@@ -20,6 +20,11 @@ export interface NetworkConfig {
     } | null
 }
 
+export interface StorageNodeRegistryItem {
+    address: string
+    url: string
+}
+
 export interface Config {
     ethereumPrivateKey: string
     network: NetworkConfig,
@@ -47,7 +52,15 @@ export interface Config {
     },
     streamrUrl: string,
     streamrAddress: string,
+    storageNodeRegistry: StorageNodeRegistryItem[] | null
     adapters: AdapterConfig[]
+}
+
+export interface BrokerConfig extends Config {
+    network: NetworkConfig & {
+        isStorageNode: false
+    },
+    storageNodeRegistry: NonNullable<Config['storageNodeRegistry']>
 }
 
 export interface StorageNodeConfig extends Config {

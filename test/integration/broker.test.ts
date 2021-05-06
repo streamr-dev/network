@@ -2,7 +2,7 @@ import { startTracker } from 'streamr-network'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { startBroker, createMockUser, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } from '../utils'
+import { startBroker, createMockUser, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, STREAMR_DOCKER_DEV_HOST } from '../utils'
 import { Todo } from '../types'
 import StreamrClient from 'streamr-client'
 
@@ -35,6 +35,14 @@ describe('broker: end-to-end', () => {
 
     beforeAll(async () => {
         const engineAndEditorAccount = Wallet.createRandom()
+        const storageNodeRegistry = [
+            [storageNodeAccount1, httpPort1], 
+            [storageNodeAccount2, httpPort2], 
+            [storageNodeAccount3, httpPort3]
+        ].map(([account, port]: any) => ({
+            address: account.address,
+            url: `http://127.0.0.1:${port}`
+        }))
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
@@ -48,7 +56,8 @@ describe('broker: end-to-end', () => {
             httpPort: httpPort1,
             wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
-            enableCassandra: true
+            enableCassandra: true,
+            storageNodeRegistry
         })
         storageNode2 = await startBroker({
             name: 'storageNode2',
@@ -58,7 +67,8 @@ describe('broker: end-to-end', () => {
             httpPort: httpPort2,
             wsPort: wsPort2,
             streamrAddress: engineAndEditorAccount.address,
-            enableCassandra: true
+            enableCassandra: true,
+            storageNodeRegistry
         })
         storageNode3 = await startBroker({
             name: 'storageNode3',
@@ -68,7 +78,8 @@ describe('broker: end-to-end', () => {
             httpPort: httpPort3,
             wsPort: wsPort3,
             streamrAddress: engineAndEditorAccount.address,
-            enableCassandra: true
+            enableCassandra: true,
+            storageNodeRegistry
         })
 
         const user1 = createMockUser()

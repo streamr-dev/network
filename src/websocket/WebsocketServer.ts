@@ -14,6 +14,7 @@ import { Publisher } from '../Publisher'
 import { SubscriptionManager } from '../SubscriptionManager'
 import { getLogger } from '../helpers/logger'
 import { StreamStateManager } from '../StreamStateManager'
+import { StorageNodeRegistry } from '../StorageNodeRegistry'
 
 const logger = getLogger('streamr:WebsocketServer')
 
@@ -35,6 +36,8 @@ export class WebsocketServer extends EventEmitter {
         publisher: Publisher,
         metricsContext: MetricsContext,
         subscriptionManager: SubscriptionManager,
+        storageNodeRegistry: StorageNodeRegistry,
+        streamrUrl: string,
         pingInterval = 60 * 1000,
     ) {
         super()
@@ -83,7 +86,7 @@ export class WebsocketServer extends EventEmitter {
             })
 
         const streams = new StreamStateManager()
-        this.requestHandler = new RequestHandler(networkNode, streamFetcher, publisher, streams, subscriptionManager, this.metrics)
+        this.requestHandler = new RequestHandler(streamFetcher, publisher, streams, subscriptionManager, this.metrics, storageNodeRegistry, streamrUrl)
         networkNode.addMessageListener((msg: Protocol.MessageLayer.StreamMessage) => this._broadcastMessage(msg, streams))
 
         this._pingInterval = setInterval(() => {
@@ -218,7 +221,6 @@ export class WebsocketServer extends EventEmitter {
             },
             close: (ws: Todo, code: Todo, message: Todo) => {
                 const connection = this.connections.get(ws.connectionId)
-
                 if (connection) {
                     logger.debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
                     this._removeConnection(connection)
@@ -273,9 +275,7 @@ export class WebsocketServer extends EventEmitter {
         })
 
         // Cancel all resends
-        connection.getOngoingResends().forEach((resend: Todo) => {
-            resend.destroy()
-        })
+        this.requestHandler.onConnectionClose(connection.id)
 
         connection.markAsDead()
     }

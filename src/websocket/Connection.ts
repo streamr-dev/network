@@ -20,7 +20,6 @@ export class Connection extends EventEmitter {
     id: string
     socket: Todo
     streams: Todo[] = []
-    ongoingResends: Set<Todo>
     dead: boolean
     controlLayerVersion: number
     messageLayerVersion: number
@@ -31,7 +30,6 @@ export class Connection extends EventEmitter {
         this.id = generateId()
         this.socket = socket
         this.streams = []
-        this.ongoingResends = new Set()
         this.dead = false
         this.controlLayerVersion = controlLayerVersion
         this.messageLayerVersion = messageLayerVersion
@@ -59,18 +57,6 @@ export class Connection extends EventEmitter {
 
     streamsAsString() {
         return this.streams.map((s: Todo) => s.toString())
-    }
-
-    addOngoingResend(resend: Todo) {
-        this.ongoingResends.add(resend)
-    }
-
-    removeOngoingResend(resend: Todo) {
-        this.ongoingResends.delete(resend)
-    }
-
-    getOngoingResends() {
-        return new Set(this.ongoingResends)
     }
 
     markAsDead() {

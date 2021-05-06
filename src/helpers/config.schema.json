@@ -11,7 +11,8 @@
     "network",
     "reporting",
     "streamrUrl",
-    "streamrAddress"
+    "streamrAddress",
+    "storageNodeRegistry"
   ],
   "additionalProperties": false,
   "properties": {
@@ -277,6 +278,15 @@
       "type": "string",
       "description": "Ethereum address Core (E&E)",
       "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "storageNodeRegistry": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/definitions/storageNodeRegistryItem"
+      }
     }
   },
   "definitions": {
@@ -381,6 +391,22 @@
       "type": "number",
       "minimum": 0,
       "maximum": 65353
+    },
+    "storageNodeRegistryItem": {
+      "type": "object",
+      "required": [
+        "address",
+        "url"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }  
+      }
     }
   }
 }

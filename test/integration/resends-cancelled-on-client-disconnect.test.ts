@@ -1,21 +1,52 @@
-import { Readable } from 'stream'
 import { startTracker, startStorageNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import ws from 'uWebSockets.js'
 import { WebsocketServer } from '../../src/websocket/WebsocketServer'
-import { createClient, STREAMR_DOCKER_DEV_HOST } from '../utils'
+import { createClient, StorageAssignmentEventManager, STREAMR_DOCKER_DEV_HOST } from '../utils'
 import { StreamFetcher } from '../../src/StreamFetcher'
 import { Publisher } from '../../src/Publisher'
 import { SubscriptionManager } from '../../src/SubscriptionManager'
 import { createMockStorageConfig } from './storage/MockStorageConfig'
 import { Todo } from '../types'
 import StreamrClient, { Stream } from 'streamr-client'
+import express from 'express'
+import { Server } from 'http'
+import { once } from 'events'
+import { Wallet } from 'ethers'
+import { wait } from 'streamr-test-utils'
+import { router as dataQueryEndpoints } from '../../src/http/DataQueryEndpoints'
+import { PassThrough } from 'stream'
+import { StorageNodeRegistry } from '../../src/StorageNodeRegistry'
 
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const trackerPort = 17750
 const networkNodePort = 17752
 const wsPort = 17753
+const mockServerPort = 17754
+const MOCK_DATA_MESSAGE_COUNT = 100
+
+class MockStorageData extends PassThrough {
+
+    constructor(opts: any) {
+        super({
+            objectMode: true,
+            ...opts
+        })
+        this.startProducer()
+    }
+
+    async startProducer() {
+        for await (const i of Array(MOCK_DATA_MESSAGE_COUNT)) {
+            await wait(200)
+            this.write(new StreamMessage({
+                messageId: new MessageID('streamId', 0, Date.now(), 0, 'publisherId', 'msgChainId'),
+                content: {},
+            }))
+        }
+        this.end();
+    }
+}
 
 describe('resend cancellation', () => {
     let tracker: Todo
@@ -24,7 +55,22 @@ describe('resend cancellation', () => {
     let networkNode: NetworkNode
     let client: StreamrClient
     let freshStream: Stream
-    let timeoutCleared = false
+    let mockDataQueryServer: Server
+    const mockStorageData = new MockStorageData({})
+
+    const createMockDataServer = async () => {
+        const storage: any = {
+            requestLast: () => mockStorageData
+        }
+
+        const app = express()
+        app.use('/api/v1', dataQueryEndpoints(storage, {
+            authenticate: () => Promise.resolve(undefined)
+        } as any, new MetricsContext(undefined as any)))
+        const server = app.listen(mockServerPort)
+        await once(server, 'listening')
+        return server
+    }
 
     beforeEach(async () => {
         client = createClient(wsPort)
@@ -42,50 +88,39 @@ describe('resend cancellation', () => {
             port: networkNodePort,
             id: 'networkNode',
             trackers: [tracker.getAddress()],
-            storages: [
-                // @ts-expect-error
-                {
-                    requestLast: (streamId, streamPartition, n) => {
-                        const stream = new Readable({
-                            objectMode: true,
-                            read() {}
-                        })
-                        const timeoutRef = setTimeout(() => {
-                            // eslint-disable-next-line no-undef
-                            fail('pushed to destroyed stream')
-                        }, 2000)
-                        stream.on('close', () => {
-                            if (stream.destroyed) {
-                                clearTimeout(timeoutRef)
-                                timeoutCleared = true
-                            }
-                        })
-                        stream.push(
-                            new StreamMessage({
-                                messageId: new MessageID(streamId, streamPartition, 0, 0, 'publisherId', 'msgChainId'),
-                                content: {},
-                            })
-                        )
-                        return stream
-                    },
-                    store: () => {}
-                }
-            ],
+            storages: [],
             // @ts-expect-error
             storageConfig: createMockStorageConfig([{
                 id: freshStream.id,
                 partition: 0
             }])
         })
+        const storageNodeAddress = Wallet.createRandom().address
+        const storageNodeRegistry = StorageNodeRegistry.createInstance(
+            {
+                storageNodeRegistry: [{
+                    address: storageNodeAddress,
+                    url: `http://127.0.0.1:${mockServerPort}`
+                }],
+                streamrUrl: 'http://127.0.0.1'
+            } as any
+        )
         websocketServer = new WebsocketServer(
             ws.App(),
             wsPort,
             networkNode,
             new StreamFetcher(`http://${STREAMR_DOCKER_DEV_HOST}`),
-            new Publisher(networkNode, {}, metricsContext),
+            new Publisher(networkNode, {
+                validate: () => {}
+            }, metricsContext),
             metricsContext,
-            new SubscriptionManager(networkNode)
+            new SubscriptionManager(networkNode),
+            storageNodeRegistry!,
+            `http://${STREAMR_DOCKER_DEV_HOST}`
         )
+        const assignmentEventManager = new StorageAssignmentEventManager(wsPort, Wallet.createRandom())
+        await assignmentEventManager.createStream()
+        await assignmentEventManager.addStreamToStorageNode(freshStream.id, storageNodeAddress, client)
     })
 
     afterEach(async () => {
@@ -95,16 +130,25 @@ describe('resend cancellation', () => {
         await tracker.stop()
     })
 
-    it('on client disconnect: associated resend is cancelled', (done) => {
-        client.resend({
+    beforeAll(async () => {
+        mockDataQueryServer = await createMockDataServer()
+    })
+
+    afterAll(async () => {
+        mockDataQueryServer.close()
+        await once(mockDataQueryServer, 'close')
+    })
+
+    it('on client disconnect: associated resend is cancelled', async () => {
+        await client.resend({
             stream: freshStream.id,
             resend: {
                 last: 1000
             }
-        }, async () => {
-            await client.ensureDisconnected()
-            await waitForCondition(() => timeoutCleared)
-            done()
         })
+        const p = waitForEvent(mockStorageData, 'close', 2000)
+        await client.ensureDisconnected()
+        await p
+        expect(mockStorageData.destroyed).toBe(true)
     })
 })

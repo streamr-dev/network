@@ -1,6 +1,6 @@
 import { Todo } from '../types'
-import { v4 as uuidv4 } from 'uuid'
-import { NetworkNode, Protocol } from 'streamr-network'
+import { Protocol } from 'streamr-network'
+import { ArrayMultimap } from '@teppeis/multimaps';
 const { ControlLayer, Utils } = Protocol
 import { HttpError } from '../errors/HttpError'
 import { FailedToPublishError } from '../errors/FailedToPublishError'
@@ -10,8 +10,10 @@ import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Publisher } from '../Publisher'
 import { SubscriptionManager } from '../SubscriptionManager'
 import { Connection } from './Connection'
-import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../http/DataQueryEndpoints'
 import { StreamFetcher } from '../StreamFetcher'
+import { StorageNodeRegistry } from '../StorageNodeRegistry'
+import { createResponse as createHistoricalDataResponse, HistoricalDataResponse } from './historicalData'
+import { GenericError } from '../errors/GenericError'
 
 const logger = getLogger('streamr:RequestHandler')
 
@@ -21,31 +23,48 @@ type ResendLastRequest = Protocol.ControlLayer.ResendLastRequest
 type ResendFromRequest = Protocol.ControlLayer.ResendFromRequest
 type ResendRangeRequest = Protocol.ControlLayer.ResendRangeRequest
 type PublishRequest = Protocol.ControlLayer.PublishRequest
-type UnicastMessage = Protocol.ControlLayer.UnicastMessage
 
 export class RequestHandler {
 
-    networkNode: NetworkNode
     streamFetcher: StreamFetcher
     publisher: Publisher
     streams: StreamStateManager
     subscriptionManager: SubscriptionManager
     metrics: Metrics
+    storageNodeRegistry: StorageNodeRegistry
+    streamrUrl: string
+    ongoingResendResponses: ArrayMultimap<string,HistoricalDataResponse> = new ArrayMultimap()
 
     constructor(   
-        networkNode: NetworkNode,
         streamFetcher: StreamFetcher,
         publisher: Publisher,
         streams: StreamStateManager,
         subscriptionManager: SubscriptionManager,
         metrics: Metrics,
+        storageNodeRegistry: StorageNodeRegistry,
+        streamrUrl: string
     ) {
-        this.networkNode = networkNode
         this.streamFetcher = streamFetcher
         this.publisher = publisher
         this.streams = streams
         this.subscriptionManager = subscriptionManager
         this.metrics = metrics
+        this.storageNodeRegistry = storageNodeRegistry,
+        this.streamrUrl = streamrUrl
+        this.metrics.addQueriedMetric('numOfOngoingResends', () => this.ongoingResendResponses.size)
+        this.metrics.addQueriedMetric('meanAgeOfOngoingResends', () => {
+            if (this.ongoingResendResponses.size > 0) {
+                const now = Date.now()
+                let sum = 0
+                this.ongoingResendResponses.forEach(response => {
+                    const age = now - response.startTime
+                    sum += age
+                })
+                return sum / this.ongoingResendResponses.size
+            } else {
+                return 0
+            }
+        })
     }
 
     handleRequest(connection: Connection, request: Todo): Promise<any> {
@@ -116,51 +135,16 @@ export class RequestHandler {
 
     private async resend(connection: Connection, request: ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
         await this._validateSubscribeOrResendRequest(request)
-        const streamingStorageData = this.getStreamStorageData(request)
-        return this.sendResendResponse(connection, request, streamingStorageData)
-    }
-
-    private getStreamStorageData(request: ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
-        let r
-        switch (request.type) {
-            case ControlLayer.ControlMessage.TYPES.ResendLastRequest:
-                r = request as ResendLastRequest
-                return this.networkNode.requestResendLast(
-                    r.streamId,
-                    r.streamPartition,
-                    uuidv4(),
-                    r.numberLast,
-                )
-            case ControlLayer.ControlMessage.TYPES.ResendFromRequest:
-                r = request as ResendFromRequest
-                return this.networkNode.requestResendFrom(
-                    r.streamId,
-                    r.streamPartition,
-                    uuidv4(),
-                    r.fromMsgRef.timestamp,
-                    // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
-                    r.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,
-                    r.publisherId,
-                    // @ts-expect-error
-                    r.msgChainId,
-                )
-            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest:
-                r = request as ResendRangeRequest
-                return this.networkNode.requestResendRange(
-                    r.streamId,
-                    r.streamPartition,
-                    uuidv4(),
-                    r.fromMsgRef.timestamp,
-                    // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE&MAX_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
-                    r.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,
-                    r.toMsgRef.timestamp,
-                    r.toMsgRef.sequenceNumber || MAX_SEQUENCE_NUMBER_VALUE,
-                    r.publisherId,
-                    r.msgChainId,
-                )
-            default: 
-                throw new Error('Assertion failed: request.type=' + request.type)
+        let streamingStorageData
+        try {
+            const response = await createHistoricalDataResponse(request, this.storageNodeRegistry)
+            streamingStorageData = response.data
+            this.ongoingResendResponses.put(connection.id, response)
+        } catch (e: any) {
+            this.sendError(e, request, connection)
+            return
         }
+        return this.sendResendResponse(connection, request, streamingStorageData)
     }
 
     private async sendResendResponse(
@@ -170,12 +154,11 @@ export class RequestHandler {
     ) {
         let sentMessages = 0
     
-        const msgHandler = (unicastMessage: UnicastMessage) => {
+        const msgHandler = (streamMessage: Protocol.StreamMessage) => {
             if (sentMessages === 0) {
                 connection.send(new ControlLayer.ResendResponseResending(request))
             }
     
-            const { streamMessage } = unicastMessage
             this.metrics.record('outBytes', streamMessage.getSerializedContent().length)
             this.metrics.record('outMessages', 1)
             sentMessages += 1
@@ -203,6 +186,7 @@ export class RequestHandler {
                     streamPartition: request.streamPartition,
                 }))
             }
+            this.ongoingResendResponses.delete(connection.id)
         }
     
         try {
@@ -211,13 +195,11 @@ export class RequestHandler {
             }
             const pauseHandler = () => streamingStorageData.pause()
             const resumeHandler = () => streamingStorageData.resume()
-            connection.addOngoingResend(streamingStorageData)
             streamingStorageData.on('data', msgHandler)
             streamingStorageData.on('end', doneHandler)
             connection.on('highBackPressure', pauseHandler)
             connection.on('lowBackPressure', resumeHandler)
             streamingStorageData.once('end', () => {
-                connection.removeOngoingResend(streamingStorageData)
                 connection.removeListener('highBackPressure', pauseHandler)
                 connection.removeListener('lowBackPressure', resumeHandler)
             })
@@ -228,6 +210,21 @@ export class RequestHandler {
                 errorMessage: `Failed to request resend from stream ${request.streamId} and partition ${request.streamPartition}: ${err.message}`,
                 errorCode: err.errorCode || 'RESEND_FAILED',
             }))
+        }
+    }
+
+    private sendError(e: Error, request: Protocol.ControlMessage, connection: Connection) {
+        if (e instanceof GenericError) {
+            logger.warn(e.message)
+            connection.send(new ControlLayer.ErrorResponse({
+                version: request.version,
+                requestId: request.requestId,
+                errorMessage: e.message,
+                errorCode: e.code as any,
+            }))
+        } else {
+            logger.error(`Assertion failed: unknown error "${e.message}"`)
+            throw e
         }
     }
 
@@ -352,6 +349,15 @@ export class RequestHandler {
             }
         } else {
             await this.streamFetcher.checkPermission(request.streamId, request.sessionToken, 'stream_subscribe')
+        }
+    }
+
+    onConnectionClose(connectionId: string) {
+        const ongoingResendResponses = this.ongoingResendResponses.get(connectionId)
+        if (ongoingResendResponses.length > 0) {
+            logger.info('Abort %s ongoing resends for connection %s', ongoingResendResponses.length, connectionId)
+            ongoingResendResponses.forEach((response)=> response.abort())
+            this.ongoingResendResponses.delete(connectionId)   
         }
     }
 

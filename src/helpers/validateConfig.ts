@@ -4,9 +4,9 @@ import { Config } from '../config'
 import { Todo } from '../types'
 import BROKER_CONFIG_SCHEMA from './config.schema.json'
 
-const assertStorageNodeProperty = (property: keyof Config, item: any) => {
+const assertProperty = (property: keyof Config, item: any) => {
     if (item[property] == null) {
-        throw new Error(`Storage node configuration must have required property '${property}'`)
+        throw new Error(`Configuration must have required property '${property}'`)
     }
 }
 
@@ -23,7 +23,9 @@ export const validateConfig = (config: Config) => {
         }).join('\n'))
     }
     if (config.network.isStorageNode) {
-        assertStorageNodeProperty('cassandra', config)
-        assertStorageNodeProperty('storageConfig', config)
+        assertProperty('cassandra', config)
+        assertProperty('storageConfig', config)
+    } else {
+        assertProperty('storageNodeRegistry', config)
     }
 }

@@ -111,44 +111,4 @@ describe('Connection', () => {
             expect(sendFn).toHaveBeenCalledWith(msg.serialize(controlLayerVersion, messageLayerVersion))
         })
     })
-
-    describe('ongoing resends', () => {
-        describe('addOngoingResend', () => {
-            it('adds resend to the connection', () => {
-                connection.addOngoingResend('resend-1')
-                connection.addOngoingResend('resend-2')
-                expect(connection.getOngoingResends()).toEqual(new Set(['resend-1', 'resend-2']))
-            })
-        })
-
-        describe('removeOngoingResend', () => {
-            beforeEach(() => {
-                connection.addOngoingResend('resend-1')
-                connection.addOngoingResend('resend-2')
-                connection.addOngoingResend('resend-3')
-            })
-
-            it('removes a resend if it is present', () => {
-                connection.removeOngoingResend('resend-2')
-                expect(connection.getOngoingResends()).toEqual(new Set(['resend-1', 'resend-3']))
-            })
-
-            it('keeps ongoing resends intact if not present', () => {
-                connection.removeOngoingResend('resend-4')
-                expect(connection.getOngoingResends()).toEqual(new Set(['resend-1', 'resend-2', 'resend-3']))
-            })
-        })
-
-        describe('getOngoingResends', () => {
-            it('returns a copy of the set', () => {
-                connection.addOngoingResend('resend-1')
-                connection.addOngoingResend('resend-2')
-                connection.addOngoingResend('resend-3')
-
-                connection.getOngoingResends().add('resend-4')
-
-                expect(connection.getOngoingResends().size).toEqual(3)
-            })
-        })
-    })
 })

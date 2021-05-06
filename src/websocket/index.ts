@@ -2,6 +2,7 @@ import ws from 'uWebSockets.js'
 import { MissingConfigError } from '../errors/MissingConfigError'
 import { WebsocketServer } from './WebsocketServer'
 import { AdapterConfig, AdapterStartFn } from '../Adapter'
+import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { BrokerUtils } from '../types'
 
 export interface WsAdapterConfig extends AdapterConfig {
@@ -12,7 +13,7 @@ export interface WsAdapterConfig extends AdapterConfig {
 
 export const start: AdapterStartFn<WsAdapterConfig> = (
     { port, privateKeyFileName, certFileName, pingInterval }: WsAdapterConfig, 
-    { networkNode, publisher, streamFetcher, metricsContext, subscriptionManager}: BrokerUtils
+    { config, networkNode, publisher, streamFetcher, metricsContext, subscriptionManager}: BrokerUtils
 ): () => Promise<any> => {
     if (port === undefined) {
         throw new MissingConfigError('port')
@@ -27,6 +28,7 @@ export const start: AdapterStartFn<WsAdapterConfig> = (
     } else {
         server = ws.App()
     }
+    const storageNodeRegistry = StorageNodeRegistry.createInstance(config)
     const websocketServer = new WebsocketServer(
         server,
         port,
@@ -35,7 +37,9 @@ export const start: AdapterStartFn<WsAdapterConfig> = (
         publisher,
         metricsContext,
         subscriptionManager,
-        pingInterval
+        storageNodeRegistry!,
+        config.streamrUrl,
+        pingInterval,
     )
     return () => websocketServer.close()
 }
