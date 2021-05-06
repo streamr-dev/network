@@ -153,6 +153,7 @@
     "debug": "^4.3.2",
     "env-paths": "^2.2.1",
     "eventemitter3": "^4.0.7",
+    "idb-keyval": "^5.0.5",
     "lodash": "^4.17.21",
     "mem": "^8.1.1",
     "node-abort-controller": "^1.2.1",
