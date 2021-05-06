@@ -7,14 +7,12 @@ import { PublisherKeyExhange } from '../stream/encryption/KeyExchangePublisher'
 
 const { StreamMessage } = MessageLayer
 
-type PublisherKeyExhangeAPI = ReturnType<typeof PublisherKeyExhange>
-
 export default function Encrypt(client: StreamrClient) {
-    let publisherKeyExchange: ReturnType<typeof PublisherKeyExhange>
+    let publisherKeyExchange: PublisherKeyExhange
 
     function getPublisherKeyExchange() {
         if (!publisherKeyExchange) {
-            publisherKeyExchange = PublisherKeyExhange(client, {
+            publisherKeyExchange = new PublisherKeyExhange(client, {
                 groupKeys: {
                     ...client.options.groupKeys,
                 }
@@ -59,13 +57,13 @@ export default function Encrypt(client: StreamrClient) {
     }
 
     return Object.assign(encrypt, {
-        setNextGroupKey(...args: Parameters<PublisherKeyExhangeAPI['setNextGroupKey']>) {
+        setNextGroupKey(...args: Parameters<PublisherKeyExhange['setNextGroupKey']>) {
             return getPublisherKeyExchange().setNextGroupKey(...args)
         },
-        rotateGroupKey(...args: Parameters<PublisherKeyExhangeAPI['rotateGroupKey']>) {
+        rotateGroupKey(...args: Parameters<PublisherKeyExhange['rotateGroupKey']>) {
             return getPublisherKeyExchange().rotateGroupKey(...args)
         },
-        rekey(...args: Parameters<PublisherKeyExhangeAPI['rekey']>) {
+        rekey(...args: Parameters<PublisherKeyExhange['rekey']>) {
             return getPublisherKeyExchange().rekey(...args)
         },
         start() {

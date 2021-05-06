@@ -17,7 +17,7 @@ export default function Decrypt(client, options = {}) {
         }
     }
 
-    const requestKey = SubscriberKeyExchange(client, {
+    const keyExchange = new SubscriberKeyExchange(client, {
         ...options,
         groupKeys: {
             ...client.options.groupKeys,
@@ -38,7 +38,7 @@ export default function Decrypt(client, options = {}) {
             }
 
             try {
-                const groupKey = await requestKey(streamMessage).catch((err) => {
+                const groupKey = await keyExchange.getGroupKey(streamMessage).catch((err) => {
                     throw new UnableToDecryptError(`Could not get GroupKey: ${streamMessage.groupKeyId} – ${err.message}`, streamMessage)
                 })
 
@@ -46,7 +46,7 @@ export default function Decrypt(client, options = {}) {
                     throw new UnableToDecryptError(`Group key not found: ${streamMessage.groupKeyId}`, streamMessage)
                 }
                 await EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
-                requestKey.addNewKey(streamMessage)
+                await keyExchange.addNewKey(streamMessage)
             } catch (err) {
                 await onError(err, streamMessage)
             } finally {
@@ -57,7 +57,7 @@ export default function Decrypt(client, options = {}) {
 
     return Object.assign(decrypt, {
         async stop() {
-            return requestKey.stop()
+            return keyExchange.stop()
         }
     })
 }

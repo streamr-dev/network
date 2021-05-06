@@ -116,81 +116,83 @@ type KeyExhangeOptions = {
     groupKeys?: Record<string, GroupKeysSerialized>
 }
 
-export function PublisherKeyExhange(client: StreamrClient, { groupKeys = {} }: KeyExhangeOptions = {}) {
-    let enabled = true
-    const getGroupKeyStore = pMemoize(async (streamId) => {
-        const clientId = await client.getAddress()
+export class PublisherKeyExhange {
+    enabled = true
+    next
+    client
+    initialGroupKeys
+    constructor(client: StreamrClient, { groupKeys = {} }: KeyExhangeOptions = {}) {
+        this.client = client
+        this.initialGroupKeys = groupKeys
+        this.getGroupKeyStore = pMemoize(this.getGroupKeyStore.bind(this), {
+            cacheKey([maybeStreamId]) {
+                const { streamId } = validateOptions(maybeStreamId)
+                return streamId
+            }
+        })
+
+        let sub: Subscription | undefined
+        this.next = Scaffold([
+            async () => {
+                sub = await PublisherKeyExhangeSubscription(client, this.getGroupKeyStore)
+                return async () => {
+                    if (!sub) { return }
+                    const cancelTask = sub.cancel()
+                    sub = undefined
+                    await cancelTask
+                }
+            }
+        ], async () => this.enabled)
+    }
+
+    async getGroupKeyStore(streamId: string) {
+        const clientId = await this.client.getAddress()
         return new GroupKeyStore({
             clientId,
             streamId,
-            groupKeys: [...parseGroupKeys(groupKeys[streamId]).entries()]
+            groupKeys: [...parseGroupKeys(this.initialGroupKeys[streamId]).entries()]
         })
-    }, {
-        cacheKey([maybeStreamId]) {
-            const { streamId } = validateOptions(maybeStreamId)
-            return streamId
-        }
-    })
+    }
 
-    let sub: Subscription | undefined
-    const next = Scaffold([
-        async () => {
-            sub = await PublisherKeyExhangeSubscription(client, getGroupKeyStore)
-            return async () => {
-                if (!sub) { return }
-                const cancelTask = sub.cancel()
-                sub = undefined
-                await cancelTask
-            }
-        }
-    ], async () => enabled)
-
-    async function rotateGroupKey(streamId: string) {
-        if (!enabled) { return }
-        const groupKeyStore = await getGroupKeyStore(streamId)
+    async rotateGroupKey(streamId: string) {
+        if (!this.enabled) { return }
+        const groupKeyStore = await this.getGroupKeyStore(streamId)
         await groupKeyStore.rotateGroupKey()
     }
 
-    async function setNextGroupKey(streamId: string, groupKey: GroupKey) {
-        if (!enabled) { return }
-        const groupKeyStore = await getGroupKeyStore(streamId)
+    async setNextGroupKey(streamId: string, groupKey: GroupKey) {
+        if (!this.enabled) { return }
+        const groupKeyStore = await this.getGroupKeyStore(streamId)
 
         await groupKeyStore.setNextGroupKey(groupKey)
     }
 
-    async function useGroupKey(streamId: string) {
-        await next()
-        if (!enabled) { return [] }
-        const groupKeyStore = await getGroupKeyStore(streamId)
+    async useGroupKey(streamId: string) {
+        await this.next()
+        if (!this.enabled) { return [] }
+        const groupKeyStore = await this.getGroupKeyStore(streamId)
         return groupKeyStore.useGroupKey()
     }
 
-    async function hasAnyGroupKey(streamId: string) {
-        const groupKeyStore = await getGroupKeyStore(streamId)
+    async hasAnyGroupKey(streamId: string) {
+        const groupKeyStore = await this.getGroupKeyStore(streamId)
         return !groupKeyStore.isEmpty()
     }
 
-    async function rekey(streamId: string) {
-        if (!enabled) { return }
-        const groupKeyStore = await getGroupKeyStore(streamId)
+    async rekey(streamId: string) {
+        if (!this.enabled) { return }
+        const groupKeyStore = await this.getGroupKeyStore(streamId)
         await groupKeyStore.rekey()
-        await next()
+        await this.next()
+    }
+    async start() {
+        this.enabled = true
+        return this.next()
     }
 
-    return {
-        setNextGroupKey,
-        useGroupKey,
-        rekey,
-        rotateGroupKey,
-        hasAnyGroupKey,
-        async start() {
-            enabled = true
-            return next()
-        },
-        async stop() {
-            pMemoize.clear(getGroupKeyStore)
-            enabled = false
-            return next()
-        }
+    async stop() {
+        pMemoize.clear(this.getGroupKeyStore)
+        this.enabled = false
+        return this.next()
     }
 }
