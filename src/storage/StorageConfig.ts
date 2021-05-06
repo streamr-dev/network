@@ -118,7 +118,7 @@ export class StorageConfig {
     }
 
     private _addStreams(streamKeys: Set<StreamKey>): void {
-        logger.info('Add %d streams to storage config: %o', streamKeys.size, Array.from(streamKeys))
+        logger.info('Add %d streams to storage config: %s', streamKeys.size, Array.from(streamKeys).join(','))
         this.streamKeys = new Set([...this.streamKeys, ...streamKeys])
         this.listeners.forEach((listener) => {
             streamKeys.forEach((key: StreamKey) => listener.onStreamAdded(getStreamFromKey(key)))
@@ -126,7 +126,7 @@ export class StorageConfig {
     }
 
     private _removeStreams(streamKeys: Set<StreamKey>): void {
-        logger.info('Remove streams from storage config: %o', streamKeys)
+        logger.info('Remove %d streams from storage config: %s', streamKeys.size, Array.from(streamKeys).join(','))
         this.streamKeys = new Set([...this.streamKeys].filter((x) => !streamKeys.has(x)))
         this.listeners.forEach((listener) => {
             streamKeys.forEach((key: StreamKey) => listener.onStreamRemoved(getStreamFromKey(key)))
