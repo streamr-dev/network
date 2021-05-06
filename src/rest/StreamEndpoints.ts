@@ -8,7 +8,7 @@ import { getEndpointUrl } from '../utils'
 import { validateOptions } from '../stream/utils'
 import { Stream, StreamOperation, StreamProperties } from '../stream'
 import { StreamPart } from '../stream/StreamPart'
-import { isKeyExchangeStream } from '../stream/encryption/KeyExchange'
+import { isKeyExchangeStream } from '../stream/encryption/KeyExchangeUtils'
 
 import authFetch, { ErrorCode, NotFoundError } from './authFetch'
 import { EthereumAddress } from '../types'

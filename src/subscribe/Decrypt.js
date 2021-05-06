@@ -1,7 +1,7 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
 import EncryptionUtil, { UnableToDecryptError } from '../stream/encryption/Encryption'
-import { SubscriberKeyExchange } from '../stream/encryption/KeyExchange'
+import { SubscriberKeyExchange } from '../stream/encryption/KeyExchangeSubscriber'
 
 const { StreamMessage } = MessageLayer
 
