@@ -1,9 +1,9 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
-import EncryptionUtil from '../stream/Encryption'
+import EncryptionUtil from '../stream/encryption/Encryption'
 import { Stream } from '../stream'
 import { StreamrClient } from '../StreamrClient'
-import { PublisherKeyExhange } from '../stream/KeyExchange'
+import { PublisherKeyExhange } from '../stream/encryption/KeyExchange'
 
 const { StreamMessage } = MessageLayer
 

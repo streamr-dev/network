@@ -22,8 +22,7 @@ import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
-import { StreamPartDefinition } from './stream'
-import type { GroupKey } from './stream/Encryption'
+import { StreamPartDefinition, GroupKey } from './stream'
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
 export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>

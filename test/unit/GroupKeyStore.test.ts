@@ -1,7 +1,6 @@
 import crypto from 'crypto'
-import { GroupKey } from '../../src/stream/Encryption'
-import PersistentStore from '../../src/stream/PersistentStore'
-import { GroupKeyStore } from '../../src/stream/KeyExchange'
+import { GroupKey } from '../../src/stream/encryption/Encryption'
+import GroupKeyStore, { GroupKeyPersistence } from '../../src/stream/encryption/GroupKeyStore'
 import { uid, addAfterFn, describeRepeats } from '../utils'
 
 describeRepeats('GroupKeyStore', () => {
@@ -59,14 +58,14 @@ describeRepeats('GroupKeyStore', () => {
 describeRepeats('PersistentStore', () => {
     let clientId: string
     let streamId: string
-    let store: PersistentStore
+    let store: GroupKeyPersistence
 
     const addAfter = addAfterFn()
 
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
         streamId = uid('stream')
-        store = new PersistentStore({
+        store = new GroupKeyPersistence({
             clientId,
             streamId,
         })
@@ -104,7 +103,7 @@ describeRepeats('PersistentStore', () => {
     })
 
     it('can get set and delete in parallel', async () => {
-        const store2 = new PersistentStore({
+        const store2 = new GroupKeyPersistence({
             clientId,
             streamId,
         })
@@ -140,7 +139,7 @@ describeRepeats('PersistentStore', () => {
 
     it('does not conflict with other streamIds', async () => {
         const streamId2 = uid('stream')
-        const store2 = new PersistentStore({
+        const store2 = new GroupKeyPersistence({
             clientId,
             streamId: streamId2,
         })
@@ -160,7 +159,7 @@ describeRepeats('PersistentStore', () => {
 
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = new PersistentStore({
+        const store2 = new GroupKeyPersistence({
             clientId: clientId2,
             streamId,
         })
@@ -180,7 +179,7 @@ describeRepeats('PersistentStore', () => {
 
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = new PersistentStore({
+        const store2 = new GroupKeyPersistence({
             clientId: clientId2,
             streamId,
         })

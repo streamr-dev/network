@@ -3,7 +3,7 @@ import { wait } from 'streamr-test-utils'
 import { describeRepeats, fakePrivateKey, uid, getPublishTestMessages, addAfterFn } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/stream'
-import { GroupKey } from '../../src/stream/Encryption'
+import { GroupKey } from '../../src/stream/encryption/Encryption'
 import Connection from '../../src/Connection'
 
 import config from './config'

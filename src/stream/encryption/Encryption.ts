@@ -7,7 +7,7 @@ import { Crypto } from 'node-webcrypto-ossl'
 import { arrayify, hexlify } from '@ethersproject/bytes'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import { uuid } from '../utils'
+import { uuid } from '../../utils'
 
 const { StreamMessage, EncryptedGroupKey } = MessageLayer
 

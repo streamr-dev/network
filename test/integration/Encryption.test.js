@@ -4,7 +4,7 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { describeRepeats, fakePrivateKey, uid, Msg, getPublishTestMessages } from '../utils'
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { GroupKey } from '../../src/stream/Encryption'
+import { GroupKey } from '../../src/stream/encryption/Encryption'
 import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
 
