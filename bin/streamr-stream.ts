@@ -12,4 +12,6 @@ program
     .command('show', 'info about a stream')
     .command("create", "create a new stream")
     .command('resend', 'request resend of a stream')
+    .command('grant-permission', 'grant permission')
+    .command('revoke-permission', 'revoke permission')
     .parse(process.argv)
