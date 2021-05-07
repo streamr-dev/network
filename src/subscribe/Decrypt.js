@@ -10,7 +10,7 @@ export default function Decrypt(client, options = {}) {
         // noop unless message encrypted
         return (streamMessage) => {
             if (streamMessage.groupKeyId) {
-                throw new Error('No keyExchange configured, cannot decrypt message.')
+                throw new UnableToDecryptError('No keyExchange configured, cannot decrypt any message.', streamMessage)
             }
 
             return streamMessage
@@ -43,11 +43,17 @@ export default function Decrypt(client, options = {}) {
                 })
 
                 if (!groupKey) {
-                    throw new UnableToDecryptError(`Group key not found: ${streamMessage.groupKeyId}`, streamMessage)
+                    throw new UnableToDecryptError([
+                        `Could not get GroupKey: ${streamMessage.groupKeyId}`,
+                        'Publisher is offline, key does not exist or no permission to access key.',
+                    ].join(' '), streamMessage)
                 }
+
                 await EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
                 await keyExchange.addNewKey(streamMessage)
             } catch (err) {
+                // clear cached permissions if cannot decrypt, likely permissions need updating
+                client.cached.clearStream(streamMessage.getStreamId())
                 await onError(err, streamMessage)
             } finally {
                 yield streamMessage
