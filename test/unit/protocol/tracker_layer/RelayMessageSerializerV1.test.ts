@@ -12,6 +12,8 @@ const message = new RelayMessage({
         peerId: 'peerId',
         peerName: 'peerName',
         peerType: 'node',
+        controlLayerVersions: [2],
+        messageLayerVersions: [32],
         location: null
     },
     targetNode: 'targetNode',
@@ -28,6 +30,8 @@ const serializedMessage = JSON.stringify([
         peerId: 'peerId',
         peerName: 'peerName',
         peerType: 'node',
+        controlLayerVersions: [2],
+        messageLayerVersions: [32],
         location: null
     },
     'targetNode',
