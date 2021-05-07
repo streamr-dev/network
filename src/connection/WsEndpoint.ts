@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events'
+import { DisconnectionCode, DisconnectionReason, Event, IWsEndpoint } from './IWsEndpoint'
 import uWS from 'uWebSockets.js'
 import WebSocket from 'ws'
 import { PeerBook } from './PeerBook'
@@ -8,30 +9,6 @@ import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 
 const staticLogger = new Logger(['connection', 'WsEndpoint'])
-
-export enum Event {
-    PEER_CONNECTED = 'streamr:peer:connect',
-    PEER_DISCONNECTED = 'streamr:peer:disconnect',
-    MESSAGE_RECEIVED = 'streamr:message-received',
-    HIGH_BACK_PRESSURE = 'streamr:high-back-pressure',
-    LOW_BACK_PRESSURE = 'streamr:low-back-pressure'
-}
-
-export enum DisconnectionCode {
-    GRACEFUL_SHUTDOWN = 1000,
-    DUPLICATE_SOCKET = 1002,
-    NO_SHARED_STREAMS = 1000,
-    MISSING_REQUIRED_PARAMETER = 1002,
-    DEAD_CONNECTION = 1002
-}
-
-export enum DisconnectionReason {
-    GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
-    DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
-    NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
-    MISSING_REQUIRED_PARAMETER = 'streamr:node:missing-required-parameter',
-    DEAD_CONNECTION = 'streamr:endpoint:dead-connection'
-}
 
 interface Connection {
     // upgraded vars
@@ -102,16 +79,7 @@ function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     }
 }
 
-// Declare event handlers
-export declare interface WsEndpoint {
-    on(event: Event.PEER_CONNECTED, listener: (peerInfo: PeerInfo) => void): this
-    on(event: Event.PEER_DISCONNECTED, listener: (peerInfo: PeerInfo, reason: string) => void): this
-    on(event: Event.MESSAGE_RECEIVED, listener: (peerInfo: PeerInfo, message: string) => void): this
-    on(event: Event.HIGH_BACK_PRESSURE, listener: (peerInfo: PeerInfo) => void): this
-    on(event: Event.LOW_BACK_PRESSURE, listener: (peerInfo: PeerInfo) => void): this
-}
-
-export class WsEndpoint extends EventEmitter {
+export class WsEndpoint extends EventEmitter implements IWsEndpoint {
     private readonly serverHost: string
     private readonly serverPort: number
     private readonly wss: uWS.TemplatedApp

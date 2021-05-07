@@ -2,7 +2,7 @@ import { EventEmitter } from 'events'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
-import { WebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/WebRtcEndpoint'
+import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
 import { ResendRequest, ResendResponse, Rtts } from '../identifiers'
 
@@ -39,10 +39,10 @@ export interface NodeToNode {
 }
 
 export class NodeToNode extends EventEmitter {
-    private readonly endpoint: WebRtcEndpoint
+    private readonly endpoint: IWebRtcEndpoint
     private readonly logger: Logger
 
-    constructor(endpoint: WebRtcEndpoint) {
+    constructor(endpoint: IWebRtcEndpoint) {
         super()
         this.endpoint = endpoint
         endpoint.on(WebRtcEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))

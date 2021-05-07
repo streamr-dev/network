@@ -1,4 +1,5 @@
 import { EventEmitter, once } from 'events'
+import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import nodeDataChannel, { DescriptionType } from 'node-datachannel'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
@@ -16,14 +17,6 @@ import { Rtts } from '../identifiers'
 
 import { MessageQueue } from './MessageQueue'
 
-export enum Event {
-    PEER_CONNECTED = 'streamr:peer:connect',
-    PEER_DISCONNECTED = 'streamr:peer:disconnect',
-    MESSAGE_RECEIVED = 'streamr:message-received',
-    HIGH_BACK_PRESSURE = 'streamr:high-back-pressure',
-    LOW_BACK_PRESSURE = 'streamr:low-back-pressure'
-}
-
 class WebRtcError extends Error {
     constructor(msg: string) {
         super(msg)
@@ -32,16 +25,7 @@ class WebRtcError extends Error {
     }
 }
 
-// Declare event handlers
-export declare interface WebRtcEndpoint {
-    on(event: Event.PEER_CONNECTED, listener: (peerInfo: PeerInfo) => void): this
-    on(event: Event.PEER_DISCONNECTED, listener: (peerInfo: PeerInfo) => void): this
-    on(event: Event.MESSAGE_RECEIVED, listener: (peerInfo: PeerInfo, message: string) => void): this
-    on(event: Event.HIGH_BACK_PRESSURE, listener: (peerInfo: PeerInfo) => void): this
-    on(event: Event.LOW_BACK_PRESSURE, listener: (peerInfo: PeerInfo) => void): this
-}
-
-export class WebRtcEndpoint extends EventEmitter {
+export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly peerInfo: PeerInfo
     private readonly stunUrls: string[]
     private readonly rtcSignaller: RtcSignaller
