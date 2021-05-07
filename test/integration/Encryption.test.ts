@@ -5,6 +5,8 @@ import { describeRepeats, fakePrivateKey, uid, Msg, getPublishTestMessages } fro
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
+import { Stream, StreamOperation } from '../../src/stream'
+import { Subscription } from '../../src'
 import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
 
@@ -15,17 +17,17 @@ const TIMEOUT = 10 * 1000
 const { StreamMessage } = MessageLayer
 
 describeRepeats('decryption', () => {
-    let publishTestMessages
+    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
     let expectErrors = 0 // check no errors by default
-    let errors = []
+    let errors: Error[] = []
 
-    const getOnError = (errs) => jest.fn((err) => {
+    const getOnError = (errs: Error[]) => jest.fn((err) => {
         errs.push(err)
     })
 
     let onError = jest.fn()
-    let client
-    let stream
+    let client: StreamrClient
+    let stream: Stream
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -35,6 +37,7 @@ describeRepeats('decryption', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
+            // @ts-expect-error
             disconnectDelay: 1,
             publishAutoDisconnectDelay: 50,
             maxRetries: 2,
@@ -46,7 +49,7 @@ describeRepeats('decryption', () => {
         return c
     }
 
-    function checkEncryptionMessages(testClient) {
+    function checkEncryptionMessages(testClient: StreamrClient) {
         const onSendTest = Defer()
         testClient.connection.on('_send', onSendTest.wrapError((sendingMsg) => {
             // check encryption is as expected
@@ -73,7 +76,7 @@ describeRepeats('decryption', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         // ensure no unexpected errors
         expect(errors).toHaveLength(expectErrors)
         if (client) {
@@ -82,7 +85,7 @@ describeRepeats('decryption', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         if (client) {
             client.debug('disconnecting after test')
             await client.disconnect()
@@ -95,7 +98,7 @@ describeRepeats('decryption', () => {
         }
     })
 
-    async function setupClient(opts) {
+    async function setupClient(opts?: any) {
         client = createClient(opts)
         await Promise.all([
             client.session.getSessionToken(),
@@ -130,6 +133,7 @@ describeRepeats('decryption', () => {
         const done = Defer()
         const sub = await client.subscribe({
             stream: stream.id,
+            // @ts-expect-error
             groupKeys: keys,
         }, done.wrap((parsedContent, streamMessage) => {
             expect(parsedContent).toEqual(msg)
@@ -174,7 +178,7 @@ describeRepeats('decryption', () => {
             client.publish(stream.id, msg),
             done,
         ])
-        onEncryptionMessageErr.resolve() // will be ignored if errored
+        onEncryptionMessageErr.resolve(undefined) // will be ignored if errored
         await onEncryptionMessageErr
         // All good, unsubscribe
         await client.unsubscribe(sub)
@@ -191,7 +195,7 @@ describeRepeats('decryption', () => {
             // Check signature stuff
             received.push(streamMessage)
             if (received.length === msgs.length) {
-                done.resolve()
+                done.resolve(undefined)
             }
         }))
 
@@ -238,7 +242,7 @@ describeRepeats('decryption', () => {
             }
         })
 
-        onEncryptionMessageErr.resolve() // will be ignored if errored
+        onEncryptionMessageErr.resolve(undefined) // will be ignored if errored
         await onEncryptionMessageErr
         // All good, unsubscribe
         await client.unsubscribe(sub)
@@ -246,6 +250,7 @@ describeRepeats('decryption', () => {
 
     it('errors if rotating group key for no stream', async () => {
         expect(async () => (
+            // @ts-expect-error
             client.rotateGroupKey()
         )).rejects.toThrow('streamId')
     })
@@ -257,8 +262,8 @@ describeRepeats('decryption', () => {
     })
 
     it('allows other users to get group key', async () => {
-        let otherClient
-        let sub
+        let otherClient: StreamrClient
+        let sub: Subscription
         try {
             otherClient = createClient({
                 autoConnect: true,
@@ -268,8 +273,8 @@ describeRepeats('decryption', () => {
             const onEncryptionMessageErr = checkEncryptionMessages(client)
             const onEncryptionMessageErr2 = checkEncryptionMessages(otherClient)
             const otherUser = await otherClient.getUserInfo()
-            await stream.grantPermission('stream_get', otherUser.username)
-            await stream.grantPermission('stream_subscribe', otherUser.username)
+            await stream.grantPermission(StreamOperation.STREAM_GET, otherUser.username)
+            await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser.username)
 
             const done = Defer()
             const msg = Msg()
@@ -293,9 +298,9 @@ describeRepeats('decryption', () => {
                 client.publish(stream.id, msg),
                 done,
             ])
-            onEncryptionMessageErr.resolve() // will be ignored if errored
+            onEncryptionMessageErr.resolve(undefined) // will be ignored if errored
             await onEncryptionMessageErr
-            onEncryptionMessageErr2.resolve() // will be ignored if errored
+            onEncryptionMessageErr2.resolve(undefined) // will be ignored if errored
             await onEncryptionMessageErr2
         } finally {
             if (otherClient) {
@@ -317,7 +322,7 @@ describeRepeats('decryption', () => {
 
         let didFindStream2 = false
 
-        function checkEncryptionMessagesPerStream(testClient) {
+        function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
             const onSendTest = Defer()
             testClient.connection.on('_send', onSendTest.wrapError((sendingMsg) => {
                 // check encryption is as expected
@@ -344,7 +349,7 @@ describeRepeats('decryption', () => {
             return onSendTest
         }
 
-        async function testSub(testStream) {
+        async function testSub(testStream: Stream) {
             const NUM_MESSAGES = 5
             const done = Defer()
             const received = []
@@ -353,7 +358,7 @@ describeRepeats('decryption', () => {
             }, done.wrapError((parsedContent) => {
                 received.push(parsedContent)
                 if (received.length === NUM_MESSAGES) {
-                    done.resolve()
+                    done.resolve(undefined)
                 }
             }))
             sub.once('error', done.reject)
@@ -376,7 +381,7 @@ describeRepeats('decryption', () => {
             testSub(stream),
             testSub(stream2),
         ])
-        onEncryptionMessageErr.resolve() // will be ignored if errored
+        onEncryptionMessageErr.resolve(undefined) // will be ignored if errored
         await onEncryptionMessageErr
         expect(didFindStream2).toBeTruthy()
     }, TIMEOUT)
@@ -393,7 +398,7 @@ describeRepeats('decryption', () => {
         const groupKey2 = GroupKey.generate()
         await client.setNextGroupKey(stream2.id, groupKey2)
 
-        function checkEncryptionMessagesPerStream(testClient) {
+        function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
             const onSendTest = Defer()
             testClient.connection.on('_send', onSendTest.wrapError((sendingMsg) => {
                 // check encryption is as expected
@@ -421,7 +426,7 @@ describeRepeats('decryption', () => {
             return onSendTest
         }
 
-        async function testSub(testStream) {
+        async function testSub(testStream: Stream) {
             const NUM_MESSAGES = 5
             const done = Defer()
             const received = []
@@ -430,7 +435,7 @@ describeRepeats('decryption', () => {
             }, done.wrapError((parsedContent) => {
                 received.push(parsedContent)
                 if (received.length === NUM_MESSAGES) {
-                    done.resolve()
+                    done.resolve(undefined)
                 }
             }))
             sub.once('error', done.reject)
@@ -450,7 +455,7 @@ describeRepeats('decryption', () => {
             testSub(stream),
             testSub(stream2),
         ])
-        onEncryptionMessageErr.resolve() // will be ignored if errored
+        onEncryptionMessageErr.resolve(undefined) // will be ignored if errored
         await onEncryptionMessageErr
     }, TIMEOUT)
 
@@ -586,6 +591,7 @@ describeRepeats('decryption', () => {
 
         const sub = await client.subscribe({
             stream: stream.id,
+            // @ts-expect-error
             groupKeys: keys,
         })
 
@@ -618,7 +624,7 @@ describeRepeats('decryption', () => {
     })
 
     describe('revoking permissions', () => {
-        let client2
+        let client2: StreamrClient
 
         beforeEach(async () => {
             client2 = createClient({ id: 'subscriber' })
@@ -643,8 +649,8 @@ describeRepeats('decryption', () => {
             const MAX_MESSAGES = 6
             await client.rotateGroupKey(stream.id)
 
-            const p1 = await stream.grantPermission('stream_get', client2.getPublisherId())
-            const p2 = await stream.grantPermission('stream_subscribe', client2.getPublisherId())
+            const p1 = await stream.grantPermission(StreamOperation.STREAM_GET, await client2.getPublisherId())
+            const p2 = await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await client2.getPublisherId())
 
             const sub = await client2.subscribe({
                 stream: stream.id,
@@ -676,12 +682,13 @@ describeRepeats('decryption', () => {
                     }
                 }
             })
-            let t
+
+            let t!: ReturnType<typeof setTimeout>
             await expect(async () => {
                 for await (const m of sub) {
                     received.push(m.getParsedContent())
                     if (received.length === REVOKE_AFTER) {
-                        gotMessages.resolve()
+                        gotMessages.resolve(undefined)
                         clearTimeout(t)
                         t = setTimeout(() => {
                             sub.cancel()
@@ -704,7 +711,7 @@ describeRepeats('decryption', () => {
             expect(onSubError).toHaveBeenCalledTimes(1)
         })
 
-        it('fails gracefully if permission revoked with low cache maxAge fail first message', async () => {
+        it.only('fails gracefully if permission revoked with low cache maxAge fail first message', async () => {
             await client.disconnect()
             await setupClient({
                 id: 'publisher',
@@ -715,8 +722,8 @@ describeRepeats('decryption', () => {
             const MAX_MESSAGES = 3
             await client.rotateGroupKey(stream.id)
 
-            const p1 = await stream.grantPermission('stream_get', client2.getPublisherId())
-            const p2 = await stream.grantPermission('stream_subscribe', client2.getPublisherId())
+            const p1 = await stream.grantPermission(StreamOperation.STREAM_GET, await client2.getPublisherId())
+            const p2 = await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await client2.getPublisherId())
 
             const sub = await client2.subscribe({
                 stream: stream.id,
@@ -749,12 +756,12 @@ describeRepeats('decryption', () => {
                     }
                 }
             })
-            let t
+            let t!: ReturnType<typeof setTimeout>
             await expect(async () => {
                 for await (const m of sub) {
                     received.push(m.getParsedContent())
                     if (received.length === REVOKE_AFTER) {
-                        gotMessages.resolve()
+                        gotMessages.resolve(undefined)
                         clearTimeout(t)
                         t = setTimeout(() => {
                             sub.cancel()
@@ -788,8 +795,8 @@ describeRepeats('decryption', () => {
             const MAX_MESSAGES = 10
             await client.rotateGroupKey(stream.id)
 
-            const p1 = await stream.grantPermission('stream_get', client2.getPublisherId())
-            const p2 = await stream.grantPermission('stream_subscribe', client2.getPublisherId())
+            const p1 = await stream.grantPermission(StreamOperation.STREAM_GET, await client2.getPublisherId())
+            const p2 = await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await client2.getPublisherId())
 
             const sub = await client2.subscribe({
                 stream: stream.id,
@@ -822,12 +829,12 @@ describeRepeats('decryption', () => {
                 }
             })
 
-            let t
+            let t!: ReturnType<typeof setTimeout>
             await expect(async () => {
                 for await (const m of sub) {
                     received.push(m.getParsedContent())
                     if (received.length === REVOKE_AFTER) {
-                        gotMessages.resolve()
+                        gotMessages.resolve(undefined)
                         clearTimeout(t)
                         t = setTimeout(() => {
                             sub.cancel()
