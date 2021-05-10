@@ -220,7 +220,7 @@ describeRepeats('decryption', () => {
         it('changing group key injects group key into next stream message', async () => {
             const done = Defer()
             const msgs = [Msg(), Msg(), Msg()]
-            const received = []
+            const received: any[] = []
             await grantSubscriberPermissions()
             // subscribe without knowing the group key to decrypt stream messages
             const sub = await subscriber.subscribe({
@@ -291,6 +291,7 @@ describeRepeats('decryption', () => {
 
         it('errors if setting group key for no stream', async () => {
             expect(async () => (
+                // @ts-expect-error
                 publisher.setNextGroupKey(undefined, GroupKey.generate())
             )).rejects.toThrow('streamId')
         })
@@ -366,7 +367,7 @@ describeRepeats('decryption', () => {
             async function testSub(testStream: Stream) {
                 const NUM_MESSAGES = 5
                 const done = Defer()
-                const received = []
+                const received: any = []
                 await grantSubscriberPermissions({ stream: testStream })
                 const sub = await subscriber.subscribe({
                     stream: testStream.id,
@@ -444,7 +445,7 @@ describeRepeats('decryption', () => {
             async function testSub(testStream: Stream) {
                 const NUM_MESSAGES = 5
                 const done = Defer()
-                const received = []
+                const received: any[] = []
                 await grantSubscriberPermissions({ stream: testStream })
                 const sub = await subscriber.subscribe({
                     stream: testStream.id,
@@ -597,11 +598,12 @@ describeRepeats('decryption', () => {
             const { parse } = subscriber.connection
             subscriber.connection.parse = (...args) => {
                 const msg = parse.call(subscriber.connection, ...args)
-                if (!msg.streamMessage) {
+                if (!('streamMessage' in msg)) {
                     return msg
                 }
 
                 if (count === BAD_INDEX) {
+                    // @ts-expect-error
                     msg.streamMessage.groupKeyId = 'badgroupkey'
                 }
 
@@ -676,15 +678,15 @@ describeRepeats('decryption', () => {
                 stream: stream.id,
             })
 
-            const errs = []
-            const onSubError = jest.fn((err) => {
+            const errs: Error[] = []
+            const onSubError = jest.fn((err: Error) => {
                 errs.push(err)
                 throw err // this should trigger unsub
             })
 
             sub.on('error', onSubError)
 
-            const received = []
+            const received: any[] = []
             // Publish after subscribed
             let count = 0
             const gotMessages = Defer()
