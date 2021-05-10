@@ -1,5 +1,3 @@
-const { StorageNode } = require('../../src/stream/StorageNode')
-
 const toNumber = (value) => {
     return (value !== undefined) ? Number(value) : undefined
 }
@@ -22,7 +20,7 @@ module.exports = {
             templateSidechainAddress: process.env.DU_TEMPLATE_SIDECHAIN || '0x36afc8c9283CC866b8EB6a61C6e6862a83cd6ee8',
         },
         storageNode: {
-            address: StorageNode.STREAMR_DOCKER_DEV.getAddress(),
+            address: '0xde1112f631486CfC759A50196853011528bC5FA0',
             url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
         },
         sidechain: {
