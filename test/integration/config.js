@@ -8,8 +8,8 @@ module.exports = {
         auth: {
             privateKey: process.env.ETHEREUM_PRIVATE_KEY || '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb',
         },
-        url: process.env.WEBSOCKET_URL || 'ws://localhost/api/v1/ws',
-        restUrl: process.env.REST_URL || 'http://localhost/api/v1',
+        url: process.env.WEBSOCKET_URL || `ws://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}/api/v1/ws`,
+        restUrl: process.env.REST_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}/api/v1`,
         streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
         tokenAddress: process.env.TOKEN_ADDRESS || '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         tokenSidechainAddress: process.env.TOKEN_ADDRESS_SIDECHAIN || '0x73Be21733CC5D08e1a14Ea9a399fb27DB3BEf8fF',
@@ -22,14 +22,14 @@ module.exports = {
         storageNode: {
             // "broker-node-storage-1" on Docker environment
             address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-            url: 'http://10.200.10.1:8891'
+            url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
         },
         sidechain: {
-            url: process.env.SIDECHAIN_URL || 'http://10.200.10.1:8546',
+            url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
             timeout: toNumber(process.env.TEST_TIMEOUT),
         },
         mainnet: {
-            url: process.env.ETHEREUM_SERVER_URL || 'http://10.200.10.1:8545',
+            url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
             timeout: toNumber(process.env.TEST_TIMEOUT),
         },
         autoConnect: false,
