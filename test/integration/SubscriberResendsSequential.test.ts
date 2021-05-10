@@ -15,6 +15,7 @@ import Connection from '../../src/Connection'
 import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber } from '../../src/subscribe'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 /* eslint-disable no-await-in-loop */
 
@@ -66,7 +67,7 @@ describeRepeats('sequential resend subscribe', () => {
         stream = await client.createStream({
             name: uid('stream')
         })
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         publishTestMessages = getPublishTestMessages(client, {
             stream,

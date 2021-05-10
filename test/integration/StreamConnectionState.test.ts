@@ -9,6 +9,7 @@ import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber, Subscription } from '../../src/subscribe'
 import { StreamrClientOptions } from '../../src'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const MAX_MESSAGES = 5
 
@@ -50,7 +51,7 @@ describeRepeats('Connection State', () => {
             requireSignedData: true,
             name: uid('stream')
         })
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)

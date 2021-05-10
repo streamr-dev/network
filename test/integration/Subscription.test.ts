@@ -6,6 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src/subscribe'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const createClient = (opts = {}) => new StreamrClient({
     ...config.clientOptions,
@@ -72,7 +73,7 @@ describe('Subscription', () => {
         stream = await client.createStream({
             name: uid('stream')
         })
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         await client.connect()
     })
 

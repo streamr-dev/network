@@ -6,6 +6,7 @@ import Connection from '../../src/Connection'
 
 import config from './config'
 import { Stream } from '../../src/stream'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 describeRepeats('StreamrClient Resend', () => {
     let expectErrors = 0 // check no errors by default
@@ -76,7 +77,7 @@ describeRepeats('StreamrClient Resend', () => {
                 requireSignedData,
                 ...opts,
             })
-            await s.addToStorageNode(config.clientOptions.storageNode.address)
+            await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             expect(s.id).toBeTruthy()
             expect(s.name).toEqual(name)

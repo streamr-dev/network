@@ -9,6 +9,7 @@ import { Stream } from '../../src/stream'
 import { Subscriber, Subscription } from '../../src/subscribe'
 import { MessageRef } from 'streamr-client-protocol/dist/src/protocol/message_layer'
 import { StreamrClientOptions } from '../../src'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const MAX_MESSAGES = 10
 
@@ -47,7 +48,7 @@ describeRepeats('GapFill with resends', () => {
             requireSignedData: true,
             name: uid('stream')
         })
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)

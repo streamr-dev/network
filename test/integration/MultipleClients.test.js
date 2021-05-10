@@ -5,6 +5,7 @@ import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTest
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId, Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 import config from './config'
 
@@ -51,7 +52,7 @@ describeRepeats('PubSub with multiple clients', () => {
         stream = await mainClient.createStream({
             name: uid('stream')
         })
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
     })
 
     afterEach(async () => {

@@ -19,6 +19,7 @@ import { Defer } from '../../src/utils'
 import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber } from '../../src/subscribe'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const { ControlMessage } = ControlLayer
 
@@ -78,7 +79,7 @@ describeRepeats('resends', () => {
 
     beforeAll(async () => {
         client.debug('addToStorageNode >>')
-        await stream.addToStorageNode(config.clientOptions.storageNode.address, {
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
             timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
         })
         client.debug('addToStorageNode <<')
@@ -138,7 +139,7 @@ describeRepeats('resends', () => {
             emptyStream = await client.createStream({
                 name: uid('stream')
             })
-            await emptyStream.addToStorageNode(config.clientOptions.storageNode.address)
+            await emptyStream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
             await expect(async () => {
                 await subscriber.resend({
                     streamId: emptyStream.id,
@@ -151,7 +152,7 @@ describeRepeats('resends', () => {
             emptyStream = await client.createStream({
                 name: uid('stream')
             })
-            await emptyStream.addToStorageNode(config.clientOptions.storageNode.address)
+            await emptyStream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             const sub = await subscriber.resend({
                 streamId: emptyStream.id,
@@ -171,7 +172,7 @@ describeRepeats('resends', () => {
             emptyStream = await client.createStream({
                 name: uid('stream')
             })
-            await emptyStream.addToStorageNode(config.clientOptions.storageNode.address)
+            await emptyStream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             const sub = await subscriber.resendSubscribe({
                 streamId: emptyStream.id,

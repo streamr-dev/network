@@ -5,6 +5,7 @@ import authFetch from '../rest/authFetch'
 
 import { StorageNode } from './StorageNode'
 import { StreamrClient } from '../StreamrClient'
+import { EthereumAddress } from '../types'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = { streamId?: string, streamPartition?: number, id?: string, partition?: number, stream?: Stream|string }
@@ -223,7 +224,8 @@ export class Stream {
         await this.update()
     }
 
-    async addToStorageNode(address: string, { timeout = 30000 }: { timeout: number } = { timeout: 30000 }) {
+    async addToStorageNode(node: StorageNode|EthereumAddress, { timeout = 30000 }: { timeout: number } = { timeout: 30000 }) {
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
         // currently we support only one storage node
         // -> we can validate that the given address is that address
         // -> remove this comparison when we start to support multiple storage nodes
@@ -258,7 +260,8 @@ export class Stream {
         throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
-    async removeFromStorageNode(address: string) {
+    async removeFromStorageNode(node: StorageNode|EthereumAddress) {
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
         await authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes', address),
             this._client.session,
