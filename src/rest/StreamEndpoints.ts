@@ -15,6 +15,7 @@ import { EthereumAddress } from '../types'
 import { StreamrClient } from '../StreamrClient'
 // TODO change this import when streamr-client-protocol exports StreamMessage type or the enums types directly
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
+import { StorageNode } from '../stream/StorageNode'
 
 const debug = debugFactory('StreamrClient')
 
@@ -255,7 +256,8 @@ export class StreamEndpoints {
         return json
     }
 
-    async getStreamPartsByStorageNode(address: EthereumAddress) {
+    async getStreamPartsByStorageNode(node: StorageNode|EthereumAddress) {
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
         type ItemType = { id: string, partitions: number}
         const json = await authFetch<ItemType[]>(getEndpointUrl(this.client.options.restUrl, 'storageNodes', address, 'streams'), this.client.session)
         let result: StreamPart[] = []

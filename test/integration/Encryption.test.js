@@ -6,6 +6,7 @@ import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/stream/Encryption'
 import Connection from '../../src/Connection'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 import config from './config'
 
@@ -107,7 +108,7 @@ describe('decryption', () => {
             requireEncryptedData: true,
         })
 
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         publishTestMessages = getPublishTestMessages(client, {
             stream

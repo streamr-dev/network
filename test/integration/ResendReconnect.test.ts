@@ -8,6 +8,7 @@ import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src'
 import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const createClient = (opts = {}) => new StreamrClient({
     ...config.clientOptions,
@@ -35,7 +36,7 @@ describe('resend/reconnect', () => {
             name: uid('resends')
         })
 
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
     }, 10000)
 
     beforeEach(async () => {

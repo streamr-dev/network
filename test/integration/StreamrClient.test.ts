@@ -12,6 +12,7 @@ import Connection from '../../src/Connection'
 import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const { StreamMessage } = MessageLayer
 
@@ -104,7 +105,7 @@ describeRepeats('StreamrClient', () => {
             requireSignedData,
             ...opts,
         })
-        await s.addToStorageNode(config.clientOptions.storageNode.address)
+        await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         expect(s.id).toBeTruthy()
         expect(s.name).toEqual(name)

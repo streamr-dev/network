@@ -7,6 +7,7 @@ import Connection from '../../src/Connection'
 
 import config from './config'
 import { Stream } from '../../src/stream'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const MAX_MESSAGES = 10
 const WAIT_FOR_STORAGE_TIMEOUT = 6000
@@ -76,7 +77,7 @@ describe('StreamrClient resends', () => {
                     name: uid('resends')
                 })
 
-                await stream.addToStorageNode(config.clientOptions.storageNode.address)
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
             })
 
             beforeEach(async () => {
@@ -337,7 +338,7 @@ describe('StreamrClient resends', () => {
                     name: uid('resends')
                 })
 
-                await stream.addToStorageNode(config.clientOptions.storageNode.address)
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 publishTestMessages = getPublishTestMessages(client, {
                     stream

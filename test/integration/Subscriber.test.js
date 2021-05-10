@@ -5,6 +5,7 @@ import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages, collect }
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 import config from './config'
 
@@ -54,7 +55,7 @@ describeRepeats('Subscriber', () => {
         stream = await client.createStream({
             name: uid('stream')
         })
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, {
             stream

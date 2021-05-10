@@ -13,6 +13,7 @@ import { BytesLike } from '@ethersproject/bytes'
 import { isAddress } from '@ethersproject/address'
 import has from 'lodash/has'
 import get from 'lodash/get'
+import { StorageNode } from './stream/StorageNode'
 
 export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
 
@@ -144,7 +145,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
         templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
     },
     storageNode: {
-        address: '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916',
+        address: StorageNode.STREAMR_GERMANY.getAddress(),
         url: 'https://corea1.streamr.network:8001'
     },
     cache: {
