@@ -64,7 +64,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.bufferThresholdHigh = webrtcDatachannelBufferThresholdHigh
         this.maxMessageSize = maxMessageSize
 
-        rtcSignaller.setOfferListener(async ({ routerId, originatorInfo, description } : OfferOptions) => {
+        rtcSignaller.setOfferListener(async ({ routerId, originatorInfo, description }: OfferOptions) => {
             const { peerId } = originatorInfo
             this.connect(peerId, routerId).catch((err) => {
                 this.logger.warn('offerListener induced connection from %s failed, reason %s', peerId, err)

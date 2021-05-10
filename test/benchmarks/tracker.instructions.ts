@@ -60,7 +60,7 @@ async function runNetwork(currentBenchmark: number, numberOfNodes: number, start
 
 interface Benchmark {
     sendInstruction: any
-    memory:any
+    memory: any
 }
 
 function extractMetrics(metrics: any): Benchmark {
