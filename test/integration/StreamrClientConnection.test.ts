@@ -6,6 +6,7 @@ import { describeRepeats, uid, fakePrivateKey } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 import config from './config'
 
@@ -406,6 +407,7 @@ describeRepeats('StreamrClient Connection', () => {
             const stream = await client.createStream({
                 name: uid('stream')
             })
+            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             const connectionEventSpy = jest.spyOn(client.connection, '_send')
             const sub = await client.subscribe(stream.id, () => {})
@@ -442,6 +444,7 @@ describeRepeats('StreamrClient Connection', () => {
             const stream = await client.createStream({
                 name: uid('stream')
             })
+            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             const connectionEventSpy = jest.spyOn(client.connection, 'send')
             const sub = await client.resend({
@@ -509,6 +512,7 @@ describeRepeats('StreamrClient Connection', () => {
                 const stream = await client.createStream({
                     name: uid('stream')
                 })
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
                 expect(client.isDisconnected()).toBeTruthy()
 
                 const message = {
@@ -532,6 +536,7 @@ describeRepeats('StreamrClient Connection', () => {
                 const stream = await client.createStream({
                     name: uid('stream')
                 })
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 const message = {
                     id1: uid('msg')
@@ -555,6 +560,7 @@ describeRepeats('StreamrClient Connection', () => {
                 const stream = await client.createStream({
                     name: uid('stream')
                 })
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 const message = {
                     id1: uid('msg')
@@ -581,6 +587,7 @@ describeRepeats('StreamrClient Connection', () => {
                 const stream = await client.createStream({
                     name: uid('stream')
                 })
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 await client.subscribe({
                     streamId: stream.id,
@@ -599,6 +606,7 @@ describeRepeats('StreamrClient Connection', () => {
                 const stream = await client.createStream({
                     name: uid('stream')
                 })
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 await client.subscribe({
                     streamId: stream.id,
