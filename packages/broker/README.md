@@ -117,10 +117,10 @@ https://semver.org/. Files package.json and package-lock.json will be automatica
 For production version of the Streamr API refer to [API Explorer](https://api-explorer.streamr.com).
 
 ### Special considerations for using MQTT adapter
-- For authentication put API_KEY in the password connection field
+- For authentication put private key in the password connection field
 - MQTT clients can send plain text, but their payload will be transformed to a JSON object accordingly:
 `{"mqttPayload":"ORIGINAL_PLAINTEXT_PAYLOAD}`
 
 #### Error handling
-- If API_KEY is not correct, client will receive "Connection refused, bad user name or password" (returnCode: 4)
+- If private key is not correct, client will receive "Connection refused, bad user name or password" (returnCode: 4)
 - If stream is not found, client will receive "Connection refused, not authorized" (returnCode: 5)
