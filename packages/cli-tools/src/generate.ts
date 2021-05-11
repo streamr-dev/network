@@ -1,5 +1,5 @@
 // From: https://stackoverflow.com/questions/10726909/random-alpha-numeric-string-in-javascript
-function randomString(length, chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+function randomString(length: number, chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
     let result = ''
     for (let i = length; i > 0; --i) {
         result += chars[Math.floor(Math.random() * chars.length)]
@@ -7,7 +7,7 @@ function randomString(length, chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDE
     return result
 }
 
-function genArray(size, elementFn) {
+function genArray(size: number, elementFn: () => any) {
     const arr = []
     for (let i=0; i < size; ++i) {
         arr.push(elementFn())
@@ -15,7 +15,7 @@ function genArray(size, elementFn) {
     return arr
 }
 
-module.exports = (rate) => {
+export const generate = (rate: number) => {
     setInterval(() => {
         console.info(JSON.stringify({
             someText: randomString(64),

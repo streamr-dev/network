@@ -1,9 +1,10 @@
-const StreamrClient = require('streamr-client')
+import { StreamrClient, StreamrClientOptions } from 'streamr-client'
 
-module.exports = function show(streamId, includePermissions, streamrOptions) {
+export const show = (streamId: string, includePermissions: boolean|undefined, streamrOptions: StreamrClientOptions) => {
     const options = { ...streamrOptions }
     const client = new StreamrClient(options)
     client.getStream(streamId).then(async (stream) => {
+        // @ts-expect-error
         const obj = stream.toObject()
         if (includePermissions) {
             obj.permissions = await stream.getPermissions()

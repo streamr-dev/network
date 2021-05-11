@@ -1,6 +1,6 @@
-const StreamrClient = require('streamr-client')
+import { StreamrClient, StreamrClientOptions } from 'streamr-client'
 
-module.exports = function subscribe(stream, partition, streamrOptions) {
+export const subscribe = (stream: string, partition: number, streamrOptions: StreamrClientOptions) => {
     const options = { ...streamrOptions }
     new StreamrClient(options).subscribe({
         stream,

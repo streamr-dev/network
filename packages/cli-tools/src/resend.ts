@@ -1,6 +1,6 @@
-const StreamrClient = require('streamr-client')
+import { StreamrClient, StreamrClientOptions } from 'streamr-client'
 
-module.exports = async function resend(streamId, resendOpts, streamrOptions) {
+export const resend = async (streamId: string, resendOpts: any, streamrOptions: StreamrClientOptions & { subscribe?: boolean }) => {
     const options = { ...streamrOptions }
     const client = new StreamrClient(options)
 
@@ -10,7 +10,7 @@ module.exports = async function resend(streamId, resendOpts, streamrOptions) {
             stream: streamId,
             resend: resendOpts
         }
-        const handler = (message) => {
+        const handler = (message: any) => {
             console.info(JSON.stringify(message))
         }
 
@@ -24,7 +24,7 @@ module.exports = async function resend(streamId, resendOpts, streamrOptions) {
         process.exit(1)
     }
 
-    sub.on('error', (err) => {
+    sub.on('error', (err: any) => {
         console.error(err)
         process.exit(1)
     })

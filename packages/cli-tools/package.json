@@ -1,16 +1,14 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "4.1.1",
+  "version": "5.0.0",
   "description": "Command line tools for Streamr.",
   "bin": {
-    "streamr": "bin/streamr.js",
-    "streamr-create": "bin/streamr-create.js",
-    "streamr-generate": "bin/streamr-generate.js",
-    "streamr-list": "bin/streamr-list.js",
-    "streamr-publish": "bin/streamr-publish.js",
-    "streamr-resend": "bin/streamr-resend.js",
-    "streamr-subscribe": "bin/streamr-subscribe.js",
-    "streamr-show": "bin/streamr-show.js"
+    "streamr": "dist/bin/streamr.js"
+  },
+  "scripts": {
+    "prepare": "tsc",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -29,9 +27,16 @@
   },
   "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
-    "commander": "^6.1.0",
+    "commander": "^7.2.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
-    "streamr-client": "5.0.0-beta.6"
+    "streamr-client": "^5.3.0-beta.0",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
+  },
+  "devDependencies": {
+    "@types/easy-table": "0.0.32",
+    "@types/event-stream": "^3.3.34",
+    "@types/node": "^14.14.37"
   }
 }
