@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
-import { Location, StreamIdAndPartition } from './identifiers'
+import { Location } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { startEndpoint } from './connection/WsEndpoint'
 import { Tracker } from './logic/Tracker'
@@ -12,8 +12,6 @@ import { RtcSignaller } from './logic/RtcSignaller'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import { NodeToNode } from './protocol/NodeToNode'
 import { NetworkNode } from './NetworkNode'
-import { Readable } from 'stream'
-import { StorageConfig } from './logic/StorageConfig'
 
 export {
     Location,
@@ -21,36 +19,6 @@ export {
     NetworkNode,
     Protocol,
     Tracker
-}
-
-export interface Storage {
-    requestLast(
-        streamId: string,
-        streamPartition: number,
-        numberLast: number
-    ): Readable
-
-    requestFrom(
-        streamId: string,
-        streamPartition: number,
-        fromTimestamp: number,
-        fromSequenceNumber: number,
-        publisherId: string | null,
-        msgChainId: string | null
-    ): Readable
-
-    requestRange(
-        streamId: string,
-        streamPartition: number,
-        fromTimestamp: number,
-        fromSequenceNumber: number,
-        toTimestamp: number,
-        toSequenceNumber: number,
-        publisherId: string | null,
-        msgChainId: string | null
-    ): Readable
-
-    store(msg: Protocol.MessageLayer.StreamMessage): void
 }
 
 export interface TrackerOptions {
@@ -75,7 +43,6 @@ export interface NetworkNodeOptions {
     id?: string,
     name?: string,
     location?: Location | null
-    storages?: Storage[],
     advertisedWsUrl?: string | null
     metricsContext?: MetricsContext
     pingInterval?: number,
@@ -84,10 +51,6 @@ export interface NetworkNodeOptions {
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
     stunUrls?: string[]
-}
-
-export interface StorageNodeOptions extends NetworkNodeOptions {
-    storageConfig: StorageConfig
 }
 
 export function startTracker({
@@ -136,19 +99,6 @@ export function startNetworkNode(opts: NetworkNodeOptions): Promise<NetworkNode>
     return startNode(opts, PeerInfo.newNode)
 }
 
-export async function startStorageNode(opts: StorageNodeOptions): Promise<NetworkNode> {
-    const node = await startNode(opts, PeerInfo.newStorage)
-    const storageConfig = opts.storageConfig
-    storageConfig.getStreams().forEach((stream) => {
-        node.subscribe(stream.id, stream.partition)
-    })
-    storageConfig.addChangeListener({
-        onStreamAdded: (stream: StreamIdAndPartition) => node.subscribe(stream.id, stream.partition),
-        onStreamRemoved: (stream: StreamIdAndPartition) => node.unsubscribe(stream.id, stream.partition)
-    })
-    return node
-}
-
 function startNode({
     host,
     port,
@@ -156,7 +106,6 @@ function startNode({
     name,
     location,
     trackers,
-    storages = [],
     advertisedWsUrl  = null,
     metricsContext = new MetricsContext(id),
     pingInterval,
@@ -188,7 +137,6 @@ function startNode({
                 nodeToNode
             },
             metricsContext,
-            storages,
             disconnectionWaitTime
         })
     })
