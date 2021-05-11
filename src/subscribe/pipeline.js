@@ -39,6 +39,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async (er
     const seenErrors = new WeakSet()
     const onErrorFn = options.onError ? options.onError : (error) => { throw error }
     const onError = async (err) => {
+        // don't handle same error multiple times
         if (seenErrors.has(err)) {
             return
         }

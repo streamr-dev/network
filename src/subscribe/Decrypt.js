@@ -46,6 +46,7 @@ export default function Decrypt(client, options = {}) {
                     throw new UnableToDecryptError(`Group key not found: ${streamMessage.groupKeyId}`, streamMessage)
                 }
                 await EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
+                requestKey.addNewKey(streamMessage)
             } catch (err) {
                 await onError(err, streamMessage)
             } finally {

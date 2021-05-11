@@ -272,7 +272,7 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
         }
     }
 
-    function handleErrBack(err: Error) {
+    function handleErrBack(err?: Error) {
         if (err) {
             reject(err)
         } else {

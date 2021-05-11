@@ -177,8 +177,7 @@ describe('MessagePipeline', () => {
         const onPipelineError = jest.fn((err) => {
             throw err
         })
-        const msgStream = new PushQueue([
-        ])
+        const msgStream = new PushQueue([])
         const p = MessagePipeline(client, {
             ...MOCK_INVALID_GROUP_KEY_MESSAGE.messageId,
             msgStream,
