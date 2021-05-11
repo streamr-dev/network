@@ -10,7 +10,7 @@ import config from './config'
 
 const TIMEOUT = 10 * 1000
 
-describeRepeats('decryption', () => {
+describeRepeats('Encryption Key Persistence', () => {
     let expectErrors = 0 // check no errors by default
     let errors: Error[] = []
     let onError = jest.fn()
