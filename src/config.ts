@@ -1,4 +1,4 @@
-import { AdapterConfig } from './Adapter';
+import { AdapterConfig } from './Adapter'
 
 export interface TrackerRegistry {
     registryAddress: string

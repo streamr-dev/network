@@ -25,7 +25,7 @@ export class Batch extends EventEmitter {
     logger: Logger
     private _maxSize: number
     private _maxRecords: number
-    private _maxRetries : number
+    private _maxRetries: number
     private _closeTimeout: number
     private _timeout: NodeJS.Timeout
     createdAt: number

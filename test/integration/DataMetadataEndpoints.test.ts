@@ -1,7 +1,7 @@
 import http from 'http'
 import { startTracker, startNetworkNode } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
-import ethers, { Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } from '../utils'
 import { Todo } from '../types'
 import StreamrClient, { Stream } from 'streamr-client'

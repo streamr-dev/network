@@ -1,6 +1,5 @@
 import { Stream } from './Stream'
 import { getLogger } from './helpers/logger'
-import { Todo } from './types'
 
 const logger = getLogger('streamr:StreamStateManager')
 

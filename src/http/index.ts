@@ -23,7 +23,7 @@ export interface HttpAdapterConfig extends AdapterConfig {
 export const start: AdapterStartFn<HttpAdapterConfig> = (
     { port, privateKeyFileName, certFileName }: HttpAdapterConfig, 
     { config, publisher, streamFetcher, metricsContext, cassandraStorage, storageConfig}: BrokerUtils
- ): () => Promise<any> => {
+): () => Promise<any> => {
     const app = express()
 
     // Add CORS headers

@@ -51,7 +51,7 @@ export class WebsocketServer extends EventEmitter {
             .addQueriedMetric('connections', () => this.connections.size)
             .addQueriedMetric('totalWebSocketBuffer', () => {
                 let totalBufferSize = 0
-                this.connections.forEach((connection: Todo, id: Todo) => {
+                this.connections.forEach((connection: Todo) => {
                     if (connection.socket) {
                         totalBufferSize += connection.socket.getBufferedAmount()
                     }
@@ -62,7 +62,7 @@ export class WebsocketServer extends EventEmitter {
                 const control: Todo = {}
                 const message: Todo = {}
                 const pairs: Todo = {}
-                this.connections.forEach((connection: Todo, id: Todo) => {
+                this.connections.forEach((connection: Todo) => {
                     const { controlLayerVersion, messageLayerVersion } = connection
                     const pairKey = controlLayerVersion + '->' + messageLayerVersion
                     if (control[controlLayerVersion] == null) {
@@ -166,7 +166,7 @@ export class WebsocketServer extends EventEmitter {
                     }
                 })
             },
-            message: (ws: Todo, message: Todo, isBinary: Todo) => {
+            message: (ws: Todo, message: Todo, _isBinary: Todo) => {
                 const connection = this.connections.get(ws.connectionId)
 
                 if (connection) {
@@ -219,7 +219,7 @@ export class WebsocketServer extends EventEmitter {
                     connection.evaluateBackPressure()
                 }
             },
-            close: (ws: Todo, code: Todo, message: Todo) => {
+            close: (ws: Todo, _code: Todo, _message: Todo) => {
                 const connection = this.connections.get(ws.connectionId)
                 if (connection) {
                     logger.debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
@@ -285,7 +285,7 @@ export class WebsocketServer extends EventEmitter {
 
         this.requestHandler.close()
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             try {
                 this.connections.forEach((connection: Todo) => connection.socket.close())
             } catch (e) {

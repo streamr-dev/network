@@ -74,6 +74,8 @@ describe('MQTT error handling', () => {
                     done()
                 })
             })
+        }).catch((err) => {
+            done(err ?? new Error('test fail'))
         })
     })
 
@@ -85,6 +87,8 @@ describe('MQTT error handling', () => {
                 mqttClient.end(true)
                 done()
             })
+        }).catch((err) => {
+            done(err ?? new Error('test fail'))
         })
     })
 
@@ -96,6 +100,8 @@ describe('MQTT error handling', () => {
                 mqttClient.end(true)
                 done()
             })
+        }).catch((err) => {
+            done(err ?? new Error('test fail'))
         })
     })
 
@@ -107,6 +113,8 @@ describe('MQTT error handling', () => {
                 mqttClient.end(true)
                 done()
             })
+        }).catch((err) => {
+            done(err ?? new Error('test fail'))
         })
     })
 
@@ -120,6 +128,8 @@ describe('MQTT error handling', () => {
             mqttClient.publish('NOT_VALID_STREAM', 'key: 1', {
                 qos: 1
             })
+        }).catch((err) => {
+            done(err ?? new Error('test fail'))
         })
     })
 })

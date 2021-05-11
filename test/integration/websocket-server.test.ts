@@ -30,6 +30,8 @@ describe('websocket server', () => {
             ws.on('error', (err) => {
                 done(err)
             })
+        }).catch((err) => {
+            done(err ?? new Error('test fail'))
         })
     })
 
@@ -53,6 +55,8 @@ describe('websocket server', () => {
             ws.on('error', (err) => {
                 done(err)
             })
+        }).catch((err) => {
+            done(err ?? new Error('test fail'))
         })
     })
 

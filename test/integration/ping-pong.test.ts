@@ -163,6 +163,8 @@ describe('ping-pong test between broker and clients', () => {
 
             // eslint-disable-next-line no-underscore-dangle
             websocketServer._pingConnections()
+        }).catch((err) => {
+            done(err)
         })
     })
 })

@@ -1,4 +1,4 @@
-import { Todo } from '../types';
+import { Todo } from '../types'
 
 export class FailedToPublishError extends Error {
     constructor(streamId: Todo, reason: Todo) {

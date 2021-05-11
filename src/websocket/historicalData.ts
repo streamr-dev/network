@@ -50,9 +50,9 @@ const getDataQueryEndpointUrl = (request: ResendFromRequest|ResendLastRequest|Re
                 toTimestamp: r.toMsgRef.timestamp,
                 toSequenceNumber: r.toMsgRef.sequenceNumber ?? MAX_SEQUENCE_NUMBER_VALUE,
                 publisherId: r.publisherId,
-                msgChainId: r.msgChainId 
+                msgChainId: r.msgChainId
             })
-        default: 
+        default:
             throw new Error('Assertion failed: request.type=' + request.type)
     }
 }
@@ -63,7 +63,7 @@ export const createResponse = async (
 ): Promise<HistoricalDataResponse> => {
     const storageNodeUrl = await storageNodeRegistry.getUrlByStreamId(request.streamId)
     const url = getDataQueryEndpointUrl(request, `${storageNodeUrl}/api/v1`)
-    const abortController = new AbortController();
+    const abortController = new AbortController()
     const response = await fetch(url, {
         headers: {
             Authorization: 'Bearer ' + request.sessionToken

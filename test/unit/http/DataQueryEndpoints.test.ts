@@ -1,14 +1,14 @@
 import { Protocol, MetricsContext } from 'streamr-network'
 import express from 'express'
 import request from 'supertest'
-import { toReadableStream} from 'streamr-test-utils'
+import { toReadableStream } from 'streamr-test-utils'
 import { router as restEndpointRouter, MIN_SEQUENCE_NUMBER_VALUE, MAX_SEQUENCE_NUMBER_VALUE } from '../../../src/http/DataQueryEndpoints'
 import { Storage } from '../../../src/storage/Storage'
 import { HttpError } from '../../../src/errors/HttpError'
 import { Todo } from '../../../src/types'
 import { PassThrough } from 'stream'
 
-const { ControlLayer, MessageLayer } = Protocol
+const { MessageLayer } = Protocol
 const { StreamMessage, MessageID } = MessageLayer
 
 const createEmptyStream = () => {

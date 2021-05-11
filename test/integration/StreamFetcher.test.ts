@@ -207,6 +207,8 @@ describe('StreamFetcher', () => {
                         ]).then(() => {
                             assert.equal(numOfRequests, 3 + 1)
                             done()
+                        }).catch(() => {
+                            done(new Error('test fail'))
                         })
                     })
                 })
@@ -311,6 +313,8 @@ describe('StreamFetcher', () => {
                         ]).then(() => {
                             assert.equal(numOfRequests, 3 + 1)
                             done()
+                        }).catch(() => {
+                            done(new Error('test fail'))
                         })
                     })
                 })
@@ -331,7 +335,7 @@ describe('StreamFetcher', () => {
 
             // Should reject promise
             streamFetcher.authenticate(streamId, 'session-token', 'stream_subscribe')
-                .catch((err: Todo) => {
+                .catch((_err: Todo) => {
                     done()
                 })
         })
@@ -347,11 +351,13 @@ describe('StreamFetcher', () => {
                 assert.equal(numOfRequests, 2)
                 assert.deepEqual(json, streamJson)
                 done()
+            }).catch(() => {
+                done(new Error('test fail'))
             })
         })
 
         it('fails with an invalid session token', (done) => {
-            streamFetcher.authenticate(streamId, 'nonExistingSessionToken', 'stream_subscribe').catch((err: Todo) => {
+            streamFetcher.authenticate(streamId, 'nonExistingSessionToken', 'stream_subscribe').catch((_err: Todo) => {
                 assert.equal(numOfRequests, 1)
                 done()
             })

@@ -1,6 +1,6 @@
 import { Todo } from '../types'
 import { Protocol } from 'streamr-network'
-import { ArrayMultimap } from '@teppeis/multimaps';
+import { ArrayMultimap } from '@teppeis/multimaps'
 const { ControlLayer, Utils } = Protocol
 import { HttpError } from '../errors/HttpError'
 import { FailedToPublishError } from '../errors/FailedToPublishError'
@@ -56,7 +56,7 @@ export class RequestHandler {
             if (this.ongoingResendResponses.size > 0) {
                 const now = Date.now()
                 let sum = 0
-                this.ongoingResendResponses.forEach(response => {
+                this.ongoingResendResponses.forEach((response) => {
                     const age = now - response.startTime
                     sum += age
                 })

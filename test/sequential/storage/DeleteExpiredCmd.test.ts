@@ -2,8 +2,8 @@ import { Wallet } from '@ethersproject/wallet'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import StreamrClient from 'streamr-client'
 import { BucketId } from '../../storage/Bucket'
-import { DeleteExpiredCmd } from "../../../src/storage/DeleteExpiredCmd";
-import { createMockUser, createClient, STREAMR_DOCKER_DEV_HOST } from "../../utils";
+import { DeleteExpiredCmd } from "../../../src/storage/DeleteExpiredCmd"
+import { createMockUser, createClient, STREAMR_DOCKER_DEV_HOST } from "../../utils"
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -82,7 +82,7 @@ describe('DeleteExpiredCmd', () => {
     })
 
     const daysArray = [0, 1, 2, 3]
-    daysArray.map(async (days, index) => {
+    daysArray.map(async (days) => {
         test(`keep in database ${days} days of data`, async () => {
             counter += 1
             const id = mockUser.address + '/DeleteExpiredCmd.test.js-' + counter

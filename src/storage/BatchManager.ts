@@ -164,7 +164,7 @@ export class BatchManager extends EventEmitter {
         batchesWithFiveOrMoreRetries: number,
         batchesWithTenOrMoreRetries: number,
         batchesWithHundredOrMoreRetries: number,
-    } {
+        } {
         const now = Date.now()
         const { batches, pendingBatches } = this
         const totalBatches = Object.values(batches).length + Object.values(pendingBatches).length

@@ -1,0 +1,7 @@
+{
+  "extends": "eslint-config-streamr-ts",
+  "rules": {
+    "@typescript-eslint/ban-ts-comment": "warn",
+    "no-underscore-dangle": "warn"
+  }
+}

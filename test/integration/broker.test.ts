@@ -2,7 +2,7 @@ import { startTracker } from 'streamr-network'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { startBroker, createMockUser, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, STREAMR_DOCKER_DEV_HOST } from '../utils'
+import { startBroker, createMockUser, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } from '../utils'
 import { Todo } from '../types'
 import StreamrClient from 'streamr-client'
 
@@ -388,7 +388,7 @@ describe('broker: end-to-end', () => {
         const client3Messages: Todo[] = []
 
         await Promise.all([
-                client1.resend({
+            client1.resend({
                 stream: freshStreamId,
                 resend: {
                     last: 2

@@ -1,5 +1,5 @@
 import { startTracker, startStorageNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForEvent } from 'streamr-test-utils'
 import ws from 'uWebSockets.js'
 import { WebsocketServer } from '../../src/websocket/WebsocketServer'
 import { createClient, StorageAssignmentEventManager, STREAMR_DOCKER_DEV_HOST } from '../utils'
@@ -37,6 +37,7 @@ class MockStorageData extends PassThrough {
     }
 
     async startProducer() {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const i of Array(MOCK_DATA_MESSAGE_COUNT)) {
             await wait(200)
             this.write(new StreamMessage({
@@ -44,7 +45,7 @@ class MockStorageData extends PassThrough {
                 content: {},
             }))
         }
-        this.end();
+        this.end()
     }
 }
 

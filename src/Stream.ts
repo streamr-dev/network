@@ -1,7 +1,4 @@
-import { getLogger } from './helpers/logger'
 import { Todo } from './types'
-
-const logger = getLogger('streamr:Stream')
 
 export class Stream {
 

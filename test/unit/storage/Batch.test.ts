@@ -101,15 +101,15 @@ describe('Batch', () => {
         batch.push(streamMessage as any)
 
         expect(batch.streamMessages.length).toEqual(1)
+        // @ts-expect-error access to private
         // eslint-disable-next-line no-underscore-dangle
-        // @ts-expect-error
         expect(batch._timeout._idleTimeout).toEqual(10)
 
         batch.clear()
 
         expect(batch.streamMessages.length).toEqual(0)
-        // eslint-disable-next-line no-underscore-dangle
         // @ts-expect-error
+        // eslint-disable-next-line no-underscore-dangle
         expect(batch._timeout._idleTimeout).toEqual(-1)
     })
 

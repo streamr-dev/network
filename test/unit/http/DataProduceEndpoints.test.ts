@@ -67,6 +67,7 @@ describe('DataProduceEndpoints', () => {
             messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', '1'),
             content: '{}',
         })
+        // eslint-disable-next-line promise/catch-or-return
         postRequest({
             query: {
                 ts: streamMessage.getTimestamp(),
@@ -88,6 +89,7 @@ describe('DataProduceEndpoints', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: 'signature',
         })
+        // eslint-disable-next-line promise/catch-or-return
         postRequest({
             query: {
                 ts: streamMessage.getTimestamp(),
@@ -107,6 +109,7 @@ describe('DataProduceEndpoints', () => {
             prevMsgRef: new MessageRef(325656645, 3),
             content: '{}',
         })
+        // eslint-disable-next-line promise/catch-or-return
         postRequest({
             query: {
                 ts: streamMessage.getTimestamp(),
