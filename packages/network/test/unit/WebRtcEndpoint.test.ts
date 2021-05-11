@@ -4,7 +4,8 @@ import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
-import { Event as EndpointEvent, WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 
 describe('WebRtcEndpoint', () => {
@@ -33,10 +34,10 @@ describe('WebRtcEndpoint', () => {
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
-        endpoint1 = new WebRtcEndpoint(peerInfo1, ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''))
-        endpoint2 = new WebRtcEndpoint(peerInfo2, ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''))
+        endpoint1 = new WebRtcEndpoint(peerInfo1, [],
+            new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), 5000)
+        endpoint2 = new WebRtcEndpoint(peerInfo2, [],
+            new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), 5000)
     })
 
     afterEach(async () => {
@@ -127,11 +128,67 @@ describe('WebRtcEndpoint', () => {
     })
 
     it('cannot send too large of a payload', (done) => {
-        const payload = new Array(1024 * 1024).fill('X').join('')
+        const payload = new Array(2 ** 21).fill('X').join('')
         endpoint1.connect('node-2', 'tracker')
         endpoint1.send('node-2', payload).catch((err) => {
-            expect(err.message).toMatch(/Dropping message due to size 1048576 exceeding the limit of \d+/)
+            expect(err.message).toMatch(/Dropping message due to size 2097152 exceeding the limit of \d+/)
             done()
         })
     })
+    it('can handle fast paced reconnects', async () => {
+        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
+        endpoint2.connect('node-1', 'tracker', false).catch(() => null)
+
+        await Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        ])
+
+        endpoint1.close('node-2', 'test')
+        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
+
+        await Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        ])
+    })
+
+    it('messages are delivered on temporary loss of connectivity', async () => {
+        const t = Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        ])
+
+        endpoint1.connect('node-2', 'tracker').catch(() => null)
+        endpoint2.connect('node-1', 'tracker').catch(() => null)
+
+        await t
+
+        let ep2NumOfReceivedMessages = 0
+
+        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep2NumOfReceivedMessages += 1
+        })
+
+        const sendFrom1To2 = () => {
+            endpoint1.send('node-2', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+
+        for (let i = 1; i <= 6; ++i) {
+            sendFrom1To2()
+            if (i === 3) {
+                // eslint-disable-next-line no-await-in-loop
+                await waitForCondition(() => ep2NumOfReceivedMessages === 3)
+                endpoint2.close('node-1', 'test')
+            }
+        }
+        await waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED)
+        endpoint1.connect('node-2', 'tracker')
+        endpoint2.connect('node-1', 'tracker')
+        await waitForCondition(() => (
+            ep2NumOfReceivedMessages === 6
+        ), 10000, undefined, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
+    }, 30 * 1000)
 })

@@ -42,6 +42,10 @@ export class OverlayTopology {
         return this.hasNode(nodeId) ? this.nodes[nodeId] : new Set<string>()
     }
 
+    getNumberOfNodes(): number {
+        return Object.keys(this.nodes).length
+    }
+
     hasNode(nodeId: string): boolean {
         return nodeId in this.nodes
     }

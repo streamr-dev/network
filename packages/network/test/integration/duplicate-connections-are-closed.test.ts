@@ -1,6 +1,7 @@
 import { waitForEvent } from 'streamr-test-utils'
 
-import { startEndpoint, DisconnectionReason, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { DisconnectionReason } from '../../src/connection/IWsEndpoint'
+import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 
 describe('duplicate connections are closed', () => {

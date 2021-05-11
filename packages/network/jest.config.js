@@ -18,7 +18,7 @@ module.exports = {
     testEnvironment: 'node',
 
     // Default timeout of a test in milliseconds
-    testTimeout: 10000,
+    testTimeout: 15000,
 
     // This option allows use of a custom test runner
     testRunner: 'jest-circus/runner'

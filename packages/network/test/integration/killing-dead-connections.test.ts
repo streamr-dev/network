@@ -1,7 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 import { waitForEvent } from 'streamr-test-utils'
 
-import { startEndpoint, Event, DisconnectionReason, DisconnectionCode, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { Event, DisconnectionReason, DisconnectionCode } from '../../src/connection/IWsEndpoint' 
+import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 
 const STATE_OPEN = 1

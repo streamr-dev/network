@@ -1,6 +1,6 @@
 import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js'
 import { MetricsContext } from './MetricsContext'
-import { addRttsToNodeConnections, getNodeConnections, getTopology } from '../logic/trackerSummaryUtils'
+import { addRttsToNodeConnections, getNodeConnections, getTopology, getStreamSizes } from '../logic/trackerSummaryUtils'
 import { Logger } from './Logger'
 import { Tracker } from '../logic/Tracker'
 
@@ -18,6 +18,26 @@ const respondWithError = (res: HttpResponse, req: HttpRequest, errorMessage: str
     res.end(JSON.stringify({
         errorMessage
     }))
+}
+
+const validateStreamId = (res: HttpResponse, req: HttpRequest): string | null => {
+    const streamId = decodeURIComponent(req.getParameter(0)).trim()
+    if (streamId.length === 0) {
+        staticLogger.warn('422 streamId must be a not empty string')
+        respondWithError(res, req, 'streamId cannot be empty')
+        return null
+    }
+    return streamId
+}
+
+const validatePartition = (res: HttpResponse, req: HttpRequest): number | null  => {
+    const partition = Number.parseInt(req.getParameter(1), 10)
+    if (!Number.isSafeInteger(partition) || partition < 0) {
+        staticLogger.warn(`422 partition must be a positive integer, askedPartition: ${partition}`)
+        respondWithError(res, req, `partition must be a positive integer (was ${partition})`)
+        return null
+    }
+    return partition
 }
 
 const cachedJsonGet = (wss: TemplatedApp, endpoint: string, maxAge: number, jsonFactory: () => any): TemplatedApp => {
@@ -45,10 +65,8 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
         res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())))
     })
     wss.get('/topology/:streamId/', (res, req) => {
-        const streamId = decodeURIComponent(req.getParameter(0)).trim()
-        if (streamId.length === 0) {
-            staticLogger.warn('422 streamId must be a not empty string')
-            respondWithError(res, req, 'streamId cannot be empty')
+        const streamId = validateStreamId(res, req)
+        if (streamId === null) {
             return
         }
 
@@ -57,17 +75,13 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
         res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, null)))
     })
     wss.get('/topology/:streamId/:partition/', (res, req) => {
-        const streamId = decodeURIComponent(req.getParameter(0)).trim()
-        if (streamId.length === 0) {
-            staticLogger.warn('422 streamId must be a not empty string')
-            respondWithError(res, req, 'streamId cannot be empty')
+        const streamId = validateStreamId(res, req)
+        if (streamId === null) {
             return
         }
 
-        const askedPartition = Number.parseInt(req.getParameter(1), 10)
-        if (!Number.isSafeInteger(askedPartition) || askedPartition < 0) {
-            staticLogger.warn(`422 partition must be a positive integer, askedPartition: ${askedPartition}`)
-            respondWithError(res, req, `partition must be a positive integer (was ${askedPartition})`)
+        const askedPartition = validatePartition(res, req)
+        if (askedPartition === null) {
             return
         }
 
@@ -107,5 +121,35 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
             staticLogger.debug('request to /metrics/')
             res.end(JSON.stringify(metrics))
         }
+    })
+    wss.get('/topology-size/', async (res, req) => {
+        staticLogger.debug('request to /topology-size/')
+        writeCorsHeaders(res, req)
+        res.end(JSON.stringify(getStreamSizes(tracker.getOverlayPerStream())))
+    })
+    wss.get('/topology-size/:streamId/', async (res, req) => {
+        const streamId = validateStreamId(res, req)
+        if (streamId === null) {
+            return
+        }
+        
+        staticLogger.debug(`request to /topology-size/${streamId}/`)
+        writeCorsHeaders(res, req)
+        res.end(JSON.stringify(getStreamSizes(tracker.getOverlayPerStream(), streamId, null)))
+    })
+    wss.get('/topology-size/:streamId/:partition/', async (res, req) => {
+        const streamId = validateStreamId(res, req)
+        if (streamId === null) {
+            return
+        }
+
+        const askedPartition = validatePartition(res, req)
+        if (askedPartition === null) {
+            return
+        }
+
+        staticLogger.debug(`request to /topology-size/${streamId}/${askedPartition}/`)
+        writeCorsHeaders(res, req)
+        res.end(JSON.stringify(getStreamSizes(tracker.getOverlayPerStream(), streamId, askedPartition)))
     })
 }

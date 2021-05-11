@@ -1,4 +1,5 @@
-import { WebRtcEndpoint, Event } from '../../src/connection/WebRtcEndpoint'
+import { Event } from '../../src/connection/IWebRtcEndpoint'
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'

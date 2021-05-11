@@ -2,7 +2,8 @@ import { Tracker } from '../../src/logic/Tracker'
 import WebSocket from 'ws'
 import { waitForEvent, wait } from 'streamr-test-utils'
 
-import { Event, DisconnectionCode, startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { Event, DisconnectionCode } from '../../src/connection/IWsEndpoint'
+import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker } from '../../src/composition'
 

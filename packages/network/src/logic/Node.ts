@@ -6,7 +6,7 @@ import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
 import { ResendHandler, Strategy } from '../resend/ResendHandler'
 import { ResendRequest, Status, StreamIdAndPartition } from '../identifiers'
-import { DisconnectionReason } from '../connection/WsEndpoint'
+import { DisconnectionReason } from '../connection/IWsEndpoint'
 import { proxyRequestStream } from '../resend/proxyRequestStream'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
@@ -111,7 +111,7 @@ export class Node extends EventEmitter {
         this.bufferTimeoutInMs = opts.bufferTimeoutInMs || 60 * 1000
         this.bufferMaxSize = opts.bufferMaxSize || 10000
         this.disconnectionWaitTime = opts.disconnectionWaitTime || 30 * 1000
-        this.nodeConnectTimeout = opts.nodeConnectTimeout || 2000
+        this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.instructionRetryInterval = opts.instructionRetryInterval || 60000
         this.started = new Date().toLocaleString()
         this.logger = new Logger(['logic', 'Node'], this.peerInfo)
@@ -302,12 +302,12 @@ export class Node extends EventEmitter {
         }
 
         // Log success / failures
-        const subscribeNodeIds: string[] = []
-        const unsubscribeNodeIds: string[] = []
+        const subscribedNodeIds: string[] = []
+        const unsubscribedNodeIds: string[] = []
         let failedInstructions = false
         results.forEach((res) => {
             if (res.status === 'fulfilled') {
-                subscribeNodeIds.push(res.value)
+                subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
                 this.logger.debug('failed to subscribe (or connect) to node, reason: %s', res.reason)
@@ -318,10 +318,13 @@ export class Node extends EventEmitter {
         }
 
         this.logger.debug('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
-            subscribeNodeIds, unsubscribeNodeIds, streamId, counter)
+            subscribedNodeIds, unsubscribedNodeIds, streamId, counter)
 
-        if (subscribeNodeIds.length !== nodeIds.length) {
+        if (subscribedNodeIds.length !== nodeIds.length) {
             this.logger.debug('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)',
+                streamId, counter)
+        } else {
+            this.logger.debug('Tracker instructions fulfilled (streamId=%s, counter=%d)',
                 streamId, counter)
         }
     }
@@ -383,52 +386,54 @@ export class Node extends EventEmitter {
 
         const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
 
-        if (subscribers.length) {
-            subscribers.forEach(async (subscriber) => {
-                try {
-                    await this.nodeToNode.sendData(subscriber, streamMessage)
-                    this.consecutiveDeliveryFailures[subscriber] = 0
-                } catch (e) {
-                    const serializedMsgId = streamMessage.getMessageID().serialize()
-                    this.logger.warn('failed to propagate %s (consecutiveFails=%d) to subscriber %s, reason: %s',
-                        serializedMsgId,
-                        this.consecutiveDeliveryFailures[subscriber] || 0,
-                        subscriber,
-                        e)
-                    this.emit(Event.MESSAGE_PROPAGATION_FAILED, streamMessage.getMessageID(), subscriber, e)
-
-                    // TODO: this is hack to get around the issue where `StreamStateManager` believes that we are
-                    //  connected to a neighbor whilst `WebRtcEndpoint` knows that we are not. In this situation, the
-                    //  Node will continuously attempt to propagate messages to the neighbor but will not actually ever
-                    //  (re-)attempt a connection unless as a side-effect of something else (e.g. subscribing to another
-                    //  stream, and the neighbor in question happens to get assigned to us via the other stream.)
-                    //
-                    // This hack basically counts consecutive delivery failures, and upon hitting 100 such failures,
-                    // decides to forcefully disconnect the neighbor.
-                    //
-                    // Ideally this hack would not be needed, but alas, it seems like with the current event-system,
-                    // we don't end up with an up-to-date state in the logic layer. I believe something like the
-                    // ConnectionManager-model could help us solve the issue for good.
-                    if (this.consecutiveDeliveryFailures[subscriber] === undefined) {
-                        this.consecutiveDeliveryFailures[subscriber] = 0
-                    }
-                    this.consecutiveDeliveryFailures[subscriber] += 1
-                    if (this.consecutiveDeliveryFailures[subscriber] >= 100) {
-                        this.logger.warn(`disconnecting from ${subscriber} due to 100 consecutive delivery failures`)
-                        this.onNodeDisconnected(subscriber) // force disconnect
-                        this.consecutiveDeliveryFailures[subscriber] = 0
-                    }
-                }
-            })
-
-            this.seenButNotPropagatedSet.delete(streamMessage)
-            this.emit(Event.MESSAGE_PROPAGATED, streamMessage)
-        } else {
-            this.logger.debug('put %j back to buffer because could not propagate to %d nodes or more',
-                streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
+        if (!subscribers.length) {
+            this.logger.debug('put back to buffer because could not propagate to %d nodes or more: %j',
+                MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION, streamMessage.messageId)
+            this.logger.debug('streams: %j', this.streams)
             this.seenButNotPropagatedSet.add(streamMessage)
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
+            return
         }
+
+        subscribers.forEach(async (subscriber) => {
+            try {
+                await this.nodeToNode.sendData(subscriber, streamMessage)
+                this.consecutiveDeliveryFailures[subscriber] = 0
+            } catch (e) {
+                const serializedMsgId = streamMessage.getMessageID().serialize()
+                this.logger.warn('failed to propagate %s (consecutiveFails=%d) to subscriber %s, reason: %s',
+                    serializedMsgId,
+                    this.consecutiveDeliveryFailures[subscriber] || 0,
+                    subscriber,
+                    e)
+                this.emit(Event.MESSAGE_PROPAGATION_FAILED, streamMessage.getMessageID(), subscriber, e)
+
+                // TODO: this is hack to get around the issue where `StreamStateManager` believes that we are
+                //  connected to a neighbor whilst `WebRtcEndpoint` knows that we are not. In this situation, the
+                //  Node will continuously attempt to propagate messages to the neighbor but will not actually ever
+                //  (re-)attempt a connection unless as a side-effect of something else (e.g. subscribing to another
+                //  stream, and the neighbor in question happens to get assigned to us via the other stream.)
+                //
+                // This hack basically counts consecutive delivery failures, and upon hitting 100 such failures,
+                // decides to forcefully disconnect the neighbor.
+                //
+                // Ideally this hack would not be needed, but alas, it seems like with the current event-system,
+                // we don't end up with an up-to-date state in the logic layer. I believe something like the
+                // ConnectionManager-model could help us solve the issue for good.
+                if (this.consecutiveDeliveryFailures[subscriber] === undefined) {
+                    this.consecutiveDeliveryFailures[subscriber] = 0
+                }
+                this.consecutiveDeliveryFailures[subscriber] += 1
+                if (this.consecutiveDeliveryFailures[subscriber] >= 100) {
+                    this.logger.warn(`disconnecting from ${subscriber} due to 100 consecutive delivery failures`)
+                    this.onNodeDisconnected(subscriber) // force disconnect
+                    this.consecutiveDeliveryFailures[subscriber] = 0
+                }
+            }
+        })
+
+        this.seenButNotPropagatedSet.delete(streamMessage)
+        this.emit(Event.MESSAGE_PROPAGATED, streamMessage)
     }
 
     stop(): Promise<unknown> {

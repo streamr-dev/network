@@ -54,7 +54,8 @@ startNetworkNode({
 })
     .then((publisher) => {
         logger.info('started publisher id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
-            id, name, program.opts().port, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().intervalInMs, program.opts().metrics)
+            id, name, program.opts().port, program.opts().ip, program.opts().trackers.join(', '),
+            program.opts().streamId, program.opts().intervalInMs, program.opts().metrics)
 
         publisher.start()
 

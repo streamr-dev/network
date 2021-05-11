@@ -194,19 +194,19 @@ export class Tracker extends EventEmitter {
                 const instructions = this.overlayPerStream[streamKey].formInstructions(node, forceGenerate)
                 Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
                     this.metrics.record('instructionsSent', 1)
+                    const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamKey)
                     try {
-                        const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamKey)
                         await this.trackerServer.sendInstruction(
                             nodeId,
                             StreamIdAndPartition.fromKey(streamKey),
                             newNeighbors,
                             counterValue
                         )
-                        this.logger.debug('instruction %j (counter=%d, stream=%s, requestId=%s) sent to node %s',
-                            newNeighbors, counterValue, streamKey, nodeId)
-                    } catch (e) {
-                        this.logger.error(`Failed to send instructions (stream=%s) to node %s, reason: %s`,
-                            streamKey, nodeId, e)
+                        this.logger.debug('Instruction %o sent to node %o',
+                            newNeighbors, { counterValue, streamKey, nodeId })
+                    } catch (err) {
+                        this.logger.error(`Failed to send instructions %o to node %o, reason: %s`,
+                            newNeighbors, { counterValue, streamKey, nodeId }, err)
                     }
                 })
             }
