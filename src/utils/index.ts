@@ -503,19 +503,20 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     if (timeOutMs > 0) {
         setTimeout(() => { timeout = true }, timeOutMs)
     }
-
     // Promise wrapped condition function works for normal functions just the same as Promises
-    let wasDone = await Promise.resolve().then(condition)
-    while (!wasDone) {
-        if (timeout) {
-            if (failedMsgFn) {
-                err.message += ` ${failedMsgFn()}`
-            }
-            throw err
+    let wasDone
+    while (!wasDone && !timeout) { // eslint-disable-line no-await-in-loop
+        wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
+        if (!wasDone && !timeout) {
+            await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
         }
 
-        await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
-        wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
+    }
+    if (timeout) {
+        if (failedMsgFn) {
+            err.message += ` ${failedMsgFn()}`
+        }
+        throw err
     }
     return wasDone
 }
