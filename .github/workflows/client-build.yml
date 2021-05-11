@@ -70,8 +70,8 @@ jobs:
       - name: npm run test-exports
         run: npm run test-exports
 
-  browser:
-    name: Test Browser using Node 14.x
+  browser-realtime:
+    name: Test Browser Realtime
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -88,15 +88,41 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
-
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - uses: nick-invision/retry@v2
-        name: Run Test
+        name: Run Realtime Test
         with:
           max_attempts: 3
           timeout_minutes: 3
           retry_on: error
-          command: cd packages/client && npm run test-browser
+          command: cd packages/client && npm run test-browser-realtime
+
+  browser-resend:
+    name: Test Browser Realtime + Resend
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - uses: actions/download-artifact@v2
+        with:
+          name: client-build
+          path: packages/client/dist
+      - name: npm ci
+        run: npm ci
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+      - uses: nick-invision/retry@v2
+        name: Run Resend Test
+        with:
+          max_attempts: 3
+          timeout_minutes: 3
+          retry_on: error
+          command: cd packages/client && npm run test-browser-resend
 
   benchmarks:
     name: Test Benchmark using Node ${{ matrix.node-version }}
@@ -118,7 +144,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: npm ci
         run: npm ci
       - name: benchmarks
@@ -152,6 +178,8 @@ jobs:
       NUM_MESSAGES: 20
       TEST_NAME: ${{ matrix.test-name }}
       CONFIG_NAME: ${{ matrix.config-name }}
+      LOG_LEVEL_JAVA_CLIENT: 'debug'
+      LOG_LEVEL_PUBLISHER_JS: 'debug'
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14
@@ -165,7 +193,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: npm ci
         run: npm ci
       - name: npm link
@@ -187,7 +215,18 @@ jobs:
       - uses: nick-invision/retry@v2
         name: run-client-testing
         with:
-          max_attempts: 2
+          max_attempts: 5
           timeout_minutes: 15
           retry_on: error
           command: cd streamr-client-testing && DEBUG='' java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v1
+        with:
+          dest: 'packages/client/logs'
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@master
+        with:
+          name: docker-logs-${{ github.job }}-${{ github.run_number }}-${{ github.run_id }}
+          path: packages/client/logs
