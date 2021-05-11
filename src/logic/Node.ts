@@ -6,7 +6,7 @@ import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
 import { ResendHandler, Strategy } from '../resend/ResendHandler'
 import { ResendRequest, Status, StreamIdAndPartition } from '../identifiers'
-import { DisconnectionReason } from '../connection/WsEndpoint'
+import { DisconnectionReason } from '../connection/IWsEndpoint'
 import { proxyRequestStream } from '../resend/proxyRequestStream'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
@@ -387,7 +387,7 @@ export class Node extends EventEmitter {
         const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
 
         if (!subscribers.length) {
-            this.logger.warn('put back to buffer because could not propagate to %d nodes or more: %j',
+            this.logger.debug('put back to buffer because could not propagate to %d nodes or more: %j',
                 MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION, streamMessage.messageId)
             this.logger.debug('streams: %j', this.streams)
             this.seenButNotPropagatedSet.add(streamMessage)

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
-import { WsEndpoint, Event as WsEndpointEvent } from '../connection/WsEndpoint'
+import { IWsEndpoint, Event as WsEndpointEvent } from '../connection/IWsEndpoint'
 import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
@@ -31,10 +31,10 @@ export interface TrackerNode {
 }
 
 export class TrackerNode extends EventEmitter {
-    private readonly endpoint: WsEndpoint
+    private readonly endpoint: IWsEndpoint
     private readonly logger: Logger
 
-    constructor(endpoint: WsEndpoint) {
+    constructor(endpoint: IWsEndpoint) {
         super()
         this.endpoint = endpoint
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))

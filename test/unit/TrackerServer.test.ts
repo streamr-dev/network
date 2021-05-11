@@ -1,5 +1,6 @@
 import { TrackerServer } from '../../src/protocol/TrackerServer'
-import { Event, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { Event } from '../../src/connection/IWsEndpoint'
+import { WsEndpoint } from '../../src/connection/WsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 
 describe(TrackerServer, () => {

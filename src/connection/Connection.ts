@@ -301,6 +301,9 @@ export class Connection extends ConnectionEmitter {
             }
         }
 
+        if (this.flushRef) {
+            clearImmediate(this.flushRef)
+        }
         if (this.flushTimeoutRef) {
             clearTimeout(this.flushTimeoutRef)
         }
@@ -443,12 +446,11 @@ export class Connection extends ConnectionEmitter {
         this.paused = false
         this.dataChannelEmitter = DataChannelEmitter(dataChannel)
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
-        if (this.isOffering) {
-            this.dataChannelEmitter.on('open', () => {
-                this.logger.debug('dc.onOpen')
-                this.openDataChannel(dataChannel)
-            })
-        }
+        this.dataChannelEmitter.on('open', () => {
+            this.logger.debug('dc.onOpen')
+            this.openDataChannel(dataChannel)
+        })
+
         this.dataChannelEmitter.on('closed', () => {
             this.logger.debug('dc.onClosed')
             this.close()

@@ -47,6 +47,7 @@ describe('test starting startWebSocketServer', () => {
             ws.on('error', (err) => {
                 done(err)
             })
+            return true
         }).catch((err) => done(err))
 
     })
@@ -76,6 +77,7 @@ describe('test starting startWebSocketServer', () => {
             ws.on('error', (err) => {
                 done(err)
             })
+            return true
         }).catch((err) => done(err))
 
     })
@@ -148,6 +150,7 @@ describe('test starting startWebSocketServer', () => {
             ws.on('open', () => {
                 endpoint.send('clientId', 'Hello, World!')
             })
+            return true
         }).catch((err) => done(err))
     })
 })

@@ -51,7 +51,11 @@ export function getNodeConnections(nodes: readonly string[], overlayPerStream: O
     return result
 }
 
-export function addRttsToNodeConnections(nodeId: string, neighbors: Array<string>, connectionRtts: OverlayConnectionRtts): { [key: string]: { neighborId: string, rtt: number | null }[] } {
+export function addRttsToNodeConnections(
+    nodeId: string,
+    neighbors: Array<string>,
+    connectionRtts: OverlayConnectionRtts
+): { [key: string]: { neighborId: string, rtt: number | null }[] } {
     return {
         [nodeId]: neighbors.map((neighborId) => {
             return {
@@ -62,7 +66,12 @@ export function addRttsToNodeConnections(nodeId: string, neighbors: Array<string
     }
 }
 
-function getNodeToNodeConnectionRtts(nodeOne: string, nodeTwo: string, nodeOneRtts: { [key: string]: number }, nodeTwoRtts: { [key: string]: number }): number | null {
+function getNodeToNodeConnectionRtts(
+    nodeOne: string,
+    nodeTwo: string,
+    nodeOneRtts: { [key: string]: number },
+    nodeTwoRtts: { [key: string]: number }
+): number | null {
     try {
         return nodeOneRtts[nodeTwo] || nodeTwoRtts[nodeOne] || null
     } catch (err) {
