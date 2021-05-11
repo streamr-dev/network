@@ -8,6 +8,7 @@ import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src'
 import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const createClient = (opts = {}) => new StreamrClient({
     ...config.clientOptions,
@@ -35,13 +36,17 @@ describe('resend/reconnect', () => {
             name: uid('resends')
         })
 
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+    }, 10000)
+
+    beforeEach(async () => {
         publishTestMessages = getPublishTestMessages(client, {
             streamId: stream.id,
             waitForLast: true,
         })
 
         publishedMessages = await publishTestMessages(MAX_MESSAGES)
-    }, 10 * 1000)
+    }, 10000)
 
     afterEach(async () => {
         await client.disconnect()
@@ -51,6 +56,7 @@ describe('resend/reconnect', () => {
         let shouldDisconnect = false
         let sub: Subscription
         let messages: any[] = []
+
         beforeEach(async () => {
             const done = Defer()
             messages = []

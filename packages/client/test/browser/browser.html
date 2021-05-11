@@ -20,6 +20,10 @@
         },
         url,
         restUrl,
+        storageNode: {
+            address: '0xde1112f631486CfC759A50196853011528bC5FA0',
+            url: 'http://10.200.10.1:8891'
+        },
         autoConnect: false,
         autoDisconnect: false
     })
@@ -57,6 +61,7 @@ $('#create').on('click', async () => {
         name: streamName,
         requireEncryptedData: true,
     })
+    await stream.addToStorageNode(client.options.storageNode.address)
     $('#result').html(stream.name)
 })
 

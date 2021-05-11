@@ -12,7 +12,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
 import { StreamrClient } from '../StreamrClient'
 
-const log = debug('StreamrClient::DataUnion')
+const log = debug('StreamrClient::Contracts')
 
 function validateAddress(name: string, address: EthereumAddress) {
     if (!isAddress(address)) {
@@ -137,7 +137,7 @@ export class Contracts {
     }
 
     // move signatures from sidechain to mainnet
-    async transportSignaturesForMessage(messageHash: string) {
+    async transportSignaturesForMessage(messageHash: string): Promise<ContractReceipt | null> {
         const sidechainAmb = await this.getSidechainAmb()
         const message = await sidechainAmb.message(messageHash)
         const messageId = '0x' + message.substr(2, 64)
@@ -149,7 +149,7 @@ export class Contracts {
 
         const [vArray, rArray, sArray]: Todo = [[], [], []]
         signatures.forEach((signature: string, i) => {
-            log(`  Signature ${i}: ${signature} (len=${signature.length}=${signature.length / 2 - 1} bytes)`)
+            log(`  Signature ${i}: ${signature} (len=${signature.length} = ${signature.length / 2 - 1} bytes)`)
             rArray.push(signature.substr(2, 64))
             sArray.push(signature.substr(66, 64))
             vArray.push(signature.substr(130, 2))
@@ -171,7 +171,7 @@ export class Contracts {
             const alreadyProcessed = await mainnetAmb.relayedMessages(messageId)
             if (alreadyProcessed) {
                 log(`WARNING: Tried to transport signatures but they have already been transported (Message ${messageId} has already been processed)`)
-                log('This could happen if freeWithdraw=false (attempt self-service), but bridge actually paid before your client')
+                log('This could happen if bridge paid for transport before your client.')
                 return null
             }
 
@@ -216,45 +216,6 @@ export class Contracts {
         const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures)
         const trAMB = await txAMB.wait()
         return trAMB
-    }
-
-    async transportSignaturesForTransaction(tr: ContractReceipt, options: { pollingIntervalMs?: number, retryTimeoutMs?: number } = {}) {
-        const {
-            pollingIntervalMs = 1000,
-            retryTimeoutMs = 60000,
-        } = options
-        log(`Got receipt, filtering UserRequestForSignature from ${tr.events!.length} events...`)
-        // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData);
-        const sigEventArgsArray = tr.events!.filter((e: Todo) => e.event === 'UserRequestForSignature').map((e: Todo) => e.args)
-        if (sigEventArgsArray.length < 1) {
-            throw new Error("No UserRequestForSignature events emitted from withdraw transaction, can't transport withdraw to mainnet")
-        }
-
-        /* eslint-disable no-await-in-loop */
-        // eslint-disable-next-line no-restricted-syntax
-        for (const eventArgs of sigEventArgsArray) {
-            const messageId = eventArgs[0]
-            const messageHash = keccak256(eventArgs[1])
-
-            log(`Waiting until sidechain AMB has collected required signatures for hash=${messageHash}...`)
-            await until(async () => this.requiredSignaturesHaveBeenCollected(messageHash), pollingIntervalMs, retryTimeoutMs)
-
-            log(`Checking mainnet AMB hasn't already processed messageId=${messageId}`)
-            const mainnetAmb = await this.getMainnetAmb()
-            const alreadySent = await mainnetAmb.messageCallStatus(messageId)
-            const failAddress = await mainnetAmb.failedMessageSender(messageId)
-
-            // zero address means no failed messages
-            if (alreadySent || failAddress !== '0x0000000000000000000000000000000000000000') {
-                log(`WARNING: Mainnet bridge has already processed withdraw messageId=${messageId}`)
-                log('This could happen if freeWithdraw=false (attempt self-service), but bridge actually paid before your client')
-                continue
-            }
-
-            log(`Transporting signatures for hash=${messageHash}`)
-            await this.transportSignaturesForMessage(messageHash)
-        }
-        /* eslint-enable no-await-in-loop */
     }
 
     async deployDataUnion({

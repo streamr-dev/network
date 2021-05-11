@@ -189,12 +189,14 @@ function getCreateStreamMessage(client) {
         rotateGroupKey(maybeStreamId) {
             return encrypt.rotateGroupKey(maybeStreamId)
         },
+        rekey(maybeStreamId) {
+            return encrypt.rekey(maybeStreamId)
+        },
         startKeyExchange() {
             return encrypt.start()
         },
         clear() {
             computeStreamPartition.clear()
-            getMsgChainer.clear()
             queue.clear()
         }
     })
@@ -316,6 +318,9 @@ export default function Publisher(client) {
         },
         setNextGroupKey(streamId, newKey) {
             return createStreamMessage.setNextGroupKey(streamId, newKey)
+        },
+        rekey(streamId) {
+            return createStreamMessage.rekey(streamId)
         }
     }
 }

@@ -1,11 +1,15 @@
-import { getEndpointUrl } from '../utils'
+import fetch from 'node-fetch'
+import { getAddress } from '@ethersproject/address'
+import { getEndpointUrl, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
-import StorageNode from './StorageNode'
+import { StorageNode } from './StorageNode'
 import { StreamrClient } from '../StreamrClient'
+import { EthereumAddress } from '../types'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
-export type StreamPartDefinition = string | { streamId?: string, streamPartition?: number, id?: string, partition?: number, stream?: Stream|string }
+export type StreamPartDefinitionOptions = { streamId?: string, streamPartition?: number, id?: string, partition?: number, stream?: Stream|string }
+export type StreamPartDefinition = string | StreamPartDefinitionOptions
 
 export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
 
@@ -220,20 +224,44 @@ export class Stream {
         await this.update()
     }
 
-    async addToStorageNode(address: string) {
+    async addToStorageNode(node: StorageNode|EthereumAddress, { timeout = 30000 }: { timeout: number } = { timeout: 30000 }) {
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
+        // currently we support only one storage node
+        // -> we can validate that the given address is that address
+        // -> remove this comparison when we start to support multiple storage nodes
+        if (getAddress(address) !== this._client.options.storageNode.address) {
+            throw new Error('Unknown storage node: ' + address)
+        }
         await authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
-            this._client.session,
-            {
+            this._client.session, {
                 method: 'POST',
                 body: JSON.stringify({
                     address
                 })
             },
         )
+        // wait for propagation: the storage node sees the database change in E&E and
+        // is ready to store the any stream data which we publish
+        const POLL_INTERVAL = 500
+        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, POLL_INTERVAL,
+            () => `Propagation timeout when adding stream to a storage node: ${this.id}`)
     }
 
-    async removeFromStorageNode(address: string) {
+    private async isStreamStoredInStorageNode(streamId: string) {
+        const url = `${this._client.options.storageNode.url}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
+        const response = await fetch(url)
+        if (response.status === 200) {
+            return true
+        }
+        if (response.status === 404) { // eslint-disable-line padding-line-between-statements
+            return false
+        }
+        throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
+    }
+
+    async removeFromStorageNode(node: StorageNode|EthereumAddress) {
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
         await authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes', address),
             this._client.session,

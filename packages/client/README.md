@@ -98,6 +98,10 @@ const stream = await client.getOrCreateStream({
     name: 'My awesome stream created via the API',
 })
 console.log(`Stream ${stream.id} has been created!`)
+
+// Optional: to enable historical data resends, add the stream to a storage node
+await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+
 // Do something with the stream, for example call stream.publish(message)
 ```
 
@@ -360,11 +364,11 @@ const dataUnion = client.getDataUnion(dataUnionAddress)
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
 These DataUnion-specific options can be given to `new StreamrClient` options:
 
-| Property                            | Default                                                | Description                                                                                                      |
-| :---------------------------------- | :----------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
-| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge                          |
-| dataUnion.freeWithdraw              | false                                                  | true = someone else pays for the gas when transporting the withdraw tx to mainnet |
-|                                     |                                                        | false = client does the transport as self-service and pays the mainnet gas costs |
+| Property                            | Default                                                | Description                                                                                |
+| :---------------------------------- | :----------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge    |
+| dataUnion.payForTransport           | true                                                   | true = client does the transport as self-service and pays the mainnet gas costs            |
+|                                     |                                                        | false = someone else pays for the gas when transporting the withdraw tx to mainnet         |
 -->
 
 ### Admin Functions
@@ -375,8 +379,10 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 | setAdminFee(newFeeFraction)       | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
 | addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
 | removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
-| withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt | Send all withdrawable earnings to the member's address |
-| withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
+| withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
+| withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
+
+`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case. 
 
 Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
 
@@ -399,14 +405,17 @@ const receipt = await dataUnion.addMembers([
 
 ### Member functions
 
-| Name                                                              | Returns             | Description                                                                 |
-| :---------------------------------------------------------------- | :------------------ | :-------------------------------------------------------------------------- |
-| join(\[secret])                                                   | JoinRequest         | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
-| isMember(memberAddress)                                           | boolean             |                                                                             |
-| withdrawAll(\[[options](#withdraw-options)\])                     | Transaction receipt | Withdraw funds from Data Union                                              |
-| withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\]) | Transaction receipt | Donate/move your earnings to recipientAddress instead of your memberAddress |
-| signWithdrawAllTo(recipientAddress)                               | Signature (string)  | Signature that can be used to withdraw all available tokens to given recipientAddress        |
-| signWithdrawAmountTo(recipientAddress, amountTokenWei)            | Signature (string)  | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
+| Name                                                                  | Returns                   | Description                                                                 |
+| :-------------------------------------------------------------------- | :------------------------ | :-------------------------------------------------------------------------- |
+| join(\[secret])                                                       | JoinRequest               | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
+| isMember(memberAddress)                                               | boolean                   |                                                                             |
+| withdrawAll(\[[options](#withdraw-options)\])                         | Transaction receipt `*`   | Withdraw funds from Data Union                                              |
+| withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\])     | Transaction receipt `*`   | Donate/move your earnings to recipientAddress instead of your memberAddress |
+| signWithdrawAllTo(recipientAddress)                                   | Signature (string)        | Signature that can be used to withdraw all available tokens to given recipientAddress        |
+| signWithdrawAmountTo(recipientAddress, amountTokenWei)                | Signature (string)        | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
+| transportMessage(messageHash[, pollingIntervalMs[, retryTimeoutMs]])  | Transaction receipt       | Send the mainnet transaction to withdraw tokens from the sidechain |
+
+`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.
 
 Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
 
@@ -432,6 +441,15 @@ const client = new StreamrClient({
 
 const dataUnion = client.getDataUnion(dataUnionAddress)
 const receipt = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature)
+```
+
+The `messageHash` argument to `transportMessage` will come from the withdraw function with the specific options. The following is equivalent to the above withdraw line:
+```js
+const messageHash = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature, {
+    payForTransport: false,
+    waitUntilTransportIsComplete: false,
+}) // only pay for sidechain gas
+const receipt = await dataUnion.transportMessage(messageHash) // only pay for mainnet gas
 ```
 
 ### Query functions
@@ -460,13 +478,29 @@ const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 
 The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
 
-| Name              | Default               | Description                                                                         |
-| :---------------- | :-------------------- | :---------------------------------------------------------------------------------- |
-| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address) |
-| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed               |
-| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                           |
+| Name              | Default               | Description                                                                           |
+| :---------------- | :-------------------- | :----------------------------------------------------------------------------------   |
+| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)   |
+| payForTransport   | true                  | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge |
+| waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                |
+| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                 |
+| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                             |
 
-These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low), but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
+These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low),
+but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
+
+The return values from the withdraw functions also depend on the options.
+
+If `sendToMainnet: false`, other options don't apply at all, and **sidechain transaction receipt** is returned as soon as the withdraw transaction is done. This should be fairly quick in the sidechain.
+
+The use cases corresponding to the different combinations of the boolean flags:
+
+| `transport` | `wait`  | Returns | Effect |
+| :---------- | :------ | :------ | :----- |
+| `true`      | `true`  | Transaction receipt | *(default)* Self-service bridge to mainnet, client pays for mainnet gas |
+| `true`      | `false` | Transaction receipt | Self-service bridge to mainnet (but **skip** the wait that double-checks the withdraw succeeded and tokens arrived to destination) |
+| `false`     | `true`  | `null`              | Someone else pays for the mainnet gas automatically, e.g. the bridge operator (in this case the transaction receipt can't be returned) |
+| `false`     | `false` | AMB message hash    | Someone else pays for the mainnet gas, but we need to give them the message hash first | 
 
 ### Deployment options
 

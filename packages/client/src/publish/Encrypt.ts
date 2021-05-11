@@ -39,8 +39,9 @@ export default function Encrypt(client: StreamrClient) {
         if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return
         }
-        const groupKey = await getPublisherKeyExchange().useGroupKey(stream.id)
-        await EncryptionUtil.encryptStreamMessage(streamMessage, groupKey)
+
+        const [groupKey, nextGroupKey] = await getPublisherKeyExchange().useGroupKey(stream.id)
+        await EncryptionUtil.encryptStreamMessage(streamMessage, groupKey, nextGroupKey)
     }
 
     return Object.assign(encrypt, {
@@ -49,6 +50,9 @@ export default function Encrypt(client: StreamrClient) {
         },
         rotateGroupKey(...args: Parameters<PublisherKeyExhangeAPI['rotateGroupKey']>) {
             return getPublisherKeyExchange().rotateGroupKey(...args)
+        },
+        rekey(...args: Parameters<PublisherKeyExhangeAPI['rekey']>) {
+            return getPublisherKeyExchange().rekey(...args)
         },
         start() {
             return getPublisherKeyExchange().start()

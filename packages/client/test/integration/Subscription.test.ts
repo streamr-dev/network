@@ -6,6 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src/subscribe'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 const createClient = (opts = {}) => new StreamrClient({
     ...config.clientOptions,
@@ -72,6 +73,7 @@ describe('Subscription', () => {
         stream = await client.createStream({
             name: uid('stream')
         })
+        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         await client.connect()
     })
 
@@ -90,7 +92,6 @@ describe('Subscription', () => {
         it('fires events in correct order 1', async () => {
             const subscriptionEvents = await createMonitoredSubscription()
             await waitForEvent(subscription, 'resent')
-            // @ts-expect-error
             await client.unsubscribe(stream)
             expect(subscriptionEvents).toEqual([
                 'resent',
@@ -102,7 +103,6 @@ describe('Subscription', () => {
             const subscriptionEvents = await createMonitoredSubscription({
                 resend: undefined,
             })
-            // @ts-expect-error
             await client.unsubscribe(stream)
             expect(subscriptionEvents).toEqual([
                 'unsubscribed',

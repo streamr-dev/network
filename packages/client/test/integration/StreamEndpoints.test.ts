@@ -1,6 +1,7 @@
 import { ethers, Wallet } from 'ethers'
 import { NotFoundError, ValidationError } from '../../src/rest/authFetch'
 import { Stream, StreamOperation } from '../../src/stream'
+import { StorageNode } from '../../src/stream/StorageNode'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { uid } from '../utils'
@@ -231,27 +232,29 @@ function TestStreamEndpoints(getName: () => string) {
 
     describe('Storage node assignment', () => {
         it('add', async () => {
-            const storageNodeAddress = ethers.Wallet.createRandom().address
+            const storageNode = StorageNode.STREAMR_DOCKER_DEV
             const stream = await client.createStream()
-            await stream.addToStorageNode(storageNodeAddress)
+            await stream.addToStorageNode(storageNode)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
-            expect(storageNodes[0].getAddress()).toBe(storageNodeAddress)
-            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            expect(storedStreamParts.length).toBe(1)
-            expect(storedStreamParts[0].getStreamId()).toBe(stream.id)
-            expect(storedStreamParts[0].getStreamPartition()).toBe(0)
+            expect(storageNodes[0].getAddress()).toBe(storageNode.getAddress())
+            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
+            expect(storedStreamParts.some(
+                (sp) => (sp.getStreamId() === stream.id) && (sp.getStreamPartition() === 0)
+            )).toBeTruthy()
         })
 
         it('remove', async () => {
-            const storageNodeAddress = ethers.Wallet.createRandom().address
+            const storageNode = StorageNode.STREAMR_DOCKER_DEV
             const stream = await client.createStream()
-            await stream.addToStorageNode(storageNodeAddress)
-            await stream.removeFromStorageNode(storageNodeAddress)
+            await stream.addToStorageNode(storageNode)
+            await stream.removeFromStorageNode(storageNode)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
-            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            expect(storedStreamParts).toHaveLength(0)
+            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
+            expect(storedStreamParts.some(
+                (sp) => (sp.getStreamId() === stream.id)
+            )).toBeFalsy()
         })
     })
 }

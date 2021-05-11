@@ -13,6 +13,7 @@ import { BytesLike } from '@ethersproject/bytes'
 import { isAddress } from '@ethersproject/address'
 import has from 'lodash/has'
 import get from 'lodash/get'
+import { StorageNode } from './stream/StorageNode'
 
 export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
 
@@ -65,12 +66,16 @@ export type StrictStreamrClientOptions = {
          * otherwise the client does the transport as self-service and pays the mainnet gas costs
          */
         minimumWithdrawTokenWei: BigNumber|number|string
-        freeWithdraw: boolean
+        payForTransport: boolean
         factoryMainnetAddress: EthereumAddress
         factorySidechainAddress: EthereumAddress
         templateMainnetAddress: EthereumAddress
         templateSidechainAddress: EthereumAddress
     },
+    storageNode: {
+        address: EthereumAddress
+        url: string
+    }
     cache: {
         maxSize: number,
         maxAge: number
@@ -133,11 +138,15 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
     tokenSidechainAddress: '0xE4a2620edE1058D61BEe5F45F6414314fdf10548',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
-        freeWithdraw: false,
+        payForTransport: true,
         factoryMainnetAddress: '0x7d55f9981d4E10A193314E001b96f72FCc901e40',
         factorySidechainAddress: '0x1b55587Beea0b5Bc96Bb2ADa56bD692870522e9f',
         templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',
         templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
+    },
+    storageNode: {
+        address: StorageNode.STREAMR_GERMANY.getAddress(),
+        url: 'https://corea1.streamr.network:8001'
     },
     cache: {
         maxSize: 10000,
@@ -160,7 +169,8 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
         'dataUnion.factoryMainnetAddress',
         'dataUnion.factorySidechainAddress',
         'dataUnion.templateMainnetAddress',
-        'dataUnion.templateSidechainAddress'
+        'dataUnion.templateSidechainAddress',
+        'storageNode.address'
     ])
 
     const options: StrictStreamrClientOptions = {
@@ -174,7 +184,7 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
             ...STREAM_CLIENT_DEFAULTS.cache,
             ...opts.cache,
         }
-        // NOTE: sidechain is not merged with the defaults
+        // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
 
     const parts = options.url!.split('?')

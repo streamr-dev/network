@@ -17,7 +17,8 @@ describe('Config', () => {
             'dataUnion.factoryMainnetAddress',
             'dataUnion.factorySidechainAddress',
             'dataUnion.templateMainnetAddress',
-            'dataUnion.templateSidechainAddress'
+            'dataUnion.templateSidechainAddress',
+            'storageNode.address'
         ]
         for (const propertyPath of propertyPaths) {
             it(propertyPath, () => {

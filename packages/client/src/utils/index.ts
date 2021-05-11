@@ -272,7 +272,7 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
         }
     }
 
-    function handleErrBack(err: Error) {
+    function handleErrBack(err?: Error) {
         if (err) {
             reject(err)
         } else {
@@ -345,13 +345,17 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
 
 export function pOrderedResolve(fn: F.Function) {
     const queue = pLimit(1)
-    return async (...args: Parameters<typeof fn>) => {
+    return Object.assign(async (...args: Parameters<typeof fn>) => {
         const d = Defer()
         const done = queue(() => d)
         // eslint-disable-next-line promise/catch-or-return
         await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
         return done
-    }
+    }, {
+        clear() {
+            queue.clearQueue()
+        }
+    })
 }
 
 /**
@@ -360,7 +364,11 @@ export function pOrderedResolve(fn: F.Function) {
 
 export function pLimitFn(fn: F.Function, limit = 1) {
     const queue = pLimit(limit)
-    return (...args: unknown[]) => queue(() => fn(...args))
+    return Object.assign((...args: unknown[]) => queue(() => fn(...args)), {
+        clear() {
+            queue.clearQueue()
+        }
+    })
 }
 
 /**
@@ -486,7 +494,8 @@ export async function sleep(ms: number = 0) {
  * @param timeOutMs - stop waiting after that many milliseconds, -1 for disable
  * @param pollingIntervalMs - check condition between so many milliseconds
  */
-export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100) {
+export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
+    const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
     let timeout = false
     if (timeOutMs > 0) {
         setTimeout(() => { timeout = true }, timeOutMs)
@@ -495,8 +504,12 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     // Promise wrapped condition function works for normal functions just the same as Promises
     while (!await Promise.resolve().then(condition)) { // eslint-disable-line no-await-in-loop
         if (timeout) {
-            throw new Error(`Timeout after ${timeOutMs} milliseconds`)
+            if (failedMsgFn) {
+                err.message += ` ${failedMsgFn()}`
+            }
+            throw err
         }
+
         await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
     }
     return condition()
