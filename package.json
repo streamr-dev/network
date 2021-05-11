@@ -1,5 +1,6 @@
 {
     "name": "streamr-monorepo",
+    "private": true,
     "workspaces": [
         "./packages/*"
     ],
@@ -7,7 +8,10 @@
         "preprepare": "husky install",
         "prepare": "npx workspaces-run --order-by-deps -- npm run prepublish --if-present",
         "test-unit": "npx workspaces-run --order-by-deps -- npm run test-unit --if-present",
-        "bootstrap": "npx workspaces-run --order-by-deps -- npm install"
+        "bootstrap": "npx workspaces-run --order-by-deps -- npm install",
+        "postbootstrap": "npm run prepare",
+        "postpostbootstrap": "npm install",
+        "unbootstrap": "npx workspaces-run --order-by-deps -- rm -Rf node_modules;"
     },
     "dependencies": {
         "husky": "^5.2.0",
