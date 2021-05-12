@@ -125,15 +125,9 @@ export const startBroker = async (config: Config) => {
     }
 
     // Set up reporting to Streamr stream
-    let client: StreamrClient|undefined
+    let client: StreamrClient | undefined
+    let legacyStreamId: string | undefined
 
-    const streamIds: Todo = {
-        metricsStreamId: null,
-        secStreamId: null,
-        minStreamId: null,
-        hourStreamId: null,
-        dayStreamId: null
-    }
     if (config.reporting.streamr || (config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.enabled)) {
         client = new StreamrClient({
             auth: {
@@ -143,51 +137,16 @@ export const startBroker = async (config: Config) => {
             restUrl: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.httpUrl || undefined) : undefined
         })
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const createMetricsStream = async (path: string) => {
-            // @ts-expect-error
-            const metricsStream = await client.getOrCreateStream({
-                name: `Metrics ${path} for broker ${brokerAddress}`,
-                id: brokerAddress + path
-            })
-
-            // @ts-expect-error
-            await metricsStream.grantPermission('stream_get', null)
-            // @ts-expect-error
-            await metricsStream.grantPermission('stream_subscribe', null)
-            return metricsStream.id
-        }
-
         if (config.reporting.streamr && config.reporting.streamr.streamId) {
             const { streamId } = config.reporting.streamr
-
-            // await createMetricsStream(streamId)
-            streamIds.metricsStreamId = streamId
-
+            legacyStreamId = streamId
             logger.info(`Starting StreamrClient reporting with streamId: ${streamId}`)
         } else {
             logger.info('StreamrClient reporting disabled')
         }
-
-        if (config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.enabled) {
-            // streamIds.secStreamId = await createMetricsStream('/streamr/node/metrics/sec')
-            // streamIds.minStreamId = await createMetricsStream('/streamr/node/metrics/min')
-            // streamIds.hourStreamId = await createMetricsStream('/streamr/node/metrics/hour')
-            // streamIds.dayStreamId = await createMetricsStream('/streamr/node/metrics/day')
-            logger.info('Starting perNodeMetrics -- Not implemented yet')
-        } else {
-            logger.info('perNodeMetrics reporting disabled')
-        }
     } else {
         logger.info('StreamrClient and perNodeMetrics disabled')
     }
-
-    const volumeLogger = new VolumeLogger(
-        config.reporting.intervalInSeconds,
-        metricsContext,
-        client,
-        streamIds
-    )
 
     // Validator only needs public information, so use unauthenticated client for that
     const unauthenticatedClient = new StreamrClient({
@@ -225,6 +184,26 @@ export const startBroker = async (config: Config) => {
             return () => {}
         }
     })
+
+    let reportingIntervals
+    let storageNodeAddress
+
+    if (config.reporting && config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.intervals) {
+        reportingIntervals = config.reporting.perNodeMetrics.intervals
+        storageNodeAddress = config.reporting.perNodeMetrics.storageNode
+    }
+
+    // Start logging facilities
+    const volumeLogger = new VolumeLogger(
+        config.reporting.intervalInSeconds,
+        metricsContext,
+        client,
+        legacyStreamId,
+        brokerAddress,
+        reportingIntervals,
+        storageNodeAddress
+    )
+    await volumeLogger.start()
 
     logger.info(`Network node '${networkNodeName}' running on ${config.network.hostname}:${config.network.port}`)
     logger.info(`Ethereum address ${brokerAddress}`)
