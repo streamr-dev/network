@@ -34,7 +34,6 @@ jobs:
             ${{ runner.os }}-
       - run: npm ci
       - run: npm run eslint
-      - run: npm run build --if-present
       - run: npm run test-unit
   test-integration:
     name: Integration Tests
@@ -58,7 +57,6 @@ jobs:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - run: npm ci
-      - run: npm run build --if-present
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
