@@ -39,7 +39,10 @@ jobs:
         with:
           node-version: "14.x"
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: npm run eslint
         run: npm run eslint
 
@@ -57,7 +60,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: test-unit
         timeout-minutes: 7
         run: npm run test-unit

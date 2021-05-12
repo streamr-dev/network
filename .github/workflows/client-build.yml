@@ -42,7 +42,10 @@ jobs:
         with:
           node-version: "14.x"
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: npm run build
         run: npm run build
       - uses: actions/upload-artifact@v2
@@ -195,7 +198,10 @@ jobs:
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: npm link
         run: cd dist && npm link
       - uses: actions/checkout@v2

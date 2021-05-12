@@ -47,7 +47,11 @@ jobs:
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
-      - run: npm ci
+      - name: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-network --include-dependencies
       - run: npm run eslint
       - run: npm run build --if-present
       - run: npm run test-unit
@@ -76,9 +80,10 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - name: npm ci
+        working-directory: './'
         run: |
           npm ci
-          npm run build --if-present
+          npx lerna bootstrap --scope streamr-network --include-dependencies
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword
