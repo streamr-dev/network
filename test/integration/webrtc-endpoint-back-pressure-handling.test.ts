@@ -8,6 +8,7 @@ import { startTracker } from '../../src/composition'
 import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { wait } from 'streamr-test-utils'
+import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
@@ -39,13 +40,15 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             peerInfo1,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, trackerNode1),
-            new MetricsContext('ep1')
+            new MetricsContext('ep1'),
+            new NegotiatedProtocolVersions(peerInfo1)
         )
         ep2 = new WebRtcEndpoint(
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo2, trackerNode2),
-            new MetricsContext('ep')
+            new MetricsContext('ep'),
+            new NegotiatedProtocolVersions(peerInfo2)
         )
         await ep1.connect('ep2', 'tracker')
     })

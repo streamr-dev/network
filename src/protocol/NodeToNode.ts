@@ -71,7 +71,8 @@ export class NodeToNode extends EventEmitter {
     }
 
     send<T>(receiverNodeId: string, message: T & ControlLayer.ControlMessage): Promise<T> {
-        return this.endpoint.send(receiverNodeId, message.serialize()).then(() => message)
+        const [controlLayerVersion, messageLayerVersion] = this.getNegotiatedProtocolVersionsOnNode(receiverNodeId)
+        return this.endpoint.send(receiverNodeId, message.serialize(controlLayerVersion, messageLayerVersion)).then(() => message)
     }
 
     disconnectFromNode(receiverNodeId: string, reason: string): void {
@@ -126,5 +127,13 @@ export class NodeToNode extends EventEmitter {
 
     getRtts(): Readonly<Rtts> {
         return this.endpoint.getRtts()
+    }
+
+    getNegotiatedProtocolVersionsOnNode(peerId: string): [number, number] {
+        const messageLayerVersion = this.endpoint.getNegotiatedMessageLayerProtocolVersionOnNode(peerId)
+            || this.endpoint.getDefaultMessageLayerProtocolVersion()
+        const controlLayerVersion = this.endpoint.getNegotiatedControlLayerProtocolVersionOnNode(peerId)
+            || this.endpoint.getDefaultControlLayerProtocolVersion()
+        return [controlLayerVersion, messageLayerVersion]
     }
 }
