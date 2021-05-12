@@ -1,4 +1,4 @@
-import {PeerInfo, PeerType} from './PeerInfo'
+import { PeerInfo } from './PeerInfo'
 
 export class NotFoundInPeerBookError extends Error {
     constructor(msg: string) {
@@ -8,57 +8,36 @@ export class NotFoundInPeerBookError extends Error {
 }
 
 export class PeerBook {
-    private readonly idToAddress: { [key: string]: string } = {}
-    private readonly addressToId: { [key: string]: string } = {}
-    private readonly addressToType: { [key: string]: PeerType } = {}
-    private readonly addressToName: { [key: string]: string | null } = {}
+    private readonly peerInfos: { [key: string]: PeerInfo }
+    constructor() {
+        this.peerInfos = {}
+    }
 
     add(peerAddress: string, peerInfo: PeerInfo): void {
-        const { peerId, peerType, peerName } = peerInfo
-        this.idToAddress[peerId] = peerAddress
-        this.addressToId[peerAddress] = peerId
-        this.addressToType[peerAddress] = peerType
-        this.addressToName[peerAddress] = peerName
+        this.peerInfos[peerAddress] = peerInfo
     }
 
     getPeerInfo(peerAddress: string): PeerInfo | null | never {
-        if (this.hasAddress(peerAddress)) {
-            return new PeerInfo(
-                this.addressToId[peerAddress],
-                this.addressToType[peerAddress],
-                this.addressToName[peerAddress]
-            )
-        }
-        return null
+        return this.peerInfos[peerAddress] || null
     }
 
     remove(peerAddress: string): void {
-        const peerId = this.addressToId[peerAddress]
-        delete this.idToAddress[peerId]
-        delete this.addressToId[peerAddress]
-        delete this.addressToType[peerAddress]
-        delete this.addressToName[peerAddress]
+        delete this.peerInfos[peerAddress]
     }
 
     getAddress(peerId: string): string | never {
-        if (!this.hasPeerId(peerId)) {
-            throw new NotFoundInPeerBookError(`Id ${peerId} not found in peer book`)
+        const address = Object.keys(this.peerInfos).find((p) => this.peerInfos[p].peerId === peerId)
+        if (!address) {
+            throw new NotFoundInPeerBookError(`PeerId ${peerId} not found in peer book`)
         }
-        return this.idToAddress[peerId]
+        return address
     }
 
     getPeerId(address: string): string | never {
-        if (!this.hasAddress(address)) {
+        const peerInfo = this.peerInfos[address]
+        if (!peerInfo) {
             throw new NotFoundInPeerBookError(`Address ${address} not found in peer book`)
         }
-        return this.addressToId[address]
-    }
-
-    hasAddress(address: string): boolean {
-        return this.addressToId[address] != null
-    }
-
-    hasPeerId(peerId: string): boolean {
-        return this.idToAddress[peerId] != null
+        return peerInfo.peerId
     }
 }

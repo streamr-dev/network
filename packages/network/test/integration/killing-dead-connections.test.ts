@@ -3,7 +3,7 @@ import { waitForEvent } from 'streamr-test-utils'
 
 import { Event, DisconnectionReason, DisconnectionCode } from '../../src/connection/IWsEndpoint' 
 import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
-import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
+import { PeerInfo } from '../../src/connection/PeerInfo'
 
 const STATE_OPEN = 1
 const STATE_CLOSING = 2
@@ -12,12 +12,6 @@ describe('check and kill dead connections', () => {
     let node1: WsEndpoint
     let node2: WsEndpoint
 
-    const defaultLocation = {
-        latitude: null,
-        longitude: null,
-        country: null,
-        city: null
-    }
     beforeEach(async () => {
         node1 = await startEndpoint('127.0.0.1', 43971, PeerInfo.newNode('node1'), null)
         node2 = await startEndpoint('127.0.0.1', 43972, PeerInfo.newNode('node2'), null)
@@ -55,9 +49,8 @@ describe('check and kill dead connections', () => {
         // @ts-expect-error private method
         expect(node1.onClose).toBeCalledTimes(1)
         // @ts-expect-error private method
-        expect(node1.onClose).toBeCalledWith('ws://127.0.0.1:43972', {
-            peerId: 'node2', peerName: null, peerType: 'node', location: defaultLocation
-        }, DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
+        expect(node1.onClose).toBeCalledWith('ws://127.0.0.1:43972', PeerInfo.newNode('node2'),
+            DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
 
         // @ts-expect-error private method
         node1.onClose.mockRestore()
@@ -65,6 +58,6 @@ describe('check and kill dead connections', () => {
         node1.pingConnections()
 
         const [peerInfo] = await waitForEvent(node1, Event.PEER_DISCONNECTED)
-        expect(peerInfo).toEqual(new PeerInfo('node2', PeerType.Node, null, defaultLocation))
+        expect(peerInfo).toEqual(PeerInfo.newNode('node2'))
     })
 })

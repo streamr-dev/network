@@ -135,6 +135,8 @@ describe('test starting startWebSocketServer', () => {
                     headers: {
                         'streamr-peer-id': 'clientId',
                         'streamr-peer-type': 'node',
+                        'control-layer-versions': "2",
+                        'message-layer-versions': "32"
                     }
                 })
             ws.on('message', async (msg) => {

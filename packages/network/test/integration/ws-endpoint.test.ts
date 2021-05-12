@@ -111,6 +111,8 @@ describe('ws-endpoint', () => {
                     headers: {
                         'streamr-peer-id': 'peerId',
                         'streamr-peer-type': 'typiii',
+                        'control-layer-versions': "2",
+                        'message-layer-versions': "32"
                     }
                 })
             close = await waitForEvent(ws, 'close')

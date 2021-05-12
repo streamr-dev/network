@@ -383,7 +383,6 @@ export class Node extends EventEmitter {
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
         )
-
         const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
 
         if (!subscribers.length) {
@@ -394,7 +393,6 @@ export class Node extends EventEmitter {
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
             return
         }
-
         subscribers.forEach(async (subscriber) => {
             try {
                 await this.nodeToNode.sendData(subscriber, streamMessage)
