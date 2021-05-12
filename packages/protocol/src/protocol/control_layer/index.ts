@@ -13,6 +13,7 @@ import UnicastMessage from "./unicast_message/UnicastMessage"
 import UnsubscribeRequest from "./unsubscribe_request/UnsubscribeRequest"
 import UnsubscribeResponse from "./unsubscribe_response/UnsubscribeResponse"
 import ControlMessage from "./ControlMessage"
+import { ControlMessageType } from "./ControlMessage"
 
 // Serializers are imported because of their side effects: they statically register themselves to the factory class
 import './broadcast_message/BroadcastMessageSerializerV1'
@@ -59,5 +60,6 @@ export {
     UnicastMessage,
     UnsubscribeRequest,
     UnsubscribeResponse,
-    ControlMessage
+    ControlMessage,
+    ControlMessageType
 }
