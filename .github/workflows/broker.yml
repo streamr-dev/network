@@ -38,7 +38,6 @@ jobs:
           npm ci
           npx lerna bootstrap --scope streamr-broker --include-dependencies
       - run: npm run eslint
-      - run: npm run build --if-present
       - run: npm run test-unit
   test-integration:
     name: Integration Tests
@@ -66,7 +65,6 @@ jobs:
         run: |
           npm ci
           npx lerna bootstrap --scope streamr-broker --include-dependencies
-      - run: npm run build --if-present
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
