@@ -170,7 +170,6 @@ export class StorageAssignmentEventManager {
                 address: storageNodeAddress
             }),
             headers: {
-                // @ts-expect-error
                 // eslint-disable-next-line quote-props
                 'Authorization': 'Bearer ' + await client.session.getSessionToken(),
                 'Content-Type': 'application/json',
