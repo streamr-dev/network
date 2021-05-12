@@ -92,6 +92,9 @@ module.exports = (env, argv) => {
             libraryExport: 'StreamrClient', // This fixes the above.
         },
         resolve: {
+            modules: [
+                'node_modules', // without this symlinked protocol won't find own dependencies
+            ],
             alias: {
                 stream: 'readable-stream',
                 util: 'util',
