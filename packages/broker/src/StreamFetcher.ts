@@ -79,7 +79,6 @@ export class StreamFetcher {
             autoConnect: false
         })
 
-        // @ts-expect-error session is marked internal
         return client.session.getSessionToken()
     }
 
