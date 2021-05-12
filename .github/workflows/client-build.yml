@@ -55,7 +55,10 @@ jobs:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: npm run build
         run: npm run build
       - uses: actions/upload-artifact@v2
@@ -86,7 +89,10 @@ jobs:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: test-types
         run: npm run test-types
       - name: npm run test-exports
@@ -115,7 +121,10 @@ jobs:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -151,7 +160,10 @@ jobs:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -195,7 +207,10 @@ jobs:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: benchmarks
         run: npm run benchmarks > benchmarks.txt
       - uses: actions/upload-artifact@v2
@@ -253,7 +268,10 @@ jobs:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - name: npm ci
-        run: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: npm link
         run: cd dist && npm link
       - uses: actions/checkout@v2
