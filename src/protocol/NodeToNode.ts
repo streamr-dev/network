@@ -50,7 +50,7 @@ export class NodeToNode extends EventEmitter {
         endpoint.on(WebRtcEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
         endpoint.on(WebRtcEndpointEvent.LOW_BACK_PRESSURE, (peerInfo) => this.onLowBackPressure(peerInfo))
         endpoint.on(WebRtcEndpointEvent.HIGH_BACK_PRESSURE, (peerInfo) => this.onHighBackPressure(peerInfo))
-        this.logger = new Logger(['protocol', 'NodeToNode'], endpoint.getPeerInfo())
+        this.logger = new Logger(module)
     }
 
     connectToNode(

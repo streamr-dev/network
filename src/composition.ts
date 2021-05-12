@@ -14,6 +14,8 @@ import { NodeToNode } from './protocol/NodeToNode'
 import { NetworkNode } from './NetworkNode'
 import { Readable } from 'stream'
 import { StorageConfig } from './logic/StorageConfig'
+import { Logger } from './helpers/Logger'
+import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
 
 export {
@@ -21,7 +23,9 @@ export {
     MetricsContext,
     NetworkNode,
     Protocol,
-    Tracker
+    Tracker,
+    Logger,
+    NameDirectory
 }
 
 export interface Storage {

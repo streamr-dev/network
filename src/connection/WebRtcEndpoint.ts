@@ -14,8 +14,8 @@ import {
     RtcSignaller
 } from '../logic/RtcSignaller'
 import { Rtts } from '../identifiers'
-
 import { MessageQueue } from './MessageQueue'
+import { NameDirectory } from '../NameDirectory'
 import { NegotiatedProtocolVersions } from "./NegotiatedProtocolVersions"
 
 class WebRtcError extends Error {
@@ -63,7 +63,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.messageQueues = {}
         this.newConnectionTimeout = newConnectionTimeout
         this.pingInterval = pingInterval
-        this.logger = new Logger(['connection', 'WebRtcEndpoint'], peerInfo)
+        this.logger = new Logger(module)
         this.bufferThresholdLow = webrtcDatachannelBufferThresholdLow
         this.bufferThresholdHigh = webrtcDatachannelBufferThresholdHigh
         this.maxMessageSize = maxMessageSize
@@ -155,7 +155,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         if (this.connections[targetPeerId]) {
             const connection = this.connections[targetPeerId]
             const lastState = connection.getLastState()
-            this.logger.debug('Already connection for %s. state: %s', targetPeerId, lastState)
+            this.logger.debug('Already connection for %s. state: %s', NameDirectory.getName(targetPeerId), lastState)
             if (['connected', 'failed', 'closed'].includes(lastState as string)) {
                 return Promise.resolve(targetPeerId)
             }
@@ -170,7 +170,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
 
         const offering = force ? true : isOffering
-        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.logger, this.maxMessageSize)
+        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.maxMessageSize)
         const connection = new Connection({
             selfId: this.peerInfo.peerId,
             targetPeerId,
@@ -265,7 +265,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     close(receiverNodeId: string, reason: string): void {
-        this.logger.debug('close connection to %s due to %s', receiverNodeId, reason)
+        this.logger.debug('close connection to %s due to %s', NameDirectory.getName(receiverNodeId), reason)
         const connection = this.connections[receiverNodeId]
         if (connection) {
             delete this.connections[receiverNodeId]

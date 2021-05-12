@@ -56,7 +56,7 @@ export class RtcSignaller {
         this.remoteCandidateListener = null
         this.connectListener = null
         this.errorListener = null
-        this.logger = new Logger(['RtcSignaller'], peerInfo)
+        this.logger = new Logger(module)
 
         trackerNode.on(TrackerNodeEvent.RELAY_MESSAGE_RECEIVED, (relayMessage: RelayMessage, source: string) => {
             const { originator, targetNode, subType } = relayMessage

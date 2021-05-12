@@ -64,9 +64,9 @@ export class MessageQueue<M> {
     private readonly logger: Logger
     private readonly maxSize: number
 
-    constructor(parentLogger: Logger, maxSize = 5000) {
+    constructor(maxSize = 5000) {
         this.heap = new Heap<QueueItem<M>>((a, b) => a.no - b.no)
-        this.logger = parentLogger.createChildLogger(['MessageQueue'])
+        this.logger = new Logger(module)
         this.maxSize = maxSize
     }
 

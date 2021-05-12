@@ -12,9 +12,9 @@ export class LocationManager {
     }
     private readonly logger: Logger
 
-    constructor(parentLogger: Logger) {
+    constructor() {
         this.nodeLocations = {}
-        this.logger = parentLogger.createChildLogger(['LocationManager'])
+        this.logger = new Logger(module)
     }
 
     getAllNodeLocations(): Readonly<{[key: string]: Location}> {

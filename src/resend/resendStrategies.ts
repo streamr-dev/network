@@ -9,8 +9,7 @@ import { Logger } from '../helpers/Logger'
 import { Strategy } from './ResendHandler'
 import { Storage } from '../composition'
 
-// TODO: move to use peerId-based logger for better traceability
-const staticLogger = new Logger(['resend', 'resendStrategies'])
+const staticLogger = new Logger(module)
 
 function toUnicastMessage(request: ResendRequest): Transform {
     return new Transform({
