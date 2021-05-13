@@ -7,6 +7,9 @@ import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { format } from 'util'
+
+const logOut = (...args: any[]) => process.stdout.write(format(...args) + '\n')
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -152,7 +155,7 @@ describe('WebRtcEndpoint', () => {
         ])
     })
 
-    it('messages are delivered on temporary loss of connectivity', async () => {
+    it.only('messages are delivered on temporary loss of connectivity', async () => {
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
@@ -167,7 +170,10 @@ describe('WebRtcEndpoint', () => {
         })
 
         const sendFrom1To2 = async (msg: any) => {
-            return endpoint1.send('node-2', JSON.stringify(msg))
+            return endpoint1.send('node-2', JSON.stringify(msg)).then((v) => {
+                logOut('sent', { msg, v })
+                return v
+            })
         }
         const sendTasks = []
         const NUM_MESSAGES = 6
