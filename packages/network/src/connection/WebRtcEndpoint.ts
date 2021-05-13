@@ -14,8 +14,9 @@ import {
     RtcSignaller
 } from '../logic/RtcSignaller'
 import { Rtts } from '../identifiers'
-
 import { MessageQueue } from './MessageQueue'
+import { NameDirectory } from '../NameDirectory'
+import { NegotiatedProtocolVersions } from "./NegotiatedProtocolVersions"
 
 class WebRtcError extends Error {
     constructor(msg: string) {
@@ -29,6 +30,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly peerInfo: PeerInfo
     private readonly stunUrls: string[]
     private readonly rtcSignaller: RtcSignaller
+    private readonly negotiatedProtocolVersions: NegotiatedProtocolVersions
     private connections: { [key: string]: Connection }
     private messageQueues: { [key: string]: MessageQueue<string> }
     private readonly newConnectionTimeout: number
@@ -45,6 +47,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         stunUrls: string[],
         rtcSignaller: RtcSignaller,
         metricsContext: MetricsContext,
+        negotiatedProtocolVersions: NegotiatedProtocolVersions,
         newConnectionTimeout = 15000,
         pingInterval = 2 * 1000,
         webrtcDatachannelBufferThresholdLow = 2 ** 15,
@@ -55,11 +58,12 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.peerInfo = peerInfo
         this.stunUrls = stunUrls
         this.rtcSignaller = rtcSignaller
+        this.negotiatedProtocolVersions = negotiatedProtocolVersions
         this.connections = {}
         this.messageQueues = {}
         this.newConnectionTimeout = newConnectionTimeout
         this.pingInterval = pingInterval
-        this.logger = new Logger(['connection', 'WebRtcEndpoint'], peerInfo)
+        this.logger = new Logger(module)
         this.bufferThresholdLow = webrtcDatachannelBufferThresholdLow
         this.bufferThresholdHigh = webrtcDatachannelBufferThresholdHigh
         this.maxMessageSize = maxMessageSize
@@ -82,6 +86,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             if (connection) {
                 connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
                 connection.setRemoteDescription(description, 'answer' as DescriptionType.Answer)
+                this.attemptProtocolVersionValidation(connection)
             } else {
                 this.logger.warn('unexpected rtcAnswer from %s: %s', peerId, description)
             }
@@ -150,7 +155,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         if (this.connections[targetPeerId]) {
             const connection = this.connections[targetPeerId]
             const lastState = connection.getLastState()
-            this.logger.debug('Already connection for %s. state: %s', targetPeerId, lastState)
+            this.logger.debug('Already connection for %s. state: %s', NameDirectory.getName(targetPeerId), lastState)
             if (['connected', 'failed', 'closed'].includes(lastState as string)) {
                 return Promise.resolve(targetPeerId)
             }
@@ -165,7 +170,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
 
         const offering = force ? true : isOffering
-        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.logger, this.maxMessageSize)
+        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.maxMessageSize)
         const connection = new Connection({
             selfId: this.peerInfo.peerId,
             targetPeerId,
@@ -180,6 +185,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
         connection.once('localDescription', (type, description) => {
             this.rtcSignaller.onLocalDescription(routerId, connection.getPeerId(), type, description)
+            this.attemptProtocolVersionValidation(connection)
         })
         connection.once('localCandidate', (candidate, mid) => {
             this.rtcSignaller.onLocalCandidate(routerId, connection.getPeerId(), candidate, mid)
@@ -201,7 +207,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 // connection.
                 delete this.connections[targetPeerId]
             }
-
+            this.negotiatedProtocolVersions.removeNegotiatedProtocolVersion(targetPeerId)
             this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo())
             connection.removeAllListeners()
             this.metrics.record('close', 1)
@@ -245,10 +251,23 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.metrics.record('msgOutSpeed', 1)
     }
 
+    private attemptProtocolVersionValidation(connection: Connection): void {
+        try {
+            this.negotiatedProtocolVersions.negotiateProtocolVersion(
+                connection.getPeerId(),
+                connection.getPeerInfo().controlLayerVersions,
+                connection.getPeerInfo().messageLayerVersions
+            )
+        } catch (err) {
+            this.logger.debug(err)
+            this.close(connection.getPeerId(), `No shared protocol versions with node: ${connection.getPeerId()}`)
+        }
+    }
+
     close(receiverNodeId: string, reason: string): void {
-        this.logger.debug('close connection to %s due to %s', receiverNodeId, reason)
         const connection = this.connections[receiverNodeId]
         if (connection) {
+            this.logger.debug('close connection to %s due to %s', NameDirectory.getName(receiverNodeId), reason)
             delete this.connections[receiverNodeId]
             connection.close()
         }
@@ -267,6 +286,22 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
     getPeerInfo(): Readonly<PeerInfo> {
         return this.peerInfo
+    }
+
+    getNegotiatedMessageLayerProtocolVersionOnNode(peerId: string): number | undefined {
+        return this.negotiatedProtocolVersions.getNegotiatedProtocolVersions(peerId)?.messageLayerVersion
+    }
+
+    getNegotiatedControlLayerProtocolVersionOnNode(peerId: string): number | undefined {
+        return this.negotiatedProtocolVersions.getNegotiatedProtocolVersions(peerId)?.controlLayerVersion
+    }
+
+    getDefaultMessageLayerProtocolVersion(): number {
+        return this.negotiatedProtocolVersions.getDefaultProtocolVersions().messageLayerVersion
+    }
+
+    getDefaultControlLayerProtocolVersion(): number {
+        return this.negotiatedProtocolVersions.getDefaultProtocolVersions().controlLayerVersion
     }
 
     /**

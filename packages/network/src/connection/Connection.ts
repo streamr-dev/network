@@ -4,6 +4,7 @@ import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
+import { NameDirectory } from '../NameDirectory'
 
 nodeDataChannel.initLogger("Error" as LogLevel)
 
@@ -165,7 +166,7 @@ export class Connection extends ConnectionEmitter {
         this.maxPingPongAttempts = maxPingPongAttempts
         this.pingInterval = pingInterval
         this.flushRetryTimeout = flushRetryTimeout
-        this.logger = new Logger(['connection', this.id, `${this.selfId}-->${this.getPeerId()}`])
+        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
         this.isFinished = false
 
         this.messageQueue = messageQueue
@@ -189,10 +190,15 @@ export class Connection extends ConnectionEmitter {
         this.onStateChange = this.onStateChange.bind(this)
         this.onGatheringStateChange = this.onGatheringStateChange.bind(this)
         this.onDataChannel = this.onDataChannel.bind(this)
+        this.logger.trace('create %o', {
+            selfId: this.selfId,
+            messageQueue: this.messageQueue.size(),
+            peerInfo: this.peerInfo,
+        })
     }
 
     connect(): void {
-        this.logger.debug('connect()')
+        this.logger.trace('connect()')
         if (this.isFinished) {
             throw new Error('Connection already closed.')
         }
@@ -210,11 +216,11 @@ export class Connection extends ConnectionEmitter {
         this.connectionEmitter.on('localCandidate', this.onLocalCandidate)
 
         if (this.isOffering) {
-            this.logger.debug('creating data channel')
+            this.logger.trace('creating data channel')
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
         } else {
-            this.logger.debug('waiting for data channel')
+            this.logger.trace('waiting for data channel')
             this.connectionEmitter.on('dataChannel', this.onDataChannel)
         }
 
@@ -274,7 +280,7 @@ export class Connection extends ConnectionEmitter {
         if (err) {
             this.logger.warn('conn.close(): %s', err)
         } else {
-            this.logger.debug('conn.close()')
+            this.logger.trace('conn.close()')
         }
 
         if (this.connectionEmitter) {
@@ -404,7 +410,7 @@ export class Connection extends ConnectionEmitter {
     }
 
     private onStateChange(state: string): void {
-        this.logger.debug('conn.onStateChange: %s -> %s', this.lastState, state)
+        this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
 
         this.lastState = state
 
@@ -424,13 +430,13 @@ export class Connection extends ConnectionEmitter {
     }
 
     private onGatheringStateChange(state: string): void {
-        this.logger.debug('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
+        this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
         this.lastGatheringState = state
     }
 
     private onDataChannel(dataChannel: DataChannel): void {
         this.setupDataChannel(dataChannel)
-        this.logger.debug('connection.onDataChannel')
+        this.logger.trace('connection.onDataChannel')
         this.openDataChannel(dataChannel)
     }
 
@@ -447,12 +453,12 @@ export class Connection extends ConnectionEmitter {
         this.dataChannelEmitter = DataChannelEmitter(dataChannel)
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         this.dataChannelEmitter.on('open', () => {
-            this.logger.debug('dc.onOpen')
+            this.logger.trace('dc.onOpen')
             this.openDataChannel(dataChannel)
         })
 
         this.dataChannelEmitter.on('closed', () => {
-            this.logger.debug('dc.onClosed')
+            this.logger.trace('dc.onClosed')
             this.close()
         })
 
@@ -468,7 +474,7 @@ export class Connection extends ConnectionEmitter {
         })
 
         this.dataChannelEmitter.on('message', (msg) => {
-            this.logger.debug('dc.onmessage')
+            this.logger.trace('dc.onmessage')
             if (msg === 'ping') {
                 this.pong()
             } else if (msg === 'pong') {
@@ -501,6 +507,7 @@ export class Connection extends ConnectionEmitter {
 
             const queueItem = this.messageQueue.peek()
             if (queueItem.isFailed()) {
+                this.logger.debug('popping failed queue item: %o', queueItem, numOfSuccessSends)
                 this.messageQueue.pop()
             } else if (queueItem.getMessage().length > this.getMaxMessageSize())  {
                 const errorMessage = 'Dropping message due to size '
@@ -518,11 +525,14 @@ export class Connection extends ConnectionEmitter {
                 return // method eventually re-scheduled by `onBufferedAmountLow`
             } else {
                 let sent = false
+                let isOpen
                 try {
                     // this.isOpen() is checked immediately after the call to node-datachannel.sendMessage() as if
                     // this.isOpen() returns false after a "successful" send, the message is lost with a near 100% chance.
                     // This does not work as expected if this.isOpen() is checked before sending a message
-                    sent = this.dataChannel!.sendMessage(queueItem.getMessage()) && this.isOpen()
+                    sent = this.dataChannel!.sendMessage(queueItem.getMessage())
+                    isOpen = this.isOpen()
+                    sent = sent && isOpen
                 } catch (e) {
                     this.processFailedMessage(queueItem, e)
                     return // method rescheduled by `this.flushTimeoutRef`
@@ -533,6 +543,12 @@ export class Connection extends ConnectionEmitter {
                     queueItem.delivered()
                     numOfSuccessSends += 1
                 } else {
+                    this.logger.debug('queue item was not sent: %o', {
+                        wasOpen: isOpen,
+                        numOfSuccessSends,
+                        queueItem,
+                        messageQueueSize: this.messageQueue.size(),
+                    })
                     this.processFailedMessage(queueItem, new Error('sendMessage returned false'))
                 }
             }

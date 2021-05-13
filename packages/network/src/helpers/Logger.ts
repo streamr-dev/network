@@ -1,39 +1,51 @@
 import pino from 'pino'
-import { PeerInfo } from "../connection/PeerInfo"
+import path from 'path'
+import _ from 'lodash'
 
-export function formName(path: string[], context: any | undefined): string {
-    let name = path.join(':')
-    if (context !== undefined) {
-        name += `:${context}`
+const parseBoolean = (value: string|undefined) => {
+    switch (value) {
+        case 'true':
+            return true
+        case 'false':
+            return false
+        case undefined:
+            return undefined
+        default:
+            throw new Error('Invalid boolean value: ${value}')
     }
-    return name
 }
 
-/**
- * Encapsulate pino.Logger and provide ability to create child loggers that inherit
- * the parent loggers name as their b2ase name.
- */
 export class Logger {
-    private readonly path: string[]
-    private readonly peerInfo: PeerInfo | undefined
+
+    static NAME_LENGTH = 20
+
     private readonly logger: pino.Logger
 
-    constructor(path: string[], peerInfo?: PeerInfo) {
-        this.path = path
-        this.peerInfo = peerInfo
+    constructor(module: NodeJS.Module, context?: string) {
         this.logger = pino({
-            name: formName(path, peerInfo),
+            name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
             level: process.env.LOG_LEVEL || 'info',
             prettyPrint: process.env.NODE_ENV === 'production' ? false : {
-                colorize: true,
-                translateTime: true
+                colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
+                translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
+                ignore: 'pid,hostname',
+                levelFirst: true,
             }
         })
     }
 
-    createChildLogger(subPath: string[]): Logger {
-        return new Logger([...this.path, ...subPath], this.peerInfo)
+    private static createName(module: NodeJS.Module, context?: string) {
+        const parsedPath = path.parse(module.filename)
+        let fileId = parsedPath.name
+        if (fileId === 'index') {
+            // file with name "foobar/index.ts" -> "foobar"
+            const parts = parsedPath.dir.split(path.sep)
+            fileId = parts[parts.length - 1]
+        }
+        const appId = process.env.STREAMR_APPLICATION_ID
+        const longName = _.without([appId, fileId, context], undefined).join(':')
+        return _.padEnd(longName.substring(0, Logger.NAME_LENGTH), Logger.NAME_LENGTH, ' ')
     }
 
     fatal(msg: string, ...args: any[]): void {
@@ -58,5 +70,12 @@ export class Logger {
 
     trace(msg: string, ...args: any[]): void {
         this.logger.trace(msg, ...args)
+    }
+    
+    getFinalLogger(): { error: (error: any, origin?: string) => void } {
+        const finalLogger = pino.final(this.logger)
+        return {
+            error: (error: any, origin?: string) => finalLogger.error(error, origin)
+        }
     }
 }

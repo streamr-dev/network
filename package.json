@@ -8,6 +8,8 @@
         "test-unit": "npx workspaces-run --order-by-deps -- npm run test-unit --if-present"
     },
     "dependencies": {
+        "@commitlint/cli": "^12.1.4",
+        "@commitlint/config-conventional": "^12.1.4",
         "husky": "^5.2.0",
         "workspaces-run": "^1.0.1"
     }

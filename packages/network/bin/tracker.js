@@ -5,7 +5,6 @@ const { Logger } = require('../dist/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
 const { startTracker } = require('../dist/composition')
 const { MetricsContext } = require('../dist/helpers/MetricsContext')
-const { PeerInfo } = require('../dist/connection/PeerInfo')
 
 program
     .version(CURRENT_VERSION)
@@ -21,8 +20,7 @@ program
 
 const id = program.opts().id || `TR${program.opts().port}`
 const name = program.opts().trackerName || id
-const peerInfo = PeerInfo.newNode(id, name)
-const logger = new Logger(['bin', 'tracker'], peerInfo)
+const logger = new Logger(module)
 
 async function main() {
     const metricsContext = new MetricsContext(id)
