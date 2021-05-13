@@ -210,6 +210,10 @@ describe('WebRtcEndpoint', () => {
                 // eslint-disable-next-line no-await-in-loop
                 await waitForCondition(() => ep2NumOfReceivedMessages === 3)
                 onReconnect = reconnect()
+                await Promise.race([
+                    wait(1000),
+                    onReconnect,
+                ])
             }
         }
 

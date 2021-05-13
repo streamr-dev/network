@@ -270,8 +270,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.logger.debug('close connection to %s due to %s', NameDirectory.getName(receiverNodeId), reason)
             delete this.connections[receiverNodeId]
             connection.close()
-        } else {
-            this.logger.debug('close ignored. no connection to %s. Reason %s', NameDirectory.getName(receiverNodeId), reason)
         }
     }
 
