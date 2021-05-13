@@ -7,7 +7,7 @@
   "scripts": {
     "test": "jest",
     "test-unit": "npm run test",
-    "prepublish": "tsc",
+    "prepare": "tsc",
     "build": "tsc"
   },
   "keywords": [

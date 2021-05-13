@@ -35,7 +35,7 @@
     "build-benchmark": "npm run benchmarks",
     "benchmark-build": "npm run build-benchmark",
     "benchmark": "npm run benchmarks",
-    "prepack": "npm run build",
+    "prepare": "npm run build",
     "prebuild": "npm run eslint -- --cache",
     "watch": "webpack --progress --watch --mode=development",
     "eslint": "eslint --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
