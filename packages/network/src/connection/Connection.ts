@@ -224,6 +224,18 @@ export class Connection extends ConnectionEmitter {
             this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
+        this.logger.debug('create %o', {
+            selfId: this.selfId,
+            messageQueue: this.messageQueue.size(),
+            peerInfo: this.peerInfo,
+        })
+    }
+
+    // @ts-expect-error asdasd
+    emit(event: string | symbol, ...args: any[]) {
+        this.logger.debug('emit %s: %o', event, args)
+        // @ts-expect-error asdasd
+        return super.emit(event, ...args)
     }
 
     setRemoteDescription(description: string, type: DescriptionType): void {
@@ -252,6 +264,10 @@ export class Connection extends ConnectionEmitter {
 
     send(message: string): Promise<void> {
         this.setFlushRef()
+        this.logger.info('send %o', {
+            message: message.slice(0, 1024),
+            messageQueueSize: this.messageQueue.size(),
+        })
         return this.messageQueue.add(message)
     }
 
@@ -491,17 +507,31 @@ export class Connection extends ConnectionEmitter {
     }
 
     private attemptToFlushMessages(): void {
+        this.logger.debug('attemptToFlushMessages %o', {
+            messageQueueSize: this.messageQueue.size(),
+            isFinished: this.isFinished,
+            paused: this.paused,
+            isOpen: this.isOpen(),
+            flushRef: this.flushRef == null,
+            flushTimeoutRef: this.flushTimeoutRef == null,
+            lastState: this.lastState,
+        })
         let numOfSuccessSends = 0
         while (!this.isFinished && !this.messageQueue.empty() && this.dataChannel != null) {
             // Max 10 messages sent in busy-loop, then relinquish control for a moment, in case `dc.send` is blocking
             // (is it?)
             if (numOfSuccessSends >= 10) {
+                this.logger.debug('messages sent in busy-loop %o', {
+                    numOfSuccessSends,
+                    messageQueueSize: this.messageQueue.size(),
+                })
                 this.setFlushRef()
                 return
             }
 
             const queueItem = this.messageQueue.peek()
             if (queueItem.isFailed()) {
+                this.logger.debug('popping failed queue item: %o', queueItem, numOfSuccessSends)
                 this.messageQueue.pop()
             } else if (queueItem.getMessage().length > this.getMaxMessageSize())  {
                 const errorMessage = 'Dropping message due to size '
@@ -523,6 +553,11 @@ export class Connection extends ConnectionEmitter {
                     // this.isOpen() is checked immediately after the call to node-datachannel.sendMessage() as if
                     // this.isOpen() returns false after a "successful" send, the message is lost with a near 100% chance.
                     // This does not work as expected if this.isOpen() is checked before sending a message
+                    this.logger.debug('sending queue item: %o', {
+                        numOfSuccessSends,
+                        queueItem,
+                        messageQueueSize: this.messageQueue.size(),
+                    })
                     sent = this.dataChannel!.sendMessage(queueItem.getMessage()) && this.isOpen()
                 } catch (e) {
                     this.processFailedMessage(queueItem, e)
@@ -532,8 +567,18 @@ export class Connection extends ConnectionEmitter {
                 if (sent) {
                     this.messageQueue.pop()
                     queueItem.delivered()
+                    this.logger.debug('delivered queue item: %o', {
+                        numOfSuccessSends,
+                        queueItem,
+                        messageQueueSize: this.messageQueue.size(),
+                    })
                     numOfSuccessSends += 1
                 } else {
+                    this.logger.debug('queue item was not sent: %o', {
+                        numOfSuccessSends,
+                        queueItem,
+                        messageQueueSize: this.messageQueue.size(),
+                    })
                     this.processFailedMessage(queueItem, new Error('sendMessage returned false'))
                 }
             }

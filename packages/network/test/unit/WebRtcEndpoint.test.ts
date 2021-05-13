@@ -194,6 +194,7 @@ describe('WebRtcEndpoint', () => {
                 endpoint2.close('node-1', 'temporary loss of connectivity test')
             ])
             await Promise.all([
+                waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
                 endpoint1.connect('node-2', 'tracker'),
                 endpoint2.connect('node-1', 'tracker'),
             ])
