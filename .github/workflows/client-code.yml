@@ -38,6 +38,15 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: "14.x"
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
       - name: npm ci
         run: npm ci
       - name: npm run eslint
@@ -56,6 +65,15 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
       - name: npm ci
         run: npm ci
       - name: test-unit
@@ -96,6 +114,15 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
       - name: npm ci
         run: npm ci
       - name: Start Streamr Docker Stack
@@ -129,6 +156,15 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
       - name: npm ci
         run: npm ci
       - name: Start Streamr Docker Stack
@@ -157,6 +193,15 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
       - name: npm ci
         run: npm ci
       - uses: nick-invision/retry@v2
