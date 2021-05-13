@@ -190,6 +190,11 @@ export class Connection extends ConnectionEmitter {
         this.onStateChange = this.onStateChange.bind(this)
         this.onGatheringStateChange = this.onGatheringStateChange.bind(this)
         this.onDataChannel = this.onDataChannel.bind(this)
+        this.logger.trace('create %o', {
+            selfId: this.selfId,
+            messageQueue: this.messageQueue.size(),
+            peerInfo: this.peerInfo,
+        })
     }
 
     connect(): void {
@@ -224,12 +229,6 @@ export class Connection extends ConnectionEmitter {
             this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
-
-        this.logger.debug('create %o', {
-            selfId: this.selfId,
-            messageQueue: this.messageQueue.size(),
-            peerInfo: this.peerInfo,
-        })
     }
 
     setRemoteDescription(description: string, type: DescriptionType): void {
