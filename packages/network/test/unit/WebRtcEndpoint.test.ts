@@ -3,7 +3,7 @@ import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForCondition, waitForEvent, wait } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
@@ -52,14 +52,19 @@ describe('WebRtcEndpoint', () => {
             endpoint2.stop()
         ])
     })
+    afterEach(async () => {
+        // add some space between tests
+        // TODO: remove this
+        await wait(3000)
+    })
 
     it('connection between nodes is established when both nodes invoke connect()', async () => {
-        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
-        endpoint2.connect('node-1', 'tracker', false).catch(() => null)
 
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
+            endpoint1.connect('node-2', 'tracker', true),
+            endpoint2.connect('node-1', 'tracker', false),
         ])
 
         let ep1NumOfReceivedMessages = 0
@@ -72,28 +77,31 @@ describe('WebRtcEndpoint', () => {
             ep2NumOfReceivedMessages += 1
         })
 
-        const sendFrom1To2 = () => {
-            endpoint1.send('node-2', JSON.stringify({
+        const sendFrom1To2 = async () => {
+            return endpoint1.send('node-2', JSON.stringify({
                 hello: 'world'
             }))
         }
-        const sendFrom2To1 = () => {
-            endpoint2.send('node-1', JSON.stringify({
+        const sendFrom2To1 = async () => {
+            return endpoint2.send('node-1', JSON.stringify({
                 hello: 'world'
             }))
         }
-
+        const sendTasks = []
         for (let i = 0; i < 10; ++i) {
-            setTimeout(sendFrom1To2, 10 * i)
-            setTimeout(sendFrom2To1, 10 * i + 5)
+            const time = 10 * i
+            sendTasks.push(Promise.all([
+                wait(time).then(sendFrom1To2),
+                wait(time + 5).then(sendFrom2To1)
+            ]))
         }
 
         await waitForCondition(() => ep1NumOfReceivedMessages > 9)
         await waitForCondition(() => ep2NumOfReceivedMessages > 9)
+        await Promise.all(sendTasks)
     })
 
     it('connection between nodes is established when only one node invokes connect()', async () => {
-
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
@@ -110,33 +118,36 @@ describe('WebRtcEndpoint', () => {
             ep2NumOfReceivedMessages += 1
         })
 
-        const sendFrom1To2 = () => {
-            endpoint1.send('node-2', JSON.stringify({
+        const sendFrom1To2 = async () => {
+            return endpoint1.send('node-2', JSON.stringify({
                 hello: 'world'
             }))
         }
-        const sendFrom2To1 = () => {
-            endpoint2.send('node-1', JSON.stringify({
+        const sendFrom2To1 = async () => {
+            return endpoint2.send('node-1', JSON.stringify({
                 hello: 'world'
             }))
         }
-
+        const sendTasks = []
         for (let i = 0; i < 10; ++i) {
-            setTimeout(sendFrom1To2, 10 * i)
-            setTimeout(sendFrom2To1, 10 * i + 5)
+            const time = 10 * i
+            sendTasks.push(Promise.all([
+                wait(time).then(sendFrom1To2),
+                wait(time + 5).then(sendFrom2To1)
+            ]))
         }
 
         await waitForCondition(() => ep1NumOfReceivedMessages === 10)
         await waitForCondition(() => ep2NumOfReceivedMessages === 10)
+        await Promise.all(sendTasks)
     })
 
-    it('cannot send too large of a payload', (done) => {
+    it('cannot send too large of a payload', async () => {
         const payload = new Array(2 ** 21).fill('X').join('')
-        endpoint1.connect('node-2', 'tracker')
-        endpoint1.send('node-2', payload).catch((err) => {
-            expect(err.message).toMatch(/Dropping message due to size 2097152 exceeding the limit of \d+/)
-            done()
-        })
+        await endpoint1.connect('node-2', 'tracker')
+        await expect(async () => {
+            await endpoint1.send('node-2', payload)
+        }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
     })
 
     it('can handle fast paced reconnects', async () => {
@@ -155,7 +166,7 @@ describe('WebRtcEndpoint', () => {
         ])
     })
 
-    it.only('messages are delivered on temporary loss of connectivity', async () => {
+    it('messages are delivered on temporary loss of connectivity', async () => {
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
