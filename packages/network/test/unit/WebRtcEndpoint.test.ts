@@ -7,6 +7,7 @@ import { waitForCondition, waitForEvent, wait } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -38,9 +39,10 @@ describe('WebRtcEndpoint', () => {
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
         endpoint1 = new WebRtcEndpoint(peerInfo1, [],
-            new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), 5000)
+            new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo1))
         endpoint2 = new WebRtcEndpoint(peerInfo2, [],
-            new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), 5000)
+            new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo2))
+
     })
 
     afterEach(async () => {

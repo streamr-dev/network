@@ -8,6 +8,7 @@ import { RelayMessage, Status, StreamIdAndPartition } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { DescriptionType } from 'node-datachannel'
+import { NameDirectory } from '../NameDirectory'
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
@@ -43,7 +44,7 @@ export class TrackerNode extends EventEmitter {
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         this.endpoint.on(WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         this.endpoint.on(WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
-        this.logger = new Logger(['protocol', 'TrackerNode'], endpoint.getPeerInfo())
+        this.logger = new Logger(module)
     }
 
     sendStatus(trackerId: string, status: Status): Promise<TrackerLayer.StatusMessage> {
@@ -139,6 +140,7 @@ export class TrackerNode extends EventEmitter {
     }
 
     onPeerConnected(peerInfo: PeerInfo): void {
+        this.logger.debug(`Peer connected: ${NameDirectory.getName(peerInfo.peerId)}`)
         if (peerInfo.isTracker()) {
             this.emit(Event.CONNECTED_TO_TRACKER, peerInfo.peerId)
         }

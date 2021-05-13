@@ -9,15 +9,15 @@ describe(TrackerServer, () => {
             on(_event: Event, _args: any): void {
             },
             getPeerInfo(): Readonly<PeerInfo> {
-                return PeerInfo.newNode('nodeZero', 'nodeZero', null)
+                return PeerInfo.newNode('nodeZero', 'nodeZero', undefined , undefined,null)
             },
             getPeerInfos(): PeerInfo[] {
                 return [
-                    PeerInfo.newNode('nodeOne', 'nodeOne', null),
-                    PeerInfo.newNode('nodeTwo', 'nodeTwo', null),
-                    PeerInfo.newTracker('tracker', 'tracker', null),
+                    PeerInfo.newNode('nodeOne', 'nodeOne', undefined , undefined,null),
+                    PeerInfo.newNode('nodeTwo', 'nodeTwo',undefined , undefined, null),
+                    PeerInfo.newTracker('tracker', 'tracker', undefined , undefined,null),
                     PeerInfo.newUnknown('unknownPeer'),
-                    PeerInfo.newStorage('storageNode', 'storageNode', null)
+                    PeerInfo.newStorage('storageNode', 'storageNode', undefined , undefined, null)
                 ]
             }
         } as WsEndpoint)

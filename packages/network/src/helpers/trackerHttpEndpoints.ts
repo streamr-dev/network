@@ -4,7 +4,7 @@ import { addRttsToNodeConnections, getNodeConnections, getTopology, getStreamSiz
 import { Logger } from './Logger'
 import { Tracker } from '../logic/Tracker'
 
-const staticLogger = new Logger(['helpers', 'trackerHttpEndpoints'])
+const staticLogger = new Logger(module)
 
 const writeCorsHeaders = (res: HttpResponse, req: HttpRequest): void => {
     const origin = req.getHeader('origin')

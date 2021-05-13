@@ -30,8 +30,8 @@ export class InstructionThrottler {
         }
     }
 
-    constructor(parentLogger: Logger, handleFn: HandleFn) {
-        this.logger = parentLogger.createChildLogger(['InstructionThrottler'])
+    constructor(handleFn: HandleFn) {
+        this.logger = new Logger(module)
         this.handleFn = handleFn
         this.ongoingPromises = {}
     }
