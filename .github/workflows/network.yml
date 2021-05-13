@@ -49,14 +49,12 @@ jobs:
             ${{ runner.OS }}-
       - run: npm ci
       - run: npm run eslint
-      - run: npx jest --forceExit test/unit/WebRtcEndpoint.test.ts
+      - run: npm run test-unit
         env:
           CI: true
-          DEBUG: 'Streamr*'
-          LOG_LEVEL: 'debug'
-      # - run: npm run test-integration
-        # env:
-          # CI: true
+      - run: npm run test-integration
+        env:
+          CI: true
 
   publish:
     needs: [test]

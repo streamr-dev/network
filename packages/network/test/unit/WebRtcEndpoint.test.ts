@@ -7,9 +7,6 @@ import { waitForCondition, waitForEvent, wait } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { format } from 'util'
-
-const logOut = (...args: any[]) => process.stdout.write(format(...args) + '\n')
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -29,11 +26,14 @@ describe('WebRtcEndpoint', () => {
         const ep2 = await startEndpoint('127.0.0.1', 28702, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
         trackerNode1 = new TrackerNode(ep1)
         trackerNode2 = new TrackerNode(ep2)
-
-        trackerNode1.connectToTracker(tracker.getAddress())
-        await waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker.getAddress())
-        await waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
+        await Promise.all([
+            trackerNode1.connectToTracker(tracker.getAddress()),
+            waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
+        ])
+        await Promise.all([
+            trackerNode2.connectToTracker(tracker.getAddress()),
+            waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
+        ])
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
@@ -52,14 +52,8 @@ describe('WebRtcEndpoint', () => {
             endpoint2.stop()
         ])
     })
-    afterEach(async () => {
-        // add some space between tests
-        // TODO: remove this
-        await wait(3000)
-    })
 
     it('connection between nodes is established when both nodes invoke connect()', async () => {
-
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
@@ -181,10 +175,7 @@ describe('WebRtcEndpoint', () => {
         })
 
         const sendFrom1To2 = async (msg: any) => {
-            return endpoint1.send('node-2', JSON.stringify(msg)).then((v) => {
-                logOut('sent', { msg, v })
-                return v
-            })
+            return endpoint1.send('node-2', JSON.stringify(msg))
         }
         const sendTasks = []
         const NUM_MESSAGES = 6
