@@ -90,11 +90,11 @@ describe('WebRtcEndpoint', () => {
     })
 
     it('connection between nodes is established when only one node invokes connect()', async () => {
-        endpoint1.connect('node-2', 'tracker').catch(() => null)
 
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
+            endpoint1.connect('node-2', 'tracker')
         ])
 
         let ep1NumOfReceivedMessages = 0
@@ -135,34 +135,30 @@ describe('WebRtcEndpoint', () => {
             done()
         })
     })
-    it('can handle fast paced reconnects', async () => {
-        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
-        endpoint2.connect('node-1', 'tracker', false).catch(() => null)
 
+    it('can handle fast paced reconnects', async () => {
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
+            endpoint1.connect('node-2', 'tracker', true),
+            endpoint2.connect('node-1', 'tracker', false),
         ])
 
-        endpoint1.close('node-2', 'test')
-        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
-
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
+            endpoint1.close('node-2', 'test'),
+            endpoint1.connect('node-2', 'tracker', true),
         ])
     })
 
     it('messages are delivered on temporary loss of connectivity', async () => {
-        const t = Promise.all([
+        await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
+            endpoint1.connect('node-2', 'tracker'),
+            endpoint2.connect('node-1', 'tracker'),
         ])
-
-        endpoint1.connect('node-2', 'tracker').catch(() => null)
-        endpoint2.connect('node-1', 'tracker').catch(() => null)
-
-        await t
 
         let ep2NumOfReceivedMessages = 0
 
@@ -170,25 +166,34 @@ describe('WebRtcEndpoint', () => {
             ep2NumOfReceivedMessages += 1
         })
 
-        const sendFrom1To2 = () => {
-            endpoint1.send('node-2', JSON.stringify({
-                hello: 'world'
-            }))
+        const sendFrom1To2 = async (msg: any) => {
+            return endpoint1.send('node-2', JSON.stringify(msg))
         }
+        const sendTasks = []
+        const NUM_MESSAGES = 6
+        for (let i = 1; i <= NUM_MESSAGES; ++i) {
+            sendTasks.push(sendFrom1To2({
+                value: `${i} of ${NUM_MESSAGES}`
+            }))
 
-        for (let i = 1; i <= 6; ++i) {
-            sendFrom1To2()
             if (i === 3) {
                 // eslint-disable-next-line no-await-in-loop
                 await waitForCondition(() => ep2NumOfReceivedMessages === 3)
                 endpoint2.close('node-1', 'test')
             }
         }
+
         await waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED)
-        endpoint1.connect('node-2', 'tracker')
-        endpoint2.connect('node-1', 'tracker')
+        await Promise.all([
+            endpoint1.connect('node-2', 'tracker'),
+            endpoint2.connect('node-1', 'tracker'),
+        ])
         await waitForCondition(() => (
             ep2NumOfReceivedMessages === 6
-        ), 10000, undefined, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
+        ), 10000, 500, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
+        // all send tasks completed
+        await Promise.allSettled(sendTasks)
+        await Promise.all(sendTasks)
+        expect(sendTasks).toHaveLength(NUM_MESSAGES)
     }, 30 * 1000)
 })
