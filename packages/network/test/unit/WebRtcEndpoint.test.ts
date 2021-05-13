@@ -42,7 +42,6 @@ describe('WebRtcEndpoint', () => {
             new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo1))
         endpoint2 = new WebRtcEndpoint(peerInfo2, [],
             new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo2))
-
     })
 
     afterEach(async () => {
@@ -54,6 +53,7 @@ describe('WebRtcEndpoint', () => {
             endpoint2.stop()
         ])
     })
+
     afterEach(async () => {
         // add some space between tests
         // TODO: remove this
@@ -187,6 +187,19 @@ describe('WebRtcEndpoint', () => {
         }
         const sendTasks = []
         const NUM_MESSAGES = 6
+
+        async function reconnect() {
+            await Promise.all([
+                waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED),
+                endpoint2.close('node-1', 'temporary loss of connectivity test')
+            ])
+            await Promise.all([
+                endpoint1.connect('node-2', 'tracker'),
+                endpoint2.connect('node-1', 'tracker'),
+            ])
+        }
+
+        let onReconnect
         for (let i = 1; i <= NUM_MESSAGES; ++i) {
             sendTasks.push(sendFrom1To2({
                 value: `${i} of ${NUM_MESSAGES}`
@@ -195,15 +208,11 @@ describe('WebRtcEndpoint', () => {
             if (i === 3) {
                 // eslint-disable-next-line no-await-in-loop
                 await waitForCondition(() => ep2NumOfReceivedMessages === 3)
-                endpoint2.close('node-1', 'test')
+                onReconnect = reconnect()
             }
         }
 
-        await waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED)
-        await Promise.all([
-            endpoint1.connect('node-2', 'tracker'),
-            endpoint2.connect('node-1', 'tracker'),
-        ])
+        await onReconnect
         await waitForCondition(() => (
             ep2NumOfReceivedMessages === 6
         ), 10000, 500, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
