@@ -54,8 +54,14 @@ describe('WebRtcEndpoint', () => {
             endpoint2.stop()
         ])
     })
+    afterEach(async () => {
+        // add some space between tests
+        // TODO: remove this
+        await wait(3000)
+    })
 
     it('connection between nodes is established when both nodes invoke connect()', async () => {
+
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
