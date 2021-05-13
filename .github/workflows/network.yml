@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # run job only for tags and skip for cron
-    if: startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
+    if: false && startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
     steps:
       - name: Get the release version
         id: get_version
