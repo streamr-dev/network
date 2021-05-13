@@ -87,7 +87,14 @@ export function formConfig({
             perNodeMetrics: {
                 enabled: false,
                 wsUrl: null,
-                httpUrl: null
+                httpUrl: null,
+                storageNode: null,
+                intervals:{
+                    sec: 0,
+                    min: 0,
+                    hour: 0,
+                    day: 0
+                }
             }
         },
         streamrUrl,

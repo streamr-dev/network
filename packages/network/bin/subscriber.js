@@ -6,7 +6,6 @@ const { version: CURRENT_VERSION } = require('../package.json')
 const { startNetworkNode } = require('../dist/composition')
 const { MetricsContext } = require('../dist/helpers/MetricsContext')
 const { Event: NodeEvent } = require('../dist/logic/Node')
-const { PeerInfo } = require('../dist/connection/PeerInfo')
 
 program
     .version(CURRENT_VERSION)
@@ -22,8 +21,7 @@ program
 
 const id = program.opts().id || `SU${program.opts().port}`
 const name = program.opts().nodeName || id
-const peerInfo = PeerInfo.newNode(id, name)
-const logger = new Logger(['bin', 'subscriber'], peerInfo)
+const logger = new Logger(module)
 const metricsContext = new MetricsContext(id)
 startNetworkNode({
     host: program.opts().ip,

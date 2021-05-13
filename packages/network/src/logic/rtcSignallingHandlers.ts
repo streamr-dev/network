@@ -4,12 +4,12 @@ import { LocalCandidateMessage, LocalDescriptionMessage, RelayMessage, RtcConnec
 import { RtcSubTypes } from './RtcMessage'
 import { Logger } from "../helpers/Logger"
 
-export function attachRtcSignalling(parentLogger: Logger, trackerServer: TrackerServer): void {
+export function attachRtcSignalling(trackerServer: TrackerServer): void {
     if (!(trackerServer instanceof TrackerServer)) {
         throw new Error('trackerServer not instance of TrackerServer')
     }
 
-    const logger = parentLogger.createChildLogger(['rtcSignallingHandlers'])
+    const logger = new Logger(module)
 
     function handleLocalDescription({ requestId, originator, targetNode, data }: LocalDescriptionMessage & RelayMessage) {
         if (data.type === 'answer') {

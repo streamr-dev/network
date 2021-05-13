@@ -2,7 +2,6 @@ import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { waitForCondition } from 'streamr-test-utils'
-
 async function setUpEndpoint(peerId: string, peerType: string, city: string, port: number): Promise<WsEndpoint> {
     const peerInfo = PeerInfo.fromObject({
         peerId,
@@ -13,7 +12,9 @@ async function setUpEndpoint(peerId: string, peerType: string, city: string, por
             longitude: null,
             country: 'Finland',
             city
-        }
+        },
+        controlLayerVersions: null,
+        messageLayerVersions: null
     })
     const metricsContext = new MetricsContext(peerId)
     const wsEndpoint = await startEndpoint(
@@ -43,12 +44,18 @@ describe('WsEndpoint with no connections', () => {
     })
 
     it('getPeerInfo() gives peer info of endpoint', () => {
-        expect(wsEndpoint.getPeerInfo()).toEqual(PeerInfo.newTracker('peerId', 'peerId', {
-            latitude: null,
-            longitude: null,
-            country: 'Finland',
-            city: 'Espoo'
-        }))
+        expect(wsEndpoint.getPeerInfo()).toEqual(PeerInfo.newTracker(
+            'peerId',
+            'peerId',
+            undefined,
+            undefined,
+            {
+                latitude: null,
+                longitude: null,
+                country: 'Finland',
+                city: 'Espoo'
+            }
+        ))
     })
 
     it('isConnected() returns false', () => {
@@ -118,18 +125,28 @@ describe('WsEndpoint with connections', () => {
 
     it('getPeerInfos() is empty', () => {
         expect(wsEndpoint.getPeerInfos()).toEqual([
-            PeerInfo.newNode('otherPeerId', null, {
-                latitude: null,
-                longitude: null,
-                country: null,
-                city: null
-            }),
-            PeerInfo.newNode('thirdPeerId', null, {
-                latitude: null,
-                longitude: null,
-                country: null,
-                city: null
-            })
+            PeerInfo.newNode(
+                'otherPeerId',
+                null,
+                undefined,
+                undefined,
+                {
+                    latitude: null,
+                    longitude: null,
+                    country: null,
+                    city: null }
+            ),
+            PeerInfo.newNode('thirdPeerId',
+                null,
+                undefined,
+                undefined,
+                {
+                    latitude: null,
+                    longitude: null,
+                    country: null,
+                    city: null
+                }
+            )
         ])
     })
 
