@@ -54,14 +54,7 @@ describe('WebRtcEndpoint', () => {
         ])
     })
 
-    afterEach(async () => {
-        // add some space between tests
-        // TODO: remove this
-        await wait(3000)
-    })
-
     it('connection between nodes is established when both nodes invoke connect()', async () => {
-
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
@@ -151,79 +144,4 @@ describe('WebRtcEndpoint', () => {
             await endpoint1.send('node-2', payload)
         }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
     })
-
-    it('can handle fast paced reconnects', async () => {
-        await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 10000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 10000),
-            endpoint1.connect('node-2', 'tracker', true),
-            endpoint2.connect('node-1', 'tracker', false),
-        ])
-
-        await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 10000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 10000),
-            endpoint1.close('node-2', 'test'),
-            endpoint1.connect('node-2', 'tracker', true),
-        ])
-    })
-
-    it('messages are delivered on temporary loss of connectivity', async () => {
-        await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 10000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 10000),
-            endpoint1.connect('node-2', 'tracker'),
-            endpoint2.connect('node-1', 'tracker'),
-        ])
-
-        let ep2NumOfReceivedMessages = 0
-
-        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
-            ep2NumOfReceivedMessages += 1
-        })
-
-        const sendFrom1To2 = async (msg: any) => {
-            return endpoint1.send('node-2', JSON.stringify(msg))
-        }
-        const sendTasks = []
-        const NUM_MESSAGES = 6
-
-        async function reconnect() {
-            await Promise.all([
-                waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED, 10000),
-                endpoint2.close('node-1', 'temporary loss of connectivity test')
-            ])
-            await Promise.all([
-                waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 10000),
-                endpoint1.connect('node-2', 'tracker'),
-                endpoint2.connect('node-1', 'tracker'),
-            ])
-        }
-
-        let onReconnect
-        for (let i = 1; i <= NUM_MESSAGES; ++i) {
-            sendTasks.push(sendFrom1To2({
-                value: `${i} of ${NUM_MESSAGES}`
-            }))
-
-            if (i === 3) {
-                // eslint-disable-next-line no-await-in-loop
-                await waitForCondition(() => ep2NumOfReceivedMessages === 3)
-                onReconnect = reconnect()
-                await Promise.race([
-                    wait(1000),
-                    onReconnect,
-                ])
-            }
-        }
-
-        await onReconnect
-        await waitForCondition(() => (
-            ep2NumOfReceivedMessages === 6
-        ), 10000, 500, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
-        // all send tasks completed
-        await Promise.allSettled(sendTasks)
-        await Promise.all(sendTasks)
-        expect(sendTasks).toHaveLength(NUM_MESSAGES)
-    }, 40 * 1000)
 })
