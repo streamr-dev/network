@@ -2,7 +2,8 @@
     "name": "streamr-monorepo",
     "scripts": {
         "prepare": "husky install",
-        "link": "lerna link"
+        "link": "lerna link",
+        "bootstrap": "lerna exec 'npm ci'"
     },
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
