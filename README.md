@@ -1,6 +1,6 @@
 # streamr monorepo
 
-WIP.
+Streamr network, client & supporting packages. Work in progress.
 
 ## Contains
 
