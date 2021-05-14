@@ -19,7 +19,6 @@ const getStorageNodes = async (streamId: string|undefined, client: StreamrClient
             })
     } else {
         // all storage nodes (currently there is only one)
-        // @ts-expect-error
         return [client.options.storageNode.address]
     }
 }
@@ -37,7 +36,7 @@ envOptions(program)
             if (addresses.length > 0) {
                 console.info(EasyTable.print(addresses.map((address: string) => ({
                     address
-                }))))    
+                }))))
             }
         })
     })
