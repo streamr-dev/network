@@ -25,13 +25,11 @@ WIP.
 
 ## Installation
 
-Uses [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces), which requires npm v7.
-
-Using `npm install` from the root directory should install all
-workspace dependencies.
+Uses [lerna](https://github.com/lerna/lerna#readmes).
 
 ```
 npm install
+npm run bootstrap
 ```
 
 ## Updating from Remotes
