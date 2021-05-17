@@ -3,7 +3,7 @@ import events from 'events'
 import mqttCon from 'mqtt-connection'
 import { MetricsContext, NetworkNode, Protocol } from 'streamr-network'
 import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
-import { getLogger } from '../helpers/logger'
+import { Logger } from 'streamr-network'
 import { partition } from '../helpers/partition'
 import { Publisher } from '../Publisher'
 import { StreamFetcher } from '../StreamFetcher'
@@ -12,7 +12,7 @@ import { SubscriptionManager } from '../SubscriptionManager'
 import { Todo } from '../types'
 import { Connection } from './Connection'
 
-const logger = getLogger('streamr:MqttServer')
+const logger = new Logger(module)
 
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 

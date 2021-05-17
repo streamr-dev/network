@@ -7,15 +7,24 @@ import { Crypto } from 'node-webcrypto-ossl'
 import { arrayify, hexlify } from '@ethersproject/bytes'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import { uuid } from '../utils'
+import { uuid } from '../../utils'
 
 const { StreamMessage, EncryptedGroupKey } = MessageLayer
 
-export class UnableToDecryptError extends Error {
+export class StreamMessageProcessingError extends Error {
     streamMessage: MessageLayer.StreamMessage
     constructor(message = '', streamMessage: MessageLayer.StreamMessage) {
-        super(`Unable to decrypt. ${message} ${util.inspect(streamMessage)}`)
+        super(`Could not process. ${message} ${util.inspect(streamMessage)}`)
         this.streamMessage = streamMessage
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+}
+
+export class UnableToDecryptError extends StreamMessageProcessingError {
+    constructor(message = '', streamMessage: MessageLayer.StreamMessage) {
+        super(`Unable to decrypt. ${message} ${util.inspect(streamMessage)}`, streamMessage)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
@@ -24,7 +33,7 @@ export class UnableToDecryptError extends Error {
 
 class InvalidGroupKeyError extends Error {
     groupKey: GroupKey | any
-    constructor(message: string, groupKey?: GroupKey) {
+    constructor(message: string, groupKey?: any) {
         super(message)
         this.groupKey = groupKey
         if (Error.captureStackTrace) {
@@ -58,6 +67,8 @@ function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject) {
 }
 
 interface GroupKey extends GroupKeyObject {}
+
+export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
 
 // eslint-disable-next-line no-redeclare
 class GroupKey {
@@ -148,7 +159,7 @@ class GroupKey {
         return new GroupKey(id, keyBytes)
     }
 
-    static from(maybeGroupKey: GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>) {
+    static from(maybeGroupKey: GroupKeyish) {
         if (!maybeGroupKey || typeof maybeGroupKey !== 'object') {
             throw new InvalidGroupKeyError(`Group key must be object ${util.inspect(maybeGroupKey)}`)
         }
@@ -224,10 +235,15 @@ class EncryptionUtilBase {
         }
     }
 
-    /*
+    /**
      * Returns a Buffer or a hex String
      */
-    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex = false) {
+    /* eslint-disable no-dupe-class-members */
+    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: true): string
+    // These overrides tell ts outputInHex returns string
+    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): string
+    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: false): Buffer
+    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: boolean = false) {
         this.validatePublicKey(publicKey)
         const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
         if (outputInHex) {
@@ -235,11 +251,12 @@ class EncryptionUtilBase {
         }
         return ciphertextBuffer
     }
+    /* eslint-disable no-dupe-class-members */
 
     /*
      * Both 'data' and 'groupKey' must be Buffers. Returns a hex string without the '0x' prefix.
      */
-    static encrypt(data: Uint8Array, groupKey: GroupKey) {
+    static encrypt(data: Uint8Array, groupKey: GroupKey): string {
         GroupKey.validate(groupKey)
         const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', groupKey.data, iv)

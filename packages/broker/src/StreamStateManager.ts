@@ -1,7 +1,7 @@
 import { Stream } from './Stream'
-import { getLogger } from './helpers/logger'
+import { Logger } from 'streamr-network'
 
-const logger = getLogger('streamr:StreamStateManager')
+const logger = new Logger(module)
 
 function getStreamLookupKey(streamId: string, streamPartition: number) {
     return `${streamId}::${streamPartition}`

@@ -1,10 +1,9 @@
 import { startNetworkNode, startStorageNode, Protocol, MetricsContext } from 'streamr-network'
-import pino from 'pino'
 import StreamrClient from 'streamr-client'
 import publicIp from 'public-ip'
 import Sentry from '@sentry/node'
 import { Wallet } from 'ethers'
-import { getLogger } from './helpers/logger'
+import { Logger } from 'streamr-network'
 import { StreamFetcher } from './StreamFetcher'
 import { startCassandraStorage } from './storage/Storage'
 import { Publisher } from './Publisher'
@@ -19,7 +18,7 @@ import { Todo } from './types'
 import { Config, TrackerRegistry } from './config'
 const { Utils } = Protocol
 
-const logger = getLogger('streamr:broker')
+const logger = new Logger(module)
 
 export const startBroker = async (config: Config) => {
     validateConfig(config)
@@ -230,12 +229,12 @@ export const startBroker = async (config: Config) => {
     }
 }
 
-process.on('uncaughtException', pino.final(logger, (err, finalLogger) => {
-    finalLogger.error(err, 'uncaughtException')
+process.on('uncaughtException', (err) => {
+    logger.getFinalLogger().error(err, 'uncaughtException')
     process.exit(1)
-}))
+})
 
-process.on('unhandledRejection', pino.final(logger, (err, finalLogger) => {
-    finalLogger.error(err, 'unhandledRejection')
+process.on('unhandledRejection', (err) => {
+    logger.getFinalLogger().error(err, 'unhandledRejection')
     process.exit(1)
-}))
+})

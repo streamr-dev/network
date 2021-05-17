@@ -3,7 +3,8 @@ import Debug from 'debug'
 import express, { Application } from 'express'
 
 import authFetch from '../../src/rest/authFetch'
-import { uuid, getEndpointUrl } from '../../src/utils'
+import * as utils from '../../src/utils'
+import { describeRepeats } from '../utils'
 import { Server } from 'http'
 
 const debug = Debug('StreamrClient::test::utils')
@@ -12,7 +13,7 @@ interface TestResponse {
     test: string
 }
 
-describe('utils', () => {
+describeRepeats('utils', () => {
     let session: any
     let expressApp: Application
     let server: Server
@@ -81,20 +82,72 @@ describe('utils', () => {
 
     describe('uuid', () => {
         it('generates different ids', () => {
-            expect(uuid('test')).not.toEqual(uuid('test'))
+            expect(utils.uuid('test')).not.toEqual(utils.uuid('test'))
         })
         it('includes text', () => {
-            expect(uuid('test')).toContain('test')
+            expect(utils.uuid('test')).toContain('test')
         })
         it('increments', () => {
-            const uid = uuid('test') // generate new text to ensure count starts at 1
-            expect(uuid(uid) < uuid(uid)).toBeTruthy()
+            const uid = utils.uuid('test') // generate new text to ensure count starts at 1
+            expect(utils.uuid(uid) < utils.uuid(uid)).toBeTruthy()
         })
     })
 
     describe('getEndpointUrl', () => {
-        const streamId = 'x/y'
-        const url = getEndpointUrl('http://example.com', 'abc', streamId, 'def')
-        expect(url.toLowerCase()).toBe('http://example.com/abc/x%2fy/def')
+        it('works', () => {
+            const streamId = 'x/y'
+            const url = utils.getEndpointUrl('http://example.com', 'abc', streamId, 'def')
+            expect(url.toLowerCase()).toBe('http://example.com/abc/x%2fy/def')
+        })
+    })
+
+    describe('until', () => {
+        it('works with sync true', async () => {
+            const condition = jest.fn(() => true)
+            await utils.until(condition)
+            expect(condition).toHaveBeenCalledTimes(1)
+        })
+
+        it('works with async true', async () => {
+            const condition = jest.fn(async () => true)
+            await utils.until(condition)
+            expect(condition).toHaveBeenCalledTimes(1)
+        })
+
+        it('works with sync false -> true', async () => {
+            let calls = 0
+            const condition = jest.fn(() => {
+                calls += 1
+                return calls > 1
+            })
+            await utils.until(condition)
+            expect(condition).toHaveBeenCalledTimes(2)
+        })
+
+        it('works with sync false -> true', async () => {
+            let calls = 0
+            const condition = jest.fn(async () => {
+                calls += 1
+                return calls > 1
+            })
+            await utils.until(condition)
+            expect(condition).toHaveBeenCalledTimes(2)
+        })
+
+        it('can time out', async () => {
+            const condition = jest.fn(() => false)
+            await expect(async () => {
+                await utils.until(condition, 100)
+            }).rejects.toThrow('Timeout')
+            expect(condition).toHaveBeenCalled()
+        })
+
+        it('can set interval', async () => {
+            const condition = jest.fn(() => false)
+            await expect(async () => {
+                await utils.until(condition, 100, 20)
+            }).rejects.toThrow('Timeout')
+            expect(condition).toHaveBeenCalledTimes(5) // exactly 5
+        })
     })
 })

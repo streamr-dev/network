@@ -2,6 +2,7 @@ test:
   - '*test*'
 ci:
 - '.github/*'
+- '.github/workflows/*'
 docs:
 - '**.md'
 - '*.md'

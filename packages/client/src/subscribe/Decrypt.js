@@ -1,7 +1,7 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
-import EncryptionUtil, { UnableToDecryptError } from '../stream/Encryption'
-import { SubscriberKeyExchange } from '../stream/KeyExchange'
+import EncryptionUtil, { UnableToDecryptError } from '../stream/encryption/Encryption'
+import { SubscriberKeyExchange } from '../stream/encryption/KeyExchangeSubscriber'
 
 const { StreamMessage } = MessageLayer
 
@@ -10,14 +10,14 @@ export default function Decrypt(client, options = {}) {
         // noop unless message encrypted
         return (streamMessage) => {
             if (streamMessage.groupKeyId) {
-                throw new Error('No keyExchange configured, cannot decrypt message.')
+                throw new UnableToDecryptError('No keyExchange configured, cannot decrypt any message.', streamMessage)
             }
 
             return streamMessage
         }
     }
 
-    const requestKey = SubscriberKeyExchange(client, {
+    const keyExchange = new SubscriberKeyExchange(client, {
         ...options,
         groupKeys: {
             ...client.options.groupKeys,
@@ -38,16 +38,22 @@ export default function Decrypt(client, options = {}) {
             }
 
             try {
-                const groupKey = await requestKey(streamMessage).catch((err) => {
+                const groupKey = await keyExchange.getGroupKey(streamMessage).catch((err) => {
                     throw new UnableToDecryptError(`Could not get GroupKey: ${streamMessage.groupKeyId} – ${err.message}`, streamMessage)
                 })
 
                 if (!groupKey) {
-                    throw new UnableToDecryptError(`Group key not found: ${streamMessage.groupKeyId}`, streamMessage)
+                    throw new UnableToDecryptError([
+                        `Could not get GroupKey: ${streamMessage.groupKeyId}`,
+                        'Publisher is offline, key does not exist or no permission to access key.',
+                    ].join(' '), streamMessage)
                 }
+
                 await EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
-                requestKey.addNewKey(streamMessage)
+                await keyExchange.addNewKey(streamMessage)
             } catch (err) {
+                // clear cached permissions if cannot decrypt, likely permissions need updating
+                client.cached.clearStream(streamMessage.getStreamId())
                 await onError(err, streamMessage)
             } finally {
                 yield streamMessage
@@ -56,8 +62,8 @@ export default function Decrypt(client, options = {}) {
     }
 
     return Object.assign(decrypt, {
-        stop() {
-            return requestKey.stop()
+        async stop() {
+            return keyExchange.stop()
         }
     })
 }

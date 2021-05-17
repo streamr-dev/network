@@ -94,8 +94,8 @@ See "Subscription options" for resend options
 ### Programmatically creating a stream
 
 ```js
-const stream = await client.getOrCreateStream({
-    name: 'My awesome stream created via the API',
+const stream = await client.createStream({
+    id: '/foo/bar', // or 0x1234567890123456789012345678901234567890/foo/bar or mydomain.eth/foo/bar
 })
 console.log(`Stream ${stream.id} has been created!`)
 
@@ -328,7 +328,7 @@ All the below functions return a Promise which gets resolved with the result.
 | getStream(streamId)                                 | Fetches a stream object from the API.                                                                                                                |
 | listStreams(query)                                  | Fetches an array of stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com).                     |
 | getStreamByName(name)                               | Fetches a stream which exactly matches the given name.                                                                                               |
-| createStream(\[properties])                         | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). |
+| createStream(\[properties])                         | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). If you specify `id`, it can be a full streamId or a path (e.g. `/foo/bar` will create a stream with id `<your-etherereum-address>/foo/bar` if you have authenticated with a private key)|
 | getOrCreateStream(properties)                       | Gets a stream with the id or name given in `properties`, or creates it if one is not found.                                                          |
 | publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given stream.                                                                                                         |
 
