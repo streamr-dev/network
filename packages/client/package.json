@@ -20,7 +20,7 @@
   "scripts": {
     "clean": "rm -rf dist; rm -rf vendor",
     "build": "npm run bootstrap-dist && npm run build-browser && npm run build-node && npm run build:types",
-    "build-production": "npm run bootstrap-dist && npm run build-browser-production && npm run build-node && npm run build:types",
+    "build-production": "npm run clean; npm run bootstrap-dist && npm run build-browser-production && npm run build-node && npm run build:types",
     "prepare": "npm run build",
     "vendor": "SRCDIR=`node -p \"path.dirname(require.resolve('quick-lru'))\"` bash -c 'mkdir -p vendor/quick-lru; cp -n $SRCDIR/index.d.ts vendor/quick-lru; cp -n $SRCDIR/index.js vendor/quick-lru'; true",
     "copy-package": "mkdir -p dist/; node copy-package.js; cp -f package-lock.json dist; cp -f README.md dist; cp -f LICENSE dist; cp -f readme-header-img.png dist; true",
