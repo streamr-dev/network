@@ -17,6 +17,10 @@ export function fakePrivateKey() {
     return crypto.randomBytes(32).toString('hex')
 }
 
+export function fakeAddress() {
+    return crypto.randomBytes(32).toString('hex').slice(0, 40)
+}
+
 const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
 
 export function describeRepeats(msg: any, fn: any, describeFn = describe) {
