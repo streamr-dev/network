@@ -4,7 +4,7 @@ import https, { Server as HttpsServer } from 'https'
 import { AddressInfo } from 'net'
 import cors from 'cors'
 import express from 'express'
-import { getLogger } from '../helpers/logger'
+import { Logger } from 'streamr-network'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataProduceEndpoints } from './DataProduceEndpoints'
 import { router as volumeEndpoint } from './VolumeEndpoint'
@@ -13,7 +13,7 @@ import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
 import { AdapterConfig, AdapterStartFn } from '../Adapter'
 import { BrokerUtils } from '../types'
 
-const logger = getLogger('streamr:httpAdapter')
+const logger = new Logger(module)
 
 export interface HttpAdapterConfig extends AdapterConfig {
     privateKeyFileName: string|null, 

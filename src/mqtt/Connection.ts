@@ -1,8 +1,8 @@
 import events from 'events'
-import { getLogger } from '../helpers/logger'
+import { Logger } from 'streamr-network'
 import { Todo } from '../types'
 
-const logger = getLogger('streamr:MqttServer:Connection')
+const logger = new Logger(module)
 
 export class Connection extends events.EventEmitter {
 

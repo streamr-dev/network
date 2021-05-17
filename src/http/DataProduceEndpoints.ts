@@ -1,7 +1,7 @@
 import express from 'express'
 import bodyParser from 'body-parser'
 import { Protocol } from 'streamr-network'
-import { getLogger } from '../helpers/logger'
+import { Logger } from 'streamr-network'
 import { FailedToPublishError } from '../errors/FailedToPublishError'
 import { partition } from '../helpers/partition'
 import { authenticator } from './RequestAuthenticatorMiddleware'
@@ -9,7 +9,7 @@ import { StreamFetcher } from '../StreamFetcher'
 import { Publisher } from '../Publisher'
 import { Todo } from '../types'
 
-const logger = getLogger('streamr:http:DataProduceEndpoints')
+const logger = new Logger(module)
 
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 const { InvalidJsonError, ValidationError } = Protocol.Errors

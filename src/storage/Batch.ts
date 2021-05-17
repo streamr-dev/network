@@ -1,8 +1,6 @@
 import { EventEmitter } from 'events'
-import { Logger } from 'pino'
-import { Protocol } from 'streamr-network'
+import { Logger, Protocol } from 'streamr-network'
 import { v4 as uuidv4 } from 'uuid'
-import { getLogger } from '../helpers/logger'
 import { BucketId } from './Bucket'
 
 export type BatchId = string
@@ -67,7 +65,7 @@ export class Batch extends EventEmitter {
         this.state = Batch.states.OPENED
         this.doneCbs = []
 
-        this.logger = getLogger(`streamr:storage:batch:${this.getId()}`)
+        this.logger = new Logger(module, `${this.getId()}`)
 
         this._maxSize = maxSize
         this._maxRecords = maxRecords
@@ -75,11 +73,11 @@ export class Batch extends EventEmitter {
         this._closeTimeout = closeTimeout
 
         this._timeout = setTimeout(() => {
-            this.logger.debug('lock timeout')
+            this.logger.trace('lock timeout')
             this.lock()
         }, this._closeTimeout)
 
-        this.logger.debug('init new batch')
+        this.logger.trace('init new batch')
     }
 
     reachedMaxRetries(): boolean {
@@ -101,7 +99,7 @@ export class Batch extends EventEmitter {
 
     scheduleInsert(): void {
         clearTimeout(this._timeout)
-        this.logger.debug(`scheduleRetry. retries:${this.retries}`)
+        this.logger.trace(`scheduleRetry. retries:${this.retries}`)
 
         this._timeout = setTimeout(() => {
             if (this.retries < this._maxRetries) {
@@ -117,7 +115,7 @@ export class Batch extends EventEmitter {
     }
 
     clear(): void {
-        this.logger.debug('cleared')
+        this.logger.trace('cleared')
         clearTimeout(this._timeout)
         this.streamMessages = []
         this._setState(Batch.states.INSERTED)
@@ -141,7 +139,7 @@ export class Batch extends EventEmitter {
 
     _setState(state: State): void {
         this.state = state
-        this.logger.debug(`emit state: ${this.state}`)
+        this.logger.trace(`emit state: ${this.state}`)
         this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this._getNumberOfMessages())
     }
 }
