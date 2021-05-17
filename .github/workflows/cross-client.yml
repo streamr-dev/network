@@ -1,4 +1,4 @@
-name: Cross-Client
+name: Cross-Client Testing
 
 # Be sure to update both workflow files if you edit any env or trigger config
 env:
@@ -28,7 +28,7 @@ jobs:
         uses: styfle/cancel-workflow-action@0.8.0
         with:
           access_token: ${{ github.token }}
-  streamr-client-testing-tool:
+  cross-client-testing:
     name: ${{ matrix.config-name }} ${{ matrix.test-name }}
     runs-on: ubuntu-latest
     strategy:
@@ -70,24 +70,12 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - uses: actions/checkout@v2
-        with:
-          repository: streamr-dev/streamr-client-testing
-          path: streamr-client-testing
+          npx lerna bootstrap --scope @streamr/cross-client-testing --include-dependencies
       - uses: actions/setup-java@v1
         with:
           java-version: '8'
-      - name: setup-client-testing
-        working-directory: streamr-client-testing
-        run: |
-          mkdir -p node_modules
-          # manually link streamr-client, prerelease versions in monorepo won't npm link.
-          ln -fs ../../packages/client/dist node_modules/streamr-client
-          ## npm install is used because package-lock.json could be from a previous client version.
-          npm install
       - name: build-client-testing
-        working-directory: streamr-client-testing
+        working-directory: packages/cross-client-testing
         run: ./gradlew fatjar
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -99,15 +87,15 @@ jobs:
           max_attempts: 5
           timeout_minutes: 15
           retry_on: error
-          command: cd streamr-client-testing && DEBUG='' java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
+          command: cd packages/cross-client-testing && DEBUG='' java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v1
         with:
-          dest: 'streamr-client-testing/logs'
+          dest: 'packages/cross-client-testing/logs'
       - name: Upload logs to GitHub
         if: failure()
         uses: actions/upload-artifact@master
         with:
           name: docker-logs-${{ github.job }}-${{ github.run_number }}-${{ github.run_id }}
-          path: streamr-client-testing/logs
+          path: packages/cross-client-testing/logs
