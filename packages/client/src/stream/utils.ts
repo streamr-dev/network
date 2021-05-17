@@ -7,7 +7,7 @@ import { inspect } from 'util'
 import { ControlLayer } from 'streamr-client-protocol'
 
 import { pTimeout } from '../utils'
-import { Todo } from '../types'
+import { EthereumAddress, Todo } from '../types'
 import { StreamrClient } from '../StreamrClient'
 import { StreamPartDefinition, ValidatedStreamPartDefinition } from '.'
 
@@ -198,4 +198,23 @@ export async function waitForRequestResponse(client: StreamrClient, request: Tod
         requestId: request.requestId,
         ...opts, // e.g. timeout, rejectOnTimeout
     })
+}
+
+export const createStreamId = async (streamIdOrPath: string, ownerProvider?: () => Promise<EthereumAddress|undefined>) => {
+    if (streamIdOrPath === undefined) {
+        throw new Error('Missing stream id')
+    }
+
+    if (!streamIdOrPath.startsWith('/')) {
+        return streamIdOrPath
+    }
+
+    if (ownerProvider === undefined) {
+        throw new Error(`Owner provider missing for stream id: ${streamIdOrPath}`)
+    }
+    const owner = await ownerProvider()
+    if (owner === undefined) {
+        throw new Error(`Owner missing for stream id: ${streamIdOrPath}`)
+    }
+    return owner.toLowerCase() + streamIdOrPath
 }

@@ -3,6 +3,8 @@ import { getAddress } from '@ethersproject/address'
 import { getEndpointUrl, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
+export { GroupKey } from './encryption/Encryption'
+
 import { StorageNode } from './StorageNode'
 import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'

@@ -243,7 +243,7 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
     }
 
     // eslint-disable-next-line promise/param-names
-    const p = new Promise((_resolve, _reject) => {
+    const p: Promise<T> = new Promise((_resolve, _reject) => {
         resolveFn = _resolve
         rejectFn = _reject
         executor(resolve, reject)
@@ -386,6 +386,46 @@ export function pOne(fn: F.Function) {
         }
 
         return inProgress
+    }
+}
+
+type Unwrap<T> = T extends Promise<infer U> ? U : T
+
+/**
+ * Only allows calling `fn` once.
+ * Returns same promise while task is executing.
+ */
+
+export function pOnce<Args extends any[], R>(
+    fn: (...args: Args) => R
+): (...args: Args) => Promise<Unwrap<R>> {
+    let inProgress: Promise<void> | undefined
+    let started = false
+    let value: Unwrap<R>
+    let error: Error | undefined
+    return async (...args: Args) => {
+        if (!started) {
+            started = true
+            inProgress = (async () => {
+                try {
+                    value = await Promise.resolve(fn(...args)) as Unwrap<R>
+                } catch (err) {
+                    error = err
+                } finally {
+                    inProgress = undefined
+                }
+            })()
+        }
+
+        if (inProgress) {
+            await inProgress
+        }
+
+        if (error) {
+            throw error
+        }
+
+        return value
     }
 }
 
