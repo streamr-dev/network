@@ -374,6 +374,7 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
                 prev.id = prev.id || 'inter-' + nextIterable.id
                 nextIterable.from(prev, { end })
             }
+
             yield* nextIterable
         }()), async (err) => {
             if (!error && err && error !== err) {

@@ -425,7 +425,7 @@ export default class Connection extends EventEmitter {
         }
     }
 
-    enableAutoDisconnect(autoDisconnect = true) {
+    enableAutoDisconnect(autoDisconnect: boolean | number = true) {
         let delay
         if (typeof autoDisconnect === 'number') {
             delay = autoDisconnect
@@ -443,7 +443,7 @@ export default class Connection extends EventEmitter {
         }
     }
 
-    enableAutoConnect(autoConnect = true) {
+    enableAutoConnect(autoConnect: boolean | number = true) {
         autoConnect = !!autoConnect // eslint-disable-line no-param-reassign
         if (this.options.autoConnect && !autoConnect) {
             this.didDisableAutoConnect = true
