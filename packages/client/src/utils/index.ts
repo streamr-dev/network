@@ -528,7 +528,6 @@ export async function sleep(ms: number = 0) {
     })
 }
 
-// condition could as well return any instead of boolean, could be convenient sometimes if waiting until a value is returned. Maybe change if such use case emerges.
 /**
  * Wait until a condition is true
  * @param condition - wait until this callback function returns true
@@ -538,6 +537,9 @@ export async function sleep(ms: number = 0) {
  * @return the (last) truthy value returned by the condition function
  */
 export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
+    // condition could as well return any instead of boolean, could be convenient
+    // sometimes if waiting until a value is returned. Maybe change if such use
+    // case emerges.
     const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
     let timeout = false
     if (timeOutMs > 0) {

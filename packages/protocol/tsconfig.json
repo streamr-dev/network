@@ -12,7 +12,9 @@
     "strict": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "incremental": true,
+    "sourceMap": true
   },
   "exclude": [
     "dist",
