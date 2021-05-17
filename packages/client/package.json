@@ -20,6 +20,7 @@
   "scripts": {
     "clean": "rm -rf dist; rm -rf vendor",
     "build": "npm run bootstrap-dist && npm run build-browser && npm run build-node && npm run build:types",
+    "build-production": "npm run bootstrap-dist && npm run build-browser-production && npm run build-node && npm run build:types",
     "prepare": "npm run build",
     "prebuild": "npm run eslint -- --cache",
     "vendor": "SRCDIR=`node -p \"path.dirname(require.resolve('quick-lru'))\"` bash -c 'mkdir -p vendor/quick-lru; cp -n $SRCDIR/index.d.ts vendor/quick-lru; cp -n $SRCDIR/index.js vendor/quick-lru'; true",
@@ -29,7 +30,8 @@
     "build:types": "tsc --incremental --emitDeclarationOnly --stripInternal",
     "build-node": "npm run bootstrap-dist && tsc --incremental --project ./tsconfig.node.json",
     "postbuild-node": "npm run copy-package",
-    "build-browser": "npm run bootstrap-dist && NODE_ENV=production webpack --mode=production --progress ",
+    "build-browser": "npm run bootstrap-dist && webpack --progress ",
+    "build-browser-production": "npm run bootstrap-dist && NODE_ENV=production webpack --mode=production --progress ",
     "watch-browser": "npm run bootstrap-dist && webpack --progress --watch",
     "watch-node": "npm run bootstrap-dist && tsc --incremental --watch --project ./tsconfig.node.json",
     "benchmarks": "node test/benchmarks/publish.js && node test/benchmarks/subscribe.js",

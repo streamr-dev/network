@@ -60,7 +60,7 @@ jobs:
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: npm run build
-        run: npm run build
+        run: npm run build-production
       - uses: actions/upload-artifact@v2
         with:
           name: client-build
