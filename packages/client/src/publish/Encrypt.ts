@@ -1,20 +1,18 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
-import EncryptionUtil from '../stream/Encryption'
+import EncryptionUtil from '../stream/encryption/Encryption'
 import { Stream } from '../stream'
 import { StreamrClient } from '../StreamrClient'
-import { PublisherKeyExhange } from '../stream/KeyExchange'
+import { PublisherKeyExhange } from '../stream/encryption/KeyExchangePublisher'
 
 const { StreamMessage } = MessageLayer
 
-type PublisherKeyExhangeAPI = ReturnType<typeof PublisherKeyExhange>
-
 export default function Encrypt(client: StreamrClient) {
-    let publisherKeyExchange: ReturnType<typeof PublisherKeyExhange>
+    let publisherKeyExchange: PublisherKeyExhange
 
     function getPublisherKeyExchange() {
         if (!publisherKeyExchange) {
-            publisherKeyExchange = PublisherKeyExhange(client, {
+            publisherKeyExchange = new PublisherKeyExhange(client, {
                 groupKeys: {
                     ...client.options.groupKeys,
                 }
@@ -28,9 +26,19 @@ export default function Encrypt(client: StreamrClient) {
             return
         }
 
+        const { messageType } = streamMessage
+        if (
+            messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
+            || messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            || messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
+        ) {
+            // never encrypt
+            return
+        }
+
         if (
             !stream.requireEncryptedData
-            && !getPublisherKeyExchange().hasAnyGroupKey(stream.id)
+            && !(await (getPublisherKeyExchange().hasAnyGroupKey(stream.id)))
         ) {
             // not needed
             return
@@ -41,17 +49,21 @@ export default function Encrypt(client: StreamrClient) {
         }
 
         const [groupKey, nextGroupKey] = await getPublisherKeyExchange().useGroupKey(stream.id)
+        if (!groupKey) {
+            throw new Error(`Tried to use group key but no group key found for stream: ${stream.id}`)
+        }
+
         await EncryptionUtil.encryptStreamMessage(streamMessage, groupKey, nextGroupKey)
     }
 
     return Object.assign(encrypt, {
-        setNextGroupKey(...args: Parameters<PublisherKeyExhangeAPI['setNextGroupKey']>) {
+        setNextGroupKey(...args: Parameters<PublisherKeyExhange['setNextGroupKey']>) {
             return getPublisherKeyExchange().setNextGroupKey(...args)
         },
-        rotateGroupKey(...args: Parameters<PublisherKeyExhangeAPI['rotateGroupKey']>) {
+        rotateGroupKey(...args: Parameters<PublisherKeyExhange['rotateGroupKey']>) {
             return getPublisherKeyExchange().rotateGroupKey(...args)
         },
-        rekey(...args: Parameters<PublisherKeyExhangeAPI['rekey']>) {
+        rekey(...args: Parameters<PublisherKeyExhange['rekey']>) {
             return getPublisherKeyExchange().rekey(...args)
         },
         start() {

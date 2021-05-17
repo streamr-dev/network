@@ -48,7 +48,11 @@ jobs:
             ${{ runner.os }}-node-${{ matrix.node-version }}
             ${{ runner.os }}-node-
             ${{ runner.os }}-
-      - run: npm ci
+      - name: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-broker --include-dependencies
       - run: npm run eslint
       - run: npm run test-unit
   test-integration:
@@ -72,7 +76,11 @@ jobs:
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
-      - run: npm ci
+      - name: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-broker --include-dependencies
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -194,9 +202,10 @@ jobs:
             ${{ runner.os }}-
 
       - name: npm ci
+        working-directory: './'
         run: |
           npm ci
-          npm run build --if-present
+          npx lerna bootstrap --scope streamr-broker --include-dependencies
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword

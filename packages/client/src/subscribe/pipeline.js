@@ -129,6 +129,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async (er
         // custom pipeline steps
         ...afterSteps
     ], async (err, ...args) => {
+        decrypt.stop()
         await msgStream.cancel(err)
         try {
             if (err) {

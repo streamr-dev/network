@@ -49,7 +49,7 @@ export class Subscription extends Emitter {
     /** @internal */
     debug
 
-    constructor(client: StreamrClient, opts: Todo, onFinally = defaultOnFinally) {
+    constructor(client: StreamrClient, opts: Todo, onFinally: MaybeAsync<(err?: any) => void> = defaultOnFinally) {
         super()
         this.client = client
         this.options = validateOptions(opts)
@@ -601,7 +601,7 @@ export class Subscriber {
         return this.subscriptions.count(options)
     }
 
-    async subscribe(opts: StreamPartDefinition, onFinally?: MaybeAsync<(err?: any) => void>) {
+    async subscribe(opts: StreamPartDefinition, onFinally?: Todo) {
         return this.subscriptions.add(opts, onFinally)
     }
 

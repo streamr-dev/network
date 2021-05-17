@@ -5,10 +5,10 @@ import qs from 'qs'
 import debugFactory from 'debug'
 
 import { getEndpointUrl } from '../utils'
-import { validateOptions } from '../stream/utils'
+import { createStreamId, validateOptions } from '../stream/utils'
 import { Stream, StreamOperation, StreamProperties } from '../stream'
 import { StreamPart } from '../stream/StreamPart'
-import { isKeyExchangeStream } from '../stream/KeyExchange'
+import { isKeyExchangeStream } from '../stream/encryption/KeyExchangeUtils'
 
 import authFetch, { ErrorCode, NotFoundError } from './authFetch'
 import { EthereumAddress } from '../types'
@@ -133,18 +133,22 @@ export class StreamEndpoints {
 
     /**
      * @category Important
+     * @param props - if id is specified, it can be full streamId or path
      */
     async createStream(props?: Partial<StreamProperties>) {
         this.client.debug('createStream %o', {
             props,
         })
-
+        const body = (props?.id !== undefined) ? {
+            ...props,
+            id: await createStreamId(props.id, () => this.client.getAddress())
+        } : props
         const json = await authFetch<StreamProperties>(
             getEndpointUrl(this.client.options.restUrl, 'streams'),
             this.client.session,
             {
                 method: 'POST',
-                body: JSON.stringify(props),
+                body: JSON.stringify(body),
             },
         )
         return new Stream(this.client, json)

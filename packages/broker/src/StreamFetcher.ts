@@ -1,12 +1,12 @@
 import fetch, { Headers, Response } from 'node-fetch'
 import memoize from 'memoizee'
-import { getLogger } from './helpers/logger'
+import { Logger } from 'streamr-network'
 import { HttpError } from './errors/HttpError'
 // TODO do all REST operations to E&E via StreamrClient
 import StreamrClient from 'streamr-client'
 import { Todo } from './types'
 
-const logger = getLogger('streamr:StreamFetcher')
+const logger = new Logger(module)
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes

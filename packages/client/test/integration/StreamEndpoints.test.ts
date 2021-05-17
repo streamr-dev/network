@@ -4,7 +4,7 @@ import { Stream, StreamOperation } from '../../src/stream'
 import { StorageNode } from '../../src/stream/StorageNode'
 
 import { StreamrClient } from '../../src/StreamrClient'
-import { uid } from '../utils'
+import { uid, fakeAddress } from '../utils'
 
 import config from './config'
 
@@ -15,6 +15,7 @@ import config from './config'
 function TestStreamEndpoints(getName: () => string) {
     let client: StreamrClient
     let wallet: Wallet
+    let createdStreamPath: string
     let createdStream: Stream
 
     const createClient = (opts = {}) => new StreamrClient({
@@ -34,7 +35,9 @@ function TestStreamEndpoints(getName: () => string) {
     })
 
     beforeAll(async () => {
+        createdStreamPath = `/StreamEndpoints-${Date.now()}`
         createdStream = await client.createStream({
+            id: `${wallet.address}${createdStreamPath}`,
             name: getName(),
             requireSignedData: true,
             requireEncryptedData: false,
@@ -55,6 +58,22 @@ function TestStreamEndpoints(getName: () => string) {
             expect(stream.requireEncryptedData).toBe(true)
         })
 
+        it('valid id', async () => {
+            const newId = `${wallet.address}/StreamEndpoints-createStream-newId-${Date.now()}`
+            const newStream = await client.createStream({
+                id: newId,
+            })
+            expect(newStream.id).toEqual(newId)
+        })
+
+        it('valid path', async () => {
+            const newPath = `/StreamEndpoints-createStream-newPath-${Date.now()}`
+            const newStream = await client.createStream({
+                id: newPath,
+            })
+            expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+        })
+
         it('invalid id', () => {
             return expect(() => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow(ValidationError)
         })
@@ -68,7 +87,7 @@ function TestStreamEndpoints(getName: () => string) {
         })
 
         it('get a non-existing Stream', async () => {
-            const id = `${wallet.address}/StreamEndpoints-integration-nonexisting-${Date.now()}`
+            const id = `${wallet.address}/StreamEndpoints-nonexisting-${Date.now()}`
             return expect(() => client.getStream(id)).rejects.toThrow(NotFoundError)
         })
     })
@@ -81,13 +100,13 @@ function TestStreamEndpoints(getName: () => string) {
         })
 
         it('get a non-existing Stream', async () => {
-            const name = `${wallet.address}/StreamEndpoints-integration-nonexisting-${Date.now()}`
+            const name = `${wallet.address}/StreamEndpoints-nonexisting-${Date.now()}`
             return expect(() => client.getStreamByName(name)).rejects.toThrow(NotFoundError)
         })
     })
 
     describe('getOrCreate', () => {
-        it('getOrCreate an existing Stream by name', async () => {
+        it('existing Stream by name', async () => {
             const existingStream = await client.getOrCreateStream({
                 name: createdStream.name,
             })
@@ -95,7 +114,7 @@ function TestStreamEndpoints(getName: () => string) {
             expect(existingStream.name).toBe(createdStream.name)
         })
 
-        it('getOrCreate an existing Stream by id', async () => {
+        it('existing Stream by id', async () => {
             const existingStream = await client.getOrCreateStream({
                 id: createdStream.id,
             })
@@ -103,7 +122,7 @@ function TestStreamEndpoints(getName: () => string) {
             expect(existingStream.name).toBe(createdStream.name)
         })
 
-        it('getOrCreate a new Stream by name', async () => {
+        it('new Stream by name', async () => {
             const newName = uid('stream')
             const newStream = await client.getOrCreateStream({
                 name: newName,
@@ -111,12 +130,32 @@ function TestStreamEndpoints(getName: () => string) {
             expect(newStream.name).toEqual(newName)
         })
 
-        it('getOrCreate a new Stream by id', async () => {
-            const newId = `${wallet.address}/StreamEndpoints-integration-${Date.now()}`
+        it('new Stream by id', async () => {
+            const newId = `${wallet.address}/StreamEndpoints-getOrCreate-newId-${Date.now()}`
             const newStream = await client.getOrCreateStream({
                 id: newId,
             })
             expect(newStream.id).toEqual(newId)
+        })
+
+        it('new Stream by path', async () => {
+            const newPath = `/StreamEndpoints-getOrCreate-newPath-${Date.now()}`
+            const newStream = await client.getOrCreateStream({
+                id: newPath,
+            })
+            expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+        })
+
+        it('fails if stream prefixed with other users address', async () => {
+            // can't create streams for other users
+            const otherAddress = `0x${fakeAddress()}`
+            const newPath = `/StreamEndpoints-getOrCreate-newPath-${Date.now()}`
+            // backend should error
+            await expect(async () => {
+                await client.getOrCreateStream({
+                    id: `${otherAddress}${newPath}`,
+                })
+            }).rejects.toThrow('Validation')
         })
     })
 

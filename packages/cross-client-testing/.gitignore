@@ -1,0 +1,13 @@
+.gitignore
+.gradle
+build/
+out/
+gradlew.bat
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/*
+*.iws
+.DS_Store
+logs/
+node_modules/
