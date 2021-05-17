@@ -1,11 +1,11 @@
 import net from 'net'
 import { MissingConfigError } from '../errors/MissingConfigError'
-import { getLogger } from '../helpers/logger'
+import { Logger } from 'streamr-network'
 import { MqttServer } from './MqttServer'
 import { BrokerUtils } from '../types'
 import { AdapterConfig, AdapterStartFn } from '../Adapter'
 
-const logger = getLogger('streamr:mqttAdapter')
+const logger = new Logger(module)
 
 export interface MqttAdapterConfig extends AdapterConfig {
     streamsTimeout: number|null

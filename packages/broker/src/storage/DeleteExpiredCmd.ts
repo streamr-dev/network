@@ -1,11 +1,11 @@
 import cassandra, { Client } from 'cassandra-driver'
 import fetch from 'node-fetch'
 import pLimit, { Limit } from 'p-limit'
-import { getLogger } from '../helpers/logger'
+import { Logger } from 'streamr-network'
 import { Todo } from '../types'
 import { Bucket } from './Bucket'
 
-const logger = getLogger('streamr:DeleteExpiredCmd')
+const logger = new Logger(module)
 
 const totalSizeOfBuckets = (buckets: Bucket[]) => buckets.reduce((mem, { size }) => mem + size, 0) / (1024 * 1024)
 

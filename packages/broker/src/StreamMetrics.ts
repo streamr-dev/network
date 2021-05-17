@@ -1,9 +1,8 @@
 import { StreamOperation, StreamrClient } from "streamr-client"
 import { MetricsContext } from 'streamr-network'
+import { Logger } from 'streamr-network'
 
-import { getLogger } from './helpers/logger'
-
-const logger = getLogger('streamr:StreamMetrics')
+const logger = new Logger(module)
 
 const throttledAvg = (avg: number, avgInterval: number) => {
     return (0.8 * avg) + (0.2 * avgInterval)

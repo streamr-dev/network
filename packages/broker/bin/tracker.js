@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 const program = require('commander')
-const { startTracker } = require('streamr-network')
+const { startTracker, Logger } = require('streamr-network')
 const Sentry = require('@sentry/node')
-const pino = require('pino')
 const ethers = require('ethers')
 
 const CURRENT_VERSION = require('../package.json').version
-const { getLogger } = require('../dist/src/helpers/logger')
 
-const logger = getLogger('streamr:broker:tracker')
+const logger = new Logger(module)
 
 program
     .version(CURRENT_VERSION)
@@ -79,7 +77,7 @@ async function main() {
             ...trackerObj
         })
     } catch (err) {
-        pino.final(logger).error(err, 'tracker bin catch')
+        logger.getFinalLogger().error(err, 'tracker bin catch')
         process.exit(1)
     }
 }
@@ -87,12 +85,12 @@ async function main() {
 main()
 
 // pino.finalLogger
-process.on('uncaughtException', pino.final(logger, (err, finalLogger) => {
-    finalLogger.error(err, 'uncaughtException')
+process.on('uncaughtException', (err) => {
+    logger.getFinalLogger().error(err, 'uncaughtException')
     process.exit(1)
-}))
+})
 
-process.on('unhandledRejection', pino.final(logger, (err, finalLogger) => {
-    finalLogger.error(err, 'unhandledRejection')
+process.on('unhandledRejection', (err) => {
+    logger.getFinalLogger().error(err, 'unhandledRejection')
     process.exit(1)
-}))
+})

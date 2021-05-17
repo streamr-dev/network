@@ -1,10 +1,10 @@
 import { Todo } from '../types'
 import { Protocol } from 'streamr-network'
+const { ControlLayer, Utils, ControlMessageType } = Protocol
 import { ArrayMultimap } from '@teppeis/multimaps'
-const { ControlLayer, Utils } = Protocol
 import { HttpError } from '../errors/HttpError'
 import { FailedToPublishError } from '../errors/FailedToPublishError'
-import { getLogger } from '../helpers/logger'
+import { Logger } from 'streamr-network'
 import { StreamStateManager } from '../StreamStateManager' 
 import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Publisher } from '../Publisher'
@@ -15,7 +15,7 @@ import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { createResponse as createHistoricalDataResponse, HistoricalDataResponse } from './historicalData'
 import { GenericError } from '../errors/GenericError'
 
-const logger = getLogger('streamr:RequestHandler')
+const logger = new Logger(module)
 
 type SubscribeRequest = Protocol.ControlLayer.SubscribeRequest
 type UnsubscribeRequest = Protocol.ControlLayer.UnsubscribeRequest
@@ -68,6 +68,7 @@ export class RequestHandler {
     }
 
     handleRequest(connection: Connection, request: Todo): Promise<any> {
+        logger.info(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
         switch (request.type) {
             case ControlLayer.ControlMessage.TYPES.SubscribeRequest:
                 return this.subscribe(connection, request)
@@ -170,7 +171,7 @@ export class RequestHandler {
         }
     
         const doneHandler = () => {
-            logger.info('Finished resend %s for stream %s with a total of %d sent messages', request.requestId, request.streamId, sentMessages)
+            logger.info('Finished resend %s: %d messages', request.requestId, sentMessages)
             if (sentMessages === 0) {
                 connection.send(new ControlLayer.ResendResponseNoResend({
                     version: request.version,
@@ -246,7 +247,7 @@ export class RequestHandler {
 
             stream.addConnection(connection)
             connection.addStream(stream)
-            logger.debug(
+            logger.trace(
                 'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
                 connection.id, connection.streamsAsString()
             )
@@ -257,7 +258,7 @@ export class RequestHandler {
                 streamPartition: request.streamPartition,
             }))
         } catch (err) {
-            logger.debug(
+            logger.trace(
                 'handleSubscribeRequest: socket "%s" failed to subscribe to stream %s:%d because of "%o"',
                 connection.id, request.streamId, request.streamPartition, err
             )
@@ -292,24 +293,24 @@ export class RequestHandler {
         const stream = this.streams.get(request.streamId, request.streamPartition)
 
         if (stream) {
-            logger.debug('handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"', connection.id,
+            logger.trace('handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"', connection.id,
                 request.streamId, request.streamPartition)
 
             stream.removeConnection(connection)
             connection.removeStream(request.streamId, request.streamPartition)
 
-            logger.debug(
+            logger.trace(
                 'handleUnsubscribeRequest: socket "%s" is still subscribed to streams "%o"',
                 connection.id, connection.streamsAsString()
             )
 
             // Unsubscribe from stream if no connections left
-            logger.debug(
+            logger.trace(
                 'checkRoomEmpty: "%d" sockets remaining on stream "%s:%d"',
                 stream.getConnections().length, request.streamId, request.streamPartition
             )
             if (stream.getConnections().length === 0) {
-                logger.debug(
+                logger.trace(
                     'checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.',
                     request.streamId, request.streamPartition
                 )
@@ -326,7 +327,7 @@ export class RequestHandler {
                 }))
             }
         } else {
-            logger.debug(
+            logger.trace(
                 'handleUnsubscribeRequest: stream "%s:%d" no longer exists',
                 request.streamId, request.streamPartition
             )
