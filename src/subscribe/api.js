@@ -8,7 +8,7 @@ import { waitForRequestResponse } from '../stream/utils'
 const {
     SubscribeRequest, UnsubscribeRequest,
     ResendLastRequest, ResendFromRequest, ResendRangeRequest,
-} = ControlcdLayer
+} = ControlLayer
 
 const { MessageRef } = MessageLayer
 
@@ -88,7 +88,8 @@ function createResendRequest(resendOptions) {
         from,
         to,
         last,
-        publisherId
+        publisherId,
+        msgChainId
     } = {
         ...options,
         ...options.resend
