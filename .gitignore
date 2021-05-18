@@ -35,3 +35,4 @@ examples/webpack/dist/*
 .idea/tasks.xml
 .idea/dictionaries
 .idea/httpRequests
+docs
