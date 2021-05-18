@@ -1,5 +1,5 @@
 #!/usr/bin/env node -r ts-node/register
-import { Command } from 'commander';
+import { Command } from 'commander'
 import {
     envOptions,
     authOptions,
@@ -7,9 +7,9 @@ import {
     formStreamrOptionsWithEnv
 } from './common'
 import pkg from '../package.json'
-import { StreamrClient } from 'streamr-client';
+import { StreamrClient } from 'streamr-client'
 
-const program = new Command();
+const program = new Command()
 program
     .arguments('<streamId> <permissionId>')
     .description('revoke permission')

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command } from 'commander'
 import { StreamrClient, StreamPart } from 'streamr-client'
 import {
     envOptions,
@@ -10,7 +10,7 @@ import {
 import pkg from '../package.json'
 import EasyTable from 'easy-table'
 
-const program = new Command();
+const program = new Command()
 program
     .arguments('<storageNodeAddress>')
     .description('list streams parts in a storage node')
@@ -27,6 +27,10 @@ envOptions(program)
                         streamPartition: streamPart.getStreamPartition()
                     }))))
                 }
+                return true
+            }).catch((err) => {
+                console.error(err)
+                process.exit(1)
             })
     })
     .parse(process.argv)

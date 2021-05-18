@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
-import { StreamrClient, StreamPart } from 'streamr-client'
+import { Command } from 'commander'
+import { StreamrClient } from 'streamr-client'
 import {
     envOptions,
     authOptions,
@@ -10,21 +10,19 @@ import {
 import pkg from '../package.json'
 import EasyTable from 'easy-table'
 
-const getStorageNodes = async (streamId: string|undefined, client: StreamrClient) => {
+const getStorageNodes = async (streamId: string | undefined, client: StreamrClient): Promise<string[]> => {
     if (streamId !== undefined) {
-        return client.getStream(streamId)
-            .then(stream => stream.getStorageNodes())
-            .then(storegeNodes => {
-                return storegeNodes.map(storageNode => storageNode.getAddress())
-            })
+        const stream = await client.getStream(streamId)
+        const storageNodes = await stream.getStorageNodes()
+        return storageNodes.map((storageNode) => storageNode.getAddress())
     } else {
         // all storage nodes (currently there is only one)
-        // @ts-expect-error
+        // @ts-expect-error digging a private field
         return [client.options.storageNode.address]
     }
 }
 
-const program = new Command();
+const program = new Command()
 program
     .description('fetch a list of storage nodes')
     .option('-s, --stream <streamId>', 'only storage nodes which store the given stream (needs authentication)')
@@ -39,6 +37,10 @@ envOptions(program)
                     address
                 }))))    
             }
+            return true
+        }).catch((err) => {
+            console.error(err)
+            process.exit(1)
         })
     })
     .parse(process.argv)

@@ -1,7 +1,11 @@
 import { Writable } from 'stream'
 import { StreamrClient, StreamrClientOptions } from 'streamr-client'
 
-export const publishStream = (stream: string, partitionKey: string|undefined, streamrOptions: StreamrClientOptions) => {
+export const publishStream = (
+    stream: string,
+    partitionKey: string | undefined,
+    streamrOptions: StreamrClientOptions
+): Writable => {
     const options = { ...streamrOptions }
 
     const client = new StreamrClient(options)
@@ -23,7 +27,7 @@ export const publishStream = (stream: string, partitionKey: string|undefined, st
                 return
             }
 
-            // @ts-expect-error
+            // @ts-expect-error TODO: the last argument here looks wrong, should be just `partitionKey`?
             client.publish(stream, json, Date.now(), json[partitionKey]).then(
                 () => done(),
                 (err) => done(err)

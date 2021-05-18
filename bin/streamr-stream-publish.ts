@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command } from 'commander'
 import es from 'event-stream'
 import { publishStream } from '../src/publish'
 import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'
 import pkg from '../package.json'
 
-const program = new Command();
+const program = new Command()
 program
     .arguments('<streamId>')
     .description('publish to a stream by reading JSON messages from stdin line-by-line')

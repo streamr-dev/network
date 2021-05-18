@@ -13,7 +13,7 @@ export interface AuthenticationOptions {
     apiKey?: string
 }
 
-export function envOptions(program: commander.Command) {
+export function envOptions(program: commander.Command): commander.Command {
     return program
         .option('--dev', 'use pre-defined development environment')
         .option('--stg', 'use pre-defined staging environment')
@@ -21,19 +21,21 @@ export function envOptions(program: commander.Command) {
         .option('--http-url <url>', 'alternative http url to use')
 }
 
-export function authOptions(program: commander.Command) {
+export function authOptions(program: commander.Command): commander.Command {
     return program
         .option('--private-key <key>', 'use an Ethereum private key to authenticate')
         .option('--api-key <key>', 'use an API key to authenticate (deprecated)')
 }
 
-export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: number, max: number) {
+export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: number, max: number): void {
     if (program.args.length < min || program.args.length > max) {
         program.help()
     }
 }
 
-export function formStreamrOptionsWithEnv({ dev, stg, wsUrl, httpUrl, privateKey, apiKey }: EnvironmentOptions & AuthenticationOptions) {
+export function formStreamrOptionsWithEnv(
+    { dev, stg, wsUrl, httpUrl, privateKey, apiKey }: EnvironmentOptions & AuthenticationOptions
+): StreamrClientOptions {
     const options: StreamrClientOptions = {}
 
     if (dev && stg) {
@@ -79,7 +81,7 @@ export function formStreamrOptionsWithEnv({ dev, stg, wsUrl, httpUrl, privateKey
     return options
 }
 
-export function createFnParseInt(name: string) {
+export function createFnParseInt(name: string): (s: string) => number {
     return (str: string) => {
         const n = parseInt(str, 10)
         if (isNaN(n)) {
