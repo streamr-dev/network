@@ -104,7 +104,6 @@ describe('validate', () => {
         }, 'raw secp256k1 (verify)', 10000)
 
         await run(() => {
-            // @ts-expect-error undocumented 5th argument?
             secp256k1.ecdsaRecover(sigObj.signature, sigObj.recid, msg, true, Buffer.alloc)
         }, 'raw secp256k1 (recover)', 10000)
     })

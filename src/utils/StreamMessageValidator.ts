@@ -51,6 +51,7 @@ export default class StreamMessageValidator {
      * @param isPublisher async function(address, streamId): returns true if address is a permitted publisher on streamId
      * @param isSubscriber async function(address, streamId): returns true if address is a permitted subscriber on streamId
      * @param verify async function(address, payload, signature): returns true if the address and payload match the signature.
+     * @param requireBrubeckValidation whether to enable brubeck validation rules
      * The default implementation uses the native secp256k1 library on node.js and falls back to the elliptic library on browsers.
      */
     constructor({ getStream, isPublisher, isSubscriber, verify = SigningUtil.verify, requireBrubeckValidation=false }: Options) {
@@ -68,7 +69,7 @@ export default class StreamMessageValidator {
         isPublisher: (address: string, streamId: string) => Promise<boolean>,
         isSubscriber: (address: string, streamId: string) => Promise<boolean>,
         verify: (address: string, payload: string, signature: string) => Promise<boolean>
-    ) {
+    ): void | never {
         if (typeof getStream !== 'function') {
             throw new Error('getStream must be: async function(streamId): returns the validation metadata object for streamId')
         }
@@ -92,7 +93,7 @@ export default class StreamMessageValidator {
      *
      * @param streamMessage the StreamMessage to validate.
      */
-    async validate(streamMessage: StreamMessage) {
+    async validate(streamMessage: StreamMessage): Promise<void> {
         if (!streamMessage) {
             throw new ValidationError('Falsey argument passed to validate()!')
         }
@@ -123,7 +124,7 @@ export default class StreamMessageValidator {
     static async assertSignatureIsValid(
         streamMessage: StreamMessage,
         verifyFn: (address: string, payload: string, signature: string) => Promise<boolean>
-    ) {
+    ): Promise<void> {
         const payload = streamMessage.getPayloadToSign()
 
         if (streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH_LEGACY
@@ -144,7 +145,7 @@ export default class StreamMessageValidator {
         }
     }
 
-    private async validateMessage(streamMessage: StreamMessage) {
+    private async validateMessage(streamMessage: StreamMessage): Promise<void> {
         const stream = await this.getStream(streamMessage.getStreamId())
 
         // Checks against stream metadata
@@ -179,7 +180,7 @@ export default class StreamMessageValidator {
         }
     }
 
-    private async validateGroupKeyRequest(streamMessage: StreamMessage) {
+    private async validateGroupKeyRequest(streamMessage: StreamMessage): Promise<void> {
         if (!streamMessage.signature) {
             throw new ValidationError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks). Message: ${streamMessage.serialize()}`)
         }
@@ -206,7 +207,7 @@ export default class StreamMessageValidator {
         }
     }
 
-    private async validateGroupKeyResponseOrAnnounce(streamMessage: StreamMessage) {
+    private async validateGroupKeyResponseOrAnnounce(streamMessage: StreamMessage): Promise<void> {
         if (!streamMessage.signature) {
             throw new ValidationError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks). Message: ${streamMessage.serialize()}`)
         }
@@ -233,7 +234,7 @@ export default class StreamMessageValidator {
         }
     }
 
-    static isKeyExchangeStream(streamId: string) {
+    static isKeyExchangeStream(streamId: string): boolean {
         return streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
     }
 }

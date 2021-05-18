@@ -13,9 +13,9 @@ export type SmartContractRecord = {
 export type TrackerInfo = SmartContractRecord | string
 
 // source: https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
-function hashCode(str: string) {
-    // eslint-disable-next-line no-bitwise
-    const a = str.split('').reduce((prevHash, currVal) => (((prevHash << 5) - prevHash) + currVal.charCodeAt(0)) | 0, 0)
+function hashCode(str: string): number {
+    const a = str.split('')
+        .reduce((prevHash, currVal) => (((prevHash << 5) - prevHash) + currVal.charCodeAt(0)) | 0, 0)
     return Math.abs(a)
 }
 
@@ -27,7 +27,7 @@ export class TrackerRegistry<T extends TrackerInfo> {
         this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(streamId: string, partition = 0) {
+    getTracker(streamId: string, partition = 0): T {
         if (typeof streamId !== 'string' || streamId.indexOf('::') >= 0) {
             throw new Error(`invalid id: ${streamId}`)
         }
@@ -40,7 +40,7 @@ export class TrackerRegistry<T extends TrackerInfo> {
         return this.records[hashCode(streamKey) % this.records.length]
     }
 
-    getAllTrackers() {
+    getAllTrackers(): T[] {
         return this.records
     }
 }
@@ -64,7 +64,7 @@ async function fetchTrackers(contractAddress: string, jsonRpcProvider: string | 
     return result.map((tracker: any) => tracker.metadata || tracker.url)
 }
 
-export function createTrackerRegistry<T extends TrackerInfo>(servers: T[]) {
+export function createTrackerRegistry<T extends TrackerInfo>(servers: T[]): TrackerRegistry<T> {
     return new TrackerRegistry(servers)
 }
 
@@ -74,7 +74,7 @@ export async function getTrackerRegistryFromContract({
 }: {
     contractAddress: string,
     jsonRpcProvider: string | ConnectionInfo
-}) {
+}): Promise<TrackerRegistry<SmartContractRecord>> {
     const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
     const records: SmartContractRecord[] = []
     for (let i = 0; i < trackers.length; ++i) {

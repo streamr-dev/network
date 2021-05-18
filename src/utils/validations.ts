@@ -1,6 +1,6 @@
 import ValidationError from '../errors/ValidationError'
 
-export function validateIsNotNullOrUndefined(varName: string, varValue: any): void | never {
+export function validateIsNotNullOrUndefined(varName: string, varValue: unknown): void | never {
     if (varValue === undefined) {
         throw new ValidationError(`Expected ${varName} to not be undefined.`)
     }
@@ -9,7 +9,7 @@ export function validateIsNotNullOrUndefined(varName: string, varValue: any): vo
     }
 }
 
-export function validateIsString(varName: string, varValue: any, allowNull = false): void | never {
+export function validateIsString(varName: string, varValue: unknown, allowNull = false): void | never {
     if (allowNull && varValue == null) {
         return
     }
@@ -19,17 +19,17 @@ export function validateIsString(varName: string, varValue: any, allowNull = fal
     }
 }
 
-export function validateIsNotEmptyString(varName: string, varValue: any, allowNull = false): void | never {
+export function validateIsNotEmptyString(varName: string, varValue: unknown, allowNull = false): void | never {
     if (allowNull && varValue == null) {
         return
     }
     validateIsString(varName, varValue)
-    if (varValue.length === 0) {
+    if ((varValue as string).length === 0) {
         throw new ValidationError(`Expected ${varName} to not be an empty string.`)
     }
 }
 
-export function validateIsInteger(varName: string, varValue: any, allowNull = false): void | never {
+export function validateIsInteger(varName: string, varValue: unknown, allowNull = false): void | never {
     if (allowNull && varValue == null) {
         return
     }
@@ -39,17 +39,17 @@ export function validateIsInteger(varName: string, varValue: any, allowNull = fa
     }
 }
 
-export function validateIsNotNegativeInteger(varName: string, varValue: any, allowNull = false): void | never {
+export function validateIsNotNegativeInteger(varName: string, varValue: unknown, allowNull = false): void | never {
     if (allowNull && varValue == null) {
         return
     }
     validateIsInteger(varName, varValue)
-    if (varValue < 0) {
+    if ((varValue as number) < 0) {
         throw new ValidationError(`Expected ${varName} to not be negative (${varValue}).`)
     }
 }
 
-export function validateIsArray(varName: string, varValue: any, allowNull = false): void | never {
+export function validateIsArray(varName: string, varValue: unknown, allowNull = false): void | never {
     if (allowNull && varValue == null) {
         return
     }
@@ -59,22 +59,35 @@ export function validateIsArray(varName: string, varValue: any, allowNull = fals
     }
 }
 
-export function validateIsType(varName: string, varValue: any, typeName: string, typeClass: any, allowNull = false): void | never {
+export function validateIsType(
+    varName: string,
+    varValue: unknown,
+    typeName: string,
+    typeClass: unknown,
+    allowNull = false
+): void | never {
     if (allowNull && varValue == null) {
         return
     }
-    if (!(varValue instanceof typeClass)) {
-        throw new ValidationError(`Expected ${varName} to be an instance of (${typeName}), but it was: ${JSON.stringify(varValue)}`)
+    if (!(varValue instanceof (typeClass as any))) {
+        const msg = `Expected ${varName} to be an instance of (${typeName}), but it was: ${JSON.stringify(varValue)}`
+        throw new ValidationError(msg)
     }
 }
 
-export function validateIsOneOf(varName: string, varValue: any, validValues: ReadonlyArray<any>, allowNull = false): void | never {
+export function validateIsOneOf(
+    varName: string,
+    varValue: unknown,
+    validValues: ReadonlyArray<any>,
+    allowNull = false
+): void | never {
     if (allowNull && varValue == null) {
         return
     }
     validateIsNotNullOrUndefined(varName, varValue)
     if (!validValues.includes(varValue)) {
-        throw new ValidationError(`Expected ${varName} to be one of ${JSON.stringify(validValues)} but was (${varValue}).`)
+        const msg = `Expected ${varName} to be one of ${JSON.stringify(validValues)} but was (${varValue}).`
+        throw new ValidationError(msg)
     }
 }
 
