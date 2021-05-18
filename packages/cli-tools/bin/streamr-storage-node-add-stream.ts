@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command } from 'commander'
 import { StreamrClient, Stream } from 'streamr-client'
 import {
     envOptions,
@@ -9,7 +9,7 @@ import {
 } from './common'
 import pkg from '../package.json'
 
-const program = new Command();
+const program = new Command()
 program
     .arguments('<storageNodeAddress> <streamId>')
     .description('add stream to a storage node')
@@ -20,6 +20,10 @@ envOptions(program)
         const client = new StreamrClient(formStreamrOptionsWithEnv(options))
         client.getStream(streamId)
             .then((stream: Stream) => stream.addToStorageNode(storageNodeAddress))
+            .catch((err) => {
+                console.error(err)
+                process.exit(1)
+            })
     })
     .parse(process.argv)
 

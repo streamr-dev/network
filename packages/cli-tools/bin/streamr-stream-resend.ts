@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
-import { StreamrClientOptions } from 'streamr-client';
+import { Command } from 'commander'
+import { StreamrClientOptions } from 'streamr-client'
 import { resend } from '../src/resend'
 import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'
 import pkg from '../package.json'
@@ -22,7 +22,7 @@ function handlePublisherIdAndMsgChainId(commandOptions: any, resendOptions: any)
     }
 }
 
-const program = new Command();
+const program = new Command()
 
 program
     .usage('<command> [<args>]')
@@ -34,8 +34,7 @@ program
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-s, --subscribe', 'subscribe in addition to resend', false)
     .action((n: string, streamId: string, options: any, command: Command) => {
-        // @ts-expect-error
-        if (isNaN(n)) {
+        if (isNaN(n as any)) {
             console.error('argument n is not a number')
             process.exit(1)
         }

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command } from 'commander'
 import { subscribe } from '../src/subscribe'
 import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, createFnParseInt } from './common'
 import pkg from '../package.json'
 
-const program = new Command();
+const program = new Command()
 program
     .arguments('<streamId>')
     .description('subscribe to a stream, prints JSON messages to stdout line-by-line')

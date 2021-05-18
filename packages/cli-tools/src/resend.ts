@@ -1,6 +1,10 @@
-import { StreamrClient, StreamrClientOptions } from 'streamr-client'
+import { StreamrClient, StreamrClientOptions, ResendOptions } from 'streamr-client'
 
-export const resend = async (streamId: string, resendOpts: any, streamrOptions: StreamrClientOptions & { subscribe?: boolean }) => {
+export const resend = async (
+    streamId: string,
+    resendOpts: ResendOptions,
+    streamrOptions: StreamrClientOptions & { subscribe?: boolean }
+): Promise<void> => {
     const options = { ...streamrOptions }
     const client = new StreamrClient(options)
 

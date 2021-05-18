@@ -6,7 +6,8 @@
     "streamr": "dist/bin/streamr.js"
   },
   "scripts": {
-    "prepare": "tsc",
+    "eslint": "eslint .",
+    "prepare": "eslint . && tsc",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -37,6 +38,11 @@
   "devDependencies": {
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/node": "^14.14.44"
+    "@types/node": "^14.14.37",
+    "@typescript-eslint/eslint-plugin": "^4.22.1",
+    "@typescript-eslint/parser": "^4.22.1",
+    "eslint": "^7.25.0",
+    "eslint-config-streamr-ts": "^3.0.0",
+    "eslint-plugin-promise": "^5.1.0"
   }
 }
