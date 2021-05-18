@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express'
 import { Storage } from '../storage/Storage'
 
-const parseIntIfExists = (x: string|undefined) => {
+const parseIntIfExists = (x: string | undefined): number | undefined => {
     return x === undefined ? undefined : parseInt(x)
 }
 
@@ -9,7 +9,14 @@ export const router = (cassandraStorage: Storage) => {
     const router = express.Router()
     const handler = async (req: Request, res: Response) => {
         const streamId = req.params.id
-        const partition = parseIntIfExists(req.params.partition) || 0
+        const partition = parseIntIfExists(req.params.partition)
+        if (Number.isNaN(partition) || partition === undefined) {
+            const errMsg = `Path parameter "partition" not a number: ${req.params.partition}`
+            res.status(400).send({
+                error: errMsg
+            })
+            return
+        }
 
         const out = {
             totalBytes: await cassandraStorage.getTotalBytesInStream(streamId, partition),
