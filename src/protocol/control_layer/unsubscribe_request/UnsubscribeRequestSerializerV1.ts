@@ -19,7 +19,7 @@ export default class UnsubscribeRequestSerializerV1 extends Serializer<Unsubscri
     fromArray(arr: any[]) {
         const [
             version,
-            type, // eslint-disable-line no-unused-vars
+            type, // eslint-disable-line @typescript-eslint/no-unused-vars
             streamId,
             streamPartition,
         ] = arr

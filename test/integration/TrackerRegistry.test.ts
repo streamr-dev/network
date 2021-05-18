@@ -78,8 +78,7 @@ describe('TrackerRegistry', () => {
 
             // partition is not valid
             expect(() => {
-                // @ts-ignore TODO
-                trackerRegistry.getTracker('stream-1', '0')
+                trackerRegistry.getTracker('stream-1', '0' as any)
             }).toThrow()
 
             expect(() => {

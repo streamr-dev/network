@@ -26,8 +26,6 @@ describe('StatusMessage', () => {
         it('should create the latest version', () => {
             const msg = new StatusMessage({
                 requestId: 'requestId',
-                // @ts-ignore BUG?
-                streamId: 'streamId',
                 status: {}
             })
             assert(msg instanceof StatusMessage)

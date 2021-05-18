@@ -19,7 +19,7 @@ function recoverPublicKey(signatureBuffer: Buffer, payloadBuffer: Buffer) {
         recoveryId,
         hash(payloadBuffer),
         false,
-        // @ts-ignore TODO: figure out why the library doesn't agree on this parameter
+        // @ts-expect-error TODO: figure out why the library doesn't agree on this parameter
         Buffer.alloc,
     )
 }

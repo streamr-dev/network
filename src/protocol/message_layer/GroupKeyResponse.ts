@@ -5,7 +5,6 @@ import StreamMessage from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
 import EncryptedGroupKey from './EncryptedGroupKey'
 
-
 interface Options {
     requestId: string
     streamId: string
