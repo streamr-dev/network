@@ -32,6 +32,19 @@ npm install
 npm run bootstrap
 ```
 
+## Bootstrap one sub-package
+
+```
+npm run bootstrap-pkg streamr-client
+npm run bootstrap-pkg streamr-network
+```
+
+## Install a dependency into a sub-package
+
+```
+npx lerna add mkdirp --scope streamr-client
+```
+
 ## Updating from Remotes
 
 Temporary feature until monorepo becomes primary repo.
@@ -39,5 +52,5 @@ Temporary feature until monorepo becomes primary repo.
 Merge remote changes from all remote repos:
 
 ```
-make pull
+make pull # keep rerunning until no errors
 ```
