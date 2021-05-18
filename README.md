@@ -10,6 +10,7 @@ Streamr network, client & supporting packages. Work in progress.
 * protocol
 * test-utils
 * cli-tools
+* cross-client-testing
 
 ## Build Status
 
