@@ -25,17 +25,16 @@ export default class ResendFromRequestSerializerV1 extends Serializer<ResendFrom
     fromArray(arr: any[]) {
         const [
             version,
-            type, // eslint-disable-line no-unused-vars
+            type, // eslint-disable-line @typescript-eslint/no-unused-vars
             streamId,
             streamPartition,
             requestId,
             fromMsgRefArray,
             publisherId,
             // unused: in V1 accidentally
-            msgChainId, // eslint-disable-line no-unused-vars
+            msgChainId, // eslint-disable-line @typescript-eslint/no-unused-vars
             sessionToken,
         ] = arr
-
 
         const [ fromTimestamp, fromSequenceNumber ] = fromMsgRefArray
         return new ResendFromRequest({

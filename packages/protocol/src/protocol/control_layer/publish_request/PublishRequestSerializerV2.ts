@@ -21,7 +21,7 @@ export default class PublishRequestSerializerV2 extends Serializer<PublishReques
     fromArray(arr: any[]) {
         const [
             version,
-            type, // eslint-disable-line no-unused-vars
+            type, // eslint-disable-line @typescript-eslint/no-unused-vars
             requestId,
             serializedStreamMsg,
             sessionToken,

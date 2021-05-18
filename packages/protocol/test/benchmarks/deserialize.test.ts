@@ -14,7 +14,7 @@ const { streamMessage } = publishRequest as PublishRequest
 
 describe('deserialize', () => {
     const run = (functionToTest: () => void, name: string) => {
-        const start = new Date()
+        const start = Date.now()
 
         let resultString = `Benchmarking ${name}...\n`
 
@@ -22,8 +22,7 @@ describe('deserialize', () => {
             functionToTest()
         }
 
-        // @ts-ignore TODO
-        const end = new Date() - start
+        const end = Date.now() - start
 
         resultString += `Execution time: ${end} ms\n`
         resultString += `Iterations / second: ${ITERATIONS / (end / 1000)}\n`

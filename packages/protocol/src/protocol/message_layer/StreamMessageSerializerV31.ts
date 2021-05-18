@@ -22,7 +22,7 @@ export default class StreamMessageSerializerV31 extends Serializer<StreamMessage
 
     fromArray(arr: any[]) {
         const [
-            version, // eslint-disable-line no-unused-vars
+            version, // eslint-disable-line @typescript-eslint/no-unused-vars
             messageIdArr,
             prevMsgRefArr,
             messageType,

@@ -1,4 +1,3 @@
-
 export default class UnsupportedTypeError extends Error {
 
     type: number

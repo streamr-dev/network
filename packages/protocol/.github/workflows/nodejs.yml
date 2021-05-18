@@ -37,12 +37,10 @@ jobs:
       - name: test-unit
         run: npm run test-unit
 
-      - name: setup streamr-docker-dev
-        run: |
-          git clone --depth 1 https://github.com/streamr-dev/streamr-docker-dev.git
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start parity-node0 --wait
-
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "parity-node0"
       - name: test-integration
         run: npm run test-integration
 

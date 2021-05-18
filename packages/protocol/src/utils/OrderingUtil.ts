@@ -31,12 +31,12 @@ class OrderingUtil extends MsgChainEmitter {
         this.orderedChains = {}
     }
 
-    add(unorderedStreamMessage: StreamMessage) {
+    add(unorderedStreamMessage: StreamMessage): void {
         const chain = this.getChain(unorderedStreamMessage.getPublisherId(), unorderedStreamMessage.getMsgChainId())
         chain.add(unorderedStreamMessage)
     }
 
-    private getChain(publisherId: string, msgChainId: string) {
+    private getChain(publisherId: string, msgChainId: string): OrderedMsgChain {
         const key = publisherId + msgChainId
         if (!this.orderedChains[key]) {
             const chain = new OrderedMsgChain(
@@ -52,18 +52,18 @@ class OrderingUtil extends MsgChainEmitter {
         return this.orderedChains[key]
     }
 
-    markMessageExplicitly(streamMessage: StreamMessage) {
+    markMessageExplicitly(streamMessage: StreamMessage): void {
         const chain = this.getChain(streamMessage.getPublisherId(), streamMessage.getMsgChainId())
         chain.markMessageExplicitly(streamMessage)
     }
 
-    isEmpty() {
+    isEmpty(): boolean {
         return Object.values(this.orderedChains).every((chain) => (
             chain.isEmpty()
         ))
     }
 
-    clearGaps() {
+    clearGaps(): void {
         Object.values(this.orderedChains).forEach((chain) => {
             chain.clearGap()
         })

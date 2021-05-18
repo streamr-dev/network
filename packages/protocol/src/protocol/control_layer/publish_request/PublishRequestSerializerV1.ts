@@ -20,7 +20,7 @@ export default class PublishRequestSerializerV1 extends Serializer<PublishReques
     fromArray(arr: any[]) {
         const [
             version,
-            type, // eslint-disable-line no-unused-vars
+            type, // eslint-disable-line @typescript-eslint/no-unused-vars
             serializedStreamMsg,
             sessionToken,
         ] = arr

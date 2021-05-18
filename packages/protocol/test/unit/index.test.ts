@@ -24,7 +24,7 @@ describe('re-exports', () => {
         expect.assertions(numKeys)
         containers.forEach((container) => {
             Object.entries(container).forEach(([containerKey, containerValue]) => {
-                // @ts-expect-error
+                // @ts-expect-error figure out proper typing here
                 expect(Protocol[containerKey]).toBe(containerValue)
             })
         })

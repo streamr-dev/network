@@ -1,4 +1,4 @@
-export default function parse(millisOrString: number|string) {
+export default function parse(millisOrString: number | string): number | never {
     if (typeof millisOrString === 'number') {
         return millisOrString
     }

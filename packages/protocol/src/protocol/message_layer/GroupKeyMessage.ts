@@ -1,4 +1,3 @@
-import { GroupKeyRequest } from '.'
 import { validateIsString } from '../../utils/validations'
 import MessageID from './MessageID'
 import MessageRef from './MessageRef'
