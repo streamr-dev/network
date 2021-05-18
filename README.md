@@ -1,4 +1,4 @@
-# streamr network/client monorepo
+# Streamr Network + Client Monorepo
 
 Streamr network, client & supporting packages. Work in progress.
 
