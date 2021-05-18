@@ -37,7 +37,7 @@ describe('StreamMessageValidator', () => {
         requireEncryptedData: false,
     }
 
-    const getValidator = (customConfig?:any) => {
+    const getValidator = (customConfig?: any) => {
         if (customConfig){
             return new StreamMessageValidator(customConfig)
         } else {
@@ -172,7 +172,6 @@ describe('StreamMessageValidator', () => {
                 ...defaultGetStreamResponse,
                 requireSignedData: false,
             })
-
 
             msg.signature = null
             msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
