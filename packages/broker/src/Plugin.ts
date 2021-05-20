@@ -4,10 +4,11 @@ import { StorageConfig } from './storage/StorageConfig'
 import { Config } from './config'
 import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
+import express from 'express'
 
 export interface PluginConfig {
     name: string
-    port: number
+    port?: number
 }
 
 export interface PluginOptions<T> {
@@ -31,6 +32,7 @@ export abstract class Plugin<T extends PluginConfig> {
     readonly storageConfig: StorageConfig|null
     readonly config: Config
     readonly pluginConfig: T
+    readonly httpServerRouters: express.Router[] = []
 
     constructor(options: PluginOptions<T>) {
         this.networkNode = options.networkNode
@@ -41,6 +43,14 @@ export abstract class Plugin<T extends PluginConfig> {
         this.storageConfig = options.storageConfig
         this.config = options.config
         this.pluginConfig = options.pluginConfig
+    }
+
+    addHttpServerRouter(router: express.Router) {
+        this.httpServerRouters.push(router)
+    }
+
+    getHttpServerRoutes() {
+        return this.httpServerRouters
     }
 
     abstract start(): Promise<unknown>

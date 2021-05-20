@@ -31,8 +31,7 @@ export function formConfig({
     const plugins = []
     if (httpPort) {
         plugins.push({
-            name: 'http',
-            port: httpPort,
+            name: 'http'
         })
     }
     if (wsPort) {
@@ -99,6 +98,11 @@ export function formConfig({
         streamrUrl,
         streamrAddress,
         storageNodeRegistry,
+        httpServer: httpPort ? {
+            port: httpPort,
+            privateKeyFileName: null,
+            certFileName: null
+        } : null,
         plugins
     }
 }

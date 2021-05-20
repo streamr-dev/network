@@ -3,6 +3,8 @@ import StreamrClient from 'streamr-client'
 import publicIp from 'public-ip'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
+import { Server as HttpServer } from 'http'
+import { Server as HttpsServer } from 'https'
 import { startCassandraStorage } from './storage/Storage'
 import { Publisher } from './Publisher'
 import { VolumeLogger } from './VolumeLogger'
@@ -15,6 +17,7 @@ import { version as CURRENT_VERSION } from '../package.json'
 import { Todo } from './types'
 import { Config, TrackerRegistry } from './config'
 import { Plugin, PluginOptions } from './Plugin'
+import { startServer as startHttpServer, stopServer } from './httpServer'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -155,6 +158,14 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     })
 
     await Promise.all(plugins.map((plugin) => plugin.start()))
+    const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
+    let httpServer: HttpServer|HttpsServer|undefined
+    if (httpServerRoutes.length > 0) {
+        if (config.httpServer === null) {
+            throw new Error('HTTP server config not defined')
+        }
+        httpServer = await startHttpServer(httpServerRoutes, config.httpServer)
+    }
 
     let reportingIntervals
     let storageNodeAddress
@@ -194,6 +205,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         close: () => Promise.all([
             networkNode.stop(),
             ...plugins.map((plugin) => plugin.stop()),
+            (httpServer !== undefined) ? stopServer(httpServer) : undefined,
             ...storages.map((storage) => storage.close()),
             volumeLogger.close(),
             (storageConfig !== null) ? storageConfig.cleanup() : undefined

@@ -20,6 +20,12 @@ export interface NetworkConfig {
     } | null
 }
 
+export interface HttpServerConfig {
+    port: number, 
+    privateKeyFileName: string | null,
+    certFileName: string | null
+}
+
 export interface StorageNodeRegistryItem {
     address: string
     url: string
@@ -59,6 +65,7 @@ export interface Config {
     streamrUrl: string,
     streamrAddress: string,
     storageNodeRegistry: StorageNodeRegistryItem[] | null
+    httpServer: HttpServerConfig | null
     plugins: PluginConfig[]
 }
 

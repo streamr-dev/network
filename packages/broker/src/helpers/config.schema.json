@@ -5,6 +5,7 @@
   "type": "object",
   "required": [
     "plugins",
+    "httpServer",
     "cassandra",
     "storageConfig",
     "ethereumPrivateKey",
@@ -21,6 +22,37 @@
       "description": "Foreign protocol plugins to use",
       "items": {
         "$ref": "#/definitions/plugin"
+      }
+    },
+    "httpServer": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "HTTP server configuration",
+      "required": [
+        "port"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "$ref": "#/definitions/port",
+          "description": "Port to start HTTP server on"
+        },
+        "certFileName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Path of certificate file to use for SSL"
+        },
+        "privateKeyFileName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Path of private key file to use for SSL"
+        }
       }
     },
     "cassandra": {
@@ -344,31 +376,12 @@
           "type": "object",
           "description": "HTTP plugin configuration",
           "required": [
-            "name",
-            "port"
+            "name"
           ],
           "additionalProperties": false,
           "properties": {
             "name": {
               "const": "http"
-            },
-            "port": {
-              "$ref": "#/definitions/port",
-              "description": "Port to start plugin on"
-            },
-            "certFileName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Path of certificate file to use for SSL"
-            },
-            "privateKeyFileName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Path of private key file to use for SSL"
             }
           }
         },
