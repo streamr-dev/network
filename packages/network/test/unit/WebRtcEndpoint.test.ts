@@ -139,12 +139,12 @@ describe('WebRtcEndpoint', () => {
 
     it('cannot send too large of a payload', async () => {
         const payload = new Array(2 ** 21).fill('X').join('')
-        endpoint1.connect('node-2', 'tracker')
-        endpoint1.send('node-2', payload).catch((err) => {
-            expect(err.message).toMatch(/Dropping message due to size 2097152 exceeding the limit of \d+/)
-            done()
-        })
+        await endpoint1.connect('node-2', 'tracker')
+        await expect(async () => {
+            await endpoint1.send('node-2', payload)
+        }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
     })
+
     it('can handle fast paced reconnects', async () => {
         endpoint1.connect('node-2', 'tracker', true).catch(() => null)
         endpoint2.connect('node-1', 'tracker', false).catch(() => null)
