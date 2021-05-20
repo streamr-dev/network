@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command } from 'commander'
 import { create } from '../src/create'
 import {
     envOptions,
@@ -10,7 +10,7 @@ import {
 } from './common'
 import pkg from '../package.json'
 
-const program = new Command();
+const program = new Command()
 program
     .arguments('<name>')
     .description('create a new stream')

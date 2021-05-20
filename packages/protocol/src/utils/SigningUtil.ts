@@ -19,13 +19,12 @@ function recoverPublicKey(signatureBuffer: Buffer, payloadBuffer: Buffer) {
         recoveryId,
         hash(payloadBuffer),
         false,
-        // @ts-ignore TODO: figure out why the library doesn't agree on this parameter
         Buffer.alloc,
     )
 }
 
 export default class SigningUtil {
-    static async sign(payload: string, privateKey: string) {
+    static async sign(payload: string, privateKey: string): Promise<string> {
         const payloadBuffer = Buffer.from(payload, 'utf-8')
         const privateKeyBuffer = Buffer.from(privateKey, 'hex')
 
@@ -36,7 +35,11 @@ export default class SigningUtil {
         return '0x' + result.toString('hex')
     }
 
-    static async recover(signature: string, payload: string, publicKeyBuffer: Buffer | Uint8Array | undefined = undefined) {
+    static async recover(
+        signature: string,
+        payload: string,
+        publicKeyBuffer: Buffer | Uint8Array | undefined = undefined
+    ): Promise<string> {
         const signatureBuffer = Buffer.from(signature.startsWith('0x') ? signature.substring(2) : signature, 'hex') // remove '0x' prefix
         const payloadBuffer = Buffer.from(payload, 'utf-8')
 
@@ -51,7 +54,7 @@ export default class SigningUtil {
         return '0x' + hashOfPubKey.subarray(12, hashOfPubKey.length).toString('hex')
     }
 
-    static async verify(address: string, payload: string, signature: string) {
+    static async verify(address: string, payload: string, signature: string): Promise<boolean> {
         try {
             const recoveredAddress = await SigningUtil.recover(signature, payload)
             return recoveredAddress.toLowerCase() === address.toLowerCase()

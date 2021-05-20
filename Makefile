@@ -11,6 +11,7 @@ setup:
 	$(call setupRemote,streamr-client-javascript)
 	$(call setupRemote,streamr-client-protocol-js)
 	$(call setupRemote,streamr-test-utils)
+	$(call setupRemote,streamr-client-testing)
 
 define setupRemote
 	-(git remote get-url $1 || git remote add --no-tags -f $1 git@github.com:streamr-dev/$1.git)
@@ -24,5 +25,6 @@ pull: setup
 	git subtree pull --prefix=packages/client streamr-client-javascript master
 	git subtree pull --prefix=packages/protocol streamr-client-protocol-js master
 	git subtree pull --prefix=packages/test-utils streamr-test-utils master
+	git subtree pull --prefix=packages/cross-client-testing streamr-client-testing master
 
 .PHONY: pull setup

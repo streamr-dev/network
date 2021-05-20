@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command } from 'commander'
 import { show } from '../src/show'
 import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'
 import pkg from '../package.json'
 
-const program = new Command();
+const program = new Command()
 program
     .arguments('<streamId>')
     .description('show detailed information about a stream')

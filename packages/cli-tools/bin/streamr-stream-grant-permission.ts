@@ -1,12 +1,12 @@
 #!/usr/bin/env node -r ts-node/register
-import { Command } from 'commander';
+import { Command } from 'commander'
 import {
     envOptions,
     authOptions,
     formStreamrOptionsWithEnv
 } from './common'
 import pkg from '../package.json'
-import { AnonymousStreamPermisson, StreamOperation, StreamrClient, UserStreamPermission } from 'streamr-client';
+import { AnonymousStreamPermisson, StreamOperation, StreamrClient, UserStreamPermission } from 'streamr-client'
 import EasyTable from 'easy-table'
 
 const PUBLIC_PERMISSION_ID = 'public'
@@ -40,7 +40,7 @@ const getTarget = (user: string): string|undefined => {
     }
 }
 
-const program = new Command();
+const program = new Command()
 program
     .arguments('<streamId> <user> <operations...>')
     .description('grant permission: use keyword "public" as a user to grant a public permission')
@@ -61,3 +61,7 @@ envOptions(program)
         }))))
     })
     .parseAsync(process.argv)
+    .catch((e) => {
+        console.error(e)
+        process.exit(1)
+    })

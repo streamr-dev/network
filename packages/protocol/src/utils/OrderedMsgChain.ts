@@ -2,7 +2,7 @@ import { EventEmitter } from 'events'
 
 import Debug from 'debug'
 import Heap from 'heap'
-import StrictEventEmitter from 'strict-event-emitter-types';
+import StrictEventEmitter from 'strict-event-emitter-types'
 
 import GapFillFailedError from '../errors/GapFillFailedError'
 import MessageRef from '../protocol/message_layer/MessageRef'
@@ -162,8 +162,8 @@ class OrderedMsgChain extends MsgChainEmitter {
     id: number
     queue = new MsgChainQueue()
     lastOrderedMsgRef: MessageRef | null = null
-    hasPendingGap: boolean = false
-    gapRequestCount: number = 0
+    hasPendingGap = false
+    gapRequestCount = 0
     maxGapRequests: number
     publisherId: string
     msgChainId: string
@@ -279,7 +279,6 @@ class OrderedMsgChain extends MsgChainEmitter {
         return this.maxGapRequests > 0
     }
 
-
     /**
      * True if queue is empty.
      */
@@ -325,7 +324,6 @@ class OrderedMsgChain extends MsgChainEmitter {
             processedMessages += 1
             this.pop()
         }
-
 
         // if queue not empty then we have a gap
         if (!this.queue.isEmpty()) {
@@ -449,4 +447,4 @@ class OrderedMsgChain extends MsgChainEmitter {
     }
 }
 
-export default OrderedMsgChain;
+export default OrderedMsgChain

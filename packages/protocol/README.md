@@ -5,7 +5,9 @@ ES6 JS implementations of [Streamr Protocol](https://github.com/streamr-dev/stre
  - [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript)
  - [streamr-broker](https://github.com/streamr-dev/streamr-broker)
  - [streamr-network](https://github.com/streamr-dev/streamr-network)
- 
+
+Please see the [API Docs](https://streamr-dev.github.io/streamr-client-protocol/) for more detailed documentation.
+
  The package is available on npm as `streamr-client-protocol`.
  
  ## Table of Contents

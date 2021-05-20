@@ -20,7 +20,7 @@ export default class SubscribeRequestSerializerV1 extends Serializer<SubscribeRe
     fromArray(arr: any[]) {
         const [
             version,
-            type, // eslint-disable-line no-unused-vars
+            type, // eslint-disable-line @typescript-eslint/no-unused-vars
             streamId,
             streamPartition,
             sessionToken,

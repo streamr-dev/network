@@ -20,7 +20,13 @@ const { Utils } = Protocol
 
 const logger = new Logger(module)
 
-export const startBroker = async (config: Config) => {
+export interface Broker {
+    getNeighbors: () => readonly string[]
+    getStreams: () => readonly string[]
+    close: () => Promise<unknown>
+}
+
+export const startBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config)
 
     logger.info(`Starting broker version ${CURRENT_VERSION}`)

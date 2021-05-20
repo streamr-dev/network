@@ -24,7 +24,7 @@ export default class ResendFromRequestSerializerV2 extends Serializer<ResendFrom
     fromArray(arr: any[]) {
         const [
             version,
-            type, // eslint-disable-line no-unused-vars
+            type, // eslint-disable-line @typescript-eslint/no-unused-vars
             requestId,
             streamId,
             streamPartition,

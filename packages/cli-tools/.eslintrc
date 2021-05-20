@@ -1,0 +1,6 @@
+{
+  "extends": "eslint-config-streamr-ts",
+  "rules": {
+    "no-console": "off"
+  }
+}

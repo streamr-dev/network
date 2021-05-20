@@ -9,8 +9,6 @@ import StreamMessage from '../../src/protocol/message_layer/StreamMessage'
 import StreamMessageValidator from '../../src/utils/StreamMessageValidator'
 import '../../src/protocol/message_layer/StreamMessageSerializerV31'
 
-const privateKey = '5765eb50ed4eb3aeec7e4199e9c21f5b9d23336b65d31a60ac20bbdee7493bc8'
-const address = '0xD12b87c9325eB36801d6114A0D5334AC2A8D25D8'
 const streamMessage = StreamMessage.deserialize('[31,["tagHE6nTQ9SJV2wPoCxBFw",0,1587141844396,0,"0xD12b87c9325eB36801d6114A0D5334AC2A8D25D8","k000EDTMtqOTLM8sirFj"],[1587141844312,0],27,0,"{\\"eventType\\":\\"trade\\",\\"eventTime\\":1587141844398,\\"symbol\\":\\"ETHBTC\\",\\"tradeId\\":172530352,\\"price\\":0.02415,\\"quantity\\":0.296,\\"buyerOrderId\\":687544144,\\"sellerOrderId\\":687544104,\\"time\\":1587141844396,\\"maker\\":false,\\"ignored\\":true}",2,"0x31453f26d0fedbf2101f6a1535c8c1dc1646de809fcde3a1068dfda9e5d2af42105efd40fe26840f1cb1d81a8872180e5ff0b0404234e179bcd413ec2bbb8aa01b"]')
 
 const mocks = {
@@ -23,12 +21,12 @@ const mocks = {
     isSubscriber: async () => true,
 }
 
-// @ts-ignore TODO
+// @ts-expect-error figure out what is wrong with typing here
 const accounts = new Web3EthAccounts()
 
 describe('validate', () => {
     const run = async (functionToTest: () => void, name: string, iterations: number) => {
-        const start = new Date()
+        const start = Date.now()
 
         let resultString = `Benchmarking ${name}...\n`
 
@@ -37,8 +35,7 @@ describe('validate', () => {
             await functionToTest()
         }
 
-        // @ts-ignore TODO
-        const end = new Date() - start
+        const end = Date.now() - start
 
         resultString += `Execution time: ${end} ms\n`
         resultString += `Iterations: ${iterations}\n`
@@ -107,7 +104,6 @@ describe('validate', () => {
         }, 'raw secp256k1 (verify)', 10000)
 
         await run(() => {
-            // @ts-ignore TODO
             secp256k1.ecdsaRecover(sigObj.signature, sigObj.recid, msg, true, Buffer.alloc)
         }, 'raw secp256k1 (recover)', 10000)
     })
