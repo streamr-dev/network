@@ -129,7 +129,17 @@ describeRepeats('decryption', () => {
 
     async function setupPublisherSubscriberClients(opts?: any) {
         debug('set up clients', opts)
-        // eslint-disable-next-line require-atomic-updates, semi-style
+        if (publisher) {
+            debug('disconnecting old publisher')
+            await publisher.disconnect()
+        }
+
+        if (subscriber) {
+            debug('disconnecting old subscriber')
+            await subscriber.disconnect()
+        }
+
+        // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
             setupClient({ id: uid('publisher'), ...opts }),
             setupClient({ id: uid('subscriber'), ...opts }),
@@ -646,6 +656,63 @@ describeRepeats('decryption', () => {
             // All good, unsubscribe
             await subscriber.unsubscribe(sub)
         }, TIMEOUT)
+
+        it('can rotate when publisher + subscriber initialised with groupkey', async () => {
+            const groupKey = GroupKey.generate()
+            const groupKeys = {
+                [stream.id]: {
+                    [groupKey.id]: {
+                        groupKeyId: groupKey.id,
+                        groupKeyHex: groupKey.hex,
+                    }
+                }
+            }
+
+            await publisher.disconnect()
+            publisher = await setupClient({
+                auth: publisher.options.auth,
+                groupKeys,
+            })
+            publishTestMessages = getPublishTestMessages(publisher, {
+                stream
+            })
+
+            await publisher.connect()
+            await publisher.rotateGroupKey(stream.id)
+            await grantSubscriberPermissions()
+            const sub = await subscriber.subscribe({
+                stream: stream.id,
+            })
+
+            const rawMessages: BroadcastMessage[] = []
+            subscriber.connection.on(String(ControlMessageType.BroadcastMessage), (msg) => {
+                rawMessages.push(BroadcastMessage.deserialize(msg.serialize()) as BroadcastMessage)
+            })
+
+            const published = await publishTestMessages.raw(3)
+
+            // published with encryption
+            expect(published.map(([, { streamMessage }]) => streamMessage.encryptionType))
+                .toEqual(published.map(() => StreamMessage.ENCRYPTION_TYPES.AES))
+
+            const received = []
+            for await (const msg of sub) {
+                received.push(msg.getParsedContent())
+                if (received.length === published.length) {
+                    break
+                }
+            }
+
+            expect(received).toEqual(published.map(([msg]) => msg))
+
+            const subMessages = rawMessages.filter(({ streamMessage }) => streamMessage.getStreamId() === stream.id)
+            // all messages were encrypted with same encryptionType as published
+            expect(subMessages.map(({ streamMessage }) => streamMessage.encryptionType))
+                .toEqual(published.map(([, { streamMessage }]) => streamMessage.encryptionType))
+
+            // All good, unsubscribe
+            await subscriber.unsubscribe(sub)
+        }, TIMEOUT * 2)
 
         it('client.resend last can get the historical keys for previous encrypted messages', async () => {
             // Publish encrypted messages with different keys
