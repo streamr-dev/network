@@ -71,6 +71,7 @@ public class Streams {
         activeStreamTester.stop();
 
         if (testCorrectness) {
+            log.info("Checking Correctness {}...", name);
             checkMsgsCorrectness();
         }
     }
@@ -136,7 +137,7 @@ public class Streams {
     }
 
     private void encryptedExchangedRotatingRevokingKeySignedStream(StreamTester streamTester) {
-        encryptedExchangeStreamHelper(streamTester, streamTester.getRotatingRevokingPublishFunction(10, 20));
+        encryptedExchangeStreamHelper(streamTester, streamTester.getRotatingRevokingPublishFunction(5, 7));
     }
 
     private void encryptedExchangeStreamHelper(StreamTester streamTester, PublishFunction publishFunction) {
