@@ -40,7 +40,6 @@ export interface Config {
     } | null,
     reporting: {
         intervalInSeconds: number,
-        sentry: string | null,
         streamr: {
             streamId: string
         } | null,

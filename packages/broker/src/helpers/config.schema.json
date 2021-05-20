@@ -201,7 +201,6 @@
       "description": "Configuration for reporting, metrics gathering, error gathering etc.",
       "required": [
         "intervalInSeconds",
-        "sentry",
         "streamr",
         "perNodeMetrics"
       ],
@@ -211,14 +210,6 @@
           "type": "integer",
           "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
           "minimum": 0
-        },
-        "sentry": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "URL for Sentry monitoring and error tracking",
-            "format": "uri"
         },
         "streamr": {
             "type": [
