@@ -41,11 +41,11 @@ export class Subscription extends Emitter {
     /** @internal */
     _onFinally
     /** @internal */
-    pipeline
+    pipeline: ReturnType<typeof MessagePipeline>
     /** @internal */
     msgStream
     /** @internal */
-    iterated?: Todo
+    iterated = false
     /** @internal */
     debug
 
