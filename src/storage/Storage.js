@@ -268,10 +268,16 @@ class Storage extends EventEmitter {
     _fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
         const resultStream = this._createResultStream()
 
-        const query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
-            + 'AND msg_chain_id = ? ALLOW FILTERING'
-        const query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND publisher_id = ? '
-            + 'AND msg_chain_id = ? ALLOW FILTERING'
+        let query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
+        let query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
+
+        if (msgChainId !== null){
+            query1 += 'AND msg_chain_id = ?'
+            query2 += 'AND msg_chain_id = ?'
+        }
+
+        query1 +=  ' ALLOW FILTERING'
+        query2 +=  ' ALLOW FILTERING'
 
         this.bucketManager.getLastBuckets(streamId, partition, 1, fromTimestamp).then((buckets) => {
             return buckets.length ? buckets[0].dateCreate : fromTimestamp
