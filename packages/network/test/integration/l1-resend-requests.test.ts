@@ -92,8 +92,7 @@ describe('resend requests are fulfilled at L1', () => {
             'requestId',
             666,
             0,
-            'publisherId',
-            'msgChainId'
+            'publisherId'
         )
         const events = await typesOfStreamItems(stream)
 

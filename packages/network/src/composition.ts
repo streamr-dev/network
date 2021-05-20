@@ -154,6 +154,14 @@ export async function startStorageNode(opts: StorageNodeOptions): Promise<Networ
     return node
 }
 
+type PeerInfoFn = (
+    id: string,
+    name: string | undefined,
+    controlLayerVersion?: number[],
+    messageLayerVersion?: number[],
+    location?: Location | null | undefined
+) => PeerInfo
+
 function startNode({
     host,
     port,
@@ -170,7 +178,7 @@ function startNode({
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
     stunUrls = ['stun:stun.l.google.com:19302']
-}: NetworkNodeOptions, peerInfoFn: (id: string, name: string | undefined, controlLayerVersion?: number[], messageLayerVersion?: number[], location?: Location | null | undefined) => PeerInfo): Promise<NetworkNode> {
+}: NetworkNodeOptions, peerInfoFn: PeerInfoFn): Promise<NetworkNode> {
     const peerInfo = peerInfoFn(id, name, undefined, undefined, location)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)

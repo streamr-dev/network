@@ -66,8 +66,7 @@ export class NetworkNode extends Node {
         requestId: string,
         fromTimestamp: number,
         fromSequenceNo: number,
-        publisherId: string | null,
-        _msgChainId: string | null
+        publisherId: string | null
     ): ReadableStream {
         const request = new ControlLayer.ResendFromRequest({
             requestId,

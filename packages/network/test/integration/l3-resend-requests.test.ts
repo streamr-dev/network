@@ -149,8 +149,7 @@ describe('resend requests are fulfilled at L3', () => {
             'requestId',
             666,
             0,
-            'publisherId',
-            'msgChainId'
+            'publisherId'
         )
         const events = await typesOfStreamItems(stream)
         expect(events).toEqual([
