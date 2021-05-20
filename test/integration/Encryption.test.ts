@@ -1,6 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { BroadcastMessage, ControlMessage, ControlMessageType, StreamMessage } from 'streamr-client-protocol'
-
+import { BroadcastMessage, ControlMessageType, StreamMessage } from 'streamr-client-protocol'
 import { describeRepeats, fakePrivateKey, uid, Msg, getPublishTestMessages } from '../utils'
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -11,7 +10,6 @@ import { StorageNode } from '../../src/stream/StorageNode'
 import Debug from 'debug'
 
 import config from './config'
-import {EncryptionType} from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 10 * 1000
@@ -574,9 +572,9 @@ describeRepeats('decryption', () => {
                 stream: stream.id,
             })
 
-            const rawMessages = []
+            const rawMessages: BroadcastMessage[] = []
             subscriber.connection.on(String(ControlMessageType.BroadcastMessage), (msg) => {
-                rawMessages.push(BroadcastMessage.deserialize(msg.serialize()))
+                rawMessages.push(BroadcastMessage.deserialize(msg.serialize()) as BroadcastMessage)
             })
 
             const published = await publishTestMessages.raw(5, {
@@ -584,7 +582,10 @@ describeRepeats('decryption', () => {
                     await publisher.rotateGroupKey(stream.id)
                 }
             })
-            expect(published.map(([, { streamMessage }]) => streamMessage.encryptionType)).toEqual(published.map(() => EncryptionType.AES))
+
+            // published with encryption
+            expect(published.map(([, { streamMessage }]) => streamMessage.encryptionType))
+                .toEqual(published.map(() => StreamMessage.ENCRYPTION_TYPES.AES))
 
             const received = []
             for await (const msg of sub) {
@@ -612,9 +613,9 @@ describeRepeats('decryption', () => {
                 stream: stream.id,
             })
 
-            const rawMessages = []
+            const rawMessages: BroadcastMessage[] = []
             subscriber.connection.on(String(ControlMessageType.BroadcastMessage), (msg) => {
-                rawMessages.push(BroadcastMessage.deserialize(msg.serialize()))
+                rawMessages.push(BroadcastMessage.deserialize(msg.serialize()) as BroadcastMessage)
             })
 
             const published = await publishTestMessages.raw(5, {
@@ -622,7 +623,10 @@ describeRepeats('decryption', () => {
                     await publisher.rekey(stream.id)
                 }
             })
-            expect(published.map(([, { streamMessage }]) => streamMessage.encryptionType)).toEqual(published.map(() => EncryptionType.AES))
+
+            // published with encryption
+            expect(published.map(([, { streamMessage }]) => streamMessage.encryptionType))
+                .toEqual(published.map(() => StreamMessage.ENCRYPTION_TYPES.AES))
 
             const received = []
             for await (const msg of sub) {
