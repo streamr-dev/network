@@ -62,24 +62,24 @@ describe('WebRtcEndpoint Flakey Tests', () => {
 
     it('can handle fast paced reconnects', async () => {
         await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 10000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 10000),
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30000),
             endpoint1.connect('node-2', 'tracker', true),
             endpoint2.connect('node-1', 'tracker', false),
         ])
 
         await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 10000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 10000),
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30000),
             endpoint1.close('node-2', 'test'),
             endpoint1.connect('node-2', 'tracker', true),
         ])
-    })
+    }, 60000)
 
     it('messages are delivered on temporary loss of connectivity', async () => {
         await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 10000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 10000),
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30000),
             endpoint1.connect('node-2', 'tracker'),
             endpoint2.connect('node-1', 'tracker'),
         ])
@@ -98,11 +98,11 @@ describe('WebRtcEndpoint Flakey Tests', () => {
 
         async function reconnect() {
             await Promise.all([
-                waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED, 10000),
+                waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED, 30000),
                 endpoint2.close('node-1', 'temporary loss of connectivity test')
             ])
             await Promise.all([
-                waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 10000),
+                waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
                 endpoint1.connect('node-2', 'tracker'),
                 endpoint2.connect('node-1', 'tracker'),
             ])
@@ -128,10 +128,10 @@ describe('WebRtcEndpoint Flakey Tests', () => {
         await onReconnect
         await waitForCondition(() => (
             ep2NumOfReceivedMessages === 6
-        ), 10000, 500, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
+        ), 30000, 500, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
         // all send tasks completed
         await Promise.allSettled(sendTasks)
         await Promise.all(sendTasks)
         expect(sendTasks).toHaveLength(NUM_MESSAGES)
-    }, 40 * 1000)
+    }, 60 * 1000)
 })
