@@ -16,7 +16,7 @@ export const authenticator = (streamFetcher: StreamFetcher, permission = 'stream
         const sessionTokenHeaderValid = req.headers.authorization.toLowerCase().startsWith('bearer ')
         if (!sessionTokenHeaderValid) {
             const errMsg = 'Authorization header malformed. Should be of form "Bearer session-token".'
-            logger.error(errMsg)
+            logger.debug(errMsg)
 
             res.status(400).send({
                 error: errMsg

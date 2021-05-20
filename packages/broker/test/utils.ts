@@ -81,7 +81,6 @@ export function formConfig({
             refreshInterval: 0
         } : null,
         reporting: reporting || {
-            sentry: null,
             streamr: null,
             intervalInSeconds: 0,
             perNodeMetrics: {

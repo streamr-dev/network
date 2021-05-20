@@ -19,12 +19,12 @@ endef
 
 pull: setup
 	-mkdir -p packages
-	git subtree pull --prefix=packages/network network master
-	git subtree pull --prefix=packages/broker broker master
-	git subtree pull --prefix=packages/cli-tools cli-tools master
-	git subtree pull --prefix=packages/client streamr-client-javascript master
-	git subtree pull --prefix=packages/protocol streamr-client-protocol-js master
-	git subtree pull --prefix=packages/test-utils streamr-test-utils master
-	git subtree pull --prefix=packages/cross-client-testing streamr-client-testing master
+	-git subtree pull --prefix=packages/network network master
+	-git subtree pull --prefix=packages/broker broker master
+	-git subtree pull --prefix=packages/cli-tools cli-tools master
+	-git subtree pull --prefix=packages/client streamr-client-javascript master
+	-git subtree pull --prefix=packages/protocol streamr-client-protocol-js master
+	-git subtree pull --prefix=packages/test-utils streamr-test-utils master
+	-git subtree pull --prefix=packages/cross-client-testing streamr-client-testing master
 
 .PHONY: pull setup
