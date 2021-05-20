@@ -40,7 +40,11 @@ function waitForSubMessage(sub: Subscription, matchFn: MessageMatch) {
 }
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil) {
-    const { encryptedGroupKeys = [] } = GroupKeyResponse.fromArray(streamMessage.getParsedContent())
+    const content = streamMessage.getParsedContent() || []
+    if (content.length === 2) {
+        content.unshift('') // Java client doesn't inject request id, skip as not needed.
+    }
+    const { encryptedGroupKeys = [] } = GroupKeyResponse.fromArray(content)
     return Promise.all(encryptedGroupKeys.map(async (encryptedGroupKey) => (
         new GroupKey(
             encryptedGroupKey.groupKeyId,
