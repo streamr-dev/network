@@ -528,7 +528,10 @@ export async function sleep(ms: number = 0) {
     })
 }
 
-// condition could as well return any instead of boolean, could be convenient sometimes if waiting until a value is returned. Maybe change if such use case emerges.
+// condition could as well return any instead of boolean, could be convenient
+// sometimes if waiting until a value is returned. Maybe change if such use
+// case emerges.
+
 /**
  * Wait until a condition is true
  * @param condition - wait until this callback function returns true

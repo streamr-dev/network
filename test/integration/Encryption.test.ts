@@ -669,6 +669,7 @@ describeRepeats('decryption', () => {
             }
 
             await publisher.disconnect()
+            // eslint-disable-next-line require-atomic-updates
             publisher = await setupClient({
                 auth: publisher.options.auth,
                 groupKeys,
