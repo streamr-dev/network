@@ -1,11 +1,5 @@
 {
-  "extends": "./tsconfig.node.json",
-  "compilerOptions": {
-        "types": [
-            "jest",
-            "node"
-        ]
-  },
+  "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
   "include": [
       "src/**/*",
       "vendor/**/*",
