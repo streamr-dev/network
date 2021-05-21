@@ -1,6 +1,5 @@
 import { Readable } from "stream"
 import { EventEmitter } from "events"
-import { AssertionError } from "assert"
 
 export type Event = string | symbol
 
