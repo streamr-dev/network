@@ -87,13 +87,17 @@ describe(waitForEvent, () => {
 describe(waitForCondition, () => {
     describe('given conditionFn that returns boolean primitives', () => {
         it('resolves immediately if conditionFn returns true from the get-go', (done) => {
-            waitForCondition(() => true).then(done)
+            waitForCondition(() => true)
+                .then(done)
+                .catch(() => done(new Error('timed out')))
         })
 
         it('resolves eventually when conditionFn returns true', (done) => {
             let cbReturnValue = false
             setTimeout(() => cbReturnValue = true, 50)
-            waitForCondition(() => cbReturnValue, 5000, 10).then(done)
+            waitForCondition(() => cbReturnValue, 5000, 10)
+                .then(done)
+                .catch(() => done(new Error('timed out')))
         })
 
         it('rejects if conditionFn does not return true within timeout', (done) => {
@@ -244,6 +248,7 @@ describe(callbackToPromise, () => {
             (value) => {
                 expect(value).toEqual(16)
                 done()
+                return true
             },
             (err) => {
                 fail(`Errored ${err}`)
@@ -253,8 +258,9 @@ describe(callbackToPromise, () => {
     it("callback error causes returned promise to reject",(done) => {
         const convertedFn = callbackToPromise(sumOfPositives, 1, 5, -666)
         convertedFn.then(
-            (value) => {
+            (_value) => {
                 fail("should have rejected")
+                return true
             },
             (err) => {
                 expect(err).toEqual(new Error("one of inputs was negative!"))
