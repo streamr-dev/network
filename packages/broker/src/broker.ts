@@ -9,13 +9,13 @@ import { Publisher } from './Publisher'
 import { VolumeLogger } from './VolumeLogger'
 import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
-import { validateBrokerConfig } from './helpers/validateConfig'
-import { Storage } from './storage/Storage'
+import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
 import { Todo } from './types'
 import { Config, TrackerRegistry } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
+import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -27,7 +27,7 @@ export interface Broker {
 }
 
 export const startBroker = async (config: Config): Promise<Broker> => {
-    validateBrokerConfig(config)
+    validateConfig(config, BROKER_CONFIG_SCHEMA)
 
     logger.info(`Starting broker version ${CURRENT_VERSION}`)
 
@@ -41,15 +41,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         throw new Error('Could not resolve Ethereum address from given config.ethereumPrivateKey')
     }
     const brokerAddress = wallet.address
-
-    let cassandraStorage: Storage
-    // Start cassandra storage
-    if (config.cassandra) {
-        logger.info(`Starting Cassandra with hosts ${config.cassandra.hosts} and keyspace ${config.cassandra.keyspace}`)
-
-    } else {
-        logger.info('Cassandra disabled')
-    }
 
     // Form tracker list
     let trackers: string[]
@@ -163,9 +154,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     logger.info(`Configured with trackers: ${trackers.join(', ')}`)
     logger.info(`Configured with Streamr: ${config.streamrUrl}`)
     logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
-    if (config.cassandra) {
-        logger.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
-    }
     if (advertisedWsUrl) {
         logger.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
     }

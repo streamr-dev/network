@@ -32,7 +32,18 @@ export function formConfig({
     if (httpPort) {
         plugins['http'] = {}
         if (enableCassandra) {
-            plugins['storage'] = {}
+            plugins['storage'] = {
+                cassandra: {
+                    hosts: [STREAMR_DOCKER_DEV_HOST],
+                    datacenter: 'datacenter1',
+                    username: '',
+                    password: '',
+                    keyspace: 'streamr_dev_v2',
+                },
+                storageConfig: {
+                    refreshInterval: 0
+                } 
+            }
         }
     }
     if (wsPort) {
@@ -68,16 +79,6 @@ export function formConfig({
                 city: 'Helsinki'
             }
         },
-        cassandra: enableCassandra ? {
-            hosts: [STREAMR_DOCKER_DEV_HOST],
-            datacenter: 'datacenter1',
-            username: '',
-            password: '',
-            keyspace: 'streamr_dev_v2',
-        } : null,
-        storageConfig: enableCassandra ? {
-            refreshInterval: 0
-        } : null,
         reporting: reporting || {
             streamr: null,
             intervalInSeconds: 0,

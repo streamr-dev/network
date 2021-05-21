@@ -7,8 +7,22 @@ import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
 import { StreamPart } from '../types'
 import { Wallet } from 'ethers'
+import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
-export class StoragePlugin extends Plugin<void> {
+export interface StoragePluginConfig {
+    cassandra: {
+        hosts: string[],
+        username: string
+        password: string
+        keyspace: string,
+        datacenter: string
+    }
+    storageConfig: {
+        refreshInterval: number
+    }
+}
+
+export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     private cassandra: Storage|undefined
     private storageConfig: StorageConfig|undefined
@@ -44,11 +58,11 @@ export class StoragePlugin extends Plugin<void> {
 
     private async getCassandraStorage() {
         const cassandraStorage = await startCassandraStorage({
-            contactPoints: [...this.brokerConfig.cassandra!.hosts],
-            localDataCenter: this.brokerConfig.cassandra!.datacenter,
-            keyspace: this.brokerConfig.cassandra!.keyspace,
-            username: this.brokerConfig.cassandra!.username,
-            password: this.brokerConfig.cassandra!.password,
+            contactPoints: [...this.pluginConfig.cassandra.hosts],
+            localDataCenter: this.pluginConfig.cassandra.datacenter,
+            keyspace: this.pluginConfig.cassandra.keyspace,
+            username: this.pluginConfig.cassandra.username,
+            password: this.pluginConfig.cassandra.password,
             opts: {
                 useTtl: !this.brokerConfig.network.isStorageNode
             }
@@ -59,7 +73,7 @@ export class StoragePlugin extends Plugin<void> {
 
     private async createStorageConfig() {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
-        const storageConfig = await StorageConfig.createInstance(brokerAddress, this.brokerConfig.streamrUrl + '/api/v1', this.brokerConfig.storageConfig!.refreshInterval)
+        const storageConfig = await StorageConfig.createInstance(brokerAddress, this.brokerConfig.streamrUrl + '/api/v1', this.pluginConfig.storageConfig.refreshInterval)
         storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.networkNode)
         return storageConfig
     }
@@ -69,5 +83,9 @@ export class StoragePlugin extends Plugin<void> {
             this.cassandra!.close(),
             this.storageConfig!.cleanup()
         ])
+    }
+
+    getConfigSchema() {
+        return PLUGIN_CONFIG_SCHEMA
     }
 }
