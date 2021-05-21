@@ -1,4 +1,4 @@
-import { AdapterConfig } from './Adapter'
+import { PluginConfig } from './Plugin'
 
 export interface TrackerRegistry {
     registryAddress: string
@@ -59,7 +59,7 @@ export interface Config {
     streamrUrl: string,
     streamrAddress: string,
     storageNodeRegistry: StorageNodeRegistryItem[] | null
-    adapters: AdapterConfig[]
+    plugins: PluginConfig[]
 }
 
 export interface BrokerConfig extends Config {

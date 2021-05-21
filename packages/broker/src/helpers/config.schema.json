@@ -4,7 +4,7 @@
   "description": "Broker configuration format",
   "type": "object",
   "required": [
-    "adapters",
+    "plugins",
     "cassandra",
     "storageConfig",
     "ethereumPrivateKey",
@@ -16,11 +16,11 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "adapters": {
+    "plugins": {
       "type": "array",
-      "description": "Foreign protocol adapters to use",
+      "description": "Foreign protocol plugins to use",
       "items": {
-        "$ref": "#/definitions/adapter"
+        "$ref": "#/definitions/plugin"
       }
     },
     "cassandra": {
@@ -301,11 +301,11 @@
     }
   },
   "definitions": {
-    "adapter": {
+    "plugin": {
       "oneOf": [
         {
           "type": "object",
-          "description": "WebSocket adapter configuration",
+          "description": "WebSocket plugin configuration",
           "required": [
             "name",
             "port"
@@ -317,7 +317,7 @@
             },
             "port": {
               "$ref": "#/definitions/port",
-              "description": "Port to start adapter on"
+              "description": "Port to start plugin on"
             },
             "pingInterval": {
               "type": "integer",
@@ -342,7 +342,7 @@
         },
         {
           "type": "object",
-          "description": "HTTP adapter configuration",
+          "description": "HTTP plugin configuration",
           "required": [
             "name",
             "port"
@@ -354,7 +354,7 @@
             },
             "port": {
               "$ref": "#/definitions/port",
-              "description": "Port to start adapter on"
+              "description": "Port to start plugin on"
             },
             "certFileName": {
               "type": [
@@ -374,7 +374,7 @@
         },
         {
           "type": "object",
-          "description": "MQTT adapter configuration",
+          "description": "MQTT plugin configuration",
           "required": [
             "name",
             "port",
@@ -387,7 +387,7 @@
             },
             "port": {
               "$ref": "#/definitions/port",
-              "description": "Port to start adapter on"
+              "description": "Port to start plugin on"
             },
             "streamsTimeout": {
               "type": "integer",

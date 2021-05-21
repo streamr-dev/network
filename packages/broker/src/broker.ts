@@ -140,7 +140,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     const publisher = new Publisher(networkNode, streamMessageValidator, metricsContext)
     const subscriptionManager = new SubscriptionManager(networkNode)
 
-    const plugins: Plugin<any>[] = config.adapters.map(({ name, ...adapterConfig }) => {
+    const plugins: Plugin<any>[] = config.plugins.map(({ name, ...pluginConfig }) => {
         const pluginOptions: PluginOptions<any> = {
             networkNode,
             subscriptionManager,
@@ -149,7 +149,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             cassandraStorage,
             storageConfig,
             config,
-            adapterConfig,
+            pluginConfig,
         }
         return createPlugin(name, pluginOptions)
     })
@@ -180,7 +180,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     logger.info(`Ethereum address ${brokerAddress}`)
     logger.info(`Configured with trackers: ${trackers.join(', ')}`)
     logger.info(`Configured with Streamr: ${config.streamrUrl}`)
-    logger.info(`Adapters: ${JSON.stringify(config.adapters.map((a: Todo) => a.name))}`)
+    logger.info(`Plugins: ${JSON.stringify(config.plugins.map((a: Todo) => a.name))}`)
     if (config.cassandra) {
         logger.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
     }

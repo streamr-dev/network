@@ -96,7 +96,7 @@ export class WebsocketServer extends EventEmitter {
         this.wss.listen(port, (token: Todo) => {
             if (token) {
                 this._listenSocket = token
-                logger.info('WS adapter listening on ' + port)
+                logger.info('WS plugin listening on ' + port)
             } else {
                 logger.info('Failed to listen to port ' + port)
                 this.close()

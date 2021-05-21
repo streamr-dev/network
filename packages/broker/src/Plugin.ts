@@ -1,10 +1,14 @@
 import { MetricsContext, NetworkNode } from 'streamr-network'
 import { Storage } from './storage/Storage'
 import { StorageConfig } from './storage/StorageConfig'
-import { AdapterConfig } from './Adapter'
 import { Config } from './config'
 import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
+
+export interface PluginConfig {
+    name: string
+    port: number
+}
 
 export interface PluginOptions<T> {
     networkNode: NetworkNode
@@ -14,10 +18,10 @@ export interface PluginOptions<T> {
     cassandraStorage: Storage|null
     storageConfig: StorageConfig|null
     config: Config
-    adapterConfig: T
+    pluginConfig: T
 }
 
-export abstract class Plugin<T extends AdapterConfig> {
+export abstract class Plugin<T extends PluginConfig> {
 
     readonly networkNode: NetworkNode
     readonly subscriptionManager: SubscriptionManager
@@ -26,7 +30,7 @@ export abstract class Plugin<T extends AdapterConfig> {
     readonly cassandraStorage: Storage|null
     readonly storageConfig: StorageConfig|null
     readonly config: Config
-    readonly adapterConfig: T
+    readonly pluginConfig: T
 
     constructor(options: PluginOptions<T>) {
         this.networkNode = options.networkNode
@@ -36,7 +40,7 @@ export abstract class Plugin<T extends AdapterConfig> {
         this.cassandraStorage = options.cassandraStorage
         this.storageConfig = options.storageConfig
         this.config = options.config
-        this.adapterConfig = options.adapterConfig
+        this.pluginConfig = options.pluginConfig
     }
 
     abstract start(): Promise<unknown>

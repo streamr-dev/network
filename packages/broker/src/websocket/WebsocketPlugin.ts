@@ -1,34 +1,33 @@
 import ws from 'uWebSockets.js'
 import { MissingConfigError } from '../errors/MissingConfigError'
 import { WebsocketServer } from './WebsocketServer'
-import { AdapterConfig } from '../Adapter'
-import { Plugin, PluginOptions } from '../Plugin'
+import { Plugin, PluginOptions, PluginConfig } from '../Plugin'
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { StreamFetcher } from '../StreamFetcher'
 
-export interface WsAdapterConfig extends AdapterConfig {
+export interface WsPluginConfig extends PluginConfig {
     privateKeyFileName: string|null, 
     certFileName: string|null,
     pingInterval: number
 }
 
-export class WebsocketPlugin extends Plugin<WsAdapterConfig> {
+export class WebsocketPlugin extends Plugin<WsPluginConfig> {
 
     private websocketServer: WebsocketServer|undefined
 
-    constructor(options: PluginOptions<WsAdapterConfig>) {
+    constructor(options: PluginOptions<WsPluginConfig>) {
         super(options)
     }
 
     async start() {
-        if (this.adapterConfig.port === undefined) {
+        if (this.pluginConfig.port === undefined) {
             throw new MissingConfigError('port')
         }
         let server
-        if (this.adapterConfig.privateKeyFileName && this.adapterConfig.certFileName) {
+        if (this.pluginConfig.privateKeyFileName && this.pluginConfig.certFileName) {
             server = ws.SSLApp({
-                key_file_name: this.adapterConfig.privateKeyFileName,
-                cert_file_name: this.adapterConfig.certFileName,
+                key_file_name: this.pluginConfig.privateKeyFileName,
+                cert_file_name: this.pluginConfig.certFileName,
             })
         } else {
             server = ws.App()
@@ -36,7 +35,7 @@ export class WebsocketPlugin extends Plugin<WsAdapterConfig> {
         const storageNodeRegistry = StorageNodeRegistry.createInstance(this.config)
         this.websocketServer = new WebsocketServer(
             server,
-            this.adapterConfig.port,
+            this.pluginConfig.port,
             this.networkNode,
             new StreamFetcher(this.config.streamrUrl),
             this.publisher,
@@ -44,7 +43,7 @@ export class WebsocketPlugin extends Plugin<WsAdapterConfig> {
             this.subscriptionManager,
             storageNodeRegistry!,
             this.config.streamrUrl,
-            this.adapterConfig.pingInterval,
+            this.pluginConfig.pingInterval,
         )
     }
 

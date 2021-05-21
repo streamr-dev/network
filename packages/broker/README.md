@@ -4,7 +4,7 @@ Main executable for running a broker node in Streamr Network.
 
 The broker node extends the minimal network node provided by the
 [streamr-network](https://github.com/streamr-dev/network) library with
-- client-facing support for foreign protocols (e.g. HTTP, MQTT) via adapters
+- client-facing support for foreign protocols (e.g. HTTP, MQTT) via plugins
 - support for long-term persistence of data using Apache Cassandra.
 
 ## Table of Contents
@@ -116,7 +116,7 @@ https://semver.org/. Files package.json and package-lock.json will be automatica
 
 For production version of the Streamr API refer to [API Explorer](https://api-explorer.streamr.com).
 
-### Special considerations for using MQTT adapter
+### Special considerations for using MQTT plugin
 - For authentication put private key in the password connection field
 - MQTT clients can send plain text, but their payload will be transformed to a JSON object accordingly:
 `{"mqttPayload":"ORIGINAL_PLAINTEXT_PAYLOAD}`

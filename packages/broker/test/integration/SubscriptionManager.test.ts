@@ -79,7 +79,7 @@ describe('SubscriptionManager', () => {
         await tracker.stop()
     })
 
-    it('SubscriptionManager correctly handles subscribe/unsubscribe requests across all adapters', async () => {
+    it('SubscriptionManager correctly handles subscribe/unsubscribe requests across all plugins', async () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
