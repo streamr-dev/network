@@ -30,7 +30,7 @@ export abstract class Plugin<T> {
     readonly storageConfig: StorageConfig|null
     readonly brokerConfig: Config
     readonly pluginConfig: T
-    readonly httpServerRouters: express.Router[] = []
+    private readonly httpServerRouters: express.Router[] = []
 
     constructor(options: PluginOptions) {
         this.name = options.name
