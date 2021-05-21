@@ -79,7 +79,7 @@ export const runAndWaitForEvents = async (
     }
     
     const promise: Promise<unknown[]> = new Promise( (resolve, reject) => { 
-        Promise.all(evs.map( (e) => { waitForEvent(e[0], e[1], timeout) }))
+`const promise = Promise.all(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))`
             .then((result) => {
                 return resolve(result)
             })
