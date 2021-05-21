@@ -23,14 +23,6 @@
   },
   "homepage": "https://github.com/streamr-dev/streamr-client-testing#readme",
   "dependencies": {
-    "ethers": "^5.1.4",
     "streamr-client": "5.4.2-alpha.0"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.14.3",
-    "@babel/core": "^7.14.3",
-    "@babel/node": "^7.8.4",
-    "@babel/preset-env": "^7.14.2",
-    "nodemon": "^2.0.2"
   }
 }

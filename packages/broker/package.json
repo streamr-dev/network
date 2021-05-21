@@ -25,7 +25,6 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@pm2/io": "^4.3.5",
-    "@sentry/node": "^6.2.3",
     "@streamr/dev-config": "1.0.0-alpha.0",
     "@teppeis/multimaps": "^2.0.0",
     "@types/cors": "^2.8.10",
