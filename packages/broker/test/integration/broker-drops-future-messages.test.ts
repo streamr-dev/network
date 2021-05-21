@@ -70,7 +70,7 @@ describe('broker drops future messages', () => {
         await client.ensureDisconnected()
     })
 
-    test('pushing message with too future timestamp to HTTP adapter returns 400 error & does not crash broker', async () => {
+    test('pushing message with too future timestamp to HTTP plugin returns 400 error & does not crash broker', async () => {
         const streamMessage = buildMsg(
             streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 5) * 1000,
             0, 'publisher', '1', {}
@@ -112,7 +112,7 @@ describe('broker drops future messages', () => {
             })
     })
 
-    test('pushing message with too future timestamp to Websocket adapter returns error & does not crash broker', (done) => {
+    test('pushing message with too future timestamp to Websocket plugin returns error & does not crash broker', (done) => {
         const streamMessage = buildMsg(
             streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 5) * 1000,
             0, 'publisher', '1', {}

@@ -1,5 +1,3 @@
-import { AdapterConfig } from './Adapter'
-
 export interface TrackerRegistry {
     registryAddress: string
     jsonRpcProvider: string
@@ -18,6 +16,12 @@ export interface NetworkConfig {
         country: string,
         city: string
     } | null
+}
+
+export interface HttpServerConfig {
+    port: number, 
+    privateKeyFileName: string | null,
+    certFileName: string | null
 }
 
 export interface StorageNodeRegistryItem {
@@ -59,7 +63,8 @@ export interface Config {
     streamrUrl: string,
     streamrAddress: string,
     storageNodeRegistry: StorageNodeRegistryItem[] | null
-    adapters: AdapterConfig[]
+    httpServer: HttpServerConfig | null
+    plugins: Record<string,any>
 }
 
 export interface BrokerConfig extends Config {
