@@ -1,6 +1,4 @@
 import { MetricsContext, NetworkNode } from 'streamr-network'
-import { Storage } from './storage/Storage'
-import { StorageConfig } from './storage/StorageConfig'
 import { Config } from './config'
 import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'

@@ -11,7 +11,6 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Todo } from './types'
 import { Config, TrackerRegistry } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
@@ -33,7 +32,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
 
     const networkNodeName = config.network.name
     const metricsContext = new MetricsContext(networkNodeName)
-    const storages: Todo[] = []
 
     // Ethereum wallet retrieval
     const wallet = new Wallet(config.ethereumPrivateKey)
