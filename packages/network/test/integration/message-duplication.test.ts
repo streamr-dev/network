@@ -1,13 +1,8 @@
 import { NetworkNode } from '../../src/NetworkNode'
 import { Tracker } from '../../src/logic/Tracker'
-import { MessageLayer } from 'streamr-client-protocol'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
-
+import { StreamMessage, MessageID } from 'streamr-client-protocol'
+import { waitForCondition } from 'streamr-test-utils'
 import { startNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
-import { Event as NodeEvent } from "../../src/logic/Node"
-
-const { StreamMessage, MessageID } = MessageLayer
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
@@ -71,19 +66,8 @@ describe('duplicate message detection and avoidance', () => {
             }),
         ])
 
-        const allNodesConnnectedToTrackerPromise = Promise.all(otherNodes.map((node) => {
-            // @ts-expect-error private field
-            return waitForEvent(node.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER)
-        }))
-        // eslint-disable-next-line no-restricted-syntax
-        for (const node of otherNodes) {
-            node.start()
-        }
-        await allNodesConnnectedToTrackerPromise
+        otherNodes.forEach((n) => n.start())
 
-        const allNodesSubscribed = Promise.all(otherNodes.map((node) => {
-            return waitForEvent(node, NodeEvent.NODE_SUBSCRIBED)
-        }))
         // Become subscribers (one-by-one, for well connected graph)
         otherNodes[0].subscribe('stream-id', 0)
         otherNodes[1].subscribe('stream-id', 0)
@@ -91,7 +75,13 @@ describe('duplicate message detection and avoidance', () => {
         otherNodes[3].subscribe('stream-id', 0)
         otherNodes[4].subscribe('stream-id', 0)
 
-        await allNodesSubscribed
+        await Promise.all([
+            otherNodes[0].waitForNeighbors('stream-id', 0, 2, 15 * 1000),
+            otherNodes[1].waitForNeighbors('stream-id', 0, 2, 15 * 1000),
+            otherNodes[2].waitForNeighbors('stream-id', 0, 2, 15 * 1000),
+            otherNodes[3].waitForNeighbors('stream-id', 0, 2, 15 * 1000),
+            otherNodes[4].waitForNeighbors('stream-id', 0, 2, 15 * 1000)
+        ])
 
         // Set up 1st test case
         let totalMessages = 0
@@ -105,21 +95,21 @@ describe('duplicate message detection and avoidance', () => {
         }
 
         // Produce data
-        contactNode.publish(new StreamMessage({
+        await contactNode.asyncPublish(new StreamMessage({
             messageId: new MessageID('stream-id', 0, 100, 0, 'publisher', 'session'),
             content: {
                 hello: 'world'
             },
-        }))
-        contactNode.publish(new StreamMessage({
+        }), 2)
+        await contactNode.asyncPublish(new StreamMessage({
             messageId: new MessageID('stream-id', 0, 120, 0, 'publisher', 'session'),
             content: {
                 hello: 'world'
             },
-        }))
+        }), 2)
 
         await waitForCondition(() => totalMessages > 9, 8000)
-    }, 10000)
+    }, 30 * 1000)
 
     afterAll(async () => {
         await Promise.allSettled([

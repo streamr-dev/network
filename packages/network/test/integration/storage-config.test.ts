@@ -1,9 +1,8 @@
 import { MessageLayer } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
 import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
-import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { startTracker, startNetworkNode, startStorageNode, Storage } from '../../src/composition'
 import { StreamIdAndPartition } from '../../src/identifiers'
 import { MockStorageConfig } from './MockStorageConfig'
@@ -64,16 +63,8 @@ describe('storage node', () => {
             storages: [storage as Storage],
             storageConfig: config
         })
-
-        // @ts-expect-error private field
-        const t1 = waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         relayNode.start()
-        await t1
-
-        // @ts-expect-error private field
-        const t2 = waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         storageNode.start()
-        await t2
     }, 15000)
 
     afterEach(async () => {
@@ -84,7 +75,7 @@ describe('storage node', () => {
 
     it('initial stream', async () => {
         const message = createMockMessage(initialStream)
-        relayNode.publish(message)
+        await relayNode.asyncPublish(message)
         await waitForCondition(() => (storage.store as any).mock.calls.length > 0)
         expect(storage.store).toHaveBeenCalledWith(createStreamMessageMatcher(message))
     })
@@ -93,7 +84,7 @@ describe('storage node', () => {
         const stream = createMockStream()
         config.addStream(stream)
         const message = createMockMessage(stream)
-        relayNode.publish(message)
+        await relayNode.asyncPublish(message)
         await waitForCondition(() => (storage.store as any).mock.calls.length > 0)
         expect(storage.store).toHaveBeenCalledWith(createStreamMessageMatcher(message))
     })

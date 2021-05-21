@@ -1,9 +1,8 @@
 import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
 
-import { Event as NodeEvent } from '../../src/logic/Node'
 import { startTracker, startNetworkNode } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -96,16 +95,18 @@ describe('message propagation in network', () => {
             payload: streamMessage.getParsedContent()
         }))
 
+        n1.subscribe('stream-1', 0)
         n2.subscribe('stream-1', 0)
         n3.subscribe('stream-1', 0)
 
         await Promise.all([
-            waitForEvent(n2, NodeEvent.NODE_SUBSCRIBED),
-            waitForEvent(n3, NodeEvent.NODE_SUBSCRIBED)
+            n1.waitForNeighbors('stream-1', 0, 2),
+            n2.waitForNeighbors('stream-1', 0, 2),
+            n3.waitForNeighbors('stream-1', 0, 2)
         ])
 
         for (let i = 1; i <= 5; ++i) {
-            n1.publish(new StreamMessage({
+            await n1.asyncPublish(new StreamMessage({
                 messageId: new MessageID('stream-1', 0, i, 0, 'publisherId', 'msgChainId'),
                 prevMsgRef: i === 1 ? null : new MessageRef(i - 1, 0),
                 content: {
@@ -113,7 +114,7 @@ describe('message propagation in network', () => {
                 },
             }))
 
-            n4.publish(new StreamMessage({
+            await n4.publish(new StreamMessage({
                 messageId: new MessageID('stream-2', 0, i * 100, 0, 'publisherId', 'msgChainId'),
                 prevMsgRef: i === 1 ? null : new MessageRef((i - 1) * 100, 0),
                 content: {
