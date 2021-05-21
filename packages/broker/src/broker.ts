@@ -10,7 +10,7 @@ import { Publisher } from './Publisher'
 import { VolumeLogger } from './VolumeLogger'
 import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
-import { validateConfig } from './helpers/validateConfig'
+import { validateBrokerConfig } from './helpers/validateConfig'
 import { Storage } from './storage/Storage'
 import { StorageConfig } from './storage/StorageConfig'
 import { version as CURRENT_VERSION } from '../package.json'
@@ -29,7 +29,7 @@ export interface Broker {
 }
 
 export const startBroker = async (config: Config): Promise<Broker> => {
-    validateConfig(config)
+    validateBrokerConfig(config)
 
     logger.info(`Starting broker version ${CURRENT_VERSION}`)
 
@@ -143,16 +143,16 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     const publisher = new Publisher(networkNode, streamMessageValidator, metricsContext)
     const subscriptionManager = new SubscriptionManager(networkNode)
 
-    const plugins: Plugin<any>[] = config.plugins.map(({ name, ...pluginConfig }) => {
-        const pluginOptions: PluginOptions<any> = {
+    const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
+        const pluginOptions: PluginOptions = {
+            name,
             networkNode,
             subscriptionManager,
             publisher,
             metricsContext,
             cassandraStorage,
             storageConfig,
-            config,
-            pluginConfig,
+            brokerConfig: config
         }
         return createPlugin(name, pluginOptions)
     })
@@ -191,7 +191,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     logger.info(`Ethereum address ${brokerAddress}`)
     logger.info(`Configured with trackers: ${trackers.join(', ')}`)
     logger.info(`Configured with Streamr: ${config.streamrUrl}`)
-    logger.info(`Plugins: ${JSON.stringify(config.plugins.map((a: Todo) => a.name))}`)
+    logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
     if (config.cassandra) {
         logger.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
     }

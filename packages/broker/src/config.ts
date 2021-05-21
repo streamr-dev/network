@@ -1,5 +1,3 @@
-import { PluginConfig } from './Plugin'
-
 export interface TrackerRegistry {
     registryAddress: string
     jsonRpcProvider: string
@@ -66,7 +64,7 @@ export interface Config {
     streamrAddress: string,
     storageNodeRegistry: StorageNodeRegistryItem[] | null
     httpServer: HttpServerConfig | null
-    plugins: PluginConfig[]
+    plugins: Record<string,any>
 }
 
 export interface BrokerConfig extends Config {

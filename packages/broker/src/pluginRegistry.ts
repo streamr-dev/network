@@ -3,7 +3,7 @@ import { HttpPlugin } from './http/HttpPlugin'
 import { WebsocketPlugin } from './websocket/WebsocketPlugin'
 import { MqttPlugin } from './mqtt/MqttPlugin'
 
-export const createPlugin = (name: string, pluginOptions: PluginOptions<any>) => {
+export const createPlugin = (name: string, pluginOptions: PluginOptions) => {
     switch (name) {
         case 'http':
             return new HttpPlugin(pluginOptions)

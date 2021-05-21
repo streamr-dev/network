@@ -5,44 +5,47 @@ import { Config } from './config'
 import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
 import express from 'express'
+import { validateConfig } from './helpers/validateConfig'
+import { Schema } from 'ajv'
 
-export interface PluginConfig {
+export interface PluginOptions {
     name: string
-    port?: number
-}
-
-export interface PluginOptions<T> {
     networkNode: NetworkNode
     subscriptionManager: SubscriptionManager
     publisher: Publisher
     metricsContext: MetricsContext
     cassandraStorage: Storage|null
     storageConfig: StorageConfig|null
-    config: Config
-    pluginConfig: T
+    brokerConfig: Config
 }
 
-export abstract class Plugin<T extends PluginConfig> {
+export abstract class Plugin<T> {
 
+    readonly name: string
     readonly networkNode: NetworkNode
     readonly subscriptionManager: SubscriptionManager
     readonly publisher: Publisher
     readonly metricsContext: MetricsContext
     readonly cassandraStorage: Storage|null
     readonly storageConfig: StorageConfig|null
-    readonly config: Config
+    readonly brokerConfig: Config
     readonly pluginConfig: T
     readonly httpServerRouters: express.Router[] = []
 
-    constructor(options: PluginOptions<T>) {
+    constructor(options: PluginOptions) {
+        this.name = options.name
         this.networkNode = options.networkNode
         this.subscriptionManager = options.subscriptionManager
         this.publisher = options.publisher
         this.metricsContext = options.metricsContext
         this.cassandraStorage = options.cassandraStorage
         this.storageConfig = options.storageConfig
-        this.config = options.config
-        this.pluginConfig = options.pluginConfig
+        this.brokerConfig = options.brokerConfig
+        this.pluginConfig = options.brokerConfig.plugins[this.name]
+        const configSchema = this.getConfigSchema()
+        if (configSchema !== undefined) {
+            validateConfig(this.pluginConfig, configSchema, `${this.name} plugin`)
+        }
     }
 
     addHttpServerRouter(router: express.Router) {
@@ -56,4 +59,8 @@ export abstract class Plugin<T extends PluginConfig> {
     abstract start(): Promise<unknown>
 
     abstract stop(): Promise<unknown>
+
+    getConfigSchema(): Schema|undefined {
+        return undefined
+    }
 }

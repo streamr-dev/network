@@ -18,11 +18,10 @@
   "additionalProperties": false,
   "properties": {
     "plugins": {
-      "type": "array",
-      "description": "Foreign protocol plugins to use",
-      "items": {
-        "$ref": "#/definitions/plugin"
-      }
+      "type": "object",
+      "description": "Pluging configurations",
+      "required": [],
+      "additionalProperties": true
     },
     "httpServer": {
       "type": [
@@ -333,84 +332,6 @@
     }
   },
   "definitions": {
-    "plugin": {
-      "oneOf": [
-        {
-          "type": "object",
-          "description": "WebSocket plugin configuration",
-          "required": [
-            "name",
-            "port"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "const": "ws"
-            },
-            "port": {
-              "$ref": "#/definitions/port",
-              "description": "Port to start plugin on"
-            },
-            "pingInterval": {
-              "type": "integer",
-              "description": "How often to ping client connections (in milliseconds)",
-              "minimum": 0
-            },
-            "certFileName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Path of certificate file to use for SSL"
-            },
-            "privateKeyFileName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Path of private key file to use for SSL"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "description": "HTTP plugin configuration",
-          "required": [
-            "name"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "const": "http"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "description": "MQTT plugin configuration",
-          "required": [
-            "name",
-            "port",
-            "streamsTimeout"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "const": "mqtt"
-            },
-            "port": {
-              "$ref": "#/definitions/port",
-              "description": "Port to start plugin on"
-            },
-            "streamsTimeout": {
-              "type": "integer",
-              "description": "MQTT connection timeout",
-              "minimum": 0
-            }
-          }
-        }
-      ]
-    },
     "port": {
       "type": "number",
       "minimum": 0,

@@ -1,0 +1,22 @@
+{
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "MQTT plugin configuration",
+  "required": [
+    "port",
+    "streamsTimeout"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "port": {
+      "type": "integer",
+      "description": "Port to start plugin on"
+    },
+    "streamsTimeout": {
+      "type": "integer",
+      "description": "MQTT connection timeout",
+      "minimum": 0
+    }
+  }
+}

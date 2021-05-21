@@ -28,27 +28,23 @@ export function formConfig({
     storageNodeRegistry = (!enableCassandra ? [] : null),
     reporting = false
 }: Todo): Config {
-    const plugins = []
+    const plugins: Record<string,any> = {}
     if (httpPort) {
-        plugins.push({
-            name: 'http'
-        })
+        plugins['http'] = {}
     }
     if (wsPort) {
-        plugins.push({
-            name: 'ws',
+        plugins['ws'] = {
             port: wsPort,
             pingInterval: 3000,
             privateKeyFileName,
             certFileName
-        })
+        }
     }
     if (mqttPort) {
-        plugins.push({
-            name: 'mqtt',
+        plugins['mqtt'] = {
             port: mqttPort,
             streamsTimeout: 300000
-        })
+        }
     }
 
     return {
