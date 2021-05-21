@@ -3,18 +3,18 @@ import StreamrClient from 'streamr-client'
 import publicIp from 'public-ip'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
-import { StreamFetcher } from './StreamFetcher'
 import { startCassandraStorage } from './storage/Storage'
 import { Publisher } from './Publisher'
 import { VolumeLogger } from './VolumeLogger'
 import { SubscriptionManager } from './SubscriptionManager'
-import { MissingConfigError } from './errors/MissingConfigError'
-import { startAdapter } from './adapterRegistry'
+import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
+import { Storage } from './storage/Storage'
 import { StorageConfig } from './storage/StorageConfig'
 import { version as CURRENT_VERSION } from '../package.json'
 import { Todo } from './types'
 import { Config, TrackerRegistry } from './config'
+import { Plugin, PluginOptions } from './Plugin'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -47,7 +47,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
 
     const storageConfig = config.network.isStorageNode ? await createStorageConfig() : null
 
-    let cassandraStorage: Todo
+    let cassandraStorage: Storage
     // Start cassandra storage
     if (config.cassandra) {
         logger.info(`Starting Cassandra with hosts ${config.cassandra.hosts} and keyspace ${config.cassandra.keyspace}`)
@@ -137,33 +137,24 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         isPublisher: (address, sId) => unauthenticatedClient.isStreamPublisher(sId, address),
         isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
     })
-    const streamFetcher = new StreamFetcher(config.streamrUrl)
     const publisher = new Publisher(networkNode, streamMessageValidator, metricsContext)
     const subscriptionManager = new SubscriptionManager(networkNode)
 
-    // Start up adapters one-by-one, storing their close functions for further use
-    const closeAdapterFns = config.adapters.map(({ name, ...adapterConfig }, index) => {
-        try {
-            // @ts-expect-error
-            return startAdapter(name, adapterConfig, {
-                config,
-                networkNode,
-                publisher,
-                streamFetcher,
-                metricsContext,
-                subscriptionManager,
-                cassandraStorage,
-                storageConfig
-            })
-        } catch (e) {
-            if (e instanceof MissingConfigError) {
-                throw new MissingConfigError(`adapters[${index}].${e.config}`)
-            }
-            logger.error(`Error thrown while starting adapter ${name}: ${e}`)
-            logger.error(e.stack)
-            return () => {}
+    const plugins: Plugin<any>[] = config.adapters.map(({ name, ...adapterConfig }) => {
+        const pluginOptions: PluginOptions<any> = {
+            networkNode,
+            subscriptionManager,
+            publisher,
+            metricsContext,
+            cassandraStorage,
+            storageConfig,
+            config,
+            adapterConfig,
         }
+        return createPlugin(name, pluginOptions)
     })
+
+    await Promise.all(plugins.map((plugin) => plugin.start()))
 
     let reportingIntervals
     let storageNodeAddress
@@ -202,7 +193,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         getStreams: () => networkNode.getStreams(),
         close: () => Promise.all([
             networkNode.stop(),
-            ...closeAdapterFns.map((close: Todo) => close()),
+            ...plugins.map((plugin) => plugin.stop()),
             ...storages.map((storage) => storage.close()),
             volumeLogger.close(),
             (storageConfig !== null) ? storageConfig.cleanup() : undefined
