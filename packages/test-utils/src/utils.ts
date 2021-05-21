@@ -161,7 +161,7 @@ export const waitForCondition = async (
  * conditions evaluate to true on a retry attempt within timeout. If timeout
  * is reached with conditionFn never evaluating to true, rejects.
  */
-export const runAndWaitForConditions = (
+export const runAndWaitForConditions = async (
     operations: () => void | (() => void)[], 
     conditions: (() => (boolean | Promise<boolean>)) | (() => (boolean | Promise<boolean>)) [],
     timeout = 5000,
