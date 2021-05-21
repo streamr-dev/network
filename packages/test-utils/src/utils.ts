@@ -57,8 +57,12 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
  * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
  * within timeout. Otherwise rejected.
  */
-export const runAndWaitForEvents = (operations: Function | Function[], waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, timeout = 5000): Promise<unknown[]> => {
-    let ops: Function[]
+export const runAndWaitForEvents = (
+    operations: () => void | (() => void)[], 
+    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
+    timeout = 5000
+): Promise<unknown[]> => {
+    let ops: (() => void)[]
     if (Array.isArray(operations)) {
         ops = operations
     } 
@@ -75,16 +79,16 @@ export const runAndWaitForEvents = (operations: Function | Function[], waitedEve
     }
     
     const promise: Promise<unknown[]> = new Promise( (resolve, reject) => { 
-        Promise.all(evs.map(e => { waitForEvent(e[0], e[1], timeout) }))
-        .then((result) => {
-            resolve(result)
-        })
-        .catch( (e) => {
-            reject(e)
-        })
+        Promise.all(evs.map( (e) => { waitForEvent(e[0], e[1], timeout) }))
+            .then((result) => {
+                return resolve(result)
+            })
+            .catch( (e) => {
+                reject(e)
+            })
     })
 
-    ops.forEach(op=> { op() })
+    ops.forEach( (op) => { op() })
     
     return promise
 }
@@ -158,19 +162,19 @@ export const waitForCondition = async (
  * is reached with conditionFn never evaluating to true, rejects.
  */
 export const runAndWaitForConditions = (
-    operations: Function | Function[], 
+    operations: () => void | (() => void)[], 
     conditions: (() => (boolean | Promise<boolean>)) | (() => (boolean | Promise<boolean>)) [],
     timeout = 5000,
     retryInterval = 100,
     onTimeoutContext?: () => string
-    ): Promise<unknown[]> => {
+): Promise<unknown[]> => {
 
-    let ops: Function[]
+    let ops: (() => void)[]
     if (Array.isArray(operations)) {
         ops = operations
     } 
     else {
-        ops = [operations];
+        ops = [operations]
     }
     
     let conds: (() => (boolean | Promise<boolean>)) [] 
@@ -178,21 +182,20 @@ export const runAndWaitForConditions = (
         conds = conditions
     } 
     else {
-        conds = [conditions];
+        conds = [conditions]
     }
     
-    
     const promise: Promise<unknown[]> = new Promise( (resolve, reject) => { 
-        Promise.all(conds.map(c => { waitForCondition(c, timeout, retryInterval, onTimeoutContext) }))
-        .then((result) => {
-            resolve(result)
-        })
-        .catch( (e) => {
-            reject(e)
-        })
+        Promise.all(conds.map( (c) => { waitForCondition(c, timeout, retryInterval, onTimeoutContext) }))
+            .then((result) => {
+                return resolve(result)
+            })
+            .catch( (e) => {
+                reject(e)
+            })
     })
 
-    ops.forEach(op=> { op() })
+    ops.forEach( (op) => { op() })
     
     return promise
 }

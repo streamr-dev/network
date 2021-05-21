@@ -7,7 +7,7 @@
   "scripts": {
     "test": "jest",
     "test-unit": "npm run test",
-    "eslint": "eslint .",
+    "eslint": "eslint src",
     "prepare": "eslint . && tsc",
     "build": "tsc"
   },
