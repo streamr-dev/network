@@ -48,11 +48,11 @@ export abstract class Plugin<T> {
         }
     }
 
-    addHttpServerRouter(router: express.Router) {
+    addHttpServerRouter(router: express.Router): void {
         this.httpServerRouters.push(router)
     }
 
-    getHttpServerRoutes() {
+    getHttpServerRoutes(): express.Router[] {
         return this.httpServerRouters
     }
 
