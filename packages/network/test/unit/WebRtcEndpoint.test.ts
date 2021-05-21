@@ -1,6 +1,6 @@
 import { MetricsContext, startTracker } from '../../src/composition'
 import { startEndpoint } from '../../src/connection/WsEndpoint'
-import { TrackerNode } from '../../src/protocol/TrackerNode'
+import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { waitForCondition, waitForEvent, wait } from 'streamr-test-utils'
@@ -29,11 +29,13 @@ describe('WebRtcEndpoint', () => {
         trackerNode2 = new TrackerNode(ep2)
         await Promise.all([
             trackerNode1.connectToTracker(tracker.getAddress()),
-            waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
+            waitForEvent(tracker, TrackerEvent.NODE_CONNECTED),
+            waitForEvent(trackerNode1, TrackerNodeEvent.CONNECTED_TO_TRACKER)
         ])
         await Promise.all([
             trackerNode2.connectToTracker(tracker.getAddress()),
-            waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
+            waitForEvent(tracker, TrackerEvent.NODE_CONNECTED),
+            waitForEvent(trackerNode2, TrackerNodeEvent.CONNECTED_TO_TRACKER)
         ])
 
         const peerInfo1 = PeerInfo.newNode('node-1')
@@ -96,7 +98,7 @@ describe('WebRtcEndpoint', () => {
         await Promise.all(sendTasks)
     })
 
-    it('connection between nodes is established when only one node invokes connect()', async () => {
+    it('connection between nodes is established when only offerer invokes connect()', async () => {
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
@@ -137,6 +139,15 @@ describe('WebRtcEndpoint', () => {
         await Promise.all(sendTasks)
     })
 
+    it('connection is formed when only non-offerer invokes connect()', async () => {
+        endpoint2.connect('node-1', 'tracker').catch(() => null)
+
+        await Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        ])
+    })
+
     it('cannot send too large of a payload', async () => {
         const payload = new Array(2 ** 21).fill('X').join('')
         await endpoint1.connect('node-2', 'tracker')
@@ -144,4 +155,68 @@ describe('WebRtcEndpoint', () => {
             await endpoint1.send('node-2', payload)
         }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
     })
+
+    it('can handle fast paced reconnects', async () => {
+        endpoint1.connect('node-2', 'tracker').catch(() => null)
+        endpoint2.connect('node-1', 'tracker').catch(() => null)
+
+        await Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30 * 1000),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30 * 1000)
+        ])
+
+        endpoint1.close('node-2', 'test')
+        endpoint1.connect('node-2', 'tracker').catch(() => null)
+
+        await Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30 * 1000),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30 * 1000)
+        ])
+
+        endpoint2.close('node-1', 'test')
+        endpoint2.connect('node-1', 'tracker').catch(() => null)
+
+        await Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30 * 1000),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30 * 1000)
+        ])
+    }, 30 * 1000)
+
+    it('messages are delivered on temporary loss of connectivity', async () => {
+        const t = Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        ])
+
+        endpoint1.connect('node-2', 'tracker').catch(() => null)
+
+        await t
+
+        let ep2NumOfReceivedMessages = 0
+
+        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep2NumOfReceivedMessages += 1
+        })
+
+        const sendFrom1To2 = () => {
+            endpoint1.send('node-2', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+
+        for (let i = 1; i <= 6; ++i) {
+            sendFrom1To2()
+            if (i === 3) {
+                // eslint-disable-next-line no-await-in-loop
+                await waitForCondition(() => ep2NumOfReceivedMessages === 3)
+                endpoint2.close('node-1', 'test')
+                await waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED)
+                endpoint1.connect('node-2', 'tracker')
+            }
+        }
+
+        await waitForCondition(() => (
+            ep2NumOfReceivedMessages === 6
+        ), 30 * 1000, undefined, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
+    }, 30 * 1000)
 })
