@@ -1,6 +1,6 @@
 {
   "name": "streamr-client",
-  "version": "5.4.0",
+  "version": "5.4.1",
   "description": "JavaScript client library for Streamr",
   "private": true,
   "repository": {
@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist; rm -rf vendor; npm run bootstrap-dist && npm run build-browser && npm run build-node && npm run build:types",
+    "build": "rm -rf dist; rm -rf vendor; npm run bootstrap-dist && npm run build-node && npm run build-browser && npm run build:types",
     "postinstall": "npm run vendor",
     "build-node": "npm run bootstrap-dist && tsc --incremental --project ./tsconfig.node.json",
     "postbuild-node": "npm run copy-package",
