@@ -1,18 +1,16 @@
-import { startNetworkNode, startStorageNode, Protocol, MetricsContext } from 'streamr-network'
+import { startNetworkNode, Protocol, MetricsContext } from 'streamr-network'
 import StreamrClient from 'streamr-client'
 import publicIp from 'public-ip'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { startCassandraStorage } from './storage/Storage'
 import { Publisher } from './Publisher'
 import { VolumeLogger } from './VolumeLogger'
 import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateBrokerConfig } from './helpers/validateConfig'
 import { Storage } from './storage/Storage'
-import { StorageConfig } from './storage/StorageConfig'
 import { version as CURRENT_VERSION } from '../package.json'
 import { Todo } from './types'
 import { Config, TrackerRegistry } from './config'
@@ -44,29 +42,11 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     }
     const brokerAddress = wallet.address
 
-    const createStorageConfig = async () => {
-        return StorageConfig.createInstance(brokerAddress, config.streamrUrl + '/api/v1', config.storageConfig!.refreshInterval)
-    }
-
-    const storageConfig = config.network.isStorageNode ? await createStorageConfig() : null
-
     let cassandraStorage: Storage
     // Start cassandra storage
     if (config.cassandra) {
         logger.info(`Starting Cassandra with hosts ${config.cassandra.hosts} and keyspace ${config.cassandra.keyspace}`)
-        cassandraStorage = await startCassandraStorage({
-            contactPoints: [...config.cassandra.hosts],
-            localDataCenter: config.cassandra.datacenter,
-            keyspace: config.cassandra.keyspace,
-            username: config.cassandra.username,
-            password: config.cassandra.password,
-            opts: {
-                useTtl: !config.network.isStorageNode
-            },
-            storageConfig: storageConfig!
-        })
-        cassandraStorage.enableMetrics(metricsContext)
-        storages.push(cassandraStorage)
+
     } else {
         logger.info('Cassandra disabled')
     }
@@ -84,28 +64,21 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     }
 
     // Start network node
-    const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
     const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
         ? config.network.advertisedWsUrl
         : await publicIp.v4().then((ip) => `ws://${ip}:${config.network.port}`)
-    const networkNode = await startFn({
+    const networkNode = await startNetworkNode({
         host: config.network.hostname,
         port: config.network.port,
         id: brokerAddress,
         name: networkNodeName,
         trackers,
-        storages,
-        // @ts-expect-error
-        storageConfig,
+        storages: [], // TODO remove this parameter from NetworkNodeOptions
         advertisedWsUrl,
         location: config.network.location,
         metricsContext
     })
     networkNode.start()
-
-    if ((storageConfig !== null) && (config.streamrAddress !== null)) {
-        storageConfig.startAssignmentEventListener(config.streamrAddress, networkNode)
-    }
 
     // Set up reporting to Streamr stream
     let client: StreamrClient | undefined
@@ -150,8 +123,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             subscriptionManager,
             publisher,
             metricsContext,
-            cassandraStorage,
-            storageConfig,
             brokerConfig: config
         }
         return createPlugin(name, pluginOptions)
@@ -206,9 +177,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             networkNode.stop(),
             ...plugins.map((plugin) => plugin.stop()),
             (httpServer !== undefined) ? stopServer(httpServer) : undefined,
-            ...storages.map((storage) => storage.close()),
-            volumeLogger.close(),
-            (storageConfig !== null) ? storageConfig.cleanup() : undefined
+            volumeLogger.close()
         ])
     }
 }

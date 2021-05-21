@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { StorageConfig } from '../storage/StorageConfig'
+import { StorageConfig } from './StorageConfig'
 
 const createHandler = (storageConfig: StorageConfig) => {
     return (req: Request, res: Response) => {

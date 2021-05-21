@@ -14,8 +14,6 @@ export interface PluginOptions {
     subscriptionManager: SubscriptionManager
     publisher: Publisher
     metricsContext: MetricsContext
-    cassandraStorage: Storage|null
-    storageConfig: StorageConfig|null
     brokerConfig: Config
 }
 
@@ -26,8 +24,6 @@ export abstract class Plugin<T> {
     readonly subscriptionManager: SubscriptionManager
     readonly publisher: Publisher
     readonly metricsContext: MetricsContext
-    readonly cassandraStorage: Storage|null
-    readonly storageConfig: StorageConfig|null
     readonly brokerConfig: Config
     readonly pluginConfig: T
     private readonly httpServerRouters: express.Router[] = []
@@ -38,8 +34,6 @@ export abstract class Plugin<T> {
         this.subscriptionManager = options.subscriptionManager
         this.publisher = options.publisher
         this.metricsContext = options.metricsContext
-        this.cassandraStorage = options.cassandraStorage
-        this.storageConfig = options.storageConfig
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]
         const configSchema = this.getConfigSchema()
