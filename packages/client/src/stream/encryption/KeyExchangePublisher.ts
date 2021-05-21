@@ -176,7 +176,7 @@ export class PublisherKeyExhange {
 
     async hasAnyGroupKey(streamId: string) {
         const groupKeyStore = await this.getGroupKeyStore(streamId)
-        return !groupKeyStore.isEmpty()
+        return !(await groupKeyStore.isEmpty())
     }
 
     async rekey(streamId: string) {
@@ -185,6 +185,7 @@ export class PublisherKeyExhange {
         await groupKeyStore.rekey()
         await this.next()
     }
+
     async start() {
         this.enabled = true
         return this.next()

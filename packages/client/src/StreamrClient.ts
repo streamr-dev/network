@@ -175,7 +175,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /** @internal */
     connection: StreamrConnection
     /** @internal */
-    publisher: Todo
+    publisher: ReturnType<typeof Publisher>
     /** @internal */
     subscriber: Subscriber
     /** @internal */
@@ -340,15 +340,15 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return getUserId(this)
     }
 
-    setNextGroupKey(streamId: string, newKey: GroupKey) {
+    async setNextGroupKey(streamId: string, newKey: GroupKey): Promise<void> {
         return this.publisher.setNextGroupKey(streamId, newKey)
     }
 
-    rotateGroupKey(streamId: string) {
+    async rotateGroupKey(streamId: string) {
         return this.publisher.rotateGroupKey(streamId)
     }
 
-    rekey(streamId: string) {
+    async rekey(streamId: string) {
         return this.publisher.rekey(streamId)
     }
 

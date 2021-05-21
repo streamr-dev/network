@@ -40,7 +40,11 @@ function waitForSubMessage(sub: Subscription, matchFn: MessageMatch) {
 }
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil) {
-    const { encryptedGroupKeys } = GroupKeyResponse.fromArray(streamMessage.getParsedContent())
+    const content = streamMessage.getParsedContent() || []
+    if (content.length === 2) {
+        content.unshift('') // Java client doesn't inject request id, skip as not needed.
+    }
+    const { encryptedGroupKeys = [] } = GroupKeyResponse.fromArray(content)
     return Promise.all(encryptedGroupKeys.map(async (encryptedGroupKey) => (
         new GroupKey(
             encryptedGroupKey.groupKeyId,
@@ -110,9 +114,10 @@ export class SubscriberKeyExchange {
         const rsaPublicKey = this.encryptionUtil.getPublicKey()
         const keyExchangeStreamId = getKeyExchangeStreamId(publisherId)
         let sub!: Subscription
+        let responseTask
         try {
             sub = await this.getSubscription()
-            const responseTask = waitForSubMessage(sub, (content, streamMessage) => {
+            responseTask = waitForSubMessage(sub, (content, streamMessage) => {
                 const { messageType } = streamMessage
                 const matchesMessageType = (
                     messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
@@ -126,6 +131,7 @@ export class SubscriberKeyExchange {
                 const groupKeyResponse = GroupKeyResponse.fromArray(content)
                 return groupKeyResponse.requestId === requestId
             })
+
             const msg = new GroupKeyRequest({
                 streamId,
                 requestId,
@@ -134,8 +140,9 @@ export class SubscriberKeyExchange {
             })
             await this.client.publish(keyExchangeStreamId, msg)
             const response = await responseTask
-            return response ? getGroupKeysFromStreamMessage(response, this.encryptionUtil) : []
+            return response ? await getGroupKeysFromStreamMessage(response, this.encryptionUtil) : []
         } finally {
+            await responseTask
             if (sub) {
                 await sub.unsubscribe()
             }

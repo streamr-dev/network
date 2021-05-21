@@ -39,7 +39,7 @@ export default function Decrypt(client, options = {}) {
 
             try {
                 const groupKey = await keyExchange.getGroupKey(streamMessage).catch((err) => {
-                    throw new UnableToDecryptError(`Could not get GroupKey: ${streamMessage.groupKeyId} – ${err.message}`, streamMessage)
+                    throw new UnableToDecryptError(`Could not get GroupKey: ${streamMessage.groupKeyId} – ${err.stack}`, streamMessage)
                 })
 
                 if (!groupKey) {
