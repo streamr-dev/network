@@ -22,7 +22,9 @@
         "module": "commonjs",
         "types": [
             "node"
-        ]
+        ],
+        "incremental": true,
+        "sourceMap": true
     },
     "include": [
         "src/**/*",

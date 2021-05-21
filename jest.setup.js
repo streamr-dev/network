@@ -1,4 +1,4 @@
-import GitRevisionPlugin from 'git-revision-webpack-plugin'
+import { GitRevisionPlugin } from 'git-revision-webpack-plugin'
 
 const pkg = require('./package.json')
 

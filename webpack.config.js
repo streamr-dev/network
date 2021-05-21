@@ -10,7 +10,7 @@ const TerserPlugin = require('terser-webpack-plugin')
 const LodashWebpackPlugin = require('lodash-webpack-plugin')
 const { merge } = require('webpack-merge')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-const GitRevisionPlugin = require('git-revision-webpack-plugin')
+const { GitRevisionPlugin } = require('git-revision-webpack-plugin')
 
 const pkg = require('./package.json')
 
