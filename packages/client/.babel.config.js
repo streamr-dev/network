@@ -11,7 +11,7 @@ module.exports = {
                     'supports async-functions',
                     'supports cryptography',
                     'supports es6',
-                    'supports async-iterations-and-generators',
+                    'supports es6-generators',
                     'not dead',
                     'not ie <= 11',
                     'not ie_mob <= 11'

@@ -25,7 +25,6 @@
             "jest",
             "node"
         ],
-        "incremental": true,
         "sourceMap": true
     },
     "include": [
