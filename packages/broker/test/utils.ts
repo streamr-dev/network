@@ -126,7 +126,11 @@ export function fastPrivateKey() {
 
 export const createMockUser = () => Wallet.createRandom()
 
-export function createClient(wsPort: number, privateKey = fastPrivateKey(), clientOptions?: StreamrClientOptions) {
+export function createClient(
+    wsPort: number,
+    privateKey = fastPrivateKey(),
+    clientOptions?: StreamrClientOptions
+): StreamrClient {
     return new StreamrClient({
         auth: {
             privateKey
