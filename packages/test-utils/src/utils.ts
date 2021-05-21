@@ -78,16 +78,8 @@ export const runAndWaitForEvents = async (
         evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
     }
     
-    const promise: Promise<unknown[]> = new Promise( (resolve, reject) => { 
-`const promise = Promise.all(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))`
-            .then((result) => {
-                return resolve(result)
-            })
-            .catch( (e) => {
-                reject(e)
-            })
-    })
-
+    const promise = Promise.all(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
+           
     ops.forEach( (op) => { op() })
     
     return promise
@@ -185,16 +177,8 @@ export const runAndWaitForConditions = async (
         conds = [conditions]
     }
     
-    const promise: Promise<unknown[]> = new Promise( (resolve, reject) => { 
-        Promise.all(conds.map( (c) => { waitForCondition(c, timeout, retryInterval, onTimeoutContext) }))
-            .then((result) => {
-                return resolve(result)
-            })
-            .catch( (e) => {
-                reject(e)
-            })
-    })
-
+    const promise = Promise.all(conds.map((condition) => waitForCondition(condition, timeout, retryInterval, onTimeoutContext)))
+        
     ops.forEach( (op) => { op() })
     
     return promise
