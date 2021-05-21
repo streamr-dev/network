@@ -4,7 +4,7 @@ import split2 from 'split2'
 import fetch from 'node-fetch'
 import AbortController from 'abort-controller'
 const { ControlLayer } = Protocol
-import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../http/DataQueryEndpoints'
+import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../storage/DataQueryEndpoints'
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { GenericError } from '../errors/GenericError'
 

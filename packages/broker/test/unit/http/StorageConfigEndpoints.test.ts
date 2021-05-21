@@ -1,6 +1,6 @@
 import express from 'express'
 import request from 'supertest'
-import { router } from '../../../src/http/StorageConfigEndpoints'
+import { router } from '../../../src/storage/StorageConfigEndpoints'
 import { createMockStorageConfig } from '../../integration/storage/MockStorageConfig'
 import { Todo } from '../../types'
 

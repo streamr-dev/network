@@ -31,6 +31,9 @@ export function formConfig({
     const plugins: Record<string,any> = {}
     if (httpPort) {
         plugins['http'] = {}
+        if (enableCassandra) {
+            plugins['storage'] = {}
+        }
     }
     if (wsPort) {
         plugins['ws'] = {

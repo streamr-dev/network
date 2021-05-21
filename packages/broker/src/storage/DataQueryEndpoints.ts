@@ -7,7 +7,7 @@ import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Logger } from 'streamr-network'
 import { Todo } from '../types'
 import { Storage } from '../storage/Storage'
-import { authenticator } from './RequestAuthenticatorMiddleware'
+import { authenticator } from '../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { Readable, Transform } from 'stream'
 
