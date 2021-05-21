@@ -78,8 +78,6 @@ export class StreamFetcher {
             restUrl: this.apiUrl,
             autoConnect: false
         })
-
-        // @ts-expect-error session is marked internal
         return client.session.getSessionToken()
     }
 
