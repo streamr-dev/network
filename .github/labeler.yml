@@ -27,3 +27,5 @@ cli-tools:
 cross-client-testing:
 - 'packages/cross-client-testing/*'
 - '.github/workflows/cross-client.yml'
+dev-config:
+- 'packages/dev-config/*'
