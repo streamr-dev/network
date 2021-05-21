@@ -4,6 +4,7 @@ import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
+import { NameDirectory } from '../NameDirectory'
 
 nodeDataChannel.initLogger("Error" as LogLevel)
 
@@ -33,6 +34,7 @@ let ID = 0
  */
 type HandlerParameters<T extends (...args: any[]) => any> = Parameters<Parameters<T>[0]>
 
+type RemoteCandidate = { candidate: string, mid: string }
 interface PeerConnectionEvents {
     stateChange: (...args: HandlerParameters<PeerConnection['onStateChange']>) => void
     gatheringStateChange: (...args: HandlerParameters<PeerConnection['onGatheringStateChange']>) => void
@@ -107,6 +109,7 @@ export class Connection extends ConnectionEmitter {
     private readonly selfId: string
     private peerInfo: PeerInfo
     private isFinished: boolean
+    private remoteDescriptionSet = false
     private readonly routerId: string
     private readonly isOffering: boolean
     private readonly stunUrls: string[]
@@ -134,6 +137,7 @@ export class Connection extends ConnectionEmitter {
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
+    private enqueuedRemoteCandidate: RemoteCandidate | null
 
     constructor({
         selfId,
@@ -165,7 +169,7 @@ export class Connection extends ConnectionEmitter {
         this.maxPingPongAttempts = maxPingPongAttempts
         this.pingInterval = pingInterval
         this.flushRetryTimeout = flushRetryTimeout
-        this.logger = new Logger(['connection', this.id, `${this.selfId}-->${this.getPeerId()}`])
+        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
         this.isFinished = false
 
         this.messageQueue = messageQueue
@@ -182,6 +186,7 @@ export class Connection extends ConnectionEmitter {
 
         this.rtt = null
         this.rttStart = null
+        this.enqueuedRemoteCandidate = null
 
         this.onStateChange = this.onStateChange.bind(this)
         this.onLocalCandidate = this.onLocalCandidate.bind(this)
@@ -192,7 +197,7 @@ export class Connection extends ConnectionEmitter {
     }
 
     connect(): void {
-        this.logger.debug('connect()')
+        this.logger.trace('connect()')
         if (this.isFinished) {
             throw new Error('Connection already closed.')
         }
@@ -210,11 +215,11 @@ export class Connection extends ConnectionEmitter {
         this.connectionEmitter.on('localCandidate', this.onLocalCandidate)
 
         if (this.isOffering) {
-            this.logger.debug('creating data channel')
+            this.logger.trace('creating data channel')
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
         } else {
-            this.logger.debug('waiting for data channel')
+            this.logger.trace('waiting for data channel')
             this.connectionEmitter.on('dataChannel', this.onDataChannel)
         }
 
@@ -229,6 +234,11 @@ export class Connection extends ConnectionEmitter {
         if (this.connection) {
             try {
                 this.connection.setRemoteDescription(description, type)
+                this.remoteDescriptionSet = true
+                if (this.enqueuedRemoteCandidate) {
+                    this.connection.addRemoteCandidate(this.enqueuedRemoteCandidate.candidate, this.enqueuedRemoteCandidate.mid)
+                    this.enqueuedRemoteCandidate = null
+                }
             } catch (err) {
                 this.logger.warn('setRemoteDescription failed, reason: %s', err)
             }
@@ -247,6 +257,10 @@ export class Connection extends ConnectionEmitter {
         } else {
             this.logger.warn('skipped addRemoteCandidate, connection is null')
         }
+    }
+
+    enqueueRemoteCandidate(remoteCandidate: RemoteCandidate): void {
+        this.enqueuedRemoteCandidate = remoteCandidate
     }
 
     send(message: string): Promise<void> {
@@ -274,7 +288,7 @@ export class Connection extends ConnectionEmitter {
         if (err) {
             this.logger.warn('conn.close(): %s', err)
         } else {
-            this.logger.debug('conn.close()')
+            this.logger.trace('conn.close()')
         }
 
         if (this.connectionEmitter) {
@@ -315,6 +329,7 @@ export class Connection extends ConnectionEmitter {
         }
         this.dataChannel = null
         this.connection = null
+        this.enqueuedRemoteCandidate = null
         this.flushTimeoutRef = null
         this.connectionTimeoutRef = null
         this.pingTimeoutRef = null
@@ -403,8 +418,12 @@ export class Connection extends ConnectionEmitter {
         }
     }
 
+    isRemoteDescriptionSet(): boolean {
+        return this.remoteDescriptionSet
+    }
+
     private onStateChange(state: string): void {
-        this.logger.debug('conn.onStateChange: %s -> %s', this.lastState, state)
+        this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
 
         this.lastState = state
 
@@ -424,13 +443,13 @@ export class Connection extends ConnectionEmitter {
     }
 
     private onGatheringStateChange(state: string): void {
-        this.logger.debug('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
+        this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
         this.lastGatheringState = state
     }
 
     private onDataChannel(dataChannel: DataChannel): void {
         this.setupDataChannel(dataChannel)
-        this.logger.debug('connection.onDataChannel')
+        this.logger.trace('connection.onDataChannel')
         this.openDataChannel(dataChannel)
     }
 
@@ -447,12 +466,12 @@ export class Connection extends ConnectionEmitter {
         this.dataChannelEmitter = DataChannelEmitter(dataChannel)
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         this.dataChannelEmitter.on('open', () => {
-            this.logger.debug('dc.onOpen')
+            this.logger.trace('dc.onOpen')
             this.openDataChannel(dataChannel)
         })
 
         this.dataChannelEmitter.on('closed', () => {
-            this.logger.debug('dc.onClosed')
+            this.logger.trace('dc.onClosed')
             this.close()
         })
 
@@ -468,7 +487,7 @@ export class Connection extends ConnectionEmitter {
         })
 
         this.dataChannelEmitter.on('message', (msg) => {
-            this.logger.debug('dc.onmessage')
+            this.logger.trace('dc.onmessage')
             if (msg === 'ping') {
                 this.pong()
             } else if (msg === 'pong') {

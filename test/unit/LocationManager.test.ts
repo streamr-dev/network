@@ -1,11 +1,10 @@
 import { LocationManager } from '../../src/logic/LocationManager'
-import { Logger } from "../../src/helpers/Logger"
 
 describe('LocationManager', () => {
     let locationManager: LocationManager
 
     beforeEach(() => {
-        locationManager = new LocationManager(new Logger([]))
+        locationManager = new LocationManager()
     })
 
     describe('#updateLocation', () => {

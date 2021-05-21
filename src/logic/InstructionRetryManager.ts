@@ -19,8 +19,8 @@ export class InstructionRetryManager {
         }
     }
 
-    constructor(parentLogger: Logger, handleFn: HandleFn, intervalInMs: number) {
-        this.logger = parentLogger.createChildLogger(['InstructionRetryManager'])
+    constructor(handleFn: HandleFn, intervalInMs: number) {
+        this.logger = new Logger(module)
         this.handleFn = handleFn
         this.intervalInMs = intervalInMs
         this.instructionRetryIntervals = {}

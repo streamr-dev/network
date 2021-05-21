@@ -3,18 +3,20 @@ import { DisconnectionCode, DisconnectionReason, Event, IWsEndpoint } from './IW
 import uWS from 'uWebSockets.js'
 import WebSocket from 'ws'
 import { PeerBook } from './PeerBook'
-import {PeerInfo, PeerType} from './PeerInfo'
+import { PeerInfo, PeerType } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 
-const staticLogger = new Logger(['connection', 'WsEndpoint'])
+const staticLogger = new Logger(module)
 
 interface Connection {
     // upgraded vars
     address?: string
     peerId?: string
     peerType?: PeerType
+    controlLayerVersions?: string
+    messageLayerVersions?: string
 
     peerInfo: PeerInfo
     highBackPressure: boolean
@@ -75,7 +77,9 @@ function terminateWs(ws: WsConnection | UWSConnection, logger: Logger): void {
 function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     return {
         'streamr-peer-id': peerInfo.peerId,
-        'streamr-peer-type': peerInfo.peerType
+        'streamr-peer-type': peerInfo.peerType,
+        'control-layer-versions': peerInfo.controlLayerVersions.join(','),
+        'message-layer-versions': peerInfo.messageLayerVersions.join(',')
     }
 }
 
@@ -123,7 +127,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         this.peerInfo = peerInfo
         this.advertisedWsUrl = advertisedWsUrl
 
-        this.logger = new Logger(['connection', 'WsEndpoint'], peerInfo)
+        this.logger = new Logger(module)
         this.connections = new Map()
         this.pendingConnections = new Map()
         this.peerBook = new PeerBook()
@@ -137,12 +141,16 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
                 res.writeStatus('101 Switching Protocols')
                     .writeHeader('streamr-peer-id', this.peerInfo.peerId)
                     .writeHeader('streamr-peer-type', this.peerInfo.peerType)
+                    .writeHeader('control-layer-versions', this.peerInfo.controlLayerVersions.join(','))
+                    .writeHeader('message-layer-versions', this.peerInfo.messageLayerVersions.join(','))
 
                 /* This immediately calls open handler, you must not use res after this call */
                 res.upgrade({
                     address: req.getQuery('address'),
                     peerId: req.getHeader('streamr-peer-id'),
                     peerType: req.getHeader('streamr-peer-type'),
+                    controlLayerVersions: req.getHeader('control-layer-versions'),
+                    messageLayerVersions: req.getHeader('message-layer-versions')
                 },
                 /* Spell these correctly */
                 req.getHeader('sec-websocket-key'),
@@ -178,14 +186,14 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
                 const connection = this.connections.get(ws.address)
 
                 if (connection) {
-                    this.logger.debug('<== received from %s "pong" frame', ws.address)
+                    this.logger.trace('<== received from %s "pong" frame', ws.address)
                     connection.respondedPong = true
                     connection.rtt = Date.now() - connection.rttStart!
                 }
             }
         })
 
-        this.logger.debug('listening on %s', this.getAddress())
+        this.logger.trace('listening on %s', this.getAddress())
         this.pingInterval = setInterval(() => this.pingConnections(), pingInterval)
 
         this.metrics = metricsContext.create('WsEndpoint')
@@ -227,7 +235,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
                 ws.respondedPong = false
                 ws.rttStart = Date.now()
                 ws.ping()
-                this.logger.debug('pinging %s (current rtt %s)', address, ws.rtt)
+                this.logger.trace('pinging %s (current rtt %s)', address, ws.rtt)
             } catch (e) {
                 this.logger.warn(`failed pinging %s, error %s, terminating connection`, address, e)
                 terminateWs(ws, this.logger)
@@ -246,7 +254,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         return new Promise<string>((resolve, reject) => {
             if (!this.isConnected(recipientAddress)) {
                 this.metrics.record('sendFailed', 1)
-                this.logger.debug('cannot send to %s [%s], not connected', recipientId, recipientAddress)
+                this.logger.trace('cannot send to %s [%s], not connected', recipientId, recipientAddress)
                 reject(new Error(`cannot send to ${recipientId} [${recipientAddress}] because not connected`))
             } else {
                 const ws = this.connections.get(recipientAddress)!
@@ -264,7 +272,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         errorCallback: (err: Error) => void
     ): void {
         const onSuccess = (address: string, peerId: string, msg: string): void => {
-            this.logger.debug('sent to %s [%s] message "%s"', recipientId, address, msg)
+            this.logger.trace('sent to %s [%s] message "%s"', recipientId, address, msg)
             this.metrics.record('outSpeed', msg.length)
             this.metrics.record('msgSpeed', 1)
             this.metrics.record('msgOutSpeed', 1)
@@ -297,18 +305,18 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
     private evaluateBackPressure(ws: WsConnection | UWSConnection): void {
         const bufferedAmount = getBufferedAmount(ws)
         if (!ws.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
-            this.logger.debug('Back pressure HIGH for %s at %d', ws.peerInfo, bufferedAmount)
+            this.logger.trace('Back pressure HIGH for %s at %d', ws.peerInfo, bufferedAmount)
             this.emit(Event.HIGH_BACK_PRESSURE, ws.peerInfo)
             ws.highBackPressure = true
         } else if (ws.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
-            this.logger.debug('Back pressure LOW for %s at %d', ws.peerInfo, bufferedAmount)
+            this.logger.trace('Back pressure LOW for %s at %d', ws.peerInfo, bufferedAmount)
             this.emit(Event.LOW_BACK_PRESSURE, ws.peerInfo)
             ws.highBackPressure = false
         }
     }
 
     onReceive(peerInfo: PeerInfo, address: string, message: string): void {
-        this.logger.debug('<== received from %s [%s] message "%s"', peerInfo, address, message)
+        this.logger.trace('<== received from %s [%s] message "%s"', peerInfo, address, message)
         this.emit(Event.MESSAGE_RECEIVED, peerInfo, message)
     }
 
@@ -317,11 +325,11 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
 
         this.metrics.record('close', 1)
         if (!this.isConnected(recipientAddress)) {
-            this.logger.debug('cannot close connection to %s [%s] because not connected', recipientId, recipientAddress)
+            this.logger.trace('cannot close connection to %s [%s] because not connected', recipientId, recipientAddress)
         } else {
             const ws = this.connections.get(recipientAddress)!
             try {
-                this.logger.debug('closing connection to %s [%s], reason %s', recipientId, recipientAddress, reason)
+                this.logger.trace('closing connection to %s [%s], reason %s', recipientId, recipientAddress, reason)
                 closeWs(ws, DisconnectionCode.GRACEFUL_SHUTDOWN, reason, this.logger)
             } catch (e) {
                 this.logger.warn('closing connection to %s [%s] failed because of %s', recipientId, recipientAddress, e)
@@ -334,11 +342,11 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
             const ws = this.connections.get(peerAddress)!
 
             if (ws.readyState === ws.OPEN) {
-                this.logger.debug('already connected to %s', peerAddress)
+                this.logger.trace('already connected to %s', peerAddress)
                 return Promise.resolve(this.peerBook.getPeerId(peerAddress))
             }
 
-            this.logger.debug('already connected to %s, but readyState is %s, closing connection',
+            this.logger.trace('already connected to %s, but readyState is %s, closing connection',
                 peerAddress, ws.readyState)
             this.close(this.peerBook.getPeerId(peerAddress))
         }
@@ -350,11 +358,11 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         }
 
         if (this.pendingConnections.has(peerAddress)) {
-            this.logger.debug('pending connection to %s', peerAddress)
+            this.logger.trace('pending connection to %s', peerAddress)
             return this.pendingConnections.get(peerAddress)!
         }
 
-        this.logger.debug('===> connecting to %s', peerAddress)
+        this.logger.trace('===> connecting to %s', peerAddress)
 
         const p = new Promise<string>((resolve, reject) => {
             try {
@@ -369,9 +377,16 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
                 ws.on('upgrade', (res) => {
                     const peerId = res.headers['streamr-peer-id'] as string
                     const peerType = res.headers['streamr-peer-type'] as PeerType
+                    const controlLayerVersions = res.headers['control-layer-versions'] as string
+                    const messageLayerVersions = res.headers['message-layer-versions'] as string
 
-                    if (peerId && peerType) {
-                        serverPeerInfo = new PeerInfo(peerId, peerType)
+                    if (peerId && peerType && controlLayerVersions && messageLayerVersions) {
+                        const controlLayerVersionsArray = controlLayerVersions.split(',').map((version) => parseInt(version, 10))
+                        const messageLayerVersionsArray = messageLayerVersions.split(',').map((version) => parseInt(version, 10))
+
+                        serverPeerInfo = new PeerInfo(peerId, peerType, controlLayerVersionsArray, messageLayerVersionsArray)
+                    } else {
+                        this.logger.debug('Invalid message headers received on upgrade: ' + res)
                     }
                 })
 
@@ -393,13 +408,13 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
 
                 ws.on('error', (err) => {
                     this.metrics.record('webSocketError', 1)
-                    this.logger.debug('failed to connect to %s, error: %o', peerAddress, err)
+                    this.logger.trace('failed to connect to %s, error: %o', peerAddress, err)
                     terminateWs(ws, this.logger)
                     reject(err)
                 })
             } catch (err) {
                 this.metrics.record('open:failedException', 1)
-                this.logger.debug('failed to connect to %s, error: %o', peerAddress, err)
+                this.logger.trace('failed to connect to %s, error: %o', peerAddress, err)
                 reject(err)
             }
         }).finally(() => {
@@ -420,7 +435,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
                 })
 
                 if (this.listenSocket) {
-                    this.logger.debug('shutting down uWS server')
+                    this.logger.trace('shutting down uWS server')
                     uWS.us_listen_socket_close(this.listenSocket)
                     this.listenSocket = null
                 }
@@ -481,7 +496,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
     }
 
     private onIncomingConnection(ws: WsConnection | UWSConnection): void {
-        const { address, peerId, peerType } = ws
+        const { address, peerId, peerType, controlLayerVersions, messageLayerVersions } = ws
 
         try {
             if (!address) {
@@ -493,18 +508,26 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
             if (!peerType) {
                 throw new Error('peerType not given')
             }
+            if (!controlLayerVersions) {
+                throw new Error('controlLayerVersions not given')
+            }
+            if (!messageLayerVersions) {
+                throw new Error('messageLayerVersions not given')
+            }
+            const controlLayerVersionsArray = controlLayerVersions.split(',').map((version) => parseInt(version))
+            const messageLayerVersionsArray = messageLayerVersions.split(',').map((version) => parseInt(version))
 
-            const clientPeerInfo = new PeerInfo(peerId, peerType)
+            const clientPeerInfo = new PeerInfo(peerId, peerType, controlLayerVersionsArray, messageLayerVersionsArray)
             if (this.isConnected(address)) {
                 this.metrics.record('open:duplicateSocket', 1)
                 ws.close(DisconnectionCode.DUPLICATE_SOCKET, DisconnectionReason.DUPLICATE_SOCKET)
                 return
             }
 
-            this.logger.debug('<=== %s connecting to me', address)
+            this.logger.trace('<=== %s connecting to me', address)
             this.onNewConnection(ws, address, clientPeerInfo, false)
         } catch (e) {
-            this.logger.debug('dropped incoming connection because of %s', e)
+            this.logger.trace('dropped incoming connection because of %s', e)
             this.metrics.record('open:missingParameter', 1)
             closeWs(ws, DisconnectionCode.MISSING_REQUIRED_PARAMETER, e.toString(), this.logger)
         }
@@ -513,14 +536,14 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
     private onClose(address: string, peerInfo: PeerInfo, code = 0, reason = ''): void {
         if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
             this.metrics.record('open:duplicateSocket', 1)
-            this.logger.debug('socket %s dropped from other side because existing connection already exists')
+            this.logger.trace('socket %s dropped from other side because existing connection already exists')
             return
         }
 
         this.metrics.record('close', 1)
-        this.logger.debug('socket to %s closed (code %d, reason %s)', address, code, reason)
+        this.logger.trace('socket to %s closed (code %d, reason %s)', address, code, reason)
         this.connections.delete(address)
-        this.logger.debug('removed %s [%s] from connection list', peerInfo, address)
+        this.logger.trace('removed %s [%s] from connection list', peerInfo, address)
         this.emit(Event.PEER_DISCONNECTED, peerInfo, reason)
     }
 
@@ -534,7 +557,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         // thereby leaving no connection behind.
         if (this.isConnected(address) && this.getAddress().localeCompare(address) === 1) {
             this.metrics.record('open:duplicateSocket', 1)
-            this.logger.debug('dropped new connection with %s because an existing connection already exists', address)
+            this.logger.trace('dropped new connection with %s because an existing connection already exists', address)
             closeWs(ws, DisconnectionCode.DUPLICATE_SOCKET, DisconnectionReason.DUPLICATE_SOCKET, this.logger)
             return false
         }
@@ -546,8 +569,8 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         this.peerBook.add(address, peerInfo)
         this.connections.set(address, ws)
         this.metrics.record('open', 1)
-        this.logger.debug('added %s [%s] to connection list', peerInfo, address)
-        this.logger.debug('%s connected to %s', out ? '===>' : '<===', address)
+        this.logger.trace('added %s [%s] to connection list', peerInfo, address)
+        this.logger.trace('%s connected to %s', out ? '===>' : '<===', address)
         this.emit(Event.PEER_CONNECTED, peerInfo)
 
         return true
@@ -565,7 +588,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         })
 
         ws.on('pong', () => {
-            this.logger.debug(`=> got pong event ws ${address}`)
+            this.logger.trace(`=> got pong event ws ${address}`)
             ws.respondedPong = true
             ws.rtt = Date.now() - ws.rttStart!
         })
@@ -573,7 +596,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         ws.once('close', (code: number, reason: string): void => {
             if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
                 this.metrics.record('open:duplicateSocket', 1)
-                this.logger.debug('socket %s dropped from other side because existing connection already exists')
+                this.logger.trace('socket %s dropped from other side because existing connection already exists')
                 return
             }
 
@@ -591,13 +614,13 @@ export function startWebSocketServer(
     return new Promise((resolve, reject) => {
         let server: uWS.TemplatedApp
         if (privateKeyFileName && certFileName) {
-            staticLogger.debug(`starting SSL uWS server (host: ${host}, port: ${port}, using ${privateKeyFileName}, ${certFileName}`)
+            staticLogger.trace(`starting SSL uWS server (host: ${host}, port: ${port}, using ${privateKeyFileName}, ${certFileName}`)
             server = uWS.SSLApp({
                 key_file_name: privateKeyFileName,
                 cert_file_name: certFileName,
             })
         } else {
-            staticLogger.debug(`starting non-SSL uWS (host: ${host}, port: ${port}`)
+            staticLogger.trace(`starting non-SSL uWS (host: ${host}, port: ${port}`)
             server = uWS.App()
         }
 

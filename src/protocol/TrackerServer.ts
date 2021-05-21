@@ -1,12 +1,13 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { IWsEndpoint, Event as WsEndpointEvent } from '../connection/IWsEndpoint'
 import { StreamIdAndPartition } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
+import { NameDirectory } from '../NameDirectory'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',
@@ -36,7 +37,7 @@ export class TrackerServer extends EventEmitter {
         endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         endpoint.on(WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         endpoint.on(WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
-        this.logger = new Logger(['protocol', 'TrackerServer'], endpoint.getPeerInfo())
+        this.logger = new Logger(module)
     }
 
     sendInstruction(
@@ -90,17 +91,14 @@ export class TrackerServer extends EventEmitter {
     sendRtcConnect(
         receiverNodeId: string,
         requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        force: boolean
+        originatorInfo: TrackerLayer.Originator
     ): Promise<TrackerLayer.RelayMessage> {
         return this.send(receiverNodeId, new TrackerLayer.RelayMessage({
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
             subType: RtcSubTypes.RTC_CONNECT,
-            data: {
-                force
-            }
+            data: new Object()
         }))
     }
 
@@ -132,6 +130,7 @@ export class TrackerServer extends EventEmitter {
     }
 
     send<T>(receiverNodeId: string, message: T & TrackerLayer.TrackerMessage): Promise<T> {
+        this.logger.debug(`Send ${TrackerMessageType[message.type]} to ${NameDirectory.getName(receiverNodeId)}`)
         return this.endpoint.send(receiverNodeId, message.serialize()).then(() => message)
     }
 

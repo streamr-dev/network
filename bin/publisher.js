@@ -6,7 +6,6 @@ const { Logger } = require('../dist/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
 const { startNetworkNode } = require('../dist/composition')
 const { MetricsContext } = require('../dist/helpers/MetricsContext')
-const { PeerInfo } = require('../dist/connection/PeerInfo')
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -26,8 +25,7 @@ program
 
 const id = program.opts().id || `PU${program.opts().port}`
 const name = program.opts().nodeName || id
-const peerInfo = PeerInfo.newNode(id, name)
-const logger = new Logger(['bin', 'publisher'], peerInfo)
+const logger = new Logger(module)
 
 const noise = parseInt(program.opts().noise, 10)
 

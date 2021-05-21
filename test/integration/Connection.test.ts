@@ -4,7 +4,6 @@ import { waitForCondition, wait } from 'streamr-test-utils'
 
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { Connection } from '../../src/connection/Connection'
-import { Logger } from '../../src/helpers/Logger'
 
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
@@ -41,8 +40,8 @@ describe('Connection', () => {
                 connectionOne.addRemoteCandidate(candidate, mid)
             },
         }
-        const messageQueueOne = new MessageQueue<string>(new Logger(['test']))
-        const messageQueueTwo = new MessageQueue<string>(new Logger(['test']))
+        const messageQueueOne = new MessageQueue<string>()
+        const messageQueueTwo = new MessageQueue<string>()
         connectionOne = new Connection({
             selfId: 'one',
             targetPeerId: 'two',

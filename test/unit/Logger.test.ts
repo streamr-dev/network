@@ -1,27 +1,6 @@
-import { Logger, formName } from "../../src/helpers/Logger"
-import { PeerInfo } from "../../src/connection/PeerInfo"
+import path from 'path'
+import { Logger } from "../../src/helpers/Logger"
 import Mock = jest.Mock
-
-const address = '0x9fd57ed5530e425c6efb724dc667ce54245944fd'
-const peerInfoNoName = PeerInfo.newNode(address)
-const peerInfoWithName = PeerInfo.newNode(address, 'nice-node')
-
-test.each([
-    [[], undefined, ''],
-    [[], peerInfoNoName, ':<0x9fd57e>'],
-    [[], peerInfoWithName, ':nice-node<0x9fd57e>'],
-    [['Manager'], undefined, 'Manager'],
-    [['Manager'], peerInfoNoName, 'Manager:<0x9fd57e>'],
-    [['Manager'], peerInfoWithName, 'Manager:nice-node<0x9fd57e>'],
-    [['logic', 'Manager'], undefined, 'logic:Manager'],
-    [['logic', 'Manager'], peerInfoNoName, 'logic:Manager:<0x9fd57e>'],
-    [['logic', 'Manager'], peerInfoWithName, 'logic:Manager:nice-node<0x9fd57e>'],
-    [['streamr', 'logic', 'Manager'], undefined, 'streamr:logic:Manager'],
-    [['streamr', 'logic', 'Manager'], peerInfoNoName, 'streamr:logic:Manager:<0x9fd57e>'],
-    [['streamr', 'logic', 'Manager'], peerInfoWithName, 'streamr:logic:Manager:nice-node<0x9fd57e>']
-])('formName(%p, %p) === %s', (arg1: string[], arg2: PeerInfo | undefined, expected: string) => {
-    expect(formName(arg1, arg2)).toEqual(expected)
-})
 
 describe(Logger, () => {
     let logger: Logger
@@ -33,7 +12,7 @@ describe(Logger, () => {
     let traceFn: Mock
 
     beforeAll(() => {
-        logger = new Logger(['a', 'b', 'TestCase'], peerInfoWithName)
+        logger = new Logger(module)
         // @ts-expect-error accessing-private
         fatalFn = logger.logger.fatal = jest.fn()
         // @ts-expect-error accessing-private
@@ -78,8 +57,30 @@ describe(Logger, () => {
         expect(traceFn).toBeCalledTimes(1)
     })
 
-    it('can create child logger', () => {
-        const childLogger = logger.createChildLogger(['c, d'])
-        expect(childLogger).toBeInstanceOf(Logger)
+    describe('name', () => {
+        it('short', () => {
+            // @ts-expect-error private method
+            expect(Logger.createName(module)).toBe('Logger.test         ')
+        })
+        it('short with context', () => {
+            // @ts-expect-error private method
+            expect(Logger.createName(module, 'foobar')).toBe('Logger.test:foobar  ')
+        })
+        it('long with context', () => {
+            // @ts-expect-error private method
+            expect(Logger.createName(module, 'loremipsum')).toBe('Logger.test:loremips')    
+        })
+        it('application id', () => {
+            process.env.STREAMR_APPLICATION_ID = 'APP'
+            // @ts-expect-error private method
+            expect(Logger.createName(module)).toBe('APP:Logger.test     ')
+            delete process.env.STREAMR_APPLICATION_ID
+        })
+        it('index', () => {
+            // @ts-expect-error private method
+            expect(Logger.createName({
+                filename: ['foo', 'bar', 'mock', 'index'].join(path.sep)
+            } as any)).toBe('mock                ') 
+        })
     })
 })

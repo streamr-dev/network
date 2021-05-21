@@ -12,13 +12,18 @@ import { RtcSignaller } from './logic/RtcSignaller'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import { NodeToNode } from './protocol/NodeToNode'
 import { NetworkNode } from './NetworkNode'
+import { Logger } from './helpers/Logger'
+import { NameDirectory } from './NameDirectory'
+import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
 
 export {
     Location,
     MetricsContext,
     NetworkNode,
     Protocol,
-    Tracker
+    Tracker,
+    Logger,
+    NameDirectory
 }
 
 export interface TrackerOptions {
@@ -67,7 +72,7 @@ export function startTracker({
     privateKeyFileName,
     certFileName,
 }: TrackerOptions): Promise<Tracker> {
-    const peerInfo = PeerInfo.newTracker(id, name, location)
+    const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
     return startEndpoint(
         host,
         port,
@@ -99,6 +104,14 @@ export function startNetworkNode(opts: NetworkNodeOptions): Promise<NetworkNode>
     return startNode(opts, PeerInfo.newNode)
 }
 
+type PeerInfoFn = (
+    id: string,
+    name: string | undefined,
+    controlLayerVersion?: number[],
+    messageLayerVersion?: number[],
+    location?: Location | null | undefined
+) => PeerInfo
+
 function startNode({
     host,
     port,
@@ -114,20 +127,22 @@ function startNode({
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
     stunUrls = ['stun:stun.l.google.com:19302']
-}: NetworkNodeOptions, peerInfoFn: (id: string, name: string | undefined, location: Location | null | undefined) => PeerInfo): Promise<NetworkNode> {
-    const peerInfo = peerInfoFn(id, name, location)
+}: NetworkNodeOptions, peerInfoFn: PeerInfoFn): Promise<NetworkNode> {
+    const peerInfo = peerInfoFn(id, name, undefined, undefined, location)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
+        const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
         const nodeToNode = new NodeToNode(new WebRtcEndpoint(
             peerInfo,
             stunUrls,
             webRtcSignaller, 
             metricsContext,
+            negotiatedProtocolVersions,
             newWebrtcConnectionTimeout,
             pingInterval,
             webrtcDatachannelBufferThresholdLow,
-            webrtcDatachannelBufferThresholdHigh
+            webrtcDatachannelBufferThresholdHigh,
         ))
         return new NetworkNode({
             peerInfo,

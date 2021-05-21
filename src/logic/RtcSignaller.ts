@@ -29,7 +29,6 @@ export interface ConnectOptions {
     routerId: string
     targetNode: string
     originatorInfo: TrackerLayer.Originator
-    force: boolean
 }
 
 export interface ErrorOptions {
@@ -56,7 +55,7 @@ export class RtcSignaller {
         this.remoteCandidateListener = null
         this.connectListener = null
         this.errorListener = null
-        this.logger = new Logger(['RtcSignaller'], peerInfo)
+        this.logger = new Logger(module)
 
         trackerNode.on(TrackerNodeEvent.RELAY_MESSAGE_RECEIVED, (relayMessage: RelayMessage, source: string) => {
             const { originator, targetNode, subType } = relayMessage
@@ -83,8 +82,7 @@ export class RtcSignaller {
                 this.connectListener!({
                     routerId: source,
                     targetNode,
-                    originatorInfo: originator,
-                    force: relayMessage.data.force
+                    originatorInfo: originator
                 })
             } else {
                 this.logger.warn('unrecognized subtype %s with contents %o', subType, relayMessage)
@@ -113,8 +111,8 @@ export class RtcSignaller {
             })
     }
 
-    onConnectionNeeded(routerId: string, targetPeerId: string, force: boolean): void {
-        this.trackerNode.sendRtcConnect(routerId, targetPeerId, this.peerInfo, force)
+    onConnectionNeeded(routerId: string, targetPeerId: string): void {
+        this.trackerNode.sendRtcConnect(routerId, targetPeerId, this.peerInfo)
             .catch((err: Error) => {
                 this.logger.debug('failed to sendRtcConnect via %s due to %s', routerId, err) // TODO: better?
             })

@@ -4,12 +4,12 @@ import { LocalCandidateMessage, LocalDescriptionMessage, RelayMessage, RtcConnec
 import { RtcSubTypes } from './RtcMessage'
 import { Logger } from "../helpers/Logger"
 
-export function attachRtcSignalling(parentLogger: Logger, trackerServer: TrackerServer): void {
+export function attachRtcSignalling(trackerServer: TrackerServer): void {
     if (!(trackerServer instanceof TrackerServer)) {
         throw new Error('trackerServer not instance of TrackerServer')
     }
 
-    const logger = parentLogger.createChildLogger(['rtcSignallingHandlers'])
+    const logger = new Logger(module)
 
     function handleLocalDescription({ requestId, originator, targetNode, data }: LocalDescriptionMessage & RelayMessage) {
         if (data.type === 'answer') {
@@ -47,8 +47,8 @@ export function attachRtcSignalling(parentLogger: Logger, trackerServer: Tracker
         })
     }
 
-    function handleRtcConnect({ requestId, originator, targetNode, data }: RtcConnectMessage & RelayMessage) {
-        trackerServer.sendRtcConnect(targetNode, requestId, originator, data.force).catch((err: Error) => {
+    function handleRtcConnect({ requestId, originator, targetNode }: RtcConnectMessage & RelayMessage) {
+        trackerServer.sendRtcConnect(targetNode, requestId, originator).catch((err: Error) => {
             logger.debug('Failed to sendRtcConnect to %s due to %s', targetNode, err) // TODO: better?
         })
     }

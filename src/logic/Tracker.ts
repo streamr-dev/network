@@ -62,10 +62,10 @@ export class Tracker extends EventEmitter {
         this.trackerServer = opts.protocols.trackerServer
         this.peerInfo = opts.peerInfo
 
-        this.logger = new Logger(['logic', 'Tracker'], this.peerInfo)
+        this.logger = new Logger(module)
         this.overlayPerStream = {}
         this.overlayConnectionRtts = {}
-        this.locationManager = new LocationManager(this.logger)
+        this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
 
         this.trackerServer.on(TrackerServerEvent.NODE_CONNECTED, (nodeId) => {
@@ -77,7 +77,7 @@ export class Tracker extends EventEmitter {
         this.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
             this.processNodeStatus(statusMessage, nodeId)
         })
-        attachRtcSignalling(this.logger, this.trackerServer)
+        attachRtcSignalling(this.trackerServer)
 
         this.metrics = metricsContext.create('tracker')
             .addRecordedMetric('onNodeDisconnected')
