@@ -57,7 +57,7 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
  * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
  * within timeout. Otherwise rejected.
  */
-export const runAndWaitForEvents = (
+export const runAndWaitForEvents = async (
     operations: () => void | (() => void)[], 
     waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
     timeout = 5000
