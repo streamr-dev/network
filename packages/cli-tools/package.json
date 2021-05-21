@@ -38,8 +38,8 @@
   "devDependencies": {
     "@streamr/dev-config": "1.0.0-alpha.0",
     "@types/easy-table": "0.0.32",
-    "@types/jest": "^26.0.23",
     "@types/event-stream": "^3.3.34",
+    "@types/jest": "^26.0.23",
     "@typescript-eslint/eslint-plugin": "^4.24.0",
     "@typescript-eslint/parser": "^4.24.0",
     "eslint": "^7.26.0",
