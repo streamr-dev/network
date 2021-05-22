@@ -58,7 +58,7 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
  * within timeout. Otherwise rejected.
  */
 export const runAndWaitForEvents = async (
-    operations: () => void | (() => void)[], 
+    operations: (() => void) | ((() => void)[]), 
     waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
     timeout = 5000
 ): Promise<unknown[]> => {
@@ -154,7 +154,7 @@ export const waitForCondition = async (
  * is reached with conditionFn never evaluating to true, rejects.
  */
 export const runAndWaitForConditions = async (
-    operations: () => void | (() => void)[], 
+    operations: (() => void) | ((() => void)[]), 
     conditions: (() => (boolean | Promise<boolean>)) | (() => (boolean | Promise<boolean>)) [],
     timeout = 5000,
     retryInterval = 100,
