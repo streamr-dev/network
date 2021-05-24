@@ -104,7 +104,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
 
         rtcSignaller.setErrorListener(({ targetNode, errorCode }: ErrorOptions) => {
-            const error = new WebRtcError(`RTC error ${errorCode} while attempting to signal with ${targetNode}`)
+            const error = new WebRtcError(`RTC error ${errorCode} while attempting to signal with node ${targetNode}`)
             const connection = this.connections[targetNode]
             // treat rtcSignaller errors as connection errors
             if (connection) {
