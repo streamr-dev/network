@@ -101,7 +101,7 @@ describe('Storage', () => {
         })
 
         test('requestFrom not throwing exception if no buckets found', async () => {
-            const a = storage.requestFrom(streamId, 777, 1, 0, null, null)
+            const a = storage.requestFrom(streamId, 777, 1, 0, null)
             const resultsB = await toArray(a)
             expect(resultsB).toEqual([])
         })
@@ -113,7 +113,7 @@ describe('Storage', () => {
         })
 
         test('requestFrom not throwing exception if timestamp is zero', async () => {
-            const a = storage.requestFrom(streamId, 0, 0, 0, null, null)
+            const a = storage.requestFrom(streamId, 0, 0, 0, null)
             const resultsA = await toArray(a)
             expect(resultsA).toEqual([])
         })
@@ -197,36 +197,12 @@ describe('Storage', () => {
                 storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0)),
             ])
 
-            const streamingResults = storage.requestFrom(streamId, 10, 3000, 0, null, null)
+            const streamingResults = storage.requestFrom(streamId, 10, 3000, 0, null)
             const results = await toArray(streamingResults)
 
             expect(results).toEqual([msg1, msg2, msg3, msg4, msg5])
         })
 
-        test('with sequenceNo, publisher and msgChainId', async () => {
-            const msg1 = buildEncryptedMsg(streamId, 10, 3000, 1, 'publisher1')
-            const msg2 = buildEncryptedMsg(streamId, 10, 3000, 3, 'publisher1')
-            const msg3 = buildEncryptedMsg(streamId, 10, 8000, 0, 'publisher1')
-
-            await Promise.all([
-                storage.store(buildEncryptedMsg(streamId, 10, 0, 0, 'publisher1')),
-                storage.store(buildEncryptedMsg(streamId, 10, 1000, 0, 'publisher2')),
-                storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3')),
-                storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')),
-                storage.store(msg2),
-                storage.store(buildEncryptedMsg(streamId, 10, 3000, 2, 'publisher2')),
-                storage.store(msg1),
-                storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')),
-                storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3')),
-                storage.store(msg3),
-                storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
-            ])
-
-            const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1', null)
-            const results = await toArray(streamingResults)
-
-            expect(results).toEqual([msg1, msg2, msg3])
-        })
     })
 
     describe('fetch messages within timestamp range', () => {
@@ -325,7 +301,7 @@ describe('Storage', () => {
         const results1 = await toArray(streamingResults1)
         expect(results1.length).toEqual(1000)
 
-        const streamingResults2 = storage.requestFrom(streamId, 0, 1000, 0, null, null)
+        const streamingResults2 = storage.requestFrom(streamId, 0, 1000, 0, null)
         const results2 = await toArray(streamingResults2)
         expect(results2.length).toEqual(1000)
 
