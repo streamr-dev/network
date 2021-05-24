@@ -79,12 +79,12 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
         const apiUrl = this.brokerConfig.streamrUrl + '/api/v1'
         const storageConfig = await StorageConfig.createInstance(brokerAddress, apiUrl, this.pluginConfig.storageConfig.refreshInterval)
-        this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.networkNode)
+        this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.subscriptionManager)
         return storageConfig
     }
 
     async stop() {
-        this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, this.brokerConfig.streamrAddress, this.networkNode)
+        this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, this.brokerConfig.streamrAddress, this.subscriptionManager)
         this.networkNode.removeMessageListener(this.messageListener!)
         this.storageConfig!.getStreams().forEach((stream) => {
             this.subscriptionManager.unsubscribe(stream.id, stream.partition)
