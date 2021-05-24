@@ -423,8 +423,8 @@ public class StreamTester {
                         publisher.publish(stream, payload);
                     } else if (counter % nbMessagesForSingleKey == 0) {
                         GroupKey newKey = GroupKey.generate();
-                        log.debug("{} rotating the key. New key: {}", publisher.getPublisherId(), newKey.getGroupKeyHex());
                         publisher.publish(stream, payload, new Date(), null, newKey);
+                        log.debug("{} rotating the key. New key: {}", publisher.getPublisherId(), newKey.getGroupKeyHex());
                     } else {
                         publisher.publish(stream, payload);
                     }
@@ -435,7 +435,7 @@ public class StreamTester {
                     log.debug("{} published {}", publisher.getPublisherId(), payloadString);
                 }
             };
-        return new PublishFunction("rotating", f);
+        return new PublishFunction("revoking", f);
     }
 
     public static String generatePrivateKey() {
