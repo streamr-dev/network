@@ -17,6 +17,7 @@ on:
       - '*'
     paths:
       - 'packages/client/*'
+      - 'packages/client/**/*'
       - '.github/workflows/client-build.yml'
   schedule:
     # run every day at 00:00
