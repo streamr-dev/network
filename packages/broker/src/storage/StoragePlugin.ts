@@ -8,6 +8,7 @@ import { StorageConfig } from './StorageConfig'
 import { StreamPart } from '../types'
 import { Wallet } from 'ethers'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { Protocol } from 'streamr-network'
 
 export interface StoragePluginConfig {
     cassandra: {
@@ -24,8 +25,10 @@ export interface StoragePluginConfig {
 
 export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
-    private cassandra: Storage|undefined
-    private storageConfig: StorageConfig|undefined
+    private cassandra?: Storage
+    private storageConfig?: StorageConfig
+    private messageListener?: (msg: Protocol.StreamMessage) => void
+    private assignmentMessageListener?: (msg: Protocol.StreamMessage) => void
 
     constructor(options: PluginOptions) {
         super(options)
@@ -34,14 +37,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     async start() {
         this.cassandra = await this.getCassandraStorage()
         this.storageConfig = await this.createStorageConfig()
-        this.storageConfig.getStreams().forEach((stream) => {
-            this.subscriptionManager.subscribe(stream.id, stream.partition)
-        })
-        this.storageConfig.addChangeListener({
-            onStreamAdded: (stream: StreamPart) => this.subscriptionManager.subscribe(stream.id, stream.partition),
-            onStreamRemoved: (stream: StreamPart) => this.subscriptionManager.unsubscribe(stream.id, stream.partition)
-        })
-        this.networkNode.addMessageListener((msg) => {
+        this.messageListener = (msg) => {
             const streamPart = {
                 id: msg.messageId.streamId,
                 partition: msg.messageId.streamPartition
@@ -49,7 +45,15 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             if (this.storageConfig!.hasStream(streamPart)) {
                 this.cassandra!.store(msg)
             }
+        }
+        this.storageConfig.getStreams().forEach((stream) => {
+            this.subscriptionManager.subscribe(stream.id, stream.partition)
         })
+        this.storageConfig.addChangeListener({
+            onStreamAdded: (stream: StreamPart) => this.subscriptionManager.subscribe(stream.id, stream.partition),
+            onStreamRemoved: (stream: StreamPart) => this.subscriptionManager.unsubscribe(stream.id, stream.partition)
+        })
+        this.networkNode.addMessageListener(this.messageListener)
         const streamFetcher = new StreamFetcher(this.brokerConfig.streamrUrl)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, streamFetcher, this.metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
@@ -73,12 +77,18 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     private async createStorageConfig() {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
-        const storageConfig = await StorageConfig.createInstance(brokerAddress, this.brokerConfig.streamrUrl + '/api/v1', this.pluginConfig.storageConfig.refreshInterval)
-        storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.networkNode)
+        const apiUrl = this.brokerConfig.streamrUrl + '/api/v1'
+        const storageConfig = await StorageConfig.createInstance(brokerAddress, apiUrl, this.pluginConfig.storageConfig.refreshInterval)
+        this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.networkNode)
         return storageConfig
     }
 
     async stop() {
+        this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, this.brokerConfig.streamrAddress, this.networkNode)
+        this.networkNode.removeMessageListener(this.messageListener!)
+        this.storageConfig!.getStreams().forEach((stream) => {
+            this.subscriptionManager.unsubscribe(stream.id, stream.partition)
+        })
         return Promise.all([
             this.cassandra!.close(),
             this.storageConfig!.cleanup()

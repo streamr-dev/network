@@ -40,6 +40,10 @@ export class NetworkNode extends Node {
         this.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }
 
+    removeMessageListener(cb: (msg: MessageLayer.StreamMessage) => void): void {
+        this.off(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
+    }
+
     subscribe(streamId: string, streamPartition: number): void {
         this.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition(streamId, streamPartition))
     }

@@ -48,8 +48,15 @@ export abstract class Plugin<T> {
         return this.httpServerRouters
     }
 
+    /**
+     * This lifecycle method is called once when Broker starts
+     */
     abstract start(): Promise<unknown>
 
+    /**
+     * This lifecycle method is called once when Broker stops
+     * It is be called only if the plugin was started successfully
+     */
     abstract stop(): Promise<unknown>
 
     getConfigSchema(): Schema|undefined {

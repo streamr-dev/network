@@ -159,12 +159,13 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     return {
         getNeighbors: () => networkNode.getNeighbors(),
         getStreams: () => networkNode.getStreams(),
-        close: () => Promise.all([
-            networkNode.stop(),
-            ...plugins.map((plugin) => plugin.stop()),
-            (httpServer !== undefined) ? stopServer(httpServer) : undefined,
-            volumeLogger.close()
-        ])
+        close: async () => {
+            if (httpServer !== undefined) {
+                await stopServer(httpServer)
+            }
+            await Promise.all(plugins.map((plugin) => plugin.stop()))
+            return Promise.all([networkNode.stop(), volumeLogger.close()])
+        }
     }
 }
 
