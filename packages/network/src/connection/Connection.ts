@@ -6,7 +6,7 @@ import { PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
 
-nodeDataChannel.initLogger("Error" as LogLevel)
+nodeDataChannel.initLogger("Release" as LogLevel)
 
 export interface ConstructorOptions {
     selfId: string
@@ -34,7 +34,6 @@ let ID = 0
  */
 type HandlerParameters<T extends (...args: any[]) => any> = Parameters<Parameters<T>[0]>
 
-type RemoteCandidate = { candidate: string, mid: string }
 interface PeerConnectionEvents {
     stateChange: (...args: HandlerParameters<PeerConnection['onStateChange']>) => void
     gatheringStateChange: (...args: HandlerParameters<PeerConnection['onGatheringStateChange']>) => void
@@ -106,10 +105,10 @@ export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<Eve
 
 export class Connection extends ConnectionEmitter {
     public readonly id: string
+    private connectionId = 'none'
     private readonly selfId: string
     private peerInfo: PeerInfo
     private isFinished: boolean
-    private remoteDescriptionSet = false
     private readonly routerId: string
     private readonly isOffering: boolean
     private readonly stunUrls: string[]
@@ -137,7 +136,6 @@ export class Connection extends ConnectionEmitter {
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
-    private enqueuedRemoteCandidate: RemoteCandidate | null
 
     constructor({
         selfId,
@@ -152,9 +150,10 @@ export class Connection extends ConnectionEmitter {
         maxPingPongAttempts = 5,
         pingInterval = 2 * 1000,
         flushRetryTimeout = 500,
-        maxMessageSize = 1048576
+        maxMessageSize = 1048576,
     }: ConstructorOptions) {
         super()
+        
         ID += 1
         this.id = `Connection${ID}`
         this.selfId = selfId
@@ -186,7 +185,6 @@ export class Connection extends ConnectionEmitter {
 
         this.rtt = null
         this.rttStart = null
-        this.enqueuedRemoteCandidate = null
 
         this.onStateChange = this.onStateChange.bind(this)
         this.onLocalCandidate = this.onLocalCandidate.bind(this)
@@ -202,7 +200,6 @@ export class Connection extends ConnectionEmitter {
     }
 
     connect(): void {
-        this.logger.trace('connect()')
         if (this.isFinished) {
             throw new Error('Connection already closed.')
         }
@@ -218,13 +215,11 @@ export class Connection extends ConnectionEmitter {
         this.connectionEmitter.on('gatheringStateChange', this.onGatheringStateChange)
         this.connectionEmitter.on('localDescription', this.onLocalDescription)
         this.connectionEmitter.on('localCandidate', this.onLocalCandidate)
-
+        
         if (this.isOffering) {
-            this.logger.trace('creating data channel')
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
         } else {
-            this.logger.trace('waiting for data channel')
             this.connectionEmitter.on('dataChannel', this.onDataChannel)
         }
 
@@ -235,15 +230,18 @@ export class Connection extends ConnectionEmitter {
         }, this.newConnectionTimeout)
     }
 
+    getConnectionId(): string {
+        return this.connectionId
+    }
+
+    setConnectionId(id: string): void {
+        this.connectionId = id
+    }
+
     setRemoteDescription(description: string, type: DescriptionType): void {
         if (this.connection) {
             try {
                 this.connection.setRemoteDescription(description, type)
-                this.remoteDescriptionSet = true
-                if (this.enqueuedRemoteCandidate) {
-                    this.connection.addRemoteCandidate(this.enqueuedRemoteCandidate.candidate, this.enqueuedRemoteCandidate.mid)
-                    this.enqueuedRemoteCandidate = null
-                }
             } catch (err) {
                 this.logger.warn('setRemoteDescription failed, reason: %s', err)
             }
@@ -262,10 +260,6 @@ export class Connection extends ConnectionEmitter {
         } else {
             this.logger.warn('skipped addRemoteCandidate, connection is null')
         }
-    }
-
-    enqueueRemoteCandidate(remoteCandidate: RemoteCandidate): void {
-        this.enqueuedRemoteCandidate = remoteCandidate
     }
 
     send(message: string): Promise<void> {
@@ -334,7 +328,6 @@ export class Connection extends ConnectionEmitter {
         }
         this.dataChannel = null
         this.connection = null
-        this.enqueuedRemoteCandidate = null
         this.flushTimeoutRef = null
         this.connectionTimeoutRef = null
         this.pingTimeoutRef = null
@@ -423,12 +416,8 @@ export class Connection extends ConnectionEmitter {
         }
     }
 
-    isRemoteDescriptionSet(): boolean {
-        return this.remoteDescriptionSet
-    }
-
     private onStateChange(state: string): void {
-        this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
+        this.logger.warn('conn.onStateChange: %s -> %s', this.lastState, state)
 
         this.lastState = state
 
@@ -448,7 +437,7 @@ export class Connection extends ConnectionEmitter {
     }
 
     private onGatheringStateChange(state: string): void {
-        this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
+        this.logger.warn('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
         this.lastGatheringState = state
     }
 

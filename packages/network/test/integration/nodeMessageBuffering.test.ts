@@ -56,10 +56,9 @@ describe('message buffering of Node', () => {
             })
             done()
         })
-
+        
         destinationNode.subscribe('id', 0)
 
-        // "Client" pushes data
         sourceNode.publish(new StreamMessage({
             messageId: new MessageID('id', 0, 1, 0, 'publisher-id', 'session-id'),
             content: {

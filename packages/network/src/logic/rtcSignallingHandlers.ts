@@ -1,6 +1,6 @@
 import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerServer'
 import { NotFoundInPeerBookError } from '../connection/PeerBook'
-import { LocalCandidateMessage, LocalDescriptionMessage, RelayMessage, RtcConnectMessage } from '../identifiers'
+import { RtcIceCandidateMessage, RtcOfferMessage, RtcAnswerMessage, RelayMessage, RtcConnectMessage } from '../identifiers'
 import { RtcSubTypes } from './RtcMessage'
 import { Logger } from "../helpers/Logger"
 
@@ -11,35 +11,36 @@ export function attachRtcSignalling(trackerServer: TrackerServer): void {
 
     const logger = new Logger(module)
 
-    function handleLocalDescription({ requestId, originator, targetNode, data }: LocalDescriptionMessage & RelayMessage) {
-        if (data.type === 'answer') {
-            trackerServer.sendRtcAnswer(
-                targetNode,
-                requestId,
-                originator,
-                data.description
-            ).catch((err: Error) => {
-                logger.debug('failed to sendRtcAnswer to %s due to %s', targetNode, err) // TODO: better?
-            })
-        } else if (data.type === 'offer') {
-            trackerServer.sendRtcOffer(
-                targetNode,
-                requestId,
-                originator,
-                data.description
-            ).catch((err: Error) => {
-                logger.debug('failed to sendRtcOffer to %s due to %s', targetNode, err) // TODO: better?
-            })
-        } else {
-            logger.warn('unrecognized localDescription message: %s', data.type)
-        }
-    }
-
-    function handleLocalCandidate({ requestId, originator, targetNode, data }: LocalCandidateMessage & RelayMessage) {
-        trackerServer.sendRemoteCandidate(
+    function handleRtcOffer({ requestId, originator, targetNode, data }: RtcOfferMessage & RelayMessage) {
+        trackerServer.sendRtcOffer(
             targetNode,
             requestId,
             originator,
+            data.connectionId,
+            data.description
+        ).catch((err: Error) => {
+            logger.debug('failed to sendRtcOffer to %s due to %s', targetNode, err) // TODO: better?
+        })
+    }
+
+    function handleRtcAnswer({ requestId, originator, targetNode, data }: RtcAnswerMessage & RelayMessage) {
+        trackerServer.sendRtcAnswer(
+            targetNode,
+            requestId,
+            originator,
+            data.connectionId,
+            data.description
+        ).catch((err: Error) => {
+            logger.debug('failed to sendRtcAnswer to %s due to %s', targetNode, err) // TODO: better?
+        })
+    }
+
+    function handleIceCandidate({ requestId, originator, targetNode, data }: RtcIceCandidateMessage & RelayMessage) {
+        trackerServer.sendRtcIceCandidate(
+            targetNode,
+            requestId,
+            originator,
+            data.connectionId,
             data.candidate,
             data.mid
         ).catch((err: Error) => {
@@ -47,8 +48,8 @@ export function attachRtcSignalling(trackerServer: TrackerServer): void {
         })
     }
 
-    function handleRtcConnect({ requestId, originator, targetNode }: RtcConnectMessage & RelayMessage) {
-        trackerServer.sendRtcConnect(targetNode, requestId, originator).catch((err: Error) => {
+    function handleRtcConnect({ requestId, originator, targetNode, data }: RtcConnectMessage & RelayMessage) {
+        trackerServer.sendRtcConnect(targetNode, requestId, originator, data.force).catch((err: Error) => {
             logger.debug('Failed to sendRtcConnect to %s due to %s', targetNode, err) // TODO: better?
         })
     }
@@ -62,10 +63,12 @@ export function attachRtcSignalling(trackerServer: TrackerServer): void {
         } = relayMessage
         // TODO: validate that source === originator
         try {
-            if (relayMessage.subType === RtcSubTypes.LOCAL_DESCRIPTION) {
-                handleLocalDescription(relayMessage)
-            } else if (relayMessage.subType === RtcSubTypes.LOCAL_CANDIDATE) {
-                handleLocalCandidate(relayMessage)
+            if (relayMessage.subType === RtcSubTypes.RTC_OFFER) {
+                handleRtcOffer(relayMessage)
+            } else if (relayMessage.subType === RtcSubTypes.RTC_ANSWER) {
+                handleRtcAnswer(relayMessage)
+            } else if (relayMessage.subType === RtcSubTypes.ICE_CANDIDATE) {
+                handleIceCandidate(relayMessage)
             } else if (relayMessage.subType === RtcSubTypes.RTC_CONNECT) {
                 handleRtcConnect(relayMessage)
             } else {

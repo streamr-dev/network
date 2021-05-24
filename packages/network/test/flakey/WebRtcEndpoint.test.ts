@@ -3,7 +3,7 @@ import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { waitForCondition, waitForEvent, wait } from 'streamr-test-utils'
+import { runAndWaitForEvents, waitForCondition, waitForEvent, wait } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
@@ -61,29 +61,29 @@ describe('WebRtcEndpoint Flakey Tests', () => {
     })
 
     it('can handle fast paced reconnects', async () => {
-        await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30000),
-            endpoint1.connect('node-2', 'tracker'),
-            endpoint2.connect('node-1', 'tracker'),
-        ])
+        await runAndWaitForEvents([
+            () => { endpoint1.connect('node-2', 'tracker', true) }, 
+            () => { endpoint2.connect('node-1', 'tracker', false) }], [
+            [endpoint1, EndpointEvent.PEER_CONNECTED],
+            [endpoint2, EndpointEvent.PEER_CONNECTED] 
+        ], 30000) 
 
-        await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30000),
-            endpoint1.close('node-2', 'test'),
-            endpoint1.connect('node-2', 'tracker'),
-        ])
+        await runAndWaitForEvents([
+            () => {  endpoint1.close('node-2', 'test') },
+            () => { endpoint1.connect('node-2', 'tracker', true) }], [
+            [endpoint1, EndpointEvent.PEER_CONNECTED],
+            [endpoint2, EndpointEvent.PEER_CONNECTED]
+        ], 30000) 
     }, 60000)
 
     it('messages are delivered on temporary loss of connectivity', async () => {
-        await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30000),
-            endpoint1.connect('node-2', 'tracker'),
-            endpoint2.connect('node-1', 'tracker'),
-        ])
-
+        await runAndWaitForEvents([
+            () => { endpoint1.connect('node-2', 'tracker') },
+            () => { endpoint2.connect('node-1', 'tracker') }], [
+            [endpoint1, EndpointEvent.PEER_CONNECTED],
+            [endpoint2, EndpointEvent.PEER_CONNECTED] 
+        ], 30000)
+        
         let ep2NumOfReceivedMessages = 0
 
         endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
@@ -97,15 +97,18 @@ describe('WebRtcEndpoint Flakey Tests', () => {
         const NUM_MESSAGES = 6
 
         async function reconnect() {
-            await Promise.all([
-                waitForEvent(endpoint1, EndpointEvent.PEER_DISCONNECTED, 30000),
-                endpoint2.close('node-1', 'temporary loss of connectivity test')
-            ])
-            await Promise.all([
-                waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
-                endpoint1.connect('node-2', 'tracker'),
-                endpoint2.connect('node-1', 'tracker'),
-            ])
+            await runAndWaitForEvents(
+                () => { endpoint2.close('node-1', 'temporary loss of connectivity test') },
+                [ endpoint1, EndpointEvent.PEER_DISCONNECTED ],
+                30000
+            )
+            
+            await runAndWaitForEvents([
+                () => { endpoint1.connect('node-2', 'tracker') },
+                () => { endpoint2.connect('node-1', 'tracker') } ], 
+            [ endpoint1, EndpointEvent.PEER_CONNECTED ],
+            30000
+            )
         }
 
         let onReconnect
@@ -134,4 +137,5 @@ describe('WebRtcEndpoint Flakey Tests', () => {
         await Promise.all(sendTasks)
         expect(sendTasks).toHaveLength(NUM_MESSAGES)
     }, 60 * 1000)
+    
 })

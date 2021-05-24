@@ -2,25 +2,27 @@ import { TrackerNode, Event as TrackerNodeEvent } from '../protocol/TrackerNode'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from './RtcMessage'
 import { RelayMessage, RtcErrorMessage } from '../identifiers'
-import { DescriptionType } from 'node-datachannel'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from "../helpers/Logger"
 
 export interface OfferOptions {
     routerId: string,
     originatorInfo: TrackerLayer.Originator,
+    connectionId: string,
     description: string
 }
 
 export interface AnswerOptions {
     routerId: string,
     originatorInfo: TrackerLayer.Originator,
+    connectionId: string,
     description: string
 }
 
-export interface RemoteCandidateOptions {
+export interface IceCandidateOptions {
     routerId: string,
     originatorInfo: TrackerLayer.Originator
+    connectionId: string,
     candidate: string,
     mid: string
 }
@@ -29,6 +31,7 @@ export interface ConnectOptions {
     routerId: string
     targetNode: string
     originatorInfo: TrackerLayer.Originator
+    force: boolean
 }
 
 export interface ErrorOptions {
@@ -42,7 +45,7 @@ export class RtcSignaller {
     private readonly trackerNode: TrackerNode
     private offerListener: null | ((opts: OfferOptions) => void)
     private answerListener: null | ((opts: AnswerOptions) => void)
-    private remoteCandidateListener: null | ((opts: RemoteCandidateOptions) => void)
+    private iceCandidateListener: null | ((opts: IceCandidateOptions) => void)
     private connectListener: null | ((opts: ConnectOptions) => void)
     private errorListener: null | ((opts: ErrorOptions) => void)
     private readonly logger: Logger
@@ -52,7 +55,7 @@ export class RtcSignaller {
         this.trackerNode = trackerNode
         this.offerListener = null
         this.answerListener = null
-        this.remoteCandidateListener = null
+        this.iceCandidateListener = null
         this.connectListener = null
         this.errorListener = null
         this.logger = new Logger(module)
@@ -63,18 +66,21 @@ export class RtcSignaller {
                 this.offerListener!({
                     routerId: source,
                     originatorInfo: originator,
+                    connectionId: relayMessage.data.connectionId,
                     description: relayMessage.data.description
                 })
             } else if (relayMessage.subType === RtcSubTypes.RTC_ANSWER) {
                 this.answerListener!({
                     routerId: source,
                     originatorInfo: originator,
+                    connectionId: relayMessage.data.connectionId,
                     description: relayMessage.data.description,
                 })
-            } else if (relayMessage.subType === RtcSubTypes.REMOTE_CANDIDATE) {
-                this.remoteCandidateListener!({
+            } else if (relayMessage.subType === RtcSubTypes.ICE_CANDIDATE) {
+                this.iceCandidateListener!({
                     routerId: source,
                     originatorInfo: originator,
+                    connectionId: relayMessage.data.connectionId,
                     candidate: relayMessage.data.candidate,
                     mid: relayMessage.data.mid
                 })
@@ -82,7 +88,8 @@ export class RtcSignaller {
                 this.connectListener!({
                     routerId: source,
                     targetNode,
-                    originatorInfo: originator
+                    originatorInfo: originator,
+                    force: relayMessage.data.force
                 })
             } else {
                 this.logger.warn('unrecognized subtype %s with contents %o', subType, relayMessage)
@@ -97,22 +104,29 @@ export class RtcSignaller {
         })
     }
 
-    onLocalDescription(routerId: string, targetPeerId: string, type: DescriptionType, description: string): void {
-        this.trackerNode.sendLocalDescription(routerId, targetPeerId, this.peerInfo, type, description)
+    sendRtcOffer(trackerId: string, targetPeerId: string, connectionId: string, description: string): void {
+        this.trackerNode.sendRtcOffer(trackerId, targetPeerId, connectionId, this.peerInfo, description)
             .catch((err: Error) => {
-                this.logger.debug('failed to sendLocalDescription via %s due to %s', routerId, err) // TODO: better?
+                this.logger.debug('failed to sendRtcOffer via %s due to %s', trackerId, err) // TODO: better?
             })
     }
 
-    onLocalCandidate(routerId: string, targetPeerId: string, candidate: string, mid: string): void {
-        this.trackerNode.sendLocalCandidate(routerId, targetPeerId, this.peerInfo, candidate, mid)
+    sendRtcAnswer(trackerId: string, targetPeerId: string, connectionId: string, description: string): void {
+        this.trackerNode.sendRtcAnswer(trackerId, targetPeerId, connectionId, this.peerInfo, description)
             .catch((err: Error) => {
-                this.logger.debug('failed to sendLocalCandidate via %s due to %s', routerId, err) // TODO: better?
+                this.logger.debug('failed to sendRtcAnswer via %s due to %s', trackerId, err) // TODO: better?
             })
     }
 
-    onConnectionNeeded(routerId: string, targetPeerId: string): void {
-        this.trackerNode.sendRtcConnect(routerId, targetPeerId, this.peerInfo)
+    sendRtcIceCandidate(routerId: string, targetPeerId: string, connectionId: string, candidate: string, mid: string): void {
+        this.trackerNode.sendRtcIceCandidate(routerId, targetPeerId, connectionId, this.peerInfo, candidate, mid)
+            .catch((err: Error) => {
+                this.logger.debug('failed to sendRtcIceCandidate via %s due to %s', routerId, err) // TODO: better?
+            })
+    }
+
+    onConnectionNeeded(routerId: string, targetPeerId: string, force: boolean): void {
+        this.trackerNode.sendRtcConnect(routerId, targetPeerId, this.peerInfo, force)
             .catch((err: Error) => {
                 this.logger.debug('failed to sendRtcConnect via %s due to %s', routerId, err) // TODO: better?
             })
@@ -126,8 +140,8 @@ export class RtcSignaller {
         this.answerListener = fn
     }
 
-    setRemoteCandidateListener(fn: (opts: RemoteCandidateOptions) => void): void {
-        this.remoteCandidateListener = fn
+    setIceCandidateListener(fn: (opts: IceCandidateOptions) => void): void {
+        this.iceCandidateListener = fn
     }
 
     setErrorListener(fn: (opts: ErrorOptions) => void): void {

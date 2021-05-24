@@ -69,7 +69,8 @@ export class TrackerServer extends EventEmitter {
     sendRtcOffer(
         receiverNodeId: string, 
         requestId: string, 
-        originatorInfo: TrackerLayer.Originator, 
+        originatorInfo: TrackerLayer.Originator,
+        connectionId: string, 
         description: string
     ): Promise<TrackerLayer.RelayMessage> {
         return this.send(receiverNodeId, new TrackerLayer.RelayMessage({
@@ -78,6 +79,7 @@ export class TrackerServer extends EventEmitter {
             targetNode: receiverNodeId,
             subType: RtcSubTypes.RTC_OFFER,
             data: {
+                connectionId,
                 description
             }
         }))
@@ -87,6 +89,7 @@ export class TrackerServer extends EventEmitter {
         receiverNodeId: string, 
         requestId: string, 
         originatorInfo: TrackerLayer.Originator, 
+        connectionId: string,
         description: string
     ): Promise<TrackerLayer.RelayMessage> {
         return this.send(receiverNodeId, new TrackerLayer.RelayMessage({
@@ -95,6 +98,7 @@ export class TrackerServer extends EventEmitter {
             targetNode: receiverNodeId,
             subType: RtcSubTypes.RTC_ANSWER,
             data: {
+                connectionId,
                 description
             }
         }))
@@ -103,21 +107,25 @@ export class TrackerServer extends EventEmitter {
     sendRtcConnect(
         receiverNodeId: string,
         requestId: string,
-        originatorInfo: TrackerLayer.Originator
+        originatorInfo: TrackerLayer.Originator,
+        force: boolean
     ): Promise<TrackerLayer.RelayMessage> {
         return this.send(receiverNodeId, new TrackerLayer.RelayMessage({
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
             subType: RtcSubTypes.RTC_CONNECT,
-            data: new Object()
+            data: {
+                force
+            }
         }))
     }
 
-    sendRemoteCandidate(
+    sendRtcIceCandidate(
         receiverNodeId: string,
         requestId: string,
         originatorInfo: TrackerLayer.Originator,
+        connectionId: string,
         candidate: string,
         mid: string
     ): Promise<TrackerLayer.RelayMessage> {
@@ -125,8 +133,9 @@ export class TrackerServer extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
-            subType: RtcSubTypes.REMOTE_CANDIDATE,
+            subType: RtcSubTypes.ICE_CANDIDATE,
             data: {
+                connectionId,
                 candidate,
                 mid
             }

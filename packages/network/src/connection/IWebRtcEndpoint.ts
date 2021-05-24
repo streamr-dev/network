@@ -18,7 +18,7 @@ export interface IWebRtcEndpoint {
     on(event: Event.HIGH_BACK_PRESSURE, listener: (peerInfo: PeerInfo) => void): this
     on(event: Event.LOW_BACK_PRESSURE, listener: (peerInfo: PeerInfo) => void): this
 
-    connect(targetPeerId: string, routerId: string, isOffering: boolean|undefined): Promise<string>
+    connect(targetPeerId: string, routerId: string, isOffering: boolean|undefined, trackerInstructed: boolean, force: boolean): Promise<string>
     send(targetPeerId: string, message: string): Promise<void>
     close(receiverNodeId: string, reason: string): void
     getRtts(): Readonly<Rtts>

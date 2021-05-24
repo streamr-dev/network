@@ -74,23 +74,10 @@ export type ResendResponse = ControlLayer.ResendResponseNoResend
     | ControlLayer.ResendResponseResending
     | ControlLayer.ResendResponseResent
 
-export type OfferMessage = {
-    subType: RtcSubTypes.RTC_OFFER
+export type RtcIceCandidateMessage = {
+    subType: RtcSubTypes.ICE_CANDIDATE
     data: {
-        description: string
-    }
-}
-
-export type AnswerMessage = {
-    subType: RtcSubTypes.RTC_ANSWER
-    data: {
-        description: string
-    }
-}
-
-export type RemoteCandidateMessage = {
-    subType: RtcSubTypes.REMOTE_CANDIDATE
-    data: {
+        connectionId: string,
         candidate: string
         mid: string
     }
@@ -103,29 +90,25 @@ export type RtcConnectMessage = {
     }
 }
 
-export type LocalDescriptionMessage = {
-    subType: RtcSubTypes.LOCAL_DESCRIPTION
+export type RtcOfferMessage = {
+    subType: RtcSubTypes.RTC_OFFER
     data: {
-        type: "answer" | "offer"
         description: string
     }
 }
 
-export type LocalCandidateMessage = {
-    subType: RtcSubTypes.LOCAL_CANDIDATE
+export type RtcAnswerMessage = {
+    subType: RtcSubTypes.RTC_ANSWER
     data: {
-        candidate: string
-        mid: string
+        description: string
     }
 }
 
 export type RelayMessage = (
-    OfferMessage
-        | AnswerMessage
-        | RemoteCandidateMessage
+    RtcOfferMessage
+        | RtcAnswerMessage
+        | RtcIceCandidateMessage
         | RtcConnectMessage
-        | LocalDescriptionMessage
-        | LocalCandidateMessage
     ) & TrackerLayer.RelayMessage
 
 export interface RtcErrorMessage {

@@ -48,6 +48,82 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
 }
 
 /**
+ * Run functions and wait for events to be emitted within timeout. Returns a promise created with Promise.all() 
+ * and waitForEvent() calls. Calls the functions after creating the promise.
+ *
+ * @param operations function(s) to call
+ * @param waitedEvents event(s) to wait for
+ * @param timeout amount of time in milliseconds to wait for
+ * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
+ * within timeout. Otherwise rejected.
+ */
+export const runAndWaitForEvents = async (
+    operations: (() => void) | ((() => void)[]), 
+    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
+    timeout = 5000
+): Promise<unknown[]> => {
+    let ops: (() => void)[]
+    if (Array.isArray(operations)) {
+        ops = operations
+    } 
+    else {
+        ops = [operations]
+    }
+
+    let evs: Array<[emitter: EventEmitter, event: Event]>
+    if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0]) ) {
+        evs = waitedEvents as Array<[emitter: EventEmitter, event: Event]>
+    } 
+    else {
+        evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
+    }
+    
+    const promise = Promise.all(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
+           
+    ops.forEach( (op) => { op() })
+    
+    return promise
+}
+
+/**
+ * Run functions and wait for one of the events to be emitted within timeout. Returns a promise created with Promise.race() 
+ * and waitForEvent() calls. Calls the functions after creating the promise.
+ *
+ * @param operations function(s) to call
+ * @param waitedEvents event(s) to wait for
+ * @param timeout amount of time in milliseconds to wait for
+ * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
+ * within timeout. Otherwise rejected.
+ */
+export const runAndRaceEvents = async (
+    operations: (() => void) | ((() => void)[]), 
+    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
+    timeout = 5000
+): Promise<unknown[]> => {
+    let ops: (() => void)[]
+    if (Array.isArray(operations)) {
+        ops = operations
+    } 
+    else {
+        ops = [operations]
+    }
+
+    let evs: Array<[emitter: EventEmitter, event: Event]>
+    if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0]) ) {
+        evs = waitedEvents as Array<[emitter: EventEmitter, event: Event]>
+    } 
+    else {
+        evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
+    }
+    
+    const promise = Promise.race(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
+           
+    ops.forEach( (op) => { op() })
+    
+    return promise
+}
+
+/**
  * Wait for a condition to become true by re-evaluating every `retryInterval` milliseconds.
  *
  * @param conditionFn condition to be evaluated; should return boolean or Promise<boolean> and have
@@ -99,6 +175,51 @@ export const waitForCondition = async (
         setImmediate(poll)
         poller = setInterval(poll, retryInterval)
     })
+}
+
+/**
+ * Run functions and wait conditions to become true by re-evaluating every `retryInterval` milliseconds. Returns a promise created with Promise.all() 
+ * and waitForCondition() calls. Calls the functions after creating the promise.
+ * 
+ * @param operations function(s) to call
+ * @param conditions condition(s) to be evaluated; condition functions should return boolean or Promise<boolean> and have
+ * no side-effects.
+ * @param timeout amount of time in milliseconds to wait for
+ * @param retryInterval how often, in milliseconds, to re-evaluate condition
+ * @param onTimeoutContext evaluated only on timeout. Used to associate human-friendly textual context to error.
+ * @returns {Promise<unknown[]>} resolves immediately if
+ * conditions evaluate to true on a retry attempt within timeout. If timeout
+ * is reached with conditionFn never evaluating to true, rejects.
+ */
+export const runAndWaitForConditions = async (
+    operations: (() => void) | ((() => void)[]), 
+    conditions: (() => (boolean | Promise<boolean>)) | (() => (boolean | Promise<boolean>)) [],
+    timeout = 5000,
+    retryInterval = 100,
+    onTimeoutContext?: () => string
+): Promise<unknown[]> => {
+
+    let ops: (() => void)[]
+    if (Array.isArray(operations)) {
+        ops = operations
+    } 
+    else {
+        ops = [operations]
+    }
+    
+    let conds: (() => (boolean | Promise<boolean>)) [] 
+    if (Array.isArray(conditions)) {
+        conds = conditions
+    } 
+    else {
+        conds = [conditions]
+    }
+    
+    const promise = Promise.all(conds.map((condition) => waitForCondition(condition, timeout, retryInterval, onTimeoutContext)))
+        
+    ops.forEach( (op) => { op() })
+    
+    return promise
 }
 
 /**

@@ -8,7 +8,6 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { startTracker } from '../../src/composition'
-import { DescriptionType } from 'node-datachannel'
 
 const { RelayMessage, ErrorMessage } = TrackerLayer
 
@@ -51,12 +50,12 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
         await targetTrackerNode.stop()
     })
 
-    it('LocalDescription (offer) messages are delivered', async () => {
-        const sentMsg = await originatorTrackerNode.sendLocalDescription(
+    it('Offer messages are delivered', async () => {
+        const sentMsg = await originatorTrackerNode.sendRtcOffer(
             'tracker',
             'target',
+            'connectionid',
             PeerInfo.newNode('originator'),
-            'offer' as DescriptionType.Offer, // TODO should be able to use the enum directly
             'description'
         )
         const [rtcOffer] = await waitForEvent(targetTrackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
@@ -66,17 +65,18 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             targetNode: 'target',
             subType: RtcSubTypes.RTC_OFFER,
             data: {
+                connectionId: 'connectionid',
                 description: 'description'
             }
         }))
     })
 
-    it('LocalDescription (answer) messages are delivered', async () => {
-        const sentMsg = await originatorTrackerNode.sendLocalDescription(
+    it('Answer messages are delivered', async () => {
+        const sentMsg = await originatorTrackerNode.sendRtcAnswer(
             'tracker',
             'target',
+            'connectionid',
             PeerInfo.newNode('originator'),
-            'answer' as DescriptionType.Answer, // TODO should be able to use the enum directly
             'description'
         )
         const [rtcOffer] = await waitForEvent(targetTrackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
@@ -86,15 +86,17 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             targetNode: 'target',
             subType: RtcSubTypes.RTC_ANSWER,
             data: {
+                connectionId: 'connectionid',
                 description: 'description'
             }
         }))
     })
 
     it('LocalCandidate messages are delivered', async () => {
-        const sentMsg = await originatorTrackerNode.sendLocalCandidate(
+        const sentMsg = await originatorTrackerNode.sendRtcIceCandidate(
             'tracker',
             'target',
+            'connectionid',
             PeerInfo.newNode('originator'),
             'candidate',
             'mid'
@@ -104,8 +106,9 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             requestId: sentMsg.requestId,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
-            subType: RtcSubTypes.REMOTE_CANDIDATE,
+            subType: RtcSubTypes.ICE_CANDIDATE,
             data: {
+                connectionId: 'connectionid',
                 candidate: 'candidate',
                 mid: 'mid'
             }
@@ -113,7 +116,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     })
 
     it('RtcConnect messages are delivered', async () => {
-        const sentMsg = await originatorTrackerNode.sendRtcConnect('tracker', 'target', PeerInfo.newNode('originator'))
+        const sentMsg = await originatorTrackerNode.sendRtcConnect('tracker', 'target', PeerInfo.newNode('originator'), false)
         const [rtcOffer] = await waitForEvent(targetTrackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
         expect(rtcOffer).toEqual(new RelayMessage({
             requestId: sentMsg.requestId,
@@ -121,6 +124,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             targetNode: 'target',
             subType: RtcSubTypes.RTC_CONNECT,
             data: {
+                force: false
             }
 
         }))
@@ -128,7 +132,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
 
     it('RelayMessage with invalid target results in RTC_ERROR response sent back to originator', async () => {
         // Enough to test only sendRtcConnect here as we know all relay message share same error handling logic
-        const sentMsg = await originatorTrackerNode.sendRtcConnect('tracker', 'nonExistingNode', PeerInfo.newUnknown('originator'))
+        const sentMsg = await originatorTrackerNode.sendRtcConnect('tracker', 'nonExistingNode', PeerInfo.newUnknown('originator'), false)
         const [rtcError] = await waitForEvent(originatorTrackerNode, TrackerNodeEvent.RTC_ERROR_RECEIVED)
         expect(rtcError).toEqual(new ErrorMessage({
             requestId: sentMsg.requestId,
