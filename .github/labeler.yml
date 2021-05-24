@@ -2,28 +2,35 @@ test:
   - '*test*'
 ci:
 - '.github/*'
-- '.github/workflows/*'
+- '.github/**/*'
 docs:
 - '**.md'
 - '*.md'
 broker:
 - 'packages/broker/*'
+- 'packages/broker/**/*'
 - '.github/workflows/broker.yml'
 network:
 - 'packages/network/*'
+- 'packages/network/**/*'
 - '.github/workflows/network.yml'
 client:
 - 'packages/client/*'
+- 'packages/client/**/*'
 - '.github/workflows/client-build.yml'
 - '.github/workflows/client-code.yml'
 protocol:
 - 'packages/protocol/*'
+- 'packages/protocol/**/*'
 - '.github/workflows/protocol.yml'
 test-utils:
 - 'packages/test-utils/*'
+- 'packages/test-utils/**/*'
 - '.github/workflows/test-utils.yml'
 cli-tools:
 - 'packages/cli-tools/*'
+- 'packages/cli-tools/**/*'
 cross-client-testing:
 - 'packages/cross-client-testing/*'
+- 'packages/cross-client-testing/**/*'
 - '.github/workflows/cross-client.yml'

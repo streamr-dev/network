@@ -9,6 +9,7 @@ on:
   pull_request:
     paths:
       - 'packages/broker/*'
+      - 'packages/broker/**/*'
       - '.github/workflows/broker.yml'
   schedule:
     # run every day at 00:00
