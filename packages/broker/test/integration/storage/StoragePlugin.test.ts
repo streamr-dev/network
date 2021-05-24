@@ -13,9 +13,6 @@ const STREAM_PARTS: StreamPart[] = [
 const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
     const brokerConfig: any = {
         ethereumPrivateKey: fastPrivateKey(),
-        network: {
-            isStorageNode: true
-        },
         plugins: {
             storage: {
                 cassandra: {
