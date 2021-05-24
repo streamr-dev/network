@@ -1,20 +1,8 @@
 {
+  "extends": "@streamr/dev-config/ts/tsconfig.node.json",
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "lib": [
-      "es6"
-    ],
-    "allowJs": true,
-    "declaration": true,
     "outDir": "dist",
-    "rootDirs": ["src", "test"],
-    "strict": true,
-    "esModuleInterop": true,
-    "noImplicitAny": true,
-    "resolveJsonModule": true,
-    "incremental": true,
-    "sourceMap": true
+    "rootDirs": ["src", "test"]
   },
   "exclude": [
     "dist",

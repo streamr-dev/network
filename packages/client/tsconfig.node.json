@@ -1,8 +1,6 @@
 {
-    "extends": "@tsconfig/node12/tsconfig.json",
+    "extends": "@streamr/dev-config/ts/tsconfig.node.json",
     "compilerOptions": {
-        "allowJs": true,
-        "declaration": true,
         "declarationDir": "dist/types",
         "outDir": "dist",
         "lib": [
@@ -15,16 +13,7 @@
             "ES2020",
             "ESNext",
             "DOM"
-        ],
-        "strict": true,
-        "moduleResolution": "node",
-        "resolveJsonModule": true,
-        "module": "commonjs",
-        "types": [
-            "node"
-        ],
-        "incremental": true,
-        "sourceMap": true
+        ]
     },
     "include": [
         "src/**/*",
