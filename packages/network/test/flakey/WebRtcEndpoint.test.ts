@@ -64,15 +64,15 @@ describe('WebRtcEndpoint Flakey Tests', () => {
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30000),
-            endpoint1.connect('node-2', 'tracker', true),
-            endpoint2.connect('node-1', 'tracker', false),
+            endpoint1.connect('node-2', 'tracker'),
+            endpoint2.connect('node-1', 'tracker'),
         ])
 
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED, 30000),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED, 30000),
             endpoint1.close('node-2', 'test'),
-            endpoint1.connect('node-2', 'tracker', true),
+            endpoint1.connect('node-2', 'tracker'),
         ])
     }, 60000)
 

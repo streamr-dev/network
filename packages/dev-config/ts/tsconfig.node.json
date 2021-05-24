@@ -1,0 +1,23 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "Node 12 – Streamr",
+    "extends": "@tsconfig/node12/tsconfig.json",
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": true,
+        "module": "commonjs",
+        "target": "es2019",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "types": [
+            "node",
+            "jest"
+        ],
+        "incremental": true,
+        "sourceMap": true
+    }
+}

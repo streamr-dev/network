@@ -1,4 +1,4 @@
-name: Network – Lint, Test and Publish
+name: test-utils – Lint, Test and Publish
 
 on:
   push:
@@ -10,16 +10,16 @@ on:
     branches:
       - '*'
     paths:
-      - 'packages/network/*'
-      - 'packages/network/**/*'
-      - '.github/workflows/network.yml'
+      - 'packages/test-utils/*'
+      - 'packages/test-utils/**/*'
+      - '.github/workflows/test-utils.yml'
   schedule:
     # run every day at 00:00
     - cron:  '0 0 * * *'
 
 defaults:
   run:
-    working-directory: packages/network
+    working-directory: packages/test-utils
 
 jobs:
   init:
@@ -30,18 +30,18 @@ jobs:
         with:
           all_but_latest: true
           access_token: ${{ github.token }}
-  test:
-    name: Lint & Test on Node ${{ matrix.node-version }}
+
+  test-unit:
+    name: Lint & Unit Test on Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [ 14.x ]
+        node-version: [12.x, 14.x]
 
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
@@ -53,28 +53,21 @@ jobs:
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
+
       - name: npm ci
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
-      - run: npm run eslint
-      - run: npm run test-unit
-        env:
-          CI: true
-      - uses: nick-invision/retry@v2
-        name: Flakey Tests
-        with:
-          max_attempts: 5
-          timeout_minutes: 4
-          retry_on: error
-          command: cd packages/network && CI=true LOG_LEVEL=trace npm run test-flakey
-      - run: npm run test-integration
-        env:
-          CI: true
+          npx lerna bootstrap --scope streamr-test-utils --include-dependencies
+
+      - name: eslint
+        run: npm run eslint
+
+      - name: test
+        run: npm run test
 
   publish:
-    needs: [test]
+    needs: [test-unit]
     name: Publishing main using Node 14
     runs-on: ubuntu-latest
 
@@ -90,6 +83,7 @@ jobs:
         with:
           node-version: 14
           registry-url: https://registry.npmjs.org/
+
       - name: Cache Node.js modules
         uses: actions/cache@v2
         with:
@@ -99,11 +93,12 @@ jobs:
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
+
       - name: npm ci
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
+          npx lerna bootstrap --scope streamr-test-utils --include-dependencies
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword

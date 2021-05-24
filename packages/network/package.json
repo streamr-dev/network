@@ -53,12 +53,12 @@
     "ws": "^7.4.5"
   },
   "devDependencies": {
+    "@streamr/dev-config": "1.0.0-alpha.0",
     "@types/geoip-lite": "^1.4.1",
     "@types/heap": "^0.2.28",
     "@types/jest": "^26.0.23",
     "@types/lodash": "^4.14.169",
     "@types/lru-cache": "^5.1.0",
-    "@types/node": "^14.17.0",
     "@types/pino": "^6.3.8",
     "@types/uuid": "^8.3.0",
     "@types/ws": "^7.4.4",
@@ -78,6 +78,6 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.3",
     "pino-pretty": "^4.7.1",
-    "utf-8-validate": "^5.0.4"
+    "utf-8-validate": "^5.0.5"
   }
 }
