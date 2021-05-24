@@ -1,7 +1,7 @@
-import { Todo } from '../types'
-import { HttpError } from '../errors/HttpError'
+import { Todo } from './types'
+import { HttpError } from './errors/HttpError'
 import { Logger } from 'streamr-network'
-import { StreamFetcher } from '../StreamFetcher'
+import { StreamFetcher } from './StreamFetcher'
 
 const logger = new Logger(module)
 

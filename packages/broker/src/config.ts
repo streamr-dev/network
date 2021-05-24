@@ -32,16 +32,6 @@ export interface StorageNodeRegistryItem {
 export interface Config {
     ethereumPrivateKey: string
     network: NetworkConfig,
-    cassandra: {
-        hosts: string[],
-        username: string
-        password: string
-        keyspace: string,
-        datacenter: string
-    } | null,
-    storageConfig: {
-        refreshInterval: number
-    } | null,
     reporting: {
         intervalInSeconds: number,
         streamr: {
@@ -65,19 +55,4 @@ export interface Config {
     storageNodeRegistry: StorageNodeRegistryItem[] | null
     httpServer: HttpServerConfig | null
     plugins: Record<string,any>
-}
-
-export interface BrokerConfig extends Config {
-    network: NetworkConfig & {
-        isStorageNode: false
-    },
-    storageNodeRegistry: NonNullable<Config['storageNodeRegistry']>
-}
-
-export interface StorageNodeConfig extends Config {
-    network: NetworkConfig & {
-        isStorageNode: true
-    }
-    cassandra: NonNullable<Config['cassandra']>
-    storageConfig: NonNullable<Config['storageConfig']>
 }
