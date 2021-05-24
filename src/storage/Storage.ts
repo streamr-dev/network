@@ -295,12 +295,12 @@ export class Storage extends EventEmitter {
         let query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
 
         if (msgChainId !== null){
-            query1 += 'AND msg_chain_id = ?'
-            query2 += 'AND msg_chain_id = ?'
+            query1 += 'AND msg_chain_id = ? '
+            query2 += 'AND msg_chain_id = ? '
         }
 
-        query1 +=  ' ALLOW FILTERING'
-        query2 +=  ' ALLOW FILTERING'
+        query1 +=  'ALLOW FILTERING'
+        query2 +=  'ALLOW FILTERING'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
