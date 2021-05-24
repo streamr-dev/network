@@ -216,13 +216,13 @@ describe('Storage', () => {
                 storage.store(msg2),
                 storage.store(buildEncryptedMsg(streamId, 10, 3000, 2, 'publisher2')),
                 storage.store(msg1),
-                storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1', '2')),
+                storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')),
                 storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3')),
                 storage.store(msg3),
-                storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1', '1'))
+                storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
             ])
 
-            const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1', '1')
+            const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1', null)
             const results = await toArray(streamingResults)
 
             expect(results).toEqual([msg1, msg2, msg3])
