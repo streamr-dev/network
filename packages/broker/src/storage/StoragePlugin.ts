@@ -68,7 +68,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             username: this.pluginConfig.cassandra.username,
             password: this.pluginConfig.cassandra.password,
             opts: {
-                useTtl: !this.brokerConfig.network.isStorageNode
+                useTtl: false
             }
         })
         cassandraStorage.enableMetrics(this.metricsContext)
