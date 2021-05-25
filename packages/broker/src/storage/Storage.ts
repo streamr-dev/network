@@ -11,7 +11,6 @@ import { BucketManager } from './BucketManager'
 import { Logger } from 'streamr-network'
 import { Todo } from '../types'
 import { Bucket, BucketId } from './Bucket'
-import { StorageConfig } from './StorageConfig'
 
 const logger = new Logger(module)
 
@@ -24,7 +23,6 @@ export interface StartCassandraOptions {
     username: string
     password: string
     opts: Todo
-    storageConfig: StorageConfig
 }
 
 export type MessageFilter = (streamMessage: Protocol.StreamMessage) => boolean
@@ -38,9 +36,8 @@ export class Storage extends EventEmitter {
     bucketManager: BucketManager
     batchManager: BatchManager
     pendingStores: Map<string,NodeJS.Timeout>
-    messageFilter: MessageFilter
 
-    constructor(cassandraClient: Client, opts: Todo, messageFilter: MessageFilter) {
+    constructor(cassandraClient: Client, opts: Todo) {
         super()
 
         const defaultOptions = {
@@ -59,14 +56,10 @@ export class Storage extends EventEmitter {
             useTtl: this.opts.useTtl
         })
         this.pendingStores = new Map()
-        this.messageFilter = messageFilter
     }
 
     async store(streamMessage: Protocol.StreamMessage): Promise<boolean> {
         logger.debug('Store message')
-        if (this.messageFilter(streamMessage) === false) {
-            return false
-        }
 
         const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
 
@@ -587,8 +580,7 @@ export const startCassandraStorage = async ({
     keyspace,
     username,
     password,
-    opts,
-    storageConfig
+    opts
 }: StartCassandraOptions) => {
     const authProvider = new auth.PlainTextAuthProvider(username || '', password || '')
     const requestLogger = new tracker.RequestLogger({
@@ -609,18 +601,11 @@ export const startCassandraStorage = async ({
     const nbTrials = 20
     let retryCount = nbTrials
     let lastError = ''
-    const messageFilter = (storageConfig !== undefined) ? (message: Protocol.StreamMessage) => {
-        const stream = {
-            id: message.messageId.streamId,
-            partition: message.messageId.streamPartition
-        }
-        return storageConfig.hasStream(stream)
-    } : () => true
     while (retryCount > 0) {
         /* eslint-disable no-await-in-loop */
         try {
             await cassandraClient.connect().catch((err: Todo) => { throw err })
-            return new Storage(cassandraClient, opts || {}, messageFilter)
+            return new Storage(cassandraClient, opts || {})
         } catch (err) {
             console.log('Cassandra not responding yet...')
             retryCount -= 1

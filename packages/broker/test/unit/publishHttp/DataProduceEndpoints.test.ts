@@ -2,8 +2,8 @@ import sinon from 'sinon'
 import express from 'express'
 import request from 'supertest'
 import { Protocol } from 'streamr-network'
-import { router } from '../../../src/http/DataProduceEndpoints'
-import { Todo } from '../../types'
+import { router } from '../../../src/publishHttp/DataProduceEndpoints'
+import { Todo } from '../../../src/types'
 
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 

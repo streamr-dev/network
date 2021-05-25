@@ -1,8 +1,8 @@
-import { Todo } from '../../types'
+import { Todo } from '../types'
 import assert from 'assert'
 import sinon from 'sinon'
-import { authenticator } from '../../../src/http/RequestAuthenticatorMiddleware'
-import { HttpError } from '../../../src/errors/HttpError'
+import { authenticator } from '../../src/RequestAuthenticatorMiddleware'
+import { HttpError } from '../../src/errors/HttpError'
 
 describe('AuthenticationMiddleware', () => {
     let request: Todo

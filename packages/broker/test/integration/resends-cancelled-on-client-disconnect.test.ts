@@ -14,7 +14,7 @@ import { Server } from 'http'
 import { once } from 'events'
 import { Wallet } from 'ethers'
 import { wait } from 'streamr-test-utils'
-import { router as dataQueryEndpoints } from '../../src/http/DataQueryEndpoints'
+import { router as dataQueryEndpoints } from '../../src/storage/DataQueryEndpoints'
 import { PassThrough } from 'stream'
 import { StorageNodeRegistry } from '../../src/StorageNodeRegistry'
 

@@ -1,6 +1,8 @@
 import fetch from 'node-fetch'
-import { NetworkNode, Logger } from 'streamr-network'
+import { Logger } from 'streamr-network'
 import { StreamPart } from '../types'
+import { Protocol } from 'streamr-network'
+import { SubscriptionManager } from '../SubscriptionManager'
 
 const logger = new Logger(module)
 
@@ -132,9 +134,9 @@ export class StorageConfig {
         })
     }
 
-    startAssignmentEventListener(streamrAddress: string, networkNode: NetworkNode): void {
-        const assignmentStreamId = streamrAddress + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
-        networkNode.addMessageListener((msg) => {
+    startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: Protocol.StreamMessage) => void {
+        const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
+        const messageListener = (msg: Protocol.StreamMessage) => {
             if (msg.messageId.streamId === assignmentStreamId) {
                 const content = msg.getParsedContent()
                 const keys = new Set(getKeysFromStream(content.stream.id, content.stream.partitions))
@@ -144,8 +146,20 @@ export class StorageConfig {
                     this._removeStreams(keys)
                 }
             }
-        })
-        networkNode.subscribe(assignmentStreamId, 0)
+        }
+        subscriptionManager.networkNode.addMessageListener(messageListener)
+        subscriptionManager.subscribe(assignmentStreamId, 0)
+        return messageListener
+    }
+
+    stopAssignmentEventListener(messageListener: (msg: Protocol.StreamMessage) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
+        subscriptionManager.networkNode.removeMessageListener(messageListener)
+        const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
+        subscriptionManager.unsubscribe(assignmentStreamId, 0)
+    }
+
+    private getAssignmentStreamId(streamrAddress: string) {
+        return streamrAddress + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
     }
 
     cleanup(): void {

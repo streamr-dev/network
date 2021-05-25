@@ -1,23 +1,20 @@
-import { startNetworkNode, startStorageNode, Protocol, MetricsContext } from 'streamr-network'
+import { startNetworkNode, Protocol, MetricsContext } from 'streamr-network'
 import StreamrClient from 'streamr-client'
 import publicIp from 'public-ip'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { startCassandraStorage } from './storage/Storage'
 import { Publisher } from './Publisher'
 import { VolumeLogger } from './VolumeLogger'
 import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
-import { validateBrokerConfig } from './helpers/validateConfig'
-import { Storage } from './storage/Storage'
-import { StorageConfig } from './storage/StorageConfig'
+import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Todo } from './types'
 import { Config, TrackerRegistry } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
+import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -29,13 +26,12 @@ export interface Broker {
 }
 
 export const startBroker = async (config: Config): Promise<Broker> => {
-    validateBrokerConfig(config)
+    validateConfig(config, BROKER_CONFIG_SCHEMA)
 
     logger.info(`Starting broker version ${CURRENT_VERSION}`)
 
     const networkNodeName = config.network.name
     const metricsContext = new MetricsContext(networkNodeName)
-    const storages: Todo[] = []
 
     // Ethereum wallet retrieval
     const wallet = new Wallet(config.ethereumPrivateKey)
@@ -43,33 +39,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         throw new Error('Could not resolve Ethereum address from given config.ethereumPrivateKey')
     }
     const brokerAddress = wallet.address
-
-    const createStorageConfig = async () => {
-        return StorageConfig.createInstance(brokerAddress, config.streamrUrl + '/api/v1', config.storageConfig!.refreshInterval)
-    }
-
-    const storageConfig = config.network.isStorageNode ? await createStorageConfig() : null
-
-    let cassandraStorage: Storage
-    // Start cassandra storage
-    if (config.cassandra) {
-        logger.info(`Starting Cassandra with hosts ${config.cassandra.hosts} and keyspace ${config.cassandra.keyspace}`)
-        cassandraStorage = await startCassandraStorage({
-            contactPoints: [...config.cassandra.hosts],
-            localDataCenter: config.cassandra.datacenter,
-            keyspace: config.cassandra.keyspace,
-            username: config.cassandra.username,
-            password: config.cassandra.password,
-            opts: {
-                useTtl: !config.network.isStorageNode
-            },
-            storageConfig: storageConfig!
-        })
-        cassandraStorage.enableMetrics(metricsContext)
-        storages.push(cassandraStorage)
-    } else {
-        logger.info('Cassandra disabled')
-    }
 
     // Form tracker list
     let trackers: string[]
@@ -84,28 +53,21 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     }
 
     // Start network node
-    const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
     const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
         ? config.network.advertisedWsUrl
         : await publicIp.v4().then((ip) => `ws://${ip}:${config.network.port}`)
-    const networkNode = await startFn({
+    const networkNode = await startNetworkNode({
         host: config.network.hostname,
         port: config.network.port,
         id: brokerAddress,
         name: networkNodeName,
         trackers,
-        storages,
-        // @ts-expect-error
-        storageConfig,
+        storages: [], // TODO remove this parameter from NetworkNodeOptions
         advertisedWsUrl,
         location: config.network.location,
         metricsContext
     })
     networkNode.start()
-
-    if ((storageConfig !== null) && (config.streamrAddress !== null)) {
-        storageConfig.startAssignmentEventListener(config.streamrAddress, networkNode)
-    }
 
     // Set up reporting to Streamr stream
     let client: StreamrClient | undefined
@@ -150,8 +112,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             subscriptionManager,
             publisher,
             metricsContext,
-            cassandraStorage,
-            storageConfig,
             brokerConfig: config
         }
         return createPlugin(name, pluginOptions)
@@ -192,9 +152,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     logger.info(`Configured with trackers: ${trackers.join(', ')}`)
     logger.info(`Configured with Streamr: ${config.streamrUrl}`)
     logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
-    if (config.cassandra) {
-        logger.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
-    }
     if (advertisedWsUrl) {
         logger.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
     }
@@ -202,14 +159,13 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     return {
         getNeighbors: () => networkNode.getNeighbors(),
         getStreams: () => networkNode.getStreams(),
-        close: () => Promise.all([
-            networkNode.stop(),
-            ...plugins.map((plugin) => plugin.stop()),
-            (httpServer !== undefined) ? stopServer(httpServer) : undefined,
-            ...storages.map((storage) => storage.close()),
-            volumeLogger.close(),
-            (storageConfig !== null) ? storageConfig.cleanup() : undefined
-        ])
+        close: async () => {
+            if (httpServer !== undefined) {
+                await stopServer(httpServer)
+            }
+            await Promise.all(plugins.map((plugin) => plugin.stop()))
+            return Promise.all([networkNode.stop(), volumeLogger.close()])
+        }
     }
 }
 

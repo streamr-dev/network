@@ -8,6 +8,9 @@ export const createMockStorageConfig = (streams: StreamPart[]) => {
         getStreams: () => {
             return streams
         },
-        addChangeListener: () => {}
+        addChangeListener: () => {},
+        startAssignmentEventListener: jest.fn(),
+        stopAssignmentEventListener: jest.fn(),
+        cleanup: jest.fn().mockResolvedValue(undefined)
     }
 }

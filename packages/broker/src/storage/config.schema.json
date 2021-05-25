@@ -1,0 +1,58 @@
+{
+    "$id": "config.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "description": "Storage plugin configuration",
+    "required": [
+        "cassandra",
+        "storageConfig"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "cassandra": {
+            "type": "object",
+            "description": "Apache Cassandra configuration",
+            "required": [
+                "hosts",
+                "username",
+                "password",
+                "keyspace",
+                "datacenter"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "hosts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "hostname"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "keyspace": {
+                    "type": "string"
+                },
+                "datacenter": {
+                    "type": "string"
+                }
+            }
+        },
+        "storageConfig": {
+            "type": "object",
+            "properties": {
+                "refreshInterval": {
+                    "type": "integer",
+                    "description": "Interval (in milliseconds) in which to refresh storage config from Core API (0 = disable)"
+                }
+            },
+            "additionalProperties": false
+        }  
+    }
+}
