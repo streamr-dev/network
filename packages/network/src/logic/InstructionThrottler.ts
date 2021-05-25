@@ -86,7 +86,9 @@ export class InstructionThrottler {
 
     private async invokeHandleFnWithLock(streamId: string): Promise<void> {
         if (!this.queue[streamId]) {
-            this.ongoingPromises[streamId].handling = false
+            if (this.ongoingPromises[streamId]) {
+                this.ongoingPromises[streamId].handling = false
+            }
             return
         }
         this.ongoingPromises[streamId].handling = true
