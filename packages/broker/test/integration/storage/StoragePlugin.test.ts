@@ -2,7 +2,7 @@ import { MetricsContext } from 'streamr-network'
 import { StoragePlugin } from '../../../src/storage/StoragePlugin'
 import { StorageConfig } from '../../../src/storage/StorageConfig'
 import { createMockStorageConfig } from './MockStorageConfig'
-import { fastPrivateKey } from '../../utils'
+import { fastPrivateKey, STREAMR_DOCKER_DEV_HOST } from '../../utils'
 import { StreamPart } from '../../../src/types'
 
 const STREAM_PARTS: StreamPart[] = [ 
@@ -17,7 +17,7 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
             storage: {
                 cassandra: {
                     hosts: [
-                        '127.0.0.1'
+                        STREAMR_DOCKER_DEV_HOST
                     ],
                     username: '',
                     password: '',

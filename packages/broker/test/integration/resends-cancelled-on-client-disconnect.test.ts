@@ -103,7 +103,7 @@ describe('resend cancellation', () => {
                     address: storageNodeAddress,
                     url: `http://127.0.0.1:${mockServerPort}`
                 }],
-                streamrUrl: 'http://127.0.0.1'
+                streamrUrl: `http://${STREAMR_DOCKER_DEV_HOST}`
             } as any
         )
         websocketServer = new WebsocketServer(
