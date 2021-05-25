@@ -1,9 +1,9 @@
 import { PluginOptions } from './Plugin'
-import { PublishHttpPlugin } from './publishHttp/PublishHttpPlugin'
-import { MetricsPlugin } from './metrics/MetricsPlugin'
-import { WebsocketPlugin } from './websocket/WebsocketPlugin'
-import { MqttPlugin } from './mqtt/MqttPlugin'
-import { StoragePlugin } from './storage/StoragePlugin'
+import { PublishHttpPlugin } from './plugins/publishHttp/PublishHttpPlugin'
+import { MetricsPlugin } from './plugins/metrics/MetricsPlugin'
+import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
+import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
+import { StoragePlugin } from './plugins/storage/StoragePlugin'
 
 export const createPlugin = (name: string, pluginOptions: PluginOptions) => {
     switch (name) {
