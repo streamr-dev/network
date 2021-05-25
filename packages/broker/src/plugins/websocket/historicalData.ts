@@ -7,6 +7,7 @@ const { ControlLayer } = Protocol
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../storage/DataQueryEndpoints'
 import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { GenericError } from '../../errors/GenericError'
+import { formAuthorizationHeader } from '../../helpers/authentication'
 
 type ResendLastRequest = Protocol.ControlLayer.ResendLastRequest
 type ResendFromRequest = Protocol.ControlLayer.ResendFromRequest
@@ -64,10 +65,9 @@ export const createResponse = async (
     const storageNodeUrl = await storageNodeRegistry.getUrlByStreamId(request.streamId)
     const url = getDataQueryEndpointUrl(request, `${storageNodeUrl}/api/v1`)
     const abortController = new AbortController()
+    const headers = formAuthorizationHeader(request.sessionToken)
     const response = await fetch(url, {
-        headers: {
-            Authorization: 'Bearer ' + request.sessionToken
-        },
+        headers,
         signal: abortController.signal
     })
     if (response.status === 200) {
