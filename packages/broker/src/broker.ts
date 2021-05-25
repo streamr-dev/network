@@ -62,7 +62,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         id: brokerAddress,
         name: networkNodeName,
         trackers,
-        storages: [], // TODO remove this parameter from NetworkNodeOptions
         advertisedWsUrl,
         location: config.network.location,
         metricsContext

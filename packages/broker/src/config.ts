@@ -8,7 +8,6 @@ export interface NetworkConfig {
     hostname: string,
     port: number,
     advertisedWsUrl: string | null,
-    isStorageNode: boolean,
     trackers: string[] | TrackerRegistry,
     location: {
         latitude: number,

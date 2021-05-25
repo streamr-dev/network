@@ -65,7 +65,6 @@
         "hostname",
         "port",
         "advertisedWsUrl",
-        "isStorageNode",
         "trackers",
         "location"
       ],
@@ -90,10 +89,6 @@
             "null"
           ],
           "description": "Override WebSocket URL to advertise to tracker and other nodes (useful when behind NAT)"
-        },
-        "isStorageNode": {
-          "type": "boolean",
-          "description": "Whether to identify as storage node or not"
         },
         "trackers": {
           "oneOf": [
