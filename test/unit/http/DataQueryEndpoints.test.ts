@@ -219,8 +219,7 @@ describe('DataQueryEndpoints', () => {
                     0,
                     1496408255672,
                     MIN_SEQUENCE_NUMBER_VALUE,
-                    null,
-                    null,
+                    null
                 )
             })
 
@@ -260,8 +259,7 @@ describe('DataQueryEndpoints', () => {
                     0,
                     1496408255672,
                     1,
-                    'publisherId',
-                    null,
+                    'publisherId'
                 )
             })
 

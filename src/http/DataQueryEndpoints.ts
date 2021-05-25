@@ -158,8 +158,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
                 partition,
                 fromTimestamp,
                 fromSequenceNumber,
-                (publisherId as string) || null,
-                null
+                (publisherId as string) || null
             ))
         }
     })
