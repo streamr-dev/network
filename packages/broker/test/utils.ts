@@ -30,7 +30,22 @@ export function formConfig({
 }: Todo): Config {
     const plugins: Record<string,any> = {}
     if (httpPort) {
-        plugins['http'] = {}
+        plugins['publishHttp'] = {}
+        plugins['metrics'] = {}
+        if (enableCassandra) {
+            plugins['storage'] = {
+                cassandra: {
+                    hosts: [STREAMR_DOCKER_DEV_HOST],
+                    datacenter: 'datacenter1',
+                    username: '',
+                    password: '',
+                    keyspace: 'streamr_dev_v2',
+                },
+                storageConfig: {
+                    refreshInterval: 0
+                } 
+            }
+        }
     }
     if (wsPort) {
         plugins['ws'] = {
@@ -65,16 +80,6 @@ export function formConfig({
                 city: 'Helsinki'
             }
         },
-        cassandra: enableCassandra ? {
-            hosts: [STREAMR_DOCKER_DEV_HOST],
-            datacenter: 'datacenter1',
-            username: '',
-            password: '',
-            keyspace: 'streamr_dev_v2',
-        } : null,
-        storageConfig: enableCassandra ? {
-            refreshInterval: 0
-        } : null,
         reporting: reporting || {
             streamr: null,
             intervalInSeconds: 0,

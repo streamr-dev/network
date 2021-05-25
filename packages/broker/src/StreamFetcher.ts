@@ -1,23 +1,16 @@
-import fetch, { Headers, Response } from 'node-fetch'
+import fetch, { Response } from 'node-fetch'
 import memoize from 'memoizee'
 import { Logger } from 'streamr-network'
 import { HttpError } from './errors/HttpError'
 // TODO do all REST operations to E&E via StreamrClient
 import StreamrClient from 'streamr-client'
 import { Todo } from './types'
+import { formAuthorizationHeader } from './helpers/authentication'
 
 const logger = new Logger(module)
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes
-
-function formHeaders(sessionToken?: string) {
-    const headers: Headers = new Headers()
-    if (sessionToken) {
-        headers.set('Authorization', `Bearer ${sessionToken}`)
-    }
-    return headers
-}
 
 async function fetchWithErrorLogging(...args: Parameters<typeof fetch>) {
     try {
@@ -97,7 +90,7 @@ export class StreamFetcher {
      */
     private async _fetch(streamId: string, sessionToken?: string): Promise<Todo> {
         const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}`
-        const headers = formHeaders(sessionToken)
+        const headers = formAuthorizationHeader(sessionToken)
 
         const response = await fetchWithErrorLogging(url, {
             headers,
@@ -130,7 +123,7 @@ export class StreamFetcher {
         sessionToken = sessionToken || undefined
 
         const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}/permissions/me`
-        const headers = formHeaders(sessionToken)
+        const headers = formAuthorizationHeader(sessionToken)
 
         const response = await fetchWithErrorLogging(url, {
             headers,

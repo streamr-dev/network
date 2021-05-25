@@ -5,7 +5,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepare": "./gradlew fatjar",
+    "test": "java -jar build/libs/client_testing-1.0-SNAPSHOT.jar"
   },
   "repository": {
     "type": "git",

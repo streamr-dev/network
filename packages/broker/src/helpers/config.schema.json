@@ -6,8 +6,6 @@
   "required": [
     "plugins",
     "httpServer",
-    "cassandra",
-    "storageConfig",
     "ethereumPrivateKey",
     "network",
     "reporting",
@@ -53,57 +51,6 @@
           "description": "Path of private key file to use for SSL"
         }
       }
-    },
-    "cassandra": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "description": "Apache Cassandra configuration",
-      "required": [
-        "hosts",
-        "username",
-        "password",
-        "keyspace",
-        "datacenter"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "hosts": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "hostname"
-          },
-          "minItems": 1,
-          "uniqueItems": true
-        },
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "keyspace": {
-          "type": "string"
-        },
-        "datacenter": {
-          "type": "string"
-        }
-      }
-    },
-    "storageConfig": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "refreshInterval": {
-          "type": "integer",
-          "description": "Interval (in milliseconds) in which to refresh storage config from Core API (0 = disable)"
-        }
-      },
-      "additionalProperties": false
     },
     "ethereumPrivateKey": {
       "type": "string",
