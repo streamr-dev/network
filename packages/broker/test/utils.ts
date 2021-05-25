@@ -5,9 +5,9 @@ import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
 import { startBroker as createBroker } from '../src/broker'
-import { StorageConfig } from '../src/storage/StorageConfig'
-import { Todo } from './types'
-import { Config } from './config'
+import { StorageConfig } from '../src/plugins/storage/StorageConfig'
+import { Todo } from '../src/types'
+import { Config } from '../src/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`

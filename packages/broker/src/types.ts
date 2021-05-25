@@ -2,7 +2,7 @@ import { MetricsContext, NetworkNode } from 'streamr-network'
 import { Publisher } from './Publisher'
 import { StreamFetcher } from './StreamFetcher'
 import { SubscriptionManager } from './SubscriptionManager'
-import { Storage } from './storage/Storage'
+import { Storage } from './plugins/storage/Storage'
 import { Config } from './config'
 
 export type Todo = any
