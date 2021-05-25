@@ -3,7 +3,7 @@ import assert from 'assert'
 import { RelayMessage } from '../../../../src'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
-const VERSION = 1
+const VERSION = 2
 
 // Message definitions
 const message = new RelayMessage({
@@ -41,7 +41,7 @@ const serializedMessage = JSON.stringify([
     }
 ])
 
-describe('RelayMessageSerializerV1', () => {
+describe('RelayMessageSerializerV2', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
             assert.deepStrictEqual(TrackerMessage.deserialize(serializedMessage), message)

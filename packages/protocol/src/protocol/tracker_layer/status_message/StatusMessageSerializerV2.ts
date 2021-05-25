@@ -4,9 +4,9 @@ import StatusMessage from './StatusMessage'
 
 import { Serializer } from '../../../Serializer'
 
-const VERSION = 1
+const VERSION = 2
 
-export default class StatusMessageSerializerV1 extends Serializer<StatusMessage> {
+export default class StatusMessageSerializerV2 extends Serializer<StatusMessage> {
     toArray(statusMessage: StatusMessage) {
         return [
             VERSION,
@@ -30,4 +30,4 @@ export default class StatusMessageSerializerV1 extends Serializer<StatusMessage>
     }
 }
 
-TrackerMessage.registerSerializer(VERSION, TrackerMessage.TYPES.StatusMessage, new StatusMessageSerializerV1())
+TrackerMessage.registerSerializer(VERSION, TrackerMessage.TYPES.StatusMessage, new StatusMessageSerializerV2())
