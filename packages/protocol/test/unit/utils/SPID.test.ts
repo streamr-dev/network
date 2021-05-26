@@ -1,6 +1,6 @@
-import SPID  from '../../../src/utils/StreamPartitionID'
+import SPID  from '../../../src/utils/SPID'
 
-describe('StreamPartitionID', () => {
+describe('SPID', () => {
     const STREAM_ID = 'test-stream-id'
     const PARTITION = 1
 

@@ -1,13 +1,16 @@
 /**
  * SPID - Stream Partition ID
  */
+// if you're using JS numbers for
+// ids or keys going over MAX_SAFE_INTEGER has the potential for disasterous
+// effects e.g. serving private user information
 export default class SPID {
     /** stream id */
     public readonly id: string
     /** stream partition */
     public readonly partition: number
     /** toString/fromString separator */
-    protected static readonly SEPARATOR = '|'
+    protected static readonly SEPARATOR = '#'
 
     /** string key representing SPID */
     public readonly key: string
@@ -37,11 +40,11 @@ export default class SPID {
      */
     private validate() {
         if (typeof this.id !== 'string' || this.id.length === 0) {
-            throw new Error('SPID validation failed: id must be non-empty string')
+            throw new Error(`SPID validation failed: id must be non-empty string: ${JSON.stringify({ id: this.id, partition: this.partition })}`)
         }
 
         if (typeof this.partition !== 'number' || !Number.isSafeInteger(this.partition) || this.partition < 0) {
-            throw new Error('SPID validation failed: paritition must be an integer >= 0 ')
+            throw new Error(`SPID validation failed: paritition must be an integer >= 0: ${JSON.stringify({ id: this.id, partition: this.partition })}`)
         }
     }
 
@@ -95,7 +98,7 @@ export default class SPID {
      */
     static fromString(spidString: string): SPID {
         const [id, parititionStr] = spidString.split(this.SEPARATOR)
-        return new SPID(id, Number.parseFloat(parititionStr) || 0)
+        return new SPID(id, Number.parseFloat(parititionStr))
     }
 
     /**
