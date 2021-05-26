@@ -13,15 +13,18 @@ export default class ServerPersistentStore implements PersistentStore<string, st
     readonly dbFilePath: string
     private store?: Database
     private error?: Error
+    private readonly initialData
 
-    constructor({ clientId, streamId }: { clientId: string, streamId: string }) {
+    constructor({ clientId, streamId, initialData = {} }: { clientId: string, streamId: string, initialData?: Record<string, string> }) {
         this.streamId = encodeURIComponent(streamId)
         this.clientId = encodeURIComponent(clientId)
+        this.initialData = initialData
         const paths = envPaths('streamr-client')
         const dbFilePath = join(paths.data, clientId, 'GroupKeys.db')
         this.dbFilePath = dbFilePath
 
         this.init = pOnce(this.init.bind(this))
+        this.init()
     }
 
     async init() {
@@ -48,6 +51,10 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         if (this.error) {
             throw this.error
         }
+
+        await Promise.all(Object.entries(this.initialData).map(async ([key, value]) => {
+            return this.setKeyValue(key, value)
+        }))
     }
 
     async get(key: string) {
@@ -62,8 +69,8 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         return value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0
     }
 
-    async set(key: string, value: string) {
-        await this.init()
+    private async setKeyValue(key: string, value: string) {
+        // set, but without init so init can insert initialData
         const result = await this.store!.run('INSERT INTO GroupKeys VALUES ($id, $groupKey, $streamId) ON CONFLICT DO NOTHING', {
             $id: key,
             $groupKey: value,
@@ -71,6 +78,11 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         })
 
         return !!result?.changes
+    }
+
+    async set(key: string, value: string) {
+        await this.init()
+        return this.setKeyValue(key, value)
     }
 
     async delete(key: string) {

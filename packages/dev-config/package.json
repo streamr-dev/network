@@ -1,0 +1,25 @@
+{
+  "name": "@streamr/dev-config",
+  "version": "1.0.0-alpha.0",
+  "description": "Streamr Development Environment Configs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git"
+  },
+  "main": "index.js",
+  "author": "Streamr Network AG <contact@streamr.network>",
+  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
+  "peerDependencies": {
+    "ts-jest": "^26.5.6",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "@tsconfig/node12": "^1.0.7",
+    "@types/jest": "^26.0.23",
+    "@types/node": "^15.6.0"
+  },
+  "devDependencies": {
+    "ts-jest": "^26.5.6",
+    "typescript": "^4.2.4"
+  }
+}

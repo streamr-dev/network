@@ -4,9 +4,8 @@
   "description": "Broker configuration format",
   "type": "object",
   "required": [
-    "adapters",
-    "cassandra",
-    "storageConfig",
+    "plugins",
+    "httpServer",
     "ethereumPrivateKey",
     "network",
     "reporting",
@@ -16,63 +15,42 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "adapters": {
-      "type": "array",
-      "description": "Foreign protocol adapters to use",
-      "items": {
-        "$ref": "#/definitions/adapter"
-      }
+    "plugins": {
+      "type": "object",
+      "description": "Pluging configurations",
+      "required": [],
+      "additionalProperties": true
     },
-    "cassandra": {
+    "httpServer": {
       "type": [
         "object",
         "null"
       ],
-      "description": "Apache Cassandra configuration",
+      "description": "HTTP server configuration",
       "required": [
-        "hosts",
-        "username",
-        "password",
-        "keyspace",
-        "datacenter"
+        "port"
       ],
       "additionalProperties": false,
       "properties": {
-        "hosts": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "hostname"
-          },
-          "minItems": 1,
-          "uniqueItems": true
+        "port": {
+          "$ref": "#/definitions/port",
+          "description": "Port to start HTTP server on"
         },
-        "username": {
-          "type": "string"
+        "certFileName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Path of certificate file to use for SSL"
         },
-        "password": {
-          "type": "string"
-        },
-        "keyspace": {
-          "type": "string"
-        },
-        "datacenter": {
-          "type": "string"
+        "privateKeyFileName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Path of private key file to use for SSL"
         }
       }
-    },
-    "storageConfig": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "refreshInterval": {
-          "type": "integer",
-          "description": "Interval (in milliseconds) in which to refresh storage config from Core API (0 = disable)"
-        }
-      },
-      "additionalProperties": false
     },
     "ethereumPrivateKey": {
       "type": "string",
@@ -301,103 +279,6 @@
     }
   },
   "definitions": {
-    "adapter": {
-      "oneOf": [
-        {
-          "type": "object",
-          "description": "WebSocket adapter configuration",
-          "required": [
-            "name",
-            "port"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "const": "ws"
-            },
-            "port": {
-              "$ref": "#/definitions/port",
-              "description": "Port to start adapter on"
-            },
-            "pingInterval": {
-              "type": "integer",
-              "description": "How often to ping client connections (in milliseconds)",
-              "minimum": 0
-            },
-            "certFileName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Path of certificate file to use for SSL"
-            },
-            "privateKeyFileName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Path of private key file to use for SSL"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "description": "HTTP adapter configuration",
-          "required": [
-            "name",
-            "port"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "const": "http"
-            },
-            "port": {
-              "$ref": "#/definitions/port",
-              "description": "Port to start adapter on"
-            },
-            "certFileName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Path of certificate file to use for SSL"
-            },
-            "privateKeyFileName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Path of private key file to use for SSL"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "description": "MQTT adapter configuration",
-          "required": [
-            "name",
-            "port",
-            "streamsTimeout"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "const": "mqtt"
-            },
-            "port": {
-              "$ref": "#/definitions/port",
-              "description": "Port to start adapter on"
-            },
-            "streamsTimeout": {
-              "type": "integer",
-              "description": "MQTT connection timeout",
-              "minimum": 0
-            }
-          }
-        }
-      ]
-    },
     "port": {
       "type": "number",
       "minimum": 0,

@@ -20,8 +20,8 @@ type GroupKeyStoreOptions = {
 
 export class GroupKeyPersistence {
     store: PersistentStore<string, string>
-    constructor({ clientId, streamId }: { clientId: string, streamId: string }) {
-        this.store = new ServerPersistentStore({ clientId, streamId })
+    constructor({ clientId, streamId, initialData = {} }: { clientId: string, streamId: string, initialData?: Record<string, string> }) {
+        this.store = new ServerPersistentStore({ clientId, streamId, initialData })
     }
 
     async has(groupKeyId: string) {
@@ -66,7 +66,10 @@ export default class GroupKeyStore {
     nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
 
     constructor({ clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
-        this.store = new GroupKeyPersistence({ clientId, streamId })
+        const initialData = groupKeys.reduce((o, [, groupKey]) => Object.assign(o, {
+            [groupKey.id]: groupKey.hex,
+        }), {})
+        this.store = new GroupKeyPersistence({ clientId, streamId, initialData })
 
         groupKeys.forEach(([groupKeyId, groupKey]) => {
             GroupKey.validate(groupKey)

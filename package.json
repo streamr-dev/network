@@ -4,12 +4,12 @@
         "prepare": "husky install",
         "link": "lerna link",
         "bootstrap": "lerna bootstrap",
-        "boostrap-pkg": "npx lerna bootstrap --include-dependencies --scope"
+        "bootstrap-pkg": "npx lerna bootstrap --include-dependencies --scope"
     },
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
-        "husky": "^5.2.0",
+        "husky": "^6.0.0",
         "lerna": "^4.0.0"
     }
 }

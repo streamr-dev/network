@@ -1,14 +1,7 @@
 {
+  "extends": "@streamr/dev-config/ts/tsconfig.node.json",
   "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
-    "strict": true,
-    "noImplicitAny": true,
     "outDir": "dist",
-    "rootDirs": ["src", "bin"],
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "rootDirs": ["src", "bin"]
   }
 }

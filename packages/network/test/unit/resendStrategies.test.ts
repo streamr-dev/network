@@ -265,9 +265,9 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
             setImmediate(() => {
                 jest.runAllTimers()
                 expect(nodeToNode.connectToNode).toBeCalledTimes(3)
-                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-1', 'tracker', undefined, false)
-                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-2', 'tracker', undefined, false)
-                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-3', 'tracker', undefined, false)
+                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-1', 'tracker')
+                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-2', 'tracker')
+                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-3', 'tracker')
                 done()
             })
         })

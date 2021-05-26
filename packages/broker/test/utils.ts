@@ -5,9 +5,9 @@ import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
 import { startBroker as createBroker } from '../src/broker'
-import { StorageConfig } from '../src/storage/StorageConfig'
-import { Todo } from './types'
-import { Config } from './config'
+import { StorageConfig } from '../src/plugins/storage/StorageConfig'
+import { Todo } from '../src/types'
+import { Config } from '../src/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -28,28 +28,38 @@ export function formConfig({
     storageNodeRegistry = (!enableCassandra ? [] : null),
     reporting = false
 }: Todo): Config {
-    const adapters = []
+    const plugins: Record<string,any> = {}
     if (httpPort) {
-        adapters.push({
-            name: 'http',
-            port: httpPort,
-        })
+        plugins['publishHttp'] = {}
+        plugins['metrics'] = {}
+        if (enableCassandra) {
+            plugins['storage'] = {
+                cassandra: {
+                    hosts: [STREAMR_DOCKER_DEV_HOST],
+                    datacenter: 'datacenter1',
+                    username: '',
+                    password: '',
+                    keyspace: 'streamr_dev_v2',
+                },
+                storageConfig: {
+                    refreshInterval: 0
+                } 
+            }
+        }
     }
     if (wsPort) {
-        adapters.push({
-            name: 'ws',
+        plugins['ws'] = {
             port: wsPort,
             pingInterval: 3000,
             privateKeyFileName,
             certFileName
-        })
+        }
     }
     if (mqttPort) {
-        adapters.push({
-            name: 'mqtt',
+        plugins['mqtt'] = {
             port: mqttPort,
             streamsTimeout: 300000
-        })
+        }
     }
 
     return {
@@ -70,16 +80,6 @@ export function formConfig({
                 city: 'Helsinki'
             }
         },
-        cassandra: enableCassandra ? {
-            hosts: [STREAMR_DOCKER_DEV_HOST],
-            datacenter: 'datacenter1',
-            username: '',
-            password: '',
-            keyspace: 'streamr_dev_v2',
-        } : null,
-        storageConfig: enableCassandra ? {
-            refreshInterval: 0
-        } : null,
         reporting: reporting || {
             streamr: null,
             intervalInSeconds: 0,
@@ -99,7 +99,12 @@ export function formConfig({
         streamrUrl,
         streamrAddress,
         storageNodeRegistry,
-        adapters
+        httpServer: httpPort ? {
+            port: httpPort,
+            privateKeyFileName: null,
+            certFileName: null
+        } : null,
+        plugins
     }
 }
 

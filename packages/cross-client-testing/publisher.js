@@ -40,14 +40,34 @@ client.on('error', console.error)
 
 const rotatingPublishFunction = async (msgToPublish, counter) => {
     if (counter % 10 === 0) {
+        client.debug('rotateGroupKey >>')
         await client.rotateGroupKey(streamId)
+        client.debug('rotateGroupKey <<')
     }
     await defaultPublishFunction(msgToPublish, counter)
+}
+
+const nbMessagesBetweenRevokes = 7
+const nbMessagesForSingleKey = 5
+
+const revokingPublishFunction = async (msgToPublish, counter) => {
+    if ((counter % nbMessagesBetweenRevokes) === 0) {
+        client.debug("revoking with a rekey >>")
+        await client.rekey(streamId)
+        client.debug("revoking with a rekey <<")
+    } else if ((counter % nbMessagesForSingleKey) === 0) {
+        client.debug('rotateGroupKey >>')
+        await client.rotateGroupKey(streamId)
+        client.debug('rotateGroupKey <<')
+    }
+
+    return defaultPublishFunction(msgToPublish, counter)
 }
 
 const defaultPublishFunction = async (msgToPublish, _counter) => {
     try {
         await client.publish(streamId, msgToPublish)
+        client.debug('Published: ', msgToPublish)
         console.log('Published: ', JSON.stringify(msgToPublish))
     } catch (err) {
         console.error(err)
@@ -59,6 +79,8 @@ if (publishFunctionName === 'default') {
     publishFunction = defaultPublishFunction
 } else if (publishFunctionName === 'rotating') {
     publishFunction = rotatingPublishFunction
+} else if (publishFunctionName === 'revoking') {
+    publishFunction = revokingPublishFunction
 }
 
 let Counter = 0

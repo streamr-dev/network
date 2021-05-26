@@ -103,17 +103,14 @@ export class TrackerServer extends EventEmitter {
     sendRtcConnect(
         receiverNodeId: string,
         requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        force: boolean
+        originatorInfo: TrackerLayer.Originator
     ): Promise<TrackerLayer.RelayMessage> {
         return this.send(receiverNodeId, new TrackerLayer.RelayMessage({
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
             subType: RtcSubTypes.RTC_CONNECT,
-            data: {
-                force
-            }
+            data: new Object()
         }))
     }
 
