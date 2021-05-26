@@ -153,7 +153,7 @@ export class NetworkNode extends Node {
      * @param timeoutInMs timeout (in milliseconds) after which to give up waiting
      * @returns nubmer of neighbors available
      */
-    public waitForNeighbors(
+    public async waitForNeighbors(
         streamId: string,
         streamPartition: number,
         minNeighbors = 1,
