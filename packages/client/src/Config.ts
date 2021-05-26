@@ -49,6 +49,7 @@ export type StrictStreamrClientOptions = {
     retryResendAfter: number
     gapFillTimeout: number
     maxGapRequests: number
+    maxRetries: number
     maxPublishQueueSize: number
     publishWithSignature: Todo
     verifySignatures: Todo
@@ -119,6 +120,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
     retryResendAfter: 5000,
     gapFillTimeout: 5000,
     maxGapRequests: 5,
+    maxRetries: 5,
     maxPublishQueueSize: 10000,
     publishAutoDisconnectDelay: 5000,
 
