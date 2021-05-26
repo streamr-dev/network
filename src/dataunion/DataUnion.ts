@@ -84,7 +84,7 @@ async function waitForTx(tx: ContractTransaction): Promise<ContractReceipt> {
             const body = JSON.parse(e.body)
             const msg = body.error.message
             log('Error message: %s', msg)
-            if (msg.indexOf('ancient block sync')) {
+            if (msg.indexOf('ancient block sync') >= 0) {
                 log('Sleeping then trying again')
                 return sleep(10000).then(() => waitForTx(tx)) // TODO: add option for retry interval and timeout
             }
