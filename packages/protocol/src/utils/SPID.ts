@@ -1,3 +1,15 @@
+import { format } from 'util'
+
+class SPIDValidationError extends Error {
+    data: SPIDish
+    constructor(msg: string, data: SPIDish) {
+        super(format(msg, data))
+        this.data = data
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+}
 /**
  * SPID - Stream Partition ID
  */
@@ -26,9 +38,8 @@ export default class SPID {
         this.partition = partition
         this.validate()
 
-        // static values
-        const separator = (this.constructor as typeof SPID).SEPARATOR
-        this.key =`${this.id}${separator}${this.partition}`
+        // static cached values to prevent unnecessary runtime allocations
+        this.key = `${this.id}${SPID.SEPARATOR}${this.partition}`
         this.cachedSplit = [this.id, this.partition]
         // prevent all mutation
         Object.freeze(this)
@@ -40,11 +51,17 @@ export default class SPID {
      */
     private validate() {
         if (typeof this.id !== 'string' || this.id.length === 0) {
-            throw new Error(`SPID validation failed: id must be non-empty string: ${JSON.stringify({ id: this.id, partition: this.partition })}`)
+            throw new SPIDValidationError('SPID validation failed: id must be non-empty string: %o', {
+                id: this.id,
+                partition: this.partition
+            })
         }
 
         if (typeof this.partition !== 'number' || !Number.isSafeInteger(this.partition) || this.partition < 0) {
-            throw new Error(`SPID validation failed: paritition must be an integer >= 0: ${JSON.stringify({ id: this.id, partition: this.partition })}`)
+            throw new SPIDValidationError('SPID validation failed: partition must be a safe integer >= 0: %o', {
+                id: this.id,
+                partition: this.partition
+            })
         }
     }
 
@@ -56,17 +73,15 @@ export default class SPID {
         if (other === this) { return true }
         let otherSpid: SPID
         try {
-            otherSpid = (this.constructor as typeof SPID).from(other)
+            otherSpid = SPID.from(other)
         } catch (_err) {
+            // ignore error
             // not equal if not valid
             return false
         }
 
-        // check if matches both id + partition
-        return (
-            this.id === otherSpid.id
-            && this.partition === otherSpid.partition
-        )
+        // check key matches
+        return this.key === otherSpid.key
     }
 
     /**
@@ -85,11 +100,13 @@ export default class SPID {
             // @ts-expect-error object should have one of these, validated anyway
             const streamId = spidish.streamId || spidish.id
             // @ts-expect-error object should have one of these, validated anyway
-            const streamPartition = spidish.streamPartition || spidish.partition
-            return SPID.from(`${streamId}${this.SEPARATOR}${streamPartition}`)
+            const partition = spidish.streamPartition || spidish.partition
+            // try parse if a value was passed, but fall back to undefined i.e. default
+            const streamPartition = partition != null ? Number.parseFloat(partition) : undefined
+            return new SPID(streamId, streamPartition)
         } else {
             // TODO: add more conversions?
-            throw new Error(`SPID validation failed, input is malformed: ${spidish}`)
+            throw new SPIDValidationError('SPID validation failed, input is malformed: %o', spidish)
         }
     }
 
@@ -97,8 +114,10 @@ export default class SPID {
      * Convert String to SPID if possible.
      */
     static fromString(spidString: string): SPID {
-        const [id, parititionStr] = spidString.split(this.SEPARATOR)
-        return new SPID(id, Number.parseFloat(parititionStr))
+        const [id, partitionStr] = spidString.split(this.SEPARATOR)
+        // partition is optional, falls back to undefined i.e. default
+        const partition = partitionStr != null ? Number.parseFloat(partitionStr) : undefined
+        return new SPID(id, partition)
     }
 
     /**
@@ -112,7 +131,7 @@ export default class SPID {
      * Alias of toString.
      */
     toKey(): string {
-        return this.key
+        return this.toString()
     }
 
     /**
