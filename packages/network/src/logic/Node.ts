@@ -406,9 +406,10 @@ export class Node extends EventEmitter {
 
         if (subscribers.length === 0) {
             this.logger.warn('no neighbors to propagate message %o to', streamMessage.getMessageID().toArray())
+        } else {
+            this.emit(Event.MESSAGE_PROPAGATED, streamMessage)
         }
 
-        this.emit(Event.MESSAGE_PROPAGATED, streamMessage)
         return subscribers
     }
 
