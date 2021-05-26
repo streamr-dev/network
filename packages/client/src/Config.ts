@@ -53,6 +53,7 @@ export type StrictStreamrClientOptions = {
     publishWithSignature: Todo
     verifySignatures: Todo
     publisherStoreKeyHistory: boolean
+    publishAutoDisconnectDelay: number,
     groupKeys: Todo
     keyExchange: Todo
     mainnet?: ConnectionInfo|string
@@ -119,6 +120,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
     gapFillTimeout: 5000,
     maxGapRequests: 5,
     maxPublishQueueSize: 10000,
+    publishAutoDisconnectDelay: 5000,
 
     // Encryption options
     publishWithSignature: 'auto',

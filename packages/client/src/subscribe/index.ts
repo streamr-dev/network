@@ -9,6 +9,8 @@ import Subscriptions from './Subscriptions'
 import { Todo, MaybeAsync } from '../types'
 import StreamrClient, { StreamPartDefinition, SubscribeOptions } from '..'
 
+export { Subscription }
+
 type StreamOptions = Subscription | StreamPartDefinition | { options: Subscription|StreamPartDefinition }
 
 /**
