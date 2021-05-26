@@ -82,7 +82,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 this.attemptProtocolVersionValidation(connection)
             } else {
                 this.logger.warn('unexpected rtcAnswer from %s: %s', peerId, description)
-                if (connection && connection.getConnectionId() !== connectionId) {
+                if (connection.getConnectionId() !== connectionId) {
                     this.logger.warn('connectionIds did not match')
                 }
             }

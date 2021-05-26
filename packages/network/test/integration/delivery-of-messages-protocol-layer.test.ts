@@ -24,7 +24,7 @@ describe('delivery of messages in protocol layer', () => {
     let trackerNode2: TrackerNode
     let trackerServer: TrackerServer
     let tracker: Tracker
-    beforeEach(async () => {
+    beforeAll(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
             port: 28515,
@@ -72,7 +72,7 @@ describe('delivery of messages in protocol layer', () => {
         await waitForEvent(nodeToNode2, NodeToNodeEvent.NODE_CONNECTED)
     })
 
-    afterEach(() => {
+    afterAll(() => {
         return Promise.all([
             nodeToNode2.stop(),
             nodeToNode1.stop(),
