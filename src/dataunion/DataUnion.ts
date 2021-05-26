@@ -9,7 +9,7 @@ import debug from 'debug'
 
 import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
-import { until, getEndpointUrl } from '../utils'
+import { until, getEndpointUrl, sleep } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import { Contracts } from './Contracts'
@@ -75,6 +75,22 @@ function getMessageHashes(tr: ContractReceipt): AmbMessageHash[] {
     const sigEventArgsArray = tr.events!.filter((e) => e.event === 'UserRequestForSignature').map((e) => e.args)
     const hashes = sigEventArgsArray.map((eventArgs) => keccak256(eventArgs![1]))
     return hashes
+}
+
+async function waitForTx(tx: ContractTransaction): Promise<ContractReceipt> {
+    return tx.wait().catch((e) => {
+        log('Got error: %o', e)
+        if (e.body) {
+            const body = JSON.parse(e.body)
+            const msg = body.error.message
+            log('Error message: %s', msg)
+            if (msg.indexOf('ancient block sync')) {
+                log('Sleeping then trying again')
+                return sleep(10000).then(() => waitForTx(tx)) // TODO: add option for retry interval and timeout
+            }
+        }
+        throw e
+    })
 }
 
 /**
@@ -391,7 +407,7 @@ export class DataUnion {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.addMembers(members)
         // TODO ETH-93: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
-        return tx.wait()
+        return waitForTx(tx)
     }
 
     /**
@@ -404,7 +420,7 @@ export class DataUnion {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.partMembers(members)
         // TODO ETH-93: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
-        return tx.wait()
+        return waitForTx(tx)
     }
 
     /**
@@ -491,7 +507,7 @@ export class DataUnion {
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
         const duMainnet = this.getContracts().getMainnetContract(this.contractAddress)
         const tx = await duMainnet.setAdminFee(adminFeeBN)
-        return tx.wait()
+        return waitForTx(tx)
     }
 
     /**
@@ -507,7 +523,7 @@ export class DataUnion {
         const address = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.transferToMemberInContract(address, amountTokenWei)
-        return tx.wait()
+        return waitForTx(tx)
     }
 
     /**
@@ -621,7 +637,7 @@ export class DataUnion {
 
         log('Executing DataUnionSidechain withdraw function')
         const tx = await getWithdrawTxFunc()
-        const tr = await tx.wait()
+        const tr = await waitForTx(tx)
 
         // keep tokens in the sidechain => just return the sidechain tx receipt
         if (!sendToMainnet) { return tr }
