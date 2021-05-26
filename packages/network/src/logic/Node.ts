@@ -284,7 +284,7 @@ export class Node extends EventEmitter {
 
         const subscribePromises = nodeIds.map(async (nodeId) => {
             if (reattempt) {
-                await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, undefined, false))
+                await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, false))
             } else {
                 await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId))
             }
@@ -296,6 +296,7 @@ export class Node extends EventEmitter {
         nodesToUnsubscribeFrom.forEach((nodeId) => {
             this.unsubscribeFromStreamOnNode(nodeId, streamId, false)
         })
+
         const results = await Promise.allSettled(subscribePromises)
         if (this.streams.isSetUp(streamId)) {
             this.streams.updateCounter(streamId, counter)
@@ -310,7 +311,7 @@ export class Node extends EventEmitter {
                 subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
-                this.logger.trace('failed to subscribe (or connect) to node, reason: %s', res.reason)
+                this.logger.warn('failed to subscribe (or connect) to node, reason: %s', res.reason)
             }
         })
         if (!reattempt || failedInstructions) {
@@ -377,7 +378,6 @@ export class Node extends EventEmitter {
     }
 
     private propagateMessage(streamMessage: MessageLayer.StreamMessage, source: string | null): void {
-        this.logger.info("propagateMessage()")
         this.metrics.record('propagateMessage', 1)
         this.perStreamMetrics.recordPropagateMessage(streamMessage.getStreamId())
         const streamIdAndPartition = new StreamIdAndPartition(
@@ -396,11 +396,9 @@ export class Node extends EventEmitter {
         }
         subscribers.forEach(async (subscriber) => {
             try {
-                this.logger.info("trying to propagate message")
                 await this.nodeToNode.sendData(subscriber, streamMessage)
                 this.consecutiveDeliveryFailures[subscriber] = 0
             } catch (e) {
-                this.logger.info("message propagation failed")
                 const serializedMsgId = streamMessage.getMessageID().serialize()
                 this.logger.warn('failed to propagate %s (consecutiveFails=%d) to subscriber %s, reason: %s',
                     serializedMsgId,

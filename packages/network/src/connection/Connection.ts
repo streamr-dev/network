@@ -103,6 +103,19 @@ interface Events {
 // i.e. no this.on('event')
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
+export class DeferredConnectionAttempt extends EventEmitter{
+    public connectionAttemptPromise: Promise<string> = new Promise((resolve, reject) => {
+        this.once('open', () => {
+            resolve(this.targetId)
+        })
+        this.once('close', (reason) => {
+            reject(reason)
+        })
+        
+    });
+    constructor(private targetId: string) {super()}
+}
+
 export class Connection extends ConnectionEmitter {
     public readonly id: string
     private connectionId = 'none'
@@ -136,6 +149,7 @@ export class Connection extends ConnectionEmitter {
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
+    private deferredConnectionAttempt: DeferredConnectionAttempt | null = null
 
     constructor({
         selfId,
@@ -197,6 +211,42 @@ export class Connection extends ConnectionEmitter {
             messageQueue: this.messageQueue.size(),
             peerInfo: this.peerInfo,
         })
+    }
+
+    createDeferredConnectionAttempt(): void {
+        this.deferredConnectionAttempt = new DeferredConnectionAttempt(this.peerInfo.peerId)
+    }
+
+    setDeferredConnectionAttempt(attempt: DeferredConnectionAttempt | null): void {
+        this.deferredConnectionAttempt = attempt
+    }
+
+    getDeferredConnectionAttempt(): DeferredConnectionAttempt | null {
+        return this.deferredConnectionAttempt
+    }
+
+    stealDeferredConnectionAttempt(): DeferredConnectionAttempt | null {
+        const att = this.deferredConnectionAttempt
+        this.deferredConnectionAttempt = null
+        return att
+    }
+
+    private emitOpen() {
+        if (this.deferredConnectionAttempt) {
+            const def = this.deferredConnectionAttempt
+            this.deferredConnectionAttempt = null
+            def.emit('open')
+        }
+        this.emit('open')
+    }
+
+    private emitClose(reason: any) {
+        if (this.deferredConnectionAttempt) {
+            const def = this.deferredConnectionAttempt
+            this.deferredConnectionAttempt = null
+            def.emit('close', reason)
+        }
+        this.emit('close')
     }
 
     connect(): void {
@@ -334,9 +384,10 @@ export class Connection extends ConnectionEmitter {
         this.flushRef = null
 
         if (err) {
-            this.emit('error', err)
+            this.emitClose(err)
+            return
         }
-        this.emit('close')
+        this.emitClose('closed')
     }
 
     ping(): void {
@@ -417,7 +468,7 @@ export class Connection extends ConnectionEmitter {
     }
 
     private onStateChange(state: string): void {
-        this.logger.warn('conn.onStateChange: %s -> %s', this.lastState, state)
+        this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
 
         this.lastState = state
 
@@ -437,7 +488,7 @@ export class Connection extends ConnectionEmitter {
     }
 
     private onGatheringStateChange(state: string): void {
-        this.logger.warn('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
+        this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
         this.lastGatheringState = state
     }
 
@@ -499,7 +550,7 @@ export class Connection extends ConnectionEmitter {
         }
         this.dataChannel = dataChannel
         this.setFlushRef()
-        this.emit('open')
+        this.emitOpen()
     }
 
     private attemptToFlushMessages(): void {

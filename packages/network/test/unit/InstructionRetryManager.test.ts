@@ -12,6 +12,10 @@ describe('InstructionRetryManager', () => {
         instructionRetryManager = new InstructionRetryManager(handlerCb, 100)
     })
 
+    afterEach(() => {
+        instructionRetryManager.reset()
+    })
+
     function createInstruction(streamId: string, counter: number) {
         return new TrackerLayer.InstructionMessage({
             requestId: 'requestId',

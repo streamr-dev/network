@@ -315,8 +315,10 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendRtcOffer is delivered (trackerServer->trackerNode)', async () => {
+        const promise = waitForEvent(trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
         trackerServer.sendRtcOffer('node1', 'requestId', PeerInfo.newNode('originatorNode'), 'connectionid','description')
-        const [msg, source]: any = await waitForEvent(trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
+        
+        const [msg, source]: any = await (promise)
 
         expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         expect(source).toEqual('trackerServer')
@@ -358,7 +360,7 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.subType).toEqual('rtcConnect')
         expect(msg.data).toEqual({ force: false })
     })
-
+    
     test('sendRtcIceCandidate is delivered (trackerServer->trackerNode)', async () => {
         trackerServer.sendRtcIceCandidate('node1', 'requestId', PeerInfo.newNode('originatorNode'), 'connectionid', 'candidate', 'mid')
         const [msg, source]: any = await waitForEvent(trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
@@ -376,7 +378,7 @@ describe('delivery of messages in protocol layer', () => {
         })
     })
 
-    /*
+    /* local candidate message does not exist anymore
     test('sendLocalCandidate is delivered (trackerNode->trackerServer)', async () => {
         trackerNode.sendLocalCandidate('trackerServer', 'targetNode', PeerInfo.newNode('originatorNode'), 'candidate', 'mid')
         const [msg, source]: any = await waitForEvent(trackerServer, TrackerServerEvent.RELAY_MESSAGE_RECEIVED)
@@ -391,7 +393,8 @@ describe('delivery of messages in protocol layer', () => {
             candidate: 'candidate',
             mid: 'mid'
         })
-    })*/
+    })
+    */
 
     test('sendRtcOffer is delivered (trackerNode->trackerServer)', async () => {
         trackerNode.sendRtcOffer(
@@ -427,4 +430,5 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.subType).toEqual('rtcConnect')
         expect(msg.data).toEqual({ force: false })
     })
+    
 })

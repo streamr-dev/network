@@ -54,14 +54,182 @@ describe('WebRtcEndpoint', () => {
         ])
     })
 
-    it('connection between nodes is established when both nodes invoke connect()', async () => {
+    it('connection between nodes is established when both nodes invoke tracker-instructed connect()', async () => {
         await runAndWaitForEvents([
             ()=>{ endpoint1.connect('node-2', 'tracker', true) }, 
-            () => { endpoint2.connect('node-1', 'tracker', false) }], [
+            () => { endpoint2.connect('node-1', 'tracker', true) }], [
             [endpoint1, EndpointEvent.PEER_CONNECTED],
             [endpoint2, EndpointEvent.PEER_CONNECTED]
         ])
        
+        let ep1NumOfReceivedMessages = 0
+        let ep2NumOfReceivedMessages = 0
+        
+        endpoint1.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep1NumOfReceivedMessages += 1
+        })
+        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep2NumOfReceivedMessages += 1
+        })
+            
+        const sendFrom1To2 = async () => {
+            return endpoint1.send('node-2', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+        const sendFrom2To1 = async () => {
+            return endpoint2.send('node-1', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+        const sendTasks = []
+        for (let i = 0; i < 10; ++i) {
+            const time = 10 * i
+            sendTasks.push(Promise.all([
+                wait(time).then(sendFrom1To2),
+                wait(time + 5).then(sendFrom2To1)
+            ]))
+        }
+
+        await waitForCondition(() => ep1NumOfReceivedMessages > 9)
+        await waitForCondition(() => ep2NumOfReceivedMessages > 9)
+        await Promise.all(sendTasks)
+    
+    })
+    
+    it('connection between nodes is established when both nodes invoke non-tracker-instructed connect()', async () => {
+        const promise = Promise.all([ 
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)])
+
+        const results = await Promise.allSettled([
+            endpoint1.connect('node-2', 'tracker', false),
+            endpoint2.connect('node-1', 'tracker', false)
+        ])
+    
+        await promise
+        
+        let oneOpened = false
+        results.forEach((result) => {
+            if (result.status == 'fulfilled') {
+                oneOpened = true
+            }
+        })
+        
+        expect(oneOpened).toBe(true)
+           
+        let ep1NumOfReceivedMessages = 0
+        let ep2NumOfReceivedMessages = 0
+        
+        endpoint1.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep1NumOfReceivedMessages += 1
+        })
+        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep2NumOfReceivedMessages += 1
+        })
+            
+        const sendFrom1To2 = async () => {
+            return endpoint1.send('node-2', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+        const sendFrom2To1 = async () => {
+            return endpoint2.send('node-1', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+        const sendTasks = []
+        for (let i = 0; i < 10; ++i) {
+            const time = 10 * i
+            sendTasks.push(Promise.all([
+                wait(time).then(sendFrom1To2),
+                wait(time + 5).then(sendFrom2To1)
+            ]))
+        }
+
+        await waitForCondition(() => ep1NumOfReceivedMessages > 9)
+        await waitForCondition(() => ep2NumOfReceivedMessages > 9)
+        await Promise.all(sendTasks)
+    
+    })
+    
+    it('connection between nodes is established when node-1 invokes non-tracker-instructed connect()', async () => {
+        const promise = Promise.all([ 
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)])
+
+        const results = await Promise.allSettled([
+            endpoint1.connect('node-2', 'tracker', true),
+            endpoint2.connect('node-1', 'tracker', false)
+        ])
+
+        await promise
+
+        let oneOpened = false
+        results.forEach((result) => {
+            if (result.status == 'fulfilled') {
+                oneOpened = true
+            }
+        })
+
+        expect(oneOpened).toBe(true)
+        
+        let ep1NumOfReceivedMessages = 0
+        let ep2NumOfReceivedMessages = 0
+        
+        endpoint1.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep1NumOfReceivedMessages += 1
+        })
+        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep2NumOfReceivedMessages += 1
+        })
+            
+        const sendFrom1To2 = async () => {
+            return endpoint1.send('node-2', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+        const sendFrom2To1 = async () => {
+            return endpoint2.send('node-1', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+        const sendTasks = []
+        for (let i = 0; i < 10; ++i) {
+            const time = 10 * i
+            sendTasks.push(Promise.all([
+                wait(time).then(sendFrom1To2),
+                wait(time + 5).then(sendFrom2To1)
+            ]))
+        }
+
+        await waitForCondition(() => ep1NumOfReceivedMessages > 9)
+        await waitForCondition(() => ep2NumOfReceivedMessages > 9)
+        await Promise.all(sendTasks)
+    
+    })
+    
+    it('connection between nodes is established when node-2 invokes non-tracker-instructed connect()', async () => {
+        const promise = Promise.all([ 
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)])
+
+        const results = await Promise.allSettled([
+            endpoint1.connect('node-2', 'tracker', false),
+            endpoint2.connect('node-1', 'tracker', true)
+        ])
+           
+        await promise
+
+        let oneOpened = false
+        results.forEach((result) => {
+            if (result.status == 'fulfilled') {
+                oneOpened = true
+            }
+        })
+
+        expect(oneOpened).toBe(true)
+
         let ep1NumOfReceivedMessages = 0
         let ep2NumOfReceivedMessages = 0
         
@@ -145,5 +313,4 @@ describe('WebRtcEndpoint', () => {
             await endpoint1.send('node-2', payload)
         }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
     })
-    
 })

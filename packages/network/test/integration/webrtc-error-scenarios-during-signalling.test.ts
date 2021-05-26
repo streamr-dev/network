@@ -48,7 +48,7 @@ describe('Signalling error scenarios', () => {
         await nodeTwo.stop()
         await tracker.stop()
     })
-    
+
     it('connection recovers after timeout if one endpoint closes during signalling', async () => {
         await runAndWaitForEvents([ ()=> { nodeOne.subscribe(streamId, 0) }, () => { nodeTwo.subscribe(streamId, 0) } ],
             // @ts-expect-error private field
@@ -66,7 +66,7 @@ describe('Signalling error scenarios', () => {
         // @ts-expect-error private field
         expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
     }, 60000)
-    
+
     it('connection recovers after timeout if both endpoints close during signalling', async () => {
         
         await runAndWaitForEvents([ () => { nodeOne.subscribe(streamId, 0)}, () => { nodeTwo.subscribe(streamId, 0) } ], [
@@ -85,7 +85,7 @@ describe('Signalling error scenarios', () => {
             [ nodeTwo, NodeEvent.NODE_DISCONNECTED ],
             [ nodeOne, NodeEvent.NODE_CONNECTED ],
             [ nodeTwo, NodeEvent.NODE_CONNECTED ]
-        ])
+        ], 10000)
         // Why was Promise.allSettled() used here? switched to Promise.all
         // ts-expect-error private field
         //nodeTwo.nodeToNode.endpoint.connections['node-1'].close()

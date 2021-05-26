@@ -139,6 +139,7 @@ describe('Connection', () => {
         expect(connectionTwo.getRtt()).toBeGreaterThanOrEqual(0)
     })
 
+    /* Condition is not valid anymore, as onOffer creates connection if it does not exist
     it('connection timeouts if other end does not connect too', async () => {
         expectErrors = true
         // @ts-expect-error access private, only in test
@@ -148,6 +149,7 @@ describe('Connection', () => {
             once(connectionOne, 'open')
         )).rejects.toThrow('timed out')
     })
+    */
 
     it('connection does not timeout if connection succeeds', async () => {
         // this test ensures failed connection timeout has been cleared
