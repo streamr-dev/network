@@ -4,13 +4,13 @@ Streamr network, client & supporting packages. Work in progress.
 
 ## Contains
 
-* network
-* broker
-* client
-* protocol
-* test-utils
-* cli-tools
-* cross-client-testing
+* [network](packages/network/README.md) (streamr-network)
+* [broker](packages/broker/README.md) (streamr-broker)
+* [client](packages/client/README.md) (streamr-client)
+* [protocol](packages/protocol/README.md) (streamr-client-protocol)
+* [test-utils](packages/test-utils/README.md) (streamr-test-utils)
+* [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
+* [cross-client-testing](packages/cross-client-testing/README.md) (com.streamr.client_testing)
 
 ## Build Status
 
