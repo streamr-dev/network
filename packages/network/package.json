@@ -27,7 +27,7 @@
     "test": "jest --forceExit",
     "test-unit": "jest --forceExit test/unit",
     "coverage": "jest --forceExit --coverage",
-    "test-integration": "jest --forceExit test/integration test/flakey",
+    "test-integration": "jest --forceExit test/integration",
     "test-flakey": "jest --forceExit test/flakey",
     "test-types": "tsc --noEmit --project ./tsconfig.json ",
     "eslint": "eslint .",
