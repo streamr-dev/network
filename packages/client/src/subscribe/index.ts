@@ -646,11 +646,15 @@ export class Subscriber {
         const realtimeMessageStream = messageStream(this.client.connection, options)
 
         // cancel both streams on end
-        async function end(optionalErr: Todo) {
-            await Promise.all([
+        async function end(optionalErr?: Error) {
+            const tasks = [
                 resendMessageStream.cancel(optionalErr),
                 realtimeMessageStream.cancel(optionalErr),
-            ])
+                resendSubscribeSub.cancel(optionalErr)
+            ]
+
+            await Promise.allSettled(tasks)
+            await Promise.all(tasks)
 
             if (optionalErr) {
                 throw optionalErr
@@ -713,7 +717,12 @@ export class Subscriber {
             },
         ], end)
 
-        const resendTask = resendMessageStream.subscribe()
+        const resendTask = resendMessageStream.subscribe().catch((err) => {
+            resendDone.reject(err)
+            resendMessageStream.cancel(err)
+            throw err
+        })
+
         const realtimeTask = this.subscribe({
             ...options,
             // @ts-expect-error
@@ -731,13 +740,23 @@ export class Subscriber {
                     }
                 },
             ],
-        }, onFinally)
+        }, onFinally).then((sub) => {
+            resendSubscribeSub = sub
+            return sub
+        })
 
-        // eslint-disable-next-line semi-style
-        ;[resendSubscribeSub] = await Promise.all([
+        const tasks: Promise<any>[] = [
             realtimeTask,
             resendTask,
-        ])
+        ]
+
+        try {
+            await Promise.allSettled(tasks)
+            await Promise.all(tasks)
+        } catch (err) {
+            await end()
+            throw err
+        }
 
         // attach additional utility functions
         return Object.assign(resendSubscribeSub, {

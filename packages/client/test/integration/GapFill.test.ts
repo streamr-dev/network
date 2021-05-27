@@ -348,6 +348,30 @@ describeRepeats('GapFill', () => {
                     })
                 }).rejects.toThrow('storage')
             }, 15000)
+
+            it('rejects resend+subscribe if no storage assigned', async () => {
+                // new stream, assign to storage node not called
+                stream = await client.createStream({
+                    requireSignedData: true,
+                    name: uid('no-storage-stream')
+                })
+
+                const publishTask = publishTestMessages(MAX_MESSAGES, {
+                    stream,
+                })
+                try {
+                    await expect(async () => {
+                        await client.subscribe({
+                            stream,
+                            resend: {
+                                last: 100,
+                            }
+                        })
+                    }).rejects.toThrow('storage')
+                } finally {
+                    await publishTask
+                }
+            }, 15000)
         })
     })
 
