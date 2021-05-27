@@ -77,19 +77,25 @@ function getMessageHashes(tr: ContractReceipt): AmbMessageHash[] {
     return hashes
 }
 
-async function waitForTx(tx: ContractTransaction): Promise<ContractReceipt> {
-    return tx.wait().catch((e) => {
-        log('Got error: %o', e)
-        if (e.body) {
-            const body = JSON.parse(e.body)
+type WaitForTXOptions = {
+    retries?: number
+    retryInterval?: number
+}
+
+async function waitForTx(tx: ContractTransaction, { retries = 60, retryInterval = 60000 }: WaitForTXOptions = {}): Promise<ContractReceipt> {
+    return tx.wait().catch((err) => {
+        log('Attempted transaction: %o', tx)
+        log('Got error: %o', err)
+        if (err.body) {
+            const body = JSON.parse(err.body)
             const msg = body.error.message
             log('Error message: %s', msg)
-            if (msg.indexOf('ancient block sync') >= 0) {
-                log('Sleeping then trying again')
-                return sleep(10000).then(() => waitForTx(tx)) // TODO: add option for retry interval and timeout
+            if (retries > 0 && msg.includes('ancient block sync')) {
+                log('Sleeping for %dms then retrying %d more time(s).', retryInterval, retries)
+                return sleep(retryInterval).then(() => waitForTx(tx, { retries: retries - 1, retryInterval }))
             }
         }
-        throw e
+        throw err
     })
 }
 
