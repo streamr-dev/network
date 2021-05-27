@@ -19,7 +19,7 @@ export function formConfig({
     privateKey,
     httpPort = null,
     wsPort = null,
-    mqttPort = null,
+    legacyMqttPort = null,
     enableCassandra = false,
     privateKeyFileName = null,
     certFileName = null,
@@ -55,9 +55,9 @@ export function formConfig({
             certFileName
         }
     }
-    if (mqttPort) {
-        plugins['mqtt'] = {
-            port: mqttPort,
+    if (legacyMqttPort) {
+        plugins['legacyMqtt'] = {
+            port: legacyMqttPort,
             streamsTimeout: 300000
         }
     }

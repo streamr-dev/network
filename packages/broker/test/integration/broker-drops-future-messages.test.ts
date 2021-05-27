@@ -52,7 +52,7 @@ describe('broker drops future messages', () => {
             trackerPort,
             httpPort,
             wsPort,
-            mqttPort
+            legacyMqttPort: mqttPort
         })
 
         client = createClient(wsPort)
