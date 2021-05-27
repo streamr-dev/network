@@ -15,5 +15,10 @@ test-utils
 for p in $PACKAGES
 do
     RES=`(cd packages/$p && find node_modules -maxdepth 1 -type l) | sed 's/^/\t/'`
-    printf "${TITLE_COLOR}$p${NO_COLOR}\n${RES}\n"
+    if [ -z "$RES" ]
+    then
+        printf "${TITLE_COLOR}$p${NO_COLOR}\n" # here to avoid extra newline
+    else
+        printf "${TITLE_COLOR}$p${NO_COLOR}\n${RES}\n"
+    fi
 done
