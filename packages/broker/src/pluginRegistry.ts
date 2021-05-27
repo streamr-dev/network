@@ -2,6 +2,7 @@ import { PluginOptions } from './Plugin'
 import { PublishHttpPlugin } from './plugins/publishHttp/PublishHttpPlugin'
 import { MetricsPlugin } from './plugins/metrics/MetricsPlugin'
 import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
+import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
 import { MqttPlugin as LegacyMqttPlugin } from './plugins/legacyMqtt/MqttPlugin'
 import { StoragePlugin } from './plugins/storage/StoragePlugin'
 
@@ -13,6 +14,8 @@ export const createPlugin = (name: string, pluginOptions: PluginOptions) => {
             return new MetricsPlugin(pluginOptions)
         case 'ws':
             return new WebsocketPlugin(pluginOptions)
+        case 'mqtt':
+            return new MqttPlugin(pluginOptions)
         case 'legacyMqtt':
             return new LegacyMqttPlugin(pluginOptions)
         case 'storage':

@@ -20,6 +20,8 @@ export function formConfig({
     httpPort = null,
     wsPort = null,
     legacyMqttPort = null,
+    extraPlugins = {},
+    apiAuthentication = null,
     enableCassandra = false,
     privateKeyFileName = null,
     certFileName = null,
@@ -28,7 +30,7 @@ export function formConfig({
     storageNodeRegistry = (!enableCassandra ? [] : null),
     reporting = false
 }: Todo): Config {
-    const plugins: Record<string,any> = {}
+    const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['publishHttp'] = {}
         plugins['metrics'] = {}
@@ -104,6 +106,7 @@ export function formConfig({
             privateKeyFileName: null,
             certFileName: null
         } : null,
+        apiAuthentication,
         plugins
     }
 }
