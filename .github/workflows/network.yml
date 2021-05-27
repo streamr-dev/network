@@ -61,13 +61,6 @@ jobs:
       - run: npm run test-unit
         env:
           CI: true
-      - uses: nick-invision/retry@v2
-        name: Flakey Tests
-        with:
-          max_attempts: 5
-          timeout_minutes: 4
-          retry_on: error
-          command: cd packages/network && CI=true LOG_LEVEL=trace npm run test-flakey
       - run: npm run test-integration
         env:
           CI: true
