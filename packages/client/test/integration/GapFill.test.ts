@@ -519,5 +519,64 @@ describeRepeats('GapFill', () => {
             // shouldn't retry if encountered no storage error
             expect(calledResend).toHaveBeenCalledTimes(0)
         }, 20000)
+
+        it('ignores gaps if orderMessages disabled', async () => {
+            await setupClient({
+                orderMessages: false, // should disable all gapfilling
+                gapFillTimeout: 200,
+                retryResendAfter: 2000,
+                maxGapRequests: 99 // would time out test if doesn't give up
+            })
+
+            await client.connect()
+            const { parse } = client.connection
+            const calledResend = jest.fn()
+            let count = 0
+            let droppedMsgRef: MessageRef
+            client.connection.parse = (...args) => {
+                const msg: any = parse.call(client.connection, ...args)
+                if (!msg.streamMessage) {
+                    return msg
+                }
+
+                count += 1
+                if (count === 3) {
+                    if (!droppedMsgRef) {
+                        droppedMsgRef = msg.streamMessage.getMessageRef()
+                    }
+                    client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
+                    return null
+                }
+
+                if (droppedMsgRef && msg.streamMessage.getMessageRef().compareTo(droppedMsgRef) === 0) {
+                    calledResend()
+                    client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
+                    return null
+                }
+
+                return msg
+            }
+
+            const sub = await client.subscribe({
+                stream,
+            })
+
+            const publishedTask = publishTestMessages(MAX_MESSAGES, {
+                stream,
+            })
+
+            const received: any[] = []
+            for await (const m of sub) {
+                received.push(m.getParsedContent())
+                if (received.length === MAX_MESSAGES - 1) {
+                    break
+                }
+            }
+            const published = await publishedTask
+            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+            expect(client.connection.getState()).toBe('connected')
+            // should not have got any resend responses
+            expect(calledResend).toHaveBeenCalledTimes(0)
+        }, 20000)
     })
 })

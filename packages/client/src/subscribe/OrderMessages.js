@@ -16,10 +16,10 @@ let ID = 0
  */
 
 export default function OrderMessages(client, options = {}) {
-    const { gapFillTimeout, retryResendAfter, maxGapRequests } = client.options
+    const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages } = client.options
     const { streamId, streamPartition, gapFill = true } = validateOptions(options)
+    let enabled = !!(orderMessages && gapFill && maxGapRequests)
     const debug = client.debug.extend(`OrderMessages::${ID}`)
-    debug('create', { gapFillTimeout, retryResendAfter, maxGapRequests, streamId , streamPartition, gapFill })
     ID += 1
 
     // output buffer
@@ -29,7 +29,6 @@ export default function OrderMessages(client, options = {}) {
 
     let done = false
     const resendStreams = new Set() // holds outstanding resends for cleanup
-    let hasNoStorage = false
 
     const orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
         if (!outStream.isWritable() || done) {
@@ -37,11 +36,10 @@ export default function OrderMessages(client, options = {}) {
         }
         outStream.push(orderedMessage)
     }, async (from, to, publisherId, msgChainId) => {
+        if (done || !enabled) { return }
         debug('gap %o', {
             streamId, streamPartition, publisherId, msgChainId, from, to,
-            done, gapFill, hasNoStorage
         })
-        if (done || !gapFill || hasNoStorage) { return }
 
         // eslint-disable-next-line no-use-before-define
         const resendMessageStream = resendStream(client, {
@@ -63,7 +61,7 @@ export default function OrderMessages(client, options = {}) {
             if (err.code === 'NO_STORAGE_NODES') {
                 // ignore NO_STORAGE_NODES errors
                 // if stream has no storage we can't do resends
-                hasNoStorage = true
+                enabled = false
                 orderingUtil.disable()
             } else {
                 outStream.push(err)
@@ -72,7 +70,7 @@ export default function OrderMessages(client, options = {}) {
             resendStreams.delete(resendMessageStream)
             await resendMessageStream.cancel()
         }
-    }, gapFillTimeout, retryResendAfter, gapFill ? maxGapRequests : 0)
+    }, gapFillTimeout, retryResendAfter, enabled ? maxGapRequests : 0)
 
     const markMessageExplicitly = orderingUtil.markMessageExplicitly.bind(orderingUtil)
 
