@@ -365,7 +365,7 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.subType).toEqual('rtcConnect')
         expect(msg.data).toEqual({})
     })
-    
+
     test('sendRtcIceCandidate is delivered (trackerServer->trackerNode)', async () => {
         trackerServer.sendRtcIceCandidate('node1', 'requestId', PeerInfo.newNode('originatorNode'), 'connectionid', 'candidate', 'mid')
         const [msg, source]: any = await waitForEvent(trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
@@ -382,24 +382,6 @@ describe('delivery of messages in protocol layer', () => {
             mid: 'mid'
         })
     })
-
-    /* local candidate message does not exist anymore
-    test('sendLocalCandidate is delivered (trackerNode->trackerServer)', async () => {
-        trackerNode.sendLocalCandidate('trackerServer', 'targetNode', PeerInfo.newNode('originatorNode'), 'candidate', 'mid')
-        const [msg, source]: any = await waitForEvent(trackerServer, TrackerServerEvent.RELAY_MESSAGE_RECEIVED)
-
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
-        expect(source).toEqual('node1')
-        expect(msg.requestId).toMatch(UUID_REGEX)
-        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
-        expect(msg.targetNode).toEqual('targetNode')
-        expect(msg.subType).toEqual('localCandidate')
-        expect(msg.data).toEqual({
-            candidate: 'candidate',
-            mid: 'mid'
-        })
-    })
-    */
 
     test('sendRtcOffer is delivered (trackerNode->trackerServer)', async () => {
         trackerNode.sendRtcOffer(

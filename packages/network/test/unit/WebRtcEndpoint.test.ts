@@ -176,7 +176,7 @@ describe('WebRtcEndpoint', () => {
         
         let ep1NumOfReceivedMessages = 0
         let ep2NumOfReceivedMessages = 0
-        
+
         endpoint1.on(EndpointEvent.MESSAGE_RECEIVED, () => {
             ep1NumOfReceivedMessages += 1
         })
@@ -206,7 +206,6 @@ describe('WebRtcEndpoint', () => {
         await waitForCondition(() => ep1NumOfReceivedMessages > 9)
         await waitForCondition(() => ep2NumOfReceivedMessages > 9)
         await Promise.all(sendTasks)
-    
     })
     
     it('connection between nodes is established when node-2 invokes non-tracker-instructed connect()', async () => {

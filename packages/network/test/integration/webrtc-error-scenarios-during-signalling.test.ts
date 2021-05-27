@@ -86,28 +86,13 @@ describe('Signalling error scenarios', () => {
             [ nodeOne, NodeEvent.NODE_CONNECTED ],
             [ nodeTwo, NodeEvent.NODE_CONNECTED ]
         ], 10000)
-        // Why was Promise.allSettled() used here? switched to Promise.all
-        // ts-expect-error private field
-        //nodeTwo.nodeToNode.endpoint.connections['node-1'].close()
-        // ts-expect-error private field
-        //nodeOne.nodeToNode.endpoint.connections['node-2'].close()
 
-        //await Promise.allSettled([
-        //    waitForEvent(nodeOne, NodeEvent.NODE_DISCONNECTED),
-        //    waitForEvent(nodeTwo, NodeEvent.NODE_DISCONNECTED)
-        //])
-
-        //await Promise.allSettled([
-        //    waitForEvent(nodeOne, NodeEvent.NODE_CONNECTED),
-        //    waitForEvent(nodeTwo, NodeEvent.NODE_CONNECTED)
-        //])
-        
         // @ts-expect-error private field
         expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual(['node-2'])
         // @ts-expect-error private field
         expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
     }, 20000)
-    
+
     it('nodes recover if both signaller connections fail during signalling', async () => {
         Promise.all([waitForEvent(nodeOne, NodeEvent.NODE_CONNECTED),
             waitForEvent(nodeTwo, NodeEvent.NODE_CONNECTED)
@@ -144,7 +129,7 @@ describe('Signalling error scenarios', () => {
             [ nodeTwo.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER ],
         ])
     })
-    
+
     it('nodes recover if one signaller connection fails during signalling', async () => {
 
         await runAndRaceEvents([

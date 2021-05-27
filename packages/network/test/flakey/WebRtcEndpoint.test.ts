@@ -69,14 +69,13 @@ describe('WebRtcEndpoint Flakey Tests', () => {
             [endpoint2, EndpointEvent.PEER_CONNECTED] 
         ], 30000) 
 
-        /*
         await runAndWaitForEvents([
             () => {  endpoint1.close('node-2', 'test') },
             () => { endpoint1.connect('node-2', 'tracker') }], [
             [endpoint1, EndpointEvent.PEER_CONNECTED],
             [endpoint2, EndpointEvent.PEER_CONNECTED]
         ], 30000)
-        */
+
         await runAndWaitForEvents([
             () => {  endpoint2.close('node-1', 'test') },
             () => { endpoint2.connect('node-1', 'tracker', false) }], [
@@ -147,5 +146,4 @@ describe('WebRtcEndpoint Flakey Tests', () => {
         await Promise.all(sendTasks)
         expect(sendTasks).toHaveLength(NUM_MESSAGES)
     }, 60 * 1000)
-    
 })

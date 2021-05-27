@@ -171,7 +171,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             selfId: this.peerInfo.peerId,
             targetPeerId,
             routerId,
-            isOffering: isOffering,
+            isOffering,
             stunUrls: this.stunUrls,
             bufferThresholdHigh: this.bufferThresholdHigh,
             bufferThresholdLow: this.bufferThresholdLow,

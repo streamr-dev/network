@@ -6,7 +6,7 @@ import { PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
 
-nodeDataChannel.initLogger("Release" as LogLevel)
+nodeDataChannel.initLogger("Error" as LogLevel)
 
 export interface ConstructorOptions {
     selfId: string
@@ -265,7 +265,7 @@ export class Connection extends ConnectionEmitter {
         this.connectionEmitter.on('gatheringStateChange', this.onGatheringStateChange)
         this.connectionEmitter.on('localDescription', this.onLocalDescription)
         this.connectionEmitter.on('localCandidate', this.onLocalCandidate)
-        
+
         if (this.isOffering) {
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
