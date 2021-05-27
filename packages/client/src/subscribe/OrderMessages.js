@@ -61,7 +61,7 @@ export default function OrderMessages(client, options = {}) {
             if (err.code === 'NO_STORAGE_NODES') {
                 // ignore NO_STORAGE_NODES errors
                 // if stream has no storage we can't do resends
-                enabled = false
+                enabled = false // eslint-disable-line require-atomic-updates
                 orderingUtil.disable()
             } else {
                 outStream.push(err)
