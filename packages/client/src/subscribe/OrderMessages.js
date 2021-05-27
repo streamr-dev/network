@@ -19,6 +19,7 @@ export default function OrderMessages(client, options = {}) {
     const { gapFillTimeout, retryResendAfter, maxGapRequests } = client.options
     const { streamId, streamPartition, gapFill = true } = validateOptions(options)
     const debug = client.debug.extend(`OrderMessages::${ID}`)
+    debug('create', { gapFillTimeout, retryResendAfter, maxGapRequests, streamId , streamPartition, gapFill })
     ID += 1
 
     // output buffer
@@ -28,6 +29,7 @@ export default function OrderMessages(client, options = {}) {
 
     let done = false
     const resendStreams = new Set() // holds outstanding resends for cleanup
+    let hasNoStorage = false
 
     const orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
         if (!outStream.isWritable() || done) {
@@ -35,10 +37,11 @@ export default function OrderMessages(client, options = {}) {
         }
         outStream.push(orderedMessage)
     }, async (from, to, publisherId, msgChainId) => {
-        if (done || !gapFill) { return }
         debug('gap %o', {
             streamId, streamPartition, publisherId, msgChainId, from, to,
+            done, gapFill, hasNoStorage
         })
+        if (done || !gapFill || hasNoStorage) { return }
 
         // eslint-disable-next-line no-use-before-define
         const resendMessageStream = resendStream(client, {
@@ -46,7 +49,6 @@ export default function OrderMessages(client, options = {}) {
         })
 
         try {
-            if (done) { return }
             resendStreams.add(resendMessageStream)
             await resendMessageStream.subscribe()
             if (done) { return }
@@ -54,6 +56,17 @@ export default function OrderMessages(client, options = {}) {
             for await (const { streamMessage } of resendMessageStream) {
                 if (done) { return }
                 orderingUtil.add(streamMessage)
+            }
+        } catch (err) {
+            if (done) { return }
+
+            if (err.code === 'NO_STORAGE_NODES') {
+                // ignore NO_STORAGE_NODES errors
+                // if stream has no storage we can't do resends
+                hasNoStorage = true
+                orderingUtil.disable()
+            } else {
+                outStream.push(err)
             }
         } finally {
             resendStreams.delete(resendMessageStream)
