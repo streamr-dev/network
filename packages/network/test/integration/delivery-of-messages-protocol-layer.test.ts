@@ -54,6 +54,11 @@ describe('delivery of messages in protocol layer', () => {
             new NegotiatedProtocolVersions(peerInfo2)
         )
 
+        // @ts-ignore: private field
+        wrtcEndpoint1.rtcSignaller.setConnectListener(() => null)
+        // @ts-ignore: private field
+        wrtcEndpoint2.rtcSignaller.setConnectListener(() => null)
+
         nodeToNode1 = new NodeToNode(wrtcEndpoint1)
         nodeToNode2 = new NodeToNode(wrtcEndpoint2)
 
