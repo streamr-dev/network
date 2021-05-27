@@ -5,6 +5,7 @@ import { validateOptions, waitForResponse } from '../stream/utils'
 
 import { resend } from './api'
 import messageStream from './messageStream'
+import { StreamrClient } from '../StreamrClient'
 
 const { ControlMessage } = ControlLayer
 
@@ -13,10 +14,11 @@ const { ControlMessage } = ControlLayer
  * Sends resend request, handles responses.
  */
 
-export default function resendStream(client, opts = {}, onFinally = async () => {}) {
+export default function resendStream(client: StreamrClient, opts = {}, onFinally = async () => {}) {
     const options = validateOptions(opts)
     const { connection } = client
     const requestId = counterId(`${options.key}-resend`)
+    // @ts-expect-error
     const msgStream = messageStream(client.connection, {
         ...options,
         isUnicast: true,
@@ -66,7 +68,7 @@ export default function resendStream(client, opts = {}, onFinally = async () => 
             return this
         },
         async unsubscribe() {
-            return this.cancel()
+            return msgStream.cancel()
         }
     })
 }
