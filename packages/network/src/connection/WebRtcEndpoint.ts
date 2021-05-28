@@ -121,6 +121,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                     connection.connect()
                 }
                 catch(e) {
+                    this.logger.warn(e)
                 }
 
                 this.connections[peerId] = connection
