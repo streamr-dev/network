@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Go through packages and for each enumrate the node_modules that are symlinked
+# Go through packages and for each enumerate the node_modules that are symlinked
 
 TITLE_COLOR='\033[0;36m'
 NO_COLOR='\033[0m'
