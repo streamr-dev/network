@@ -60,7 +60,6 @@ describe('broker drops future messages', () => {
             name: 'broker-drops-future-messages' + Date.now()
         })
         streamId = freshStream.id
-        // @ts-expect-error
         token = await client.session.getSessionToken()
     })
 
