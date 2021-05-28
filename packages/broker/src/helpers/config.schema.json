@@ -269,10 +269,7 @@
       "pattern": "^0x[a-fA-F0-9]{40}$"
     },
     "storageNodeRegistry": {
-      "type": [
-        "array",
-        "null"
-      ],
+      "type": "array",
       "items": {
         "$ref": "#/definitions/storageNodeRegistryItem"
       }
