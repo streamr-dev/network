@@ -103,7 +103,11 @@ interface Events {
 // i.e. no this.on('event')
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-export class DeferredConnectionAttempt extends EventEmitter{
+export class DeferredConnectionAttempt extends EventEmitter {
+    constructor(private targetId: string) {
+        super()
+    }
+
     public connectionAttemptPromise: Promise<string> = new Promise((resolve, reject) => {
         this.once('open', () => {
             resolve(this.targetId)
@@ -111,9 +115,7 @@ export class DeferredConnectionAttempt extends EventEmitter{
         this.once('close', (reason) => {
             reject(reason)
         })
-        
-    });
-    constructor(private targetId: string) {super()}
+    })
 }
 
 export class Connection extends ConnectionEmitter {
@@ -167,7 +169,7 @@ export class Connection extends ConnectionEmitter {
         maxMessageSize = 1048576,
     }: ConstructorOptions) {
         super()
-        
+
         ID += 1
         this.id = `Connection${ID}`
         this.selfId = selfId
