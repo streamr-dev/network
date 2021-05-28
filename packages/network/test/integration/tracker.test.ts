@@ -58,7 +58,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
         
         // @ts-expect-error private field
-        
         await runAndWaitForEvents(()=> { subscriberTwo.start() }, [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED])
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1::0': {
