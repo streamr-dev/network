@@ -632,29 +632,32 @@ export class Subscriber {
             await sub.cancel(...args)
         })
 
-        await resendMsgStream.subscribe()
+        await resendMsgStream.subscribe().catch(async (err) => {
+            await sub.cancel()
+            throw err
+        })
         return sub
     }
 
     async resendSubscribe(opts: SubscribeOptions & StreamPartDefinition, onFinally?: MaybeAsync<(err?: any) => void>) {
+        const onEndFns: any[] = []
         // This works by passing a custom message stream to a subscription
         // the custom message stream iterates resends, then iterates realtime
         const options = validateOptions(opts)
 
         const resendMessageStream = resendStream(this.client, options)
+        onEndFns.push(async () => resendMessageStream.cancel())
         // @ts-expect-error
         const realtimeMessageStream = messageStream(this.client.connection, options)
+        onEndFns.push(async () => realtimeMessageStream.cancel())
 
         // cancel both streams on end
         async function end(optionalErr?: Error) {
-            const tasks = [
-                resendMessageStream.cancel(optionalErr),
-                realtimeMessageStream.cancel(optionalErr),
-                resendSubscribeSub.cancel(optionalErr)
-            ]
-
-            await Promise.allSettled(tasks)
-            await Promise.all(tasks)
+            const tasks = onEndFns.slice().reverse()
+            onEndFns.length = 0
+            await tasks.reduce((prev, next) => (
+                prev.finally(async () => next())
+            ), Promise.resolve())
 
             if (optionalErr) {
                 throw optionalErr
@@ -668,6 +671,7 @@ export class Subscriber {
         const resendDone = Defer()
         let isResendDone = false
         let resentEmitted = false
+        onEndFns.push(() => resendDone.resolve(undefined))
 
         function messageIDString(msg: Todo) {
             return msg.getMessageID().serialize()
@@ -716,12 +720,9 @@ export class Subscriber {
                 yield* resendSubscribeSub.realtime
             },
         ], end)
+        onEndFns.push(async () => it.cancel())
 
-        const resendTask = resendMessageStream.subscribe().catch((err) => {
-            resendDone.reject(err)
-            resendMessageStream.cancel(err)
-            throw err
-        })
+        const resendTask = resendMessageStream.subscribe()
 
         const realtimeTask = this.subscribe({
             ...options,
@@ -742,6 +743,7 @@ export class Subscriber {
             ],
         }, onFinally).then((sub) => {
             resendSubscribeSub = sub
+            onEndFns.push(async () => resendSubscribeSub.cancel())
             return sub
         })
 
