@@ -336,11 +336,6 @@ describeRepeats('GapFill', () => {
                     name: uid('no-storage-stream')
                 })
 
-                await publishTestMessages(MAX_MESSAGES, {
-                    waitForLast: true,
-                    stream,
-                })
-
                 await expect(async () => {
                     await client.resend({
                         stream,
@@ -356,21 +351,14 @@ describeRepeats('GapFill', () => {
                     name: uid('no-storage-stream')
                 })
 
-                const publishTask = publishTestMessages(MAX_MESSAGES, {
-                    stream,
-                })
-                try {
-                    await expect(async () => {
-                        await client.subscribe({
-                            stream,
-                            resend: {
-                                last: 100,
-                            }
-                        })
-                    }).rejects.toThrow('storage')
-                } finally {
-                    await publishTask
-                }
+                await expect(async () => {
+                    await client.subscribe({
+                        stream,
+                        resend: {
+                            last: 100,
+                        }
+                    })
+                }).rejects.toThrow('storage')
             }, 15000)
         })
     })
