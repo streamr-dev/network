@@ -9,10 +9,12 @@ import { HttpServerConfig } from './config'
 
 const logger = new Logger(module)
 
+export const LEGACY_API_ROUTE_PREFIX = '/api/v1'
+
 export const startServer = async (routers: express.Router[], config: HttpServerConfig) => {
     const app = express()
     app.use(cors())
-    routers.forEach((router) => app.use('/api/v1', router))
+    routers.forEach((router) => app.use(router))
     let serverFactory: { listen: (port: number) => HttpServer|HttpsServer }
     if (config.privateKeyFileName && config.certFileName) {
         serverFactory = https.createServer({

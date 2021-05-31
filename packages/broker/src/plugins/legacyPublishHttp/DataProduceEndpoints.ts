@@ -7,6 +7,7 @@ import { partition } from '../../helpers/partition'
 import { authenticator } from '../../RequestAuthenticatorMiddleware'
 import { StreamFetcher } from '../../StreamFetcher'
 import { Publisher } from '../../Publisher'
+import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 import { Todo } from '../../types'
 
 const logger = new Logger(module)
@@ -53,7 +54,7 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
     const router = express.Router()
 
     router.post(
-        '/streams/:id/data',
+        `${LEGACY_API_ROUTE_PREFIX}/streams/:id/data`,
         // Disable automatic body parsing and increase body size limit (body becomes available as Buffer)
         bodyParser.raw({
             limit: '1024kb',

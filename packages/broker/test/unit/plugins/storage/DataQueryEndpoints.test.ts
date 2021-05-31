@@ -51,7 +51,7 @@ describe('DataQueryEndpoints', () => {
                 }))
             },
         }
-        app.use('/api/v1', restEndpointRouter(storage, streamFetcher, new MetricsContext(null as any)))
+        app.use(restEndpointRouter(storage, streamFetcher, new MetricsContext(null as any)))
     })
 
     describe('Getting last events', () => {

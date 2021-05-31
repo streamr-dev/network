@@ -3,6 +3,7 @@ import express from 'express'
 import request from 'supertest'
 import { Protocol } from 'streamr-network'
 import { router } from '../../../../src/plugins/legacyPublishHttp/DataProduceEndpoints'
+import { LEGACY_API_ROUTE_PREFIX } from '../../../../src/httpServer'
 import { Todo } from '../../../../src/types'
 
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
@@ -35,7 +36,7 @@ describe('DataProduceEndpoints', () => {
         }
 
         const req = request(app)
-            .post(`/streams/${opts.streamId}/data`)
+            .post(`${LEGACY_API_ROUTE_PREFIX}/streams/${opts.streamId}/data`)
         req.query(opts.query)
             .send(opts.body)
 
