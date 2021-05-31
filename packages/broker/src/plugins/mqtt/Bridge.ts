@@ -6,9 +6,9 @@ const logger = new Logger(module)
 
 export class Bridge implements MqttServerListener {
 
-    streamrClient: StreamrClient
-    mqttServer: MqttServer
-    streamIdDomain?: string
+    private readonly streamrClient: StreamrClient
+    private readonly mqttServer: MqttServer
+    private readonly streamIdDomain?: string
 
     constructor(streamrClient: StreamrClient, mqttServer: MqttServer, streamIdDomain?: string) {
         this.streamrClient = streamrClient
