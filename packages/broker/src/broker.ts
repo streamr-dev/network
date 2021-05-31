@@ -171,7 +171,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             }
             await Promise.all(plugins.map((plugin) => plugin.stop()))
             if (localStreamrClient !== undefined) {
-                await localStreamrClient!.ensureDisconnected()
+                await localStreamrClient.ensureDisconnected()
             }        
             await Promise.all([networkNode.stop(), volumeLogger.close()])
         }
