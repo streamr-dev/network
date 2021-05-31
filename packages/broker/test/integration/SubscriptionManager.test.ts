@@ -41,7 +41,7 @@ describe('SubscriptionManager', () => {
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
-            mqttPort: mqttPort1
+            legacyMqttPort: mqttPort1
         })
         broker2 = await startBroker({
             name: 'broker2',
@@ -50,7 +50,7 @@ describe('SubscriptionManager', () => {
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
-            mqttPort: mqttPort2
+            legacyMqttPort: mqttPort2
         })
 
         await wait(2000)

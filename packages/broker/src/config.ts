@@ -55,4 +55,7 @@ export interface Config {
     storageNodeRegistry: StorageNodeRegistryItem[] | null
     httpServer: HttpServerConfig | null
     plugins: Record<string,any>
+    apiAuthentication: {
+        keys: string[]
+    } | null
 }

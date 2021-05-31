@@ -49,7 +49,7 @@ describe('mqtt: end-to-end', () => {
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
-            mqttPort: mqttPort1
+            legacyMqttPort: mqttPort1
         })
         broker2 = await startBroker({
             name: 'broker2',
@@ -58,7 +58,7 @@ describe('mqtt: end-to-end', () => {
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
-            mqttPort: mqttPort2
+            legacyMqttPort: mqttPort2
         })
         broker3 = await startBroker({
             name: 'broker3',
@@ -67,7 +67,7 @@ describe('mqtt: end-to-end', () => {
             trackerPort,
             httpPort: httpPort3,
             wsPort: wsPort3,
-            mqttPort: mqttPort3
+            legacyMqttPort: mqttPort3
         })
     }, 15000)
 

@@ -36,7 +36,7 @@ describe('local propagation', () => {
             trackerPort,
             httpPort,
             wsPort,
-            mqttPort
+            legacyMqttPort: mqttPort
         })
 
         client1 = createClient(wsPort, privateKey)
