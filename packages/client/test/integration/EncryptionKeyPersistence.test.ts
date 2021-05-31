@@ -127,7 +127,7 @@ describeRepeats('Encryption Key Persistence', () => {
         await publisher.setNextGroupKey(stream.id, groupKey)
     })
 
-    describe.only('publisher persists group key', () => {
+    describe('publisher persists group key', () => {
         let published: any[]
         let publisher2: StreamrClient
         beforeEach(async () => {
