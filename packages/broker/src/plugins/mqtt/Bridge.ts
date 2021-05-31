@@ -17,7 +17,18 @@ export class Bridge implements MqttServerListener {
     }
 
     onMessageReceived(topic: string, payload: string) {
-        const { message, metadata } = JSON.parse(payload)
+        let json
+        try {
+            json = JSON.parse(payload)
+        } catch (e) {
+            logger.warn('Unable to publish message: JSON syntax error')
+            return
+        }
+        const { message, metadata } = json
+        if (message === undefined) {
+            logger.warn('Unable to publish message: no "message" field in JSON')
+            return
+        }
         this.streamrClient!.publish(this.getStreamId(topic), message, metadata?.timestamp)
     }
     
