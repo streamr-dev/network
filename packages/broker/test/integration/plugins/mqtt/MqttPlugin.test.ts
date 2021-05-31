@@ -57,8 +57,10 @@ describe('MQTT plugin', () => {
     })
 
     afterAll(async () => {
-        await broker.close()
-        await tracker.stop()
+        await Promise.allSettled([
+            broker.close(),
+            tracker.stop()
+        ])
     })
 
     beforeEach(async () => {
@@ -73,8 +75,10 @@ describe('MQTT plugin', () => {
     })
 
     afterEach(async () => {
-        await mqttClient.end(true)
-        await streamrClient.ensureDisconnected()
+        await Promise.allSettled([
+            mqttClient.end(true),
+            streamrClient.ensureDisconnected()
+        ])
     })
 
     test('publish on MQTT client', async () => {
