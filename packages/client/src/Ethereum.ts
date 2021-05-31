@@ -1,7 +1,10 @@
 import { Wallet } from '@ethersproject/wallet'
-import { getDefaultProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
+import { getDefaultProvider, JsonRpcProvider, Provider, Web3Provider } from '@ethersproject/providers'
+import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
+
+import type { StreamrClient } from './StreamrClient'
 
 export default class StreamrEthereum {
     static generateEthereumAccount() {
@@ -12,7 +15,12 @@ export default class StreamrEthereum {
         }
     }
 
-    constructor(client) {
+    _getAddress?: () => Promise<string>
+    _getSigner?: () => Signer
+    _getSidechainSigner?: () => Promise<Signer>
+    client
+
+    constructor(client: StreamrClient) {
         this.client = client
         const { options } = client
         const { auth } = options
@@ -22,10 +30,14 @@ export default class StreamrEthereum {
             this._getAddress = async () => address
             this._getSigner = () => new Wallet(key, this.getMainnetProvider())
             this._getSidechainSigner = async () => new Wallet(key, this.getSidechainProvider())
-        } else if (auth.ethereum) {
+        } else if ('ethereum' in auth && auth.ethereum) {
+            const ethereumConfig = auth.ethereum!
             this._getAddress = async () => {
                 try {
-                    const accounts = await auth.ethereum.request({ method: 'eth_requestAccounts' })
+                    if (!(ethereumConfig && 'request' in ethereumConfig && typeof ethereumConfig.request === 'function')) {
+                        throw new Error(`invalid ethereum provider ${ethereumConfig}`)
+                    }
+                    const accounts = await ethereumConfig.request({ method: 'eth_requestAccounts' })
                     const account = getAddress(accounts[0]) // convert to checksum case
                     return account
                 } catch {
@@ -33,7 +45,7 @@ export default class StreamrEthereum {
                 }
             }
             this._getSigner = () => {
-                const metamaskProvider = new Web3Provider(auth.ethereum)
+                const metamaskProvider = new Web3Provider(ethereumConfig)
                 const metamaskSigner = metamaskProvider.getSigner()
                 return metamaskSigner
             }
@@ -42,7 +54,7 @@ export default class StreamrEthereum {
                     throw new Error('Streamr sidechain not configured (with chainId) in the StreamrClient options!')
                 }
 
-                const metamaskProvider = new Web3Provider(auth.ethereum)
+                const metamaskProvider = new Web3Provider(ethereumConfig)
                 const { chainId } = await metamaskProvider.getNetwork()
                 if (chainId !== options.sidechain.chainId) {
                     throw new Error(
@@ -65,7 +77,7 @@ export default class StreamrEthereum {
         return !!(this._getAddress && this._getSigner)
     }
 
-    async getAddress() {
+    async getAddress(): Promise<string> {
         if (!this._getAddress) {
             // _getAddress is assigned in constructor
             throw new Error('StreamrClient is not authenticated with private key')
@@ -74,7 +86,7 @@ export default class StreamrEthereum {
         return this._getAddress()
     }
 
-    getSigner() {
+    getSigner(): Signer {
         if (!this._getSigner) {
             // _getSigner is assigned in constructor
             throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
@@ -83,7 +95,7 @@ export default class StreamrEthereum {
         return this._getSigner()
     }
 
-    async getSidechainSigner() {
+    async getSidechainSigner(): Promise<Signer> {
         if (!this._getSidechainSigner) {
             // _getSidechainSigner is assigned in constructor
             throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
@@ -93,7 +105,7 @@ export default class StreamrEthereum {
     }
 
     /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
-    getMainnetProvider() {
+    getMainnetProvider(): Provider {
         if (!this.client.options.mainnet) {
             return getDefaultProvider()
         }
@@ -102,7 +114,7 @@ export default class StreamrEthereum {
     }
 
     /** @returns Ethers.js Provider, a connection to the Streamr EVM sidechain */
-    getSidechainProvider() {
+    getSidechainProvider(): Provider {
         if (!this.client.options.sidechain) {
             throw new Error('StreamrClient has no sidechain configuration.')
         }

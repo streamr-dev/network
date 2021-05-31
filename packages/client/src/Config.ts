@@ -4,7 +4,7 @@
 
 import qs from 'qs'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
+import { ExternalProvider } from '@ethersproject/providers'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getVersionString } from './utils'
 import { ConnectionInfo } from '@ethersproject/web'
@@ -15,7 +15,7 @@ import has from 'lodash/has'
 import get from 'lodash/get'
 import { StorageNode } from './stream/StorageNode'
 
-export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
+export type EthereumConfig = ExternalProvider
 
 /**
  * @category Important

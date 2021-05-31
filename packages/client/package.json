@@ -137,6 +137,7 @@
     "@babel/runtime": "^7.14.0",
     "@babel/runtime-corejs3": "^7.14.0",
     "@ethersproject/abi": "^5.1.2",
+    "@ethersproject/abstract-signer": "^5.1.2",
     "@ethersproject/address": "^5.1.0",
     "@ethersproject/bignumber": "^5.1.1",
     "@ethersproject/bytes": "^5.1.0",
