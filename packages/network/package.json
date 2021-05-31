@@ -27,7 +27,7 @@
     "test": "jest",
     "test-unit": "jest test/unit",
     "coverage": "jest --coverage",
-    "test-integration": "jest test/integration",
+    "test-integration": "jest --detectOpenHandles test/integration",
     "test-flakey": "jest test/flakey",
     "test-types": "tsc --noEmit --project ./tsconfig.json ",
     "eslint": "eslint .",
