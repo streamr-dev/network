@@ -5,13 +5,12 @@
 TITLE_COLOR='\033[0;36m'
 NO_COLOR='\033[0m'
 
-PACKAGES="broker
-cli-tools
-client
-network
-protocol
-test-utils
-"
+LIST_CMD=`npx lerna list --all --parseable | xargs -L1 basename`
+PACKAGES=()
+while IFS= read -r line; do
+    PACKAGES+=("$line")
+done < <(echo $LIST_CMD)
+
 for p in $PACKAGES
 do
     RES=`(cd packages/$p && find node_modules -maxdepth 1 -type l) | sed 's/^/\t/'`
