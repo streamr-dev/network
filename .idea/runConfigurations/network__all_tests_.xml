@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="network (all tests)" type="JavaScriptTestRunnerJest">
+    <config-file value="$PROJECT_DIR$/packages/network/jest.config.js" />
+    <node-interpreter value="project" />
+    <node-options value="" />
+    <jest-package value="$PROJECT_DIR$/packages/network/node_modules/jest" />
+    <working-dir value="$PROJECT_DIR$/packages/network" />
+    <envs />
+    <scope-kind value="ALL" />
+    <method v="2" />
+  </configuration>
+</component>

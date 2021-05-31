@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/packages/cross-client-testing/build" isTestSource="false" generated="true" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/cli-tools/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/broker/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/network/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/protocol/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/test-utils/dist" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
