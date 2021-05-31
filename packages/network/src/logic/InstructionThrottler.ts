@@ -29,14 +29,19 @@ export class InstructionThrottler {
             handling: boolean
         }
     }
+    private stopped: boolean
 
     constructor(handleFn: HandleFn) {
         this.logger = new Logger(module)
         this.handleFn = handleFn
         this.ongoingPromises = {}
+        this.stopped = false
     }
 
     add(instructionMessage: TrackerLayer.InstructionMessage, trackerId: string): void {
+        if (this.stopped) {
+            return
+        }
         const streamId = StreamIdAndPartition.fromMessage(instructionMessage).key()
         if (!this.instructionCounter[streamId] || this.instructionCounter[streamId] <= instructionMessage.counter) {
             this.instructionCounter[streamId] = instructionMessage.counter
@@ -60,6 +65,9 @@ export class InstructionThrottler {
     }
 
     removeStreamId(streamId: StreamKey): void {
+        if (this.stopped) {
+            return
+        }
         delete this.queue[streamId]
         delete this.instructionCounter[streamId]
         if (this.ongoingPromises[streamId]) {
@@ -72,7 +80,7 @@ export class InstructionThrottler {
         return !Object.values(this.ongoingPromises).some((p) => p.handling)
     }
 
-    reset(): void {
+    stop(): void {
         this.queue = {}
         this.instructionCounter = {}
         Object.keys(this.ongoingPromises).forEach((streamId) => {
@@ -82,9 +90,13 @@ export class InstructionThrottler {
             delete this.ongoingPromises[streamId]
         })
         this.ongoingPromises = {}
+        this.stopped = true
     }
 
     private async invokeHandleFnWithLock(streamId: string): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         if (!this.queue[streamId]) {
             this.ongoingPromises[streamId].handling = false
             return

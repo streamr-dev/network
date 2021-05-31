@@ -1,5 +1,5 @@
-import { NetworkNode } from '../NetworkNode'
-import { Tracker } from '../logic/Tracker'
+import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForEvent, waitForStreamToEnd, toReadableStream } from 'streamr-test-utils'
 

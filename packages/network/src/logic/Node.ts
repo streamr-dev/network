@@ -433,8 +433,8 @@ export class Node extends EventEmitter {
     stop(): Promise<unknown> {
         this.logger.trace('stopping')
         this.resendHandler.stop()
-        this.instructionThrottler.reset()
-        this.instructionRetryManager.reset()
+        this.instructionThrottler.stop()
+        this.instructionRetryManager.stop()
 
         if (this.connectToBoostrapTrackersInterval) {
             clearInterval(this.connectToBoostrapTrackersInterval)

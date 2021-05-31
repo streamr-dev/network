@@ -83,16 +83,8 @@ describe('Connection', () => {
     })
 
     afterEach(async () => {
-        if (connectionOne.isOpen()) {
-            const onClose1 = once(connectionOne, 'close')
-            connectionOne.close()
-            await onClose1
-        }
-        if (connectionTwo.isOpen()) {
-            const onClose2 = once(connectionTwo, 'close')
-            connectionTwo.close()
-            await onClose2
-        }
+        connectionOne.close()
+        connectionTwo.close()
     })
 
     it('connection can be established', async () => {

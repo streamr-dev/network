@@ -35,9 +35,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
 
         // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = await startEndpoint('127.0.0.1', 28681, peerInfo1, null, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = await startEndpoint('127.0.0.1', 28682, peerInfo2, null, new MetricsContext(peerInfo2.peerId))
-        const wsEp3 = await startEndpoint('127.0.0.1', 28683, peerInfo3, null, new MetricsContext(peerInfo2.peerId))
+        const wsEp1 = await startEndpoint('127.0.0.1', 28555, peerInfo1, null, new MetricsContext(peerInfo1.peerId))
+        const wsEp2 = await startEndpoint('127.0.0.1', 28556, peerInfo2, null, new MetricsContext(peerInfo2.peerId))
+        const wsEp3 = await startEndpoint('127.0.0.1', 28557, peerInfo3, null, new MetricsContext(peerInfo2.peerId))
         trackerNode1 = new TrackerNode(wsEp1)
         trackerNode2 = new TrackerNode(wsEp2)
         trackerNode3 = new TrackerNode(wsEp3)
@@ -86,8 +86,10 @@ describe('Node-to-Node protocol version negotiation', () => {
             tracker.stop(),
             trackerNode1.stop(),
             trackerNode2.stop(),
+            trackerNode3.stop(),
             ep1.stop(),
-            ep2.stop()
+            ep2.stop(),
+            ep3.stop()
         ])
     })
 
