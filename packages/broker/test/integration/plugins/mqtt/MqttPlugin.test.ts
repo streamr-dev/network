@@ -109,7 +109,6 @@ describe('MQTT plugin', () => {
             receivedJson = JSON.parse(payload.toString())
         })
         await mqttClient.subscribe(topic)
-        await wait(1000)
         await streamrClient.publish(getStreamId(), {
             foo: 'to-client'
         })
