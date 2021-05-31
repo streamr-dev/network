@@ -1,7 +1,7 @@
 import { StreamrClient } from 'streamr-client'
 import { AsyncMqttClient } from 'async-mqtt'
 import { Wallet } from 'ethers'
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
 import { startTracker, Tracker } from 'streamr-network'
 import mqtt from 'async-mqtt'
 import { Broker } from '../../../../src/broker'
