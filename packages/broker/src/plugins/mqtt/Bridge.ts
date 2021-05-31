@@ -29,12 +29,12 @@ export class Bridge implements MqttServerListener {
             logger.warn('Unable to publish message: no "message" field in JSON')
             return
         }
-        this.streamrClient!.publish(this.getStreamId(topic), message, metadata?.timestamp)
+        this.streamrClient.publish(this.getStreamId(topic), message, metadata?.timestamp)
     }
     
     onSubscribed(topic: string) {
         logger.info('Client subscribed: ' + topic)
-        this.streamrClient!.subscribe(this.getStreamId(topic), (message: any, metadata: any) => {
+        this.streamrClient.subscribe(this.getStreamId(topic), (message: any, metadata: any) => {
             const payload = JSON.stringify({
                 message,
                 metadata: {
