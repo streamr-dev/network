@@ -59,16 +59,15 @@ module.exports = {
     // A set of global variables that need to be available in all test environments
     globals: {
         'ts-jest': {
-            babelConfig: true,
-            tsConfig: 'tsconfig.test.json',
+            babelConfig: false,
+            // tsConfig: 'tsconfig.test.json',
         }
     },
 
     // An array of directory names to be searched recursively up from the requiring module's location
-    moduleDirectories: [
-        'node_modules',
-        path.resolve('./node_modules'), // makes npm link work.
-    ],
+    // moduleDirectories: [
+    //   'node_modules',
+    // ],
     // An array of file extensions your modules use
     // moduleFileExtensions: [
     //   "js",
@@ -92,7 +91,7 @@ module.exports = {
     // notifyMode: "always",
 
     // A preset that is used as a base for Jest's configuration
-    preset: 'ts-jest',
+    preset: 'ts-jest/presets/js-with-ts-esm',
 
     // Run tests from one or more projects
     // projects: null,
@@ -169,17 +168,14 @@ module.exports = {
     // timers: "real",
 
     // A map from regular expressions to paths to transformers
-    transform: {
-        '\\.(js|ts)$': ['babel-jest', {
-            configFile: path.resolve(__dirname, '.babel.node.config.js'),
-            babelrc: false,
-        }]
-    },
+    // transform: {
+        // '^.+\\.(ts|tsx|js|jsx)?$': 'ts-jest',
+    // },
 
     // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-    transformIgnorePatterns: [
-        '/node_modules/(?!quick-lru)', // quick-lru is esm
-    ],
+    // transformIgnorePatterns: [
+        // '/node_modules/(?!quick-lru)', // quick-lru is esm
+    // ],
 
     // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
     // unmockedModulePathPatterns: undefined,
