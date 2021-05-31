@@ -19,8 +19,8 @@ export class MqttServer {
     private static BAD_USERNAME_OR_PASSWORD = 4
     private static NOT_AUTHORIZED = 5
 
-    private port: number
-    private aedes: aedes.Aedes
+    private readonly port: number
+    private readonly aedes: aedes.Aedes
     private server?: net.Server
     private listener?: MqttServerListener
 
