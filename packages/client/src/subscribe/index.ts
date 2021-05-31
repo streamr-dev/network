@@ -156,6 +156,10 @@ export class Subscription extends Emitter {
         return this.pipeline.cancel(...args)
     }
 
+    isCancelled(...args: Todo[]): boolean {
+        return this.pipeline.isCancelled(...args)
+    }
+
     async return(...args: Todo[]) {
         return this.pipeline.return(...args)
     }
@@ -692,22 +696,19 @@ export class Subscriber {
 
         const it = pipeline([
             async function* HandleResends() {
+                // Inconvience here
+                // emitting the resent event is a bit tricky in this setup because the subscription
+                // doesn't know anything about the source of the messages
+                // can't emit resent immediately after resent stream end since
+                // the message is not yet through the message pipeline
+                let currentMsgId
                 try {
-                    // Inconvience here
-                    // emitting the resent event is a bit tricky in this setup because the subscription
-                    // doesn't know anything about the source of the messages
-                    // can't emit resent immediately after resent stream end since
-                    // the message is not yet through the message pipeline
-                    let currentMsgId
-                    try {
-                        for await (const msg of resendSubscribeSub.resend) {
-                            currentMsgId = messageIDString(msg.streamMessage)
-                            yield msg
-                        }
-                    } finally {
-                        lastResentMsgId = currentMsgId
+                    for await (const msg of resendSubscribeSub.resend) {
+                        currentMsgId = messageIDString(msg.streamMessage)
+                        yield msg
                     }
                 } finally {
+                    lastResentMsgId = currentMsgId
                     isResendDone = true
                     maybeEmitResend()
                     // @ts-expect-error
@@ -743,7 +744,11 @@ export class Subscriber {
             ],
         }, onFinally).then((sub) => {
             resendSubscribeSub = sub
-            onEndFns.push(async () => resendSubscribeSub.cancel())
+            onEndFns.push(async () => {
+                if (!resendSubscribeSub.isCancelled()) {
+                    await resendSubscribeSub.cancel()
+                }
+            })
             return sub
         })
 
