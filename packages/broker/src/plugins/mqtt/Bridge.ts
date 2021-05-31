@@ -16,7 +16,7 @@ export class Bridge implements MqttServerListener {
         this.streamIdDomain = streamIdDomain
     }
 
-    onMessageReceived(topic: string, payload: string) {
+    onMessageReceived(topic: string, payload: string): void {
         let json
         try {
             json = JSON.parse(payload)
@@ -32,7 +32,7 @@ export class Bridge implements MqttServerListener {
         this.streamrClient.publish(this.getStreamId(topic), message, metadata?.timestamp)
     }
     
-    onSubscribed(topic: string) {
+    onSubscribed(topic: string): void {
         logger.info('Client subscribed: ' + topic)
         this.streamrClient.subscribe(this.getStreamId(topic), (message: any, metadata: any) => {
             const payload = JSON.stringify({
@@ -45,7 +45,7 @@ export class Bridge implements MqttServerListener {
         })
     }
 
-    onUnsubscribed(topic: string) {
+    onUnsubscribed(topic: string): void {
         logger.info('Client unsubscribed: ' + topic)
         const streamId = this.getStreamId(topic)
         this.streamrClient!.getSubscriptions()
@@ -53,7 +53,7 @@ export class Bridge implements MqttServerListener {
             .forEach((subscription: Subscription) => this.streamrClient!.unsubscribe(subscription))
     }
 
-    private getStreamId(topic: string) {
+    private getStreamId(topic: string): string {
         if (this.streamIdDomain !== undefined) {
             return this.streamIdDomain + '/' + topic
         } else {
