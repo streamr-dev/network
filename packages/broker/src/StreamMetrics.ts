@@ -163,7 +163,7 @@ export class StreamMetrics {
                     await this.publishReport()
                 } else {
                     const targetMessages: any[] = await this.getResend(this.targetStreamId, 1)
-                    if (targetMessages.length > 0 && (targetMessages[0].timestamp + this.reportMiliseconds - now) < 0) {
+                    if (targetMessages.length === 0 || (targetMessages[0].timestamp + this.reportMiliseconds - now) < 0) {
                         this.resetReport()
                         for (let i = 0; i < messages.length; i++) {
                             this.report.broker.messagesToNetworkPerSec += messages[i].broker.messagesToNetworkPerSec
@@ -198,6 +198,8 @@ export class StreamMetrics {
                         }
 
                         await this.publishReport()
+                    } else {
+                        logger.info(`Skipping reporting for ${this.interval}, time difference to last message too low.`)
                     }
                 }
             }
