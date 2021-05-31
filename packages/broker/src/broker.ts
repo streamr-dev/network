@@ -106,8 +106,8 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     })
     const publisher = new Publisher(networkNode, streamMessageValidator, metricsContext)
     const subscriptionManager = new SubscriptionManager(networkNode)
-
     const localStreamrClient = createLocalStreamrClient(config)
+    const apiAuthenticator = createApiAuthenticator(config)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
@@ -116,7 +116,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             subscriptionManager,
             publisher,
             streamrClient: localStreamrClient,
-            apiAuthenticator: createApiAuthenticator(config),
+            apiAuthenticator,
             metricsContext,
             brokerConfig: config
         }
@@ -130,7 +130,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         if (config.httpServer === null) {
             throw new Error('HTTP server config not defined')
         }
-        httpServer = await startHttpServer(httpServerRoutes, config.httpServer)
+        httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
     }
 
     let reportingIntervals
