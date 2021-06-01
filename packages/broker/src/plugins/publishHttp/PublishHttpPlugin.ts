@@ -1,16 +1,17 @@
-import { router as dataProduceEndpoints } from './DataProduceEndpoints'
+import { createEndpoint } from './publishEndpoint'
 import { Plugin, PluginOptions } from '../../Plugin'
-import { StreamFetcher } from '../../StreamFetcher'
 
 export class PublishHttpPlugin extends Plugin<void> {
 
     constructor(options: PluginOptions) {
         super(options)
+        if (this.streamrClient === undefined) {
+            throw new Error('StreamrClient is not available')   
+        }
     }
 
     async start() {
-        const streamFetcher = new StreamFetcher(this.brokerConfig.streamrUrl)
-        this.addHttpServerRouter(dataProduceEndpoints(streamFetcher, this.publisher))
+        this.addHttpServerRouter(createEndpoint(this.streamrClient!))
     }
 
     async stop() {

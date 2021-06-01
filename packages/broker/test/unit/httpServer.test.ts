@@ -22,7 +22,7 @@ const startTestServer = (apiConfig: { keys: string[] } | null) => {
 }
 
 const createRequest = async (headers?: Record<string,string>) => {
-    return await fetch(`http://127.0.0.1:${PORT}/api/v1/foo`, {
+    return await fetch(`http://127.0.0.1:${PORT}/foo`, {
         headers
     })
 }

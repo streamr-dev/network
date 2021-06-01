@@ -33,7 +33,7 @@ export function formConfig({
 }: Todo): Config {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
-        plugins['publishHttp'] = {}
+        plugins['legacyPublishHttp'] = {}
         plugins['metrics'] = {}
         if (enableCassandra) {
             plugins['storage'] = {

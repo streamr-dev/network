@@ -65,7 +65,7 @@ describe('resend cancellation', () => {
         }
 
         const app = express()
-        app.use('/api/v1', dataQueryEndpoints(storage, {
+        app.use(dataQueryEndpoints(storage, {
             authenticate: () => Promise.resolve(undefined)
         } as any, new MetricsContext(undefined as any)))
         const server = app.listen(mockServerPort)

@@ -1,15 +1,15 @@
 import http from 'http'
-import { startTracker } from 'streamr-network'
-import { Todo } from '../types'
-import { startBroker, createClient } from '../utils'
+import { startTracker, Tracker } from 'streamr-network'
+import { Broker } from '../../../broker'
+import { startBroker, createClient } from '../../../utils'
 
 const trackerPort = 12420
 const networkPort = 12421
 const httpPort = 12422
 
 describe('broker resistance to invalid data', () => {
-    let tracker: Todo
-    let broker: Todo
+    let tracker: Tracker
+    let broker: Broker
     let streamId: string
     let sessionToken: string
 
@@ -42,7 +42,7 @@ describe('broker resistance to invalid data', () => {
         await tracker.stop()
     })
 
-    test('pushing invalid data to HTTP plugin returns 400 error & does not crash broker', (done) => {
+    test('pushing invalid data to legacy HTTP plugin returns 400 error & does not crash broker', (done) => {
         const invalidData = '###!!THIS-DATA-IS-NOT-JSON!!###'
 
         const request = http.request({
