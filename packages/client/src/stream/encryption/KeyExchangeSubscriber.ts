@@ -194,7 +194,7 @@ export class SubscriberKeyExchange {
             groupKeyStore.add(groupKey)
         )))
 
-        return groupKeyStore.get(groupKeyId)
+        return receivedGroupKeys.find((groupKey) => groupKey.id === groupKeyId)
     }
 
     cleanupPending() {
