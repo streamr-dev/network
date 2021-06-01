@@ -48,7 +48,7 @@ describe('StorageNodeRegistry', () => {
             }],
             streamrUrl: `http://127.0.0.1:${mockCoreApiServerPort}`
         } as Config
-        registry = StorageNodeRegistry.createInstance(config)!
+        registry = StorageNodeRegistry.createInstance(config)
     })
 
     it('get url by address', () => {

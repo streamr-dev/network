@@ -19,16 +19,19 @@ export function formConfig({
     privateKey,
     httpPort = null,
     wsPort = null,
-    mqttPort = null,
+    legacyMqttPort = null,
+    extraPlugins = {},
+    apiAuthentication = null,
     enableCassandra = false,
     privateKeyFileName = null,
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeRegistry = (!enableCassandra ? [] : null),
+    storageNodeRegistry = [],
+    storageConfigRefreshInterval = 0,
     reporting = false
 }: Todo): Config {
-    const plugins: Record<string,any> = {}
+    const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['publishHttp'] = {}
         plugins['metrics'] = {}
@@ -42,7 +45,7 @@ export function formConfig({
                     keyspace: 'streamr_dev_v2',
                 },
                 storageConfig: {
-                    refreshInterval: 0
+                    refreshInterval: storageConfigRefreshInterval
                 } 
             }
         }
@@ -55,9 +58,9 @@ export function formConfig({
             certFileName
         }
     }
-    if (mqttPort) {
-        plugins['mqtt'] = {
-            port: mqttPort,
+    if (legacyMqttPort) {
+        plugins['legacyMqtt'] = {
+            port: legacyMqttPort,
             streamsTimeout: 300000
         }
     }
@@ -103,6 +106,7 @@ export function formConfig({
             privateKeyFileName: null,
             certFileName: null
         } : null,
+        apiAuthentication,
         plugins
     }
 }
@@ -130,7 +134,11 @@ export function fastPrivateKey() {
 
 export const createMockUser = () => Wallet.createRandom()
 
-export function createClient(wsPort: number, privateKey = fastPrivateKey(), clientOptions?: StreamrClientOptions) {
+export function createClient(
+    wsPort: number,
+    privateKey = fastPrivateKey(),
+    clientOptions?: StreamrClientOptions
+): StreamrClient {
     return new StreamrClient({
         auth: {
             privateKey
@@ -173,7 +181,6 @@ export class StorageAssignmentEventManager {
                 address: storageNodeAddress
             }),
             headers: {
-                // @ts-expect-error
                 // eslint-disable-next-line quote-props
                 'Authorization': 'Bearer ' + await client.session.getSessionToken(),
                 'Content-Type': 'application/json',
