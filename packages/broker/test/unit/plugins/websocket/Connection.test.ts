@@ -11,7 +11,7 @@ describe('Connection', () => {
     beforeEach(() => {
         controlLayerVersion = 2
         messageLayerVersion = 31
-        connection = new Connection(undefined, controlLayerVersion, messageLayerVersion)
+        connection = new Connection(undefined as any, controlLayerVersion, messageLayerVersion)
     })
 
     it('id is assigned', () => {
@@ -98,11 +98,11 @@ describe('Connection', () => {
             sendFn = jest.fn()
             connection = new Connection({
                 send: sendFn,
-            }, controlLayerVersion, messageLayerVersion)
+            } as any, controlLayerVersion, messageLayerVersion)
         })
 
         it('sends a serialized message to the socket', () => {
-            const msg = {
+            const msg: any = {
                 serialize: (controlVersion: number, messageVersion: number) => `msg:${controlVersion}:${messageVersion}`,
             }
             connection.send(msg)
