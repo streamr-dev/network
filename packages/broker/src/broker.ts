@@ -15,6 +15,8 @@ import { Config, TrackerRegistry } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
+import { createLocalStreamrClient } from './localStreamrClient'
+import { createApiAuthenticator } from './apiAuthenticator'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -105,12 +107,16 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     const publisher = new Publisher(networkNode, streamMessageValidator, metricsContext)
     const subscriptionManager = new SubscriptionManager(networkNode)
 
+    const localStreamrClient = createLocalStreamrClient(config)
+
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
             name,
             networkNode,
             subscriptionManager,
             publisher,
+            streamrClient: localStreamrClient,
+            apiAuthenticator: createApiAuthenticator(config),
             metricsContext,
             brokerConfig: config
         }
@@ -164,7 +170,10 @@ export const startBroker = async (config: Config): Promise<Broker> => {
                 await stopServer(httpServer)
             }
             await Promise.all(plugins.map((plugin) => plugin.stop()))
-            return Promise.all([networkNode.stop(), volumeLogger.close()])
+            if (localStreamrClient !== undefined) {
+                await localStreamrClient.ensureDisconnected()
+            }        
+            await Promise.all([networkNode.stop(), volumeLogger.close()])
         }
     }
 }
