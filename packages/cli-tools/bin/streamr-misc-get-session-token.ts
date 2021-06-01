@@ -11,7 +11,7 @@ import pkg from '../package.json'
 
 const program = new Command()
 program
-    .description('fetch a session token for the current user')
+    .description('get a session token for the current user')
 authOptions(program)
 envOptions(program)
     .version(pkg.version)

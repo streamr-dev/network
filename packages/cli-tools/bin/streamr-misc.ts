@@ -6,5 +6,5 @@ program
     .version(pkg.version)
     .usage('<command> [<args>]')
     .description('miscellaneous subcommands')
-    .command('fetch-token', 'fetch a session token for the current user')
+    .command('get-session-token', 'get a session token for the current user')
     .parse(process.argv)
