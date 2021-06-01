@@ -43,7 +43,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
             this.publisher,
             this.metricsContext,
             this.subscriptionManager,
-            storageNodeRegistry!,
+            storageNodeRegistry,
             this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
         )

@@ -67,7 +67,9 @@ describe('metricsStream', () => {
         }]
         nodeAddress = tmpAccount.address
 
-        client1 = createClient(wsPort, Wallet.createRandom().privateKey)
+        client1 = createClient(wsPort, Wallet.createRandom().privateKey, {
+            storageNode: storageNodeRegistry[0]
+        })
         legacyStream = await client1.getOrCreateStream({
             name: 'per-node-stream-metrics.test.js-legacyStream'
         })
@@ -88,7 +90,9 @@ describe('metricsStream', () => {
             trackerPort,
             httpPort,
             enableCassandra: true,
-            storageNodeRegistry
+            storageNodeRegistry,
+            storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
+            // therefore StorageAssignmentEventManager test helper cannot be used
         })
 
         broker1 = await startBroker({
@@ -118,8 +122,10 @@ describe('metricsStream', () => {
             storageNodeRegistry
         })
 
-        client2 = createClient(wsPort, tmpAccount.privateKey)
-    }, 30 * 1000)
+        client2 = createClient(wsPort, tmpAccount.privateKey, {
+            storageNode: storageNodeRegistry[0]
+        })
+    }, 35 * 1000)
 
     afterEach(async () => {
         await Promise.allSettled([

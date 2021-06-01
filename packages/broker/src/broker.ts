@@ -76,12 +76,19 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     let legacyStreamId: string | undefined
 
     if (config.reporting.streamr || (config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.enabled)) {
+        const targetStorageNode = config.reporting.perNodeMetrics!.storageNode
+        const storageNodeRegistryItem = config.storageNodeRegistry.find((n) => n.address === targetStorageNode)
+        if (storageNodeRegistryItem === undefined) {
+            throw new Error(`Value ${storageNodeRegistryItem} (config.reporting.perNodeMetrics.storageNode) not ` +
+                'present in config.storageNodeRegistry')
+        }
         client = new StreamrClient({
             auth: {
                 privateKey: config.ethereumPrivateKey,
             },
             url: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.wsUrl || undefined) : undefined,
-            restUrl: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.httpUrl || undefined) : undefined
+            restUrl: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.httpUrl || undefined) : undefined,
+            storageNode: storageNodeRegistryItem
         })
 
         if (config.reporting.streamr && config.reporting.streamr.streamId) {
