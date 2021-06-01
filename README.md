@@ -376,9 +376,9 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 | Name                              | Returns             | Description                                                    |
 | :-------------------------------- | :------------------ | :------------------------------------------------------------- |
 | createSecret(\[name])             | string              | Create a secret for a Data Union                               |
-| setAdminFee(newFeeFraction)       | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
 | addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
 | removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
+| setAdminFee(newFeeFraction[, ethersOptions])                                                      | Transaction receipt     | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
 
@@ -402,6 +402,8 @@ const receipt = await dataUnion.addMembers([
     "0x1234567890123456789012345678901234567892",
 ])
 ```
+
+`ethersOptions` that `setAdminFee` takes can be found as ["overrides" documented in docs.ethers.io](https://docs.ethers.io/v5/api/contract/contract/#contract-functionsSend).
 
 ### Member functions
 
@@ -478,13 +480,14 @@ const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 
 The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
 
-| Name              | Default               | Description                                                                           |
-| :---------------- | :-------------------- | :----------------------------------------------------------------------------------   |
-| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)   |
-| payForTransport   | true                  | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge |
-| waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                |
-| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                 |
-| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                             |
+| Name              | Default               | Description                                                                               |
+| :---------------- | :-------------------- | :--------------------------------------------------------------------------------------   |
+| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)       |
+| payForTransport   | true                  | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge|
+| waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                    |
+| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                     |
+| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                                 |
+| gasPrice          | network estimate      | Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge    | 
 
 These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low),
 but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.

@@ -42,6 +42,7 @@ export interface DataUnionWithdrawOptions {
     payForTransport?: boolean
     waitUntilTransportIsComplete?: boolean
     sendToMainnet?: boolean
+    gasPrice?: BigNumber | string
 }
 
 export interface DataUnionStats {
@@ -506,13 +507,13 @@ export class DataUnion {
     /**
      * Admin: set admin fee (between 0.0 and 1.0) for the data union
      */
-    async setAdminFee(newFeeFraction: number) {
+    async setAdminFee(newFeeFraction: number, ethersOptions = {}) {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
         const duMainnet = this.getContracts().getMainnetContract(this.contractAddress)
-        const tx = await duMainnet.setAdminFee(adminFeeBN)
+        const tx = await duMainnet.setAdminFee(adminFeeBN, ethersOptions)
         return waitForTx(tx)
     }
 
@@ -634,6 +635,7 @@ export class DataUnion {
             payForTransport = this.client.options.dataUnion.payForTransport,
             waitUntilTransportIsComplete = true,
             sendToMainnet = true,
+            gasPrice,
         } = options
 
         const getBalanceFunc = sendToMainnet
@@ -676,7 +678,11 @@ export class DataUnion {
             return messageHash
         }
 
-        const ambTr = await this.transportMessage(messageHash, pollingIntervalMs, retryTimeoutMs)
+        const ethersOptions: { gasPrice?: BigNumber | string } = {}
+        if (gasPrice) {
+            ethersOptions.gasPrice = gasPrice
+        }
+        const ambTr = await this.transportMessage(messageHash, pollingIntervalMs, retryTimeoutMs, ethersOptions)
         if (waitUntilTransportIsComplete) {
             log(`Waiting for balance ${balanceBefore.toString()} to change`)
             await until(async () => !(await getBalanceFunc()).eq(balanceBefore), retryTimeoutMs, pollingIntervalMs)
@@ -691,7 +697,7 @@ export class DataUnion {
     /**
      * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
      */
-    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000) {
+    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000, ethersOptions = {}) {
         const helper = this.getContracts()
         const [sidechainAmb, mainnetAmb] = await Promise.all([
             helper.getSidechainAmb(),
@@ -721,6 +727,6 @@ export class DataUnion {
         }
 
         log(`Transporting signatures for hash=${messageHash}`)
-        return helper.transportSignaturesForMessage(messageHash)
+        return helper.transportSignaturesForMessage(messageHash, ethersOptions)
     }
 }
