@@ -5,7 +5,7 @@ import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessag
 
 const { InstructionMessage } = TrackerLayer
 
-const VERSION = 1
+const VERSION = 2
 
 // Message definitions
 const message = new InstructionMessage({
@@ -26,7 +26,7 @@ const serializedMessage = JSON.stringify([
     100
 ])
 
-describe('InstructionMessageSerializerV1', () => {
+describe('InstructionMessageSerializerV2', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
             assert.deepStrictEqual(TrackerMessage.deserialize(serializedMessage), message)

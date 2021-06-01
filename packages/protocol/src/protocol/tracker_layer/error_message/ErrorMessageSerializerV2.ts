@@ -4,9 +4,9 @@ import ErrorMessage from './ErrorMessage'
 
 import { Serializer } from '../../../Serializer'
 
-const VERSION = 1
+const VERSION = 2
 
-export default class ErrorMessageSerializerV1 extends Serializer<ErrorMessage> {
+export default class ErrorMessageSerializerV2 extends Serializer<ErrorMessage> {
     toArray(errorMessage: ErrorMessage) {
         return [
             VERSION,
@@ -32,4 +32,4 @@ export default class ErrorMessageSerializerV1 extends Serializer<ErrorMessage> {
     }
 }
 
-TrackerMessage.registerSerializer(VERSION, TrackerMessage.TYPES.ErrorMessage, new ErrorMessageSerializerV1())
+TrackerMessage.registerSerializer(VERSION, TrackerMessage.TYPES.ErrorMessage, new ErrorMessageSerializerV2())

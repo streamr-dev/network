@@ -72,7 +72,6 @@ export function formConfig({
             hostname: '127.0.0.1',
             port: networkPort,
             advertisedWsUrl: null,
-            isStorageNode: enableCassandra,
             trackers: [
                 `ws://127.0.0.1:${trackerPort}`
             ],
