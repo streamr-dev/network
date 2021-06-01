@@ -17,7 +17,7 @@ const parseContent = (req: Request) => {
     }
 }
 
-export const createEndpoint = (streamrClient: StreamrClient) => {
+export const createEndpoint = (streamrClient: StreamrClient): express.Router => {
     const router = express.Router()
     router.use(express.raw({
         limit: '1024kb',
