@@ -21,7 +21,7 @@ describe('MQTT error handling', () => {
             privateKey: '0x4e850f1940b1901ca926f20e121f40ba6f6730eaae655d827f48eccf01e32f40',
             networkPort,
             trackerPort,
-            mqttPort,
+            legacyMqttPort: mqttPort,
             streamrUrl: broken ? 'http://non-existing-url-666' : undefined
         })
     }

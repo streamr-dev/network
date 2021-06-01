@@ -5,12 +5,16 @@ import { SubscriptionManager } from './SubscriptionManager'
 import express from 'express'
 import { validateConfig } from './helpers/validateConfig'
 import { Schema } from 'ajv'
+import { StreamrClient } from 'streamr-client'
+import { ApiAuthenticator } from './apiAuthenticator'
 
 export interface PluginOptions {
     name: string
     networkNode: NetworkNode
     subscriptionManager: SubscriptionManager
     publisher: Publisher
+    streamrClient?: StreamrClient
+    apiAuthenticator: ApiAuthenticator
     metricsContext: MetricsContext
     brokerConfig: Config
 }
@@ -21,6 +25,8 @@ export abstract class Plugin<T> {
     readonly networkNode: NetworkNode
     readonly subscriptionManager: SubscriptionManager
     readonly publisher: Publisher
+    readonly streamrClient?: StreamrClient
+    readonly apiAuthenticator: ApiAuthenticator
     readonly metricsContext: MetricsContext
     readonly brokerConfig: Config
     readonly pluginConfig: T
@@ -31,6 +37,8 @@ export abstract class Plugin<T> {
         this.networkNode = options.networkNode
         this.subscriptionManager = options.subscriptionManager
         this.publisher = options.publisher
+        this.streamrClient = options.streamrClient
+        this.apiAuthenticator = options.apiAuthenticator
         this.metricsContext = options.metricsContext
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]

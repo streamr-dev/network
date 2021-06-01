@@ -273,6 +273,25 @@
       "items": {
         "$ref": "#/definitions/storageNodeRegistryItem"
       }
+    },
+    "apiAuthentication": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
+      "required": [
+        "keys"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "definitions": {
