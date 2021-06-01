@@ -35,6 +35,8 @@ export default class ServerPersistentStore implements PersistentStore<string, st
                 filename: this.dbFilePath,
                 driver: sqlite3.Database
             })
+            await store.configure('busyTimeout', 5000)
+            await store.run('PRAGMA journal_mode = WAL;')
             await store.exec(`CREATE TABLE IF NOT EXISTS GroupKeys (
                 id TEXT,
                 groupKey TEXT,
