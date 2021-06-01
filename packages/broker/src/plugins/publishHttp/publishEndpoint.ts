@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express'
 import { StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
-import { getQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
+import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 
 const logger = new Logger(module)
 
@@ -30,9 +30,9 @@ export const createEndpoint = (streamrClient: StreamrClient) => {
         let partitionKey: string|undefined
         try {
             content = parseContent(req)
-            timestamp = getQueryParameter('timestamp', req, parseTimestamp)
-            partition = getQueryParameter('partition', req, parsePositiveInteger)
-            partitionKey = getQueryParameter('partitionKey', req)
+            timestamp = parseQueryParameter<number>('timestamp', req, parseTimestamp)
+            partition = parseQueryParameter<number>('partition', req, parsePositiveInteger)
+            partitionKey = req.query['partitionKey'] as string
         } catch (e) {
             res.status(400).send({
                 error: e.message

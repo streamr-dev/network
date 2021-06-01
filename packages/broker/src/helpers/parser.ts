@@ -1,6 +1,6 @@
 import { Request } from 'express'
 
-export const parsePositiveInteger = (n: string): number | never => {
+export const parsePositiveInteger = (n: string): number|never => {
     const parsed = parseInt(n)
     if (!Number.isInteger(parsed) || parsed < 0) {
         throw new Error(`${n} is not a valid positive integer`)
@@ -25,10 +25,10 @@ export const parseTimestamp = (millisOrString: number|string): number|never => {
     }
 }
 
-export const getQueryParameter = (name: string, req: Request, parser?: (input: string) => any) => {
+export const parseQueryParameter = <T>(name: string, req: Request, parser: (input: string) => T): T|undefined => {
     const value = req.query[name] as string
     if (value !== undefined) {
-        return (parser !== undefined) ? parser(value) : value
+        return parser(value)
     } else {
         return undefined
     }
