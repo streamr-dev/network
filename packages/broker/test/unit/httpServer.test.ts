@@ -68,7 +68,7 @@ describe('HttpServer', () => {
         })
 
         it('unauthorized', async () => {
-            const server = await startTestServer({
+            server = await startTestServer({
                 keys: [MOCK_API_KEY]
             })           
             const response = await createRequest()
