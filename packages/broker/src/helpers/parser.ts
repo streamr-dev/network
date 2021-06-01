@@ -8,7 +8,7 @@ export const parsePositiveInteger = (n: string): number | never => {
     return parsed
 }
 
-export const parseTimestamp = (millisOrString: number|string) => {
+export const parseTimestamp = (millisOrString: number|string): number|never => {
     if (typeof millisOrString === 'number') {
         return millisOrString
     }
