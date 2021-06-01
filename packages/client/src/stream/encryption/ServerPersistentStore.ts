@@ -35,12 +35,13 @@ export default class ServerPersistentStore implements PersistentStore<string, st
                 filename: this.dbFilePath,
                 driver: sqlite3.Database
             })
+            await store.configure('busyTimeout', 3000)
+            await store.run('PRAGMA journal_mode = WAL;')
             await store.exec(`CREATE TABLE IF NOT EXISTS GroupKeys (
-                id TEXT,
+                id TEXT NOT NULL PRIMARY KEY,
                 groupKey TEXT,
                 streamId TEXT
             )`)
-            await store.exec('CREATE UNIQUE INDEX IF NOT EXISTS name ON GroupKeys (id)')
             this.store = store
         } catch (err) {
             if (!this.error) {
@@ -66,7 +67,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
     async has(key: string) {
         await this.init()
         const value = await this.store!.get('SELECT COUNT(*) FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
-        return value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0
+        return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
     }
 
     private async setKeyValue(key: string, value: string) {
