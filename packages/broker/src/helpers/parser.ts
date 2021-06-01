@@ -1,6 +1,6 @@
 import { Request } from 'express'
 
-export const parsePositiveInteger = (n: string) => {
+export const parsePositiveInteger = (n: string): number | never => {
     const parsed = parseInt(n)
     if (!Number.isInteger(parsed) || parsed < 0) {
         throw new Error(`${n} is not a valid positive integer`)
