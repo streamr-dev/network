@@ -85,7 +85,7 @@ describe('DataUnion transfer within contract', () => {
         providerSidechain.removeAllListeners()
     })
 
-    it('transfer token to member', async () => {
+    it.each([true, false], 'transfer token to member, approveFirst=%p', async (approveFirst: boolean) => {
         const dataUnion = await adminClient.deployDataUnion()
         const secret = await dataUnion.createSecret('test secret')
         // eslint-disable-next-line no-underscore-dangle
@@ -118,9 +118,12 @@ describe('DataUnion transfer within contract', () => {
         const stats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
         log(`Stats: ${JSON.stringify(stats)}`)
 
-        const approve = await tokenSidechain.approve(dataUnion.getSidechainAddress(), parseEther('1'))
-        await approve.wait()
-        log(`Approve DU ${dataUnion.getSidechainAddress()} to access 1 token from ${adminWalletSidechain.address}`)
+        // if approval hasn't been done, transferToMemberInContract should do it
+        if (approveFirst) {
+            const approve = await tokenSidechain.approve(dataUnion.getSidechainAddress(), parseEther('1'))
+            await approve.wait()
+            log(`Approve DU ${dataUnion.getSidechainAddress()} to access 1 token from ${adminWalletSidechain.address}`)
+        }
 
         await dataUnion.transferToMemberInContract(memberWallet.address, parseEther('1'))
         log(`Transfer 1 token with transferWithinContract to ${memberWallet.address}`)

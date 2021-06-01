@@ -70,6 +70,20 @@ export type AmbMessageHash = string
 
 const log = debug('StreamrClient::DataUnion')
 
+const erc20AllowanceAbi = [{
+    name: 'allowance',
+    inputs: [{ type: 'address' }, { type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'increaseAllowance',
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
+    outputs: [{ type: 'bool' }],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}]
+
 function getMessageHashes(tr: ContractReceipt): AmbMessageHash[] {
     // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData);
     const sigEventArgsArray = tr.events!.filter((e) => e.event === 'UserRequestForSignature').map((e) => e.args)
@@ -527,8 +541,22 @@ export class DataUnion {
         amountTokenWei: BigNumber|number|string
     ): Promise<ContractReceipt> {
         const address = getAddress(memberAddress) // throws if bad address
+        const amount = BigNumber.from(amountTokenWei)
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        const tx = await duSidechain.transferToMemberInContract(address, amountTokenWei)
+
+        // check first that we have enough allowance to do the transferFrom within the transferToMemberInContract
+        const tokenSidechainAddress = await duSidechain.token()
+        const sidechainProvider = this.client.ethereum.getSidechainProvider()
+        const token = new Contract(tokenSidechainAddress, erc20AllowanceAbi, sidechainProvider)
+        const allowance = await token.allowance(await duSidechain.signer.getAddress(), duSidechain.address)
+        if (allowance.lt(amount)) {
+            const difference = amount.sub(allowance)
+            const approveTx = token.increaseAllowance(duSidechain.address, difference)
+            const approveTr = await waitForTx(approveTx)
+            log('Approval transaction receipt: %o', approveTr)
+        }
+
+        const tx = await duSidechain.transferToMemberInContract(address, amount)
         return waitForTx(tx)
     }
 
