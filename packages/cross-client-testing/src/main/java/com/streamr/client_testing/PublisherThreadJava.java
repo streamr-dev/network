@@ -29,9 +29,9 @@ public class PublisherThreadJava extends PublisherThread {
         task = new TimerTask() {
             @Override
             public void run() {
-                counter++;
-                publishFunction.getF().apply(publisher, stream, counter);
-                if (counter > 0 && counter >= maxMessages) {
+                long currentCounter = counter++;
+                publishFunction.getF().apply(publisher, stream, currentCounter);
+                if (currentCounter > 0 && currentCounter >= maxMessages) {
                     log.info("Publisher {} done: All {} messages published.",
                             publisher.getPublisherId(), maxMessages);
                     ready = true;
