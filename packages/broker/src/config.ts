@@ -52,7 +52,7 @@ export interface Config {
     },
     streamrUrl: string,
     streamrAddress: string,
-    storageNodeRegistry: StorageNodeRegistryItem[] | null
+    storageNodeRegistry: StorageNodeRegistryItem[]
     httpServer: HttpServerConfig | null
     plugins: Record<string,any>
     apiAuthentication: {

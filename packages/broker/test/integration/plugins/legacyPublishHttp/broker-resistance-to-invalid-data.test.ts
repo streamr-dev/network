@@ -34,7 +34,6 @@ describe('broker resistance to invalid data', () => {
         })
         streamId = freshStream.id
         await client.ensureDisconnected()
-        // @ts-expect-error
         sessionToken = await client.session.getSessionToken()
     })
 

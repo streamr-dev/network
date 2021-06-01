@@ -116,7 +116,7 @@ describe('resend cancellation', () => {
             }, metricsContext),
             metricsContext,
             new SubscriptionManager(networkNode),
-            storageNodeRegistry!,
+            storageNodeRegistry,
             `http://${STREAMR_DOCKER_DEV_HOST}`
         )
         const assignmentEventManager = new StorageAssignmentEventManager(wsPort, Wallet.createRandom())
