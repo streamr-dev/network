@@ -44,7 +44,6 @@ describe('HttpServer', () => {
             const response = await createRequest()
             const body = await response.text()
             expect(body).toBe('FOO')
-            await stopServer(server)
         })
 
         it('valid authentication', async () => {
