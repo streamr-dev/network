@@ -262,7 +262,7 @@ export class DataUnion {
      */
     async signWithdrawAmountTo(
         recipientAddress: EthereumAddress,
-        amountTokenWei: BigNumber|number|string
+        amountTokenWei: BigNumber | number | string
     ): Promise<string> {
         const to = getAddress(recipientAddress) // throws if bad address
         const signer = this.client.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
@@ -276,7 +276,7 @@ export class DataUnion {
 
     /** @internal */
     async _createWithdrawSignature(
-        amountTokenWei: BigNumber|number|string,
+        amountTokenWei: BigNumber | number | string,
         to: EthereumAddress,
         withdrawn: BigNumber,
         signer: Wallet | JsonRpcSigner
