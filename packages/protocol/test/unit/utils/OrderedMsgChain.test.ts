@@ -277,19 +277,19 @@ describe('OrderedMsgChain', () => {
         const msgs: StreamMessage[] = []
         util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
             msgs.push(msg)
+            if (msgs.length === 3) {
+                try {
+                    // should have seen messages 1, 3, 5
+                    expect(msgs).toEqual([msg1, msg3, msg5])
+                    done()
+                } catch(err) {
+                    done(err)
+                }
+            }
         }, () => {
             counter += 1
             if (counter === 1) {
                 util.disable()
-                setTimeout(() => {
-                    try {
-                        // should have seen messages 1, 3, 5
-                        expect(msgs).toEqual([msg1, msg3, msg5])
-                        done()
-                    } catch(err) {
-                        done(err)
-                    }
-                }, 1000)
             } else {
                 throw new Error('Unexpected call to the gap handler')
             }
