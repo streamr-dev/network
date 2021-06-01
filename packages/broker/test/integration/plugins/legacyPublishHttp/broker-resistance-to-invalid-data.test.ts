@@ -43,7 +43,7 @@ describe('broker resistance to invalid data', () => {
         await tracker.stop()
     })
 
-    test('pushing invalid data returns 400 error & does not crash broker', (done) => {
+    test('pushing invalid data to legacy HTTP plugin returns 400 error & does not crash broker', (done) => {
         const invalidData = '###!!THIS-DATA-IS-NOT-JSON!!###'
 
         const request = http.request({
