@@ -1,4 +1,3 @@
-import { Todo } from '../../types'
 import { Protocol } from 'streamr-network'
 const { ControlLayer, Utils, ControlMessageType } = Protocol
 import { ArrayMultimap } from '@teppeis/multimaps'
@@ -67,19 +66,19 @@ export class RequestHandler {
         })
     }
 
-    handleRequest(connection: Connection, request: Todo): Promise<any> {
+    handleRequest(connection: Connection, request: Protocol.ControlLayer.ControlMessage): Promise<any> {
         logger.info(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
         switch (request.type) {
             case ControlLayer.ControlMessage.TYPES.SubscribeRequest:
-                return this.subscribe(connection, request)
+                return this.subscribe(connection, request as SubscribeRequest)
             case ControlLayer.ControlMessage.TYPES.UnsubscribeRequest:
-                return this.unsubscribe(connection, request)
+                return this.unsubscribe(connection, request as UnsubscribeRequest)
             case ControlLayer.ControlMessage.TYPES.PublishRequest:
-                return this.publish(connection, request)
+                return this.publish(connection, request as PublishRequest)
             case ControlLayer.ControlMessage.TYPES.ResendLastRequest:
             case ControlLayer.ControlMessage.TYPES.ResendFromRequest:
             case ControlLayer.ControlMessage.TYPES.ResendRangeRequest:
-                return this.resend(connection, request)
+                return this.resend(connection, request as (ResendLastRequest|ResendFromRequest|ResendRangeRequest))
             default:
                 connection.send(new ControlLayer.ErrorResponse({
                     version: request.version,
