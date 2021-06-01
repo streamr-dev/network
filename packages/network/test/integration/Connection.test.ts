@@ -1,7 +1,6 @@
 import { once } from 'events'
 import { DescriptionType } from 'node-datachannel'
 import { waitForCondition, wait } from 'streamr-test-utils'
-import nodeDataChannel from 'node-datachannel'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { Connection } from '../../src/connection/Connection'
 
