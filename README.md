@@ -55,3 +55,10 @@ Merge remote changes from all remote repos:
 ```
 make pull # keep rerunning until no errors
 ```
+
+## List active symlinks
+
+Check which packages are currently being symlinked
+```
+./show-links.sh
+```
