@@ -9,7 +9,7 @@ import debug from 'debug'
 
 import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
-import { until, getEndpointUrl } from '../utils'
+import { until, getEndpointUrl, sleep } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import { Contracts } from './Contracts'
@@ -75,6 +75,28 @@ function getMessageHashes(tr: ContractReceipt): AmbMessageHash[] {
     const sigEventArgsArray = tr.events!.filter((e) => e.event === 'UserRequestForSignature').map((e) => e.args)
     const hashes = sigEventArgsArray.map((eventArgs) => keccak256(eventArgs![1]))
     return hashes
+}
+
+type WaitForTXOptions = {
+    retries?: number
+    retryInterval?: number
+}
+
+async function waitForTx(tx: ContractTransaction, { retries = 60, retryInterval = 60000 }: WaitForTXOptions = {}): Promise<ContractReceipt> {
+    return tx.wait().catch((err) => {
+        log('Attempted transaction: %o', tx)
+        log('Got error: %o', err)
+        if (err.body) {
+            const body = JSON.parse(err.body)
+            const msg = body.error.message
+            log('Error message: %s', msg)
+            if (retries > 0 && msg.includes('ancient block sync')) {
+                log('Sleeping for %dms then retrying %d more time(s).', retryInterval, retries)
+                return sleep(retryInterval).then(() => waitForTx(tx, { retries: retries - 1, retryInterval }))
+            }
+        }
+        throw err
+    })
 }
 
 /**
@@ -391,7 +413,7 @@ export class DataUnion {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.addMembers(members)
         // TODO ETH-93: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
-        return tx.wait()
+        return waitForTx(tx)
     }
 
     /**
@@ -404,7 +426,7 @@ export class DataUnion {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.partMembers(members)
         // TODO ETH-93: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
-        return tx.wait()
+        return waitForTx(tx)
     }
 
     /**
@@ -491,7 +513,7 @@ export class DataUnion {
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
         const duMainnet = this.getContracts().getMainnetContract(this.contractAddress)
         const tx = await duMainnet.setAdminFee(adminFeeBN)
-        return tx.wait()
+        return waitForTx(tx)
     }
 
     /**
@@ -507,7 +529,7 @@ export class DataUnion {
         const address = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.transferToMemberInContract(address, amountTokenWei)
-        return tx.wait()
+        return waitForTx(tx)
     }
 
     /**
@@ -621,7 +643,7 @@ export class DataUnion {
 
         log('Executing DataUnionSidechain withdraw function')
         const tx = await getWithdrawTxFunc()
-        const tr = await tx.wait()
+        const tr = await waitForTx(tx)
 
         // keep tokens in the sidechain => just return the sidechain tx receipt
         if (!sendToMainnet) { return tr }
