@@ -24,7 +24,10 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         this.dbFilePath = dbFilePath
 
         this.init = pOnce(this.init.bind(this))
-        this.init()
+        this.init().catch(() => {
+            // ignore error until used
+            // prevent unhandled rejection
+        })
     }
 
     async init() {
@@ -37,11 +40,10 @@ export default class ServerPersistentStore implements PersistentStore<string, st
             })
             await store.configure('busyTimeout', 3000)
             await store.run('PRAGMA journal_mode = WAL;')
-            await store.exec(`CREATE TABLE IF NOT EXISTS GroupKeys (
-                id TEXT NOT NULL PRIMARY KEY,
-                groupKey TEXT,
-                streamId TEXT
-            )`)
+            await store.migrate({
+                migrationsPath: join(__dirname, 'migrations'),
+            })
+
             this.store = store
         } catch (err) {
             if (!this.error) {
