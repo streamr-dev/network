@@ -1,5 +1,5 @@
 #!/bin/sh
-BRANCH_NAME=$(git branch --no-color | grep --color=never '*' | sed 's/* //')
+BRANCH_NAME=$(git symbolic-ref --short -q HEAD)
 
 if [ $BRANCH_NAME != '(no branch)' ]
 then
