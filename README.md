@@ -361,6 +361,11 @@ To get an existing (previously deployed) `DataUnion` instance:
 const dataUnion = client.getDataUnion(dataUnionAddress)
 ```
 
+Or to verify untrusted (e.g. user) input, use:
+```js
+const dataUnion = await client.safeGetDataUnion(dataUnionAddress)
+```
+
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
 These DataUnion-specific options can be given to `new StreamrClient` options:
 
