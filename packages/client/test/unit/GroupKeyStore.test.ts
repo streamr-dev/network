@@ -1,10 +1,12 @@
 import crypto from 'crypto'
-import { mkdtemp, rmdir, copyFile } from 'fs/promises'
+import fs from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
 import GroupKeyStore, { GroupKeyPersistence } from '../../src/stream/encryption/GroupKeyStore'
 import { uid, addAfterFn, describeRepeats } from '../utils'
+
+const { mkdtemp, rmdir, copyFile } = fs.promises
 
 describeRepeats('GroupKeyStore', () => {
     let clientId: string
