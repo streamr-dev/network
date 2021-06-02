@@ -120,9 +120,12 @@ describe('per-node metrics', () => {
         })
 
         client2 = createClient(wsPort, tmpAccount.privateKey)
-        await fillMetrics(client2, 60, nodeAddress, 'sec')
-        await fillMetrics(client2, 60, nodeAddress, 'min')
-        await fillMetrics(client2, 24, nodeAddress, 'hour')
+        await Promise.all([
+            fillMetrics(client2, 60, nodeAddress, 'sec'),
+            fillMetrics(client2, 60, nodeAddress, 'min'),
+            fillMetrics(client2, 24, nodeAddress, 'hour'),
+        ])
+            
     }, 30 * 1000)
 
     afterAll(async () => {
