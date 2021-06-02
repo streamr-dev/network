@@ -8,11 +8,11 @@ CREATE TABLE IF NOT EXISTS GroupKeys (
     streamId TEXT
 );
 
-CREATE UNIQUE INDEX name ON GroupKeys (id);
+CREATE UNIQUE INDEX IF NOT EXISTS name ON GroupKeys (id);
 
 --------------------------------------------------------------------------------
 -- Down
 --------------------------------------------------------------------------------
 
-DROP INDEX name;
-DROP TABLE GroupKeys;
+DROP INDEX IF EXISTS name;
+DROP TABLE IF EXISTS GroupKeys;

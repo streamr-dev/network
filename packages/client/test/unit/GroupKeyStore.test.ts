@@ -1,4 +1,7 @@
 import crypto from 'crypto'
+import { mkdtemp, rmdir, copyFile } from 'fs/promises'
+import { join } from 'path'
+import { tmpdir } from 'os'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
 import GroupKeyStore, { GroupKeyPersistence } from '../../src/stream/encryption/GroupKeyStore'
 import { uid, addAfterFn, describeRepeats } from '../utils'
@@ -73,7 +76,7 @@ describeRepeats('PersistentStore', () => {
 
     afterEach(async () => {
         if (!store) { return }
-        await store.clear()
+        await store.destroy()
     })
 
     it('can get set and delete', async () => {
@@ -102,12 +105,12 @@ describeRepeats('PersistentStore', () => {
         expect(await store.size()).toBe(0)
     })
 
-    it('can get set and delete in parallel', async () => {
+    it('can get set and delete with multiple instances in parallel', async () => {
         const store2 = new GroupKeyPersistence({
             clientId,
             streamId,
         })
-        addAfter(() => store2.clear())
+        addAfter(() => store2.destroy())
 
         for (let i = 0; i < 5; i++) {
             const groupKey = GroupKey.generate()
@@ -144,7 +147,7 @@ describeRepeats('PersistentStore', () => {
             streamId: streamId2,
         })
 
-        addAfter(() => store2.clear())
+        addAfter(() => store2.destroy())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
@@ -164,7 +167,7 @@ describeRepeats('PersistentStore', () => {
             streamId,
         })
 
-        addAfter(() => store2.clear())
+        addAfter(() => store2.destroy())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
@@ -184,7 +187,7 @@ describeRepeats('PersistentStore', () => {
             streamId,
         })
 
-        addAfter(() => store2.clear())
+        addAfter(() => store2.destroy())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
@@ -196,4 +199,30 @@ describeRepeats('PersistentStore', () => {
         expect(await store2.clear()).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
+
+    it('can migrate old data', async () => {
+        const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
+        const migrationsPath = await mkdtemp(join(tmpdir(), 'group-key-test-migrations'))
+        // @ts-expect-error migrationsPath is only on ServerPersistentStore
+        await copyFile(join(store.store.migrationsPath, '001-initial.sql'), join(migrationsPath, '001-initial.sql'))
+        const store2 = new GroupKeyPersistence({
+            clientId: clientId2,
+            streamId,
+            migrationsPath,
+        })
+
+        addAfter(() => store2.destroy())
+        addAfter(() => rmdir(migrationsPath, { recursive: true }))
+
+        const groupKey = GroupKey.generate()
+        await store2.add(groupKey)
+        expect(await store2.get(groupKey.id)).toEqual(groupKey)
+
+        const store3 = new GroupKeyPersistence({
+            clientId: clientId2,
+            streamId,
+        })
+        expect(await store3.get(groupKey.id)).toEqual(groupKey)
+    })
+
 })

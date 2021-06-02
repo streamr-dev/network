@@ -256,18 +256,18 @@ describeRepeats('Encryption Key Persistence', () => {
             stream,
             waitForLast: true,
         })
-
+        const MAX_MESSAGES = 16
         const [published1, published2] = await Promise.all([
-            publishTestMessages(5),
-            publishTestMessages2(6), // use different lengths so we can differentiate who published what
+            publishTestMessages(MAX_MESSAGES - 1),
+            publishTestMessages2(MAX_MESSAGES), // use different lengths so we can differentiate who published what
         ])
 
         const received1 = []
         const received2 = []
         for await (const m of sub) {
             const content = m.getParsedContent()
-            // 'n of 6' messages belong to publisher2
-            if (content.value.endsWith('of 6')) {
+            // 'n of MAX_MESSAGES' messages belong to publisher2
+            if (content.value.endsWith(`of ${MAX_MESSAGES}`)) {
                 received2.push(content)
             } else {
                 received1.push(content)
