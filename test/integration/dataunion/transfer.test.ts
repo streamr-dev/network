@@ -85,7 +85,7 @@ describe('DataUnion transfer within contract', () => {
         providerSidechain.removeAllListeners()
     })
 
-    it.each([true, false], 'transfer token to member, approveFirst=%p', async (approveFirst: boolean) => {
+    it.each([true, false])('transfer token to member, approveFirst=%p', async (approveFirst: boolean) => {
         const dataUnion = await adminClient.deployDataUnion()
         const secret = await dataUnion.createSecret('test secret')
         // eslint-disable-next-line no-underscore-dangle
