@@ -14,6 +14,7 @@ function generateId(): string {
 }
 
 export interface Connection {
+    on(eventName: 'message', handler: (msg: Protocol.ControlMessage) => void): this
     on(eventName: 'close', handler: () => void): this
     on(eventName: 'highBackPressure', handler: () => void): this
     on(eventName: 'lowBackPressure', handler: () => void): this
@@ -41,6 +42,37 @@ export class Connection extends EventEmitter {
         this.controlLayerVersion = controlLayerVersion
         this.messageLayerVersion = messageLayerVersion
         this.highBackPressure = false
+
+        socket.on('message', async (data: WebSocket.Data) => {
+            if (this.dead) {
+                return
+            }
+            let message: Protocol.ControlMessage | undefined
+            try {
+                message = Protocol.ControlMessage.deserialize(data.toString(), false)
+            } catch (err) {
+                this.send(new Protocol.ControlLayer.ErrorResponse({
+                    requestId: '', // Can't echo the requestId of the request since parsing the request failed
+                    errorMessage: err.message || err,
+                    // @ts-expect-error this errorCode does not exist in pre-defined set of error codes
+                    errorCode: 'INVALID_REQUEST',
+                }))
+            }
+            if (message !== undefined) {
+                this.emit('message', message)
+            }
+        })
+        socket.on('pong', () => {
+            logger.trace(`received from ${this.id} "pong" frame`)
+            this.respondedPong = true
+        })
+        socket.on('close', () => {
+            logger.trace('socket "%s" closed connections (was on streams="%o")', this.id, this.streamsAsString())
+            this.emit('close')
+        })
+        socket.on('error', (err) => {
+            logger.warn('socket "%s" error %s', this.id, err)
+        })
     }
 
     getBufferedAmount(): number {
@@ -88,6 +120,7 @@ export class Connection extends EventEmitter {
 
     ping(): void {
         this.socket.ping()
+        logger.trace(`sent ping to ${this.id}`)
     }
 
     send(msg: Protocol.ControlLayer.ControlMessage): void {

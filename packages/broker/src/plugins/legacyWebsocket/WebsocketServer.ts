@@ -45,7 +45,7 @@ export class WebsocketServer extends EventEmitter {
     httpServer: http.Server | https.Server
     wss: WebSocket.Server
     requestHandler: RequestHandler
-    connections: Map<WebSocket, Connection>
+    connections: Set<Connection>
     pingIntervalInMs: number
     metrics: Metrics
     pingInterval: NodeJS.Timeout
@@ -65,7 +65,7 @@ export class WebsocketServer extends EventEmitter {
     ) {
         super()
         this.httpServer = httpServer
-        this.connections = new Map()
+        this.connections = new Set()
         this.pingIntervalInMs = pingIntervalInMs
         this.metrics = metricsContext.create('broker/ws')
             .addRecordedMetric('outBytes')
@@ -74,9 +74,7 @@ export class WebsocketServer extends EventEmitter {
             .addQueriedMetric('totalWebSocketBuffer', () => {
                 let totalBufferSize = 0
                 this.connections.forEach((connection: Connection) => {
-                    if (connection.socket) {
-                        totalBufferSize += connection.getBufferedAmount()
-                    }
+                    totalBufferSize += connection.getBufferedAmount()
                 })
                 return totalBufferSize
             })
@@ -179,30 +177,7 @@ export class WebsocketServer extends EventEmitter {
             }
 
             const connection = new Connection(ws, controlLayerVersion, messageLayerVersion)
-            this.connections.set(ws, connection)
-            connection.once('close', () => {
-                this.removeConnection(connection)
-            })
-
-            ws.on('message', async (data: WebSocket.Data) => {
-                const connection = this.connections.get(ws)
-                if (connection === undefined || connection.isDead()) {
-                    return
-                }
-
-                let request
-                try {
-                    request = ControlLayer.ControlMessage.deserialize(data.toString(), false)
-                } catch (err) {
-                    connection.send(new ControlLayer.ErrorResponse({
-                        requestId: '', // Can't echo the requestId of the request since parsing the request failed
-                        errorMessage: err.message || err,
-                        // @ts-expect-error this errorCode does not exist in pre-defined set of error codes
-                        errorCode: 'INVALID_REQUEST',
-                    }))
-                    return
-                }
-
+            connection.on('message', async (request) => {
                 try {
                     logger.trace('socket "%s" sent request "%s" with contents "%o"',
                         connection.id,
@@ -222,34 +197,10 @@ export class WebsocketServer extends EventEmitter {
                     }))
                 }
             })
-
-            ws.on('pong', () => {
-                const connection = this.connections.get(ws)
-
-                if (connection) {
-                    logger.trace(`received from ${connection.id} "pong" frame`)
-                    connection.respondedPong = true
-                }
+            connection.once('close', () => {
+                this.removeConnection(connection)
             })
-
-            ws.on('close', () => {
-                const connection = this.connections.get(ws)
-
-                if (connection) {
-                    logger.trace('socket "%s" closed connections (was on streams="%o")',
-                        connection.id,
-                        connection.streamsAsString()
-                    )
-                    this.removeConnection(connection)
-                }
-            })
-
-            ws.on('error', (err) => {
-                const connection = this.connections.get(ws)
-                if (connection) {
-                    logger.warn('socket "%s" error %s', connection.id, err)
-                }
-            })
+            this.connections.add(connection)
         })
 
         this.wss.on('error', (err) => {
@@ -300,7 +251,7 @@ export class WebsocketServer extends EventEmitter {
     }
 
     private removeConnection(connection: Connection): void {
-        this.connections.delete(connection.socket)
+        this.connections.delete(connection)
 
         // Unsubscribe from all streams
         connection.forEachStream((stream: Stream) => {
@@ -323,20 +274,22 @@ export class WebsocketServer extends EventEmitter {
     }
 
     private pingConnections() {
+        function logAndForceClose(connection: Connection, reason: string | Error): void {
+            logger.error(`Failed to ping connection: ${connection.id}, reason ${reason}`)
+            connection.forceClose(reason.toString())
+        }
+
         const connections = [...this.connections.values()]
         connections.forEach((connection) => {
+            if (!connection.respondedPong) { // didn't get "pong" in pingInterval
+                logAndForceClose(connection, 'no pong response')
+            }
+            connection.respondedPong = false
             try {
-                // didn't get "pong" in pingInterval
-                if (!connection.respondedPong) {
-                    throw Error('Connection is not active')
-                }
-
-                connection.respondedPong = false
                 connection.ping()
-                logger.trace(`pinging ${connection.id}`)
             } catch (e) {
                 logger.error(`Failed to ping connection: ${connection.id}, error ${e}`)
-                connection.forceClose('failed to ping')
+                logAndForceClose(connection, 'failed to ping')
             }
         })
     }
