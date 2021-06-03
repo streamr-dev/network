@@ -18,9 +18,9 @@ describe('SPID', () => {
         expect(spid.partition).toBe(0)
     })
 
-    it('lowercases streamId', () => {
+    it('does not lowercase streamId', () => {
         const spid = new SPID(STREAM_ID.toUpperCase())
-        expect(spid.id).toEqual(STREAM_ID)
+        expect(spid.id).toEqual(STREAM_ID.toUpperCase())
         expect(spid.partition).toBe(0)
     })
 

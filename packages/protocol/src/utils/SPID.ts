@@ -32,7 +32,7 @@ export default class SPID {
      * @param partition - stream partition
      */
     constructor(id: string, partition = 0) {
-        this.id = typeof id === 'string' ? id.toLowerCase() : id
+        this.id = id
         this.partition = partition
         this.validate()
 
