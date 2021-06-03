@@ -54,7 +54,7 @@ export class Logger {
     }
 
     error(msg: string, ...args: any[]): void {
-        const errorInstance = args.find(arg => (arg instanceof Error))
+        const errorInstance = args.find((arg) => (arg instanceof Error))
         if (errorInstance !== undefined) {
             this.logger.error({ err: errorInstance }, msg, ...args)
         } else {
