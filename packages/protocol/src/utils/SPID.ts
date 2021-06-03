@@ -1,8 +1,8 @@
 import { format } from 'util'
 
 class SPIDValidationError extends Error {
-    data: SPIDish
-    constructor(msg: string, data: SPIDish) {
+    data: SPIDishPartial
+    constructor(msg: string, data: SPIDishPartial) {
         super(format(msg, data))
         this.data = data
         if (Error.captureStackTrace) {
@@ -10,6 +10,7 @@ class SPIDValidationError extends Error {
         }
     }
 }
+
 /**
  * SPID - Stream Partition ID
  */
@@ -31,7 +32,7 @@ export default class SPID {
      * @param id - stream id
      * @param partition - stream partition
      */
-    constructor(id: string, partition = 0) {
+    constructor(id: string, partition: number) {
         this.id = id
         this.partition = partition
         this.validate()
@@ -80,18 +81,13 @@ export default class SPID {
         return this.key === otherSpid.key
     }
 
-    /**
-     * Convert to SPID if possible.
-     */
-    static from(spidish: SPIDish): SPID {
-        // return spid if already spid
-        if (spidish instanceof SPID) {
-            return spidish
-        }
-
+    static toSPIDObjectPartial(spidish: SPIDishPartial): SPIDObjectPartial {
         // convert from string
         if (typeof spidish === 'string') {
-            return SPID.fromString(spidish)
+            const [streamId, partitionStr] = spidish.split(this.SEPARATOR)
+            // partition is optional, falls back to undefined i.e. default
+            const streamPartition = partitionStr != null ? Number.parseFloat(partitionStr) : undefined
+            return { streamId, streamPartition }
         } else if (spidish && typeof spidish === 'object') {
             // @ts-expect-error object should have one of these, validated anyway
             const streamId = spidish.streamId || spidish.id
@@ -99,21 +95,55 @@ export default class SPID {
             const partition = spidish.streamPartition || spidish.partition
             // try parse if a value was passed, but fall back to undefined i.e. default
             const streamPartition = partition != null ? Number.parseFloat(partition) : undefined
-            return new SPID(streamId, streamPartition)
+            return { streamId, streamPartition }
         } else {
-            // TODO: add more conversions?
-            throw new SPIDValidationError('SPID validation failed, input is malformed: %o', spidish)
+            return { streamId: undefined, streamPartition: undefined }
         }
     }
 
     /**
-     * Convert String to SPID if possible.
+     * Convert to SPID if possible, with defaults.
+     * e.g.
+     * ```ts
+     * fromDefaults(streamId, { partition: 0 })
+     * ```
      */
-    static fromString(spidString: string): SPID {
-        const [id, partitionStr] = spidString.split(this.SEPARATOR)
-        // partition is optional, falls back to undefined i.e. default
-        const partition = partitionStr != null ? Number.parseFloat(partitionStr) : undefined
-        return new SPID(id, partition)
+    static fromDefaults(spidish: SPIDish, defaultValues?: SPIDishPartial): SPID
+    static fromDefaults(spidish: SPIDishPartial, defaultValues: SPIDishPartial): SPID // requires id+partition if no defaults
+    static fromDefaults(spidish: SPIDishPartial, defaultValues?: SPIDishPartial): SPID {
+        // return spid if already spid
+        if (spidish instanceof SPID) {
+            return spidish
+        }
+
+        // defaults can be partial, e.g. { partition: 0 }
+        // toSPIDObjectPartial can handle undefined input but we want external interface to check for it.
+        const defaults = SPID.toSPIDObjectPartial(defaultValues!)
+        const { streamId = defaults?.streamId, streamPartition = defaults?.streamPartition } = SPID.toSPIDObjectPartial(spidish)
+        try {
+            // constructor can handle partial input but we want external interface to check for it.
+            return new SPID(streamId!, streamPartition!)
+        } catch (err) {
+            // TODO: add more conversions?
+            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err.message} %o`, spidish)
+        }
+    }
+
+    /**
+     * Convert to SPID if possible.
+     */
+    static from(spidish: SPIDish): SPID {
+        return SPID.fromDefaults(spidish)
+    }
+
+    /**
+     * Plain object representation of SPID id + partition
+     */
+    toObject(): SPIDObject {
+        return {
+            streamId: this.id,
+            streamPartition: this.partition,
+        }
     }
 
     /**
@@ -143,6 +173,27 @@ export default class SPID {
 }
 
 /**
- * SPID or String representing a SPID
+ * Object version of SPID
  */
-export type SPIDish = SPID | string | { streamId: string, streamPartition: number } | { id: string, partition: number }
+export type SPIDObject = {
+    streamId: string,
+    streamPartition: number
+}
+
+/**
+ * Represents partial SPIDObject e.g. for setting defaults
+ * Known keys
+ */
+export type SPIDObjectPartial = Partial<SPIDObject>
+
+/**
+ * Flexible input type
+ */
+export type SPIDishPartial = SPIDish | SPIDObjectPartial | Partial<{ id: string, partition: number }>
+
+/**
+ * SPID or String representing a SPID
+ * Object cases can be typechecked
+ * TODO: SPID string type safety
+ */
+export type SPIDish = SPID | string | SPIDObject | { id: string, partition: number }
