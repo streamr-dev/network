@@ -31,7 +31,7 @@ export interface Broker {
 // using this placeholder for scaffolding purposes 
 // source:
 // https://gist.github.com/erikvullings/b71a0be49e5e79945805bd209e22c7d2
-export const uuid4 = () => {
+export const uuidv4 = () => {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
       // tslint:disable-next-line:no-bitwise
       const r = (Math.random() * 16) | 0;
