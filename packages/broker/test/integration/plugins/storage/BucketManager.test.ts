@@ -39,7 +39,6 @@ describe('BucketManager', () => {
 
         await cassandraClient.connect()
         bucketManager = new BucketManager(cassandraClient, {
-            logErrors: true,
             checkFullBucketsTimeout: 1000,
             storeBucketsTimeout: 1000,
             maxBucketSize: 10 * 300,
