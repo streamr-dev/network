@@ -100,7 +100,7 @@ describe('Storage', () => {
     let storage: Storage
 
     afterEach(async () => {
-        await storage!.close()
+        await storage?.close()
     })
 
     describe('requestLast', () => {
