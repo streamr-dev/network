@@ -89,17 +89,24 @@ const createMockStorage = (getResults: (query: string) => any[]|Error) => {
                 stream.push(null)
             }
             return stream
-        })
+        }),
+        shutdown: jest.fn().mockResolvedValue(undefined)
     }
     return new Storage(cassandraClient as any, {})
 }
 
 describe('Storage', () => {
 
+    let storage: Storage
+
+    afterEach(async () => {
+        await storage!.close()
+    })
+
     describe('requestLast', () => {
 
         it('happy path', (done) => {
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: [MOCK_BUCKET],
                 messageCounts: [MOCK_MESSAGE_COUNT],
                 messages: [MOCK_MESSAGE_2]
@@ -115,7 +122,7 @@ describe('Storage', () => {
         })
 
         it('no messages', (done) => {
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: [],
             }))
             const resultStream = storage.requestLast(MOCK_STREAM_ID, 0, 1)
@@ -129,7 +136,7 @@ describe('Storage', () => {
 
         it('bucket query error', (done) => {
             const expectedError = new Error('bucket-error')
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: expectedError
             }))
             const resultStream = storage.requestLast(MOCK_STREAM_ID, 0, 1)
@@ -141,7 +148,7 @@ describe('Storage', () => {
 
         it('message count query error', (done) => {
             const expectedError = new Error('message-count-error')
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: [MOCK_BUCKET],
                 messageCounts: expectedError
             }))
@@ -154,7 +161,7 @@ describe('Storage', () => {
 
         it('message query error', (done) => {
             const expectedError = new Error('message-error')
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: [MOCK_BUCKET],
                 messageCounts: [MOCK_MESSAGE_COUNT],
                 messages: expectedError
@@ -188,7 +195,7 @@ describe('Storage', () => {
         }
 
         it('happy path', (done) => {
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: [MOCK_BUCKET],
                 messages: [MOCK_MESSAGE_1, MOCK_MESSAGE_2]
             }))
@@ -206,7 +213,7 @@ describe('Storage', () => {
         })
 
         it('no messages', (done) => {
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: [],
             }))
             const resultStream = getResultStream(storage)
@@ -220,7 +227,7 @@ describe('Storage', () => {
 
         it('bucket query error', (done) => {
             const expectedError = new Error('bucket-error')
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: expectedError
             }))
             const resultStream = getResultStream(storage)
@@ -232,7 +239,7 @@ describe('Storage', () => {
 
         it('message query error', (done) => {
             const expectedError = new Error('message-error')
-            const storage = createMockStorage(createResultFactory({
+            storage = createMockStorage(createResultFactory({
                 buckets: [MOCK_BUCKET],
                 messages: expectedError
             }))
