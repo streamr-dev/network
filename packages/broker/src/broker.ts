@@ -27,6 +27,12 @@ export interface Broker {
     close: () => Promise<unknown>
 }
 
+export function uuidv4(): string {
+    return (`${1e7}-${1e3}-${4e3}-${8e3}-${1e11}`).replace(/[018]/g, (c: any) =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    )
+}
+
 export const startBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
 
@@ -40,7 +46,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     if (!wallet) {
         throw new Error('Could not resolve Ethereum address from given config.ethereumPrivateKey')
     }
-    const brokerAddress = wallet.address
+    const brokerAddress = `${wallet.address}#${uuidv4()}`
 
     // Form tracker list
     let trackers: string[]
