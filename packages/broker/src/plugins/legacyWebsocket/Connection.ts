@@ -1,32 +1,32 @@
 import { EventEmitter } from 'events'
 import { Logger, Protocol } from 'streamr-network'
-import uWS from 'uWebSockets.js'
 import { Stream } from '../../Stream'
+import WebSocket from "ws"
 
 const logger = new Logger(module)
 
 let nextId = 1
 
-function generateId() {
+function generateId(): string {
     const id = `socketId-${nextId}`
     nextId += 1
     return id
 }
 
 export class Connection extends EventEmitter {
+    static LOW_BACK_PRESSURE = 1024 * 1024
+    static HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 
-    static LOW_BACK_PRESSURE = 1024 * 1024 // 1 megabytes
-    static HIGH_BACK_PRESSURE = 1024 * 1024 * 2 // 2 megabytes
-
-    id: string
-    socket: uWS.WebSocket
-    streams: Stream[] = []
+    readonly id: string
+    readonly socket: WebSocket
+    readonly streams: Stream[] = []
+    readonly controlLayerVersion: number
+    readonly messageLayerVersion: number
     dead: boolean
-    controlLayerVersion: number
-    messageLayerVersion: number
     highBackPressure: boolean
+    respondedPong = true
 
-    constructor(socket: uWS.WebSocket, controlLayerVersion: number, messageLayerVersion: number) {
+    constructor(socket: WebSocket, controlLayerVersion: number, messageLayerVersion: number) {
         super()
         this.id = generateId()
         this.socket = socket
@@ -37,54 +37,58 @@ export class Connection extends EventEmitter {
         this.highBackPressure = false
     }
 
-    addStream(stream: Stream) {
+    addStream(stream: Stream): void {
         this.streams.push(stream)
     }
 
-    removeStream(streamId: string, streamPartition: number) {
+    removeStream(streamId: string, streamPartition: number): void {
         const i = this.streams.findIndex((s: Stream) => s.id === streamId && s.partition === streamPartition)
         if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
 
-    forEachStream(cb: (stream: Stream) => void) {
+    forEachStream(cb: (stream: Stream) => void): void {
         this.getStreams().forEach(cb)
     }
 
-    getStreams() {
+    getStreams(): Stream[] {
         return this.streams.slice() // return copy
     }
 
-    streamsAsString() {
+    streamsAsString(): string[] {
         return this.streams.map((s: Stream) => s.toString())
     }
 
-    markAsDead() {
+    markAsDead(): void {
         this.dead = true
     }
 
-    isDead() {
+    isDead(): boolean {
         return this.dead
     }
 
-    evaluateBackPressure() {
-        if (!this.highBackPressure && this.socket.getBufferedAmount() > Connection.HIGH_BACK_PRESSURE) {
-            logger.debug('Back pressure HIGH for %s at %d', this.id, this.socket.getBufferedAmount())
+    evaluateBackPressure(): void {
+        if (!this.highBackPressure && this.getBufferedAmount() > Connection.HIGH_BACK_PRESSURE) {
+            logger.debug('Back pressure HIGH for %s at %d', this.id, this.getBufferedAmount())
             this.emit('highBackPressure')
             this.highBackPressure = true
-        } else if (this.highBackPressure && this.socket.getBufferedAmount() < Connection.LOW_BACK_PRESSURE) {
-            logger.debug('Back pressure LOW for %s at %d', this.id, this.socket.getBufferedAmount())
+        } else if (this.highBackPressure && this.getBufferedAmount() < Connection.LOW_BACK_PRESSURE) {
+            logger.debug('Back pressure LOW for %s at %d', this.id, this.getBufferedAmount())
             this.emit('lowBackPressure')
             this.highBackPressure = false
         }
     }
 
-    ping() {
+    getBufferedAmount(): number {
+        return this.socket.bufferedAmount
+    }
+
+    ping(): void {
         this.socket.ping()
     }
 
-    send(msg: Protocol.ControlLayer.ControlMessage) {
+    send(msg: Protocol.ControlLayer.ControlMessage): void {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         logger.trace('send: %s: %o', this.id, serialized)
         try {

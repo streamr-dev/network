@@ -1,10 +1,17 @@
-import ws from 'uWebSockets.js'
+import WebSocket from "ws"
 import { MissingConfigError } from '../../errors/MissingConfigError'
 import { WebsocketServer } from './WebsocketServer'
 import { Plugin, PluginOptions } from '../../Plugin'
 import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { Logger } from "streamr-network"
+import fs from "fs"
+import http from 'http'
+import https from "https"
+import * as util from "util"
+
+const logger = new Logger(module)
 
 export interface WebsocketPluginConfig {
     port: number
@@ -25,18 +32,19 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         if (this.pluginConfig.port === undefined) {
             throw new MissingConfigError('port')
         }
-        let server
+        let httpServer: http.Server | https.Server
         if (this.pluginConfig.privateKeyFileName && this.pluginConfig.certFileName) {
-            server = ws.SSLApp({
-                key_file_name: this.pluginConfig.privateKeyFileName,
-                cert_file_name: this.pluginConfig.certFileName,
-            })
+            const opts = {
+                key: fs.readFileSync(this.pluginConfig.privateKeyFileName),
+                cert: fs.readdirSync(this.pluginConfig.certFileName)
+            }
+            httpServer = https.createServer(opts)
         } else {
-            server = ws.App()
+            httpServer = http.createServer()
         }
         const storageNodeRegistry = StorageNodeRegistry.createInstance(this.brokerConfig)
         this.websocketServer = new WebsocketServer(
-            server,
+            httpServer,
             this.pluginConfig.port,
             this.networkNode,
             new StreamFetcher(this.brokerConfig.streamrUrl),
@@ -47,6 +55,10 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
             this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
         )
+        return util.promisify(() => httpServer.listen(this.pluginConfig.port))()
+            .then(() => {
+                logger.info('WS plugin listening on ' + this.pluginConfig.port)
+            })
     }
 
     async stop() {

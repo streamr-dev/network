@@ -1,9 +1,8 @@
 import { startTracker, startNetworkNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
 import { waitForEvent } from 'streamr-test-utils'
-import ws from 'uWebSockets.js'
 import StreamrClient, { Stream } from 'streamr-client'
 import express from 'express'
-import { Server } from 'http'
+import http, { Server } from 'http'
 import { once } from 'events'
 import { Wallet } from 'ethers'
 import { wait } from 'streamr-test-utils'
@@ -100,7 +99,7 @@ describe('resend cancellation', () => {
             } as any
         )
         websocketServer = new WebsocketServer(
-            ws.App(),
+            http.createServer().listen(wsPort),
             wsPort,
             networkNode,
             new StreamFetcher(`http://${STREAMR_DOCKER_DEV_HOST}`),
