@@ -13,10 +13,12 @@ const MOCK_MESSAGE_COUNT = {
         low: 1
     }
 }
+const MOCK_PUBLISHER_ID = 'publisherId'
+const MOCK_MSG_CHAIN_ID = 'msgChainId'
 const createMockMessage = (contentValue: number) => {
     return {
         payload: new StreamMessage({
-            messageId: new MessageID(MOCK_STREAM_ID, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(MOCK_STREAM_ID, 0, Date.now(), 0, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID),
             content: {
                 value: contentValue
             }
@@ -166,18 +168,16 @@ describe('Storage', () => {
     })
 
     describe.each([
-        [REQUEST_TYPE_FROM, true],
-        [REQUEST_TYPE_FROM, false],
-        [REQUEST_TYPE_RANGE, true],
-        [REQUEST_TYPE_RANGE, false]
-    ])('%s, publisher: %p', (requestType: string, isPublisher: boolean) => {
+        [REQUEST_TYPE_FROM, MOCK_PUBLISHER_ID, null],
+        [REQUEST_TYPE_FROM, null, null],
+        [REQUEST_TYPE_RANGE, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID],
+        [REQUEST_TYPE_RANGE, null, null]
+    ])('%s, publisher: %p', (requestType: string, publisherId: string|null, msgChainId: string|null) => {
 
         const getResultStream = (storage: Storage): Readable => {
-            const publisherId: string|null = isPublisher ? 'mock-publisher-id' : null
             if (requestType === REQUEST_TYPE_FROM) {
                 return storage.requestFrom(MOCK_STREAM_ID, 0, 0, 0, publisherId)
             } else if (requestType === REQUEST_TYPE_RANGE) {
-                const msgChainId: string|null = isPublisher ? 'mock-msgchain-id' : null
                 return storage.requestRange(MOCK_STREAM_ID, 0, 0, 0, 0, 0, publisherId, msgChainId)
             } else {
                 throw new Error('Assertion failed')
