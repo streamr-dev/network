@@ -24,13 +24,6 @@ describe('SPID', () => {
         expect(spid.partition).toBe(0)
     })
 
-    it('can use array destructuring with split', () => {
-        const spid = new SPID(STREAM_ID, PARTITION)
-        const [ id, partition ] = spid.split()
-        expect(id).toBe(STREAM_ID)
-        expect(partition).toBe(PARTITION)
-    })
-
     it('can get key from string', () => {
         const spid = new SPID(STREAM_ID, PARTITION)
         const key = SPID.toKey(spid.toString())

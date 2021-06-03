@@ -27,8 +27,6 @@ export default class SPID {
     /** string key representing SPID */
     public readonly key: string
 
-    protected readonly cachedSplit: [string, number] // cached split
-
     /**
      * @param id - stream id
      * @param partition - stream partition
@@ -40,10 +38,8 @@ export default class SPID {
 
         // static cached values to prevent unnecessary runtime allocations
         this.key = `${this.id}${SPID.SEPARATOR}${this.partition}`
-        this.cachedSplit = [this.id, this.partition]
         // prevent all mutation
         Object.freeze(this)
-        Object.freeze(this.cachedSplit)
     }
 
     /**
@@ -132,30 +128,6 @@ export default class SPID {
      */
     toKey(): string {
         return this.toString()
-    }
-
-    /**
-     * Returns an [id, partition] tuple.
-     * Useful for destructuring.
-     * e.g.
-     * ```js
-     * const [streamId, streamPartition] = spid.split()
-     * ```
-     */
-    split(): [string, number] {
-        return this.cachedSplit
-    }
-
-    /**
-     * Returns an [id, partition] tuple.
-     * Useful for destructuring.
-     * e.g.
-     * ```js
-     * const [streamId, streamPartition] = SPID.split(someString)
-     * ```
-     */
-    static split(spidish: SPIDish): [string, number] {
-        return SPID.from(spidish).split()
     }
 
     /**
