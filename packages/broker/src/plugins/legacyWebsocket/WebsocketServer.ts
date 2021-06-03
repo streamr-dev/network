@@ -46,9 +46,9 @@ export class WebsocketServer extends EventEmitter {
     wss: WebSocket.Server
     requestHandler: RequestHandler
     connections: Map<WebSocket, Connection>
-    pingInterval: number
+    pingIntervalInMs: number
     metrics: Metrics
-    _pingInterval: NodeJS.Timeout
+    pingInterval: NodeJS.Timeout
     backPressureEvaluateInterval: NodeJS.Timeout
 
     constructor(
@@ -61,12 +61,12 @@ export class WebsocketServer extends EventEmitter {
         subscriptionManager: SubscriptionManager,
         storageNodeRegistry: StorageNodeRegistry,
         streamrUrl: string,
-        pingInterval = 60 * 1000,
+        pingIntervalInMs = 60 * 1000,
     ) {
         super()
         this.httpServer = httpServer
         this.connections = new Map()
-        this.pingInterval = pingInterval
+        this.pingIntervalInMs = pingIntervalInMs
         this.metrics = metricsContext.create('broker/ws')
             .addRecordedMetric('outBytes')
             .addRecordedMetric('outMessages')
@@ -256,9 +256,9 @@ export class WebsocketServer extends EventEmitter {
             logger.error(`websocket server error: %s`, err)
         })
 
-        this._pingInterval = setInterval(() => {
+        this.pingInterval = setInterval(() => {
             this.pingConnections()
-        }, this.pingInterval)
+        }, this.pingIntervalInMs)
 
         /**
          * drain: (ws: uWS.WebSocket) => {
@@ -278,7 +278,7 @@ export class WebsocketServer extends EventEmitter {
     }
 
     async close(): Promise<unknown> {
-        clearInterval(this._pingInterval)
+        clearInterval(this.pingInterval)
         clearInterval(this.backPressureEvaluateInterval)
         this.requestHandler.close()
         this.connections.forEach((connection: Connection) => connection.socket.close())
