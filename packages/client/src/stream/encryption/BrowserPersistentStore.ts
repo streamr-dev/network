@@ -47,6 +47,16 @@ export default class BrowserPersistentStore implements PersistentStore<string, s
         return allKeys.length
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    async close() {
+        // noop
+    }
+
+    async destroy() {
+        await this.clear()
+        await this.close()
+    }
+
     get [Symbol.toStringTag]() {
         return this.constructor.name
     }

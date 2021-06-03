@@ -80,7 +80,7 @@ class MsgChainQueue {
     /**
      * True if queue already has a message with this message ref.
      */
-    has(streamMessage: StreamMessage) {
+    has(streamMessage: StreamMessage): boolean {
         // prevent duplicates
         return this.pendingMsgs.has(streamMessage)
     }
@@ -89,7 +89,7 @@ class MsgChainQueue {
      * Push new item into the queue.
      * Ignores duplicates.
      */
-    push(streamMessage: StreamMessage) {
+    push(streamMessage: StreamMessage): void {
         // prevent duplicates
         if (this.has(streamMessage)) { return }
         this.pendingMsgs.add(streamMessage)
@@ -100,7 +100,7 @@ class MsgChainQueue {
     /**
      * Remove next item from queue and return it.
      */
-    pop() {
+    pop(): StreamMessage | undefined {
         if (this.isEmpty()) { return }
         const streamMessage = this.peek()
         if (!streamMessage) { return }
@@ -112,14 +112,14 @@ class MsgChainQueue {
     /**
      * True if there are no items in the queue.
      */
-    isEmpty() {
+    isEmpty(): boolean {
         return this.queue.empty()
     }
 
     /**
      * Number of items in queue.
      */
-    size() {
+    size(): number {
         return this.queue.size()
     }
 }
@@ -201,9 +201,9 @@ class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Messages are stale if they are already enqueued or last ordered message is newer.
      */
-    isStaleMessage(streamMessage: StreamMessage) {
+    isStaleMessage(streamMessage: StreamMessage): boolean {
         const msgRef = streamMessage.getMessageRef()
-        return (
+        return !!(
             // already enqueued
             this.queue.has(streamMessage) || (
                 this.lastOrderedMsgRef
@@ -216,11 +216,15 @@ class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Add message to queue.
      */
-    add(unorderedStreamMessage: StreamMessage) {
+    add(unorderedStreamMessage: StreamMessage): void {
         if (this.isStaleMessage(unorderedStreamMessage)) {
             const msgRef = unorderedStreamMessage.getMessageRef()
             // Prevent double-processing of messages for any reason
-            this.debug('Ignoring message: %o. Message was already enqueued or we already processed a newer message: %o.', msgRef, this.lastOrderedMsgRef)
+            this.debug(
+                'Ignoring message: %o. Message was already enqueued or we already processed a newer message: %o.',
+                msgRef,
+                this.lastOrderedMsgRef
+            )
             return
         }
 
@@ -236,7 +240,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Mark a message to have it be treated as the next message & not trigger gap fill
      */
-    markMessageExplicitly(streamMessage: StreamMessage) {
+    markMessageExplicitly(streamMessage: StreamMessage): void {
         // only add if not stale
         if (this.markMessage(streamMessage)) {
             this.add(streamMessage)
@@ -247,7 +251,7 @@ class OrderedMsgChain extends MsgChainEmitter {
      * Adds message to set of marked messages.
      * Does nothing and returns false if message is stale.
      */
-    private markMessage(streamMessage: StreamMessage) {
+    private markMessage(streamMessage: StreamMessage): boolean {
         if (!streamMessage || this.isStaleMessage(streamMessage)) {
             // do nothing if already past/handled this message
             return false
@@ -264,7 +268,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Cancel any outstanding gap fill request.
      */
-    clearGap() {
+    clearGap(): void {
         if (this.hasPendingGap) {
             this.debug('clearGap')
         }
@@ -275,21 +279,27 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.firstGap = null
     }
 
-    isGapHandlingEnabled() {
+    disable(): void {
+        this.maxGapRequests = 0
+        this.clearGap()
+        this.checkQueue()
+    }
+
+    isGapHandlingEnabled(): boolean {
         return this.maxGapRequests > 0
     }
 
     /**
      * True if queue is empty.
      */
-    isEmpty() {
+    isEmpty(): boolean {
         return this.queue.isEmpty()
     }
 
     /**
      * Number of enqueued messages.
      */
-    size() {
+    size(): number {
         return this.queue.size()
     }
 
@@ -297,7 +307,7 @@ class OrderedMsgChain extends MsgChainEmitter {
      * True if the next queued message is the next message in the chain.
      * Always true for first message and unchained messages i.e. messages without a prevMsgRef.
      */
-    private hasNextMessageInChain() {
+    private hasNextMessageInChain(): boolean {
         const streamMessage = this.queue.peek()
         if (!streamMessage) { return false }
         const { prevMsgRef } = streamMessage
@@ -318,7 +328,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Keep popping messages until we hit a gap or run out of messages.
      */
-    private checkQueue() {
+    private checkQueue(): void {
         let processedMessages = 0
         while (this.hasNextMessageInChain()) {
             processedMessages += 1
@@ -343,7 +353,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Remove next message from queue and run it through inOrderHandler if valid.
      */
-    private pop() {
+    private pop(): StreamMessage | undefined {
         const msg = this.queue.pop()
         if (!msg) { return }
         this.lastOrderedMsgRef = msg.getMessageRef()
@@ -368,7 +378,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Schedule a requestGapFill call.
      */
-    private scheduleGap() {
+    private scheduleGap(): void {
         if (this.hasPendingGap) { return }
         this.gapRequestCount = 0
         this.hasPendingGap = true
@@ -392,7 +402,7 @@ class OrderedMsgChain extends MsgChainEmitter {
      * Call gapHandler until run out of gapRequests.
      * Failure emits an error and sets up to continue processing enqueued messages after the gap.
      */
-    private requestGapFill() {
+    private requestGapFill(): void {
         if (!this.hasPendingGap || this.isEmpty()) { return }
         const msg = this.queue.peek() as ChainedMessage
         const { lastOrderedMsgRef } = this
@@ -420,14 +430,18 @@ class OrderedMsgChain extends MsgChainEmitter {
             }
         } else {
             if (!this.isEmpty()) {
-                this.debug('requestGapFill failed after %d attempts: %o', maxGapRequests, {
-                    from,
-                    to,
-                })
-                this.debugStatus()
+                if (this.isGapHandlingEnabled()) {
+                    this.debug('requestGapFill failed after %d attempts: %o', maxGapRequests, {
+                        from,
+                        to,
+                    })
+                    this.debugStatus()
+                }
                 // skip gap, allow queue processing to continue
                 this.lastOrderedMsgRef = msg.getPreviousMessageRef()
-                this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
+                if (this.isGapHandlingEnabled()) {
+                    this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
+                }
                 this.clearGap()
                 // keep processing
                 this.checkQueue()
@@ -435,7 +449,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         }
     }
 
-    debugStatus() {
+    debugStatus(): void {
         this.debug('Up to %o: %o', this.lastOrderedMsgRef, {
             gapRequestCount: this.gapRequestCount,
             maxGapRequests: this.maxGapRequests,
