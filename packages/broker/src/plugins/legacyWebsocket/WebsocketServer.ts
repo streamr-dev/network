@@ -19,6 +19,8 @@ import { parse as parseQuery } from 'querystring'
 
 const logger = new Logger(module)
 
+const BACKPRESSURE_EVALUATE_MS = 250
+
 export class WebsocketServer extends EventEmitter {
 
     static validateProtocolVersions(controlLayerVersion: number|undefined, messageLayerVersion: number|undefined): void | never {
@@ -47,6 +49,7 @@ export class WebsocketServer extends EventEmitter {
     pingInterval: number
     metrics: Metrics
     _pingInterval: NodeJS.Timeout
+    backPressureEvaluateInterval: NodeJS.Timeout
 
     constructor(
         httpServer: http.Server | https.Server,
@@ -108,40 +111,59 @@ export class WebsocketServer extends EventEmitter {
         this.requestHandler = new RequestHandler(streamFetcher, publisher, streams, subscriptionManager, this.metrics, storageNodeRegistry, streamrUrl)
         networkNode.addMessageListener((msg: Protocol.MessageLayer.StreamMessage) => this.broadcastMessage(msg, streams))
 
-        this._pingInterval = setInterval(() => {
-            this.pingConnections()
-        }, this.pingInterval)
-
         this.wss = new WebSocket.Server({
             server: httpServer,
-            maxPayload: 1024 * 1024,
+            maxPayload: 1024 * 1024
         })
         this.wss.on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
+            function closeWithError(internalMsg: string, clientMsg: string) {
+                logger.trace(`rejected connection: ${internalMsg}`)
+                ws.close(1000, clientMsg.slice(0, 100)) // clientMsg has a max size in WS (~123 bytes)
+            }
+
             if (request.url === undefined) {
-                logger.trace('rejected connection: no request url available')
-                return false
+                closeWithError(
+                    'no request url available',
+                    'no request url'
+                )
+                return
             }
             if (request.url.indexOf('?') < 0) {
-                logger.trace('rejected connection: request url has no url parameters')
-                return false
+                closeWithError(
+                    'request url has no url parameters',
+                    'version params missing'
+                )
+                return
             }
 
             const queryParams = parseQuery(request.url.replace(/^.*\?/, ''))
             if (!queryParams.controlLayerVersion) {
-                logger.trace('rejected connection: "controlLayerVersion" url parameter missing')
-                return false
+                closeWithError(
+                    '"controlLayerVersion" url parameter missing',
+                    'controlLayerVersion missing'
+                )
+                return
             }
             if (!queryParams.messageLayerVersion) {
-                logger.trace('rejected connection: "messageLayerVersion" url parameter missing')
-                return false
+                closeWithError(
+                    '"messageLayerVersion" url parameter missing',
+                    'messageLayerVersion missing'
+                )
+                return
             }
             if (Array.isArray(queryParams.controlLayerVersion)) {
-                logger.trace('rejected connection: "controlLayerVersion" parameter set multiple times')
-                return false
+                closeWithError(
+                    '"controlLayerVersion" parameter set multiple times',
+                    'multiple controlLayerVersions given'
+                )
+                return
             }
             if (Array.isArray(queryParams.messageLayerVersion)) {
-                logger.trace('rejected connection: "messageLayerVersion" parameter set multiple times')
-                return false
+                closeWithError(
+                    '"messageLayerVersion" parameter set multiple times',
+                    'multiple messageLayerVersion given'
+                )
+                return
             }
             const controlLayerVersion = parseInt(queryParams.controlLayerVersion)
             const messageLayerVersion = parseInt(queryParams.messageLayerVersion)
@@ -149,7 +171,10 @@ export class WebsocketServer extends EventEmitter {
             try {
                 WebsocketServer.validateProtocolVersions(controlLayerVersion, messageLayerVersion)
             } catch (err) {
-                logger.trace('rejected connection: protocol version validation failed %s', err)
+                closeWithError(
+                    `protocol version validation failed ${err}`,
+                    'protocol version(s) not supported'
+                )
                 return false
             }
 
@@ -179,7 +204,7 @@ export class WebsocketServer extends EventEmitter {
                     connection.send(new ControlLayer.ErrorResponse({
                         requestId: '', // Can't echo the requestId of the request since parsing the request failed
                         errorMessage: err.message || err,
-                        // @ts-expect-error
+                        // @ts-expect-error this errorCode does not exist in pre-defined set of error codes
                         errorCode: 'INVALID_REQUEST',
                     }))
                     return
@@ -232,20 +257,31 @@ export class WebsocketServer extends EventEmitter {
                     logger.warn('socket "%s" error %s', connection.id, err)
                 }
             })
-
-            /**
-             * drain: (ws: uWS.WebSocket) => {
-                const connection = this.connections.get(ws.connectionId)
-                if (connection) {
-                    connection.evaluateBackPressure()
-                }
-               }
-             */
         })
 
         this.wss.on('error', (err) => {
             logger.error(`websocket server error: %s`, err)
         })
+
+        this._pingInterval = setInterval(() => {
+            this.pingConnections()
+        }, this.pingInterval)
+
+        /**
+         * drain: (ws: uWS.WebSocket) => {
+                const connection = this.connections.get(ws.connectionId)
+                if (connection) {
+                    connection.evaluateBackPressure()
+                }
+               }
+         */
+        this.backPressureEvaluateInterval = setInterval(() => {
+            this.connections.forEach((connection) => {
+                if (!connection.isDead()) {
+                    connection.evaluateBackPressure()
+                }
+            })
+        }, BACKPRESSURE_EVALUATE_MS)
     }
 
     private removeConnection(connection: Connection): void {
@@ -275,6 +311,7 @@ export class WebsocketServer extends EventEmitter {
 
     async close(): Promise<unknown> {
         clearInterval(this._pingInterval)
+        clearInterval(this.backPressureEvaluateInterval)
         this.requestHandler.close()
         this.connections.forEach((connection: Connection) => connection.socket.close())
         return new Promise((resolve, reject) => {

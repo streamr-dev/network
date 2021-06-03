@@ -15,7 +15,7 @@ function generateId(): string {
 
 export class Connection extends EventEmitter {
     static LOW_BACK_PRESSURE = 1024 * 1024
-    static HIGH_BACK_PRESSURE = 1024 * 1024 * 2
+    static HIGH_BACK_PRESSURE = 1024 * 1024 * 4
 
     readonly id: string
     readonly socket: WebSocket

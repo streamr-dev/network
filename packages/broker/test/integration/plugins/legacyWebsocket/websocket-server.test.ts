@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForEvent } from 'streamr-test-utils'
 import { Todo } from '../../../../src/types'
 import { startBroker, getWsUrlWithControlAndMessageLayerVersions } from '../../../utils'
 
@@ -61,7 +61,7 @@ describe('websocket server', () => {
     })
 
     describe('rejections', () => {
-        const testRejection = async (connectionUrl: string) => {
+        const testRejection = async (connectionUrl: string): Promise<[number, string]> => {
             broker = await startBroker({
                 name: 'broker',
                 privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
@@ -70,34 +70,25 @@ describe('websocket server', () => {
                 wsPort: 12346
             })
             ws = new WebSocket(connectionUrl)
-            let gotError = false
-            let closed = false
-            ws.on('open', () => {
-                throw new Error('Websocket should not have opened!')
-            })
-            ws.on('error', (err) => {
-                if (err.message.includes('400')) {
-                    gotError = true
-                } else {
-                    throw new Error(`Got unexpected error message: ${err.message}`)
-                }
-            })
-            ws.on('close', () => {
-                closed = true
-            })
-            await waitForCondition(() => gotError && closed)
+            return await waitForEvent(ws, 'close') as [number, string]
         }
 
         it('rejects connections without preferred versions given as query parameters', async () => {
-            await testRejection('ws://127.0.0.1:12346/api/v1/ws')
+            const [code, reason] = await testRejection('ws://127.0.0.1:12346/api/v1/ws')
+            expect(code).toEqual(1000)
+            expect(reason).toEqual('version params missing')
         })
 
         it('rejects connections with unsupported ControlLayer version', async () => {
-            await testRejection(getWsUrlWithControlAndMessageLayerVersions(12346, false, 666, 31))
+            const [code, reason] = await testRejection(getWsUrlWithControlAndMessageLayerVersions(12346, false, 666, 31))
+            expect(code).toEqual(1000)
+            expect(reason).toEqual('protocol version(s) not supported')
         })
 
         it('rejects connections with unsupported MessageLayer version', async () => {
-            await testRejection(getWsUrlWithControlAndMessageLayerVersions(12346, false, 1, 666))
+            const [code, reason] = await testRejection(getWsUrlWithControlAndMessageLayerVersions(12346, false, 1, 666))
+            expect(code).toEqual(1000)
+            expect(reason).toEqual('protocol version(s) not supported')
         })
     })
 })

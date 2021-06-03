@@ -1,4 +1,3 @@
-import WebSocket from "ws"
 import { MissingConfigError } from '../../errors/MissingConfigError'
 import { WebsocketServer } from './WebsocketServer'
 import { Plugin, PluginOptions } from '../../Plugin'
@@ -9,7 +8,6 @@ import { Logger } from "streamr-network"
 import fs from "fs"
 import http from 'http'
 import https from "https"
-import * as util from "util"
 
 const logger = new Logger(module)
 
@@ -22,13 +20,13 @@ export interface WebsocketPluginConfig {
 
 export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
 
-    private websocketServer: WebsocketServer|undefined
+    private websocketServer: WebsocketServer | undefined
 
     constructor(options: PluginOptions) {
         super(options)
     }
 
-    async start() {
+    async start(): Promise<unknown> {
         if (this.pluginConfig.port === undefined) {
             throw new MissingConfigError('port')
         }
@@ -36,7 +34,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         if (this.pluginConfig.privateKeyFileName && this.pluginConfig.certFileName) {
             const opts = {
                 key: fs.readFileSync(this.pluginConfig.privateKeyFileName),
-                cert: fs.readdirSync(this.pluginConfig.certFileName)
+                cert: fs.readFileSync(this.pluginConfig.certFileName)
             }
             httpServer = https.createServer(opts)
         } else {
@@ -55,17 +53,19 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
             this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
         )
-        return util.promisify(() => httpServer.listen(this.pluginConfig.port))()
-            .then(() => {
-                logger.info('WS plugin listening on ' + this.pluginConfig.port)
+        return new Promise((resolve) => {
+            httpServer.listen(this.pluginConfig.port, () => {
+                logger.info(`started on port %s`, this.pluginConfig.port)
+                resolve(true)
             })
+        })
     }
 
-    async stop() {
+    async stop(): Promise<unknown> {
         return this.websocketServer!.close()
     }
 
-    getConfigSchema() {
+    getConfigSchema(): Record<string, unknown> {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

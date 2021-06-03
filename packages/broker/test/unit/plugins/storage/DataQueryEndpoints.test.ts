@@ -18,7 +18,7 @@ const createEmptyStream = () => {
 }
 
 describe('DataQueryEndpoints', () => {
-    let app: Todo
+    let app: express.Express
     let storage: Storage
     let streamFetcher: Todo
 
