@@ -83,4 +83,21 @@ describe(Logger, () => {
             } as any)).toBe('mock                ') 
         })
     })
+
+    test('error object', () => {
+        let lines: string[]
+        const logger = new Logger(module, '', {
+            write: (msg: string) => {
+                lines = msg.split('\n').map(line => line.trim())
+            }
+        })
+        logger.error('log message', new SyntaxError('error message'))
+        expect(lines!.length >= 7)
+        const [ main, _errorTag, errorType, errorMessage, _stackTag, _errorDescription, firstStackFrame ] = lines!
+        expect(main.includes('ERROR')).toBeTruthy()
+        expect(main.includes('log message')).toBeTruthy()
+        expect(errorType.includes('SyntaxError'))
+        expect(errorMessage.includes('error message'))
+        expect(firstStackFrame.startsWith('at ')).toBeTruthy()
+    })
 })

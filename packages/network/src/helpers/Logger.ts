@@ -21,8 +21,8 @@ export class Logger {
 
     private readonly logger: pino.Logger
 
-    constructor(module: NodeJS.Module, context?: string) {
-        this.logger = pino({
+    constructor(module: NodeJS.Module, context?: string, destinationStream?: { write(msg: string): void }) {
+        const options = {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
             level: process.env.LOG_LEVEL || 'info',
@@ -32,7 +32,8 @@ export class Logger {
                 ignore: 'pid,hostname',
                 levelFirst: true,
             }
-        })
+        }
+        this.logger = (destinationStream !== undefined) ? pino(options, destinationStream) : pino(options) 
     }
 
     private static createName(module: NodeJS.Module, context?: string) {
@@ -53,7 +54,12 @@ export class Logger {
     }
 
     error(msg: string, ...args: any[]): void {
-        this.logger.error(msg, ...args)
+        const errorInstance = args.find(arg => (arg instanceof Error))
+        if (errorInstance !== undefined) {
+            this.logger.error({ err: errorInstance }, msg, ...args)
+        } else {
+            this.logger.error(msg, ...args)
+        }
     }
 
     warn(msg: string, ...args: any[]): void {
