@@ -277,6 +277,28 @@ export class WebsocketServer extends EventEmitter {
         }, BACKPRESSURE_EVALUATE_MS)
     }
 
+    async close(): Promise<unknown> {
+        clearInterval(this._pingInterval)
+        clearInterval(this.backPressureEvaluateInterval)
+        this.requestHandler.close()
+        this.connections.forEach((connection: Connection) => connection.socket.close())
+        return new Promise((resolve, reject) => {
+            this.wss.close((err?) => {
+                if (err) {
+                    logger.error('error on closing websocket server: %s', err)
+                }
+                this.httpServer.close((err?) => {
+                    if (err) {
+                        logger.error('error closing http server: %s', err)
+                        reject(err)
+                    } else {
+                        resolve(true)
+                    }
+                })
+            })
+        })
+    }
+
     private removeConnection(connection: Connection): void {
         this.connections.delete(connection.socket)
 
@@ -298,28 +320,6 @@ export class WebsocketServer extends EventEmitter {
 
         // Cancel all resends
         this.requestHandler.onConnectionClose(connection.id)
-    }
-
-    async close(): Promise<unknown> {
-        clearInterval(this._pingInterval)
-        clearInterval(this.backPressureEvaluateInterval)
-        this.requestHandler.close()
-        this.connections.forEach((connection: Connection) => connection.socket.close())
-        return new Promise((resolve, reject) => {
-            this.wss.close((err?) => {
-                if (err) {
-                    logger.error('error on closing websocket server: %s', err)
-                }
-                this.httpServer.close((err?) => {
-                    if (err) {
-                        logger.error('error closing http server: %s', err)
-                        reject(err)
-                    } else {
-                        resolve(true)
-                    }
-                })
-            })
-        })
     }
 
     private pingConnections() {
