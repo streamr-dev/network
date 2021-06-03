@@ -1,4 +1,3 @@
-import { Todo } from '../../types'
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
 import qs from 'qs'
@@ -15,13 +14,15 @@ import { SubscriptionManager } from '../../SubscriptionManager'
 import { Logger } from 'streamr-network'
 import { StreamStateManager } from '../../StreamStateManager'
 import { StorageNodeRegistry } from '../../StorageNodeRegistry'
+import { Stream } from '../../Stream'
+import { StreamFetcher } from '../../StreamFetcher'
 
 const logger = new Logger(module)
 
 export class WebsocketServer extends EventEmitter {
 
     wss: TemplatedApp
-    _listenSocket: Todo
+    _listenSocket: uWS.us_listen_socket|null
     requestHandler: RequestHandler
     connections: Map<string,Connection>
     pingInterval: number
@@ -30,9 +31,9 @@ export class WebsocketServer extends EventEmitter {
 
     constructor(
         wss: TemplatedApp,
-        port: Todo,
+        port: number,
         networkNode: NetworkNode,
-        streamFetcher: Todo,
+        streamFetcher: StreamFetcher,
         publisher: Publisher,
         metricsContext: MetricsContext,
         subscriptionManager: SubscriptionManager,
@@ -51,7 +52,7 @@ export class WebsocketServer extends EventEmitter {
             .addQueriedMetric('connections', () => this.connections.size)
             .addQueriedMetric('totalWebSocketBuffer', () => {
                 let totalBufferSize = 0
-                this.connections.forEach((connection: Todo) => {
+                this.connections.forEach((connection: Connection) => {
                     if (connection.socket) {
                         totalBufferSize += connection.socket.getBufferedAmount()
                     }
@@ -59,10 +60,10 @@ export class WebsocketServer extends EventEmitter {
                 return totalBufferSize
             })
             .addQueriedMetric('clientVersions', () => {
-                const control: Todo = {}
-                const message: Todo = {}
-                const pairs: Todo = {}
-                this.connections.forEach((connection: Todo) => {
+                const control: Record<number,number> = {}
+                const message: Record<number,number> = {}
+                const pairs: Record<string,number> = {}
+                this.connections.forEach((connection: Connection) => {
                     const { controlLayerVersion, messageLayerVersion } = connection
                     const pairKey = controlLayerVersion + '->' + messageLayerVersion
                     if (control[controlLayerVersion] == null) {
@@ -93,7 +94,7 @@ export class WebsocketServer extends EventEmitter {
             this._pingConnections()
         }, this.pingInterval)
 
-        this.wss.listen(port, (token: Todo) => {
+        this.wss.listen(port, (token: uWS.us_listen_socket) => {
             if (token) {
                 this._listenSocket = token
                 logger.info('WS plugin listening on ' + port)
@@ -109,7 +110,7 @@ export class WebsocketServer extends EventEmitter {
             maxPayloadLength: 1024 * 1024,
             maxBackpressure: Connection.HIGH_BACK_PRESSURE + (1024 * 1024), // add 1MB safety margin
             idleTimeout: 3600, // 1 hour
-            upgrade: (res: Todo, req: Todo, context: Todo) => {
+            upgrade: (res: uWS.HttpResponse, req: uWS.HttpRequest, context: uWS.us_socket_context_t) => {
                 let controlLayerVersion
                 let messageLayerVersion
 
@@ -148,14 +149,14 @@ export class WebsocketServer extends EventEmitter {
                     context
                 )
             },
-            open: (ws: Todo) => {
+            open: (ws: uWS.WebSocket) => {
                 const connection = new Connection(ws, ws.controlLayerVersion, ws.messageLayerVersion)
                 this.connections.set(connection.id, connection)
                 logger.trace('onNewClientConnection: socket "%s" connected', connection.id)
                 // eslint-disable-next-line no-param-reassign
                 ws.connectionId = connection.id
 
-                connection.on('forceClose', (err: Todo) => {
+                connection.on('forceClose', (err: any) => {
                     try {
                         connection.socket.close()
                     } catch (e) {
@@ -166,11 +167,11 @@ export class WebsocketServer extends EventEmitter {
                     }
                 })
             },
-            message: (ws: Todo, message: Todo, _isBinary: Todo) => {
+            message: (ws: uWS.WebSocket, message: ArrayBuffer, _isBinary: boolean) => {
                 const connection = this.connections.get(ws.connectionId)
 
                 if (connection) {
-                    const copy = (src: Todo) => {
+                    const copy = (src: ArrayBuffer) => {
                         const dst = new ArrayBuffer(src.byteLength)
                         new Uint8Array(dst).set(new Uint8Array(src))
                         return dst
@@ -213,20 +214,20 @@ export class WebsocketServer extends EventEmitter {
                     })
                 }
             },
-            drain: (ws: Todo) => {
+            drain: (ws: uWS.WebSocket) => {
                 const connection = this.connections.get(ws.connectionId)
                 if (connection) {
                     connection.evaluateBackPressure()
                 }
             },
-            close: (ws: Todo, _code: Todo, _message: Todo) => {
+            close: (ws: uWS.WebSocket, _code: number, _message: ArrayBuffer) => {
                 const connection = this.connections.get(ws.connectionId)
                 if (connection) {
                     logger.trace('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
                     this._removeConnection(connection)
                 }
             },
-            pong: (ws: Todo) => {
+            pong: (ws: uWS.WebSocket) => {
                 const connection = this.connections.get(ws.connectionId)
 
                 if (connection) {
@@ -238,7 +239,7 @@ export class WebsocketServer extends EventEmitter {
         })
     }
 
-    static validateProtocolVersions(controlLayerVersion: Todo, messageLayerVersion: Todo) {
+    static validateProtocolVersions(controlLayerVersion: number|undefined, messageLayerVersion: number|undefined) {
         if (controlLayerVersion === undefined || messageLayerVersion === undefined) {
             throw new Error('Missing version negotiation! Must give controlLayerVersion and messageLayerVersion as query parameters!')
         }
@@ -257,11 +258,11 @@ export class WebsocketServer extends EventEmitter {
         }
     }
 
-    _removeConnection(connection: Todo) {
+    _removeConnection(connection: Connection) {
         this.connections.delete(connection.id)
 
         // Unsubscribe from all streams
-        connection.forEachStream((stream: Todo) => {
+        connection.forEachStream((stream: Stream) => {
             // for cleanup, spoof an UnsubscribeRequest to ourselves on the removed connection
             this.requestHandler.unsubscribe(
                 connection,
@@ -287,7 +288,7 @@ export class WebsocketServer extends EventEmitter {
 
         return new Promise((resolve) => {
             try {
-                this.connections.forEach((connection: Todo) => connection.socket.close())
+                this.connections.forEach((connection: Connection) => connection.socket.close())
             } catch (e) {
                 // ignoring any error
             }

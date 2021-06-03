@@ -4,9 +4,9 @@ import RelayMessage from './RelayMessage'
 
 import { Serializer } from '../../../Serializer'
 
-const VERSION = 1
+const VERSION = 2
 
-export default class RelayMessageSerializerV1 extends Serializer<RelayMessage> {
+export default class RelayMessageSerializerV2 extends Serializer<RelayMessage> {
     toArray(relayMessage: RelayMessage) {
         return [
             VERSION,
@@ -36,4 +36,4 @@ export default class RelayMessageSerializerV1 extends Serializer<RelayMessage> {
     }
 }
 
-TrackerMessage.registerSerializer(VERSION, TrackerMessage.TYPES.RelayMessage, new RelayMessageSerializerV1())
+TrackerMessage.registerSerializer(VERSION, TrackerMessage.TYPES.RelayMessage, new RelayMessageSerializerV2())

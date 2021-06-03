@@ -64,7 +64,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         id: brokerAddress,
         name: networkNodeName,
         trackers,
-        storages: [], // TODO remove this parameter from NetworkNodeOptions
         advertisedWsUrl,
         location: config.network.location,
         metricsContext
@@ -76,12 +75,19 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     let legacyStreamId: string | undefined
 
     if (config.reporting.streamr || (config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.enabled)) {
+        const targetStorageNode = config.reporting.perNodeMetrics!.storageNode
+        const storageNodeRegistryItem = config.storageNodeRegistry.find((n) => n.address === targetStorageNode)
+        if (storageNodeRegistryItem === undefined) {
+            throw new Error(`Value ${storageNodeRegistryItem} (config.reporting.perNodeMetrics.storageNode) not ` +
+                'present in config.storageNodeRegistry')
+        }
         client = new StreamrClient({
             auth: {
                 privateKey: config.ethereumPrivateKey,
             },
             url: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.wsUrl || undefined) : undefined,
-            restUrl: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.httpUrl || undefined) : undefined
+            restUrl: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.httpUrl || undefined) : undefined,
+            storageNode: storageNodeRegistryItem
         })
 
         if (config.reporting.streamr && config.reporting.streamr.streamId) {
@@ -106,8 +112,8 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     })
     const publisher = new Publisher(networkNode, streamMessageValidator, metricsContext)
     const subscriptionManager = new SubscriptionManager(networkNode)
-
     const localStreamrClient = createLocalStreamrClient(config)
+    const apiAuthenticator = createApiAuthenticator(config)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
@@ -116,7 +122,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             subscriptionManager,
             publisher,
             streamrClient: localStreamrClient,
-            apiAuthenticator: createApiAuthenticator(config),
+            apiAuthenticator,
             metricsContext,
             brokerConfig: config
         }
@@ -130,7 +136,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         if (config.httpServer === null) {
             throw new Error('HTTP server config not defined')
         }
-        httpServer = await startHttpServer(httpServerRoutes, config.httpServer)
+        httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
     }
 
     let reportingIntervals

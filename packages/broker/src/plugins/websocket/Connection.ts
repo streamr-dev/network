@@ -1,6 +1,7 @@
-import { Todo } from '../../types'
 import { EventEmitter } from 'events'
-import { Logger } from 'streamr-network'
+import { Logger, Protocol } from 'streamr-network'
+import uWS from 'uWebSockets.js'
+import { Stream } from '../../Stream'
 
 const logger = new Logger(module)
 
@@ -18,14 +19,14 @@ export class Connection extends EventEmitter {
     static HIGH_BACK_PRESSURE = 1024 * 1024 * 2 // 2 megabytes
 
     id: string
-    socket: Todo
-    streams: Todo[] = []
+    socket: uWS.WebSocket
+    streams: Stream[] = []
     dead: boolean
     controlLayerVersion: number
     messageLayerVersion: number
     highBackPressure: boolean
 
-    constructor(socket: Todo, controlLayerVersion: Todo, messageLayerVersion: Todo) {
+    constructor(socket: uWS.WebSocket, controlLayerVersion: number, messageLayerVersion: number) {
         super()
         this.id = generateId()
         this.socket = socket
@@ -36,18 +37,18 @@ export class Connection extends EventEmitter {
         this.highBackPressure = false
     }
 
-    addStream(stream: Todo) {
+    addStream(stream: Stream) {
         this.streams.push(stream)
     }
 
-    removeStream(streamId: Todo, streamPartition: Todo) {
-        const i = this.streams.findIndex((s: Todo) => s.id === streamId && s.partition === streamPartition)
+    removeStream(streamId: string, streamPartition: number) {
+        const i = this.streams.findIndex((s: Stream) => s.id === streamId && s.partition === streamPartition)
         if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
 
-    forEachStream(cb: Todo) {
+    forEachStream(cb: (stream: Stream) => void) {
         this.getStreams().forEach(cb)
     }
 
@@ -56,7 +57,7 @@ export class Connection extends EventEmitter {
     }
 
     streamsAsString() {
-        return this.streams.map((s: Todo) => s.toString())
+        return this.streams.map((s: Stream) => s.toString())
     }
 
     markAsDead() {
@@ -83,7 +84,7 @@ export class Connection extends EventEmitter {
         this.socket.ping()
     }
 
-    send(msg: Todo) {
+    send(msg: Protocol.ControlLayer.ControlMessage) {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         logger.trace('send: %s: %o', this.id, serialized)
         try {

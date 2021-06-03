@@ -7,37 +7,14 @@ import { partition } from '../../helpers/partition'
 import { authenticator } from '../../RequestAuthenticatorMiddleware'
 import { StreamFetcher } from '../../StreamFetcher'
 import { Publisher } from '../../Publisher'
+import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
+import { parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { Todo } from '../../types'
 
 const logger = new Logger(module)
 
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 const { InvalidJsonError, ValidationError } = Protocol.Errors
-
-function parsePositiveInteger(n: string) {
-    const parsed = parseInt(n)
-    if (!Number.isInteger(parsed) || parsed < 0) {
-        throw new Error(`${n} is not a valid positive integer`)
-    }
-    return parsed
-}
-
-function parseTimestamp(millisOrString: number|string) {
-    if (typeof millisOrString === 'number') {
-        return millisOrString
-    }
-    if (typeof millisOrString === 'string') {
-        // Try if this string represents a number
-        const timestamp = Number(millisOrString) || Date.parse(millisOrString)
-        if (Number.isNaN(timestamp)) {
-            throw new Error(`Invalid timestamp: ${millisOrString}`)
-        } else {
-            return timestamp
-        }
-    } else {
-        throw new Error(`Invalid timestamp: ${millisOrString}`)
-    }
-}
 
 /**
  * Endpoint for POSTing data to streams
@@ -53,7 +30,7 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
     const router = express.Router()
 
     router.post(
-        '/streams/:id/data',
+        `${LEGACY_API_ROUTE_PREFIX}/streams/:id/data`,
         // Disable automatic body parsing and increase body size limit (body becomes available as Buffer)
         bodyParser.raw({
             limit: '1024kb',
