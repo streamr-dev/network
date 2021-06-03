@@ -1,5 +1,6 @@
 import { Readable, PassThrough } from 'stream'
 import { Protocol } from 'streamr-network'
+import { waitForEvent, waitForStreamToEnd } from 'streamr-test-utils'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
@@ -28,21 +29,24 @@ const REQUEST_TYPE_FROM = 'requestFrom'
 const REQUEST_TYPE_RANGE = 'requestRange'
 
 const createResultFactory = ({
-    buckets,
-    messageCounts,
-    messages
+    buckets = [],
+    messageCounts = [],
+    messages = []
 }: {
-    buckets?: { id: string}[]|Error,
-    messageCounts?: { total: { low: number } }[]|Error,
-    messages?: { payload: string }[]|Error
+    buckets?: ({ id: string}[]|Error)[],
+    messageCounts?: ({ total: { low: number } }[]|Error)[],
+    messages?: ({ payload: string }[]|Error)[]
 }) => {
+    const bucketIterables = buckets[Symbol.iterator]()
+    const messageCountIterables = messageCounts[Symbol.iterator]()
+    const messageIterables = messages[Symbol.iterator]()
     return (query: string) => {
         if (query.includes('FROM bucket')) {
-            return buckets!
+            return bucketIterables.next().value
         } else if (query.includes('total FROM stream_data')) {
-            return messageCounts!
+            return messageCountIterables.next().value
         } else if (query.includes('payload FROM stream_data')) {
-            return messages!
+            return messageIterables.next().value
         } else {
             throw new Error(`Assertion failed: query="${query}"`)
         }
@@ -105,72 +109,58 @@ describe('Storage', () => {
 
     describe('requestLast', () => {
 
-        it('happy path', (done) => {
+        it('happy path', async () => {
             storage = createMockStorage(createResultFactory({
-                buckets: [MOCK_BUCKET],
-                messageCounts: [MOCK_MESSAGE_COUNT],
-                messages: [MOCK_MESSAGE_2]
+                buckets: [[MOCK_BUCKET]],
+                messageCounts: [[MOCK_MESSAGE_COUNT]],
+                messages: [[MOCK_MESSAGE_2]]
             }))
             const resultStream = storage.requestLast(MOCK_STREAM_ID, 0, 1)
-            const onData = jest.fn()
-            resultStream.on('data', onData)
-            resultStream.on('end', () => {
-                expect(onData).toBeCalledTimes(1)
-                expect(onData.mock.calls[0][0].serialize()).toEqual(MOCK_MESSAGE_2.payload)
-                done()
-            })
+            const messages: Protocol.StreamMessage[] = (await waitForStreamToEnd(resultStream)) as Protocol.StreamMessage[]
+            expect(messages.length).toBe(1)
+            expect(messages[0].serialize()).toEqual(MOCK_MESSAGE_2.payload)
         })
 
-        it('no messages', (done) => {
+        it('no messages', async () => {
             storage = createMockStorage(createResultFactory({
-                buckets: [],
+                buckets: [[]],
             }))
             const resultStream = storage.requestLast(MOCK_STREAM_ID, 0, 1)
-            const onData = jest.fn()
-            resultStream.on('data', onData)
-            resultStream.on('end', () => {
-                expect(onData).not.toBeCalled()
-                done()
-            })
+            const messages: Protocol.StreamMessage[] = (await waitForStreamToEnd(resultStream)) as Protocol.StreamMessage[]
+            expect(messages.length).toBe(0)
         })
 
-        it('bucket query error', (done) => {
+        it('bucket query error', async () => {
             const expectedError = new Error('bucket-error')
             storage = createMockStorage(createResultFactory({
-                buckets: expectedError
+                buckets: [expectedError]
             }))
             const resultStream = storage.requestLast(MOCK_STREAM_ID, 0, 1)
-            resultStream.on('error', (e) => {
-                expect(e).toBe(expectedError)
-                done()
-            })
+            const [ actualError ] = await waitForEvent(resultStream, 'error')
+            expect(actualError).toBe(expectedError)
         })
 
-        it('message count query error', (done) => {
+        it('message count query error', async () => {
             const expectedError = new Error('message-count-error')
             storage = createMockStorage(createResultFactory({
-                buckets: [MOCK_BUCKET],
-                messageCounts: expectedError
+                buckets: [[MOCK_BUCKET]],
+                messageCounts: [expectedError]
             }))
             const resultStream = storage.requestLast(MOCK_STREAM_ID, 0, 1)
-            resultStream.on('error', (e) => {
-                expect(e).toBe(expectedError)
-                done()
-            })
+            const [ actualError ] = await waitForEvent(resultStream, 'error')
+            expect(actualError).toBe(expectedError)
         })
 
-        it('message query error', (done) => {
+        it('message query error', async () => {
             const expectedError = new Error('message-error')
             storage = createMockStorage(createResultFactory({
-                buckets: [MOCK_BUCKET],
-                messageCounts: [MOCK_MESSAGE_COUNT],
-                messages: expectedError
+                buckets: [[MOCK_BUCKET]],
+                messageCounts: [[MOCK_MESSAGE_COUNT]],
+                messages: [expectedError]
             }))
             const resultStream = storage.requestLast(MOCK_STREAM_ID, 0, 1)
-            resultStream.on('error', (e) => {
-                expect(e).toBe(expectedError)
-                done()
-            })
+            const [ actualError ] = await waitForEvent(resultStream, 'error')
+            expect(actualError).toBe(expectedError)
         })
 
     })
@@ -179,7 +169,7 @@ describe('Storage', () => {
         [REQUEST_TYPE_FROM, true],
         [REQUEST_TYPE_FROM, false],
         [REQUEST_TYPE_RANGE, true],
-        [REQUEST_TYPE_RANGE, false],
+        [REQUEST_TYPE_RANGE, false]
     ])('%s, publisher: %p', (requestType: string, isPublisher: boolean) => {
 
         const getResultStream = (storage: Storage): Readable => {
@@ -194,60 +184,46 @@ describe('Storage', () => {
             }
         }
 
-        it('happy path', (done) => {
+        it('happy path', async () => {
             storage = createMockStorage(createResultFactory({
-                buckets: [MOCK_BUCKET],
-                messages: [MOCK_MESSAGE_1, MOCK_MESSAGE_2]
+                buckets: [[MOCK_BUCKET], []],
+                messages: [[MOCK_MESSAGE_1, MOCK_MESSAGE_2], [], []]
             }))
             const resultStream = getResultStream(storage)
-            const receivedMessages: Protocol.StreamMessage[] = []
-            resultStream.on('data', (message: Protocol.StreamMessage) => {
-                receivedMessages.push(message)
-            })
-            resultStream.on('end', () => {
-                expect(receivedMessages.length === 2)
-                expect(receivedMessages[0].serialize()).toEqual(MOCK_MESSAGE_1.payload)
-                expect(receivedMessages[1].serialize()).toEqual(MOCK_MESSAGE_2.payload)
-                done()
-            })
+            const messages: Protocol.StreamMessage[] = (await waitForStreamToEnd(resultStream)) as Protocol.StreamMessage[]
+            expect(messages.length).toBe(2)
+            expect(messages[0].serialize()).toEqual(MOCK_MESSAGE_1.payload)
+            expect(messages[1].serialize()).toEqual(MOCK_MESSAGE_2.payload)
         })
 
-        it('no messages', (done) => {
+        it('no messages', async () => {
             storage = createMockStorage(createResultFactory({
-                buckets: [],
+                buckets: [[], []],
             }))
             const resultStream = getResultStream(storage)
-            const onData = jest.fn()
-            resultStream.on('data', onData)
-            resultStream.on('end', () => {
-                expect(onData).not.toBeCalled()
-                done()
-            })
+            const messages: Protocol.StreamMessage[] = (await waitForStreamToEnd(resultStream)) as Protocol.StreamMessage[]
+            expect(messages.length).toBe(0)
         })
 
-        it('bucket query error', (done) => {
+        it('bucket query error', async () => {
             const expectedError = new Error('bucket-error')
             storage = createMockStorage(createResultFactory({
-                buckets: expectedError
+                buckets: [expectedError]
             }))
             const resultStream = getResultStream(storage)
-            resultStream.on('error', (e) => {
-                expect(e).toBe(expectedError)
-                done()
-            })
+            const [ actualError ] = await waitForEvent(resultStream, 'error')
+            expect(actualError).toBe(expectedError)
         })
 
-        it('message query error', (done) => {
+        it('message query error', async () => {
             const expectedError = new Error('message-error')
             storage = createMockStorage(createResultFactory({
-                buckets: [MOCK_BUCKET],
-                messages: expectedError
+                buckets: [[MOCK_BUCKET], []],
+                messages: [expectedError, [], []]
             }))
             const resultStream = getResultStream(storage)
-            resultStream.on('error', (e) => {
-                expect(e).toBe(expectedError)
-                done()
-            })
+            const [ actualError ] = await waitForEvent(resultStream, 'error')
+            expect(actualError).toBe(expectedError)
         })
 
     })
