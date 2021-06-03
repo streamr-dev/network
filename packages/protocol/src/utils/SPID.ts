@@ -1,8 +1,34 @@
 import { format } from 'util'
 
+/**
+ * Object version of SPID
+ */
+export type SPIDObject = {
+    streamId: string,
+    streamPartition: number
+}
+
+/**
+ * Represents partial SPIDObject e.g. for setting defaults
+ * Known keys
+ */
+export type SPIDObjectPartial = Partial<SPIDObject>
+
+/**
+ * SPID or String representing a SPID
+ * Object cases can be typechecked
+ * TODO: SPID string type safety
+ */
+export type SPIDLike = SPID | string | SPIDObject | { id: string, partition: number }
+
+/**
+ * Flexible input type
+ */
+export type SPIDLikePartial = SPIDLike | SPIDObjectPartial | Partial<{ id: string, partition: number }>
+
 class SPIDValidationError extends Error {
-    data: SPIDishPartial
-    constructor(msg: string, data: SPIDishPartial) {
+    data: SPIDLikePartial
+    constructor(msg: string, data: SPIDLikePartial) {
         super(format(msg, data))
         this.data = data
         if (Error.captureStackTrace) {
@@ -14,9 +40,6 @@ class SPIDValidationError extends Error {
 /**
  * SPID - Stream Partition ID
  */
-// if you're using JS numbers for
-// ids or keys going over MAX_SAFE_INTEGER has the potential for disasterous
-// effects e.g. serving private user information
 export default class SPID {
     /** stream id */
     public readonly id: string
@@ -65,7 +88,7 @@ export default class SPID {
     /**
      * True iff other value is equivalent.
      */
-    equals(other: SPIDish): boolean {
+    equals(other: SPIDLike): boolean {
         // check if same instance
         if (other === this) { return true }
         let otherSpid: SPID
@@ -81,18 +104,23 @@ export default class SPID {
         return this.key === otherSpid.key
     }
 
-    static toSPIDObjectPartial(spidish: SPIDishPartial): SPIDObjectPartial {
+    /**
+     * Convert SPIDLikePartial to SPIDObjectPartial
+     * i.e. normalizes various input types/shapes to { streamId?, streamPartition? }
+     * Note: does not throw on malformed input
+     */
+    static toSPIDObjectPartial(spidLike: SPIDLikePartial): SPIDObjectPartial {
         // convert from string
-        if (typeof spidish === 'string') {
-            const [streamId, partitionStr] = spidish.split(this.SEPARATOR)
+        if (typeof spidLike === 'string') {
+            const [streamId, partitionStr] = spidLike.split(this.SEPARATOR)
             // partition is optional, falls back to undefined i.e. default
             const streamPartition = partitionStr != null ? Number.parseFloat(partitionStr) : undefined
             return { streamId, streamPartition }
-        } else if (spidish && typeof spidish === 'object') {
+        } else if (spidLike && typeof spidLike === 'object') {
             // @ts-expect-error object should have one of these, validated anyway
-            const streamId = spidish.streamId || spidish.id
+            const streamId = spidLike.streamId || spidLike.id
             // @ts-expect-error object should have one of these, validated anyway
-            const partition = spidish.streamPartition || spidish.partition
+            const partition = spidLike.streamPartition || spidLike.partition
             // try parse if a value was passed, but fall back to undefined i.e. default
             const streamPartition = partition != null ? Number.parseFloat(partition) : undefined
             return { streamId, streamPartition }
@@ -108,32 +136,32 @@ export default class SPID {
      * fromDefaults(streamId, { partition: 0 })
      * ```
      */
-    static fromDefaults(spidish: SPIDish, defaultValues?: SPIDishPartial): SPID
-    static fromDefaults(spidish: SPIDishPartial, defaultValues: SPIDishPartial): SPID // requires id+partition if no defaults
-    static fromDefaults(spidish: SPIDishPartial, defaultValues?: SPIDishPartial): SPID {
+    static fromDefaults(spidLike: SPIDLike, defaultValues?: SPIDLikePartial): SPID
+    static fromDefaults(spidLike: SPIDLikePartial, defaultValues: SPIDLikePartial): SPID // requires id+partition if no defaults
+    static fromDefaults(spidLike: SPIDLikePartial, defaultValues?: SPIDLikePartial): SPID {
         // return spid if already spid
-        if (spidish instanceof SPID) {
-            return spidish
+        if (spidLike instanceof SPID) {
+            return spidLike
         }
 
         // defaults can be partial, e.g. { partition: 0 }
         // toSPIDObjectPartial can handle undefined input but we want external interface to check for it.
         const defaults = SPID.toSPIDObjectPartial(defaultValues!)
-        const { streamId = defaults?.streamId, streamPartition = defaults?.streamPartition } = SPID.toSPIDObjectPartial(spidish)
+        const { streamId = defaults?.streamId, streamPartition = defaults?.streamPartition } = SPID.toSPIDObjectPartial(spidLike)
         try {
             // constructor can handle partial input but we want external interface to check for it.
             return new SPID(streamId!, streamPartition!)
         } catch (err) {
             // TODO: add more conversions?
-            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err.message} %o`, spidish)
+            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err.message} %o`, spidLike)
         }
     }
 
     /**
      * Convert to SPID if possible.
      */
-    static from(spidish: SPIDish): SPID {
-        return SPID.fromDefaults(spidish)
+    static from(spidLike: SPIDLike): SPID {
+        return SPID.fromDefaults(spidLike)
     }
 
     /**
@@ -161,39 +189,14 @@ export default class SPID {
     }
 
     /**
-     * Returns a key for spidish
+     * Returns a key for spidLike
      * e.g.
      * ```js
      * const key = SPID.toKey({ streamId, streamPartition })
      * ```
      */
-    static toKey(spidish: SPIDish): string {
-        return SPID.from(spidish).key
+    static toKey(spidLike: SPIDLike): string {
+        return SPID.from(spidLike).key
     }
 }
 
-/**
- * Object version of SPID
- */
-export type SPIDObject = {
-    streamId: string,
-    streamPartition: number
-}
-
-/**
- * Represents partial SPIDObject e.g. for setting defaults
- * Known keys
- */
-export type SPIDObjectPartial = Partial<SPIDObject>
-
-/**
- * Flexible input type
- */
-export type SPIDishPartial = SPIDish | SPIDObjectPartial | Partial<{ id: string, partition: number }>
-
-/**
- * SPID or String representing a SPID
- * Object cases can be typechecked
- * TODO: SPID string type safety
- */
-export type SPIDish = SPID | string | SPIDObject | { id: string, partition: number }

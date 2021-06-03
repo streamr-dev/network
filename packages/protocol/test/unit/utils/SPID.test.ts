@@ -218,7 +218,7 @@ describe('SPID', () => {
             expect(spid1.equals(spid4)).not.toBeTruthy()
         })
 
-        it('works with spidish', () => {
+        it('works with spidLike', () => {
             const spid = new SPID(STREAM_ID, PARTITION)
             const spidString = spid.toString()
             expect(spid.equals(spidString)).toBeTruthy()
