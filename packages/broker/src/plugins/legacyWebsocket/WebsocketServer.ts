@@ -180,15 +180,8 @@ export class WebsocketServer extends EventEmitter {
 
             const connection = new Connection(ws, controlLayerVersion, messageLayerVersion)
             this.connections.set(ws, connection)
-            connection.once('forceClose', (err: any) => {
-                try {
-                    connection.socket.terminate()
-                } catch (e) {
-                    // no need to check this error
-                } finally {
-                    logger.warn('connection %s was terminated, reason: %s', connection.id, err)
-                    this.removeConnection(connection)
-                }
+            connection.once('close', () => {
+                this.removeConnection(connection)
             })
 
             ws.on('message', async (data: WebSocket.Data) => {
@@ -305,8 +298,6 @@ export class WebsocketServer extends EventEmitter {
 
         // Cancel all resends
         this.requestHandler.onConnectionClose(connection.id)
-
-        connection.markAsDead()
     }
 
     async close(): Promise<unknown> {
@@ -345,7 +336,7 @@ export class WebsocketServer extends EventEmitter {
                 logger.trace(`pinging ${connection.id}`)
             } catch (e) {
                 logger.error(`Failed to ping connection: ${connection.id}, error ${e}`)
-                connection.emit('forceClose')
+                connection.forceClose('failed to ping')
             }
         })
     }

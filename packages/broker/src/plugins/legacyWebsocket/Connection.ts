@@ -13,6 +13,12 @@ function generateId(): string {
     return id
 }
 
+export interface Connection {
+    on(eventName: 'close', handler: () => void): this
+    on(eventName: 'highBackPressure', handler: () => void): this
+    on(eventName: 'lowBackPressure', handler: () => void): this
+}
+
 export class Connection extends EventEmitter {
     static LOW_BACK_PRESSURE = 1024 * 1024
     static HIGH_BACK_PRESSURE = 1024 * 1024 * 4
@@ -37,6 +43,18 @@ export class Connection extends EventEmitter {
         this.highBackPressure = false
     }
 
+    getBufferedAmount(): number {
+        return this.socket.bufferedAmount
+    }
+
+    getStreams(): Stream[] {
+        return this.streams.slice() // return copy
+    }
+
+    isDead(): boolean {
+        return this.dead
+    }
+
     addStream(stream: Stream): void {
         this.streams.push(stream)
     }
@@ -52,20 +70,8 @@ export class Connection extends EventEmitter {
         this.getStreams().forEach(cb)
     }
 
-    getStreams(): Stream[] {
-        return this.streams.slice() // return copy
-    }
-
     streamsAsString(): string[] {
         return this.streams.map((s: Stream) => s.toString())
-    }
-
-    markAsDead(): void {
-        this.dead = true
-    }
-
-    isDead(): boolean {
-        return this.dead
     }
 
     evaluateBackPressure(): void {
@@ -80,10 +86,6 @@ export class Connection extends EventEmitter {
         }
     }
 
-    getBufferedAmount(): number {
-        return this.socket.bufferedAmount
-    }
-
     ping(): void {
         this.socket.ping()
     }
@@ -95,7 +97,19 @@ export class Connection extends EventEmitter {
             this.socket.send(serialized)
             this.evaluateBackPressure()
         } catch (e) {
-            this.emit('forceClose', e)
+            this.forceClose(`unable to send message: ${e}`)
+        }
+    }
+
+    forceClose(reason: string): void {
+        try {
+            this.socket.terminate()
+        } catch (e) {
+            // no need to check this error
+        } finally {
+            logger.warn('connection %s was terminated, reason: %s', this.id, reason)
+            this.dead = true
+            this.emit('close')
         }
     }
 }
