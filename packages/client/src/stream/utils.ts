@@ -37,7 +37,7 @@ export function validateOptions<U>(optionsOrStreamId: StreamPartDefinition): Val
             const { stream, ...other } = optionsOrStreamId
             return validateOptions({
                 ...other,
-                ...validateOptions(stream),
+                ...(validateOptions(stream) as ValidatedStreamPartDefinition),
             })
         }
 
