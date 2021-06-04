@@ -17,21 +17,21 @@ describe('StorageConfigEndpoints', () => {
     it('stream in storage config', async () => {
         const app = express()
         // @ts-expect-error
-        app.use('/api/v1', router(storageConfig))
+        app.use(router(storageConfig))
         await createRequest('existing', 123, app).expect(200)
     })
 
     it('stream not in storage config', async () => {
         const app = express()
         // @ts-expect-error
-        app.use('/api/v1', router(storageConfig))
+        app.use(router(storageConfig))
         await createRequest('non-existing', 456, app).expect(404)
     })
 
     it('invalid partition', async () => {
         const app = express()
         // @ts-expect-error
-        app.use('/api/v1', router(storageConfig))
+        app.use(router(storageConfig))
         await createRequest('foo', 'bar' as any, app).expect(400, 'Partition is not a number: bar')
     })
 })

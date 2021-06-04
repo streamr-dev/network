@@ -5,13 +5,11 @@ import { Serializer } from '../../Serializer'
 
 // TODO use ControlMessageType instead of number when we have real enums
 const serializerByVersionAndType: {[version: string]: { [type: number]: Serializer<TrackerMessage> }} = {}
-const LATEST_VERSION = 1
+const LATEST_VERSION = 2
 
 export enum TrackerMessageType {
     StatusMessage = 1,
     InstructionMessage = 2,
-    StorageNodesRequest = 3,
-    StorageNodesResponse = 4,
     RelayMessage = 5,
     ErrorMessage = 6
 }

@@ -1,4 +1,4 @@
-import {PeerInfo} from './PeerInfo'
+import { PeerInfo } from './PeerInfo'
 import { Rtts } from '../identifiers'
 
 export enum Event {
