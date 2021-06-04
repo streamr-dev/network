@@ -29,7 +29,7 @@ Streamr network, client & supporting packages. Work in progress.
 Uses [lerna](https://github.com/lerna/lerna#readmes).
 
 ```
-npm install
+npm ci
 npm run bootstrap
 ```
 

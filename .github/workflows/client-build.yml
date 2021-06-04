@@ -184,7 +184,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [14.x, 12.x]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -212,10 +212,14 @@ jobs:
         run: |
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: benchmarks
-        run: npm run benchmarks > benchmarks.txt
+      - name: benchmark publish
+        run: DEBUG='' npm run benchmark-publish > benchmark-publish.txt
+      - name: benchmark subscribe
+        run: DEBUG='' npm run benchmark-subscribe > benchmark-subscribe.txt
       - uses: actions/upload-artifact@v2
         with:
           name: client-benchmarks
-          path: packages/client/benchmarks.txt
+          path: |
+              packages/client/benchmark-publish.txt
+              packages/client/benchmark-subscribe.txt
 

@@ -8,7 +8,7 @@ const { StreamMessage } = MessageLayer
 const { SigningUtil } = Utils
 const { SIGNATURE_TYPES } = StreamMessage
 
-type AuthOption = {
+export type AuthOption = {
     ethereum?: never
     privateKey: string | Uint8Array
 } | {

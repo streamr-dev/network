@@ -7,10 +7,10 @@ import mqtt from 'async-mqtt'
 import { Broker } from '../../../../src/broker'
 import { createMockUser, createClient, startBroker } from '../../../utils'
 
-const MQTT_PORT = 1883
-const WS_PORT = 12391
-const TRACKER_PORT = 12392
-const NETWORK_PORT = 12393
+const MQTT_PORT = 1884
+const WS_PORT = 12395
+const TRACKER_PORT = 12396
+const NETWORK_PORT = 12397
 const MOCK_API_KEY = 'mock-api-key'
 
 const createMqttClient = () => {

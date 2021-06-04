@@ -1,5 +1,5 @@
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse
+    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyAnnounce
 } from 'streamr-client-protocol'
 import pMemoize from 'p-memoize'
 import { uuid, Defer } from '../../utils'
@@ -18,6 +18,8 @@ import {
 } from './KeyExchangeUtils'
 
 type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
+
+const { MESSAGE_TYPES } = StreamMessage
 
 function waitForSubMessage(sub: Subscription, matchFn: MessageMatch) {
     const task = Defer<StreamMessage | undefined>()
@@ -40,17 +42,24 @@ function waitForSubMessage(sub: Subscription, matchFn: MessageMatch) {
 }
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil) {
+    const { messageType } = streamMessage
     const content = streamMessage.getParsedContent() || []
-    if (content.length === 2) {
-        content.unshift('') // Java client doesn't inject request id, skip as not needed.
+    let encryptedGroupKeys: EncryptedGroupKey[] = []
+    if (messageType === MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
+        encryptedGroupKeys = GroupKeyResponse.fromArray(content).encryptedGroupKeys || []
+    } else if (messageType === MESSAGE_TYPES.GROUP_KEY_ANNOUNCE) {
+        const msg = GroupKeyAnnounce.fromArray(content)
+        encryptedGroupKeys = msg.encryptedGroupKeys || []
     }
-    const { encryptedGroupKeys = [] } = GroupKeyResponse.fromArray(content)
-    return Promise.all(encryptedGroupKeys.map(async (encryptedGroupKey) => (
+
+    const tasks = encryptedGroupKeys.map(async (encryptedGroupKey) => (
         new GroupKey(
             encryptedGroupKey.groupKeyId,
             await encryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, true)
         )
-    )))
+    ))
+    await Promise.allSettled(tasks)
+    return Promise.all(tasks)
 }
 
 async function SubscriberKeyExhangeSubscription(
@@ -62,7 +71,6 @@ async function SubscriberKeyExhangeSubscription(
     async function onKeyExchangeMessage(_parsedContent: any, streamMessage: StreamMessage) {
         try {
             const { messageType } = streamMessage
-            const { MESSAGE_TYPES } = StreamMessage
             if (messageType !== MESSAGE_TYPES.GROUP_KEY_ANNOUNCE) {
                 return
             }
@@ -186,7 +194,7 @@ export class SubscriberKeyExchange {
             groupKeyStore.add(groupKey)
         )))
 
-        return groupKeyStore.get(groupKeyId)
+        return receivedGroupKeys.find((groupKey) => groupKey.id === groupKeyId)
     }
 
     cleanupPending() {

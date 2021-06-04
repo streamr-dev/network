@@ -43,7 +43,6 @@ describeRepeats('sequential resend subscribe', () => {
             auth: {
                 privateKey: fakePrivateKey(),
             },
-            // @ts-expect-error
             publishAutoDisconnectDelay: 1000,
             autoConnect: false,
             autoDisconnect: false,
