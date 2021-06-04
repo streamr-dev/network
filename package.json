@@ -5,12 +5,16 @@
         "link": "lerna link",
         "bootstrap": "lerna bootstrap",
         "bootstrap-pkg": "npx lerna bootstrap --include-dependencies --scope",
+        "versions": "./show-versions.mjs",
         "clean": "npx lerna clean"
     },
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
+        "cli-table": "^0.3.6",
         "husky": "^6.0.0",
-        "lerna": "^4.0.0"
+        "lerna": "^4.0.0",
+        "semver": "^7.3.5",
+        "zx": "^1.14.1"
     }
 }
