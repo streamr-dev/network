@@ -57,7 +57,7 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeRegistry
+            storageNodeConfig: { storageNodes: storageNodeRegistry }
         })
         storageNode2 = await startBroker({
             name: 'storageNode2',
@@ -68,7 +68,7 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort2,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeRegistry
+            storageNodeConfig: { storageNodes: storageNodeRegistry }
         })
         storageNode3 = await startBroker({
             name: 'storageNode3',
@@ -79,7 +79,7 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort3,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeRegistry
+            storageNodeConfig: { storageNodes: storageNodeRegistry }
         })
 
         const user1 = createMockUser()

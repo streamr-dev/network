@@ -1,5 +1,5 @@
 import { MetricsContext, NetworkNode } from 'streamr-network'
-import { Config } from './config'
+import {Config, StorageNodeRegistryItem} from './config'
 import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
 import express from 'express'
@@ -17,6 +17,7 @@ export interface PluginOptions {
     apiAuthenticator: ApiAuthenticator
     metricsContext: MetricsContext
     brokerConfig: Config
+    storageNodeRegistry: StorageNodeRegistryItem[]
 }
 
 export abstract class Plugin<T> {
@@ -29,6 +30,7 @@ export abstract class Plugin<T> {
     readonly apiAuthenticator: ApiAuthenticator
     readonly metricsContext: MetricsContext
     readonly brokerConfig: Config
+    readonly storageNodeRegistry: StorageNodeRegistryItem[]
     readonly pluginConfig: T
     private readonly httpServerRouters: express.Router[] = []
 
@@ -42,6 +44,7 @@ export abstract class Plugin<T> {
         this.metricsContext = options.metricsContext
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]
+        this.storageNodeRegistry = options.storageNodeRegistry
         const configSchema = this.getConfigSchema()
         if (configSchema !== undefined) {
             validateConfig(this.pluginConfig, configSchema, `${this.name} plugin`)

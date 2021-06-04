@@ -27,7 +27,7 @@ export function formConfig({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeRegistry = [],
+    storageNodeConfig = {storageNodes: []},
     storageConfigRefreshInterval = 0,
     reporting = false
 }: Todo): Config {
@@ -100,7 +100,7 @@ export function formConfig({
         },
         streamrUrl,
         streamrAddress,
-        storageNodeRegistry,
+        storageNodeConfig,
         httpServer: httpPort ? {
             port: httpPort,
             privateKeyFileName: null,

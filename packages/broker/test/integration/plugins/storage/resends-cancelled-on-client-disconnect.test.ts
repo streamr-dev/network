@@ -91,13 +91,11 @@ describe('resend cancellation', () => {
         })
         const storageNodeAddress = Wallet.createRandom().address
         const storageNodeRegistry = StorageNodeRegistry.createInstance(
-            {
-                storageNodeRegistry: [{
-                    address: storageNodeAddress,
-                    url: `http://127.0.0.1:${mockServerPort}`
-                }],
-                streamrUrl: `http://${STREAMR_DOCKER_DEV_HOST}`
-            } as any
+            { streamrUrl: `http://${STREAMR_DOCKER_DEV_HOST}`} as any,
+            [{
+                address: storageNodeAddress,
+                url: `http://127.0.0.1:${mockServerPort}`
+            }]
         )
         websocketServer = new WebsocketServer(
             ws.App(),

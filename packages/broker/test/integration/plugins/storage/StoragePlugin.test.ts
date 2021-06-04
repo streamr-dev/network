@@ -38,7 +38,8 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
         streamrClient: undefined,
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
-        brokerConfig
+        brokerConfig,
+        storageNodeRegistry: []
     })
 }
 

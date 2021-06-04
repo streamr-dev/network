@@ -34,7 +34,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         } else {
             server = ws.App()
         }
-        const storageNodeRegistry = StorageNodeRegistry.createInstance(this.brokerConfig)
+        const storageNodeRegistry = StorageNodeRegistry.createInstance(this.brokerConfig, this.storageNodeRegistry)
         this.websocketServer = new WebsocketServer(
             server,
             this.pluginConfig.port,

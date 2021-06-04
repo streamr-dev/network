@@ -11,7 +11,7 @@
     "reporting",
     "streamrUrl",
     "streamrAddress",
-    "storageNodeRegistry"
+    "storageNodeConfig"
   ],
   "additionalProperties": false,
   "properties": {
@@ -263,10 +263,46 @@
       "description": "Ethereum address Core (E&E)",
       "pattern": "^0x[a-fA-F0-9]{40}$"
     },
-    "storageNodeRegistry": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/storageNodeRegistryItem"
+    "storageNodeConfig": {
+      "type": "object",
+      "description": "Network node settings",
+      "required": [
+        "storageNodes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "storageNodes": {
+          "oneOf": [
+            {
+              "type": "array",
+              "description": "List of storageNode HTTP URLs to connect to",
+              "items": {
+                "$ref": "#/definitions/storageNodeRegistryItem"
+              }
+            },
+            {
+              "type": "object",
+              "description": "Storage Node Tracker Registry Config",
+              "required": [
+                "registryAddress",
+                "jsonRpcProvider"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "registryAddress": {
+                  "type": "string",
+                  "description": "Ethereum address of tracker registry smart contract",
+                  "pattern": "^0x[a-fA-F0-9]{40}$"
+                },
+                "jsonRpcProvider": {
+                  "type": "string",
+                  "description": "URL for JSON RPC Provider",
+                  "format": "uri"
+                }
+              }
+            }
+          ]
+        }
       }
     },
     "apiAuthentication": {

@@ -11,7 +11,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, TrackerRegistry } from './config'
+import {Config, NetworkSmartContractRegistry, StorageNodeRegistryItem} from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -44,14 +44,26 @@ export const startBroker = async (config: Config): Promise<Broker> => {
 
     // Form tracker list
     let trackers: string[]
-    if ((config.network.trackers as TrackerRegistry).registryAddress) {
+    if ((config.network.trackers as NetworkSmartContractRegistry).registryAddress) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
-            contractAddress: (config.network.trackers as TrackerRegistry).registryAddress,
-            jsonRpcProvider: (config.network.trackers as TrackerRegistry).jsonRpcProvider
+            contractAddress: (config.network.trackers as NetworkSmartContractRegistry).registryAddress,
+            jsonRpcProvider: (config.network.trackers as NetworkSmartContractRegistry).jsonRpcProvider
         })
         trackers = registry.getAllTrackers().map((record) => record.ws)
     } else {
         trackers = config.network.trackers as string[]
+    }
+
+    // Form storage node list
+    let storageNodes: StorageNodeRegistryItem[]
+    if ((config.storageNodeConfig.storageNodes as NetworkSmartContractRegistry).registryAddress) {
+        const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
+            contractAddress: (config.storageNodeConfig.storageNodes as NetworkSmartContractRegistry).registryAddress,
+            jsonRpcProvider: (config.storageNodeConfig.storageNodes as NetworkSmartContractRegistry).jsonRpcProvider
+        })
+        storageNodes = registry.getAllStorageNodes()
+    } else {
+        storageNodes = config.storageNodeConfig.storageNodes as StorageNodeRegistryItem[]
     }
 
     // Start network node
@@ -76,7 +88,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
 
     if (config.reporting.streamr || (config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.enabled)) {
         const targetStorageNode = config.reporting.perNodeMetrics!.storageNode
-        const storageNodeRegistryItem = config.storageNodeRegistry.find((n) => n.address === targetStorageNode)
+        const storageNodeRegistryItem = storageNodes.find((n) => n.address === targetStorageNode)
         if (storageNodeRegistryItem === undefined) {
             throw new Error(`Value ${storageNodeRegistryItem} (config.reporting.perNodeMetrics.storageNode) not ` +
                 'present in config.storageNodeRegistry')
@@ -124,7 +136,8 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             streamrClient: localStreamrClient,
             apiAuthenticator,
             metricsContext,
-            brokerConfig: config
+            brokerConfig: config,
+            storageNodeRegistry: storageNodes
         }
         return createPlugin(name, pluginOptions)
     })

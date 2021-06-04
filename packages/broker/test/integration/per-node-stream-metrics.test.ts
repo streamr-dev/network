@@ -90,7 +90,7 @@ describe('metricsStream', () => {
             trackerPort,
             httpPort,
             enableCassandra: true,
-            storageNodeRegistry,
+            storageNodeConfig: { storageNodes: storageNodeRegistry },
             storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
             // therefore StorageAssignmentEventManager test helper cannot be used
         })
@@ -119,7 +119,7 @@ describe('metricsStream', () => {
                     storageNode: storageNodeAccount.address
                 }
             },
-            storageNodeRegistry
+            storageNodeConfig: { storageNodes: storageNodeRegistry }
         })
 
         client2 = createClient(wsPort, tmpAccount.privateKey, {

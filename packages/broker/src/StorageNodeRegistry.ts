@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
-import { Config } from './config'
 import { GenericError } from './errors/GenericError'
+import { StorageNodeRegistryItem, Config } from './config'
 
 export class StorageNodeRegistry {
 
@@ -16,9 +16,9 @@ export class StorageNodeRegistry {
         return this.urlByAddress[address]
     }
 
-    static createInstance(config: Config): StorageNodeRegistry {
+    static createInstance(config: Config, storageNodeRegistry: StorageNodeRegistryItem[]): StorageNodeRegistry {
         const urlByAddress: Record<string,string> = {}
-        config.storageNodeRegistry.forEach((item) => {
+        storageNodeRegistry.forEach((item) => {
             urlByAddress[item.address] = item.url
         })
         return new StorageNodeRegistry(urlByAddress, config.streamrUrl)
