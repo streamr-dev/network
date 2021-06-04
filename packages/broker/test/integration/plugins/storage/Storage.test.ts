@@ -72,7 +72,6 @@ describe('Storage', () => {
     })
 
     beforeEach(async () => {
-        // @ts-expect-error
         storage = await startCassandraStorage({
             contactPoints,
             localDataCenter,

@@ -20,9 +20,9 @@ export interface StartCassandraOptions {
     contactPoints: string[]
     localDataCenter: string
     keyspace: string
-    username: string
-    password: string
-    opts: Todo
+    username?: string
+    password?: string
+    opts?: Todo
 }
 
 export type MessageFilter = (streamMessage: Protocol.StreamMessage) => boolean
