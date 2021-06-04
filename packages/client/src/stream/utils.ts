@@ -93,6 +93,7 @@ export async function waitForMatchingMessage({
     timeoutMessage,
     cancelTask,
 }: Todo) {
+    let callError: Error | undefined = new Error('waitForMatchingMessage Error')
     if (typeof matchFn !== 'function') {
         throw new Error(`matchFn required, got: (${typeof matchFn}) ${matchFn}`)
     }
@@ -121,14 +122,16 @@ export async function waitForMatchingMessage({
         const onErrorResponse = (res: Todo) => {
             if (!tryMatch(res)) { return }
             // clean up success handler
+            const error = callError || new Error('waitForMatchingMessage Error')
             cleanup()
-            const error = new Error(res.errorMessage)
+            error.message += `: ${res.errorMessage}`
             // @ts-expect-error
             error.code = res.errorCode
             reject(error)
         }
 
         cleanup = () => {
+            callError = undefined
             if (cancelTask) { cancelTask.catch(() => {}) } // ignore
             connection.off('disconnected', onDisconnected)
             connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)

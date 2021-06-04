@@ -5,7 +5,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "prepare": "./gradlew fatjar",
+    "prepare": "./gradlew fatjar 2>&1 < /dev/null # building cross-client-testing, redirect output to work around gradle i/o bug.",
     "test": "java -jar build/libs/client_testing-1.0-SNAPSHOT.jar"
   },
   "repository": {

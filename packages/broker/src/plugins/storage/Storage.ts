@@ -277,19 +277,11 @@ export class Storage extends EventEmitter {
         return resultStream
     }
 
-    _fetchFromMessageRefForPublisher(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number|null, publisherId?: string|null, msgChainId: string|null = null) {
+    _fetchFromMessageRefForPublisher(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number|null, publisherId?: string|null) {
         const resultStream = this._createResultStream()
 
-        let query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
-        let query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
-
-        if (msgChainId !== null){
-            query1 += 'AND msg_chain_id = ? '
-            query2 += 'AND msg_chain_id = ? '
-        }
-
-        query1 +=  'ALLOW FILTERING'
-        query2 +=  'ALLOW FILTERING'
+        const query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? ALLOW FILTERING'
+        const query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND publisher_id = ? ALLOW FILTERING'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) {
@@ -301,10 +293,6 @@ export class Storage extends EventEmitter {
 
             const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo, publisherId]
             const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, publisherId]
-            if (msgChainId !== null) {
-                queryParams1.push(msgChainId)
-                queryParams2.push(msgChainId)
-            }
             const stream1 = this._queryWithStreamingResults(query1, queryParams1)
             const stream2 = this._queryWithStreamingResults(query2, queryParams2)
 

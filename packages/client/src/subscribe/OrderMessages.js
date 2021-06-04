@@ -16,8 +16,9 @@ let ID = 0
  */
 
 export default function OrderMessages(client, options = {}) {
-    const { gapFillTimeout, retryResendAfter, maxGapRequests } = client.options
+    const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages } = client.options
     const { streamId, streamPartition, gapFill = true } = validateOptions(options)
+    let enabled = !!(orderMessages && gapFill && maxGapRequests)
     const debug = client.debug.extend(`OrderMessages::${ID}`)
     ID += 1
 
@@ -35,7 +36,7 @@ export default function OrderMessages(client, options = {}) {
         }
         outStream.push(orderedMessage)
     }, async (from, to, publisherId, msgChainId) => {
-        if (done || !gapFill) { return }
+        if (done || !enabled) { return }
         debug('gap %o', {
             streamId, streamPartition, publisherId, msgChainId, from, to,
         })
@@ -46,7 +47,6 @@ export default function OrderMessages(client, options = {}) {
         })
 
         try {
-            if (done) { return }
             resendStreams.add(resendMessageStream)
             await resendMessageStream.subscribe()
             if (done) { return }
@@ -55,11 +55,22 @@ export default function OrderMessages(client, options = {}) {
                 if (done) { return }
                 orderingUtil.add(streamMessage)
             }
+        } catch (err) {
+            if (done) { return }
+
+            if (err.code === 'NO_STORAGE_NODES') {
+                // ignore NO_STORAGE_NODES errors
+                // if stream has no storage we can't do resends
+                enabled = false // eslint-disable-line require-atomic-updates
+                orderingUtil.disable()
+            } else {
+                outStream.push(err)
+            }
         } finally {
             resendStreams.delete(resendMessageStream)
             await resendMessageStream.cancel()
         }
-    }, gapFillTimeout, retryResendAfter, gapFill ? maxGapRequests : 0)
+    }, gapFillTimeout, retryResendAfter, enabled ? maxGapRequests : 0)
 
     const markMessageExplicitly = orderingUtil.markMessageExplicitly.bind(orderingUtil)
 

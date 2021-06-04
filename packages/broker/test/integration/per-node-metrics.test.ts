@@ -50,7 +50,7 @@ const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: st
     return Promise.allSettled(promises)
 }
 
-describe('metricsStream', () => {
+describe('per-node metrics', () => {
     let tracker: Tracker
     let broker1: Todo
     let storageNode: Todo
@@ -58,7 +58,8 @@ describe('metricsStream', () => {
     let legacyStream: Stream
     let nodeAddress: string
     let client2: StreamrClient
-    beforeEach(async () => {
+
+    beforeAll(async () => {
         const tmpAccount = Wallet.createRandom()
         const storageNodeAccount = Wallet.createRandom()
         const storageNodeRegistry = [{
@@ -122,12 +123,16 @@ describe('metricsStream', () => {
             storageNodeRegistry
         })
 
-        client2 = createClient(wsPort, tmpAccount.privateKey, {
-            storageNode: storageNodeRegistry[0]
-        })
+        client2 = createClient(wsPort, tmpAccount.privateKey)
+        await Promise.all([
+            fillMetrics(client2, 60, nodeAddress, 'sec'),
+            fillMetrics(client2, 60, nodeAddress, 'min'),
+            fillMetrics(client2, 24, nodeAddress, 'hour'),
+        ])
+
     }, 35 * 1000)
 
-    afterEach(async () => {
+    afterAll(async () => {
         await Promise.allSettled([
             tracker.stop(),
             broker1.close(),
@@ -189,7 +194,6 @@ describe('metricsStream', () => {
             expect(res.timestamp).toBeGreaterThanOrEqual(0)
             done()
         })
-        fillMetrics(client2, 60, nodeAddress, 'sec')
     })
 
     it('should retrieve the last `hour` metrics', (done) => {
@@ -212,7 +216,6 @@ describe('metricsStream', () => {
             expect(res.timestamp).toBeGreaterThanOrEqual(0)
             done()
         })
-        fillMetrics(client2, 60, nodeAddress, 'min')
     })
 
     it('should retrieve the last `day` metrics', (done) => {
@@ -235,6 +238,5 @@ describe('metricsStream', () => {
             expect(res.timestamp).toBeGreaterThanOrEqual(0)
             done()
         })
-        fillMetrics(client2, 24, nodeAddress, 'hour')
     })
 })
