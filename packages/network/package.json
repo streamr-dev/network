@@ -46,7 +46,7 @@
     "node-datachannel": "^0.1.4",
     "pino": "^6.11.3",
     "speedometer": "^1.1.0",
-    "streamr-client-protocol": "^8.1.0",
+    "streamr-client-protocol": "^8.2.0",
     "strict-event-emitter-types": "^2.0.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.14.0",
     "uuid": "^8.3.2",
