@@ -34,7 +34,7 @@
     "streamr-client": "5.4.2-alpha.0"
   },
   "devDependencies": {
-    "@streamr/dev-config": "1.0.0-alpha.0",
+    "@streamr/dev-config": "^1.0.0",
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
     "@types/jest": "^26.0.23",

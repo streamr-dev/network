@@ -53,7 +53,7 @@
     "ws": "^7.4.5"
   },
   "devDependencies": {
-    "@streamr/dev-config": "1.0.0-alpha.0",
+    "@streamr/dev-config": "^1.0.0",
     "@types/geoip-lite": "^1.4.1",
     "@types/heap": "^0.2.28",
     "@types/jest": "^26.0.23",
