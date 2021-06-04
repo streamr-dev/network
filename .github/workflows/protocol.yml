@@ -69,7 +69,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "parity-node0 parity-sidechain-node0"
+          services-to-start: "parity-node0"
 
       - name: test-integration
         run: npm run test-integration
@@ -97,7 +97,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "parity-node0"
+          services-to-start: "parity-node0 parity-sidechain-node0"
 
       - name: test-integration
         run: npm run test-integration
