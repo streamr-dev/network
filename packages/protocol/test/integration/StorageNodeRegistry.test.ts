@@ -18,7 +18,7 @@ describe('StorageNodeRegistry', () => {
 
     test('throw exception if address is wrong', async (done) => {
         try {
-            await getTrackerRegistryFromContract({
+            await getStorageNodeRegistryFromContract({
                 contractAddress: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', jsonRpcProvider
             })
         } catch (e) {
@@ -29,7 +29,7 @@ describe('StorageNodeRegistry', () => {
 
     test('throw exception if jsonRpcProvider is wrong', async (done) => {
         try {
-            await getTrackerRegistryFromContract({
+            await getStorageNodeRegistryFromContract({
                 contractAddress, jsonRpcProvider: 'jsonRpcProvider'
             })
         } catch (e) {
