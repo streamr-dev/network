@@ -85,8 +85,8 @@ const createEndpointRoute = (
                             'Content-Type': format.contentType
                         })
                     })
-                    data.on('error', () => {
-                        logger.error(`Stream error in DataQueryEndpoints: ${streamId}`)
+                    data.on('error', (err: any) => {
+                        logger.error(`Stream error in DataQueryEndpoints: ${streamId}`, err)
                         if (!res.headersSent) {
                             res.status(500).json({
                                 error: 'Failed to fetch data!'

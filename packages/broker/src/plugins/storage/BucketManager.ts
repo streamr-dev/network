@@ -18,7 +18,6 @@ interface StreamPartState {
 }
 
 export interface BucketManagerOptions {
-    logErrors: boolean,
     checkFullBucketsTimeout: number,
     storeBucketsTimeout: number
     maxBucketSize: number
@@ -44,7 +43,6 @@ export class BucketManager {
 
     constructor(cassandraClient: Client, opts: Partial<BucketManagerOptions> = {}) {
         const defaultOptions = {
-            logErrors: true,
             checkFullBucketsTimeout: 1000,
             storeBucketsTimeout: 500,
             maxBucketSize: 1024 * 1024 * 100,
@@ -293,26 +291,20 @@ export class BucketManager {
     async _getBucketsFromDatabase(query: string, params: any, streamId: string, partition: number) {
         const buckets: Bucket[] = []
 
-        try {
-            const resultSet = await this.cassandraClient.execute(query, params, {
-                prepare: true,
-            })
+        const resultSet = await this.cassandraClient.execute(query, params, {
+            prepare: true,
+        })
 
-            resultSet.rows.forEach((row) => {
-                const { id, records, size, date_create: dateCreate } = row
+        resultSet.rows.forEach((row) => {
+            const { id, records, size, date_create: dateCreate } = row
 
-                const bucket = new Bucket(
-                    id.toString(), streamId, partition, size, records, new Date(dateCreate),
-                    this.opts.maxBucketSize, this.opts.maxBucketRecords, this.opts.bucketKeepAliveSeconds
-                )
+            const bucket = new Bucket(
+                id.toString(), streamId, partition, size, records, new Date(dateCreate),
+                this.opts.maxBucketSize, this.opts.maxBucketRecords, this.opts.bucketKeepAliveSeconds
+            )
 
-                buckets.push(bucket)
-            })
-        } catch (e) {
-            if (this.opts.logErrors) {
-                logger.error(e)
-            }
-        }
+            buckets.push(bucket)
+        })
 
         return buckets
     }
