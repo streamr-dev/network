@@ -91,32 +91,10 @@ describe('Storage', () => {
         await storage.close()
     })
 
-    describe('no messages', () => {
-
-        test('requestLast not throwing exception if no buckets found', async () => {
-            const b = storage.requestLast(streamId, 777, 10)
-            const resultsB = await toArray(b)
-            expect(resultsB).toEqual([])
-        })
-
-        test('requestFrom not throwing exception if no buckets found', async () => {
-            const a = storage.requestFrom(streamId, 777, 1, 0, null)
-            const resultsB = await toArray(a)
-            expect(resultsB).toEqual([])
-        })
-
-        test('requestRange not throwing exception if no buckets found', async () => {
-            const a = storage.requestRange(streamId, 777, 0, 0, Number.MAX_VALUE, 0, null, null)
-            const resultsB = await toArray(a)
-            expect(resultsB).toEqual([])
-        })
-
-        test('requestFrom not throwing exception if timestamp is zero', async () => {
-            const a = storage.requestFrom(streamId, 0, 0, 0, null)
-            const resultsA = await toArray(a)
-            expect(resultsA).toEqual([])
-        })
-
+    test('requestFrom not throwing exception if timestamp is zero', async () => {
+        const a = storage.requestFrom(streamId, 0, 0, 0, null)
+        const resultsA = await toArray(a)
+        expect(resultsA).toEqual([])
     })
 
     test('store messages into Cassandra', async () => {
