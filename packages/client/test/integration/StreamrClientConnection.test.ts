@@ -35,7 +35,6 @@ describeRepeats('StreamrClient Connection', () => {
             autoDisconnect: false,
             // disconnectDelay: 500,
             // publishAutoDisconnectDelay: 250,
-            // @ts-expect-error
             maxRetries: 2,
             ...opts,
         })

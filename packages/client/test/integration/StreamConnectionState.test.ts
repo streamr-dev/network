@@ -31,7 +31,6 @@ describeRepeats('Connection State', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
-            // @ts-expect-error
             publishAutoDisconnectDelay: 250,
             maxRetries: 2,
             ...opts,

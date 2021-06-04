@@ -29,7 +29,6 @@ describeRepeats('GapFill', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
-            // @ts-expect-error
             maxRetries: 2,
             maxGapRequests: 10,
             ...opts,
