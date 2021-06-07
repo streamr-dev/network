@@ -1,4 +1,4 @@
-name: Broker – Lint, Test and Publish
+name: Broker
 
 on:
   push:
