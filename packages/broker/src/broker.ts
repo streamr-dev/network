@@ -17,6 +17,7 @@ import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
+import { StorageNodeRegistry } from "./StorageNodeRegistry"
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -65,6 +66,8 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     } else {
         storageNodes = config.storageNodeConfig.registry as StorageNodeRegistryItem[]
     }
+
+    const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
     // Start network node
     const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
@@ -137,7 +140,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
             apiAuthenticator,
             metricsContext,
             brokerConfig: config,
-            storageNodeRegistry: storageNodes
+            storageNodeRegistry
         }
         return createPlugin(name, pluginOptions)
     })
