@@ -265,13 +265,13 @@
     },
     "storageNodeConfig": {
       "type": "object",
-      "description": "Network node settings",
+      "description": "Storage node settings",
       "required": [
-        "storageNodes"
+        "registry"
       ],
       "additionalProperties": false,
       "properties": {
-        "storageNodes": {
+        "registry": {
           "oneOf": [
             {
               "type": "array",
@@ -284,12 +284,12 @@
               "type": "object",
               "description": "Storage Node Tracker Registry Config",
               "required": [
-                "registryAddress",
+                "contractAddress",
                 "jsonRpcProvider"
               ],
               "additionalProperties": false,
               "properties": {
-                "registryAddress": {
+                "contractAddress": {
                   "type": "string",
                   "description": "Ethereum address of tracker registry smart contract",
                   "pattern": "^0x[a-fA-F0-9]{40}$"

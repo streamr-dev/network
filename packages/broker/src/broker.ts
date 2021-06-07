@@ -11,7 +11,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import {Config, NetworkSmartContractRegistry, StorageNodeRegistryItem} from './config'
+import { Config, NetworkSmartContract, StorageNodeRegistryItem } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -44,10 +44,10 @@ export const startBroker = async (config: Config): Promise<Broker> => {
 
     // Form tracker list
     let trackers: string[]
-    if ((config.network.trackers as NetworkSmartContractRegistry).registryAddress) {
+    if ((config.network.trackers as NetworkSmartContract).contractAddress) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
-            contractAddress: (config.network.trackers as NetworkSmartContractRegistry).registryAddress,
-            jsonRpcProvider: (config.network.trackers as NetworkSmartContractRegistry).jsonRpcProvider
+            contractAddress: (config.network.trackers as NetworkSmartContract).contractAddress,
+            jsonRpcProvider: (config.network.trackers as NetworkSmartContract).jsonRpcProvider
         })
         trackers = registry.getAllTrackers().map((record) => record.ws)
     } else {
@@ -56,14 +56,14 @@ export const startBroker = async (config: Config): Promise<Broker> => {
 
     // Form storage node list
     let storageNodes: StorageNodeRegistryItem[]
-    if ((config.storageNodeConfig.storageNodes as NetworkSmartContractRegistry).registryAddress) {
+    if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
         const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
-            contractAddress: (config.storageNodeConfig.storageNodes as NetworkSmartContractRegistry).registryAddress,
-            jsonRpcProvider: (config.storageNodeConfig.storageNodes as NetworkSmartContractRegistry).jsonRpcProvider
+            contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
+            jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
         })
         storageNodes = registry.getAllStorageNodes()
     } else {
-        storageNodes = config.storageNodeConfig.storageNodes as StorageNodeRegistryItem[]
+        storageNodes = config.storageNodeConfig.registry as StorageNodeRegistryItem[]
     }
 
     // Start network node

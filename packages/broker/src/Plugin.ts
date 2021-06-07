@@ -1,5 +1,5 @@
 import { MetricsContext, NetworkNode } from 'streamr-network'
-import {Config, StorageNodeRegistryItem} from './config'
+import { Config, StorageNodeRegistryItem } from './config'
 import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
 import express from 'express'

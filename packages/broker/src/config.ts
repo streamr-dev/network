@@ -1,5 +1,5 @@
-export interface NetworkSmartContractRegistry {
-    registryAddress: string
+export interface NetworkSmartContract {
+    contractAddress: string
     jsonRpcProvider: string
 }
 
@@ -8,7 +8,7 @@ export interface NetworkConfig {
     hostname: string,
     port: number,
     advertisedWsUrl: string | null,
-    trackers: string[] | NetworkSmartContractRegistry,
+    trackers: string[] | NetworkSmartContract,
     location: {
         latitude: number,
         longitude: number,
@@ -29,7 +29,7 @@ export interface StorageNodeRegistryItem {
 }
 
 export interface StorageNodeConfig {
-    storageNodes: StorageNodeRegistryItem[] | NetworkSmartContractRegistry
+    registry: StorageNodeRegistryItem[] | NetworkSmartContract
 }
 
 export interface Config {
