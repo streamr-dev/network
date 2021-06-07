@@ -3,7 +3,7 @@ import { MetricsContext } from 'streamr-network'
 import { BatchManager } from './BatchManager'
 import { Readable, Transform } from 'stream'
 import { EventEmitter } from 'events'
-import { pipeline } from 'stream'
+import pump from 'pump'
 import { v1 as uuidv1 } from 'uuid'
 import merge2 from 'merge2'
 import { Protocol } from 'streamr-network'
@@ -20,9 +20,9 @@ export interface StartCassandraOptions {
     contactPoints: string[]
     localDataCenter: string
     keyspace: string
-    username?: string
-    password?: string
-    opts?: Todo
+    username: string
+    password: string
+    opts: Todo
 }
 
 export type MessageFilter = (streamMessage: Protocol.StreamMessage) => boolean
@@ -125,7 +125,8 @@ export class Storage extends EventEmitter {
                 })
                 resultStream.push(null)
             }).catch((e: Todo) => {
-                resultStream.destroy(e)
+                logger.warn(e)
+                resultStream.push(null)
             })
         }
 
@@ -142,7 +143,8 @@ export class Storage extends EventEmitter {
             bucketIds.push(bucketId)
         }, (err: Todo, result: Todo) => {
             if (err) {
-                resultStream.destroy(err)
+                logger.error(err)
+                resultStream.push(null)
             } else {
                 // no buckets found at all
                 if (!bucketId) {
@@ -165,7 +167,8 @@ export class Storage extends EventEmitter {
                         makeLastQuery(bucketIds)
                     }
                 }).catch((e: Todo) => {
-                    resultStream.destroy(e)
+                    logger.warn(e)
+                    resultStream.push(null)
                 })
             }
         })
@@ -249,9 +252,8 @@ export class Storage extends EventEmitter {
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
-            if (buckets.length === 0) {
-                resultStream.push(null)
-                return
+            if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
+                throw new Error(`_fetchFromTimestamp: Failed to find buckets: ${streamId} ${partition}`)
             }
 
             const bucketsForQuery = bucketsToIds(buckets)
@@ -259,19 +261,21 @@ export class Storage extends EventEmitter {
             const queryParams = [streamId, partition, bucketsForQuery, fromTimestamp]
             const cassandraStream = this._queryWithStreamingResults(query, queryParams)
 
-            return pipeline(
+            return pump(
                 // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 cassandraStream,
                 resultStream,
                 (err?: Error) => {
                     if (err) {
-                        resultStream.destroy(err)
+                        logger.error('pump finished with error', err)
+                        resultStream.push(null)
                     }
                 }
             )
         })
             .catch((e: Todo) => {
-                resultStream.destroy(e)
+                logger.warn(e)
+                resultStream.push(null)
             })
 
         return resultStream
@@ -284,9 +288,8 @@ export class Storage extends EventEmitter {
         const query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND publisher_id = ? ALLOW FILTERING'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
-            if (buckets.length === 0) {
-                resultStream.push(null)
-                return
+            if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
+                throw new Error(`_fetchFromMessageRefForPublisher: Failed to find buckets: ${streamId} ${partition}`)
             }
 
             const bucketsForQuery = bucketsToIds(buckets)
@@ -296,21 +299,21 @@ export class Storage extends EventEmitter {
             const stream1 = this._queryWithStreamingResults(query1, queryParams1)
             const stream2 = this._queryWithStreamingResults(query2, queryParams2)
 
-            return pipeline(
+            return pump(
                 // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
-                merge2(stream1, stream2, {
-                    pipeError: true
-                }),
+                merge2(stream1, stream2),
                 resultStream,
                 (err: Todo) => {
                     if (err) {
-                        resultStream.destroy(err)
+                        logger.error('pump finished with error', err)
+                        resultStream.push(null)
                     }
                 }
             )
         })
             .catch((e: Todo) => {
-                resultStream.destroy(e)
+                logger.warn(e)
+                resultStream.push(null)
             })
 
         return resultStream
@@ -323,9 +326,8 @@ export class Storage extends EventEmitter {
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
-            if (buckets.length === 0) {
-                resultStream.push(null)
-                return
+            if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
+                throw new Error(`_fetchBetweenTimestamps: Failed to find buckets: ${streamId} ${partition}`)
             }
 
             const bucketsForQuery = bucketsToIds(buckets)
@@ -333,19 +335,21 @@ export class Storage extends EventEmitter {
             const queryParams = [streamId, partition, bucketsForQuery, fromTimestamp, toTimestamp]
             const cassandraStream = this._queryWithStreamingResults(query, queryParams)
 
-            return pipeline(
+            return pump(
                 // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 cassandraStream,
                 resultStream,
                 (err: Todo) => {
                     if (err) {
-                        resultStream.destroy(err)
+                        logger.error('pump finished with error', err)
+                        resultStream.push(null)
                     }
                 }
             )
         })
             .catch((e: Todo) => {
-                resultStream.destroy(e)
+                logger.warn(e)
+                resultStream.push(null)
             })
 
         return resultStream
@@ -362,9 +366,8 @@ export class Storage extends EventEmitter {
             + 'AND msg_chain_id = ? ALLOW FILTERING'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
-            if (buckets.length === 0) {
-                resultStream.push(null)
-                return
+            if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
+                throw new Error(`_fetchBetweenMessageRefsForPublisher: Failed to find buckets: ${streamId} ${partition}`)
             }
 
             const bucketsForQuery = bucketsToIds(buckets)
@@ -376,21 +379,21 @@ export class Storage extends EventEmitter {
             const stream2 = this._queryWithStreamingResults(query2, queryParams2)
             const stream3 = this._queryWithStreamingResults(query3, queryParams3)
 
-            return pipeline(
+            return pump(
                 // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
-                merge2(stream1, stream2, stream3, {
-                    pipeError: true
-                }),
+                merge2(stream1, stream2, stream3),
                 resultStream,
                 (err: Todo) => {
                     if (err) {
-                        resultStream.destroy(err)
+                        logger.error('pump finished with error', err)
+                        resultStream.push(null)
                     }
                 }
             )
         })
             .catch((e: Todo) => {
-                resultStream.destroy(e)
+                logger.warn(e)
+                resultStream.push(null)
             })
 
         return resultStream
@@ -414,6 +417,8 @@ export class Storage extends EventEmitter {
                 // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 setImmediate(() => cassandraStream.resume())
             }
+        }).on('error', (err: Todo) => {
+            logger.error(err)
         })
 
         return cassandraStream
