@@ -265,24 +265,35 @@ describe('Storage', () => {
         expect(results3).toEqual([])
     }, 20000)
 
-    test('fast big stream', async () => {
+    describe('fast big stream', () => {
+        let storedStreamId: string
+        const NUM_MESSAGES = 1000
 
-        const storePromises = []
-        for (let i = 0; i < 1000; i++) {
-            const msg = buildMsg(streamId, 0, (i + 1) * 1000, i, 'publisher1')
-            storePromises.push(storage.store(msg))
-        }
-        await Promise.all(storePromises)
+        beforeEach(async () => {
+            // slow message setup: run this once
+            // capture first streamId as storedStreamId, use that for these tests
+            if (storedStreamId) { return }
+            storedStreamId = streamId
+            const storePromises = []
+            for (let i = 0; i < NUM_MESSAGES; i++) {
+                const msg = buildMsg(storedStreamId, 0, (i + 1) * 1000, i, 'publisher1')
+                storePromises.push(storage.store(msg))
+            }
+            await Promise.all(storePromises)
+        }, 30000)
 
-        const streamingResults1 = storage.requestLast(streamId, 0, 1000)
-        const results1 = await toArray(streamingResults1)
-        expect(results1.length).toEqual(1000)
+        it('can requestLast', async () => {
+            const streamingResults = storage.requestLast(storedStreamId, 0, NUM_MESSAGES)
+            const results = await toArray(streamingResults)
+            expect(results.length).toEqual(1000)
+        }, 20000)
 
-        const streamingResults2 = storage.requestFrom(streamId, 0, 1000, 0, null)
-        const results2 = await toArray(streamingResults2)
-        expect(results2.length).toEqual(1000)
-
-    }, 60000)
+        it('can requestFrom', async () => {
+            const streamingResults = storage.requestFrom(storedStreamId, 0, NUM_MESSAGES, 0, null)
+            const results = await toArray(streamingResults)
+            expect(results.length).toEqual(1000)
+        }, 20000)
+    })
 
     describe('stream details', () => {
 
