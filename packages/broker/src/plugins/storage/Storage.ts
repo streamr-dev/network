@@ -170,16 +170,6 @@ export class Storage extends EventEmitter {
             }
         })
 
-        // Temporary counter for debugging purposes
-        let counter = 0
-        resultStream
-            .on('data', () => {
-                counter += 1
-            })
-            .on('end', () => {
-                logger.info('Storage finished resendLast for stream %s with a total of %d sent messages', streamId, counter)
-            })
-
         return resultStream
     }
 
@@ -260,10 +250,9 @@ export class Storage extends EventEmitter {
             const cassandraStream = this._queryWithStreamingResults(query, queryParams)
 
             return pipeline(
-                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 cassandraStream,
                 resultStream,
-                (err?: Error) => {
+                (err?: Error | null) => {
                     if (err) {
                         resultStream.destroy(err)
                     }
@@ -297,8 +286,8 @@ export class Storage extends EventEmitter {
             const stream2 = this._queryWithStreamingResults(query2, queryParams2)
 
             return pipeline(
-                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 merge2(stream1, stream2, {
+                    // @ts-expect-error pipeError not in merge2 types
                     pipeError: true
                 }),
                 resultStream,
@@ -334,10 +323,9 @@ export class Storage extends EventEmitter {
             const cassandraStream = this._queryWithStreamingResults(query, queryParams)
 
             return pipeline(
-                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 cassandraStream,
                 resultStream,
-                (err: Todo) => {
+                (err: Error | null) => {
                     if (err) {
                         resultStream.destroy(err)
                     }
@@ -377,8 +365,8 @@ export class Storage extends EventEmitter {
             const stream3 = this._queryWithStreamingResults(query3, queryParams3)
 
             return pipeline(
-                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 merge2(stream1, stream2, stream3, {
+                    // @ts-expect-error pipeError not in merge2 types
                     pipeError: true
                 }),
                 resultStream,
@@ -397,26 +385,10 @@ export class Storage extends EventEmitter {
     }
 
     _queryWithStreamingResults(query: string, queryParams: any[]) {
-        const cassandraStream = this.cassandraClient.stream(query, queryParams, {
+        return this.cassandraClient.stream(query, queryParams, {
             prepare: true,
             autoPage: false
-        })
-
-        // To avoid blocking main thread for too long, on every 1000th message
-        // pause & resume the cassandraStream to give other events in the event
-        // queue a chance to be handled.
-        let resultCount = 0
-        cassandraStream.on('data', () => {
-            resultCount += 1
-            if (resultCount % 1000 === 0) {
-                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
-                cassandraStream.pause()
-                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
-                setImmediate(() => cassandraStream.resume())
-            }
-        })
-
-        return cassandraStream
+        }) as Readable
     }
 
     _parseRow(row: Todo) {
@@ -426,10 +398,21 @@ export class Storage extends EventEmitter {
     }
 
     _createResultStream() {
+        // To avoid blocking main thread for too long, on every 1000th message
+        // pause & resume the cassandraStream to give other events in the event
+        // queue a chance to be handled.
+        let resultCount = 0
+        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         return new Transform({
             objectMode: true,
-            transform: (row: Todo, _: Todo, done: Todo) => {
-                done(null, this._parseRow(row))
+            transform(row: Todo, _: Todo, done: Todo) {
+                resultCount += 1
+                this.push(self._parseRow(row))
+                if (resultCount % 1000 === 0) {
+                    setImmediate(() => done())
+                } else {
+                    done()
+                }
             }
         })
     }
