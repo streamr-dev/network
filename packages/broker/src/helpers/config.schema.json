@@ -100,25 +100,8 @@
               }
             },
             {
-              "type": "object",
               "description": "Tracker registry smart contract to use for fetching tracker WebSocket URLs",
-              "required": [
-                "registryAddress",
-                "jsonRpcProvider"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "registryAddress": {
-                  "type": "string",
-                  "description": "Ethereum address of tracker registry smart contract",
-                  "pattern": "^0x[a-fA-F0-9]{40}$"
-                },
-                "jsonRpcProvider": {
-                  "type": "string",
-                  "description": "URL for JSON RPC Provider",
-                  "format": "uri"
-                }
-              }
+              "$ref": "#/definitions/smartContractConfig"
             }
           ]
         },
@@ -281,25 +264,8 @@
               }
             },
             {
-              "type": "object",
-              "description": "Storage Node Tracker Registry Config",
-              "required": [
-                "contractAddress",
-                "jsonRpcProvider"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "contractAddress": {
-                  "type": "string",
-                  "description": "Ethereum address of tracker registry smart contract",
-                  "pattern": "^0x[a-fA-F0-9]{40}$"
-                },
-                "jsonRpcProvider": {
-                  "type": "string",
-                  "description": "URL for JSON RPC Provider",
-                  "format": "uri"
-                }
-              }
+              "description": "Storage Node Registry Config",
+              "$ref": "#/definitions/smartContractConfig"
             }
           ]
         }
@@ -345,6 +311,26 @@
         "url": {
           "type": "string"
         }  
+      }
+    },
+    "smartContractConfig": {
+      "type": "object",
+      "required": [
+        "contractAddress",
+        "jsonRpcProvider"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "contractAddress": {
+          "type": "string",
+          "description": "Ethereum address of registry smart contract",
+          "pattern": "^0x[a-fA-F0-9]{40}$"
+        },
+        "jsonRpcProvider": {
+          "type": "string",
+          "description": "URL for JSON RPC Provider",
+          "format": "uri"
+        }
       }
     }
   }
