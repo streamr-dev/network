@@ -3,7 +3,6 @@ import {createStorageNodeRegistry, getStorageNodeRegistryFromContract} from '../
 const contractAddress = '0xEAA002f7Dc60178B6103f8617Be45a9D3df659B6'
 const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`
 
-console.log(jsonRpcProvider)
 describe('StorageNodeRegistry', () => {
 
     test('throw exception if address is wrong (ENS)', async (done) => {

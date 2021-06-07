@@ -24,6 +24,6 @@
   },
   "homepage": "https://github.com/streamr-dev/streamr-client-testing#readme",
   "dependencies": {
-    "streamr-client": "5.4.2-alpha.0"
+    "streamr-client": "^5.4.2"
   }
 }

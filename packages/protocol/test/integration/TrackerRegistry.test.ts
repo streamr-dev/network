@@ -2,7 +2,7 @@ import { createTrackerRegistry, getTrackerRegistryFromContract } from '../../src
 
 const contractAddress = '0xBFCF120a8fD17670536f1B27D9737B775b2FD4CF'
 const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`
-console.log(jsonRpcProvider)
+
 describe('TrackerRegistry', () => {
     test('throw exception if address is wrong (ENS)', async (done) => {
         try {
