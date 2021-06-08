@@ -1,7 +1,7 @@
 import WebSocket from 'ws'
 import { waitForCondition } from 'streamr-test-utils'
-import { startBroker, getWsUrlWithControlAndMessageLayerVersions } from '../utils'
-import { Todo } from 'streamr-client'
+import { Todo } from '../../../../src/types'
+import { startBroker, getWsUrlWithControlAndMessageLayerVersions } from '../../../utils'
 
 describe('websocket server', () => {
     let ws: WebSocket
