@@ -186,7 +186,15 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         expect(source).toEqual('trackerServer')
         expect(msg.requestId).toEqual('requestId')
-        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        const originatorNode = PeerInfo.newNode('originatorNode')
+        expect(msg.originator).toEqual(expect.objectContaining({
+            peerId: originatorNode.peerId,
+            peerType: originatorNode.peerType,
+            controlLayerVersions: originatorNode.controlLayerVersions,
+            messageLayerVersions: originatorNode.messageLayerVersions,
+            peerName: originatorNode.peerName,
+            location: originatorNode.location,        
+        }))
         expect(msg.targetNode).toEqual('node1')
         expect(msg.subType).toEqual('rtcOffer')
         expect(msg.data).toEqual({
@@ -201,7 +209,15 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         expect(source).toEqual('trackerServer')
         expect(msg.requestId).toEqual('requestId')
-        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        const originatorNode = PeerInfo.newNode('originatorNode')
+        expect(msg.originator).toEqual(expect.objectContaining({
+            peerId: originatorNode.peerId,
+            peerType: originatorNode.peerType,
+            controlLayerVersions: originatorNode.controlLayerVersions,
+            messageLayerVersions: originatorNode.messageLayerVersions,
+            peerName: originatorNode.peerName,
+            location: originatorNode.location,        
+        }))
         expect(msg.targetNode).toEqual('node1')
         expect(msg.subType).toEqual('rtcAnswer')
         expect(msg.data).toEqual({
@@ -216,7 +232,15 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         expect(source).toEqual('trackerServer')
         expect(msg.requestId).toEqual('requestId')
-        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        const originatorNode = PeerInfo.newNode('originatorNode')
+        expect(msg.originator).toEqual(expect.objectContaining({
+            peerId: originatorNode.peerId,
+            peerType: originatorNode.peerType,
+            controlLayerVersions: originatorNode.controlLayerVersions,
+            messageLayerVersions: originatorNode.messageLayerVersions,
+            peerName: originatorNode.peerName,
+            location: originatorNode.location,        
+        }))
         expect(msg.targetNode).toEqual('node1')
         expect(msg.subType).toEqual('rtcConnect')
         expect(msg.data).toEqual({})
@@ -229,7 +253,16 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         expect(source).toEqual('trackerServer')
         expect(msg.requestId).toEqual('requestId')
-        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+
+        const originatorNode = PeerInfo.newNode('originatorNode')
+        expect(msg.originator).toEqual(expect.objectContaining({
+            peerId: originatorNode.peerId,
+            peerType: originatorNode.peerType,
+            controlLayerVersions: originatorNode.controlLayerVersions,
+            messageLayerVersions: originatorNode.messageLayerVersions,
+            peerName: originatorNode.peerName,
+            location: originatorNode.location,        
+        }))
         expect(msg.targetNode).toEqual('node1')
         expect(msg.subType).toEqual('remoteCandidate')
         expect(msg.data).toEqual({
@@ -245,7 +278,15 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
-        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        const originatorNode = PeerInfo.newNode('originatorNode')
+        expect(msg.originator).toEqual(expect.objectContaining({
+            peerId: originatorNode.peerId,
+            peerType: originatorNode.peerType,
+            controlLayerVersions: originatorNode.controlLayerVersions,
+            messageLayerVersions: originatorNode.messageLayerVersions,
+            peerName: originatorNode.peerName,
+            location: originatorNode.location,        
+        }))
         expect(msg.targetNode).toEqual('targetNode')
         expect(msg.subType).toEqual('localCandidate')
         expect(msg.data).toEqual({
@@ -267,7 +308,15 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
-        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        const originatorNode = PeerInfo.newNode('originatorNode')
+        expect(msg.originator).toEqual(expect.objectContaining({
+            peerId: originatorNode.peerId,
+            peerType: originatorNode.peerType,
+            controlLayerVersions: originatorNode.controlLayerVersions,
+            messageLayerVersions: originatorNode.messageLayerVersions,
+            peerName: originatorNode.peerName,
+            location: originatorNode.location,        
+        }))
         expect(msg.targetNode).toEqual('targetNode')
         expect(msg.subType).toEqual('localDescription')
         expect(msg.data).toEqual({
@@ -283,7 +332,15 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
-        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        const originatorNode = PeerInfo.newNode('originatorNode')
+        expect(msg.originator).toEqual(expect.objectContaining({
+            peerId: originatorNode.peerId,
+            peerType: originatorNode.peerType,
+            controlLayerVersions: originatorNode.controlLayerVersions,
+            messageLayerVersions: originatorNode.messageLayerVersions,
+            peerName: originatorNode.peerName,
+            location: originatorNode.location,        
+        }))
         expect(msg.targetNode).toEqual('targetNode')
         expect(msg.subType).toEqual('rtcConnect')
         expect(msg.data).toEqual({})

@@ -71,17 +71,33 @@ describe('WebRtcEndpoint: back pressure handling', () => {
     }
 
     it('emits HIGH_BACK_PRESSURE on high back pressure', (done) => {
+        const ep2 = PeerInfo.newNode('ep2')
         ep1.once(Event.HIGH_BACK_PRESSURE, (peerInfo) => {
-            expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
+            expect(peerInfo).toEqual(expect.objectContaining({
+                peerId: ep2.peerId,
+                peerType: ep2.peerType,
+                controlLayerVersions: ep2.controlLayerVersions,
+                messageLayerVersions: ep2.messageLayerVersions,
+                peerName: ep2.peerName,
+                location: ep2.location,        
+            }))
             done()
         })
         inflictHighBackPressure()
     })
 
     it('emits LOW_BACK_PRESSURE after high back pressure',  (done) => {
+        const ep2 = PeerInfo.newNode('ep2')
         ep1.once(Event.HIGH_BACK_PRESSURE, () => {
             ep1.once(Event.LOW_BACK_PRESSURE, (peerInfo) => {
-                expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
+                expect(peerInfo).toEqual(expect.objectContaining({
+                    peerId: ep2.peerId,
+                    peerType: ep2.peerType,
+                    controlLayerVersions: ep2.controlLayerVersions,
+                    messageLayerVersions: ep2.messageLayerVersions,
+                    peerName: ep2.peerName,
+                    location: ep2.location,        
+                }))
                 done()
             })
         })
