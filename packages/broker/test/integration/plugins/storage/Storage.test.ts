@@ -308,7 +308,7 @@ describe('Storage', () => {
 
             const ts = await storage.getFirstMessageTimestampInStream(streamId, 10)
 
-            expect(ts.getTime()).toEqual(2000)
+            expect(ts).toEqual(2000)
         })
 
         test('getLastMessageTimestampInStream', async () => {
@@ -322,7 +322,7 @@ describe('Storage', () => {
 
             const ts = await storage.getLastMessageTimestampInStream(streamId, 10)
 
-            expect(ts.getTime()).toEqual(4000)
+            expect(ts).toEqual(4000)
         })
 
         test('getNumberOfMessagesInStream', async () => {

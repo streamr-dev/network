@@ -472,7 +472,7 @@ export class Storage extends EventEmitter {
         })
     }
 
-    async getFirstMessageTimestampInStream(streamId: string, partition: number): Promise<Date> {
+    async getFirstMessageTimestampInStream(streamId: string, partition: number): Promise<number> {
         const bucketQuery = 'SELECT id FROM bucket WHERE stream_id=? AND partition =? ORDER BY date_create ASC LIMIT 1'
 
         const queryParams = [streamId, partition]
@@ -482,7 +482,7 @@ export class Storage extends EventEmitter {
         })
 
         if (buckets.rows.length !== 1) {
-            return new Date(0)
+            return 0
         }
 
         const bucketId = buckets.rows[0].id
@@ -498,15 +498,15 @@ export class Storage extends EventEmitter {
         })
 
         if (streams.rows.length !== 1) {
-            return new Date(0)
+            return 0
         }
 
         const { ts } = streams.rows[0]
 
-        return ts
+        return new Date(ts).getTime()
     }
 
-    async getLastMessageTimestampInStream(streamId: string, partition: number): Promise<Date> {
+    async getLastMessageTimestampInStream(streamId: string, partition: number): Promise<number> {
         const bucketQuery = 'SELECT id FROM bucket WHERE stream_id=? AND partition =? ORDER BY date_create DESC LIMIT 1'
 
         const queryParams = [streamId, partition]
@@ -516,7 +516,7 @@ export class Storage extends EventEmitter {
         })
 
         if (buckets.rows.length !== 1) {
-            return new Date(0)
+            return 0
         }
 
         const bucketId = buckets.rows[0].id
@@ -532,12 +532,12 @@ export class Storage extends EventEmitter {
         })
 
         if (streams.rows.length !== 1) {
-            return new Date(0)
+            return 0
         }
 
         const { ts } = streams.rows[0]
 
-        return ts
+        return new Date(ts).getTime()
     }
 
     async getNumberOfMessagesInStream(streamId: string, partition: number): Promise<number> {
