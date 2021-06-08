@@ -27,7 +27,6 @@ export interface Broker {
     close: () => Promise<unknown>
 }
 
-
 export const startBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
 
