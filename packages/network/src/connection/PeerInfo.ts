@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { Location } from '../identifiers'
 
@@ -43,7 +44,7 @@ export class PeerInfo {
         peerName?: string | null | undefined,
         controlLayerVersions?: number[] | undefined,
         messageLayerVersions?: number[] | undefined,
-        location?: Location | null | undefined
+        location?: Location | null | undefined,
     ): PeerInfo  {
         return new PeerInfo(
             peerId,
@@ -88,6 +89,7 @@ export class PeerInfo {
     }
 
     readonly peerId: string
+    readonly sessionId: string
     readonly peerType: PeerType
     readonly controlLayerVersions: number[]
     readonly messageLayerVersions: number[]
@@ -100,7 +102,7 @@ export class PeerInfo {
         controlLayerVersions?: number[],
         messageLayerVersions?: number[],
         peerName?: string | null | undefined,
-        location?: Location | null | undefined
+        location?: Location | null | undefined,
     ) {
         if (!peerId) {
             throw new Error('peerId not given')
@@ -118,6 +120,8 @@ export class PeerInfo {
             throw new Error('messageLayerVersions not given')
         }
 
+       
+
         this.peerId = peerId
         this.peerType = peerType
         this.controlLayerVersions = controlLayerVersions
@@ -129,6 +133,8 @@ export class PeerInfo {
             country: null,
             city: null
         }
+
+        this.sessionId = `${peerId}#${uuidv4()}`
     }
 
     isTracker(): boolean {

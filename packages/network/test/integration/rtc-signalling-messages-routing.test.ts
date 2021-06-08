@@ -59,9 +59,17 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             'description'
         )
         const [rtcOffer] = await waitForEvent(targetTrackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
+        const originator = PeerInfo.newNode('originator')
         expect(rtcOffer).toEqual(new RelayMessage({
             requestId: sentMsg.requestId,
-            originator: PeerInfo.newNode('originator'),
+            originator: expect.objectContaining({
+                peerId: originator.peerId,
+                peerType: originator.peerType,
+                controlLayerVersions: originator.controlLayerVersions,
+                messageLayerVersions: originator.messageLayerVersions,
+                peerName: originator.peerName,
+                location: originator.location,        
+            }),
             targetNode: 'target',
             subType: RtcSubTypes.RTC_OFFER,
             data: {
@@ -80,9 +88,17 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             'description'
         )
         const [rtcOffer] = await waitForEvent(targetTrackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
+        const originator = PeerInfo.newNode('originator')
         expect(rtcOffer).toEqual(new RelayMessage({
             requestId: sentMsg.requestId,
-            originator: PeerInfo.newNode('originator'),
+            originator: expect.objectContaining({
+                peerId: originator.peerId,
+                peerType: originator.peerType,
+                controlLayerVersions: originator.controlLayerVersions,
+                messageLayerVersions: originator.messageLayerVersions,
+                peerName: originator.peerName,
+                location: originator.location,        
+            }),
             targetNode: 'target',
             subType: RtcSubTypes.RTC_ANSWER,
             data: {
@@ -102,9 +118,17 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             'mid'
         )
         const [rtcOffer] = await waitForEvent(targetTrackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
+        const originator = PeerInfo.newNode('originator')
         expect(rtcOffer).toEqual(new RelayMessage({
             requestId: sentMsg.requestId,
-            originator: PeerInfo.newNode('originator'),
+            originator: expect.objectContaining({
+                peerId: originator.peerId,
+                peerType: originator.peerType,
+                controlLayerVersions: originator.controlLayerVersions,
+                messageLayerVersions: originator.messageLayerVersions,
+                peerName: originator.peerName,
+                location: originator.location,        
+            }),
             targetNode: 'target',
             subType: RtcSubTypes.ICE_CANDIDATE,
             data: {
@@ -118,9 +142,17 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     it('RtcConnect messages are delivered', async () => {
         const sentMsg = await originatorTrackerNode.sendRtcConnect('tracker', 'target', PeerInfo.newNode('originator'))
         const [rtcOffer] = await waitForEvent(targetTrackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
+        const originator = PeerInfo.newNode('originator')
         expect(rtcOffer).toEqual(new RelayMessage({
             requestId: sentMsg.requestId,
-            originator: PeerInfo.newNode('originator'),
+            originator: expect.objectContaining({
+                peerId: originator.peerId,
+                peerType: originator.peerType,
+                controlLayerVersions: originator.controlLayerVersions,
+                messageLayerVersions: originator.messageLayerVersions,
+                peerName: originator.peerName,
+                location: originator.location,        
+            }),
             targetNode: 'target',
             subType: RtcSubTypes.RTC_CONNECT,
             data: {}

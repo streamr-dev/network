@@ -44,7 +44,7 @@ describe('WsEndpoint with no connections', () => {
     })
 
     it('getPeerInfo() gives peer info of endpoint', () => {
-        expect(wsEndpoint.getPeerInfo()).toEqual(PeerInfo.newTracker(
+        const originator = PeerInfo.newTracker(
             'peerId',
             'peerId',
             undefined,
@@ -55,7 +55,15 @@ describe('WsEndpoint with no connections', () => {
                 country: 'Finland',
                 city: 'Espoo'
             }
-        ))
+        )
+        expect(wsEndpoint.getPeerInfo()).toEqual(expect.objectContaining({
+            peerId: originator.peerId,
+            peerType: originator.peerType,
+            controlLayerVersions: originator.controlLayerVersions,
+            messageLayerVersions: originator.messageLayerVersions,
+            peerName: originator.peerName,
+            location: originator.location,   
+        }))
     })
 
     it('isConnected() returns false', () => {
@@ -124,29 +132,49 @@ describe('WsEndpoint with connections', () => {
     })
 
     it('getPeerInfos() is empty', () => {
+        const otherPeer = PeerInfo.newNode(
+            'otherPeerId',
+            null,
+            undefined,
+            undefined,
+            {
+                latitude: null,
+                longitude: null,
+                country: null,
+                city: null 
+            }
+        )
+        const thirdPeer = PeerInfo.newNode(
+            'thirdPeerId',
+            null,
+            undefined,
+            undefined,
+            {
+                latitude: null,
+                longitude: null,
+                country: null,
+                city: null
+            }
+        )
+
+
         expect(wsEndpoint.getPeerInfos()).toEqual([
-            PeerInfo.newNode(
-                'otherPeerId',
-                null,
-                undefined,
-                undefined,
-                {
-                    latitude: null,
-                    longitude: null,
-                    country: null,
-                    city: null }
-            ),
-            PeerInfo.newNode('thirdPeerId',
-                null,
-                undefined,
-                undefined,
-                {
-                    latitude: null,
-                    longitude: null,
-                    country: null,
-                    city: null
-                }
-            )
+            expect.objectContaining({
+                peerId: otherPeer.peerId,
+                peerType: otherPeer.peerType,
+                controlLayerVersions: otherPeer.controlLayerVersions,
+                messageLayerVersions: otherPeer.messageLayerVersions,
+                peerName: otherPeer.peerName,
+                location: otherPeer.location,   
+            }),
+            expect.objectContaining({
+                peerId: thirdPeer.peerId,
+                peerType: thirdPeer.peerType,
+                controlLayerVersions: thirdPeer.controlLayerVersions,
+                messageLayerVersions: thirdPeer.messageLayerVersions,
+                peerName: thirdPeer.peerName,
+                location: thirdPeer.location,   
+            })
         ])
     })
 

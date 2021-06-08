@@ -60,8 +60,28 @@ describe('ws-endpoint', () => {
         const endpointOneArguments = await e1
         const endpointTwoArguments = await e2
 
-        expect(endpointOneArguments).toEqual([PeerInfo.newNode('endpointTwo')])
-        expect(endpointTwoArguments).toEqual([PeerInfo.newNode('endpointOne')])
+        const endpointOneInfo = PeerInfo.newNode('endpointOne')
+        const endpointTwoInfo = PeerInfo.newNode('endpointTwo')
+
+        expect(endpointOneArguments).toEqual([expect.objectContaining({
+            peerId: endpointTwoInfo.peerId,
+            peerType: endpointTwoInfo.peerType,
+            controlLayerVersions: endpointTwoInfo.controlLayerVersions,
+            messageLayerVersions: endpointTwoInfo.messageLayerVersions,
+            peerName: endpointTwoInfo.peerName,
+            location: endpointTwoInfo.location,        
+        })])
+
+
+        
+        expect(endpointTwoArguments).toEqual([expect.objectContaining({
+            peerId: endpointOneInfo.peerId,
+            peerType: endpointOneInfo.peerType,
+            controlLayerVersions: endpointOneInfo.controlLayerVersions,
+            messageLayerVersions: endpointOneInfo.messageLayerVersions,
+            peerName: endpointOneInfo.peerName,
+            location: endpointOneInfo.location,        
+        }),])
 
         await endpointOne.stop()
         await endpointTwo.stop()

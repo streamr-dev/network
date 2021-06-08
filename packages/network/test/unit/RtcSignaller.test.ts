@@ -50,9 +50,18 @@ describe('RtcSignaller', () => {
             }),
             'router'
         )
+        const originator = PeerInfo.newNode('originator')
+
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
-            originatorInfo: PeerInfo.newNode('originator'),
+            originatorInfo: expect.objectContaining({
+                peerId: originator.peerId,
+                peerType: originator.peerType,
+                controlLayerVersions: originator.controlLayerVersions,
+                messageLayerVersions: originator.messageLayerVersions,
+                peerName: originator.peerName,
+                location: originator.location,        
+            }),
             targetNode: 'node'
         })
     })
@@ -73,9 +82,18 @@ describe('RtcSignaller', () => {
             }),
             'router'
         )
+        const originator = PeerInfo.newNode('originator')
+
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
-            originatorInfo: PeerInfo.newNode('originator'),
+            originatorInfo: expect.objectContaining({
+                peerId: originator.peerId,
+                peerType: originator.peerType,
+                controlLayerVersions: originator.controlLayerVersions,
+                messageLayerVersions: originator.messageLayerVersions,
+                peerName: originator.peerName,
+                location: originator.location,        
+            }),
             description: 'description',
         })
     })
@@ -96,9 +114,18 @@ describe('RtcSignaller', () => {
             }),
             'router'
         )
+        const originator = PeerInfo.newNode('originator')
+
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
-            originatorInfo: PeerInfo.newNode('originator'),
+            originatorInfo: expect.objectContaining({
+                peerId: originator.peerId,
+                peerType: originator.peerType,
+                controlLayerVersions: originator.controlLayerVersions,
+                messageLayerVersions: originator.messageLayerVersions,
+                peerName: originator.peerName,
+                location: originator.location,        
+            }),
             description: 'description'
         })
     })
@@ -120,9 +147,20 @@ describe('RtcSignaller', () => {
             }),
             'router'
         )
+
+        const originator = PeerInfo.newNode('originator')
+       
+
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
-            originatorInfo: PeerInfo.newNode('originator'),
+            originatorInfo: expect.objectContaining({
+                peerId: originator.peerId,
+                peerType: originator.peerType,
+                controlLayerVersions: originator.controlLayerVersions,
+                messageLayerVersions: originator.messageLayerVersions,
+                peerName: originator.peerName,
+                location: originator.location,        
+            }),
             candidate: 'candidate',
             mid: 'mid'
         })
