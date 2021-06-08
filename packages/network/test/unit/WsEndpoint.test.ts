@@ -157,6 +157,10 @@ describe('WsEndpoint with connections', () => {
             }
         )
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> test: passing existing tests
         expect(wsEndpoint.getPeerInfos()).toEqual([
             expect.objectContaining({
                 peerId: otherPeer.peerId,
