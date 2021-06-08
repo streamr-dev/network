@@ -71,8 +71,6 @@ describe('ws-endpoint', () => {
             peerName: endpointTwoInfo.peerName,
             location: endpointTwoInfo.location,        
         })])
-
-
         
         expect(endpointTwoArguments).toEqual([expect.objectContaining({
             peerId: endpointOneInfo.peerId,
