@@ -74,11 +74,6 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: '8'
-      - name: build-client-testing
-        working-directory: packages/cross-client-testing
-        run: |
-          ./gradlew distTar
-          tar xf build/distributions/client_testing-1.0-SNAPSHOT.tar
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -89,7 +84,7 @@ jobs:
           max_attempts: 5
           timeout_minutes: 15
           retry_on: error
-          command: cd packages/cross-client-testing && DEBUG='' ./client_testing-1.0-SNAPSHOT/bin/client_testing com.streamr.client_testing.Main -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
+          command: cd packages/cross-client-testing && DEBUG='' make run
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v1
