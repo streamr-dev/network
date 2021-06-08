@@ -52,28 +52,28 @@ describe('StorageNodeRegistry', () => {
     })
 
     it('get url by address', () => {
-        expect(registry.getUrlByAddress('0x1111111111111111111111111111111111111111')).toBe('http://one.mock')
-        expect(registry.getUrlByAddress('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')).toBe(undefined)
+        expect(registry.getUrlsByAddresses(['0x1111111111111111111111111111111111111111'])).toStrictEqual(['http://one.mock'])
+        expect(registry.getUrlsByAddresses(['0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'])).toStrictEqual([])
     })
 
     describe('get url by streamId', () => {
 
         it('happy path', async () => {
-            const actualUrl = await registry.getUrlByStreamId('stream-id-1')
-            expect(actualUrl).toBe('http://one.mock')    
+            const actualUrl = await registry.getUrlsByStreamId('stream-id-1')
+            expect(actualUrl).toStrictEqual(['http://one.mock'])
         })
 
         it('no storage nodes', async () => {
-            return expect(() => registry.getUrlByStreamId('stream-id-nonexisting')).rejects.toThrow('No storage nodes: stream-id-nonexisting')
+            return expect(() => registry.getUrlsByStreamId('stream-id-nonexisting')).rejects.toThrow('No storage nodes: stream-id-nonexisting')
         })
 
         it('node not in registry', async () => {
-            return expect(() => registry.getUrlByStreamId('stream-id-2')).rejects.toThrow('Storage node not in registry: 0x2222222222222222222222222222222222222222')
+            return expect(() => registry.getUrlsByStreamId('stream-id-2')).rejects.toThrow('Storage node not in registry: 0x2222222222222222222222222222222222222222')
         })
 
         it('unable to list storage nodes', async () => {
             registry.streamrUrl = `http://127.0.0.1:${mockCoreApiServerPort}/fail`
-            return expect(() => registry.getUrlByStreamId('stream-id-3')).rejects.toThrow('Unable to list storage nodes: stream-id-3')
+            return expect(() => registry.getUrlsByStreamId('stream-id-3')).rejects.toThrow('Unable to list storage nodes: stream-id-3')
         })
     })
 })

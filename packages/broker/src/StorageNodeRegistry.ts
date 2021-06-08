@@ -12,8 +12,15 @@ export class StorageNodeRegistry {
         this.streamrUrl = streamrUrl
     }
 
-    getUrlByAddress(address: string): string|undefined {
-        return this.urlByAddress[address]
+    getUrlsByAddresses(addresses: string[]): string[] {
+        const urls = addresses.reduce((res: string[], address: string): string[] => {
+            const url = this.urlByAddress[address]
+            if (url) {
+                res.push(url)
+            }
+            return res
+        }, [])
+        return urls
     }
 
     static createInstance(config: Config): StorageNodeRegistry {
@@ -24,14 +31,14 @@ export class StorageNodeRegistry {
         return new StorageNodeRegistry(urlByAddress, config.streamrUrl)
     }
 
-    async getUrlByStreamId(streamId: string): Promise<string> {
-        const storageNodeAddress = await this.getStorageNodeAddress(streamId)
-        if (storageNodeAddress !== undefined) {
-            const url = this.getUrlByAddress(storageNodeAddress)
-            if (url !== undefined) {
-                return url
+    async getUrlsByStreamId(streamId: string): Promise<string[]> {
+        const storageNodeAddresses = await this.getStorageNodeAddress(streamId)
+        if (storageNodeAddresses !== undefined) {
+            const urls = this.getUrlsByAddresses(storageNodeAddresses)
+            if (urls.length > 0) {
+                return urls
             } else {
-                return Promise.reject(new GenericError(`Storage node not in registry: ${storageNodeAddress}`, 'STORAGE_NODE_NOT_IN_REGISTRY'))
+                return Promise.reject(new GenericError(`Storage node not in registry: ${storageNodeAddresses}`, 'STORAGE_NODE_NOT_IN_REGISTRY'))
             }
         } else {
             return Promise.reject(new GenericError(`No storage nodes: ${streamId}`, 'NO_STORAGE_NODES'))
@@ -41,7 +48,7 @@ export class StorageNodeRegistry {
     // TODO when we support multiple storage nodes, this method should actually return all
     // addresses. resends should try to fetch from random storage node, and if that fetch fails,
     // it should try to fetch from other addresses, too
-    private async getStorageNodeAddress(streamId: string): Promise<string|undefined> {
+    private async getStorageNodeAddress(streamId: string): Promise<string[]|undefined> {
         const url = `${this.streamrUrl}/api/v1/streams/${encodeURIComponent(streamId)}/storageNodes`
         const response = await fetch(url)
         if (response.status === 200) {
@@ -50,7 +57,7 @@ export class StorageNodeRegistry {
                 return item.storageNodeAddress
             })
             if (addresses.length > 0) {
-                return addresses[Math.floor(Math.random() * addresses.length)]
+                return addresses
             } else if (addresses.length === 0) {
                 return undefined
             }    
