@@ -315,7 +315,6 @@ export class Storage extends EventEmitter {
             return pipeline(
                 merge2(stream1, stream2, {
                     // @ts-expect-error options not in type
-                    highWaterMark: 16,
                     pipeError: true,
                 }),
                 resultStream,
@@ -416,7 +415,6 @@ export class Storage extends EventEmitter {
             return pipeline(
                 merge2(stream1, stream2, stream3, {
                     // @ts-expect-error options not in type
-                    highWaterMark: 16,
                     pipeError: true,
                 }),
                 resultStream,
@@ -452,7 +450,7 @@ export class Storage extends EventEmitter {
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         let last = Date.now()
         return new Transform({
-            highWaterMark: 1024,
+            highWaterMark: 1024, // buffer up to 1024 messages
             objectMode: true,
             transform(row: Todo, _: Todo, done: Todo) {
                 const now = Date.now()
