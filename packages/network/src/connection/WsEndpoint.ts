@@ -540,6 +540,11 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
             return
         }
 
+        // @ts-expect-error private method
+        delete this.peerInfo.sessionId
+        // @ts-expect-error private method
+        delete peerInfo.sessionId 
+
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', address, code, reason)
         this.connections.delete(address)

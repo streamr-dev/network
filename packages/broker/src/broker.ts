@@ -54,7 +54,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     if (!wallet) {
         throw new Error('Could not resolve Ethereum address from given config.ethereumPrivateKey')
     }
-    const brokerAddress = `${wallet.address}#${uuidv4()}`
+    const brokerAddress = wallet.address
 
     // Form tracker list
     let trackers: string[]
