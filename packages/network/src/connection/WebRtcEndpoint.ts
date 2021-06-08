@@ -302,7 +302,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             }
 
             if (connection.getDeferredConnectionAttempt()) {
-                return (connection.getDeferredConnectionAttempt()?.connectionAttemptPromise as Promise<string>)
+                return (connection.getDeferredConnectionAttempt()?.getPromise() as Promise<string>)
             }
             else {
                 throw new Error(`disconnected ${connection.getPeerId()}`)
@@ -323,8 +323,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.rtcSignaller.onConnectionNeeded(routerId, connection.getPeerId())
         }
 
-        if (connection.getDeferredConnectionAttempt()) {
-            return (connection.getDeferredConnectionAttempt()?.connectionAttemptPromise as Promise<string>)
+        const deferredAttempt = connection.getDeferredConnectionAttempt() 
+        if (deferredAttempt) {
+            return deferredAttempt.getPromise()
         }
         else {
             throw new Error(`disconnected ${connection.getPeerId()}`)

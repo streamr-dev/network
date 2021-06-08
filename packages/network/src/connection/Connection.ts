@@ -103,19 +103,37 @@ interface Events {
 // i.e. no this.on('event')
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-export class DeferredConnectionAttempt extends EventEmitter {
+export class DeferredConnectionAttempt {
+    
+    private eventEmitter: EventEmitter
+    private connectionAttemptPromise: Promise<string>
+
     constructor(private targetId: string) {
-        super()
+
+        this.eventEmitter = new EventEmitter()
+        
+        this.connectionAttemptPromise = new Promise((resolve, reject) => {
+            this.eventEmitter.once('resolve', () => {
+                resolve(this.targetId)
+            })
+            this.eventEmitter.once('reject', (reason) => {
+                reject(reason)
+            })
+        })
+    
     }
 
-    public connectionAttemptPromise: Promise<string> = new Promise((resolve, reject) => {
-        this.once('open', () => {
-            resolve(this.targetId)
-        })
-        this.once('close', (reason) => {
-            reject(reason)
-        })
-    })
+    getPromise(): Promise<string> {
+        return this.connectionAttemptPromise
+    }
+
+    resolve() {
+        this.eventEmitter.emit('resolve')
+    }
+
+    reject(reason: any) {
+        this.eventEmitter.emit('reject', reason)
+    }
 }
 
 export class Connection extends ConnectionEmitter {
@@ -237,7 +255,7 @@ export class Connection extends ConnectionEmitter {
         if (this.deferredConnectionAttempt) {
             const def = this.deferredConnectionAttempt
             this.deferredConnectionAttempt = null
-            def.emit('open')
+            def.resolve()
         }
         this.emit('open')
     }
@@ -246,7 +264,7 @@ export class Connection extends ConnectionEmitter {
         if (this.deferredConnectionAttempt) {
             const def = this.deferredConnectionAttempt
             this.deferredConnectionAttempt = null
-            def.emit('close', reason)
+            def.reject(reason)
         }
         this.emit('close')
     }
