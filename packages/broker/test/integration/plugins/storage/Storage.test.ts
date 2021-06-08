@@ -282,17 +282,23 @@ describe('Storage', () => {
             await Promise.all(storePromises)
         }, 30000)
 
+        it('can store messages and requestLast 1', async () => {
+            const streamingResults = storage.requestLast(storedStreamId, 0, 1)
+            const results = await toArray(streamingResults)
+            expect(results.length).toEqual(1)
+        })
+
         it('can requestLast', async () => {
             const streamingResults = storage.requestLast(storedStreamId, 0, NUM_MESSAGES)
             const results = await toArray(streamingResults)
             expect(results.length).toEqual(1000)
-        }, 20000)
+        })
 
         it('can requestFrom', async () => {
             const streamingResults = storage.requestFrom(storedStreamId, 0, NUM_MESSAGES, 0, null)
             const results = await toArray(streamingResults)
             expect(results.length).toEqual(1000)
-        }, 20000)
+        })
     })
 
     describe('stream details', () => {
