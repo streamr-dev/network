@@ -4,7 +4,7 @@
 
 import qs from 'qs'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
+import { ExternalProvider } from '@ethersproject/providers'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getVersionString } from './utils'
 import { ConnectionInfo } from '@ethersproject/web'
@@ -15,7 +15,7 @@ import has from 'lodash/has'
 import get from 'lodash/get'
 import { StorageNode } from './stream/StorageNode'
 
-export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
+export type EthereumConfig = ExternalProvider
 
 /**
  * @category Important
@@ -49,10 +49,12 @@ export type StrictStreamrClientOptions = {
     retryResendAfter: number
     gapFillTimeout: number
     maxGapRequests: number
+    maxRetries: number
     maxPublishQueueSize: number
     publishWithSignature: Todo
     verifySignatures: Todo
     publisherStoreKeyHistory: boolean
+    publishAutoDisconnectDelay: number,
     groupKeys: Todo
     keyExchange: Todo
     mainnet?: ConnectionInfo|string
@@ -118,7 +120,9 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
     retryResendAfter: 5000,
     gapFillTimeout: 5000,
     maxGapRequests: 5,
+    maxRetries: 5,
     maxPublishQueueSize: 10000,
+    publishAutoDisconnectDelay: 5000,
 
     // Encryption options
     publishWithSignature: 'auto',

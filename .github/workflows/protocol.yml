@@ -11,6 +11,7 @@ on:
       - '*'
     paths:
       - 'packages/protocol/*'
+      - 'packages/protocol/**/*'
       - '.github/workflows/protocol.yml'
   schedule:
     # run every day at 00:00

@@ -4,7 +4,7 @@ import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { IWsEndpoint, Event as WsEndpointEvent } from '../connection/IWsEndpoint'
-import { RelayMessage, Status, StreamIdAndPartition } from '../identifiers'
+import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
@@ -13,14 +13,12 @@ export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
     TRACKER_DISCONNECTED = 'streamr:tracker-node:tracker-disconnected',
     TRACKER_INSTRUCTION_RECEIVED = 'streamr:tracker-node:tracker-instruction-received',
-    STORAGE_NODES_RESPONSE_RECEIVED = 'streamr:tracker-node:storage-nodes-received',
     RELAY_MESSAGE_RECEIVED = 'streamr:tracker-node:relay-message-received',
     RTC_ERROR_RECEIVED = 'streamr:tracker-node:rtc-error-received',
 }
 
 const eventPerType: { [key: number]: string } = {}
 eventPerType[TrackerLayer.TrackerMessage.TYPES.InstructionMessage] = Event.TRACKER_INSTRUCTION_RECEIVED
-eventPerType[TrackerLayer.TrackerMessage.TYPES.StorageNodesResponse] = Event.STORAGE_NODES_RESPONSE_RECEIVED
 eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 eventPerType[TrackerLayer.TrackerMessage.TYPES.ErrorMessage] = Event.RTC_ERROR_RECEIVED
 
@@ -28,7 +26,6 @@ export interface TrackerNode {
     on(event: Event.CONNECTED_TO_TRACKER, listener: (trackerId: string) => void): this
     on(event: Event.TRACKER_DISCONNECTED, listener: (trackerId: string) => void): this
     on(event: Event.TRACKER_INSTRUCTION_RECEIVED, listener: (msg: TrackerLayer.InstructionMessage, trackerId: string) => void): this
-    on(event: Event.STORAGE_NODES_RESPONSE_RECEIVED, listener: (msg: TrackerLayer.StorageNodesResponse, trackerId: string) => void): this
     on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: RelayMessage, trackerId: string) => void): this
     on(event: Event.RTC_ERROR_RECEIVED, listener: (msg: TrackerLayer.ErrorMessage, trackerId: string) => void): this
 }
@@ -50,14 +47,6 @@ export class TrackerNode extends EventEmitter {
         return this.send(trackerId, new TrackerLayer.StatusMessage({
             requestId: uuidv4(),
             status
-        }))
-    }
-
-    sendStorageNodesRequest(trackerId: string, streamId: StreamIdAndPartition): Promise<TrackerLayer.StorageNodesRequest> {
-        return this.send(trackerId, new TrackerLayer.StorageNodesRequest({
-            requestId: uuidv4(),
-            streamId: streamId.id,
-            streamPartition: streamId.partition
         }))
     }
 

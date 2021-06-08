@@ -4,14 +4,12 @@ import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
-import { ResendRequest, ResendResponse, Rtts } from '../identifiers'
+import { Rtts } from "../identifiers"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',
     NODE_DISCONNECTED = 'streamr:node-node:node-disconnected',
     DATA_RECEIVED = 'streamr:node-node:stream-data',
-    RESEND_REQUEST = 'streamr:node-node:resend-request',
-    RESEND_RESPONSE = 'streamr:node-node:resend-response',
     UNICAST_RECEIVED = 'streamr:node-node:unicast-received',
     LOW_BACK_PRESSURE = 'streamr:node-node:low-back-pressure',
     HIGH_BACK_PRESSURE = 'streamr:node-node:high-back-pressure',
@@ -20,19 +18,11 @@ export enum Event {
 const eventPerType: { [key: number]: string } = {}
 eventPerType[ControlLayer.ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.UnicastMessage] = Event.UNICAST_RECEIVED
-eventPerType[ControlLayer.ControlMessage.TYPES.ResendLastRequest] = Event.RESEND_REQUEST
-eventPerType[ControlLayer.ControlMessage.TYPES.ResendFromRequest] = Event.RESEND_REQUEST
-eventPerType[ControlLayer.ControlMessage.TYPES.ResendRangeRequest] = Event.RESEND_REQUEST
-eventPerType[ControlLayer.ControlMessage.TYPES.ResendResponseResending] = Event.RESEND_RESPONSE
-eventPerType[ControlLayer.ControlMessage.TYPES.ResendResponseResent] = Event.RESEND_RESPONSE
-eventPerType[ControlLayer.ControlMessage.TYPES.ResendResponseNoResend] = Event.RESEND_RESPONSE
 
 export interface NodeToNode {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: string) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: string) => void): this
     on(event: Event.DATA_RECEIVED, listener: (message: ControlLayer.BroadcastMessage, nodeId: string) => void): this
-    on(event: Event.RESEND_REQUEST, listener: (message: ResendRequest, nodeId: string) => void): this
-    on(event: Event.RESEND_RESPONSE, listener: (message: ResendResponse, nodeId: string) => void): this
     on(event: Event.UNICAST_RECEIVED, listener: (message: ControlLayer.UnicastMessage, nodeId: string) => void): this
     on(event: Event.LOW_BACK_PRESSURE, listener: (nodeId: string) => void): this
     on(event: Event.HIGH_BACK_PRESSURE, listener: (nodeId: string) => void): this

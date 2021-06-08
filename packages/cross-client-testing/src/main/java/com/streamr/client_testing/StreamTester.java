@@ -31,7 +31,7 @@ public class StreamTester {
 
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final Random random = new Random();
-    private static final int NETWORK_SETUP_DELAY = 15000;
+    private static final int NETWORK_SETUP_DELAY = 25000;
     private static final int NETWORK_PROPAGATION_DELAY = 30000;
     // "broker-node-storage-1" on Docker environment
     private final static Address DEV_STORAGE_NODE_ADDRESS = new Address("0xde1112f631486CfC759A50196853011528bC5FA0");
@@ -423,8 +423,8 @@ public class StreamTester {
                         publisher.publish(stream, payload);
                     } else if (counter % nbMessagesForSingleKey == 0) {
                         GroupKey newKey = GroupKey.generate();
-                        log.debug("{} rotating the key. New key: {}", publisher.getPublisherId(), newKey.getGroupKeyHex());
                         publisher.publish(stream, payload, new Date(), null, newKey);
+                        log.debug("{} rotating the key. New key: {}", publisher.getPublisherId(), newKey.getGroupKeyHex());
                     } else {
                         publisher.publish(stream, payload);
                     }
@@ -435,7 +435,7 @@ public class StreamTester {
                     log.debug("{} published {}", publisher.getPublisherId(), payloadString);
                 }
             };
-        return new PublishFunction("rotating", f);
+        return new PublishFunction("revoking", f);
     }
 
     public static String generatePrivateKey() {

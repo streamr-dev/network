@@ -1,0 +1,20 @@
+{
+    "$id": "config.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "description": "MQTT plugin configuration",
+    "required": [
+        "port"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "port": {
+            "type": "integer",
+            "description": "Port to start plugin on"
+        },
+        "streamIdDomain": {
+            "type": "string",
+            "description": "All topics are mapped to streamIds by prepending the domain to the topic: streamIdDomain + '/' + topic"
+        }
+    }
+}

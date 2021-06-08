@@ -5,20 +5,10 @@ import { resend } from '../src/resend'
 import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'
 import pkg from '../package.json'
 
-function handlePublisherIdAndMsgChainId(commandOptions: any, resendOptions: any) {
-    if ('publisherId' in commandOptions && !('msgChainId' in commandOptions)) {
-        console.error('option --publisher-id must be accompanied by option --msg-chain-id')
+function assertBothOrNoneDefined(option1: string, option2: string, errorMessage: string, commandOptions: any) {
+    if ((option1 in commandOptions && !(option2 in commandOptions)) || (option2 in commandOptions && !(option1 in commandOptions))) {
+        console.error(`option ${errorMessage}`)
         process.exit(1)
-    }
-    if ('msgChainId' in commandOptions && !('publisherId' in commandOptions)) {
-        console.error('option --msg-chain-id must be accompanied by option --publisher-id')
-        process.exit(1)
-    }
-    if ('publisherId' in commandOptions) {
-        resendOptions.publisherId = commandOptions.publisherId
-    }
-    if ('msgChainId' in commandOptions) {
-        resendOptions.msgChainId = commandOptions.msgChainId
     }
 }
 
@@ -51,7 +41,6 @@ program
     .command('from <from> <streamId>')
     .description('request messages starting from given date-time (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
     .option('--publisher-id <string>', 'filter results by publisher')
-    .option('--msg-chain-id <string>', 'filter results by message chain')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-s, --subscribe', 'subscribe in addition to resend', false)
     .action((from: string, streamId: string, options: any, command: Command) => {
@@ -59,9 +48,9 @@ program
             from: {
                 timestamp: Date.parse(from),
                 sequenceNumber: 0
-            }
+            },
+            publisherId: options.publisherId
         }
-        handlePublisherIdAndMsgChainId(options, resendOptions)
         const clientOptions: StreamrClientOptions & { subscribe?: boolean } = formStreamrOptionsWithEnv(command.parent!.opts())
         clientOptions.orderMessages = !options.disableOrdering
         clientOptions.subscribe = options.subscribe
@@ -84,8 +73,10 @@ program
                 timestamp: Date.parse(to),
                 sequenceNumber: 0
             },
+            publisherId: options.publisherId,
+            msgChainId: options.msgChainId
         }
-        handlePublisherIdAndMsgChainId(options, resendOptions)
+        assertBothOrNoneDefined('publisherId', 'msgChainId', '--publisher-id must be accompanied by option --msg-chain-id', options)
         const clientOptions = formStreamrOptionsWithEnv(command.parent!.opts())
         clientOptions.orderMessages = !options.disableOrdering
         resend(streamId, resendOptions, clientOptions)

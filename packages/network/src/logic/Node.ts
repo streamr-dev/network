@@ -4,10 +4,8 @@ import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { TrackerNode, Event as TrackerNodeEvent } from '../protocol/TrackerNode'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
-import { ResendHandler, Strategy } from '../resend/ResendHandler'
-import { ResendRequest, Status, StreamIdAndPartition } from '../identifiers'
+import { Status, StreamIdAndPartition } from '../identifiers'
 import { DisconnectionReason } from '../connection/IWsEndpoint'
-import { proxyRequestStream } from '../resend/proxyRequestStream'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { PerStreamMetrics } from './PerStreamMetrics'
@@ -16,7 +14,6 @@ import { InstructionThrottler } from './InstructionThrottler'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
-import { Readable } from 'stream'
 import { InstructionRetryManager } from "./InstructionRetryManager"
 import { NameDirectory } from '../NameDirectory'
 
@@ -28,8 +25,7 @@ export enum Event {
     MESSAGE_PROPAGATED = 'streamr:node:message-propagated',
     MESSAGE_PROPAGATION_FAILED = 'streamr:node:message-propagation-failed',
     NODE_SUBSCRIBED = 'streamr:node:subscribed-successfully',
-    NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed',
-    RESEND_REQUEST_RECEIVED = 'streamr:node:resend-request-received',
+    NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed'
 }
 
 export interface NodeOptions {
@@ -39,7 +35,6 @@ export interface NodeOptions {
     }
     peerInfo: PeerInfo
     trackers: Array<string>
-    resendStrategies: Array<Strategy>
     metricsContext?: MetricsContext
     connectToBootstrapTrackersInterval?: number
     sendStatusToAllTrackersInterval?: number
@@ -61,7 +56,6 @@ export interface Node {
     on(event: Event.MESSAGE_PROPAGATION_FAILED, listener: (msg: MessageLayer.StreamMessage, nodeId: string, error: Error) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: string, streamId: StreamIdAndPartition) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: string, streamId: StreamIdAndPartition) => void): this
-    on(event: Event.RESEND_REQUEST_RECEIVED, listener: (request: ResendRequest, source: string | null) => void): this
 }
 
 export class Node extends EventEmitter {
@@ -82,7 +76,6 @@ export class Node extends EventEmitter {
     private readonly streams: StreamManager
     private readonly messageBuffer: MessageBuffer<[MessageLayer.StreamMessage, string | null]>
     private readonly seenButNotPropagatedSet: SeenButNotPropagatedSet
-    private readonly resendHandler: ResendHandler
     private readonly trackerRegistry: Utils.TrackerRegistry<string>
     private readonly trackerBook: { [key: string]: string } // address => id
     private readonly instructionThrottler: InstructionThrottler
@@ -125,11 +118,7 @@ export class Node extends EventEmitter {
             this.logger.trace(`failed to deliver buffered messages of stream ${streamId}`)
         })
         this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
-        this.resendHandler = new ResendHandler(
-            opts.resendStrategies,
-            (errorCtx) => this.logger.warn('resendHandler reported error, %j', errorCtx),
-            metricsContext
-        )
+
         this.trackerRegistry = Utils.createTrackerRegistry(opts.trackers)
         this.trackerBook = {}
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
@@ -145,14 +134,6 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
-        this.nodeToNode.on(NodeToNodeEvent.RESEND_REQUEST, (request, source) => this.requestResend(request, source))
-        this.nodeToNode.on(NodeToNodeEvent.LOW_BACK_PRESSURE, (nodeId) => {
-            this.resendHandler.resumeResendsOfNode(nodeId)
-        })
-        this.nodeToNode.on(NodeToNodeEvent.HIGH_BACK_PRESSURE, (nodeId) => {
-            this.resendHandler.pauseResendsOfNode(nodeId)
-        })
-
         let avgLatency = -1
 
         this.on(Event.UNSEEN_MESSAGE_RECEIVED, (message) => {
@@ -173,7 +154,6 @@ export class Node extends EventEmitter {
         this.metrics = metricsContext.create('node')
             .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
             .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
-            .addRecordedMetric('resendRequests')
             .addRecordedMetric('unexpectedTrackerInstructions')
             .addRecordedMetric('trackerInstructions')
             .addRecordedMetric('onDataReceived')
@@ -220,40 +200,6 @@ export class Node extends EventEmitter {
         if (sendStatus) {
             this.prepareAndSendStreamStatus(streamId)
         }
-    }
-
-    requestResend(request: ResendRequest, source: string | null): Readable {
-        this.metrics.record('resendRequests', 1)
-        this.perStreamMetrics.recordResend(request.streamId)
-        this.logger.trace('received %s resend request %s with requestId %s',
-            source === null ? 'local' : `from ${source}`,
-            request.constructor.name,
-            request.requestId)
-        this.emit(Event.RESEND_REQUEST_RECEIVED, request, source)
-
-        if (this.peerInfo.isStorage()) {
-            const { streamId, streamPartition } = request
-            this.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition(streamId, streamPartition))
-        }
-
-        const requestStream = this.resendHandler.handleRequest(request, source)
-        if (source != null) {
-            proxyRequestStream(
-                async (data) => {
-                    try {
-                        await this.nodeToNode.send(source, data)
-                    } catch (e) {
-                        // TODO: catch specific error
-                        const requests = this.resendHandler.cancelResendsOfNode(source)
-                        this.logger.warn('failed to send resend response to %s,\n\tcancelling resends %j,\n\tError %s',
-                            source, requests, e)
-                    }
-                },
-                request,
-                requestStream
-            )
-        }
-        return requestStream
     }
 
     onTrackerInstructionReceived(trackerId: string, instructionMessage: TrackerLayer.InstructionMessage): void {
@@ -436,7 +382,6 @@ export class Node extends EventEmitter {
 
     stop(): Promise<unknown> {
         this.logger.trace('stopping')
-        this.resendHandler.stop()
         this.instructionThrottler.reset()
         this.instructionRetryManager.reset()
 
@@ -549,7 +494,6 @@ export class Node extends EventEmitter {
 
     onNodeDisconnected(node: string): void {
         this.metrics.record('onNodeDisconnect', 1)
-        this.resendHandler.cancelResendsOfNode(node)
         const streams = this.streams.removeNodeFromAllStreams(node)
         this.logger.trace('removed all subscriptions of node %s', node)
         const trackers = [...new Set(streams.map((streamId) => this.getTrackerId(streamId)))]

@@ -3,8 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { arrayify, hexZeroPad } from '@ethersproject/bytes'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
-import { Wallet } from '@ethersproject/wallet'
-import { JsonRpcSigner } from '@ethersproject/providers'
+import type { Signer } from '@ethersproject/abstract-signer'
 import debug from 'debug'
 
 import { StreamrClient } from '../StreamrClient'
@@ -257,7 +256,7 @@ export class DataUnion {
         amountTokenWei: BigNumber|number|string,
         to: EthereumAddress,
         withdrawn: BigNumber,
-        signer: Wallet | JsonRpcSigner
+        signer: Signer
     ) {
         const message = to
             + hexZeroPad(BigNumber.from(amountTokenWei).toHexString(), 32).slice(2)

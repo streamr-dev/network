@@ -1,4 +1,4 @@
-import { ControlLayer, TrackerLayer } from 'streamr-client-protocol'
+import { TrackerLayer } from 'streamr-client-protocol'
 import { RtcSubTypes } from './logic/RtcMessage'
 
 /**
@@ -65,14 +65,6 @@ export interface Status {
     started: string
     singleStream: boolean // indicate whether this is a status update for only a single stream
 }
-
-export type ResendRequest = ControlLayer.ResendLastRequest
-    | ControlLayer.ResendFromRequest
-    | ControlLayer.ResendRangeRequest
-
-export type ResendResponse = ControlLayer.ResendResponseNoResend
-    | ControlLayer.ResendResponseResending
-    | ControlLayer.ResendResponseResent
 
 export type RtcIceCandidateMessage = {
     subType: RtcSubTypes.ICE_CANDIDATE

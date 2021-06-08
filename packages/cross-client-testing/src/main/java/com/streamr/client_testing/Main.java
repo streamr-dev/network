@@ -86,6 +86,7 @@ public class Main {
         try {
             Streams streams = new Streams(participants, restUrl, wsUrl, minInterval, maxInterval, maxMessages, testCorrectness);
             streams.runTestBlocking(streamName);
+            log.info("Completed {}.", streamName);
         } catch (Exception e) {
             log.info("Error in {}.", streamName);
             log.fatal(e.getMessage(), e);

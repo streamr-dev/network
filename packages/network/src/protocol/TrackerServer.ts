@@ -13,20 +13,17 @@ export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',
     NODE_DISCONNECTED = 'streamr:tracker:node-disconnected',
     NODE_STATUS_RECEIVED = 'streamr:tracker:peer-status',
-    STORAGE_NODES_REQUEST = 'streamr:tracker:find-storage-nodes-request',
     RELAY_MESSAGE_RECEIVED = 'streamr:tracker:relay-message-received'
 }
 
 const eventPerType: { [key: number]: string } = {}
 eventPerType[TrackerLayer.TrackerMessage.TYPES.StatusMessage] = Event.NODE_STATUS_RECEIVED
-eventPerType[TrackerLayer.TrackerMessage.TYPES.StorageNodesRequest] = Event.STORAGE_NODES_REQUEST
 eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 
 export interface TrackerNode {
-    on(event: Event.NODE_CONNECTED, listener: (nodeId: string, isStorage: boolean) => void): this
-    on(event: Event.NODE_DISCONNECTED, listener: (nodeId: string, isStorage: boolean) => void): this
+    on(event: Event.NODE_CONNECTED, listener: (nodeId: string) => void): this
+    on(event: Event.NODE_DISCONNECTED, listener: (nodeId: string) => void): this
     on(event: Event.NODE_STATUS_RECEIVED, listener: (msg: TrackerLayer.StatusMessage, nodeId: string) => void): this
-    on(event: Event.STORAGE_NODES_REQUEST, listener: (msg: TrackerLayer.StorageNodesRequest, nodeId: string) => void): this
     on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: TrackerLayer.RelayMessage, nodeId: string) => void): this
 }
 
@@ -54,15 +51,6 @@ export class TrackerServer extends EventEmitter {
             streamPartition: streamId.partition,
             nodeIds,
             counter
-        }))
-    }
-
-    sendStorageNodesResponse(receiverNodeId: string, streamId: StreamIdAndPartition, nodeIds: string[]): Promise<TrackerLayer.StorageNodesResponse> {
-        return this.send(receiverNodeId, new TrackerLayer.StorageNodesResponse({
-            requestId: '', // TODO: set requestId
-            streamId: streamId.id,
-            streamPartition: streamId.partition,
-            nodeIds
         }))
     }
 
@@ -172,13 +160,13 @@ export class TrackerServer extends EventEmitter {
 
     onPeerConnected(peerInfo: PeerInfo): void {
         if (peerInfo.isNode()) {
-            this.emit(Event.NODE_CONNECTED, peerInfo.peerId, peerInfo.isStorage())
+            this.emit(Event.NODE_CONNECTED, peerInfo.peerId)
         }
     }
 
     onPeerDisconnected(peerInfo: PeerInfo): void {
         if (peerInfo.isNode()) {
-            this.emit(Event.NODE_DISCONNECTED, peerInfo.peerId, peerInfo.isStorage())
+            this.emit(Event.NODE_DISCONNECTED, peerInfo.peerId)
         }
     }
 

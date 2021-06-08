@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="broker (all tests)" type="JavaScriptTestRunnerJest">
+    <config-file value="$PROJECT_DIR$/packages/broker/jest.config.js" />
+    <node-interpreter value="project" />
+    <node-options value="" />
+    <jest-package value="$PROJECT_DIR$/packages/broker/node_modules/jest" />
+    <working-dir value="$PROJECT_DIR$/packages/broker" />
+    <envs />
+    <scope-kind value="ALL" />
+    <method v="2" />
+  </configuration>
+</component>
