@@ -5,7 +5,7 @@ export const create = (body: Partial<StreamProperties>, streamrOptions: StreamrC
 
     const client = new StreamrClient(options)
     client.createStream(body).then((stream) => {
-        // @ts-expect-error TODO: toObject() is internal in streamr-client-javascript
+        // @ts-expect-error toObject is internal
         console.info(JSON.stringify(stream.toObject(), null, 2))
         process.exit(0)
         return true

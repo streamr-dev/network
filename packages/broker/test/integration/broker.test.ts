@@ -306,7 +306,6 @@ describe('broker: end-to-end', () => {
             await fetch(`http://localhost:${httpPort1}/api/v1/streams/${freshStreamId}/data`, {
                 method: 'post',
                 headers: {
-                    // @ts-expect-error
                     Authorization: 'Bearer ' + await client1.session.getSessionToken()
                 },
                 body: JSON.stringify({
@@ -702,7 +701,6 @@ describe('broker: end-to-end', () => {
             const response = await fetch(url, {
                 method: 'get',
                 headers: {
-                    // @ts-expect-error
                     Authorization: 'Bearer ' + await client1.session.getSessionToken()
                 },
             })
@@ -757,7 +755,6 @@ describe('broker: end-to-end', () => {
         const response = await fetch(url, {
             method: 'get',
             headers: {
-                // @ts-expect-error
                 Authorization: 'Bearer ' + await client1.session.getSessionToken()
             },
         })
@@ -773,7 +770,6 @@ describe('broker: end-to-end', () => {
         const response = await fetch(url, {
             method: 'get',
             headers: {
-                // @ts-expect-error
                 Authorization: 'Bearer ' + await client1.session.getSessionToken()
             },
         })
@@ -820,7 +816,6 @@ describe('broker: end-to-end', () => {
             const response = await fetch(url, {
                 method: 'get',
                 headers: {
-                    // @ts-expect-error
                     Authorization: 'Bearer ' + await client1.session.getSessionToken()
                 },
             })
@@ -908,7 +903,6 @@ describe('broker: end-to-end', () => {
             const response = await fetch(url, {
                 method: 'get',
                 headers: {
-                    // @ts-expect-error
                     Authorization: 'Bearer ' + await client1.session.getSessionToken()
                 },
             })

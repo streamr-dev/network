@@ -5,9 +5,9 @@ import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
 import { startBroker as createBroker } from '../src/broker'
-import { StorageConfig } from '../src/storage/StorageConfig'
-import { Todo } from './types'
-import { Config } from './config'
+import { StorageConfig } from '../src/plugins/storage/StorageConfig'
+import { Todo } from '../src/types'
+import { Config } from '../src/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -19,18 +19,36 @@ export function formConfig({
     privateKey,
     httpPort = null,
     wsPort = null,
-    mqttPort = null,
+    legacyMqttPort = null,
+    extraPlugins = {},
+    apiAuthentication = null,
     enableCassandra = false,
     privateKeyFileName = null,
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeRegistry = (!enableCassandra ? [] : null),
+    storageNodeRegistry = [],
+    storageConfigRefreshInterval = 0,
     reporting = false
 }: Todo): Config {
-    const plugins: Record<string,any> = {}
+    const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
-        plugins['http'] = {}
+        plugins['legacyPublishHttp'] = {}
+        plugins['metrics'] = {}
+        if (enableCassandra) {
+            plugins['storage'] = {
+                cassandra: {
+                    hosts: [STREAMR_DOCKER_DEV_HOST],
+                    datacenter: 'datacenter1',
+                    username: '',
+                    password: '',
+                    keyspace: 'streamr_dev_v2',
+                },
+                storageConfig: {
+                    refreshInterval: storageConfigRefreshInterval
+                } 
+            }
+        }
     }
     if (wsPort) {
         plugins['ws'] = {
@@ -40,9 +58,9 @@ export function formConfig({
             certFileName
         }
     }
-    if (mqttPort) {
-        plugins['mqtt'] = {
-            port: mqttPort,
+    if (legacyMqttPort) {
+        plugins['legacyMqtt'] = {
+            port: legacyMqttPort,
             streamsTimeout: 300000
         }
     }
@@ -54,7 +72,6 @@ export function formConfig({
             hostname: '127.0.0.1',
             port: networkPort,
             advertisedWsUrl: null,
-            isStorageNode: enableCassandra,
             trackers: [
                 `ws://127.0.0.1:${trackerPort}`
             ],
@@ -65,16 +82,6 @@ export function formConfig({
                 city: 'Helsinki'
             }
         },
-        cassandra: enableCassandra ? {
-            hosts: [STREAMR_DOCKER_DEV_HOST],
-            datacenter: 'datacenter1',
-            username: '',
-            password: '',
-            keyspace: 'streamr_dev_v2',
-        } : null,
-        storageConfig: enableCassandra ? {
-            refreshInterval: 0
-        } : null,
         reporting: reporting || {
             streamr: null,
             intervalInSeconds: 0,
@@ -99,6 +106,7 @@ export function formConfig({
             privateKeyFileName: null,
             certFileName: null
         } : null,
+        apiAuthentication,
         plugins
     }
 }
@@ -126,7 +134,11 @@ export function fastPrivateKey() {
 
 export const createMockUser = () => Wallet.createRandom()
 
-export function createClient(wsPort: number, privateKey = fastPrivateKey(), clientOptions?: StreamrClientOptions) {
+export function createClient(
+    wsPort: number,
+    privateKey = fastPrivateKey(),
+    clientOptions?: StreamrClientOptions
+): StreamrClient {
     return new StreamrClient({
         auth: {
             privateKey
@@ -169,7 +181,6 @@ export class StorageAssignmentEventManager {
                 address: storageNodeAddress
             }),
             headers: {
-                // @ts-expect-error
                 // eslint-disable-next-line quote-props
                 'Authorization': 'Bearer ' + await client.session.getSessionToken(),
                 'Content-Type': 'application/json',

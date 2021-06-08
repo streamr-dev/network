@@ -160,7 +160,7 @@ function Plugin(targetInstance: any, srcInstance: any) {
 }
 
 // these are mixed in via Plugin function above
-export interface StreamrClient extends StreamEndpoints, LoginEndpoints, ReturnType<typeof Publisher>, Subscriber {}
+export interface StreamrClient extends StreamEndpoints, LoginEndpoints, Publisher, Subscriber {}
 
 /**
  * @category Important
@@ -175,7 +175,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /** @internal */
     connection: StreamrConnection
     /** @internal */
-    publisher: ReturnType<typeof Publisher>
+    publisher: Publisher
     /** @internal */
     subscriber: Subscriber
     /** @internal */
@@ -216,7 +216,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
             .on('error', this.onConnectionError)
 
         this.ethereum = new StreamrEthereum(this)
-        this.publisher = Publisher(this)
+        this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
 
         Plugin(this, new StreamEndpoints(this))

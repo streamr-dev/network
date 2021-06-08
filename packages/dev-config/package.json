@@ -1,6 +1,6 @@
 {
   "name": "@streamr/dev-config",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0",
   "description": "Streamr Development Environment Configs",
   "repository": {
     "type": "git",

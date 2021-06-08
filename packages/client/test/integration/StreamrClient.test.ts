@@ -39,7 +39,6 @@ describeRepeats('StreamrClient', () => {
             autoDisconnect: false,
             // disconnectDelay: 500,
             // publishAutoDisconnectDelay: 250,
-            // @ts-expect-error
             maxRetries: 2,
             ...opts,
         })
@@ -387,7 +386,6 @@ describeRepeats('StreamrClient', () => {
             client.on('disconnected', onDisconnected)
             client.on('connected', onConnected)
 
-            // @ts-expect-error
             client.options.publishAutoDisconnectDelay = 1000 // eslint-disable-line require-atomic-updates
 
             client.enableAutoConnect()
@@ -396,7 +394,6 @@ describeRepeats('StreamrClient', () => {
                 delay: 150,
             })
 
-            // @ts-expect-error
             await wait(client.options.publishAutoDisconnectDelay * 1.5)
 
             expect(onConnected).toHaveBeenCalledTimes(1)

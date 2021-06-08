@@ -272,6 +272,55 @@ describe('OrderedMsgChain', () => {
         util.add(msg3)
     })
 
+    it('does not call the gap handler again if disabled', (done) => {
+        let counter = 0
+        const msgs: StreamMessage[] = []
+        util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
+            msgs.push(msg)
+            if (msgs.length === 3) {
+                try {
+                    // should have seen messages 1, 3, 5
+                    expect(msgs).toEqual([msg1, msg3, msg5])
+                    done()
+                } catch(err) {
+                    done(err)
+                }
+            }
+        }, () => {
+            counter += 1
+            if (counter === 1) {
+                util.disable()
+            } else {
+                throw new Error('Unexpected call to the gap handler')
+            }
+        }, 100, 100)
+        util.add(msg1)
+        util.add(msg3)
+        util.add(msg5)
+    })
+
+    it('does not call the gap handler if disabled', (done) => {
+        const msgs: StreamMessage[] = []
+        util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
+            msgs.push(msg)
+            if (msgs.length === 3) {
+                try {
+                    // should have seen messages 1, 3, 5
+                    expect(msgs).toEqual([msg1, msg3, msg5])
+                    done()
+                } catch(err) {
+                    done(err)
+                }
+            }
+        }, () => {
+            throw new Error('Unexpected call to the gap handler')
+        }, 100, 100)
+        util.disable()
+        util.add(msg1)
+        util.add(msg3)
+        util.add(msg5)
+    })
+
     it('can handle multiple gaps', (done) => {
         const msgs: StreamMessage[] = []
         util = new OrderedMsgChain('publisherId', 'msgChainId', (msg: StreamMessage) => {

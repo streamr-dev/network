@@ -6,8 +6,6 @@
   "required": [
     "plugins",
     "httpServer",
-    "cassandra",
-    "storageConfig",
     "ethereumPrivateKey",
     "network",
     "reporting",
@@ -54,57 +52,6 @@
         }
       }
     },
-    "cassandra": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "description": "Apache Cassandra configuration",
-      "required": [
-        "hosts",
-        "username",
-        "password",
-        "keyspace",
-        "datacenter"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "hosts": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "hostname"
-          },
-          "minItems": 1,
-          "uniqueItems": true
-        },
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "keyspace": {
-          "type": "string"
-        },
-        "datacenter": {
-          "type": "string"
-        }
-      }
-    },
-    "storageConfig": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "refreshInterval": {
-          "type": "integer",
-          "description": "Interval (in milliseconds) in which to refresh storage config from Core API (0 = disable)"
-        }
-      },
-      "additionalProperties": false
-    },
     "ethereumPrivateKey": {
       "type": "string",
       "description": "Ethereum private key to establish broker identity",
@@ -118,7 +65,6 @@
         "hostname",
         "port",
         "advertisedWsUrl",
-        "isStorageNode",
         "trackers",
         "location"
       ],
@@ -143,10 +89,6 @@
             "null"
           ],
           "description": "Override WebSocket URL to advertise to tracker and other nodes (useful when behind NAT)"
-        },
-        "isStorageNode": {
-          "type": "boolean",
-          "description": "Whether to identify as storage node or not"
         },
         "trackers": {
           "oneOf": [
@@ -322,12 +264,28 @@
       "pattern": "^0x[a-fA-F0-9]{40}$"
     },
     "storageNodeRegistry": {
-      "type": [
-        "array",
-        "null"
-      ],
+      "type": "array",
       "items": {
         "$ref": "#/definitions/storageNodeRegistryItem"
+      }
+    },
+    "apiAuthentication": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
+      "required": [
+        "keys"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   },

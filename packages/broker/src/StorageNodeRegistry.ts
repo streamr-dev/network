@@ -16,16 +16,12 @@ export class StorageNodeRegistry {
         return this.urlByAddress[address]
     }
 
-    static createInstance(config: Config): StorageNodeRegistry|undefined {
-        if (config.storageNodeRegistry !== null) {  
-            const urlByAddress: Record<string,string> = {}
-            config.storageNodeRegistry.forEach((item) => {
-                urlByAddress[item.address] = item.url
-            })
-            return new StorageNodeRegistry(urlByAddress, config.streamrUrl) 
-        } else {
-            return undefined
-        }
+    static createInstance(config: Config): StorageNodeRegistry {
+        const urlByAddress: Record<string,string> = {}
+        config.storageNodeRegistry.forEach((item) => {
+            urlByAddress[item.address] = item.url
+        })
+        return new StorageNodeRegistry(urlByAddress, config.streamrUrl)
     }
 
     async getUrlByStreamId(streamId: string): Promise<string> {
