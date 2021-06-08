@@ -120,8 +120,6 @@ export class PeerInfo {
             throw new Error('messageLayerVersions not given')
         }
 
-       
-
         this.peerId = peerId
         this.peerType = peerType
         this.controlLayerVersions = controlLayerVersions

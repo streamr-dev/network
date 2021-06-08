@@ -66,7 +66,6 @@ describe('check and kill dead connections', () => {
             DisconnectionReason.DEAD_CONNECTION
         )
 
-
         // @ts-expect-error private method
         node1.onClose.mockRestore()
         // @ts-expect-error private method
