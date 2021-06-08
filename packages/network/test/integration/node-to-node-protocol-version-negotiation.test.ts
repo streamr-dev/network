@@ -86,8 +86,10 @@ describe('Node-to-Node protocol version negotiation', () => {
             tracker.stop(),
             trackerNode1.stop(),
             trackerNode2.stop(),
+            trackerNode3.stop(),
             ep1.stop(),
-            ep2.stop()
+            ep2.stop(),
+            ep3.stop(),
         ])
     })
 
