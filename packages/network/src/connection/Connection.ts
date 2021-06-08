@@ -127,11 +127,11 @@ export class DeferredConnectionAttempt {
         return this.connectionAttemptPromise
     }
 
-    resolve() {
+    resolve(): void {
         this.eventEmitter.emit('resolve')
     }
 
-    reject(reason: any) {
+    reject(reason: Error | string): void {
         this.eventEmitter.emit('reject', reason)
     }
 }
@@ -251,7 +251,7 @@ export class Connection extends ConnectionEmitter {
         return att
     }
 
-    private emitOpen() {
+    private emitOpen(): void {
         if (this.deferredConnectionAttempt) {
             const def = this.deferredConnectionAttempt
             this.deferredConnectionAttempt = null
@@ -260,7 +260,7 @@ export class Connection extends ConnectionEmitter {
         this.emit('open')
     }
 
-    private emitClose(reason: any) {
+    private emitClose(reason: Error | string): void {
         if (this.deferredConnectionAttempt) {
             const def = this.deferredConnectionAttempt
             this.deferredConnectionAttempt = null

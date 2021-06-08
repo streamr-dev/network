@@ -102,17 +102,17 @@ export class RtcSignaller {
         })
     }
 
-    sendRtcOffer(trackerId: string, targetPeerId: string, connectionId: string, description: string): void {
-        this.trackerNode.sendRtcOffer(trackerId, targetPeerId, connectionId, this.peerInfo, description)
+    sendRtcOffer(routerId: string, targetPeerId: string, connectionId: string, description: string): void {
+        this.trackerNode.sendRtcOffer(routerId, targetPeerId, connectionId, this.peerInfo, description)
             .catch((err: Error) => {
-                this.logger.debug('failed to sendRtcOffer via %s due to %s', trackerId, err) // TODO: better?
+                this.logger.debug('failed to sendRtcOffer via %s due to %s', routerId, err) // TODO: better?
             })
     }
 
-    sendRtcAnswer(trackerId: string, targetPeerId: string, connectionId: string, description: string): void {
-        this.trackerNode.sendRtcAnswer(trackerId, targetPeerId, connectionId, this.peerInfo, description)
+    sendRtcAnswer(routerId: string, targetPeerId: string, connectionId: string, description: string): void {
+        this.trackerNode.sendRtcAnswer(routerId, targetPeerId, connectionId, this.peerInfo, description)
             .catch((err: Error) => {
-                this.logger.debug('failed to sendRtcAnswer via %s due to %s', trackerId, err) // TODO: better?
+                this.logger.debug('failed to sendRtcAnswer via %s due to %s', routerId, err) // TODO: better?
             })
     }
 
@@ -123,7 +123,7 @@ export class RtcSignaller {
             })
     }
 
-    onConnectionNeeded(routerId: string, targetPeerId: string): void {
+    sendRtcConnect(routerId: string, targetPeerId: string): void {
         this.trackerNode.sendRtcConnect(routerId, targetPeerId, this.peerInfo)
             .catch((err: Error) => {
                 this.logger.debug('failed to sendRtcConnect via %s due to %s', routerId, err) // TODO: better?

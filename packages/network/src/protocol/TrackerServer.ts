@@ -72,8 +72,8 @@ export class TrackerServer extends EventEmitter {
         originatorInfo: TrackerLayer.Originator,
         connectionId: string, 
         description: string
-    ): Promise<TrackerLayer.RelayMessage> {
-        const msg = new TrackerLayer.RelayMessage({
+    ): Promise<TrackerLayer.RelayMessage> { 
+        return this.send(receiverNodeId, new TrackerLayer.RelayMessage({
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
@@ -82,8 +82,7 @@ export class TrackerServer extends EventEmitter {
                 connectionId,
                 description
             }
-        })
-        return this.send(receiverNodeId, msg)
+        }))
     }
 
     sendRtcAnswer(

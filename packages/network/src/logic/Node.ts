@@ -283,11 +283,10 @@ export class Node extends EventEmitter {
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            if (reattempt) {
-                await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, false))
-            } else {
-                await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId))
-            }
+            
+            await promiseTimeout(this.nodeConnectTimeout, 
+                this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
+            
             this.clearDisconnectionTimer(nodeId)
             this.subscribeToStreamOnNode(nodeId, streamId, false)
             return nodeId

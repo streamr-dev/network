@@ -93,13 +93,15 @@ export type RtcConnectMessage = {
 export type RtcOfferMessage = {
     subType: RtcSubTypes.RTC_OFFER
     data: {
-        description: string
+        connectionId: string,
+        description: string,
     }
 }
 
 export type RtcAnswerMessage = {
     subType: RtcSubTypes.RTC_ANSWER
     data: {
+        connectionId: string,
         description: string
     }
 }
