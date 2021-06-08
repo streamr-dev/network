@@ -52,7 +52,7 @@ describe('broker drops future messages', () => {
             trackerPort,
             httpPort,
             wsPort,
-            mqttPort
+            legacyMqttPort: mqttPort
         })
 
         client = createClient(wsPort)
@@ -60,7 +60,6 @@ describe('broker drops future messages', () => {
             name: 'broker-drops-future-messages' + Date.now()
         })
         streamId = freshStream.id
-        // @ts-expect-error
         token = await client.session.getSessionToken()
     })
 

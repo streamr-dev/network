@@ -9,4 +9,5 @@ program
     .command('stream', 'stream subcommands')
     .command('storage-node', 'storage node subcommands')
     .command('mock-data', 'mock data subcommands')
+    .command('misc', 'miscellaneous subcommands')
     .parse(process.argv)

@@ -44,7 +44,6 @@ export class Tracker extends EventEmitter {
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
-    private readonly storageNodes: Set<NodeId>
     private readonly logger: Logger
     private readonly metrics: Metrics
 
@@ -68,10 +67,9 @@ export class Tracker extends EventEmitter {
         this.overlayConnectionRtts = {}
         this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
-        this.storageNodes = new Set()
 
-        this.trackerServer.on(TrackerServerEvent.NODE_CONNECTED, (nodeId, isStorage) => {
-            this.onNodeConnected(nodeId, isStorage)
+        this.trackerServer.on(TrackerServerEvent.NODE_CONNECTED, (nodeId) => {
+            this.onNodeConnected(nodeId)
         })
         this.trackerServer.on(TrackerServerEvent.NODE_DISCONNECTED, (nodeId) => {
             this.onNodeDisconnected(nodeId)
@@ -79,23 +77,16 @@ export class Tracker extends EventEmitter {
         this.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
             this.processNodeStatus(statusMessage, nodeId)
         })
-        this.trackerServer.on(TrackerServerEvent.STORAGE_NODES_REQUEST, (message, nodeId) => {
-            this.findStorageNodes(message, nodeId)
-        })
         attachRtcSignalling(this.trackerServer)
 
         this.metrics = metricsContext.create('tracker')
             .addRecordedMetric('onNodeDisconnected')
             .addRecordedMetric('processNodeStatus')
-            .addRecordedMetric('findStorageNodes')
             .addRecordedMetric('instructionsSent')
             .addRecordedMetric('_removeNode')
     }
 
-    onNodeConnected(node: NodeId, isStorage: boolean): void {
-        if (isStorage) {
-            this.storageNodes.add(node)
-        }
+    onNodeConnected(node: NodeId): void {
         this.emit(Event.NODE_CONNECTED, node)
     }
 
@@ -127,17 +118,6 @@ export class Tracker extends EventEmitter {
             this.updateNode(source, filteredStreams, streams)
         }
         this.formAndSendInstructions(source, Object.keys(streams))
-    }
-
-    findStorageNodes(storageNodesRequest: TrackerLayer.StorageNodesRequest, source: NodeId): void {
-        this.metrics.record('findStorageNodes', 1)
-        const streamId = StreamIdAndPartition.fromMessage(storageNodesRequest)
-        const storageNodeIds = [...this.storageNodes].filter((s) => s !== source)
-        this.trackerServer.sendStorageNodesResponse(source, streamId, storageNodeIds)
-            .catch((e) => {
-                this.logger.error('Failed to send StorageNodesResponse to %s for stream %s, reason: %s',
-                    source, streamId, e)
-            })
     }
 
     stop(): Promise<void> {
@@ -215,7 +195,6 @@ export class Tracker extends EventEmitter {
 
     private removeNode(node: NodeId): void {
         this.metrics.record('_removeNode', 1)
-        this.storageNodes.delete(node)
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
         Object.entries(this.overlayPerStream)
@@ -256,10 +235,6 @@ export class Tracker extends EventEmitter {
 
     getOverlayConnectionRtts(): { [key: string]: { [key: string]: number } } {
         return this.overlayConnectionRtts
-    }
-
-    getStorageNodes(): ReadonlyArray<NodeId> {
-        return [...this.storageNodes]
     }
 
     getOverlayPerStream(): Readonly<OverlayPerStream> {

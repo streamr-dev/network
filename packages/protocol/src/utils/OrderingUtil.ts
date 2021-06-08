@@ -68,6 +68,13 @@ class OrderingUtil extends MsgChainEmitter {
             chain.clearGap()
         })
     }
+
+    disable(): void {
+        this.maxGapRequests = 0
+        Object.values(this.orderedChains).forEach((chain) => {
+            chain.disable()
+        })
+    }
 }
 
 export default OrderingUtil

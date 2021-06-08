@@ -127,51 +127,57 @@ describeRepeats('Encryption Key Persistence', () => {
         await publisher.setNextGroupKey(stream.id, groupKey)
     })
 
-    it('publisher persists group key', async () => {
-        // ensure publisher can read a persisted group key
-        // 1. publish some messages with publisher
-        // 2. then disconnect publisher
-        // 3. create new publisher with same key
-        // 4. subscribe with subscriber
-        // because original publisher is disconnected
-        // subscriber will need to ask new publisher
-        // for group keys, which the new publisher will have to read from
-        // persistence
-        const published = await publishTestMessages(5)
-        await publisher.disconnect()
-        const publisher2 = createClient({
-            id: 'publisher2',
-            auth: {
-                privateKey: publisherPrivateKey,
+    describe('publisher persists group key', () => {
+        let published: any[]
+        let publisher2: StreamrClient
+        beforeEach(async () => {
+            // ensure publisher can read a persisted group key
+            // 1. publish some messages with publisher
+            // 2. then disconnect publisher
+            // 3. create new publisher with same key
+            // 4. subscribe with subscriber
+            // because original publisher is disconnected
+            // subscriber will need to ask new publisher
+            // for group keys, which the new publisher will have to read from
+            // persistence
+            published = await publishTestMessages(5)
+            await publisher.disconnect()
+            publisher2 = createClient({
+                id: 'publisher2',
+                auth: {
+                    privateKey: publisherPrivateKey,
+                }
+            })
+
+            addAfter(async () => {
+                await publisher2.disconnect()
+            })
+
+            await publisher2.connect()
+        }, 2 * TIMEOUT)
+
+        it('works', async () => {
+            // TODO: this should probably happen automatically if there are keys
+            // also probably needs to create a connection handle
+            await publisher2.publisher.startKeyExchange()
+
+            const sub = await subscriber.subscribe({
+                stream: stream.id,
+                resend: {
+                    last: 5,
+                }
+            })
+            const received = []
+            for await (const m of sub) {
+                received.push(m.getParsedContent())
+                if (received.length === published.length) {
+                    break
+                }
             }
-        })
 
-        addAfter(async () => {
-            await publisher2.disconnect()
-        })
-
-        await publisher2.connect()
-
-        // TODO: this should probably happen automatically if there are keys
-        // also probably needs to create a connection handle
-        await publisher2.publisher.startKeyExchange()
-
-        const sub = await subscriber.subscribe({
-            stream: stream.id,
-            resend: {
-                last: 5,
-            }
-        })
-        const received = []
-        for await (const m of sub) {
-            received.push(m.getParsedContent())
-            if (received.length === published.length) {
-                break
-            }
-        }
-
-        expect(received).toEqual(published)
-    }, 2 * TIMEOUT)
+            expect(received).toEqual(published)
+        }, 2 * TIMEOUT)
+    })
 
     it('subscriber persists group key', async () => {
         // we want to check that subscriber can read a group key
@@ -250,18 +256,18 @@ describeRepeats('Encryption Key Persistence', () => {
             stream,
             waitForLast: true,
         })
-
+        const MAX_MESSAGES = 16
         const [published1, published2] = await Promise.all([
-            publishTestMessages(5),
-            publishTestMessages2(6), // use different lengths so we can differentiate who published what
+            publishTestMessages(MAX_MESSAGES - 1),
+            publishTestMessages2(MAX_MESSAGES), // use different lengths so we can differentiate who published what
         ])
 
         const received1 = []
         const received2 = []
         for await (const m of sub) {
             const content = m.getParsedContent()
-            // 'n of 6' messages belong to publisher2
-            if (content.value.endsWith('of 6')) {
+            // 'n of MAX_MESSAGES' messages belong to publisher2
+            if (content.value.endsWith(`of ${MAX_MESSAGES}`)) {
                 received2.push(content)
             } else {
                 received1.push(content)

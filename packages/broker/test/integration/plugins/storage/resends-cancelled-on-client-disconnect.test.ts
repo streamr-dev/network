@@ -1,4 +1,4 @@
-import { startTracker, startStorageNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
+import { startTracker, startNetworkNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
 import { waitForEvent } from 'streamr-test-utils'
 import ws from 'uWebSockets.js'
 import StreamrClient, { Stream } from 'streamr-client'
@@ -16,7 +16,6 @@ import { Todo } from '../../../../src/types'
 import { router as dataQueryEndpoints } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { StorageNodeRegistry } from '../../../../src/StorageNodeRegistry'
 import { createClient, StorageAssignmentEventManager, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { createMockStorageConfig } from './MockStorageConfig'
 
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
@@ -65,7 +64,7 @@ describe('resend cancellation', () => {
         }
 
         const app = express()
-        app.use('/api/v1', dataQueryEndpoints(storage, {
+        app.use(dataQueryEndpoints(storage, {
             authenticate: () => Promise.resolve(undefined)
         } as any, new MetricsContext(undefined as any)))
         const server = app.listen(mockServerPort)
@@ -84,17 +83,11 @@ describe('resend cancellation', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        networkNode = await startStorageNode({
+        networkNode = await startNetworkNode({
             host: '127.0.0.1',
             port: networkNodePort,
             id: 'networkNode',
             trackers: [tracker.getAddress()],
-            storages: [],
-            // @ts-expect-error
-            storageConfig: createMockStorageConfig([{
-                id: freshStream.id,
-                partition: 0
-            }])
         })
         const storageNodeAddress = Wallet.createRandom().address
         const storageNodeRegistry = StorageNodeRegistry.createInstance(
@@ -116,7 +109,7 @@ describe('resend cancellation', () => {
             }, metricsContext),
             metricsContext,
             new SubscriptionManager(networkNode),
-            storageNodeRegistry!,
+            storageNodeRegistry,
             `http://${STREAMR_DOCKER_DEV_HOST}`
         )
         const assignmentEventManager = new StorageAssignmentEventManager(wsPort, Wallet.createRandom())

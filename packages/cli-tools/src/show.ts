@@ -8,7 +8,7 @@ export const show = (
     const options = { ...streamrOptions }
     const client = new StreamrClient(options)
     client.getStream(streamId).then(async (stream) => {
-        // @ts-expect-error accessing internal method, should be made public perhaps?
+        // @ts-expect-error toObject is internal
         const obj = stream.toObject()
         if (includePermissions) {
             obj.permissions = await stream.getPermissions()
