@@ -44,9 +44,11 @@ describe('Signalling error scenarios', () => {
     })
 
     afterEach(async () => {
-        await nodeOne.stop()
-        await nodeTwo.stop()
-        await tracker.stop()
+        await Promise.all([
+            tracker.stop(),
+            nodeOne.stop(),
+            nodeTwo.stop()
+        ])
     })
 
     it('connection recovers after timeout if one endpoint closes during signalling', async () => {

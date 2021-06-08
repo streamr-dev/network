@@ -1,7 +1,6 @@
 import { once } from 'events'
 import { DescriptionType } from 'node-datachannel'
 import { waitForCondition, wait } from 'streamr-test-utils'
-
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { Connection } from '../../src/connection/Connection'
 
@@ -82,17 +81,9 @@ describe('Connection', () => {
         }
     })
 
-    afterEach(async () => {
-        if (connectionOne.isOpen()) {
-            const onClose1 = once(connectionOne, 'close')
-            connectionOne.close()
-            await onClose1
-        }
-        if (connectionTwo.isOpen()) {
-            const onClose2 = once(connectionTwo, 'close')
-            connectionTwo.close()
-            await onClose2
-        }
+    afterEach(()  => {
+        connectionOne.close()
+        connectionTwo.close()
     })
 
     it('connection can be established', async () => {
@@ -161,14 +152,22 @@ describe('Connection', () => {
 
         await Promise.all([once(connectionOne, 'open'), once(connectionTwo, 'open')])
 
-        connectionTwo.pong = () => {} // hacky: prevent connectionTwo from responding
+        connectionTwo.pong = () => {
+        } // hacky: prevent connectionTwo from responding
         // @ts-expect-error access private, only in test
         // eslint-disable-next-line require-atomic-updates
         connectionOne.pingPongTimeout = 50 // would be better to pass via constructor
-        connectionOne.ping()
-        connectionOne.ping()
 
-        await Promise.allSettled([once(connectionOne, 'close'), once(connectionTwo, 'close')])
+        await Promise.allSettled([
+            once(connectionOne, 'close'),
+            once(connectionTwo, 'close'),
+            connectionOne.ping(),
+            connectionOne.ping(),
+            connectionOne.ping(),
+            connectionOne.ping(),
+            connectionOne.ping(),
+            connectionOne.ping()
+        ])
 
         expect(connectionOne.isOpen()).toEqual(false)
         expect(connectionTwo.isOpen()).toEqual(false)

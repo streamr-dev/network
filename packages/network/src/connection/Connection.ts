@@ -411,6 +411,9 @@ export class Connection extends ConnectionEmitter {
     }
 
     ping(): void {
+        if (this.isFinished) {
+            return
+        }
         if (this.isOpen()) {
             if (this.pingAttempts >= this.maxPingPongAttempts) {
                 this.logger.warn(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
@@ -432,6 +435,9 @@ export class Connection extends ConnectionEmitter {
     }
 
     pong(): void {
+        if (this.isFinished) {
+            return
+        }
         try {
             this.dataChannel!.sendMessage('pong')
         } catch (e) {
