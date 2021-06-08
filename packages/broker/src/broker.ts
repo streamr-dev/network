@@ -27,19 +27,6 @@ export interface Broker {
     close: () => Promise<unknown>
 }
 
-// replace with an actual uuid function in it's final location 
-// using this placeholder for scaffolding purposes 
-// source:
-// https://gist.github.com/erikvullings/b71a0be49e5e79945805bd209e22c7d2
-export const uuidv4 = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        // tslint:disable-next-line:no-bitwise
-        const r = (Math.random() * 16) | 0
-        // tslint:disable-next-line:no-bitwise
-        const v = c === 'x' ? r : (r & 0x3) | 0x8
-        return v.toString(16)
-    })
-}
 
 export const startBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
