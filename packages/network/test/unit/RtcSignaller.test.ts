@@ -149,10 +149,6 @@ describe('RtcSignaller', () => {
         )
 
         const originator = PeerInfo.newNode('originator')
-<<<<<<< HEAD
-=======
-       
->>>>>>> test: passing existing tests
 
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',

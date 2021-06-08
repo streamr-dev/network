@@ -71,11 +71,6 @@ describe('ws-endpoint', () => {
             peerName: endpointTwoInfo.peerName,
             location: endpointTwoInfo.location,        
         })])
-<<<<<<< HEAD
-=======
-
-
->>>>>>> test: passing existing tests
         
         expect(endpointTwoArguments).toEqual([expect.objectContaining({
             peerId: endpointOneInfo.peerId,
