@@ -74,7 +74,6 @@ export class Logger {
 
     warn(msg: string, ...args: any[]): void {
         this.updateLogLevelIfChanged()
-        console.trace(pino, this.logger)
         this.logger.warn(msg, ...args)
     }
 
