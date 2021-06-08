@@ -41,7 +41,6 @@ describe('BatchManager', () => {
 
         await cassandraClient.connect()
         batchManager = new BatchManager(cassandraClient, {
-            logErrors: false,
             batchMaxSize: 10000,
             batchMaxRecords: 10,
             batchCloseTimeout: 1000,

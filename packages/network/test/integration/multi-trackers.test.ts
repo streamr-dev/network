@@ -21,8 +21,7 @@ const THIRD_STREAM_2 = 'stream-11'
 const TRACKER_NODE_EVENTS_OF_INTEREST = [
     TrackerNodeEvent.CONNECTED_TO_TRACKER,
     TrackerNodeEvent.TRACKER_DISCONNECTED,
-    TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED,
-    TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED
+    TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED
 ]
 
 describe('multi trackers', () => {

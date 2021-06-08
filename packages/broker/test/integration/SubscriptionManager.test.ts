@@ -41,7 +41,7 @@ describe('SubscriptionManager', () => {
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
-            mqttPort: mqttPort1
+            legacyMqttPort: mqttPort1
         })
         broker2 = await startBroker({
             name: 'broker2',
@@ -50,7 +50,7 @@ describe('SubscriptionManager', () => {
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
-            mqttPort: mqttPort2
+            legacyMqttPort: mqttPort2
         })
 
         await wait(2000)
@@ -92,7 +92,7 @@ describe('SubscriptionManager', () => {
         expect(broker1.getStreams()).toEqual([freshStream1.id + '::0'])
         expect(broker2.getStreams()).toEqual([freshStream2.id + '::0'])
 
-        await client1.subscribe({
+        const subFreshStream2 = await client1.subscribe({
             stream: freshStream2.id
         }, () => {})
 
@@ -106,7 +106,7 @@ describe('SubscriptionManager', () => {
         expect(broker1.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
         expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
 
-        await client1.subscribe({
+        const subFreshStream1 = await client1.subscribe({
             stream: freshStream1.id
         }, () => {})
 
@@ -121,8 +121,7 @@ describe('SubscriptionManager', () => {
         expect(broker1.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
         expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
 
-        // @ts-expect-error
-        await client1.unsubscribe(freshStream1.id)
+        await client1.unsubscribe(subFreshStream1)
 
         await waitForCondition(() => broker1.getStreams().length === 1)
         await waitForCondition(() => broker2.getStreams().length === 2)
@@ -130,8 +129,7 @@ describe('SubscriptionManager', () => {
         expect(broker1.getStreams()).toEqual([freshStream2.id + '::0'])
         expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
 
-        // @ts-expect-error
-        await client1.unsubscribe(freshStream2.id)
+        await client1.unsubscribe(subFreshStream2)
 
         await waitForCondition(() => broker1.getStreams().length === 0)
         await waitForCondition(() => broker2.getStreams().length === 2)

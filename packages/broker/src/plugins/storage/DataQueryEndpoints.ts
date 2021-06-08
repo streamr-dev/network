@@ -5,11 +5,12 @@ import express, { Request, Response } from 'express'
 import { MetricsContext, Protocol } from 'streamr-network'
 import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Logger } from 'streamr-network'
+import { Readable, Transform } from 'stream'
 import { Todo } from '../../types'
 import { Storage } from './Storage'
 import { authenticator } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
-import { Readable, Transform } from 'stream'
+import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 
 const logger = new Logger(module)
 
@@ -68,7 +69,7 @@ const createEndpointRoute = (
     metrics: Metrics, 
     processRequest: (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => void
 ) => {
-    router.get(`/streams/:id/data/partitions/:partition/${name}`, (req: Request, res: Response) => {
+    router.get(`${LEGACY_API_ROUTE_PREFIX}/streams/:id/data/partitions/:partition/${name}`, (req: Request, res: Response) => {
         const format = getFormat(req.query.format as string)
         if (format === undefined) {
             sendError(`Query parameter "format" is invalid: ${req.query.format}`, res)
@@ -84,8 +85,8 @@ const createEndpointRoute = (
                             'Content-Type': format.contentType
                         })
                     })
-                    data.on('error', () => {
-                        logger.error(`Stream error in DataQueryEndpoints: ${streamId}`)
+                    data.on('error', (err: any) => {
+                        logger.error(`Stream error in DataQueryEndpoints: ${streamId}`, err)
                         if (!res.headersSent) {
                             res.status(500).json({
                                 error: 'Failed to fetch data!'
@@ -114,7 +115,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         .addRecordedMetric('rangeRequests')
 
     router.use(
-        '/streams/:id/data/partitions/:partition',
+        `${LEGACY_API_ROUTE_PREFIX}/streams/:id/data/partitions/:partition`,
         // partition parsing middleware
         (req, res, next) => {
             if (Number.isNaN(parseInt(req.params.partition))) {

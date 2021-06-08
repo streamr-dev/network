@@ -8,7 +8,6 @@ export interface NetworkConfig {
     hostname: string,
     port: number,
     advertisedWsUrl: string | null,
-    isStorageNode: boolean,
     trackers: string[] | TrackerRegistry,
     location: {
         latitude: number,
@@ -52,7 +51,10 @@ export interface Config {
     },
     streamrUrl: string,
     streamrAddress: string,
-    storageNodeRegistry: StorageNodeRegistryItem[] | null
+    storageNodeRegistry: StorageNodeRegistryItem[]
     httpServer: HttpServerConfig | null
     plugins: Record<string,any>
+    apiAuthentication: {
+        keys: string[]
+    } | null
 }

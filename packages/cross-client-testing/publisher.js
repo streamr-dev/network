@@ -20,6 +20,8 @@ process.on('beforeExit', () => {
 const options = {
     restUrl: "http://localhost/api/v1",
     url: "ws://localhost/api/v1/ws",
+    autoDisconnect: false,
+    autoConnect: false,
     auth: {
         privateKey: privateKey,
     },
@@ -99,10 +101,11 @@ const publishMessage = async (address) => {
     await publishFunction(msg, counter)
 
     if (maxMessages && counter >= maxMessages - 1) {
-        console.log(`Done: All ${maxMessages} messages published. Quitting JS publisher.`)
+        console.log(`Done: All ${maxMessages} messages published.`)
         // Disconnect gracefully so that this process will quit.
         // Don't do it immediately to avoid messing up the last published message in any way.
         await wait(10000 + (500 * maxMessages))
+        console.info(`Disconnecting publisher...`)
         await client.disconnect()
         console.log(`Disconnected.`)
     } else {

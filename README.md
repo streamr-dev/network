@@ -29,7 +29,7 @@ Streamr network, client & supporting packages. Work in progress.
 Uses [lerna](https://github.com/lerna/lerna#readmes).
 
 ```
-npm install
+npm ci
 npm run bootstrap
 ```
 
@@ -55,3 +55,17 @@ Merge remote changes from all remote repos:
 ```
 make pull # keep rerunning until no errors
 ```
+
+## List active versions & symlinks
+
+Check which packages are currently being symlinked.
+
+```
+npm run versions
+```
+
+This lists internal packages & their versions on the left, linked packages are columns.
+If the package on the left links to the package in the column, it shows a checkmark & the semver range, otherwise it shows the mismatched semver range and prints a warning at the end.
+It prints the version ranges so you can double-check that they're formatted as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
+
+![image](https://user-images.githubusercontent.com/43438/120851127-6b173e00-c546-11eb-8b2e-0fcd33d0da5a.png)

@@ -1,5 +1,5 @@
 import { GroupKey } from './Encryption'
-import ServerPersistentStore from './ServerPersistentStore'
+import ServerPersistentStore, { ServerPersistentStoreOptions } from './ServerPersistentStore'
 
 export interface PersistentStore<K, V> {
     get(key: K): Promise<V | undefined>
@@ -8,6 +8,8 @@ export interface PersistentStore<K, V> {
     delete(key: K): Promise<boolean>
     clear(): Promise<boolean>
     size(): Promise<number>
+    close(): Promise<void>
+    destroy(): Promise<void>
 }
 
 type GroupKeyId = string
@@ -18,10 +20,10 @@ type GroupKeyStoreOptions = {
     groupKeys: [GroupKeyId, GroupKey][]
 }
 
-export class GroupKeyPersistence {
+export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
     store: PersistentStore<string, string>
-    constructor({ clientId, streamId, initialData = {} }: { clientId: string, streamId: string, initialData?: Record<string, string> }) {
-        this.store = new ServerPersistentStore({ clientId, streamId, initialData })
+    constructor(options: ServerPersistentStoreOptions) {
+        this.store = new ServerPersistentStore(options)
     }
 
     async has(groupKeyId: string) {
@@ -53,6 +55,14 @@ export class GroupKeyPersistence {
 
     async clear() {
         return this.store.clear()
+    }
+
+    async destroy() {
+        return this.store.destroy()
+    }
+
+    async close() {
+        return this.store.close()
     }
 
     get [Symbol.toStringTag]() {
@@ -171,6 +181,10 @@ export default class GroupKeyStore {
         this.nextGroupKeys.unshift(newKey)
         this.nextGroupKeys.length = Math.min(this.nextGroupKeys.length, 2)
         await this.storeKey(newKey)
+    }
+
+    async close() {
+        return this.store.close()
     }
 
     async rekey() {

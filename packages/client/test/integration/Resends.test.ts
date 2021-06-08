@@ -27,7 +27,6 @@ describe('StreamrClient resends', () => {
                 },
                 autoConnect: false,
                 autoDisconnect: false,
-                // @ts-expect-error
                 maxRetries: 2,
                 ...opts,
             })

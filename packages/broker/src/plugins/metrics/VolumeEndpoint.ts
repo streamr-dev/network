@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express'
 import { MetricsContext } from 'streamr-network'
+import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 
 /**
  * Endpoint for GETing volume metrics
@@ -11,7 +12,7 @@ export const router = (metricsContext: MetricsContext) => {
 
     const router = express.Router()
 
-    router.get('/volume', async (req: Request, res: Response) => {
+    router.get(`${LEGACY_API_ROUTE_PREFIX}/volume`, async (req: Request, res: Response) => {
         const report = await metricsContext.report()
         res.status(200).send(report)
     })
