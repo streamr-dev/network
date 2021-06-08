@@ -92,13 +92,17 @@ describe('Connection', () => {
 
     describe('send()', () => {
         it('sends a serialized message to the socket', () => {
+            // @ts-expect-error violate private
+            const fakeDuplexStream = connection.duplexStream = {
+                write: jest.fn()
+            }
             const msg: any = {
                 serialize: (controlVersion: number, messageVersion: number) => `msg:${controlVersion}:${messageVersion}`,
             }
             connection.send(msg)
 
-            expect(fakeSocket.send).toHaveBeenCalledTimes(1)
-            expect(fakeSocket.send).toHaveBeenCalledWith(msg.serialize(controlLayerVersion, messageLayerVersion))
+            expect(fakeDuplexStream.write).toHaveBeenCalledTimes(1)
+            expect(fakeDuplexStream.write).toHaveBeenCalledWith(msg.serialize(controlLayerVersion, messageLayerVersion))
         })
     })
 })

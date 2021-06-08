@@ -19,8 +19,6 @@ import { parse as parseQuery } from 'querystring'
 
 const logger = new Logger(module)
 
-const BACKPRESSURE_EVALUATE_MS = 250
-
 export class WebsocketServer extends EventEmitter {
 
     static validateProtocolVersions(controlLayerVersion: number|undefined, messageLayerVersion: number|undefined): void | never {
@@ -49,7 +47,6 @@ export class WebsocketServer extends EventEmitter {
     pingIntervalInMs: number
     metrics: Metrics
     pingInterval: NodeJS.Timeout
-    backPressureEvaluateInterval: NodeJS.Timeout
 
     constructor(
         httpServer: http.Server | https.Server,
@@ -210,27 +207,10 @@ export class WebsocketServer extends EventEmitter {
         this.pingInterval = setInterval(() => {
             this.pingConnections()
         }, this.pingIntervalInMs)
-
-        /**
-         * drain: (ws: uWS.WebSocket) => {
-                const connection = this.connections.get(ws.connectionId)
-                if (connection) {
-                    connection.evaluateBackPressure()
-                }
-               }
-         */
-        this.backPressureEvaluateInterval = setInterval(() => {
-            this.connections.forEach((connection) => {
-                if (!connection.isDead()) {
-                    connection.evaluateBackPressure()
-                }
-            })
-        }, BACKPRESSURE_EVALUATE_MS)
     }
 
     async close(): Promise<unknown> {
         clearInterval(this.pingInterval)
-        clearInterval(this.backPressureEvaluateInterval)
         this.requestHandler.close()
         this.connections.forEach((connection: Connection) => connection.socket.close())
         return new Promise((resolve, reject) => {

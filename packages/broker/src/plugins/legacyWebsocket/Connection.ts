@@ -2,6 +2,7 @@ import { EventEmitter } from 'events'
 import { Logger, Protocol } from 'streamr-network'
 import { Stream } from '../../Stream'
 import WebSocket from "ws"
+import stream from "stream"
 
 const logger = new Logger(module)
 
@@ -21,11 +22,9 @@ export interface Connection {
 }
 
 export class Connection extends EventEmitter {
-    static LOW_BACK_PRESSURE = 1024 * 1024
-    static HIGH_BACK_PRESSURE = 1024 * 1024 * 4
-
     readonly id: string
     readonly socket: WebSocket
+    private duplexStream: stream.Duplex
     readonly streams: Stream[] = []
     readonly controlLayerVersion: number
     readonly messageLayerVersion: number
@@ -37,6 +36,7 @@ export class Connection extends EventEmitter {
         super()
         this.id = generateId()
         this.socket = socket
+        this.duplexStream = WebSocket.createWebSocketStream(socket)
         this.streams = []
         this.dead = false
         this.controlLayerVersion = controlLayerVersion
@@ -73,6 +73,12 @@ export class Connection extends EventEmitter {
         socket.on('error', (err) => {
             logger.warn('socket "%s" error %s', this.id, err)
         })
+
+        this.duplexStream.on('drain', () => {
+            logger.debug('Back pressure LOW for %s at %d', this.id, this.getBufferedAmount())
+            this.emit('lowBackPressure')
+            this.highBackPressure = false
+        })
     }
 
     getBufferedAmount(): number {
@@ -106,18 +112,6 @@ export class Connection extends EventEmitter {
         return this.streams.map((s: Stream) => s.toString())
     }
 
-    evaluateBackPressure(): void {
-        if (!this.highBackPressure && this.getBufferedAmount() > Connection.HIGH_BACK_PRESSURE) {
-            logger.debug('Back pressure HIGH for %s at %d', this.id, this.getBufferedAmount())
-            this.emit('highBackPressure')
-            this.highBackPressure = true
-        } else if (this.highBackPressure && this.getBufferedAmount() < Connection.LOW_BACK_PRESSURE) {
-            logger.debug('Back pressure LOW for %s at %d', this.id, this.getBufferedAmount())
-            this.emit('lowBackPressure')
-            this.highBackPressure = false
-        }
-    }
-
     ping(): void {
         this.socket.ping()
         logger.trace(`sent ping to ${this.id}`)
@@ -126,11 +120,16 @@ export class Connection extends EventEmitter {
     send(msg: Protocol.ControlLayer.ControlMessage): void {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         logger.trace('send: %s: %o', this.id, serialized)
+        let shouldContinueWriting = true
         try {
-            this.socket.send(serialized)
-            this.evaluateBackPressure()
+            shouldContinueWriting = this.duplexStream.write(serialized)
         } catch (e) {
             this.forceClose(`unable to send message: ${e}`)
+        }
+        if (!shouldContinueWriting) {
+            logger.debug('Back pressure HIGH for %s at %d', this.id, this.getBufferedAmount())
+            this.emit('highBackPressure')
+            this.highBackPressure = true
         }
     }
 
