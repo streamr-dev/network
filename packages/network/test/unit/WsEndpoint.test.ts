@@ -157,7 +157,6 @@ describe('WsEndpoint with connections', () => {
             }
         )
 
-
         expect(wsEndpoint.getPeerInfos()).toEqual([
             expect.objectContaining({
                 peerId: otherPeer.peerId,
