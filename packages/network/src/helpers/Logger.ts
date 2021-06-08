@@ -16,16 +16,18 @@ const parseBoolean = (value: string|undefined) => {
 }
 
 export class Logger {
-
     static NAME_LENGTH = 20
 
     private readonly logger: pino.Logger
+
+    private static upToDateLoggers: WeakSet<Logger> = new WeakSet<Logger>()
+    private static logLevel: pino.LevelWithSilent = (process.env.LOG_LEVEL as pino.LevelWithSilent) || 'info'
 
     constructor(module: NodeJS.Module, context?: string, destinationStream?: { write(msg: string): void }) {
         const options = {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
-            level: process.env.LOG_LEVEL || 'info',
+            level: Logger.logLevel,
             prettyPrint: process.env.NODE_ENV === 'production' ? false : {
                 colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
                 translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
@@ -33,7 +35,8 @@ export class Logger {
                 levelFirst: true,
             }
         }
-        this.logger = (destinationStream !== undefined) ? pino(options, destinationStream) : pino(options) 
+        this.logger = (destinationStream !== undefined) ? pino(options, destinationStream) : pino(options)
+        Logger.upToDateLoggers.add(this)
     }
 
     private static createName(module: NodeJS.Module, context?: string) {
@@ -49,11 +52,18 @@ export class Logger {
         return _.padEnd(longName.substring(0, Logger.NAME_LENGTH), Logger.NAME_LENGTH, ' ')
     }
 
+    static changeLogLevel(logLevel: pino.LevelWithSilent): void {
+        Logger.logLevel = logLevel
+        Logger.upToDateLoggers = new WeakSet<Logger>()
+    }
+
     fatal(msg: string, ...args: any[]): void {
+        this.updateLogLevelIfChanged()
         this.logger.fatal(msg, ...args)
     }
 
     error(msg: string, ...args: any[]): void {
+        this.updateLogLevelIfChanged()
         const errorInstance = args.find((arg) => (arg instanceof Error))
         if (errorInstance !== undefined) {
             this.logger.error({ err: errorInstance }, msg, ...args)
@@ -63,18 +73,23 @@ export class Logger {
     }
 
     warn(msg: string, ...args: any[]): void {
+        this.updateLogLevelIfChanged()
+        console.trace(pino, this.logger)
         this.logger.warn(msg, ...args)
     }
 
     info(msg: string, ...args: any[]): void {
+        this.updateLogLevelIfChanged()
         this.logger.info(msg, ...args)
     }
 
     debug(msg: string, ...args: any[]): void {
+        this.updateLogLevelIfChanged()
         this.logger.debug(msg, ...args)
     }
 
     trace(msg: string, ...args: any[]): void {
+        this.updateLogLevelIfChanged()
         this.logger.trace(msg, ...args)
     }
     
@@ -82,6 +97,13 @@ export class Logger {
         const finalLogger = pino.final(this.logger)
         return {
             error: (error: any, origin?: string) => finalLogger.error(error, origin)
+        }
+    }
+
+    private updateLogLevelIfChanged(): void {
+        if (!Logger.upToDateLoggers.has(this)) {
+            this.logger.level = Logger.logLevel
+            Logger.upToDateLoggers.add(this)
         }
     }
 }
