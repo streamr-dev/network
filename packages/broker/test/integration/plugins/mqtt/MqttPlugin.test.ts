@@ -103,8 +103,8 @@ describe('MQTT plugin', () => {
 
     test('subscribe on MQTT client', async () => {
         let receivedTopic: string|undefined
-        let receivedJson: any 
-        mqttClient.on('message', (topic: string, payload: Buffer) => {
+        let receivedJson: any
+        mqttClient.once('message', (topic: string, payload: Buffer) => {
             receivedTopic = topic
             receivedJson = JSON.parse(payload.toString())
         })
@@ -112,9 +112,9 @@ describe('MQTT plugin', () => {
         await streamrClient.publish(getStreamId(), {
             foo: 'to-client'
         })
-        await waitForCondition(() => receivedJson !== undefined)
+        await waitForCondition(() => receivedJson !== undefined, 7000)
         expect(receivedTopic).toBe(topic)
         expect(receivedJson.message.foo).toBe('to-client')
         expect(receivedJson.metadata.timestamp).toBeDefined()
-    })
+    }, 15000)
 })
