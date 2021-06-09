@@ -36,7 +36,9 @@ export class Connection extends EventEmitter {
         super()
         this.id = generateId()
         this.socket = socket
-        this.duplexStream = WebSocket.createWebSocketStream(socket)
+        this.duplexStream = WebSocket.createWebSocketStream(socket, {
+            decodeStrings: false
+        })
         this.streams = []
         this.dead = false
         this.controlLayerVersion = controlLayerVersion
