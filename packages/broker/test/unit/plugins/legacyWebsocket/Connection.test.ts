@@ -1,4 +1,4 @@
-import { Connection } from '../../../../src/plugins/websocket/Connection'
+import { Connection } from '../../../../src/plugins/legacyWebsocket/Connection'
 import { Stream } from '../../../../src/Stream'
 import { Todo } from '../../../../src/types'
 
