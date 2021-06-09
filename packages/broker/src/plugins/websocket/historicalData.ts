@@ -66,9 +66,12 @@ export const createResponse = async (
     storageNodeRegistry: StorageNodeRegistry
 ): Promise<HistoricalDataResponse> => {
     const storageNodeUrls = await storageNodeRegistry.getUrlsByStreamId(request.streamId)
+
+    // Form data query endpoints and shuffle the resulting array
     const urls = storageNodeUrls.map((storageNodeUrl) => {
         return getDataQueryEndpointUrl(request, `${storageNodeUrl}/api/v1`)
-    })
+    }).sort(() => Math.random() - 0.5)
+
     for (let i = 0; i < urls.length; i++) {
         const url = urls[i]
         const abortController = new AbortController()

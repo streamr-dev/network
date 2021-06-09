@@ -9,7 +9,7 @@ const mockCoreApiServerPort = 17755
 const createMockCoreApiServer = async () => {
     const app = express()
     const registry: Record<string,string[]> = {
-        'stream-id-1': ['0x1111111111111111111111111111111111111111'],
+        'stream-id-1': ['0x1111111111111111111111111111111111111111', '0x3333333333333333333333333333333333333333'],
         'stream-id-2': ['0x2222222222222222222222222222222222222222']
     }
     app.use('/api/v1/streams/:streamId/storageNodes', (req: Request, res: Response) => {
@@ -45,6 +45,9 @@ describe('StorageNodeRegistry', () => {
             storageNodeRegistry: [{
                 address: '0x1111111111111111111111111111111111111111',
                 url: 'http://one.mock'
+            }, {
+                address: '0x3333333333333333333333333333333333333333',
+                url: 'http://three.mock'
             }],
             streamrUrl: `http://127.0.0.1:${mockCoreApiServerPort}`
         } as Config
@@ -53,6 +56,7 @@ describe('StorageNodeRegistry', () => {
 
     it('get url by address', () => {
         expect(registry.getUrlsByAddresses(['0x1111111111111111111111111111111111111111'])).toStrictEqual(['http://one.mock'])
+        expect(registry.getUrlsByAddresses(['0x3333333333333333333333333333333333333333'])).toStrictEqual(['http://three.mock'])
         expect(registry.getUrlsByAddresses(['0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'])).toStrictEqual([])
     })
 
@@ -60,7 +64,7 @@ describe('StorageNodeRegistry', () => {
 
         it('happy path', async () => {
             const actualUrl = await registry.getUrlsByStreamId('stream-id-1')
-            expect(actualUrl).toStrictEqual(['http://one.mock'])
+            expect(actualUrl).toStrictEqual(['http://one.mock', 'http://three.mock'])
         })
 
         it('no storage nodes', async () => {
