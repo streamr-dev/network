@@ -194,25 +194,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.connections[peerId] = connection
 
         } else if (this.connections[peerId].getConnectionId() !== 'none') {
-            // connectionId exists, it is a reconnect attempt
-            const conn = this.connections[peerId]
-            const lastState = conn.getLastState()
-            this.logger.trace('onRtcOffer: answering reconnect attempt; there is already a connection for %s. state: %s', 
-                NameDirectory.getName(peerId), lastState)
-            let deferredConnectionAttempt = null
-            if (conn.getDeferredConnectionAttempt()) {
-                deferredConnectionAttempt = conn.stealDeferredConnectionAttempt()
-            }
-            delete this.connections[peerId]
-            conn.close()
-
-            connection = this.createConnection(peerId, routerId, deferredConnectionAttempt)
-            try {
-                connection.connect()
-            } catch(e) {
-                this.logger.warn(e)
-            }
-            this.connections[peerId] = connection
+            connection = this.replaceConnection(peerId, routerId)
 
         } else {
             connection = this.connections[peerId]
@@ -261,24 +243,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
 
         if (this.connections[peerId]) {
-            const conn = this.connections[peerId]
-            let deferredConnectionAttempt = null
-            if (conn.getDeferredConnectionAttempt()) {
-                deferredConnectionAttempt = conn.stealDeferredConnectionAttempt()
-            }
-            delete this.connections[peerId]
-            conn.close()
-
-            const connection = this.createConnection(peerId, routerId, deferredConnectionAttempt)
-            connection.setConnectionId(uuidv4())
-
-            try {
-                connection.connect()
-            } catch(e) {
-                this.logger.warn(e)
-            }
-
-            this.connections[peerId] = connection
+            this.replaceConnection(peerId, routerId, uuidv4())
         } else {
             this.connect(peerId, routerId, true).then(() => {
                 this.logger.trace('unattended connectListener induced connection from %s connected', peerId)
@@ -287,6 +252,30 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 this.logger.trace('connectListener induced connection from %s failed, reason %s', peerId, err)
             })
         }
+    }
+
+    private replaceConnection(peerId: string, routerId: string, newConnectionId?: string): Connection {
+        // Close old connection
+        const conn = this.connections[peerId]
+        let deferredConnectionAttempt = null
+        if (conn.getDeferredConnectionAttempt()) {
+            deferredConnectionAttempt = conn.stealDeferredConnectionAttempt()
+        }
+        delete this.connections[peerId]
+        conn.close()
+
+        // Set up new connection
+        const connection = this.createConnection(peerId, routerId, deferredConnectionAttempt)
+        if (newConnectionId) {
+            connection.setConnectionId(newConnectionId)
+        }
+        try {
+            connection.connect()
+        } catch(e) {
+            this.logger.warn(e)
+        }
+        this.connections[peerId] = connection
+        return connection
     }
 
     async connect(
