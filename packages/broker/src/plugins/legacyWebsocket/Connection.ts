@@ -23,14 +23,14 @@ export interface Connection {
 
 export class Connection extends EventEmitter {
     readonly id: string
-    readonly socket: WebSocket
-    private duplexStream: stream.Duplex
-    readonly streams: Stream[] = []
     readonly controlLayerVersion: number
     readonly messageLayerVersion: number
-    dead: boolean
-    highBackPressure: boolean
-    respondedPong = true
+    private readonly socket: WebSocket
+    private readonly duplexStream: stream.Duplex
+    private readonly streams: Stream[] = []
+    private dead = false
+    private highBackPressure = false
+    private respondedPong = true
 
     constructor(socket: WebSocket, controlLayerVersion: number, messageLayerVersion: number) {
         super()
@@ -39,11 +39,8 @@ export class Connection extends EventEmitter {
         this.duplexStream = WebSocket.createWebSocketStream(socket, {
             decodeStrings: false
         })
-        this.streams = []
-        this.dead = false
         this.controlLayerVersion = controlLayerVersion
         this.messageLayerVersion = messageLayerVersion
-        this.highBackPressure = false
 
         socket.on('message', async (data: WebSocket.Data) => {
             if (this.dead) {
@@ -56,8 +53,7 @@ export class Connection extends EventEmitter {
                 this.send(new Protocol.ControlLayer.ErrorResponse({
                     requestId: '', // Can't echo the requestId of the request since parsing the request failed
                     errorMessage: err.message || err,
-                    // @ts-expect-error this errorCode does not exist in pre-defined set of error codes
-                    errorCode: 'INVALID_REQUEST',
+                    errorCode: Protocol.ControlLayer.ErrorCode.INVALID_REQUEST,
                 }))
             }
             if (message !== undefined) {
@@ -93,6 +89,14 @@ export class Connection extends EventEmitter {
 
     isDead(): boolean {
         return this.dead
+    }
+
+    setRespondedToPongAsFalse(): void {
+        this.respondedPong = false
+    }
+
+    hasRespondedToPong(): boolean {
+        return this.respondedPong
     }
 
     addStream(stream: Stream): void {
@@ -132,6 +136,17 @@ export class Connection extends EventEmitter {
             logger.debug('Back pressure HIGH for %s at %d', this.id, this.getBufferedAmount())
             this.emit('highBackPressure')
             this.highBackPressure = true
+        }
+    }
+
+    close(): void {
+        try {
+            this.socket.close()
+        } catch (e) {
+            logger.warn('connection %s threw error on graceful close, reason: %s', this.id, e)
+        } finally {
+            this.dead = true
+            this.emit('close')
         }
     }
 

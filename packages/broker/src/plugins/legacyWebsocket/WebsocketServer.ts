@@ -40,13 +40,13 @@ export class WebsocketServer extends EventEmitter {
         }
     }
 
-    httpServer: http.Server | https.Server
-    wss: WebSocket.Server
-    requestHandler: RequestHandler
-    connections: Set<Connection>
-    pingIntervalInMs: number
-    metrics: Metrics
-    pingInterval: NodeJS.Timeout
+    private readonly httpServer: http.Server | https.Server
+    private readonly wss: WebSocket.Server
+    private readonly requestHandler: RequestHandler
+    private readonly connections: Set<Connection>
+    private readonly pingIntervalInMs: number
+    private readonly metrics: Metrics
+    private readonly pingInterval: NodeJS.Timeout
 
     constructor(
         httpServer: http.Server | https.Server,
@@ -103,7 +103,15 @@ export class WebsocketServer extends EventEmitter {
             })
 
         const streams = new StreamStateManager()
-        this.requestHandler = new RequestHandler(streamFetcher, publisher, streams, subscriptionManager, this.metrics, storageNodeRegistry, streamrUrl)
+        this.requestHandler = new RequestHandler(
+            streamFetcher,
+            publisher,
+            streams,
+            subscriptionManager,
+            this.metrics,
+            storageNodeRegistry,
+            streamrUrl
+        )
         networkNode.addMessageListener((msg: Protocol.MessageLayer.StreamMessage) => this.broadcastMessage(msg, streams))
 
         this.wss = new WebSocket.Server({
@@ -126,7 +134,7 @@ export class WebsocketServer extends EventEmitter {
             if (request.url.indexOf('?') < 0) {
                 closeWithError(
                     'request url has no url parameters',
-                    'version params missing'
+                    'url params missing'
                 )
                 return
             }
@@ -170,7 +178,7 @@ export class WebsocketServer extends EventEmitter {
                     `protocol version validation failed ${err}`,
                     'protocol version(s) not supported'
                 )
-                return false
+                return
             }
 
             const connection = new Connection(ws, controlLayerVersion, messageLayerVersion)
@@ -212,7 +220,7 @@ export class WebsocketServer extends EventEmitter {
     async close(): Promise<unknown> {
         clearInterval(this.pingInterval)
         this.requestHandler.close()
-        this.connections.forEach((connection: Connection) => connection.socket.close())
+        this.connections.forEach((connection: Connection) => connection.close())
         return new Promise((resolve, reject) => {
             this.wss.close((err?) => {
                 if (err) {
@@ -261,10 +269,11 @@ export class WebsocketServer extends EventEmitter {
 
         const connections = [...this.connections.values()]
         connections.forEach((connection) => {
-            if (!connection.respondedPong) { // didn't get "pong" in pingInterval
+            if (!connection.hasRespondedToPong()) { // didn't get "pong" in pingInterval
                 logAndForceClose(connection, 'no pong response')
+                return
             }
-            connection.respondedPong = false
+            connection.setRespondedToPongAsFalse()
             try {
                 connection.ping()
             } catch (e) {

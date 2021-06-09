@@ -19,7 +19,6 @@ export interface WebsocketPluginConfig {
 }
 
 export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
-
     private websocketServer: WebsocketServer | undefined
 
     constructor(options: PluginOptions) {
