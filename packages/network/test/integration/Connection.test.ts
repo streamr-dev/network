@@ -41,13 +41,17 @@ describe('Connection', () => {
         }
         const messageQueueOne = new MessageQueue<string>()
         const messageQueueTwo = new MessageQueue<string>()
+        const deferredConnectionAttemptOne = new DeferredConnectionAttempt('two')
+        const deferredConnectionAttemptTwo = new DeferredConnectionAttempt('one')
+        deferredConnectionAttemptOne.getPromise().catch(() => {}) // prevent crashing on reject
+        deferredConnectionAttemptTwo.getPromise().catch(() => {}) // prevent crashing on reject
         connectionOne = new Connection({
             selfId: 'one',
             targetPeerId: 'two',
             routerId: 'routerId',
             stunUrls: [],
             messageQueue: messageQueueOne,
-            deferredConnectionAttempt: new DeferredConnectionAttempt('two')
+            deferredConnectionAttempt: deferredConnectionAttemptOne
         })
         connectionOne.on('localDescription', (...args) => oneFunctions.onLocalDescription(...args))
         connectionOne.on('localCandidate', (...args) => oneFunctions.onLocalCandidate(...args))
@@ -58,7 +62,7 @@ describe('Connection', () => {
             routerId: 'routerId',
             stunUrls: [],
             messageQueue: messageQueueTwo,
-            deferredConnectionAttempt: new DeferredConnectionAttempt('one')
+            deferredConnectionAttempt: deferredConnectionAttemptTwo
         })
 
         connectionTwo.on('localDescription', (...args) => twoFunctions.onLocalDescription(...args))
