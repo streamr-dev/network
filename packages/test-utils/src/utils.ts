@@ -47,6 +47,27 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
     })
 }
 
+// internal
+const runAndWait = async (
+    operations: (() => void) | ((() => void)[]),
+    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>,
+    timeout: number,
+    promiseFn: (args: Array<Promise<unknown>>) => Promise<unknown[]>
+): Promise<unknown[]> => {
+    const ops = Array.isArray(operations) ? operations : [operations]
+
+    let evs: Array<[emitter: EventEmitter, event: Event]>
+    if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0])) {
+        evs = waitedEvents as Array<[emitter: EventEmitter, event: Event]>
+    } else {
+        evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
+    }
+
+    const promise = promiseFn(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
+    ops.forEach((op) => { op() })
+    return promise
+}
+
 /**
  * Run functions and wait for events to be emitted within timeout. Returns a promise created with Promise.all() 
  * and waitForEvent() calls. Calls the functions after creating the promise.
@@ -59,30 +80,10 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
  */
 export const runAndWaitForEvents = async (
     operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
+    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>,
     timeout = 5000
 ): Promise<unknown[]> => {
-    let ops: (() => void)[]
-    if (Array.isArray(operations)) {
-        ops = operations
-    } 
-    else {
-        ops = [operations]
-    }
-
-    let evs: Array<[emitter: EventEmitter, event: Event]>
-    if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0]) ) {
-        evs = waitedEvents as Array<[emitter: EventEmitter, event: Event]>
-    } 
-    else {
-        evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
-    }
-    
-    const promise = Promise.all(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
-           
-    ops.forEach( (op) => { op() })
-    
-    return promise
+    return runAndWait(operations, waitedEvents, timeout, Promise.all.bind(Promise))
 }
 
 /**
@@ -100,27 +101,7 @@ export const runAndRaceEvents = async (
     waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
     timeout = 5000
 ): Promise<unknown[]> => {
-    let ops: (() => void)[]
-    if (Array.isArray(operations)) {
-        ops = operations
-    } 
-    else {
-        ops = [operations]
-    }
-
-    let evs: Array<[emitter: EventEmitter, event: Event]>
-    if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0]) ) {
-        evs = waitedEvents as Array<[emitter: EventEmitter, event: Event]>
-    } 
-    else {
-        evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
-    }
-    
-    const promise = Promise.race(evs.map(([emitter, event]) => waitForEvent(emitter, event, timeout)))
-           
-    ops.forEach( (op) => { op() })
-    
-    return promise
+    return runAndWait(operations, waitedEvents, timeout, Promise.race.bind(Promise))
 }
 
 /**
@@ -198,27 +179,15 @@ export const runAndWaitForConditions = async (
     retryInterval = 100,
     onTimeoutContext?: () => string
 ): Promise<unknown[]> => {
-
-    let ops: (() => void)[]
-    if (Array.isArray(operations)) {
-        ops = operations
-    } 
-    else {
-        ops = [operations]
-    }
-    
-    let conds: (() => (boolean | Promise<boolean>)) [] 
-    if (Array.isArray(conditions)) {
-        conds = conditions
-    } 
-    else {
-        conds = [conditions]
-    }
-    
-    const promise = Promise.all(conds.map((condition) => waitForCondition(condition, timeout, retryInterval, onTimeoutContext)))
-        
-    ops.forEach( (op) => { op() })
-    
+    const ops = Array.isArray(operations) ? operations : [operations]
+    const conds = Array.isArray(conditions) ? conditions : [conditions]
+    const promise = Promise.all(conds.map((condition) => waitForCondition(
+        condition,
+        timeout,
+        retryInterval,
+        onTimeoutContext
+    )))
+    ops.forEach((op) => { op() })
     return promise
 }
 
