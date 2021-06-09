@@ -3,7 +3,7 @@ import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import nodeDataChannel, { DescriptionType } from 'node-datachannel'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
-import { Connection, ConstructorOptions, DeferredConnectionAttempt } from './Connection'
+import { Connection, ConstructorOptions, DeferredConnectionAttempt, isOffering } from './Connection'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import {
     AnswerOptions,
@@ -113,7 +113,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private createConnection(
         targetPeerId: string,
         routerId: string,
-        isOffering: boolean,
         deferredConnectionAttempt: DeferredConnectionAttempt | null
     ) {
         const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.maxMessageSize)
@@ -121,7 +120,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             selfId: this.peerInfo.peerId,
             targetPeerId,
             routerId,
-            isOffering,
             stunUrls: this.stunUrls,
             bufferThresholdHigh: this.bufferThresholdHigh,
             bufferThresholdLow: this.bufferThresholdLow,
@@ -133,7 +131,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
         const connection = new Connection(connectionOptions)
 
-        if (isOffering) {
+        if (connection.isOffering()) {
             connection.once('localDescription', (type, description) => {            
                 this.rtcSignaller.sendRtcOffer(routerId, connection.getPeerId(), connection.getConnectionId(), description)
                 this.attemptProtocolVersionValidation(connection)
@@ -186,7 +184,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         let connection: Connection
        
         if (!this.connections[peerId]) {
-            connection = this.createConnection(peerId, routerId, false, null)
+            connection = this.createConnection(peerId, routerId,null)
             
             try {
                 connection.connect()
@@ -208,7 +206,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             delete this.connections[peerId]
             conn.close()
 
-            connection = this.createConnection(peerId, routerId, false, deferredConnectionAttempt)
+            connection = this.createConnection(peerId, routerId, deferredConnectionAttempt)
             try {
                 connection.connect()
             } catch(e) {
@@ -271,7 +269,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             delete this.connections[peerId]
             conn.close()
 
-            const connection = this.createConnection(peerId, routerId, true, deferredConnectionAttempt)
+            const connection = this.createConnection(peerId, routerId, deferredConnectionAttempt)
             connection.setConnectionId(uuidv4())
 
             try {
@@ -296,9 +294,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         routerId: string,
         trackerInstructed = true
     ): Promise<string> {
-        const offering = this.peerInfo.peerId < targetPeerId
-        const peerType = offering ? 'offerer' : 'answerer'
-
         // Prevent new connections from being opened when WebRtcEndpoint has been closed
         if (this.stopped) {
             return Promise.reject(new WebRtcError('WebRtcEndpoint has been stopped'))
@@ -309,7 +304,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             const lastState = connection.getLastState()
             const deferredConnectionAttempt = connection.getDeferredConnectionAttempt()
 
-            this.logger.trace('%s has already connection for %s. state: %s', peerType, NameDirectory.getName(targetPeerId), lastState)
+            this.logger.trace('%s has already connection for %s. state: %s',
+                isOffering(this.peerInfo.peerId, targetPeerId) ? 'offerer' : 'answerer',
+                NameDirectory.getName(targetPeerId),
+                lastState
+            )
             
             if (lastState === 'connected') {
                 return Promise.resolve(targetPeerId)
@@ -320,16 +319,16 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             }
         }
         
-        const connection = this.createConnection(targetPeerId, routerId, offering, null)
+        const connection = this.createConnection(targetPeerId, routerId, null)
 
-        if (offering) {
+        if (connection.isOffering()) {
             connection.setConnectionId(uuidv4())
         }
 
         this.connections[targetPeerId] = connection
         connection.connect()
         
-        if (!trackerInstructed && !offering) {
+        if (!trackerInstructed && !connection.isOffering()) {
             // If we are non-offerer and this connection was not instructed by the tracker, we need
             // to let the offering side know about it so it can send us the initial offer message.
             

@@ -12,7 +12,6 @@ export interface ConstructorOptions {
     selfId: string
     targetPeerId: string
     routerId: string
-    isOffering: boolean
     stunUrls: string[]
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
@@ -137,6 +136,10 @@ export class DeferredConnectionAttempt {
     }
 }
 
+export function isOffering(myId: string, theirId: string): boolean {
+    return myId < theirId
+}
+
 export class Connection extends ConnectionEmitter {
     public readonly id: string
     private connectionId = 'none'
@@ -144,7 +147,6 @@ export class Connection extends ConnectionEmitter {
     private peerInfo: PeerInfo
     private isFinished: boolean
     private readonly routerId: string
-    private readonly isOffering: boolean
     private readonly stunUrls: string[]
     private readonly bufferThresholdHigh: number
     private readonly bufferThresholdLow: number
@@ -176,7 +178,6 @@ export class Connection extends ConnectionEmitter {
         selfId,
         targetPeerId,
         routerId,
-        isOffering,
         stunUrls,
         messageQueue,
         deferredConnectionAttempt,
@@ -195,7 +196,6 @@ export class Connection extends ConnectionEmitter {
         this.selfId = selfId
         this.peerInfo = PeerInfo.newUnknown(targetPeerId)
         this.routerId = routerId
-        this.isOffering = isOffering
         this.stunUrls = stunUrls
         this.bufferThresholdHigh = bufferThresholdHigh
         this.bufferThresholdLow = bufferThresholdLow
@@ -281,7 +281,7 @@ export class Connection extends ConnectionEmitter {
         this.connectionEmitter.on('localDescription', this.onLocalDescription)
         this.connectionEmitter.on('localCandidate', this.onLocalCandidate)
 
-        if (this.isOffering) {
+        if (this.isOffering()) {
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
         } else {
@@ -478,6 +478,10 @@ export class Connection extends ConnectionEmitter {
 
     getQueueSize(): number {
         return this.messageQueue.size()
+    }
+
+    isOffering(): boolean {
+        return isOffering(this.selfId, this.peerInfo.peerId)
     }
 
     isOpen(): boolean {
