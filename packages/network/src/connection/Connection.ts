@@ -22,6 +22,7 @@ export interface ConstructorOptions {
     pingInterval?: number
     flushRetryTimeout?: number
     messageQueue: MessageQueue<string>
+    deferredConnectionAttempt: DeferredConnectionAttempt
 }
 
 let ID = 0
@@ -169,7 +170,7 @@ export class Connection extends ConnectionEmitter {
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
-    private deferredConnectionAttempt: DeferredConnectionAttempt | null = null
+    private deferredConnectionAttempt: DeferredConnectionAttempt | null
 
     constructor({
         selfId,
@@ -178,6 +179,7 @@ export class Connection extends ConnectionEmitter {
         isOffering,
         stunUrls,
         messageQueue,
+        deferredConnectionAttempt,
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
@@ -202,10 +204,11 @@ export class Connection extends ConnectionEmitter {
         this.maxPingPongAttempts = maxPingPongAttempts
         this.pingInterval = pingInterval
         this.flushRetryTimeout = flushRetryTimeout
+        this.messageQueue = messageQueue
+        this.deferredConnectionAttempt = deferredConnectionAttempt
         this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
         this.isFinished = false
 
-        this.messageQueue = messageQueue
         this.connection = null
         this.dataChannel = null
         this.paused = false
@@ -231,14 +234,6 @@ export class Connection extends ConnectionEmitter {
             messageQueue: this.messageQueue.size(),
             peerInfo: this.peerInfo,
         })
-    }
-
-    createDeferredConnectionAttempt(): void {
-        this.deferredConnectionAttempt = new DeferredConnectionAttempt(this.peerInfo.peerId)
-    }
-
-    setDeferredConnectionAttempt(attempt: DeferredConnectionAttempt | null): void {
-        this.deferredConnectionAttempt = attempt
     }
 
     getDeferredConnectionAttempt(): DeferredConnectionAttempt | null {

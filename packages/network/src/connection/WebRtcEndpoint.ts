@@ -3,7 +3,7 @@ import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import nodeDataChannel, { DescriptionType } from 'node-datachannel'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
-import { Connection, ConstructorOptions } from './Connection'
+import { Connection, ConstructorOptions, DeferredConnectionAttempt } from './Connection'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import {
     AnswerOptions,
@@ -110,7 +110,12 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             })
     }
     
-    private createConnection(targetPeerId: string, routerId: string, isOffering: boolean) {
+    private createConnection(
+        targetPeerId: string,
+        routerId: string,
+        isOffering: boolean,
+        deferredConnectionAttempt: DeferredConnectionAttempt | null
+    ) {
         const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.maxMessageSize)
         const connectionOptions: ConstructorOptions = {
             selfId: this.peerInfo.peerId,
@@ -121,6 +126,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             bufferThresholdHigh: this.bufferThresholdHigh,
             bufferThresholdLow: this.bufferThresholdLow,
             messageQueue,
+            deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(targetPeerId),
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
         }
@@ -180,7 +186,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         let connection: Connection
        
         if (!this.connections[peerId]) {
-            connection = this.createConnection(peerId, routerId, false)
+            connection = this.createConnection(peerId, routerId, false, null)
             
             try {
                 connection.connect()
@@ -195,15 +201,14 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             const lastState = conn.getLastState()
             this.logger.trace('onRtcOffer: answering reconnect attempt; there is already a connection for %s. state: %s', 
                 NameDirectory.getName(peerId), lastState)
-            
-            connection = this.createConnection(peerId, routerId, false)
+            let deferredConnectionAttempt = null
             if (conn.getDeferredConnectionAttempt()) {
-                connection.setDeferredConnectionAttempt(conn.stealDeferredConnectionAttempt())
+                deferredConnectionAttempt = conn.stealDeferredConnectionAttempt()
             }
-            
             delete this.connections[peerId]
             conn.close()
 
+            connection = this.createConnection(peerId, routerId, false, deferredConnectionAttempt)
             try {
                 connection.connect()
             } catch(e) {
@@ -259,16 +264,15 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
         if (this.connections[peerId]) {
             const conn = this.connections[peerId]
-
-            const connection = this.createConnection(peerId, routerId, true)
-            connection.setConnectionId(uuidv4())
-
+            let deferredConnectionAttempt = null
             if (conn.getDeferredConnectionAttempt()) {
-                connection.setDeferredConnectionAttempt(conn.stealDeferredConnectionAttempt())
+                deferredConnectionAttempt = conn.stealDeferredConnectionAttempt()
             }
-
             delete this.connections[peerId]
             conn.close()
+
+            const connection = this.createConnection(peerId, routerId, true, deferredConnectionAttempt)
+            connection.setConnectionId(uuidv4())
 
             try {
                 connection.connect()
@@ -316,8 +320,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             }
         }
         
-        const connection = this.createConnection(targetPeerId, routerId, offering)
-        connection.createDeferredConnectionAttempt()
+        const connection = this.createConnection(targetPeerId, routerId, offering, null)
 
         if (offering) {
             connection.setConnectionId(uuidv4())
