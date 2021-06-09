@@ -436,7 +436,9 @@ export class Storage extends EventEmitter {
     private queryWithStreamingResults(query: string, queryParams: any[]) {
         return this.cassandraClient.stream(query, queryParams, {
             prepare: true,
-            autoPage: false
+            // force small page sizes, otherwise gives RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
+            fetchSize: 128,
+            readTimeout: 0,
         }) as Readable
     }
 

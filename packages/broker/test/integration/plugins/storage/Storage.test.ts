@@ -1,3 +1,5 @@
+import { randomFillSync } from 'crypto'
+
 import { Client } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { Protocol } from 'streamr-network'
@@ -311,6 +313,7 @@ describe('Storage', () => {
     describe('fast big stream', () => {
         let storedStreamId: string
         const NUM_MESSAGES = 1000
+        const MESSAGE_SIZE = 1e3 // 1k
 
         beforeEach(async () => {
             // slow message setup: run this once
@@ -318,16 +321,25 @@ describe('Storage', () => {
             if (storedStreamId) { return }
             storedStreamId = streamId
             const storePromises = []
+            const randomBuffer = Buffer.alloc(MESSAGE_SIZE)
             for (let i = 0; i < NUM_MESSAGES; i++) {
+                randomFillSync(randomBuffer)
                 const msg = buildMsg({
-                    streamId: storedStreamId, streamPartition: 0, timestamp: (i + 1) * 1000, sequenceNumber: i, publisherId: 'publisher1'
+                    streamId: storedStreamId,
+                    streamPartition: 0,
+                    timestamp: (i + 1) * 1000,
+                    sequenceNumber: i,
+                    publisherId: 'publisher1',
+                    content: randomBuffer.toString('hex')
                 })
                 storePromises.push(storage.store(msg))
             }
-            await Promise.all(storePromises)
-        }, 30000)
+            const half = Math.floor(storePromises.length / 2)
+            await Promise.all(storePromises.slice(0, half))
+            await Promise.all(storePromises.slice(half))
+        }, 60000)
 
-        it('can store messages and requestLast 1', async () => {
+        it(`can store ${NUM_MESSAGES} ${MESSAGE_SIZE} byte messages and requestLast 1`, async () => {
             const streamingResults = storage.requestLast(storedStreamId, 0, 1)
             const results = await toArray(streamingResults)
             expect(results.length).toEqual(1)
@@ -339,7 +351,19 @@ describe('Storage', () => {
             expect(results.length).toEqual(NUM_MESSAGES)
         })
 
+        it('can requestLast again', async () => {
+            const streamingResults = storage.requestLast(storedStreamId, 0, NUM_MESSAGES)
+            const results = await toArray(streamingResults)
+            expect(results.length).toEqual(NUM_MESSAGES)
+        })
+
         it('can requestFrom', async () => {
+            const streamingResults = storage.requestFrom(storedStreamId, 0, NUM_MESSAGES, 0, null)
+            const results = await toArray(streamingResults)
+            expect(results.length).toEqual(NUM_MESSAGES)
+        })
+
+        it('can requestFrom again', async () => {
             const streamingResults = storage.requestFrom(storedStreamId, 0, NUM_MESSAGES, 0, null)
             const results = await toArray(streamingResults)
             expect(results.length).toEqual(NUM_MESSAGES)
