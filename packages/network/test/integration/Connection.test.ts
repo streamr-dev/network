@@ -43,8 +43,6 @@ describe('Connection', () => {
         const messageQueueTwo = new MessageQueue<string>()
         const deferredConnectionAttemptOne = new DeferredConnectionAttempt('two')
         const deferredConnectionAttemptTwo = new DeferredConnectionAttempt('one')
-        deferredConnectionAttemptOne.getPromise().catch(() => {}) // prevent crashing on reject
-        deferredConnectionAttemptTwo.getPromise().catch(() => {}) // prevent crashing on reject
         connectionOne = new Connection({
             selfId: 'one',
             targetPeerId: 'two',

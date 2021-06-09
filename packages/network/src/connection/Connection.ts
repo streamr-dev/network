@@ -120,7 +120,9 @@ export class DeferredConnectionAttempt {
                 reject(reason)
             })
         })
-    
+
+        // allow promise to reject without outside catch
+        this.connectionAttemptPromise.catch(() => {})
     }
 
     getPromise(): Promise<string> {
