@@ -51,7 +51,7 @@ export function formConfig({
         }
     }
     if (wsPort) {
-        plugins['ws'] = {
+        plugins['legacyWebsocket'] = {
             port: wsPort,
             pingInterval: 3000,
             privateKeyFileName,

@@ -97,7 +97,7 @@ export class WebsocketServer extends EventEmitter {
         this.wss.listen(port, (token: uWS.us_listen_socket) => {
             if (token) {
                 this._listenSocket = token
-                logger.info('WS plugin listening on ' + port)
+                logger.info('Legacy websocket plugin listening on ' + port)
             } else {
                 logger.info('Failed to listen to port ' + port)
                 this.close()
