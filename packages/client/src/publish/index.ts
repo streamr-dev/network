@@ -1,4 +1,4 @@
-import { ControlLayer, PublishRequest } from 'streamr-client-protocol'
+import { ControlLayer, PublishRequest, StreamMessage } from 'streamr-client-protocol'
 
 import { uuid, LimitAsyncFnByKey } from '../utils'
 import { inspect } from '../utils/log'
@@ -85,10 +85,39 @@ export default class Publisher {
 
     async listenForErrors(request: PublishRequest) {
         // listen for errors for this request for 3s
-        return waitForRequestResponse(this.client, request, {
+        await waitForRequestResponse(this.client, request, {
             timeout: 3000,
             rejectOnTimeout: false,
         })
+    }
+
+    private async send(streamMessage: StreamMessage, sessionToken?: string) {
+        const { client } = this
+        const requestId = uuid('pub')
+        const request = new ControlLayer.PublishRequest({
+            streamMessage,
+            requestId,
+            sessionToken: sessionToken || null,
+        })
+
+        this.listenForErrors(request).catch(this.onErrorEmit) // unchained async
+
+        // send calls should probably also fire in-order otherwise new realtime streams
+        // can miss messages that are sent late
+        try {
+            await client.send(request)
+        } finally {
+            const { publishAutoDisconnectDelay = 5000 } = client.options
+            publishHandleTimeouts.set(client, setTimeout(async () => { // eslint-disable-line require-atomic-updates
+                cleanupPublishHandle(client)
+                try {
+                    await client.connection.removeHandle(PUBLISH_HANDLE)
+                } catch (err) {
+                    client.emit('error', err)
+                }
+            }, publishAutoDisconnectDelay || 0))
+        }
+        return request
     }
 
     async publishMessage(streamObjectOrId: StreamIDish, {
@@ -121,36 +150,15 @@ export default class Publisher {
             setupPublishHandle(this.client),
         ])
 
-        const { client } = this
+        asyncDepsTask.catch(() => {
+            // prevent unhandledrejection, should wait for queue
+            // will still reject in queue
+        })
 
         // no async before running sendQueue
         return this.sendQueue(streamId, async () => {
             const [streamMessage, sessionToken] = await asyncDepsTask
-            const requestId = uuid('pub')
-            const request = new ControlLayer.PublishRequest({
-                streamMessage,
-                requestId,
-                sessionToken: sessionToken || null,
-            })
-
-            this.listenForErrors(request).catch(this.onErrorEmit) // unchained async
-
-            // send calls should probably also fire in-order otherwise new realtime streams
-            // can miss messages that are sent late
-            try {
-                await client.send(request)
-            } finally {
-                const { publishAutoDisconnectDelay = 5000 } = client.options
-                publishHandleTimeouts.set(client, setTimeout(async () => { // eslint-disable-line require-atomic-updates
-                    cleanupPublishHandle(client)
-                    try {
-                        await client.connection.removeHandle(PUBLISH_HANDLE)
-                    } catch (err) {
-                        client.emit('error', err)
-                    }
-                }, publishAutoDisconnectDelay || 0))
-            }
-            return request
+            return this.send(streamMessage, sessionToken)
         })
     }
 
