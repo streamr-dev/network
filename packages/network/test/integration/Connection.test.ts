@@ -2,7 +2,7 @@ import { once } from 'events'
 import { DescriptionType } from 'node-datachannel'
 import { waitForCondition, wait } from 'streamr-test-utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
-import { Connection } from '../../src/connection/Connection'
+import { Connection, DeferredConnectionAttempt } from '../../src/connection/Connection'
 
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
@@ -41,13 +41,15 @@ describe('Connection', () => {
         }
         const messageQueueOne = new MessageQueue<string>()
         const messageQueueTwo = new MessageQueue<string>()
+        const deferredConnectionAttemptOne = new DeferredConnectionAttempt('two')
+        const deferredConnectionAttemptTwo = new DeferredConnectionAttempt('one')
         connectionOne = new Connection({
             selfId: 'one',
             targetPeerId: 'two',
             routerId: 'routerId',
             stunUrls: [],
-            isOffering: true,
             messageQueue: messageQueueOne,
+            deferredConnectionAttempt: deferredConnectionAttemptOne
         })
         connectionOne.on('localDescription', (...args) => oneFunctions.onLocalDescription(...args))
         connectionOne.on('localCandidate', (...args) => oneFunctions.onLocalCandidate(...args))
@@ -57,8 +59,8 @@ describe('Connection', () => {
             targetPeerId: 'one',
             routerId: 'routerId',
             stunUrls: [],
-            isOffering: false,
             messageQueue: messageQueueTwo,
+            deferredConnectionAttempt: deferredConnectionAttemptTwo
         })
 
         connectionTwo.on('localDescription', (...args) => twoFunctions.onLocalDescription(...args))

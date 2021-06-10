@@ -12,7 +12,6 @@ export interface ConstructorOptions {
     selfId: string
     targetPeerId: string
     routerId: string
-    isOffering: boolean
     stunUrls: string[]
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
@@ -22,6 +21,7 @@ export interface ConstructorOptions {
     pingInterval?: number
     flushRetryTimeout?: number
     messageQueue: MessageQueue<string>
+    deferredConnectionAttempt: DeferredConnectionAttempt
 }
 
 let ID = 0
@@ -120,7 +120,9 @@ export class DeferredConnectionAttempt {
                 reject(reason)
             })
         })
-    
+
+        // allow promise to reject without outside catch
+        this.connectionAttemptPromise.catch(() => {})
     }
 
     getPromise(): Promise<string> {
@@ -136,6 +138,10 @@ export class DeferredConnectionAttempt {
     }
 }
 
+export function isOffering(myId: string, theirId: string): boolean {
+    return myId < theirId
+}
+
 export class Connection extends ConnectionEmitter {
     public readonly id: string
     private connectionId = 'none'
@@ -143,7 +149,6 @@ export class Connection extends ConnectionEmitter {
     private peerInfo: PeerInfo
     private isFinished: boolean
     private readonly routerId: string
-    private readonly isOffering: boolean
     private readonly stunUrls: string[]
     private readonly bufferThresholdHigh: number
     private readonly bufferThresholdLow: number
@@ -169,15 +174,15 @@ export class Connection extends ConnectionEmitter {
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
-    private deferredConnectionAttempt: DeferredConnectionAttempt | null = null
+    private deferredConnectionAttempt: DeferredConnectionAttempt | null
 
     constructor({
         selfId,
         targetPeerId,
         routerId,
-        isOffering,
         stunUrls,
         messageQueue,
+        deferredConnectionAttempt,
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
@@ -193,7 +198,6 @@ export class Connection extends ConnectionEmitter {
         this.selfId = selfId
         this.peerInfo = PeerInfo.newUnknown(targetPeerId)
         this.routerId = routerId
-        this.isOffering = isOffering
         this.stunUrls = stunUrls
         this.bufferThresholdHigh = bufferThresholdHigh
         this.bufferThresholdLow = bufferThresholdLow
@@ -202,10 +206,11 @@ export class Connection extends ConnectionEmitter {
         this.maxPingPongAttempts = maxPingPongAttempts
         this.pingInterval = pingInterval
         this.flushRetryTimeout = flushRetryTimeout
+        this.messageQueue = messageQueue
+        this.deferredConnectionAttempt = deferredConnectionAttempt
         this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
         this.isFinished = false
 
-        this.messageQueue = messageQueue
         this.connection = null
         this.dataChannel = null
         this.paused = false
@@ -231,14 +236,6 @@ export class Connection extends ConnectionEmitter {
             messageQueue: this.messageQueue.size(),
             peerInfo: this.peerInfo,
         })
-    }
-
-    createDeferredConnectionAttempt(): void {
-        this.deferredConnectionAttempt = new DeferredConnectionAttempt(this.peerInfo.peerId)
-    }
-
-    setDeferredConnectionAttempt(attempt: DeferredConnectionAttempt | null): void {
-        this.deferredConnectionAttempt = attempt
     }
 
     getDeferredConnectionAttempt(): DeferredConnectionAttempt | null {
@@ -286,7 +283,7 @@ export class Connection extends ConnectionEmitter {
         this.connectionEmitter.on('localDescription', this.onLocalDescription)
         this.connectionEmitter.on('localCandidate', this.onLocalCandidate)
 
-        if (this.isOffering) {
+        if (this.isOffering()) {
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
         } else {
@@ -483,6 +480,10 @@ export class Connection extends ConnectionEmitter {
 
     getQueueSize(): number {
         return this.messageQueue.size()
+    }
+
+    isOffering(): boolean {
+        return isOffering(this.selfId, this.peerInfo.peerId)
     }
 
     isOpen(): boolean {
