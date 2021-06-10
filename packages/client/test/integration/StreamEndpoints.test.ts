@@ -120,14 +120,6 @@ function TestStreamEndpoints(getName: () => string) {
             expect(existingStream.name).toBe(createdStream.name)
         })
 
-        it('new Stream by name', async () => {
-            const newName = uid('stream')
-            const newStream = await client.getOrCreateStream({
-                name: newName,
-            })
-            expect(newStream.name).toEqual(newName)
-        })
-
         it('new Stream by id', async () => {
             const newId = `${wallet.address}/StreamEndpoints-getOrCreate-newId-${Date.now()}`
             const newStream = await client.getOrCreateStream({
