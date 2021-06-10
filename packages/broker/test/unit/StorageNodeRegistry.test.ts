@@ -50,7 +50,7 @@ describe('StorageNodeRegistry', () => {
                 storageNodes
             },
             streamrUrl: `http://127.0.0.1:${mockCoreApiServerPort}`
-        } as Config
+        } as unknown as Config
         registry = StorageNodeRegistry.createInstance(config, storageNodes)
     })
 
