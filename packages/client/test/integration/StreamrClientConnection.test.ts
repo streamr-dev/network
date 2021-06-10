@@ -158,9 +158,7 @@ describeRepeats('StreamrClient Connection', () => {
             const otherOnError = jest.fn()
             client2.on('error', otherOnError)
 
-            const stream = await client2.createStream({
-                name: uid('stream')
-            }) // this will succeed because it uses restUrl config, not url
+            const stream = await createTestStream(client2, module) // this will succeed because it uses restUrl config, not url
 
             // publish should trigger connect
             await expect(() => (

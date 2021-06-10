@@ -4,7 +4,7 @@ import { Stream, StreamOperation } from '../../src/stream'
 import { StorageNode } from '../../src/stream/StorageNode'
 
 import { StreamrClient } from '../../src/StreamrClient'
-import { uid, fakeAddress, createTestStream } from '../utils'
+import { uid, fakeAddress, createTestStream, createRelativeTestStreamId } from '../utils'
 
 import config from './config'
 
@@ -45,6 +45,7 @@ function TestStreamEndpoints(getName: () => string) {
         it('creates a stream with correct values', async () => {
             const name = getName()
             const stream = await client.createStream({
+                id: createRelativeTestStreamId(module),
                 name,
                 requireSignedData: true,
                 requireEncryptedData: true,
