@@ -64,6 +64,7 @@ describe('ping-pong test between broker and clients', () => {
     })
 
     beforeEach(async () => {
+        // @ts-expect-error accessing private
         await waitForCondition(() => websocketServer.connections.size === 3)
     })
 
@@ -82,6 +83,7 @@ describe('ping-pong test between broker and clients', () => {
     it('websocketServer sends pings and receives pongs from clients', async () => {
         let pings = 0
 
+        // @ts-expect-error accessing private
         const connections = [...websocketServer.connections.values()]
         connections.forEach((connection) => {
             expect(connection.isDead()).toEqual(false)
@@ -107,10 +109,11 @@ describe('ping-pong test between broker and clients', () => {
         await waitForCondition(() => pings === 3)
 
         expect(pings).toEqual(3)
+        // @ts-expect-error accessing private
         expect(websocketServer.connections.size).toEqual(3)
-        await waitForCondition(() => connections.every((connection) => connection.respondedPong))
+        await waitForCondition(() => connections.every((connection) => connection.hasRespondedToPong()))
         connections.forEach((connection) => {
-            expect(connection.respondedPong).toEqual(true)
+            expect(connection.hasRespondedToPong()).toEqual(true)
         })
     })
 
@@ -133,19 +136,20 @@ describe('ping-pong test between broker and clients', () => {
         // @ts-expect-error accessing private method
         websocketServer.pingConnections()
         waitForCondition(() => pings === 2).then(async () => {
+            // @ts-expect-error accessing private
             const connections = [...websocketServer.connections.values()]
             expect(connections.length).toEqual(3)
             await waitForCondition(() => {
-                const respondedPongCount = connections.filter((connection) => connection.respondedPong).length
+                const respondedPongCount = connections.filter((connection) => connection.hasRespondedToPong()).length
                 // @ts-expect-error client1.connection hack
                 return ((client1.connection.socket.pong.mock.calls.length === 1) && (respondedPongCount === 2))
             })
             connections.forEach((connection, index) => {
                 // first client
                 if (index === 0) {
-                    expect(connection.respondedPong).toEqual(false)
+                    expect(connection.hasRespondedToPong()).toEqual(false)
                 } else {
-                    expect(connection.respondedPong).toEqual(true)
+                    expect(connection.hasRespondedToPong()).toEqual(true)
                 }
             })
 
