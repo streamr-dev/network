@@ -42,7 +42,10 @@ const PUBLISH_HANDLE = Symbol('publish')
 
 const setupPublishHandleTimeouts: WeakMap<StreamrClient, ReturnType<typeof setTimeout>> = new WeakMap()
 async function setupPublishHandle(client: StreamrClient) {
-    const clearConnectionTimeout = () => clearTimeout(setupPublishHandleTimeouts.get(client)!)
+    const clearConnectionTimeout = () => {
+        client.connection.removeListener('done', clearConnectionTimeout)
+        clearTimeout(setupPublishHandleTimeouts.get(client)!)
+    }
     try {
         clearConnectionTimeout()
         client.connection.addListener('done', clearConnectionTimeout)
