@@ -40,27 +40,31 @@ export class FailedToPublishError extends Error {
 
 const PUBLISH_HANDLE = Symbol('publish')
 
-const setupPublishHandleTimeouts: WeakMap<StreamrClient, ReturnType<typeof setTimeout>> = new WeakMap()
+const publishHandleOnDone: WeakMap<StreamrClient, (...args: any[]) => void> = new WeakMap()
+const publishHandleTimeouts: WeakMap<StreamrClient, ReturnType<typeof setTimeout>> = new WeakMap()
+
+const cleanupPublishHandle = (client: StreamrClient) => {
+    const timeout = publishHandleTimeouts.get(client)
+    if (timeout) {
+        clearTimeout(timeout!)
+        publishHandleTimeouts.delete(client)
+    }
+
+    const onDone = publishHandleOnDone.get(client)
+    if (onDone) {
+        client.connection.off('done', onDone)
+        publishHandleOnDone.delete(client)
+    }
+}
+
 async function setupPublishHandle(client: StreamrClient) {
-    const clearConnectionTimeout = () => {
-        client.connection.removeListener('done', clearConnectionTimeout)
-        clearTimeout(setupPublishHandleTimeouts.get(client)!)
-    }
-    try {
-        clearConnectionTimeout()
-        client.connection.addListener('done', clearConnectionTimeout)
-        await client.connection.addHandle(PUBLISH_HANDLE)
-    } finally {
-        const { publishAutoDisconnectDelay = 5000 } = client.options
-        clearConnectionTimeout()
-        setupPublishHandleTimeouts.set(client, setTimeout(async () => { // eslint-disable-line require-atomic-updates
-            try {
-                await client.connection.removeHandle(PUBLISH_HANDLE)
-            } catch (err) {
-                client.emit('error', err)
-            }
-        }, publishAutoDisconnectDelay || 0))
-    }
+    // remove any existing
+    cleanupPublishHandle(client)
+    const cleanup = () => cleanupPublishHandle(client)
+    client.connection.once('done', cleanup)
+    publishHandleOnDone.set(client, cleanup)
+
+    await client.connection.addHandle(PUBLISH_HANDLE)
 }
 
 export default class Publisher {
@@ -117,6 +121,8 @@ export default class Publisher {
             setupPublishHandle(this.client),
         ])
 
+        const { client } = this
+
         // no async before running sendQueue
         return this.sendQueue(streamId, async () => {
             const [streamMessage, sessionToken] = await asyncDepsTask
@@ -131,7 +137,19 @@ export default class Publisher {
 
             // send calls should probably also fire in-order otherwise new realtime streams
             // can miss messages that are sent late
-            await this.client.send(request)
+            try {
+                await client.send(request)
+            } finally {
+                const { publishAutoDisconnectDelay = 5000 } = client.options
+                publishHandleTimeouts.set(client, setTimeout(async () => { // eslint-disable-line require-atomic-updates
+                    cleanupPublishHandle(client)
+                    try {
+                        await client.connection.removeHandle(PUBLISH_HANDLE)
+                    } catch (err) {
+                        client.emit('error', err)
+                    }
+                }, publishAutoDisconnectDelay || 0))
+            }
             return request
         })
     }
