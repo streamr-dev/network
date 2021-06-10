@@ -212,3 +212,28 @@ export const waitForStreamPersistedInStorageNode = async (streamId: string, part
     }
     await waitForCondition(() => isPersistent(), undefined, 1000)
 }
+
+const getTestName = (module: NodeModule) => {
+    const fileNamePattern = new RegExp('.*/(.*).test\...')
+    const groups = module.filename.match(fileNamePattern)
+    return (groups !== null) ? groups[1] : module.filename
+}
+
+export const createTestStream = (streamrClient: StreamrClient, module: NodeModule) => {
+    return streamrClient.createStream({
+        id: '/test/' + getTestName(module) + '/' + Date.now()
+    })
+}
+
+export const createQueue = () => {
+    let items: any[] = []
+    return {
+        push: (item: any) => {
+            items.push(item)
+        },
+        pop: async () => {
+            await waitForCondition(() => items.length > 0)
+            return items.shift()
+        }
+    }
+}
