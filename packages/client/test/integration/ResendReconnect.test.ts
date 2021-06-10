@@ -66,7 +66,7 @@ describe('resend/reconnect', () => {
             }, (message) => {
                 messages.push(message)
                 if (shouldDisconnect) {
-                    client.connection.socket.close()
+                    client.connection.socket?.close()
                 }
             })
 
@@ -84,8 +84,8 @@ describe('resend/reconnect', () => {
         it('can handle reconnection after unintentional disconnection 1', async () => {
             const onClose = Defer()
 
-            client.connection.socket.once('close', onClose.resolve)
-            client.connection.socket.close()
+            client.connection.socket?.once('close', onClose.resolve)
+            client.connection.socket?.close()
             await onClose
             // should reconnect and get new messages
             const prevMessages = messages.slice()
@@ -102,8 +102,8 @@ describe('resend/reconnect', () => {
             })
             const onClose = Defer()
 
-            client.connection.socket.once('close', onClose.resolve)
-            client.connection.socket.close()
+            client.connection.socket?.once('close', onClose.resolve)
+            client.connection.socket?.close()
             await client.connection.nextConnection()
 
             await wait(6000)

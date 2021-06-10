@@ -280,7 +280,7 @@ describeRepeats('StreamrClient Connection', () => {
                 await client.disconnect()
             }))
 
-            client.connection.socket.close()
+            client.connection.socket?.close()
             await done
             await wait(2500)
             expect(client.isDisconnected()).toBeTruthy()
@@ -351,7 +351,7 @@ describeRepeats('StreamrClient Connection', () => {
             client = createClient()
             await client.connect()
 
-            client.connection.socket.close()
+            client.connection.socket?.close()
             expect(client.isConnected()).not.toBeTruthy()
             await client.connection.nextConnection()
             expect(client.isConnected()).toBeTruthy()
@@ -450,7 +450,7 @@ describeRepeats('StreamrClient Connection', () => {
             const msgs = await sub.collect()
 
             await wait(2000)
-            await client.connection.socket.close()
+            await client.connection.socket?.close()
             await client.connection.nextConnection()
 
             // check whole list of calls after reconnect and disconnect

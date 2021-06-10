@@ -45,7 +45,12 @@ export class ConnectionError extends Error {
 const openSockets = new Set()
 const FORCE_CLOSED = Symbol('FORCE_CLOSED')
 
-async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]) {
+type AugmentedWebsocket = WebSocket & {
+    id: string,
+    debug: Debugger,
+}
+
+async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]): Promise<AugmentedWebsocket> {
     return new Promise((resolve, reject) => {
         try {
             if (!url) {
@@ -57,12 +62,14 @@ async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]) {
             // @ts-expect-error
             const socket = process.browser ? new WebSocket(url) : new WebSocket(url, opts, ...args)
             let error: Todo
-            Object.assign(socket, {
-                id: counterId('ws'),
+            const id = counterId('ws')
+            const augmentedSocket: AugmentedWebsocket = Object.assign(socket, {
+                id,
+                debug: opts.debug.extend(id),
                 binaryType: 'arraybuffer',
                 onopen() {
                     openSockets.add(socket)
-                    resolve(socket)
+                    resolve(augmentedSocket)
                 },
                 onclose() {
                     openSockets.delete(socket)
@@ -72,12 +79,7 @@ async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]) {
                     error = new ConnectionError(event.error || event)
                 },
             })
-
-            // attach debug
-            // @ts-expect-error
-            socket.debug = opts.debug.extend(socket.id)
-            // @ts-expect-error
-            socket.debug.color = opts.debug.color // use existing colour
+            augmentedSocket.debug.color = opts.debug.color // use existing colour
         } catch (err) {
             reject(err)
         }
@@ -296,7 +298,7 @@ export default class Connection extends EventEmitter {
     wantsState: Todo
     connectionHandles: Todo
     step: Todo
-    socket?: Todo
+    socket?: AugmentedWebsocket
     didDisableAutoConnect?: Todo
     isWaiting?: Todo
     _isReconnecting: Todo
@@ -340,11 +342,11 @@ export default class Connection extends EventEmitter {
         this.nextDisconnection = pOne(this.nextDisconnection.bind(this))
     }
 
-    debug(...args: Todo[]) {
+    debug(formatter: any, ...args: any[]) {
         if (this.socket) {
-            return this.socket.debug(...args)
+            return this.socket.debug(formatter, ...args)
         }
-        return this._debug(...args)
+        return this._debug(formatter, ...args)
     }
 
     emit(event: Todo, ...args: Todo[]) {
@@ -651,7 +653,7 @@ export default class Connection extends EventEmitter {
         )
     }
 
-    async send(msg: Todo) {
+    async send(msg: any): Promise<any> {
         this.sendID = this.sendID + 1 || 1
         const handle = `send${this.sendID}`
         this.debug('(%s) send()', this.getState())
@@ -670,8 +672,12 @@ export default class Connection extends EventEmitter {
         }
     }
 
-    async _send(msg: Todo) {
+    async _send(msg: any): Promise<any> {
         return new Promise((resolve, reject) => {
+            if (!this.socket) {
+                throw new ConnectionError('No socket for connection!')
+            }
+
             this.debug('(%s) >> %o', this.getState(), msg)
             // promisify send
             const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
