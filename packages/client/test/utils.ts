@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { wait } from 'streamr-test-utils'
 import { providers, Wallet } from 'ethers'
-import { pTimeout, counterId, AggregatedError } from '../src/utils'
+import { pTimeout, counterId, AggregatedError, pLimitFn } from '../src/utils'
 import { Debug, inspect } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
@@ -158,18 +158,32 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     /* eslint-enable no-await-in-loop */
 }
 
-type PublishOpts = {
+export type CreateMessageOpts = {
+    /** index of message in total */
+    index: number,
+    /** batch number */
+    batch: number,
+    /** index of message in batch */
+    batchIndex: number,
+    /** total messages */
+    total: number
+}
+
+export type PublishOpts = {
     testName: string,
     delay: number
     timeout: number
+    /** set false to allow gc message content */
+    retainMessages: boolean,
     waitForLast: boolean
     waitForLastCount: number
     waitForLastTimeout: number
     beforeEach: (m: any) => any
-    afterEach: (msg: any, request: any) => Promise<void> | void
+    afterEach: (msg: any, request: PublishRequest) => Promise<void> | void
     timestamp: number | (() => number)
     partitionKey: string
-    createMessage: () => Promise<any> | any
+    createMessage: (opts: CreateMessageOpts) => Promise<any> | any
+    batchSize: number
 }
 
 type PublishTestMessagesOpts = StreamPartDefinitionOptions & Partial<PublishOpts>
@@ -192,6 +206,7 @@ export function getPublishTestMessages(client: StreamrClient, defaultOptsOrStrea
         const {
             streamId,
             streamPartition = 0,
+            retainMessages = true,
             delay = 100,
             timeout = 3500,
             waitForLast = false, // wait for message to hit storage
@@ -201,6 +216,7 @@ export function getPublishTestMessages(client: StreamrClient, defaultOptsOrStrea
             afterEach = () => {},
             timestamp,
             partitionKey,
+            batchSize = 1,
             createMessage = () => {
                 msgCount += 1
                 return {
@@ -222,39 +238,86 @@ export function getPublishTestMessages(client: StreamrClient, defaultOptsOrStrea
         const onDone = () => {
             connectionDone = true
         }
+
         try {
             client.connection.once('done', onDone)
-
-            const published: [ message: any, request: PublishRequest ][] = []
-            /* eslint-disable no-await-in-loop, no-loop-func */
-            for (let i = 0; i < n; i++) {
-                if (connectionDone) { break }
-                const message = createMessage()
+            // async queue to ensure messages set up in order
+            const setupMessage = pLimitFn(async (publishOpts) => {
+                const message = createMessage(publishOpts)
                 await beforeEach(message)
-                if (connectionDone) { break }
+                return message
+            })
+
+            const publishMessage = async (publishOpts: CreateMessageOpts) => {
+                if (connectionDone) { return }
+                const message = await setupMessage(publishOpts)
+                if (connectionDone) { return }
+                const { index } = publishOpts
                 const request = await pTimeout(client.publish(
                     { streamId, streamPartition },
                     message,
                     typeof timestamp === 'function' ? timestamp() : timestamp,
                     partitionKey
-                ), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`).catch((err) => {
+                ), timeout, `publish timeout ${streamId}: ${index} ${inspect(message, {
+                    maxStringLength: 256,
+                })}`).catch((err) => {
                     if (connectionDone && err.message.includes('Needs connection')) {
                         // ignore connection closed error
                         return
                     }
                     throw err
                 })
+
+                if (!retainMessages) {
+                    // only keep last message (for waitForLast)
+                    published.length = 0
+                }
+
                 published.push([
                     message,
                     // @ts-expect-error
                     request,
                 ])
-                if (connectionDone) { break }
 
-                await afterEach(message, request)
+                if (connectionDone) { return }
+
+                await afterEach(message, request as PublishRequest)
                 checkDone()
                 await wait(delay) // ensure timestamp increments for reliable resend response in test.
                 checkDone()
+            }
+
+            const published: [ message: any, request: PublishRequest ][] = []
+            /* eslint-disable no-await-in-loop, no-loop-func */
+            const batchTasks: Promise<any>[] = []
+            let batches = 1
+            for (let i = 0; i < n; i++) {
+                if (connectionDone) {
+                    await Promise.allSettled(batchTasks)
+                    break
+                }
+
+                if (batchTasks.length < batchSize) {
+                    client.debug('adding to batch', { i, batchTasks: batchTasks.length, batches })
+                    // fill batch
+                    batchTasks.push(publishMessage({
+                        index: i,
+                        batchIndex: batchTasks.length,
+                        batch: batches,
+                        total: n,
+                    }))
+                }
+
+                if (batchTasks.length >= batchSize || i >= n) {
+                    // batch is full, or finished all messages
+                    // wait for tasks
+                    const tasks = batchTasks.slice()
+                    batchTasks.length = 0
+                    batches += 1
+                    client.debug('executing batch', { i, batchTasks: tasks.length, batches })
+                    await Promise.allSettled(tasks)
+                    await Promise.all(tasks)
+                }
             }
             /* eslint-enable no-await-in-loop, no-loop-func */
 
