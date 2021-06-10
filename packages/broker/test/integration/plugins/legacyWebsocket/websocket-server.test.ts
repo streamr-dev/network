@@ -1,82 +1,110 @@
 import WebSocket from 'ws'
 import { waitForEvent } from 'streamr-test-utils'
-import { Todo } from '../../../../src/types'
-import { startBroker, getWsUrlWithControlAndMessageLayerVersions } from '../../../utils'
+import { startBroker } from '../../../utils'
+import { Broker } from '../../../../src/broker'
+
+function getWsUrlWithControlAndMessageLayerVersions(
+    port: number,
+    ssl = false,
+    controlLayerVersion = 2,
+    messageLayerVersion = 32
+) {
+    return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`
+}
 
 describe('websocket server', () => {
     let ws: WebSocket
-    let broker: Todo
+    let brokerWithoutSSL: Broker
+    let brokerWithSSL: Broker
 
-    afterEach(async () => {
-        if (ws) {
-            ws.terminate()
-        }
-        await broker.close()
-    })
-
-    it('receives unencrypted connections', (done) => {
-        startBroker({
+    beforeAll(async () => {
+        brokerWithoutSSL = await startBroker({
             name: 'broker',
             privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
             networkPort: 12345,
             trackerPort: 666,
             wsPort: 12346
-        }).then((newBroker) => {
-            broker = newBroker
-            ws = new WebSocket(getWsUrlWithControlAndMessageLayerVersions(12346, false, 2, 31))
-            ws.on('open', () => {
-                done()
-            })
-            ws.on('error', (err) => {
-                done(err)
-            })
-        }).catch((err) => {
-            done(err ?? new Error('test fail'))
+        })
+        brokerWithSSL = await startBroker({
+            name: 'broker',
+            privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
+            networkPort: 12347,
+            trackerPort: 666,
+            wsPort: 12348,
+            privateKeyFileName: 'test/fixtures/key.pem',
+            certFileName: 'test/fixtures/cert.pem'
+        })
+    })
+
+    afterEach(() => {
+        ws?.terminate()
+    })
+
+    afterAll(async () => {
+        await Promise.allSettled([
+            brokerWithoutSSL?.close(),
+            brokerWithSSL?.close()
+        ])
+    })
+
+    it('receives unencrypted connections', (done) => {
+        ws = new WebSocket(getWsUrlWithControlAndMessageLayerVersions(12346, false, 2, 31))
+        ws.on('open', () => {
+            done()
+        })
+        ws.on('error', (err) => {
+            done(err)
         })
     })
 
     it('receives encrypted connections', (done) => {
-        startBroker({
-            name: 'broker',
-            privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
-            networkPort: 12345,
-            trackerPort: 666,
-            wsPort: 12346,
-            privateKeyFileName: 'test/fixtures/key.pem',
-            certFileName: 'test/fixtures/cert.pem'
-        }).then((newBroker) => {
-            broker = newBroker
-            ws = new WebSocket(getWsUrlWithControlAndMessageLayerVersions(12346, true, 2, 31), {
-                rejectUnauthorized: false // needed to accept self-signed certificate
-            })
-            ws.on('open', () => {
-                done()
-            })
-            ws.on('error', (err) => {
-                done(err)
-            })
-        }).catch((err) => {
-            done(err ?? new Error('test fail'))
+        ws = new WebSocket(getWsUrlWithControlAndMessageLayerVersions(12348, true, 2, 31), {
+            rejectUnauthorized: false // needed to accept self-signed certificate
+        })
+        ws.on('open', () => {
+            done()
+        })
+        ws.on('error', (err) => {
+            done(err)
         })
     })
 
     describe('rejections', () => {
         const testRejection = async (connectionUrl: string): Promise<[number, string]> => {
-            broker = await startBroker({
-                name: 'broker',
-                privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
-                networkPort: 12345,
-                trackerPort: 666,
-                wsPort: 12346
-            })
             ws = new WebSocket(connectionUrl)
             return await waitForEvent(ws, 'close') as [number, string]
         }
 
-        it('rejects connections without preferred versions given as query parameters', async () => {
+        it('rejects connection with no url parameters', async () => {
             const [code, reason] = await testRejection('ws://127.0.0.1:12346/api/v1/ws')
             expect(code).toEqual(1000)
-            expect(reason).toEqual('version params missing')
+            expect(reason).toEqual('url params missing')
+        })
+
+        it('rejects connection with no ControlLayer version', async () => {
+            const [code, reason] = await testRejection('ws://127.0.0.1:12346/api/v1/ws?messageLayerVersion=32')
+            expect(code).toEqual(1000)
+            expect(reason).toEqual('controlLayerVersion missing')
+        })
+
+        it('rejects connection with no MessageLayer version', async () => {
+            const [code, reason] = await testRejection('ws://127.0.0.1:12346/api/v1/ws?controlLayerVersion=2')
+            expect(code).toEqual(1000)
+            expect(reason).toEqual('messageLayerVersion missing')
+        })
+
+        it('rejects connection with ControlLayer version set multiple times', async () => {
+            // eslint-disable-next-line max-len
+            const [code, reason] = await testRejection('ws://127.0.0.1:12346/api/v1/ws?controlLayerVersion=2&controlLayerVersion=1&messageLayerVersion=31')
+            expect(code).toEqual(1000)
+            expect(reason).toEqual('multiple controlLayerVersion given')
+        })
+
+        it('rejects connection with MessageLayer version set multiple times', async () => {
+            // eslint-disable-next-line max-len
+            const [code, reason] = await testRejection('ws://127.0.0.1:12346/api/v1/ws?controlLayerVersion=2&messageLayerVersion=31&messageLayerVersion=32')
+            expect(code).toEqual(1000)
+            expect(reason).toEqual('multiple messageLayerVersion given')
         })
 
         it('rejects connections with unsupported ControlLayer version', async () => {

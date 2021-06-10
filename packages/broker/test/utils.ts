@@ -120,10 +120,6 @@ export function getWsUrl(port: number, ssl = false) {
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws`
 }
 
-export function getWsUrlWithControlAndMessageLayerVersions(port: number, ssl = false, controlLayerVersion = 2, messageLayerVersion = 32) {
-    return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`
-}
-
 // generates a private key
 // equivalent to Wallet.createRandom().privateKey but much faster
 // the slow part seems to be deriving the address from the key so if you can avoid this, just use

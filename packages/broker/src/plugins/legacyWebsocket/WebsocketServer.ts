@@ -157,7 +157,7 @@ export class WebsocketServer extends EventEmitter {
             if (Array.isArray(queryParams.controlLayerVersion)) {
                 closeWithError(
                     '"controlLayerVersion" parameter set multiple times',
-                    'multiple controlLayerVersions given'
+                    'multiple controlLayerVersion given'
                 )
                 return
             }
