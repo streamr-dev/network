@@ -1,6 +1,6 @@
 import {createStorageNodeRegistry, getStorageNodeRegistryFromContract} from '../../src/utils/StorageNodeRegistry'
 
-const contractAddress = '0xEAA002f7Dc60178B6103f8617Be45a9D3df659B6'
+const contractAddress = '0xbAA81A0179015bE47Ad439566374F2Bae098686F'
 const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}:8546`
 
 describe('StorageNodeRegistry', () => {
