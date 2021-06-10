@@ -301,10 +301,8 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
 
 export function LimitAsyncFnByKey<KeyType>(limit = 1) {
     const pending = new Map()
-    const queueOnEmptyTasks = new Map()
     const f = async (id: KeyType, fn: () => Promise<any>) => {
         const limitFn = pending.get(id) || pending.set(id, pLimit(limit)).get(id)
-        const onQueueEmpty = queueOnEmptyTasks.get(id) || queueOnEmptyTasks.set(id, Defer()).get(id)
         try {
             return await limitFn(fn)
         } finally {
@@ -313,27 +311,14 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
                     // clean up if no more active entries (if not cleared)
                     pending.delete(id)
                 }
-
-                if (queueOnEmptyTasks.has(id)) {
-                    queueOnEmptyTasks.get(id).resolve(undefined)
-                    queueOnEmptyTasks.delete(id)
-                }
-
-                onQueueEmpty.resolve()
             }
         }
-    }
-
-    f.getOnQueueEmpty = async (id: KeyType) => {
-        return queueOnEmptyTasks.get(id) || queueOnEmptyTasks.set(id, Defer()).get(id)
     }
 
     f.clear = () => {
         // note: does not cancel promises
         pending.forEach((p) => p.clearQueue())
         pending.clear()
-        queueOnEmptyTasks.forEach((p) => p.resolve(undefined))
-        queueOnEmptyTasks.clear()
     }
     return f
 }
