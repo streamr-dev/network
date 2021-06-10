@@ -214,7 +214,7 @@ export const waitForStreamPersistedInStorageNode = async (streamId: string, part
 }
 
 const getTestName = (module: NodeModule) => {
-    const fileNamePattern = new RegExp('.*/(.*).test\...')
+    const fileNamePattern = new RegExp('.*/(.*).test\\...')
     const groups = module.filename.match(fileNamePattern)
     return (groups !== null) ? groups[1] : module.filename
 }
