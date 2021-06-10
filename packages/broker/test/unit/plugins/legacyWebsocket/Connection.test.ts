@@ -140,6 +140,17 @@ describe('Connection', () => {
             expect(fakeDuplexStream.write).toHaveBeenCalledTimes(1)
             expect(fakeDuplexStream.write).toHaveBeenCalledWith(msg.serialize(controlLayerVersion, messageLayerVersion))
         })
+
+        it('terminates connection if writing message to socket throws', () => {
+            fakeDuplexStream.write.mockImplementation(() => {
+                throw new Error('ERROR ERROR')
+            })
+            connection.send(new Protocol.ResendResponseNoResend({
+                requestId: 'requestId',
+                streamId: 'streamId',
+                streamPartition: 0
+            }))
+        })
     })
 
     describe('close()', () => {
