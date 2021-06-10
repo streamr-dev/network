@@ -356,24 +356,36 @@ export function pLimitFn(fn: F.Function, limit = 1) {
 }
 
 /**
+ * Unwrap a Promise type e.g. Awaited<Promise<T>> => T
+ * Required as TS doesn't (currently) understand Promise<T> is equivalent to Promise<Promise<T>>
+ */
+type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
+
+/**
  * Only allows one outstanding call.
  * Returns same promise while task is executing.
  */
 
-export function pOne(fn: F.Function) {
-    let inProgress: Promise<unknown> | undefined
-    return (...args: Parameters<typeof fn>) => {
-        if (!inProgress) {
-            inProgress = Promise.resolve(fn(...args)).finally(() => {
-                inProgress = undefined
-            })
+export function pOne<Args extends any[], R>(
+    fn: (...args: Args) => R
+): (...args: Args) => Promise<Awaited<R>> {
+    let inProgress: Promise<Awaited<R>> | undefined
+    return async (...args: Args): Promise<Awaited<R>> => {
+        if (inProgress) {
+            return inProgress
         }
+
+        inProgress = (async () => {
+            try {
+                return await Promise.resolve(fn(...args)) as Awaited<R>
+            } finally {
+                inProgress = undefined
+            }
+        })()
 
         return inProgress
     }
 }
-
-type Unwrap<T> = T extends Promise<infer U> ? U : T
 
 /**
  * Only allows calling `fn` once.
@@ -382,17 +394,17 @@ type Unwrap<T> = T extends Promise<infer U> ? U : T
 
 export function pOnce<Args extends any[], R>(
     fn: (...args: Args) => R
-): (...args: Args) => Promise<Unwrap<R>> {
+): (...args: Args) => Promise<Awaited<R>> {
     let inProgress: Promise<void> | undefined
     let started = false
-    let value: Unwrap<R>
+    let value: Awaited<R>
     let error: Error | undefined
     return async (...args: Args) => {
         if (!started) {
             started = true
             inProgress = (async () => {
                 try {
-                    value = await Promise.resolve(fn(...args)) as Unwrap<R>
+                    value = await Promise.resolve(fn(...args)) as Awaited<R>
                 } catch (err) {
                     error = err
                 } finally {

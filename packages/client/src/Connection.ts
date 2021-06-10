@@ -336,7 +336,6 @@ export default class Connection extends EventEmitter {
         this.backoffWait = pLimitFn(this.backoffWait.bind(this))
         this.step = SocketConnector(this)
         this.debug = this.debug.bind(this)
-        // @ts-expect-error
         this.maybeConnect = pOne(this.maybeConnect.bind(this))
         this.nextConnection = pOne(this.nextConnection.bind(this))
         this.nextDisconnection = pOne(this.nextDisconnection.bind(this))
@@ -453,13 +452,13 @@ export default class Connection extends EventEmitter {
         }
     }
 
-    async nextConnection() {
+    async nextConnection(): Promise<void> {
         if (this.isConnected()) {
-            return Promise.resolve()
+            return
         }
 
         this.isWaiting = true
-        return new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
             let onError: Todo
             let onDone: Todo
             const onConnected = () => {
@@ -578,12 +577,12 @@ export default class Connection extends EventEmitter {
         }
     }
 
-    async nextDisconnection() {
+    async nextDisconnection(): Promise<void> {
         if (this.isDisconnected()) {
-            return Promise.resolve()
+            return
         }
 
-        return new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
             let onError: Todo
             const onDisconnected = () => {
                 this.off('error', onError)
