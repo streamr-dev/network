@@ -55,9 +55,9 @@ describe('StorageNodeRegistry', () => {
     })
 
     it('get url by address', () => {
-        expect(registry.getUrlsByAddresses(['0x1111111111111111111111111111111111111111'])).toStrictEqual(['http://one.mock'])
-        expect(registry.getUrlsByAddresses(['0x3333333333333333333333333333333333333333'])).toStrictEqual(['http://three.mock'])
-        expect(registry.getUrlsByAddresses(['0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'])).toStrictEqual([])
+        expect(registry.getUrlByAddress('0x1111111111111111111111111111111111111111')).toStrictEqual('http://one.mock')
+        expect(registry.getUrlByAddress('0x3333333333333333333333333333333333333333')).toStrictEqual('http://three.mock')
+        expect(registry.getUrlByAddress('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')).toStrictEqual(undefined)
     })
 
     describe('get url by streamId', () => {

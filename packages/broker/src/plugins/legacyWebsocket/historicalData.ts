@@ -70,7 +70,7 @@ export const createResponse = async (
     // Form data query endpoints and shuffle the resulting array
     const urls = storageNodeUrls.map((storageNodeUrl) => {
         return getDataQueryEndpointUrl(request, `${storageNodeUrl}/api/v1`)
-    }).sort(() => Math.random() - 0.5)
+    }).sort(() => Math.random() - 0.5) // shuffle
 
     for (let i = 0; i < urls.length; i++) {
         const url = urls[i]
