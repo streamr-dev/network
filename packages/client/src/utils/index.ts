@@ -541,24 +541,31 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     // sometimes if waiting until a value is returned. Maybe change if such use
     // case emerges.
     const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
-    let timeout = false
+    let isTimedOut = false
+    let t!: ReturnType<typeof setTimeout>
     if (timeOutMs > 0) {
-        setTimeout(() => { timeout = true }, timeOutMs)
+        t = setTimeout(() => { isTimedOut = true }, timeOutMs)
     }
-    // Promise wrapped condition function works for normal functions just the same as Promises
-    let wasDone
-    while (!wasDone && !timeout) { // eslint-disable-line no-await-in-loop
-        wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
-        if (!wasDone && !timeout) {
-            await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+
+    try {
+        // Promise wrapped condition function works for normal functions just the same as Promises
+        let wasDone = false
+        while (!wasDone && !isTimedOut) { // eslint-disable-line no-await-in-loop
+            wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
+            if (!wasDone && !isTimedOut) {
+                await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+            }
         }
 
-    }
-    if (timeout) {
-        if (failedMsgFn) {
-            err.message += ` ${failedMsgFn()}`
+        if (isTimedOut) {
+            if (failedMsgFn) {
+                err.message += ` ${failedMsgFn()}`
+            }
+            throw err
         }
-        throw err
+
+        return wasDone
+    } finally {
+        clearTimeout(t)
     }
-    return wasDone
 }
