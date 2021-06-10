@@ -32,13 +32,16 @@ export class Connection extends EventEmitter {
     private highBackPressure = false
     private respondedPong = true
 
-    constructor(socket: WebSocket, controlLayerVersion: number, messageLayerVersion: number) {
+    constructor(
+        socket: WebSocket,
+        duplexStream: stream.Duplex,
+        controlLayerVersion: number,
+        messageLayerVersion: number
+    ) {
         super()
         this.id = generateId()
         this.socket = socket
-        this.duplexStream = WebSocket.createWebSocketStream(socket, {
-            decodeStrings: false
-        })
+        this.duplexStream = duplexStream
         this.controlLayerVersion = controlLayerVersion
         this.messageLayerVersion = messageLayerVersion
 
@@ -72,7 +75,7 @@ export class Connection extends EventEmitter {
             logger.warn('socket "%s" error %s', this.id, err)
         })
 
-        this.duplexStream.on('drain', () => {
+        duplexStream.on('drain', () => {
             logger.debug('Back pressure LOW for %s at %d', this.id, this.getBufferedAmount())
             this.emit('lowBackPressure')
             this.highBackPressure = false

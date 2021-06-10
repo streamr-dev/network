@@ -6,16 +6,19 @@ import { Protocol } from "streamr-network"
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import Mock = jest.Mock
 import { ErrorResponse } from '../../../../../protocol/src'
+import stream from 'stream'
 
 class FakeWebSocket extends EventEmitter {
     send: Mock
     close: Mock
     terminate: Mock
+    ping: Mock
     constructor() {
         super()
         this.send = jest.fn()
         this.close = jest.fn()
         this.terminate = jest.fn()
+        this.ping = jest.fn()
     }
 }
 
@@ -26,6 +29,16 @@ class FakeDuplexStream extends EventEmitter {
         this.write = jest.fn().mockReturnValue(true) // return value is backpressure signal
     }
 }
+
+// Just any protocol message really, content doesn't matter
+const protocolMessage = new Protocol.ControlLayer.SubscribeRequest({
+    requestId: 'requestId',
+    streamId: 'streamId',
+    streamPartition: 0,
+    sessionToken: 'sessionToken'
+})
+
+const WAIT_TIME_FOR_NO_EVENT = 100 // how long to wait before deciding that an event did not occur
 
 describe('Connection', () => {
     let controlLayerVersion: number
@@ -39,9 +52,12 @@ describe('Connection', () => {
         messageLayerVersion = 31
         fakeSocket = new FakeWebSocket()
         fakeDuplexStream = new FakeDuplexStream()
-        connection = new Connection(fakeSocket as unknown as WebSocket, controlLayerVersion, messageLayerVersion)
-        // @ts-expect-error violate private
-        connection.duplexStream = fakeDuplexStream
+        connection = new Connection(
+            fakeSocket as unknown as WebSocket,
+            fakeDuplexStream as unknown as stream.Duplex,
+            controlLayerVersion,
+            messageLayerVersion
+        )
     })
 
     it('id is assigned', () => {
@@ -145,11 +161,16 @@ describe('Connection', () => {
             fakeDuplexStream.write.mockImplementation(() => {
                 throw new Error('ERROR ERROR')
             })
-            connection.send(new Protocol.ResendResponseNoResend({
-                requestId: 'requestId',
-                streamId: 'streamId',
-                streamPartition: 0
-            }))
+            connection.send(protocolMessage)
+            expect(fakeSocket.terminate).toHaveBeenCalledTimes(1)
+            expect(connection.isDead()).toEqual(true)
+        })
+    })
+
+    describe('ping()', () => {
+        it('delegates to socket#ping', () => {
+            connection.ping()
+            expect(fakeSocket.ping).toHaveBeenCalledTimes(1)
         })
     })
 
@@ -194,25 +215,17 @@ describe('Connection', () => {
     })
 
     describe('event: message', () => {
-        const WAIT_TIME_FOR_NO_EVENT = 100 // how long to wait before deciding that an event did not occur
-        const subscribeRequest = new Protocol.ControlLayer.SubscribeRequest({
-            requestId: 'requestId',
-            streamId: 'streamId',
-            streamPartition: 0,
-            sessionToken: 'sessionToken'
-        })
-
         it('emitted when receiving valid message', async () => {
             const messageEvent = waitForEvent(connection, 'message')
-            fakeSocket.emit('message', subscribeRequest.serialize())
+            fakeSocket.emit('message', protocolMessage.serialize())
             const [receivedMessage] = await messageEvent
-            expect(receivedMessage).toEqual(subscribeRequest)
+            expect(receivedMessage).toEqual(protocolMessage)
         })
 
         it('not emitted if connection marked as dead', async () => {
             connection.forceClose('test')
             const messageEvent = waitForEvent(connection, 'message', WAIT_TIME_FOR_NO_EVENT)
-            fakeSocket.emit('message', subscribeRequest.serialize())
+            fakeSocket.emit('message', protocolMessage.serialize())
             await expect(messageEvent).rejects
                 .toEqual(new Error(`Promise timed out after ${WAIT_TIME_FOR_NO_EVENT} milliseconds`))
         })
@@ -245,6 +258,31 @@ describe('Connection', () => {
         })
     })
 
+    describe('event: highBackPressure', () => {
+        it('emitted within send() if duplexStream.write returns with false', async () => {
+            fakeDuplexStream.write.mockReturnValue(false) // false = "backpressure accumulated"
+            const highBackPressureEvent = waitForEvent(connection, 'highBackPressure')
+            connection.send(protocolMessage)
+            await highBackPressureEvent
+        })
+
+        it('not emitted within send() if duplexStream.write returns with true', async () => {
+            fakeDuplexStream.write.mockReturnValue(true) // true = "go ahead and publish more"
+            const highBackPressureEvent = waitForEvent(connection, 'highBackPressure', WAIT_TIME_FOR_NO_EVENT)
+            connection.send(protocolMessage)
+            await expect(highBackPressureEvent).rejects
+                .toEqual(new Error(`Promise timed out after ${WAIT_TIME_FOR_NO_EVENT} milliseconds`))
+        })
+    })
+
+    describe('event: lowBackPressure', () => {
+        it('emitted when duplexStream emits event "drain"', async () => {
+            const lowBackPressureEvent = waitForEvent(connection, 'lowBackPressure')
+            fakeDuplexStream.emit('drain')
+            await lowBackPressureEvent
+        })
+    })
+
     it('responds with an error if received invalid message from socket', async () => {
         fakeSocket.emit('message', 'INVALID_MESSAGE_INCOMING')
         await waitForCondition(() => fakeDuplexStream.write.mock.calls.length !== 0)
@@ -254,5 +292,13 @@ describe('Connection', () => {
             errorMessage: 'Unexpected token I in JSON at position 0',
             errorCode: Protocol.ErrorCode.INVALID_REQUEST
         }).serialize())
+    })
+
+    it('hasRespondedPong set back to true upon receiving pong from socket', () => {
+        connection.setRespondedToPongAsFalse()
+        expect(connection.hasRespondedToPong()).toEqual(false)
+
+        fakeSocket.emit('pong')
+        expect(connection.hasRespondedToPong()).toEqual(true)
     })
 })

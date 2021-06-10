@@ -181,7 +181,10 @@ export class WebsocketServer extends EventEmitter {
                 return
             }
 
-            const connection = new Connection(ws, controlLayerVersion, messageLayerVersion)
+            const duplexStream = WebSocket.createWebSocketStream(ws, {
+                decodeStrings: false
+            })
+            const connection = new Connection(ws, duplexStream, controlLayerVersion, messageLayerVersion)
             connection.on('message', async (request) => {
                 try {
                     logger.trace('socket "%s" sent request "%s" with contents "%o"',
