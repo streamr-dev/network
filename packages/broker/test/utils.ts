@@ -226,7 +226,7 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
 }
 
 export const createQueue = () => {
-    let items: any[] = []
+    const items: any[] = []
     return {
         push: (item: any) => {
             items.push(item)
