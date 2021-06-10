@@ -307,9 +307,10 @@ const getTestName = (module: NodeModule) => {
     return (groups !== null) ? groups[1] : module.filename
 }
 
+const randomTestRunId = crypto.randomBytes(4).toString('hex')
 // eslint-disable-next-line no-undef
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) => {
-    return counterId(`/test/${getTestName(module)}${(suffix !== undefined) ? suffix : ''}`, '-')
+    return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
 // eslint-disable-next-line no-undef
