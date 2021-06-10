@@ -1,8 +1,7 @@
-import { inspect } from 'util'
-
 import { ControlLayer, PublishRequest } from 'streamr-client-protocol'
 
 import { uuid, LimitAsyncFnByKey } from '../utils'
+import { inspect } from '../utils/log'
 import { waitForRequestResponse } from '../stream/utils'
 
 import { GroupKey } from '../stream'
@@ -22,6 +21,14 @@ export class FailedToPublishError extends Error {
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
+    }
+
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any) {
+        return inspect(this, {
+            ...options,
+            customInspect: false,
+            depth,
+        })
     }
 }
 

@@ -4,7 +4,7 @@
  */
 import EventEmitter from 'eventemitter3'
 import { ControlLayer } from 'streamr-client-protocol'
-import Debug from 'debug'
+import { Debug, Debugger } from './utils/log'
 
 import { counterId, uuid, CacheAsyncFn } from './utils'
 import { validateOptions } from './stream/utils'
@@ -56,7 +56,7 @@ const balanceOfAbi = [{
  */
 class StreamrConnection extends Connection {
     // TODO define args type when we convert Connection class to TypeScript
-    constructor(options: ConnectionOptions, debug?: Debug.Debugger) {
+    constructor(options: ConnectionOptions, debug?: Debugger) {
         super(options, debug)
         this.on('message', this.onConnectionMessage)
     }
@@ -169,7 +169,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /** @internal */
     id: string
     /** @internal */
-    debug: Debug.Debugger
+    debug: Debugger
     options: StrictStreamrClientOptions
     session: Session
     /** @internal */
@@ -248,7 +248,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
                 // emit non-connection errors
                 this.emit('error', err)
             } else {
-                source.debug(err)
+                source.debug('error', err)
             }
         }
     }

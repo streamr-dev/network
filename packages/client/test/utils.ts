@@ -1,15 +1,20 @@
-import { inspect } from 'util'
+import crypto from 'crypto'
 import { wait } from 'streamr-test-utils'
 import { providers, Wallet } from 'ethers'
 import { pTimeout, counterId, AggregatedError } from '../src/utils'
+import { Debug, inspect } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
 import type { StreamPartDefinitionOptions, StreamProperties } from '../src/stream'
 import { StreamrClient } from '../src/StreamrClient'
 import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
+import config from './integration/config'
 
-const crypto = require('crypto')
-const config = require('./integration/config')
+const testDebugRoot = Debug('test')
+const testDebug = testDebugRoot.extend.bind(testDebugRoot)
+export {
+    testDebug as Debug
+}
 
 export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 

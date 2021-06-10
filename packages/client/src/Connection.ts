@@ -1,17 +1,11 @@
-import { inspect } from 'util'
-
 import EventEmitter from 'eventemitter3'
-import Debug from 'debug'
 import WebSocket from 'ws'
 
 import { Scaffold, counterId, pLimitFn, pOne } from './utils'
+import { Debug, inspect, Debugger } from './utils/log'
 import { Todo } from './types'
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-// add global support for pretty millisecond formatting with %n
-// @ts-expect-error
-Debug.formatters.n = (v) => Debug.humanize(v)
 
 export interface ConnectionOptions {
     url?: string,
@@ -322,11 +316,12 @@ export default class Connection extends EventEmitter {
         }))
     }
 
-    constructor(options: ConnectionOptions = {}, debug?: Debug.Debugger) {
+    constructor(options: ConnectionOptions = {}, debug?: Debugger) {
         super()
+        const id = counterId(this.constructor.name)
         this._debug = debug !== undefined
-            ? debug.extend(counterId(this.constructor.name))
-            : Debug(`StreamrClient::${counterId(this.constructor.name)}`)
+            ? debug.extend(id)
+            : Debug(id)
 
         this.options = options
         this.options.autoConnect = !!this.options.autoConnect

@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import Debug from 'debug'
+import { Debug } from '../../src/utils/log'
 import { StreamrClient } from '../../src/StreamrClient'
 import { MessageLayer } from 'streamr-client-protocol'
 import { Stream } from '../../src/stream'
@@ -10,7 +10,7 @@ import prettyBytes from 'pretty-bytes'
 
 const TRAM_DEMO_STREAM = '7wa7APtlTq6EC5iTCBy6dw'
 
-const log = Debug('MessageQuantityTest')
+const log = Debug('test:MessageQuantityTest')
 
 function logMemory() {
     const res = process.memoryUsage()

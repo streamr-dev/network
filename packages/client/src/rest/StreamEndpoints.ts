@@ -2,9 +2,9 @@ import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
 
 import qs from 'qs'
-import debugFactory from 'debug'
 
 import { getEndpointUrl } from '../utils'
+import { Debug } from '../utils/log'
 import { createStreamId, validateOptions } from '../stream/utils'
 import { Stream, StreamOperation, StreamProperties } from '../stream'
 import { StreamPart } from '../stream/StreamPart'
@@ -17,7 +17,7 @@ import { StreamrClient } from '../StreamrClient'
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
 import { StorageNode } from '../stream/StorageNode'
 
-const debug = debugFactory('StreamrClient')
+const debug = Debug('StreamEndpoints')
 
 export interface StreamListQuery {
     name?: string

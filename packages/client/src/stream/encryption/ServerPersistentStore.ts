@@ -3,10 +3,10 @@ import { dirname, resolve, join } from 'path'
 import { promises as fs } from 'fs'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
-import Debug from 'debug'
 
 import { PersistentStore } from './GroupKeyStore'
 import { counterId, pOnce } from '../../utils'
+import { Debug } from '../../utils/log'
 
 // eslint-disable-next-line promise/param-names
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
@@ -38,7 +38,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         migrationsPath = join(__dirname, 'migrations')
     }: ServerPersistentStoreOptions) {
         this.id = counterId(this.constructor.name)
-        this.debug = Debug(`StreamrClient::${this.id}`)
+        this.debug = Debug(this.id)
         this.streamId = encodeURIComponent(streamId)
         this.clientId = encodeURIComponent(clientId)
         this.initialData = initialData

@@ -1,8 +1,7 @@
 import { AddressInfo, Server } from 'ws'
 import { wait } from 'streamr-test-utils'
-import Debug from 'debug'
+import { Debug, describeRepeats } from '../utils'
 
-import { describeRepeats } from '../utils'
 import Connection from '../../src/Connection'
 import { Defer } from '../../src/utils'
 import { Todo } from '../../src/types'
