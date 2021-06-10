@@ -1,6 +1,6 @@
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey } from '../utils'
+import { uid, fakePrivateKey, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import config from './config'
@@ -70,9 +70,7 @@ describe('Subscription', () => {
         expectedErrors = 0
         client = createClient()
         client.on('error', onError)
-        stream = await client.createStream({
-            name: uid('stream')
-        })
+        stream = await createTestStream(client, module)
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         await client.connect()
     })

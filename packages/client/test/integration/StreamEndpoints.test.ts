@@ -4,7 +4,7 @@ import { Stream, StreamOperation } from '../../src/stream'
 import { StorageNode } from '../../src/stream/StorageNode'
 
 import { StreamrClient } from '../../src/StreamrClient'
-import { uid, fakeAddress } from '../utils'
+import { uid, fakeAddress, createTestStream } from '../utils'
 
 import config from './config'
 
@@ -15,7 +15,6 @@ import config from './config'
 function TestStreamEndpoints(getName: () => string) {
     let client: StreamrClient
     let wallet: Wallet
-    let createdStreamPath: string
     let createdStream: Stream
 
     const createClient = (opts = {}) => new StreamrClient({
@@ -35,9 +34,7 @@ function TestStreamEndpoints(getName: () => string) {
     })
 
     beforeAll(async () => {
-        createdStreamPath = `/StreamEndpoints-${Date.now()}`
-        createdStream = await client.createStream({
-            id: `${wallet.address}${createdStreamPath}`,
+        createdStream = await createTestStream(client, module, {
             name: getName(),
             requireSignedData: true,
             requireEncryptedData: false,
@@ -81,7 +78,7 @@ function TestStreamEndpoints(getName: () => string) {
 
     describe('getStream', () => {
         it('get an existing Stream', async () => {
-            const stream = await client.createStream()
+            const stream = await createTestStream(client, module)
             const existingStream = await client.getStream(stream.id)
             expect(existingStream.id).toEqual(stream.id)
         })
@@ -94,7 +91,7 @@ function TestStreamEndpoints(getName: () => string) {
 
     describe('getStreamByName', () => {
         it('get an existing Stream', async () => {
-            const stream = await client.createStream()
+            const stream = await createTestStream(client, module)
             const existingStream = await client.getStreamByName(stream.name)
             expect(existingStream.id).toEqual(stream.id)
         })
@@ -272,7 +269,7 @@ function TestStreamEndpoints(getName: () => string) {
     describe('Storage node assignment', () => {
         it('add', async () => {
             const storageNode = StorageNode.STREAMR_DOCKER_DEV
-            const stream = await client.createStream()
+            const stream = await createTestStream(client, module)
             await stream.addToStorageNode(storageNode)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
@@ -285,7 +282,7 @@ function TestStreamEndpoints(getName: () => string) {
 
         it('remove', async () => {
             const storageNode = StorageNode.STREAMR_DOCKER_DEV
-            const stream = await client.createStream()
+            const stream = await createTestStream(client, module)
             await stream.addToStorageNode(storageNode)
             await stream.removeFromStorageNode(storageNode)
             const storageNodes = await stream.getStorageNodes()

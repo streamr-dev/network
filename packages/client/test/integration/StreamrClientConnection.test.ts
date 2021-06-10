@@ -2,7 +2,7 @@ import fetch from 'node-fetch'
 import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey } from '../utils'
+import { describeRepeats, uid, fakePrivateKey, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -403,9 +403,7 @@ describeRepeats('StreamrClient Connection', () => {
             await client.connect()
             const sessionToken = await client.session.getSessionToken()!
 
-            const stream = await client.createStream({
-                name: uid('stream')
-            })
+            const stream = await createTestStream(client, module)
             await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             const connectionEventSpy = jest.spyOn(client.connection, '_send')
@@ -440,9 +438,7 @@ describeRepeats('StreamrClient Connection', () => {
             await client.connect()
             const sessionToken = await client.session.getSessionToken()!
 
-            const stream = await client.createStream({
-                name: uid('stream')
-            })
+            const stream = await createTestStream(client, module)
             await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             const connectionEventSpy = jest.spyOn(client.connection, 'send')
@@ -508,9 +504,7 @@ describeRepeats('StreamrClient Connection', () => {
                     autoDisconnect: true,
                 })
 
-                const stream = await client.createStream({
-                    name: uid('stream')
-                })
+                const stream = await createTestStream(client, module)
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
                 expect(client.isDisconnected()).toBeTruthy()
 
@@ -532,9 +526,7 @@ describeRepeats('StreamrClient Connection', () => {
                 })
 
                 await client.connect()
-                const stream = await client.createStream({
-                    name: uid('stream')
-                })
+                const stream = await createTestStream(client, module)
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 const message = {
@@ -556,9 +548,7 @@ describeRepeats('StreamrClient Connection', () => {
                 })
 
                 await client.connect()
-                const stream = await client.createStream({
-                    name: uid('stream')
-                })
+                const stream = await createTestStream(client, module)
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 const message = {
@@ -583,9 +573,7 @@ describeRepeats('StreamrClient Connection', () => {
                 })
 
                 await client.connect()
-                const stream = await client.createStream({
-                    name: uid('stream')
-                })
+                const stream = await createTestStream(client, module)
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 await client.subscribe({
@@ -602,9 +590,7 @@ describeRepeats('StreamrClient Connection', () => {
                 })
 
                 await client.connect()
-                const stream = await client.createStream({
-                    name: uid('stream')
-                })
+                const stream = await createTestStream(client, module)
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
                 await client.subscribe({
