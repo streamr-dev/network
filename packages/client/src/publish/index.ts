@@ -91,7 +91,7 @@ export default class Publisher {
         })
     }
 
-    private async send(streamMessage: StreamMessage, sessionToken?: string) {
+    private async sendMessage(streamMessage: StreamMessage, sessionToken?: string) {
         const { client } = this
         const requestId = uuid('pub')
         const request = new ControlLayer.PublishRequest({
@@ -186,9 +186,12 @@ export default class Publisher {
         return this.streamMessageCreator.startKeyExchange()
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.sendQueue.clear()
-        this.streamMessageCreator.clear()
+        cleanupPublishHandle(this.client)
+        await this.client.connection.removeHandle(PUBLISH_HANDLE)
+        await this.streamMessageCreator.stop()
+        this.streamMessageCreator = undefined
     }
 
     rotateGroupKey(streamId: string) {

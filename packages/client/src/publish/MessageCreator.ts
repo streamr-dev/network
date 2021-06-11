@@ -52,7 +52,7 @@ export default class StreamMessageCreator {
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    create(streamObjectOrId: StreamIDish, {
+    async create(streamObjectOrId: StreamIDish, {
         content,
         timestamp,
         partitionKey,
@@ -121,9 +121,12 @@ export default class StreamMessageCreator {
         return this.encrypt.start()
     }
 
-    clear() {
+    async stop() {
         this.computeStreamPartition.clear()
         this.queue.clear()
+        this.getMsgChainer.clear()
+        this.client.debug('message creator stop <<')
+        await this.encrypt.stop()
     }
 }
 

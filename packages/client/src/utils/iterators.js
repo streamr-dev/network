@@ -390,6 +390,7 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
             await cancelAll(error)
         }
         cancelFns.clear()
+        firstSrc = undefined
         try {
             finallyCalled = true
             await onFinally(error)

@@ -47,6 +47,14 @@ export class Subscriber {
         return this.subscriptions.add(opts, onFinally)
     }
 
+    async unsubscribeAll() {
+        return this.subscriptions.removeAll()
+    }
+
+    async stop(): Promise<void> {
+        await this.unsubscribeAll()
+    }
+
     async unsubscribe(options: StreamOptions): Promise<Todo> {
         if (options instanceof Subscription) {
             const sub = options

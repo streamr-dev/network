@@ -83,6 +83,7 @@ export default class Subscription extends Emitter {
             this.cancel(error)
             return false
         }
+
         try {
             this.debug('emit error', error)
             return super.emit('error', ...args)
@@ -109,6 +110,7 @@ export default class Subscription extends Emitter {
             error = AggregatedError.from(error, onFinallyError)
         } finally {
             this._onDone.handleErrBack(error)
+            this.removeAllListeners()
         }
     }
 
