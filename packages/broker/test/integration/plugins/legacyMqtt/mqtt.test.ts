@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../../../../src/types'
-import { startBroker, fastPrivateKey, createClient, createMqttClient } from '../../../utils'
+import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../../../utils'
 
 const httpPort1 = 12381
 const httpPort2 = 12382
@@ -80,9 +80,7 @@ describe('mqtt: end-to-end', () => {
         mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
         mqttClient3 = createMqttClient(mqttPort3, 'localhost', privateKey)
 
-        freshStream1 = await client1.createStream({
-            name: 'mqtt.test.js-' + Date.now()
-        })
+        freshStream1 = await createTestStream(client1, module)
     }, 15000)
 
     afterEach(async () => {

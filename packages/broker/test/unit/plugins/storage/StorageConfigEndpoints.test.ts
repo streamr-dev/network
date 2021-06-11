@@ -5,7 +5,7 @@ import { Todo } from '../../../../src/types'
 import { createMockStorageConfig } from '../../../integration/plugins/storage/MockStorageConfig'
 
 const createRequest = (streamId: string, partition: number, app: Todo) => {
-    return request(app).get(`/api/v1/streams/${streamId}/storage/partitions/${partition}`)
+    return request(app).get(`/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
 }
 
 describe('StorageConfigEndpoints', () => {

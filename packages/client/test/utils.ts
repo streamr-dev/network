@@ -4,7 +4,7 @@ import { providers, Wallet } from 'ethers'
 import { pTimeout, counterId, AggregatedError } from '../src/utils'
 import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
-import type { StreamPartDefinitionOptions } from '../src/stream'
+import type { StreamPartDefinitionOptions, StreamProperties } from '../src/stream'
 import { StreamrClient } from '../src/StreamrClient'
 import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
 
@@ -298,4 +298,25 @@ export const createClient = (providerSidechain?: providers.JsonRpcProvider) => {
 
 export const expectInvalidAddress = (operation: () => Promise<any>) => {
     return expect(() => operation()).rejects.toThrow('invalid address')
+}
+
+// eslint-disable-next-line no-undef
+const getTestName = (module: NodeModule) => {
+    const fileNamePattern = new RegExp('.*/(.*).test\\...')
+    const groups = module.filename.match(fileNamePattern)
+    return (groups !== null) ? groups[1] : module.filename
+}
+
+const randomTestRunId = crypto.randomBytes(4).toString('hex')
+// eslint-disable-next-line no-undef
+export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) => {
+    return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
+}
+
+// eslint-disable-next-line no-undef
+export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+    return streamrClient.createStream({
+        id: createRelativeTestStreamId(module),
+        ...props
+    })
 }

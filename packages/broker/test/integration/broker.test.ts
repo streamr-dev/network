@@ -4,6 +4,7 @@ import { Wallet } from 'ethers'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import {
     createClient,
+    createTestStream,
     fastPrivateKey,
     startBroker,
     StorageAssignmentEventManager,
@@ -93,9 +94,7 @@ describe('broker: end-to-end', () => {
         await assignmentEventManager.createStream()
 
         // Set up stream
-        freshStream = await client1.createStream({
-            name: 'broker.test.js-' + Date.now()
-        })
+        freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
         await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort)
@@ -214,7 +213,7 @@ describe('broker: end-to-end', () => {
 
         for (let i = 1; i <= 3; ++i) {
             // eslint-disable-next-line no-await-in-loop
-            await fetch(`http://localhost:${httpPort}/api/v1/streams/${freshStreamId}/data`, {
+            await fetch(`http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data`, {
                 method: 'post',
                 headers: {
                     Authorization: 'Bearer ' + await client1.session.getSessionToken()
@@ -607,7 +606,7 @@ describe('broker: end-to-end', () => {
 
         await wait(1500) // wait for propagation
 
-        const url = `http://localhost:${httpPort}/api/v1/streams/${freshStreamId}/data/partitions/0/last?count=2`
+        const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/last?count=2`
         const response = await fetch(url, {
             method: 'get',
             headers: {
@@ -642,7 +641,7 @@ describe('broker: end-to-end', () => {
 
         await wait(3000)
 
-        const url = `http://localhost:${httpPort}/api/v1/streams/${freshStreamId}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
+        const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
         const response = await fetch(url, {
             method: 'get',
             headers: {
@@ -657,7 +656,7 @@ describe('broker: end-to-end', () => {
 
     it('broker returns [] for empty http resend', async () => {
         const fromTimestamp = Date.now() + 99999999
-        const url = `http://localhost:${httpPort}/api/v1/streams/${freshStreamId}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
+        const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
         const response = await fetch(url, {
             method: 'get',
             headers: {
@@ -701,7 +700,7 @@ describe('broker: end-to-end', () => {
 
         await wait(1500) // wait for propagation
 
-        const url = `http://localhost:${httpPort}/api/v1/streams/${freshStreamId}/data/partitions/0/from`
+        const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/from`
             + `?fromTimestamp=${timeAfterFirstMessagePublished}`
         const response = await fetch(url, {
             method: 'get',
@@ -761,7 +760,7 @@ describe('broker: end-to-end', () => {
 
         await wait(1500) // wait for propagation
 
-        const url = `http://localhost:${httpPort}/api/v1/streams/${freshStreamId}/data/partitions/0/range`
+        const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/range`
             + `?fromTimestamp=${timeAfterFirstMessagePublished}`
             + `&toTimestamp=${timeAfterThirdMessagePublished}`
         const response = await fetch(url, {

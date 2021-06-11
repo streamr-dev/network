@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../types'
-import { startBroker, fastPrivateKey, createClient, createMqttClient } from '../utils'
+import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
 
 const httpPort1 = 13381
 const httpPort2 = 13382
@@ -61,12 +61,8 @@ describe('SubscriptionManager', () => {
         mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
 
-        freshStream1 = await client1.createStream({
-            name: 'SubscriptionManager.test.js-' + Date.now()
-        })
-        freshStream2 = await client2.createStream({
-            name: 'SubscriptionManager.test.js-' + Date.now()
-        })
+        freshStream1 = await createTestStream(client1, module)
+        freshStream2 = await createTestStream(client2, module)
     }, 10 * 1000)
 
     afterEach(async () => {
