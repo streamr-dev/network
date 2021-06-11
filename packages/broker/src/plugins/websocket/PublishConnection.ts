@@ -28,13 +28,16 @@ export class PublishConnection implements Connection {
     streamId: string
     partition?: number
     partitionKey?: string
+    partitionKeyField?: string
 
     constructor(streamId: string, queryParams: ParsedQs) {
         this.streamId = streamId
         this.partition = parseQueryParameter<number>('partition', queryParams, parsePositiveInteger)
-        this.partitionKey = queryParams['partitionKey'] as string
-        if ((this.partition !== undefined) && (this.partitionKey !== undefined)) {
-            throw new Error('Invalid combination of "partition" and "partitionKey"')
+        this.partitionKey = queryParams['partitionKey'] as string|undefined
+        this.partitionKeyField = queryParams['partitionKeyField'] as string|undefined
+        const partitionDefinitions = [this.partition, this.partitionKey, this.partitionKeyField].filter((d) => d !== undefined)
+        if (partitionDefinitions.length > 1) {
+            throw new Error('Invalid combination of "partition", "partitionKey" and "partitionKeyField"')
         }
     }
     
@@ -43,10 +46,11 @@ export class PublishConnection implements Connection {
             let content
             try {
                 content = parsePayloadJson(contentPayload)
+                const partitionKey = this.partitionKey ?? (this.partitionKeyField ? content[this.partitionKeyField] : undefined)
                 streamrClient.publish({
                     id: this.streamId,
                     partition: this.partition
-                }, content, undefined, this.partitionKey)
+                }, content, undefined, partitionKey)
             } catch (err: any) {
                 closeWithError(err, 'Unable to publish', ws)
             }

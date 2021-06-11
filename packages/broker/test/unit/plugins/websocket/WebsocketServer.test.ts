@@ -101,14 +101,27 @@ describe('WebsocketServer', () => {
             )
         })
 
-        it('invalid partition', async () => {
-            wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, { partition: -1 })
-            await assertConnectionError(400)
+        it('valid partitionKeyField', async () => {
+            await publish({ partitionKeyField: 'foo' })
+            expect(streamrClient.publish).toBeCalledWith(
+                {
+                    id: MOCK_STREAM_ID,
+                    partition: undefined
+                }, 
+                MOCK_MESSAGE, undefined, 'bar'
+            )
         })
 
-        it('both partition and partitionKey', async () => {
-            wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, { partition: 123, partitionKey: 'mock-key' })
-            await assertConnectionError(400)
+        describe.each([
+            [ { partition: -1 } ],
+            [ { partition: 123, partitionKey: 'mock-key' } ],
+            [ { partition: 123, partitionKeyField: 'foo' } ],
+            [ { partitionKey: 'mock-key', partitionKeyField: 'foo' } ]
+        ])('invalid partition definition', (queryParams: any) => {
+            it(qs.stringify(queryParams), async () => {
+                wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, queryParams)
+                await assertConnectionError(400)
+            })
         })
 
         it('invalid json', async () => {
