@@ -169,7 +169,9 @@ export class Subscriber {
         ], end)
         onEndFns.push(async () => it.cancel())
 
-        const resendTask = resendMessageStream.subscribe()
+        const resendTask = resendMessageStream.subscribe().catch(async (err) => {
+            await resendMessageStream.cancel(err)
+        })
 
         const realtimeTask = this.subscribe({
             ...options,
