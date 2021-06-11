@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '../utils'
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
@@ -44,9 +44,8 @@ describeRepeats('GapFill', () => {
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         await client.session.getSessionToken()
-        stream = await client.createStream({
-            requireSignedData: true,
-            name: uid('stream')
+        stream = await createTestStream(client, module, {
+            requireSignedData: true
         })
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
@@ -330,9 +329,8 @@ describeRepeats('GapFill', () => {
 
             it('rejects resend if no storage assigned', async () => {
                 // new stream, assign to storage node not called
-                stream = await client.createStream({
+                stream = await createTestStream(client, module, {
                     requireSignedData: true,
-                    name: uid('no-storage-stream')
                 })
 
                 await expect(async () => {
@@ -345,9 +343,8 @@ describeRepeats('GapFill', () => {
 
             it('rejects resend+subscribe if no storage assigned', async () => {
                 // new stream, assign to storage node not called
-                stream = await client.createStream({
+                stream = await createTestStream(client, module, {
                     requireSignedData: true,
-                    name: uid('no-storage-stream')
                 })
 
                 await expect(async () => {
@@ -478,9 +475,8 @@ describeRepeats('GapFill', () => {
             await client.connect()
             const { parse } = client.connection
             // new stream, assign to storage node not called
-            stream = await client.createStream({
+            stream = await createTestStream(client, module, {
                 requireSignedData: true,
-                name: uid('no-storage-stream')
             })
             const calledResend = jest.fn()
             let count = 0

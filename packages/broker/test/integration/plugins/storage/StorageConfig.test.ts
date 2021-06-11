@@ -10,7 +10,8 @@ import {
     createClient,
     StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode,
-    STREAMR_DOCKER_DEV_HOST
+    STREAMR_DOCKER_DEV_HOST,
+    createTestStream
 } from '../../../utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -86,9 +87,7 @@ describe('StorageConfig', () => {
     })
 
     it('when client publishes a message, it is written to the store', async () => {
-        stream = await client.createStream({
-            id: publisherAccount.address + '/StorageConfigTest/' + Date.now()
-        })
+        stream = await createTestStream(client, module)
         await assignmentEventManager.addStreamToStorageNode(stream.id, storageNodeAccount.address, client)
         await waitForStreamPersistedInStorageNode(stream.id, 0, NODE_HOST, HTTP_PORT)
         const publishMessage = await client.publish(stream.id, {

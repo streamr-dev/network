@@ -4,7 +4,7 @@ import path from 'path'
 import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
+import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg, createRelativeTestStreamId } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -100,6 +100,7 @@ describeRepeats('StreamrClient', () => {
     const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
         const name = uid('stream')
         const s = await client.createStream({
+            id: createRelativeTestStreamId(module),
             name,
             requireSignedData,
             ...opts,
