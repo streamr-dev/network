@@ -63,7 +63,7 @@ export default class StreamMessageCreator {
         timestamp: string | number | Date,
         partitionKey?: string | number,
         msgChainId?: string,
-    }) {
+    }): Promise<StreamMessage> {
         const streamId = getStreamId(streamObjectOrId)
         // streamId as queue key
         return this.queue(streamId, async () => {
