@@ -9,7 +9,7 @@ import { GroupKey } from '../stream'
 import { StreamrClient } from '../StreamrClient'
 import MessageChainer from './MessageChainer'
 import StreamPartitioner from './StreamPartitioner'
-import { StreamIDish, getStreamId } from './utils'
+import { StreamIDish, getStreamId, getStreamPartition } from './utils'
 
 export default class StreamMessageCreator {
     computeStreamPartition
@@ -74,7 +74,7 @@ export default class StreamMessageCreator {
             ])
 
             // figure out partition
-            const streamPartition = this.computeStreamPartition(stream.partitions, partitionKey)
+            const streamPartition = getStreamPartition(streamObjectOrId) ?? this.computeStreamPartition(stream.partitions, partitionKey)
 
             // chain messages
             const chainMessage = this.getMsgChainer({
