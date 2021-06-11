@@ -1,3 +1,7 @@
+/**
+ * Publishes a bunch of messages, taking incremental snapshots along the way.
+ */
+
 import { wait } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { PublishRequest } from 'streamr-client-protocol'
@@ -28,7 +32,11 @@ function logMemory() {
     }
 }
 
-describe('no memleaks when publishing a high quantity of large messages', () => {
+/**
+ * This can be used to generate heap snapshots for analysis, doesn't actually do any assertions currently.
+ * Skip for CI.
+ */
+describe.skip('no memleaks when publishing a high quantity of large messages', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
     let client: StreamrClient
     let stream: Stream
@@ -88,9 +96,8 @@ describe('no memleaks when publishing a high quantity of large messages', () => 
     })
 
     describe('publishing large messages', () => {
-        // const MAX_MEMORY_USAGE = 2e+8 // 200MB
         const NUM_SNAPSHOTS = 5
-        const NUM_MESSAGES = 10000
+        const NUM_MESSAGES = 5000
         const MESSAGE_SIZES = [
             1, // 1B
             // 1e3, // 1KB
@@ -127,6 +134,8 @@ describe('no memleaks when publishing a high quantity of large messages', () => 
                 memory: logMemory(),
                 total: prettyBytes(totalBytes)
             })
+
+            snapshot()
         }
 
         beforeEach(() => {
@@ -189,7 +198,7 @@ describe('no memleaks when publishing a high quantity of large messages', () => 
                         }
                     })
                     log('DONE')
-
+                    await wait(5000)
                     validate()
                 }, 60 * 60000)
             })

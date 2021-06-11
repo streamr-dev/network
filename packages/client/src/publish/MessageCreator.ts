@@ -125,7 +125,6 @@ export default class StreamMessageCreator {
         this.computeStreamPartition.clear()
         this.queue.clear()
         this.getMsgChainer.clear()
-        this.client.debug('message creator stop <<')
         await this.encrypt.stop()
     }
 }

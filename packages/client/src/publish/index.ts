@@ -128,7 +128,7 @@ export default class Publisher {
         content: any
         timestamp?: string | number | Date
         partitionKey?: string | number
-    }) {
+    }): Promise<PublishRequest> {
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
@@ -158,7 +158,7 @@ export default class Publisher {
         // no async before running sendQueue
         return this.sendQueue(streamId, async () => {
             const [streamMessage, sessionToken] = await asyncDepsTask
-            return this.send(streamMessage, sessionToken)
+            return this.sendMessage(streamMessage, sessionToken)
         })
     }
 
@@ -191,7 +191,6 @@ export default class Publisher {
         cleanupPublishHandle(this.client)
         await this.client.connection.removeHandle(PUBLISH_HANDLE)
         await this.streamMessageCreator.stop()
-        this.streamMessageCreator = undefined
     }
 
     rotateGroupKey(streamId: string) {

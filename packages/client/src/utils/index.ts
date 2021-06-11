@@ -157,12 +157,14 @@ export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
     })
 
     const cachedFn = Object.assign(pMemoize(asyncFn, {
-        maxAge,
         cachePromiseRejection,
         cache,
         ...opts,
     }), {
-        clear: () => pMemoize.clear(cachedFn),
+        clear: () => {
+            pMemoize.clear(cachedFn)
+            cache.clear()
+        },
         clearMatching: (...args: L.Tail<Parameters<typeof clearMatching>>) => clearMatching(cache, ...args),
     })
 

@@ -3,7 +3,7 @@ import {
 } from 'streamr-client-protocol'
 import pMemoize from 'p-memoize'
 
-import Scaffold from '../../utils/Scaffold'
+import { pOne } from '../../utils'
 
 import { validateOptions } from '../utils'
 import EncryptionUtil, { GroupKey, StreamMessageProcessingError } from './Encryption'
@@ -51,7 +51,7 @@ async function PublisherKeyExhangeSubscription(client: StreamrClient, getGroupKe
     async function onKeyExchangeMessage(_parsedContent: any, streamMessage: StreamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
             if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
-                return Promise.resolve()
+                return
             }
 
             // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
@@ -90,7 +90,7 @@ async function PublisherKeyExhangeSubscription(client: StreamrClient, getGroupKe
                 return msg
             }
 
-            return client.publish(getKeyExchangeStreamId(subscriberId), response)
+            await client.publish(getKeyExchangeStreamId(subscriberId), response)
         })
     }
 
@@ -118,40 +118,72 @@ type KeyExhangeOptions = {
 
 export class PublisherKeyExhange {
     enabled = true
-    next
     client
     initialGroupKeys
+    cleanupFns: ((...args: any[]) => any)[]
+    sub?: Subscription
+    private getSubTask?: Promise<Subscription | undefined>
+
     constructor(client: StreamrClient, { groupKeys = {} }: KeyExhangeOptions = {}) {
         this.client = client
         this.initialGroupKeys = groupKeys
+        this.cleanupFns = []
+        this.getSub = pOne(this.getSub.bind(this))
         this.getGroupKeyStore = pMemoize(this.getGroupKeyStore.bind(this), {
             cacheKey([maybeStreamId]) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return streamId
             }
         })
+    }
 
-        let sub: Subscription | undefined
-        this.next = Scaffold([
-            async () => {
-                sub = await PublisherKeyExhangeSubscription(client, this.getGroupKeyStore)
-                return async () => {
-                    if (!sub) { return }
-                    const cancelTask = sub.cancel()
-                    sub = undefined
-                    await cancelTask
-                }
+    async getSub(): Promise<Subscription | undefined> {
+        if (!this.enabled) {
+            if (this.sub) {
+                await this.sub.cancel()
             }
-        ], async () => this.enabled)
+
+            if (this.getSubTask) {
+                return this.getSubTask
+            }
+
+            return undefined
+        }
+
+        if (this.sub) { return this.sub }
+
+        if (this.getSubTask) { return this.getSubTask }
+
+        this.getSubTask = PublisherKeyExhangeSubscription(this.client, this.getGroupKeyStore).finally(() => {
+            this.getSubTask = undefined
+        }).then(async (sub) => {
+            if (!this.enabled) {
+                await sub.cancel()
+                return undefined
+            }
+            this.sub = sub
+            return sub
+        })
+
+        return this.getSubTask
     }
 
     async getGroupKeyStore(streamId: string) {
         const clientId = await this.client.getAddress()
-        return new GroupKeyStore({
+        const store = new GroupKeyStore({
             clientId,
             streamId,
             groupKeys: [...parseGroupKeys(this.initialGroupKeys[streamId]).entries()]
         })
+        this.cleanupFns.push(async () => {
+            try {
+                await store.close()
+            } catch (_err) {
+                // whatever
+
+            }
+        })
+        return store
     }
 
     async rotateGroupKey(streamId: string) {
@@ -168,7 +200,7 @@ export class PublisherKeyExhange {
     }
 
     async useGroupKey(streamId: string) {
-        await this.next()
+        await this.getSub()
         if (!this.enabled) { return [] }
         const groupKeyStore = await this.getGroupKeyStore(streamId)
         return groupKeyStore.useGroupKey()
@@ -182,18 +214,23 @@ export class PublisherKeyExhange {
     async rekey(streamId: string) {
         if (!this.enabled) { return }
         const groupKeyStore = await this.getGroupKeyStore(streamId)
+        if (!this.enabled) { return }
         await groupKeyStore.rekey()
-        await this.next()
+        if (!this.enabled) { return }
+        await this.getSub()
     }
 
     async start() {
         this.enabled = true
-        return this.next()
+        await this.getSub()
     }
 
     async stop() {
         pMemoize.clear(this.getGroupKeyStore)
         this.enabled = false
-        return this.next()
+        await this.getSub()
+        const { cleanupFns } = this
+        this.cleanupFns = []
+        await Promise.allSettled(cleanupFns)
     }
 }

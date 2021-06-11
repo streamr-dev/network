@@ -47,7 +47,7 @@ export default class SubscriptionSession extends Emitter {
     validate
     subscriptions: Set<Subscription>
     deletedSubscriptions: Set<Todo>
-    step?: Todo
+    updateSubscriptions?: Todo
     _subscribe
     _unsubscribe
 
@@ -69,22 +69,22 @@ export default class SubscriptionSession extends Emitter {
 
     _init() {
         const { key } = this.options
-        const { connection } = this.client
 
         let needsReset = false
         const onDisconnected = async () => {
+            const { connection } = this.client
             // see if we should reset then retry connecting
             try {
                 if (!connection.isConnectionValid()) {
-                    await this.step()
+                    await this.updateSubscriptions()
                     return
                 }
 
                 needsReset = true
-                await this.step()
+                await this.updateSubscriptions()
                 if (connection.isConnectionValid()) {
                     needsReset = false
-                    await this.step()
+                    await this.updateSubscriptions()
                 }
             } catch (err) {
                 this.emit('error', err)
@@ -93,6 +93,7 @@ export default class SubscriptionSession extends Emitter {
 
         let deleted = new Set()
         const check = () => {
+            const { connection } = this.client
             return (
                 connection.isConnectionValid()
                 && !needsReset
@@ -101,10 +102,11 @@ export default class SubscriptionSession extends Emitter {
             )
         }
 
-        this.step = Scaffold([
+        this.updateSubscriptions = Scaffold([
             () => {
                 needsReset = false
                 return async () => {
+                    const { connection } = this.client
                     // don't clean up if just resetting
                     if (needsReset) { return }
 
@@ -122,6 +124,7 @@ export default class SubscriptionSession extends Emitter {
             },
             // add handlers for connection close events
             () => {
+                const { connection } = this.client
                 connection.on('done', onDisconnected)
                 connection.on('disconnected', onDisconnected)
                 connection.on('disconnecting', onDisconnected)
@@ -135,6 +138,7 @@ export default class SubscriptionSession extends Emitter {
             },
             // open connection
             async () => {
+                const { connection } = this.client
                 await connection.addHandle(key)
                 return async () => {
                     if (needsReset) { return } // don't close connection if just resetting
@@ -144,6 +148,7 @@ export default class SubscriptionSession extends Emitter {
             },
             // validate connected
             async () => {
+                const { connection } = this.client
                 await connection.needsConnection(`Subscribe ${key}`)
             },
             // subscribe
@@ -215,7 +220,7 @@ export default class SubscriptionSession extends Emitter {
         await connection.addHandle(`adding${sub.id}`)
         try {
             await connection.needsConnection(`Subscribe ${sub.id}`)
-            await this.step()
+            await this.updateSubscriptions()
         } finally {
             await connection.removeHandle(`adding${sub.id}`)
         }
@@ -240,7 +245,7 @@ export default class SubscriptionSession extends Emitter {
         try {
             this.subscriptions.delete(sub)
             this.deletedSubscriptions.add(sub)
-            await this.step()
+            await this.updateSubscriptions()
         } finally {
             await cancelTask
         }

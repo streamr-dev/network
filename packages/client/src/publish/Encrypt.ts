@@ -70,10 +70,10 @@ export default function Encrypt(client: StreamrClient) {
             return getPublisherKeyExchange().start()
         },
         async stop() {
-            if (!publisherKeyExchange) { return Promise.resolve() }
+            if (!publisherKeyExchange) { return }
             const exchange = publisherKeyExchange
             publisherKeyExchange = undefined
-            return await exchange.stop()
+            await exchange.stop()
         }
     })
 }

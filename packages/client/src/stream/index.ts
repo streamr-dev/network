@@ -10,7 +10,14 @@ import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
-export type StreamPartDefinitionOptions = { streamId?: string, streamPartition?: number, id?: string, partition?: number, stream?: Stream|string }
+export type StreamPartDefinitionOptions = {
+    streamId?: string,
+    streamPartition?: number,
+    id?: string,
+    partition?: number,
+    stream?: StreamrStream|string
+}
+
 export type StreamPartDefinition = string | StreamPartDefinitionOptions
 
 export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
@@ -79,7 +86,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
     }
 }
 
-export class Stream {
+class StreamrStream {
     // @ts-expect-error
     id: string
     // @ts-expect-error
@@ -110,7 +117,7 @@ export class Stream {
                 body: JSON.stringify(this.toObject()),
             },
         )
-        return json ? new Stream(this._client, json) : undefined
+        return json ? new StreamrStream(this._client, json) : undefined
     }
 
     /** @internal */
@@ -284,4 +291,8 @@ export class Stream {
     async publish(content: object, timestamp?: number|string|Date, partitionKey?: string) {
         return this._client.publish(this.id, content, timestamp, partitionKey)
     }
+}
+
+export {
+    StreamrStream as Stream
 }
