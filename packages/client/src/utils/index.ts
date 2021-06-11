@@ -50,7 +50,7 @@ export const counterId = (() => {
     const MAX_PREFIXES = 256
     let counts: { [prefix: string]: number } = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false
-    const counterIdFn = (prefix = 'ID') => {
+    const counterIdFn = (prefix = 'ID', separator = SEPARATOR) => {
         // pedantic: wrap around if count grows too large
         counts[prefix] = (counts[prefix] + 1 || 0) % Number.MAX_SAFE_INTEGER
 
@@ -63,7 +63,7 @@ export const counterId = (() => {
             }
         }
 
-        return `${prefix}${SEPARATOR}${counts[prefix]}`
+        return `${prefix}${separator}${counts[prefix]}`
     }
 
     /**

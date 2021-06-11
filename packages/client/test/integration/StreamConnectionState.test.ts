@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages, addAfterFn } from '../utils'
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, addAfterFn, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -46,9 +46,8 @@ describeRepeats('Connection State', () => {
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         await client.session.getSessionToken()
-        stream = await client.createStream({
-            requireSignedData: true,
-            name: uid('stream')
+        stream = await createTestStream(client, module, {
+            requireSignedData: true
         })
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 

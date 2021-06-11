@@ -1,6 +1,6 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
+import { fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
@@ -32,9 +32,7 @@ describe('resend/reconnect', () => {
         client = createClient()
         await client.connect()
 
-        stream = await client.createStream({
-            name: uid('resends')
-        })
+        stream = await createTestStream(client, module)
 
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
     }, 10000)

@@ -1,6 +1,6 @@
 import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
 
-import { uid, describeRepeats, fakePrivateKey, getPublishTestMessages } from '../utils'
+import { uid, describeRepeats, fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -72,9 +72,7 @@ describe('StreamrClient resends', () => {
 
         describe('short resend', () => {
             beforeEach(async () => {
-                stream = await client.createStream({
-                    name: uid('resends')
-                })
+                stream = await createTestStream(client, module)
 
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
             })
@@ -333,9 +331,7 @@ describe('StreamrClient resends', () => {
             const LONG_RESEND = 500
 
             beforeEach(async () => {
-                stream = await client.createStream({
-                    name: uid('resends')
-                })
+                stream = await createTestStream(client, module)
 
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
