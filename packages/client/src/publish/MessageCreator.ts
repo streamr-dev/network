@@ -55,7 +55,7 @@ export default class StreamMessageCreator {
     create(streamObjectOrId: StreamIDish, {
         content,
         timestamp,
-        partitionKey = 0,
+        partitionKey,
         msgChainId,
         ...opts
     }: {
@@ -74,7 +74,11 @@ export default class StreamMessageCreator {
             ])
 
             // figure out partition
-            const streamPartition = getStreamPartition(streamObjectOrId) ?? this.computeStreamPartition(stream.partitions, partitionKey)
+            const definedPartition = getStreamPartition(streamObjectOrId)
+            if ((definedPartition !== undefined) && (partitionKey !== undefined)) {
+                throw new Error('Invalid combination of "partition" and "partitionKey"')
+            }
+            const streamPartition = definedPartition ?? this.computeStreamPartition(stream.partitions, partitionKey ?? 0)
 
             // chain messages
             const chainMessage = this.getMsgChainer({
