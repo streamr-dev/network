@@ -86,16 +86,19 @@ async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]): Promise<
     })
 }
 
-async function CloseWebSocket(socket: Todo) {
+async function CloseWebSocket(socket: AugmentedWebsocket) {
     return new Promise((resolve, reject) => {
         if (!socket || socket.readyState === WebSocket.CLOSED) {
             resolve(undefined)
             return
         }
 
-        const waitThenClose = () => (
+        const waitThenClose = () => {
+            socket.removeEventListener('error', waitThenClose)
+            socket.removeEventListener('open', waitThenClose)
+            socket.removeEventListener('close', resolve)
             resolve(CloseWebSocket(socket))
-        )
+        }
 
         // @ts-expect-error
         if (socket.readyState === WebSocket.OPENING) {
@@ -200,17 +203,24 @@ function SocketConnector(connection: Connection) {
                 debug: connection._debug,
             })
             socket.addEventListener('close', onClose)
-            socket.addEventListener('close', () => {
+            const disableReconnect = () => {
                 // if forced closed by Connection.closeOpen, disable reconnect
                 if (socket[FORCE_CLOSED]) {
                     connection._setShouldDisconnect()
                 }
-            })
+            }
+
+            socket.addEventListener('close', disableReconnect)
             return async () => { // disconnect
                 startedConnecting = false
                 // remove close listener before closing
                 socket.removeEventListener('close', onClose)
-                await CloseWebSocket(socket)
+
+                try {
+                    await CloseWebSocket(socket)
+                } finally {
+                    socket.removeEventListener('close', disableReconnect)
+                }
             }
         },
         // set socket
@@ -297,7 +307,7 @@ export default class Connection extends EventEmitter {
     retryCount: Todo
     wantsState: Todo
     connectionHandles: Todo
-    step: Todo
+    stepConnection: Todo
     socket?: AugmentedWebsocket
     didDisableAutoConnect?: Todo
     isWaiting?: Todo
@@ -334,7 +344,7 @@ export default class Connection extends EventEmitter {
         this.wantsState = STATE.AUTO // target state or auto
         this.connectionHandles = new Set() // autoConnect when this is not empty, autoDisconnect when empty
         this.backoffWait = pLimitFn(this.backoffWait.bind(this))
-        this.step = SocketConnector(this)
+        this.stepConnection = SocketConnector(this)
         this.debug = this.debug.bind(this)
         this.maybeConnect = pOne(this.maybeConnect.bind(this))
         this.nextConnection = pOne(this.nextConnection.bind(this))
@@ -411,7 +421,7 @@ export default class Connection extends EventEmitter {
         this.enableAutoConnect(false)
         this.enableAutoDisconnect(false)
         this.retryCount = 0
-        await this.step()
+        await this.stepConnection()
         if (!this.isConnectionValid()) {
             const err = new ConnectionError('disconnected before connected')
             if (this.isWaiting) {
@@ -534,7 +544,7 @@ export default class Connection extends EventEmitter {
     }
 
     async maybeConnect() {
-        await this.step()
+        await this.stepConnection()
     }
 
     async needsConnection(msg?: Todo) {
@@ -571,7 +581,7 @@ export default class Connection extends EventEmitter {
         this.debug('disconnect()')
         this._setShouldDisconnect()
 
-        await this.step()
+        await this.stepConnection()
         if (this.isConnectionValid()) {
             throw new ConnectionError('connected before disconnected')
         }
@@ -639,7 +649,7 @@ export default class Connection extends EventEmitter {
         const hadConnection = this.connectionHandles.has(id)
         this.connectionHandles.delete(id)
         if (hadConnection && this._couldAutoDisconnect()) {
-            await this.step()
+            await this.stepConnection()
         }
     }
 
