@@ -49,8 +49,8 @@ describe('MessageCreator', () => {
             [ { id: MOCK_STREAM_ID, partition: MOCK_STREAM_PARTITION }, undefined, MOCK_STREAM_PARTITION ],
             [ { streamId: MOCK_STREAM_ID, streamPartition: MOCK_STREAM_PARTITION }, undefined, MOCK_STREAM_PARTITION ],
             [ MOCK_STREAM_ID, MOCK_PARTITION_KEY, 85 ]
-        ])('valid: %p %p', (definition: StreamIDish, partitionKey: string|undefined, expectedPartition: number) => {
-            it('', async () => {
+        ])('valid', (definition: StreamIDish, partitionKey: string|undefined, expectedPartition: number) => {
+            it(`definition=${JSON.stringify(definition)}, partitionKey=${partitionKey}`, async () => {
                 const msg = await createMockMessage(definition, partitionKey)
                 expect(msg.getParsedContent()).toBe(MOCK_CONTENT)
                 expect(msg.messageId.streamId).toBe(MOCK_STREAM_ID)
@@ -64,8 +64,8 @@ describe('MessageCreator', () => {
             [ { streamPartition: MOCK_STREAM_PARTITION }, undefined, 'First argument must be a Stream object or the stream id!'],
             [ {}, undefined, 'First argument must be a Stream object or the stream id!' ],
             [ { id: MOCK_STREAM_ID, partition: MOCK_STREAM_PARTITION }, MOCK_PARTITION_KEY, 'Invalid combination of "partition" and "partitionKey"']
-        ])('invalid: %p %p', (definition: StreamIDish, partitionKey: string|undefined, expectedErrorMessage: string) => {
-            it('', () => {
+        ])('invalid', (definition: StreamIDish, partitionKey: string|undefined, expectedErrorMessage: string) => {
+            it(`definition=${JSON.stringify(definition)}, partitionKey=${partitionKey}`, () => {
                 return expect(() => createMockMessage(definition, partitionKey)).rejects.toThrow(expectedErrorMessage)
             })
         })
