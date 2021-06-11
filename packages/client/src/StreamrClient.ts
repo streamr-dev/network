@@ -125,10 +125,15 @@ class StreamrCached {
         this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
     }
 
-    clearStream(streamId: string) {
+    clearStream(streamId?: string) {
         this.getStream.clear()
-        this.isStreamPublisher.clearMatching((s: string) => s.startsWith(streamId))
-        this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(streamId))
+        if (streamId != null) {
+            this.isStreamPublisher.clearMatching((s: string) => s.startsWith(streamId))
+            this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(streamId))
+        } else {
+            this.isStreamPublisher.clear()
+            this.isStreamSubscriber.clear()
+        }
     }
 
     clearUser() {
@@ -138,7 +143,6 @@ class StreamrCached {
 
     clear() {
         this.clearUser()
-        // @ts-expect-error
         this.clearStream()
     }
 }
