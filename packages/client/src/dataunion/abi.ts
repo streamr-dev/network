@@ -1,3 +1,284 @@
+export const binanceAdapterABI = [
+    {
+        inputs: [
+            {
+                internalType: 'address',
+                name: 'dataCoin_',
+                type: 'address'
+            },
+            {
+                internalType: 'address',
+                name: 'honeyswapRouter_',
+                type: 'address'
+            },
+            {
+                internalType: 'address',
+                name: 'bscBridge_',
+                type: 'address'
+            },
+            {
+                internalType: 'address',
+                name: 'convertToCoin_',
+                type: 'address'
+            },
+            {
+                internalType: 'address',
+                name: 'liquidityToken_',
+                type: 'address'
+            }
+        ],
+        stateMutability: 'nonpayable',
+        type: 'constructor'
+    },
+    {
+        anonymous: false,
+        inputs: [
+            {
+                indexed: true,
+                internalType: 'address',
+                name: 'member',
+                type: 'address'
+            },
+            {
+                indexed: true,
+                internalType: 'address',
+                name: 'recipient',
+                type: 'address'
+            }
+        ],
+        name: 'SetBinanceRecipient',
+        type: 'event'
+    },
+    {
+        anonymous: false,
+        inputs: [
+            {
+                indexed: true,
+                internalType: 'address',
+                name: 'token',
+                type: 'address'
+            },
+            {
+                indexed: true,
+                internalType: 'address',
+                name: 'to',
+                type: 'address'
+            },
+            {
+                indexed: false,
+                internalType: 'uint256',
+                name: 'amountDatacoin',
+                type: 'uint256'
+            },
+            {
+                indexed: false,
+                internalType: 'uint256',
+                name: 'amountOtheroken',
+                type: 'uint256'
+            }
+        ],
+        name: 'WithdrawToBinance',
+        type: 'event'
+    },
+    {
+        inputs: [
+            {
+                internalType: 'address',
+                name: '',
+                type: 'address'
+            }
+        ],
+        name: 'binanceRecipient',
+        outputs: [
+            {
+                internalType: 'address',
+                name: 'binanceAddress',
+                type: 'address'
+            },
+            {
+                internalType: 'uint256',
+                name: 'nonce',
+                type: 'uint256'
+            }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [],
+        name: 'bscBridge',
+        outputs: [
+            {
+                internalType: 'address',
+                name: '',
+                type: 'address'
+            }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [],
+        name: 'convertToCoin',
+        outputs: [
+            {
+                internalType: 'address',
+                name: '',
+                type: 'address'
+            }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [],
+        name: 'dataCoin',
+        outputs: [
+            {
+                internalType: 'contract IERC677',
+                name: '',
+                type: 'address'
+            }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [],
+        name: 'datacoinPassed',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256'
+            }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [],
+        name: 'honeyswapRouter',
+        outputs: [
+            {
+                internalType: 'contract IUniswapV2Router02',
+                name: '',
+                type: 'address'
+            }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [],
+        name: 'liquidityToken',
+        outputs: [
+            {
+                internalType: 'address',
+                name: '',
+                type: 'address'
+            }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    {
+        inputs: [
+            {
+                internalType: 'address',
+                name: '',
+                type: 'address'
+            },
+            {
+                internalType: 'uint256',
+                name: 'amount',
+                type: 'uint256'
+            },
+            {
+                internalType: 'bytes',
+                name: 'data',
+                type: 'bytes'
+            }
+        ],
+        name: 'onTokenTransfer',
+        outputs: [
+            {
+                internalType: 'bool',
+                name: '',
+                type: 'bool'
+            }
+        ],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [
+            {
+                internalType: 'address',
+                name: 'recipient',
+                type: 'address'
+            }
+        ],
+        name: 'setBinanceRecipient',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [
+            {
+                internalType: 'address',
+                name: 'from',
+                type: 'address'
+            },
+            {
+                internalType: 'address',
+                name: 'recipient',
+                type: 'address'
+            },
+            {
+                internalType: 'bytes',
+                name: 'sig',
+                type: 'bytes'
+            }
+        ],
+        name: 'setBinanceRecipientFromSig',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [
+            {
+                internalType: 'address',
+                name: 'recipient',
+                type: 'address'
+            },
+            {
+                internalType: 'uint256',
+                name: 'nonce',
+                type: 'uint256'
+            },
+            {
+                internalType: 'bytes',
+                name: 'signature',
+                type: 'bytes'
+            }
+        ],
+        name: 'getSigner',
+        outputs: [
+            {
+                internalType: 'address',
+                name: '',
+                type: 'address'
+            }
+        ],
+        stateMutability: 'view',
+        type: 'function'
+    }
+]
+
+
 export const dataUnionMainnetABI = [{
     name: 'sendTokensToBridge',
     inputs: [],
@@ -193,7 +474,7 @@ export const mainnetAmbABI = [{
     type: 'function'
 }, {
     name: 'relayedMessages',
-    inputs: [{ type: 'bytes32' }], // messageId, was called "_txhash" though?!
+    inputs: [{ type: 'bytes32' }], // messageId, was called '_txhash' though?!
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view',
     type: 'function'

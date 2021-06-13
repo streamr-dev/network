@@ -1,6 +1,6 @@
 import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
-import { arrayify, hexZeroPad } from '@ethersproject/bytes'
+import { arrayify, hexZeroPad, BytesLike } from '@ethersproject/bytes'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import type { Signer } from '@ethersproject/abstract-signer'
@@ -250,6 +250,28 @@ export class DataUnion {
         const withdrawn = memberData[3]
         return this._createWithdrawSignature(amountTokenWei, to, withdrawn, signer)
     }
+    
+    async signSetBinanceRecipient(
+        recipientAddress: EthereumAddress,
+    ): Promise<string> {
+        const to = getAddress(recipientAddress) // throws if bad address
+        const signer = this.client.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
+        return this._createSetBinanceRecipientSignature(to, signer)
+    }
+
+    /** @internal */
+    async _createSetBinanceRecipientSignature(
+        to: EthereumAddress,
+        signer: Signer
+    ) {
+        const binanceAdapter : Contract = await this.getContracts().getBinanceAdapter();
+        const nextNonce = (await binanceAdapter.binanceRecipient(await signer.getAddress()))[1].add(BigNumber.from(1))
+        const message = to 
+            + hexZeroPad(nextNonce.toHexString(), 32).slice(2) 
+            + binanceAdapter.address.slice(2);
+        const signature = await signer.signMessage(arrayify(message))
+        return signature
+    }
 
     /** @internal */
     async _createWithdrawSignature(
@@ -426,6 +448,13 @@ export class DataUnion {
             options
         )
     }
+    async withdrawAllToBinance(options?: DataUnionWithdrawOptions) {
+        return this.withdrawAllToMember(this.client.options.binanceAdapterAddress ,options)
+    }
+
+    async signWithdrawAllToBinance() {
+        return this.signWithdrawAllTo(this.client.options.binanceAdapterAddress)
+    }
 
     /**
      * Admin: get the tx promise for withdrawing all earnings on behalf of a member
@@ -561,6 +590,30 @@ export class DataUnion {
             gasPrice
         })
         return new DataUnion(contract.address, contract.sidechain.address, client)
+    }
+
+        /** @internal */
+        static async _getBinanceDepositAddress(userAddress: string, client: StreamrClient) {
+            const contracts = new Contracts(client)
+            const recip =  (await (await contracts.getBinanceAdapter()).binanceRecipient())[0]
+            if(recip == 0)
+                return undefined
+            return recip
+        }
+    
+    
+    /** @internal */
+    static async _setBinanceDepositAddress(binanceRecipient: EthereumAddress, client: StreamrClient) {
+        const contracts = new Contracts(client)
+        const tx = await (await contracts.getBinanceAdapter()).setBinanceRecipient(binanceRecipient)
+        return (await tx.wait())
+    }
+
+    /** @internal */
+    static async _setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike, client: StreamrClient) {
+        const contracts = new Contracts(client)
+        const tx = await (await contracts.getBinanceAdapter()).setBinanceRecipientFromSig(from, binanceRecipient, signature)
+        return (await tx.wait())
     }
 
     // Internal functions
