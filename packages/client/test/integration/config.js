@@ -13,6 +13,7 @@ module.exports = {
         streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
         tokenAddress: process.env.TOKEN_ADDRESS || '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         tokenSidechainAddress: process.env.TOKEN_ADDRESS_SIDECHAIN || '0x73Be21733CC5D08e1a14Ea9a399fb27DB3BEf8fF',
+        withdrawServerUrl: process.env.WITHDRAW_SERVER_URL || 'http://localhost:3000',
         binanceAdapterAddress: process.env.BINANCE_ADAPTER || '0xdc5F6368cd31330adC259386e78604a5E29E9415',
         dataUnion: {
             factoryMainnetAddress: process.env.DU_FACTORY_MAINNET || '0x4bbcBeFBEC587f6C4AF9AF9B48847caEa1Fe81dA',

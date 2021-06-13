@@ -614,7 +614,7 @@ export class DataUnion {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
         const recip = (await adapter.binanceRecipient(userAddress))[0]
-        if (recip == AddressZero) {
+        if (recip === AddressZero) {
             return undefined
         }
         return recip

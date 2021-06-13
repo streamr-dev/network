@@ -5,8 +5,8 @@
 import EventEmitter from 'eventemitter3'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
-
-import { counterId, uuid, CacheAsyncFn } from './utils'
+import fetch, { Response, RequestInit } from 'node-fetch'
+import { counterId, uuid, CacheAsyncFn, getEndpointUrl } from './utils'
 import { validateOptions } from './stream/utils'
 import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
 import StreamrEthereum from './Ethereum'
@@ -481,6 +481,24 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return DataUnion._setBinanceDepositAddressFromSignature(from, binanceRecipient, signature, this) // eslint-disable-line no-underscore-dangle
     }
 
+    async setBinanceDepositAddressViaWithdrawServer(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike): Promise<object> {
+        const body: any = {
+            memberAddress: from,
+            binanceRecipientAddress: binanceRecipient,
+            signature
+        }
+
+        const url = getEndpointUrl(this.options.withdrawServerUrl, 'binanceAdapterSetRecipient')
+
+        const request: RequestInit = {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: { 'Content-Type': 'application/json' }
+        }
+        const response: Response = await fetch(url, request)
+        return response
+    }
+
     async getBinanceDepositAddress(userAddress: EthereumAddress) {
         return DataUnion._getBinanceDepositAddress(userAddress, this) // eslint-disable-line no-underscore-dangle
     }
@@ -489,8 +507,8 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         recipientAddress: EthereumAddress,
     ): Promise<string> {
         const to = getAddress(recipientAddress) // throws if bad address
-        const signer = this.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
-        return DataUnion._createSetBinanceRecipientSignature(to, signer, this)
+        const signer = this.ethereum.getSigner()
+        return DataUnion._createSetBinanceRecipientSignature(to, signer, this) // eslint-disable-line no-underscore-dangle
     }
 
     /** @internal */
