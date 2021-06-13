@@ -14,8 +14,12 @@ const log = debug('StreamrClient::DataUnion::binanceAdapter')
 
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
 const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, providerSidechain)
-//const zeroAddress = "0x100000000000000000000000000000000000000012300000001";
-const zeroAddress = "0x000000000000000000000000000000000000000000000000000";
+// config representing another user
+const config2 = Object.assign({}, config);
+config2.clientOptions.auth.privateKey = '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb'
+const oneAddress = "0x0000000000000000000000000000000000000001"
+
+
 describe('Binance Adapter functions', () => {
 
     afterAll(() => {
@@ -24,60 +28,23 @@ describe('Binance Adapter functions', () => {
 
     it('can set/get binance recipient for self', async () => {
         const adminClient = new StreamrClient(config.clientOptions as any)
-        const contracts new Contracts(adminClient)
-        const dataUnion = await adminClient.deployDataUnion()
-        const secret = await dataUnion.createSecret('test secret')
-        log(`DataUnion ${dataUnion.getAddress()} is ready to roll`)
+        //const contracts = new Contracts(adminClient)
+        await adminClient.setBinanceDepositAddress(oneAddress)
+        expect(await adminClient.getBinanceDepositAddress(adminWalletSidechain.address)).toBe(oneAddress)
+        expect(await adminClient.getBinanceDepositAddress(oneAddress)).toBe(undefined)
+    }, 100000),
 
-        const memberWallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
-        const member2Wallet = new Wallet(`0x100000000000000000000000000000000000000012300000002${Date.now()}`, providerSidechain)
+    it('can set/get binance recipient for other with signature', async () => {
+        const client2 = new StreamrClient(config2.clientOptions as any)
+        const client2address = await client2.getAddress()
+        const sig = await client2.signSetBinanceRecipient(oneAddress)
+        const adminClient = new StreamrClient(config.clientOptions as any)
+        await adminClient.setBinanceDepositAddressFromSignature(client2address, oneAddress, sig)
+        expect(await adminClient.getBinanceDepositAddress(client2address)).toBe(oneAddress)
 
-        const memberClient = new StreamrClient({
-            ...config.clientOptions,
-            auth: {
-                privateKey: memberWallet.privateKey
-            }
-        } as any)
-
-        // product is needed for join requests to analyze the DU version
-        const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
-        await authFetch(createProductUrl, adminClient.session, {
-            method: 'POST',
-            body: JSON.stringify({
-                beneficiaryAddress: dataUnion.getAddress(),
-                type: 'DATAUNION',
-                dataUnionVersion: 2
-            })
-        })
-        await memberClient.getDataUnion(dataUnion.getAddress()).join(secret)
-
-        // eslint-disable-next-line no-underscore-dangle
-        const contract = await dataUnion._getContract()
-        const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
-        const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
-
-        const signature = await memberClient.getDataUnion(dataUnion.getAddress()).signWithdrawAllTo(member2Wallet.address)
-        const signature2 = await memberClient
-            .getDataUnion(dataUnion.getAddress())
-            .signWithdrawAmountTo(member2Wallet.address, parseEther('1'))
-        const signature3 = await memberClient
-            .getDataUnion(dataUnion.getAddress())
-            .signWithdrawAmountTo(member2Wallet.address, 3000000000000000) // 0.003 tokens
-
-        const isValid = await sidechainContract.signatureIsValid(memberWallet.address, member2Wallet.address, '0', signature) // '0' = all earnings
-        const isValid2 = await sidechainContract.signatureIsValid(memberWallet.address, member2Wallet.address, parseEther('1'), signature2)
-        const isValid3 = await sidechainContract.signatureIsValid(memberWallet.address, member2Wallet.address, '3000000000000000', signature3)
-        log(`Signature for all tokens ${memberWallet.address} -> ${member2Wallet.address}: ${signature}, checked ${isValid ? 'OK' : '!!!BROKEN!!!'}`)
-        log(`Signature for 1 token ${memberWallet.address} -> ${member2Wallet.address}: ${signature2}, checked ${isValid2 ? 'OK' : '!!!BROKEN!!!'}`)
-        // eslint-disable-next-line max-len
-        log(`Signature for 0.003 tokens ${memberWallet.address} -> ${member2Wallet.address}: ${signature3}, checked ${isValid3 ? 'OK' : '!!!BROKEN!!!'}`)
-        log(`sidechainDU(${sidechainContract.address}) token bal ${await tokenSidechain.balanceOf(sidechainContract.address)}`)
-
-        expect(isValid).toBe(true)
-        expect(isValid2).toBe(true)
-        expect(isValid3).toBe(true)
     }, 100000)
 
+    /*
     it('create signature', async () => {
         const client = new StreamrClient({
             auth: {
@@ -94,4 +61,5 @@ describe('Binance Adapter functions', () => {
         const expectedSignature = '0x5325ae62cdfd7d7c15101c611adcb159439217a48193c4e1d87ca5de698ec5233b1a68fd1302fdbd5450618d40739904295c88e88cf79d4241cf8736c2ec75731b' // eslint-disable-line max-len
         expect(actualSignatures.every((actual) => actual === expectedSignature))
     })
+    */
 })

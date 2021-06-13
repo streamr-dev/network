@@ -278,7 +278,6 @@ export const binanceAdapterABI = [
     }
 ]
 
-
 export const dataUnionMainnetABI = [{
     name: 'sendTokensToBridge',
     inputs: [],

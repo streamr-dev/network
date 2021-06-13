@@ -118,10 +118,8 @@ export default class StreamrEthereum {
         if (!this.client.options.binanceRPC) {
             throw new Error('StreamrClient has no binance configuration.')
         }
-    
         return new JsonRpcProvider(this.client.options.binanceRPC)
     }
-    
 
     /** @returns Ethers.js Provider, a connection to the Streamr EVM sidechain */
     getSidechainProvider(): Provider {

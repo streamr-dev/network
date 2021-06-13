@@ -3,6 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { arrayify, hexZeroPad, BytesLike } from '@ethersproject/bytes'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
+import { AddressZero } from '@ethersproject/constants'
 import type { Signer } from '@ethersproject/abstract-signer'
 import debug from 'debug'
 
@@ -250,7 +251,7 @@ export class DataUnion {
         const withdrawn = memberData[3]
         return this._createWithdrawSignature(amountTokenWei, to, withdrawn, signer)
     }
-    
+
     async signSetBinanceRecipient(
         recipientAddress: EthereumAddress,
     ): Promise<string> {
@@ -264,11 +265,11 @@ export class DataUnion {
         to: EthereumAddress,
         signer: Signer
     ) {
-        const binanceAdapter : Contract = await this.getContracts().getBinanceAdapter();
+        const binanceAdapter : Contract = await this.getContracts().getBinanceAdapter()
         const nextNonce = (await binanceAdapter.binanceRecipient(await signer.getAddress()))[1].add(BigNumber.from(1))
-        const message = to 
-            + hexZeroPad(nextNonce.toHexString(), 32).slice(2) 
-            + binanceAdapter.address.slice(2);
+        const message = to
+            + hexZeroPad(nextNonce.toHexString(), 32).slice(2)
+            + binanceAdapter.address.slice(2)
         const signature = await signer.signMessage(arrayify(message))
         return signature
     }
@@ -449,7 +450,7 @@ export class DataUnion {
         )
     }
     async withdrawAllToBinance(options?: DataUnionWithdrawOptions) {
-        return this.withdrawAllToMember(this.client.options.binanceAdapterAddress ,options)
+        return this.withdrawAllToMember(this.client.options.binanceAdapterAddress, options)
     }
 
     async signWithdrawAllToBinance() {
@@ -592,28 +593,46 @@ export class DataUnion {
         return new DataUnion(contract.address, contract.sidechain.address, client)
     }
 
-        /** @internal */
-        static async _getBinanceDepositAddress(userAddress: string, client: StreamrClient) {
-            const contracts = new Contracts(client)
-            const recip =  (await (await contracts.getBinanceAdapter()).binanceRecipient())[0]
-            if(recip == 0)
-                return undefined
-            return recip
+    /** @internal */
+    static async _createSetBinanceRecipientSignature(
+        to: EthereumAddress,
+        signer: Signer,
+        client: StreamrClient
+    ) {
+        const contracts = new Contracts(client)
+        const binanceAdapter: Contract = await contracts.getBinanceAdapter()
+        const nextNonce = (await binanceAdapter.binanceRecipient(await signer.getAddress()))[1].add(BigNumber.from(1))
+        const message = to
+            + hexZeroPad(nextNonce.toHexString(), 32).slice(2)
+            + binanceAdapter.address.slice(2)
+        const signature = await signer.signMessage(arrayify(message))
+        return signature
+    }
+
+    /** @internal */
+    static async _getBinanceDepositAddress(userAddress: string, client: StreamrClient) {
+        const contracts = new Contracts(client)
+        const adapter = await contracts.getBinanceAdapter()
+        const recip = (await adapter.binanceRecipient(userAddress))[0]
+        if (recip == AddressZero) {
+            return undefined
         }
-    
-    
+        return recip
+    }
+
     /** @internal */
     static async _setBinanceDepositAddress(binanceRecipient: EthereumAddress, client: StreamrClient) {
         const contracts = new Contracts(client)
-        const tx = await (await contracts.getBinanceAdapter()).setBinanceRecipient(binanceRecipient)
-        return (await tx.wait())
+        const adapter = await contracts.getBinanceAdapter()
+        const tx = await adapter.setBinanceRecipient(binanceRecipient)
+        return tx.wait()
     }
 
     /** @internal */
     static async _setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike, client: StreamrClient) {
         const contracts = new Contracts(client)
         const tx = await (await contracts.getBinanceAdapter()).setBinanceRecipientFromSig(from, binanceRecipient, signature)
-        return (await tx.wait())
+        return tx.wait()
     }
 
     // Internal functions

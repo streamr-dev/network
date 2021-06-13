@@ -473,18 +473,26 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return DataUnion._deploy(options, this) // eslint-disable-line no-underscore-dangle
     }
 
-    async setBinanceDepositAddress(binanceRecipient: EthereumAddress){
+    async setBinanceDepositAddress(binanceRecipient: EthereumAddress) {
         return DataUnion._setBinanceDepositAddress(binanceRecipient, this) // eslint-disable-line no-underscore-dangle
     }
-    
-    async setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike){
+
+    async setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike) {
         return DataUnion._setBinanceDepositAddressFromSignature(from, binanceRecipient, signature, this) // eslint-disable-line no-underscore-dangle
     }
 
-    async getBinanceDepositAddress(userAddress: EthereumAddress){
+    async getBinanceDepositAddress(userAddress: EthereumAddress) {
         return DataUnion._getBinanceDepositAddress(userAddress, this) // eslint-disable-line no-underscore-dangle
     }
-    
+
+    async signSetBinanceRecipient(
+        recipientAddress: EthereumAddress,
+    ): Promise<string> {
+        const to = getAddress(recipientAddress) // throws if bad address
+        const signer = this.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
+        return DataUnion._createSetBinanceRecipientSignature(to, signer, this)
+    }
+
     /** @internal */
     _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: EthereumAddress}) {
         return DataUnion._fromName({ // eslint-disable-line no-underscore-dangle
