@@ -85,7 +85,7 @@ jobs:
           max_attempts: 5
           timeout_minutes: 15
           retry_on: error
-          command: cd packages/cross-client-testing && DEBUG='' npm run test -- -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
+          command: cd packages/cross-client-testing && DEBUG='' make run
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v1

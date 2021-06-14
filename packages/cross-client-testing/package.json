@@ -4,10 +4,6 @@
   "description": "This tool allows to run/test different stream setups using the developed client libraries. These setups can be either part of the CI or run indefinitely against the staging environment to better mock the production environment.",
   "private": true,
   "main": "index.js",
-  "scripts": {
-    "prepare": "./gradlew fatjar 2>&1 < /dev/null # building cross-client-testing, redirect output to work around gradle i/o bug.",
-    "test": "java -jar build/libs/client_testing-1.0-SNAPSHOT.jar"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/streamr-client-testing.git"
