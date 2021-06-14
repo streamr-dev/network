@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '../utils'
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
@@ -38,9 +38,8 @@ describeRepeats('Validation', () => {
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         await client.session.getSessionToken()
-        stream = await client.createStream({
-            requireSignedData: client.options.publishWithSignature !== 'never',
-            name: uid('stream')
+        stream = await createTestStream(client, module, {
+            requireSignedData: client.options.publishWithSignature !== 'never'
         })
 
         client.debug('connecting before test <<')

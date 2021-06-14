@@ -2,12 +2,12 @@ import { wait } from 'streamr-test-utils'
 
 import {
     Msg,
-    uid,
     collect,
     describeRepeats,
     fakePrivateKey,
     getWaitForStorage,
     getPublishTestMessages,
+    createTestStream,
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
@@ -63,9 +63,7 @@ describeRepeats('sequential resend subscribe', () => {
             client.connect(),
             client.session.getSessionToken(),
         ])
-        stream = await client.createStream({
-            name: uid('stream')
-        })
+        stream = await createTestStream(client, module)
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         publishTestMessages = getPublishTestMessages(client, {

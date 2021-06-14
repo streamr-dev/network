@@ -1,6 +1,6 @@
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, getPublishTestMessages } from '../utils'
+import { describeRepeats, fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
@@ -70,16 +70,13 @@ describeRepeats('StreamrClient Resend', () => {
         let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
         const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
-            const name = uid('stream')
-            const s = await client.createStream({
-                name,
+            const s = await createTestStream(client, module, {
                 requireSignedData,
                 ...opts,
             })
             await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             expect(s.id).toBeTruthy()
-            expect(s.name).toEqual(name)
             expect(s.requireSignedData).toBe(requireSignedData)
             return s
         }
