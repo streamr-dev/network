@@ -63,7 +63,7 @@ public class StreamTester {
             // TODO: consider cleaning below when 3.0.0 is landed (and the private static helper method)
             String address = publicKeyFromPrivateKey(privateKey);
             Stream protoStream = new Stream(streamName, "");
-            protoStream.setId(address + "/" + System.nanoTime());
+            protoStream.setId(address + "/" + UUID.randomUUID());
             stream = creator.createStream(protoStream);
             creator.addStreamToStorageNode(stream.getId(), new StorageNode(DEV_STORAGE_NODE_ADDRESS));
         } catch (Exception e) {
