@@ -18,8 +18,8 @@ type StreamOptions = Subscription | StreamPartDefinition | { options: Subscripti
  */
 export class Subscriber {
 
-    client: StreamrClient
-    subscriptions: Subscriptions
+    readonly client: StreamrClient
+    readonly subscriptions: Subscriptions
 
     constructor(client: StreamrClient) {
         this.client = client

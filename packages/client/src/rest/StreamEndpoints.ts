@@ -81,7 +81,7 @@ function getKeepAliveAgentForUrl(url: string) {
 export class StreamEndpoints {
 
     /** @internal */
-    client: StreamrClient
+    readonly client: StreamrClient
 
     constructor(client: StreamrClient) {
         this.client = client
