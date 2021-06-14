@@ -229,7 +229,10 @@ export class Node extends EventEmitter {
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId))
+            
+            await promiseTimeout(this.nodeConnectTimeout, 
+                this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
+            
             this.clearDisconnectionTimer(nodeId)
             this.subscribeToStreamOnNode(nodeId, streamId, false)
             return nodeId
@@ -238,6 +241,7 @@ export class Node extends EventEmitter {
         nodesToUnsubscribeFrom.forEach((nodeId) => {
             this.unsubscribeFromStreamOnNode(nodeId, streamId, false)
         })
+
         const results = await Promise.allSettled(subscribePromises)
         if (this.streams.isSetUp(streamId)) {
             this.streams.updateCounter(streamId, counter)
@@ -252,7 +256,7 @@ export class Node extends EventEmitter {
                 subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
-                this.logger.trace('failed to subscribe (or connect) to node, reason: %s', res.reason)
+                this.logger.warn('failed to subscribe (or connect) to node, reason: %s', res.reason)
             }
         })
         if (!reattempt || failedInstructions) {
@@ -378,8 +382,9 @@ export class Node extends EventEmitter {
 
     stop(): Promise<unknown> {
         this.logger.trace('stopping')
-        this.instructionThrottler.reset()
-        this.instructionRetryManager.reset()
+        
+        this.instructionThrottler.stop()
+        this.instructionRetryManager.stop()
 
         if (this.connectToBoostrapTrackersInterval) {
             clearInterval(this.connectToBoostrapTrackersInterval)
