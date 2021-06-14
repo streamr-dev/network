@@ -468,6 +468,21 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
     }
 
+    async safeGetDataUnion(contractAddress: EthereumAddress) {
+        const du = DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
+        const version = await du.getVersion()
+        if (version === 0) {
+            throw new Error(`${contractAddress} is not a Data Union!`)
+        }
+        if (version === 1) {
+            throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
+        }
+        if (version === 2) {
+            return du
+        }
+        throw new Error(`${contractAddress} is an unknown Data Union version "${version}"`)
+    }
+
     async deployDataUnion(options?: DataUnionDeployOptions) {
         return DataUnion._deploy(options, this) // eslint-disable-line no-underscore-dangle
     }

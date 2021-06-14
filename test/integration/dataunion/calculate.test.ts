@@ -46,4 +46,12 @@ describe('DataUnion calculate', () => {
         const client = createClient(providerSidechain)
         return expectInvalidAddress(async () => client.getDataUnion('invalid-address'))
     })
+
+    it('safeGetDataUnion fails for bad addresses', async () => {
+        const client = createClient(providerSidechain)
+        await expectInvalidAddress(async () => client.safeGetDataUnion('invalid-address'))
+        return expect(client.safeGetDataUnion('0x2222222222222222222222222222222222222222'))
+            .rejects
+            .toThrow('0x2222222222222222222222222222222222222222 is not a Data Union!')
+    })
 })
