@@ -1,10 +1,12 @@
 import { wait } from 'streamr-test-utils'
 import LeakDetector from 'jest-leak-detector'
 
-import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot } from '../utils'
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot, LeaksDetector } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import config from '../integration/config'
+
+const MAX_MESSAGES = 5
 
 describeRepeats('Leaks', () => {
     let leakDetector: LeakDetector | undefined
@@ -123,6 +125,106 @@ describeRepeats('Leaks', () => {
                 await client.disconnect()
                 await wait(3000)
             }, 15000)
+
+            describe('publish + subscribe', () => {
+                it('does not leak subscription', async () => {
+                    if (!client) { return }
+
+                    const stream = await client.createStream({
+                        requireSignedData: true,
+                    })
+                    let sub = await client.subscribe(stream)
+                    const subLeak = new LeakDetector(sub)
+                    const publishTestMessages = getPublishTestMessages(client, {
+                        retainMessages: false,
+                        stream
+                    })
+
+                    await publishTestMessages(MAX_MESSAGES)
+                    sub = undefined
+                    await client.disconnect()
+                    await wait(3000)
+                    expect(await subLeak.isLeaking()).toBeFalsy()
+                }, 15000)
+
+                // wrap these in describe blocks so we can ensure sub etc are out of scope when checking for leaks
+                // publishTestMessages with retain: false holds onto last message for waitForStorage checks
+                describe('subscribe using async iterator', () => {
+                    let subLeak: LeakDetector
+                    let leaksDetector: LeaksDetector
+
+                    beforeEach(async () => {
+                        if (!client) { return }
+
+                        leaksDetector = new LeaksDetector()
+                        const stream = await client.createStream({
+                            requireSignedData: true,
+                        })
+                        const sub = await client.subscribe(stream)
+                        subLeak = new LeakDetector(sub)
+                        const publishTestMessages = getPublishTestMessages(client, {
+                            retainMessages: false,
+                            stream
+                        })
+
+                        await publishTestMessages(MAX_MESSAGES)
+                        const received = []
+                        for await (const msg of sub) {
+                            received.push(msg)
+                            leaksDetector.add('streamMessage', msg)
+                            if (received.length === MAX_MESSAGES) {
+                                break
+                            }
+                        }
+                        await wait(1000)
+                    }, 15000)
+
+                    test('does not leak subscription or messages', async () => {
+                        if (!client) { return }
+                        expect(await subLeak.isLeaking()).toBeFalsy()
+                        await leaksDetector.checkNoLeaks()
+                    })
+                })
+
+                describe('subscribe using onMessage callback', () => {
+                    let subLeak: LeakDetector
+                    let leaksDetector: LeaksDetector
+
+                    beforeEach(async () => {
+                        if (!client) { return }
+
+                        leaksDetector = new LeaksDetector()
+                        const stream = await client.createStream({
+                            requireSignedData: true,
+                        })
+
+                        const publishTestMessages = getPublishTestMessages(client, {
+                            retainMessages: false,
+                            stream
+                        })
+                        const received: any[] = []
+                        const sub = await client.subscribe(stream, (msg, streamMessage) => {
+                            received.push(msg)
+                            leaksDetector.add('messageContent', msg)
+                            leaksDetector.add('streamMessage', streamMessage)
+                            if (received.length === MAX_MESSAGES) {
+                                sub.unsubscribe()
+                            }
+                        })
+
+                        subLeak = new LeakDetector(sub)
+
+                        await publishTestMessages(MAX_MESSAGES)
+                        await wait(1000)
+                    }, 15000)
+
+                    test('does not leak subscription or messages', async () => {
+                        if (!client) { return }
+                        expect(await subLeak.isLeaking()).toBeFalsy()
+                        await leaksDetector.checkNoLeaks()
+                    })
+                })
+            })
         })
     })
 })

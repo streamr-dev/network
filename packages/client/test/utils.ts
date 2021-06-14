@@ -4,9 +4,10 @@ import { writeHeapSnapshot } from 'v8'
 import { wait } from 'streamr-test-utils'
 import { providers, Wallet } from 'ethers'
 import { PublishRequest } from 'streamr-client-protocol'
+import LeakDetector from 'jest-leak-detector'
 
-import { pTimeout, counterId, AggregatedError, pLimitFn } from '../src/utils'
-import { Debug, inspect } from '../src/utils/log'
+import { pTimeout, counterId, CounterId, AggregatedError, pLimitFn } from '../src/utils'
+import { Debug, inspect, format } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
 import type { StreamPartDefinitionOptions, StreamProperties } from '../src/stream'
@@ -398,4 +399,35 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
 export function snapshot() {
     if (!process.env.WRITE_SNAPSHOTS) { return '' }
     return writeHeapSnapshot()
+}
+
+const testUtilsCounter = CounterId('test/utils')
+
+export class LeaksDetector {
+    leakDetectors: Map<string, LeakDetector> = new Map()
+    private counter = CounterId(testUtilsCounter(this.constructor.name))
+
+    add(name: string, obj: any) {
+        this.leakDetectors.set(this.counter(name), new LeakDetector(obj))
+    }
+
+    async getLeaks(): Promise<string[]> {
+        const results = await Promise.all([...this.leakDetectors.entries()].map(async ([key, d]) => {
+            const isLeaking = await d.isLeaking()
+            return isLeaking ? key : undefined
+        }))
+
+        return results.filter((key) => key != null) as string[]
+    }
+
+    async checkNoLeaks() {
+        const leaks = await this.getLeaks()
+        if (leaks.length) {
+            throw new Error(format('Leaking %d of %d items: %o', leaks.length, this.leakDetectors.size, leaks))
+        }
+    }
+
+    clear() {
+        this.leakDetectors.clear()
+    }
 }

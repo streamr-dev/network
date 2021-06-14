@@ -45,8 +45,7 @@ export function randomString(length = 20) {
  * counterId('test') => test.1
  */
 
-export const counterId = (() => {
-    const MAX_PREFIXES = 256
+export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefixes?: number } = {}) => {
     let counts: { [prefix: string]: number } = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false
     const counterIdFn = (prefix = 'ID', separator = SEPARATOR) => {
@@ -56,13 +55,16 @@ export const counterId = (() => {
         // warn once if too many prefixes
         if (!didWarn) {
             const numTracked = Object.keys(counts).length
-            if (numTracked > MAX_PREFIXES) {
+            if (numTracked > maxPrefixes) {
                 didWarn = true
-                console.warn(`counterId should not be used for a large number of unique prefixes: ${numTracked} > ${MAX_PREFIXES}`)
+                console.warn(`counterId should not be used for a large number of unique prefixes: ${numTracked} > ${maxPrefixes}`)
             }
         }
 
-        return `${prefix}${separator}${counts[prefix]}`
+        // connect prefix with separator
+        return [rootPrefix, prefix, counts[prefix]]
+            .filter((v) => v != null) // remove {root}Prefix if not set
+            .join(separator)
     }
 
     /**
@@ -81,7 +83,9 @@ export const counterId = (() => {
         }
     }
     return counterIdFn
-})()
+}
+
+export const counterId = CounterId()
 
 export function getVersionString() {
     const isProduction = process.env.NODE_ENV === 'production'
