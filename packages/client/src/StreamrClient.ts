@@ -190,7 +190,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     // TODO annotate connection parameter as internal parameter if possible?
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
-        this.id = counterId(`${this.constructor.name}:${uid}${options.id || ''}`)
+        this.id = counterId(`${this.constructor.name}-${uid}${options.id || ''}`)
         this.debug = Debug(this.id)
 
         this.options = Config(options)

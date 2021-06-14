@@ -222,5 +222,6 @@ export const createStreamId = async (streamIdOrPath: string, ownerProvider?: () 
     if (owner === undefined) {
         throw new Error(`Owner missing for stream id: ${streamIdOrPath}`)
     }
+
     return owner.toLowerCase() + streamIdOrPath
 }

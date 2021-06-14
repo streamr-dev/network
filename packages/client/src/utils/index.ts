@@ -18,7 +18,7 @@ export { AggregatedError, Scaffold }
 
 const UUID = uuidv4()
 
-export const SEPARATOR = ':'
+export const SEPARATOR = '-'
 /*
  * Incrementing + human readable uuid
  */
