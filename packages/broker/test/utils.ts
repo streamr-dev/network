@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import StreamrClient, { Stream, StreamrClientOptions } from 'streamr-client'
+import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
@@ -207,4 +207,17 @@ export const waitForStreamPersistedInStorageNode = async (streamId: string, part
         return (response.status === 200)
     }
     await waitForCondition(() => isPersistent(), undefined, 1000)
+}
+
+const getTestName = (module: NodeModule) => {
+    const fileNamePattern = new RegExp('.*/(.*).test\\...')
+    const groups = module.filename.match(fileNamePattern)
+    return (groups !== null) ? groups[1] : module.filename
+}
+
+export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+    return streamrClient.createStream({
+        id: '/test/' + getTestName(module) + '/' + Date.now(),
+        ...props
+    })
 }

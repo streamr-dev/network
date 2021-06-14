@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../types'
-import { startBroker, fastPrivateKey, createClient, createMqttClient } from '../utils'
+import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -47,9 +47,7 @@ describe('local propagation', () => {
     })
 
     beforeEach(async () => {
-        freshStream = await client1.createStream({
-            name: 'local-propagation.test.js-' + Date.now()
-        })
+        freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
 
         await wait(3000)

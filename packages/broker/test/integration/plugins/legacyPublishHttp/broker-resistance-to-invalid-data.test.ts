@@ -1,7 +1,7 @@
 import http from 'http'
 import { startTracker, Tracker } from 'streamr-network'
 import { Broker } from '../../../broker'
-import { startBroker, createClient } from '../../../utils'
+import { startBroker, createClient, createTestStream } from '../../../utils'
 
 const trackerPort = 12420
 const networkPort = 12421
@@ -29,9 +29,7 @@ describe('broker resistance to invalid data', () => {
 
         // Create new stream
         const client = createClient(0)
-        const freshStream = await client.createStream({
-            name: 'broker-resistance-to-invalid-data.test.js-' + Date.now()
-        })
+        const freshStream = await createTestStream(client, module)
         streamId = freshStream.id
         await client.ensureDisconnected()
         sessionToken = await client.session.getSessionToken()
@@ -48,7 +46,7 @@ describe('broker resistance to invalid data', () => {
         const request = http.request({
             hostname: '127.0.0.1',
             port: httpPort,
-            path: `/api/v1/streams/${streamId}/data`,
+            path: `/api/v1/streams/${encodeURIComponent(streamId)}/data`,
             method: 'POST',
             headers: {
                 Authorization: 'Bearer ' + sessionToken,

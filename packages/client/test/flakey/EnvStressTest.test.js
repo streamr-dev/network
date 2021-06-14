@@ -58,6 +58,7 @@ describe('EnvStressTest', () => {
 
                         const streams = await Promise.all(names.map((name, index) => (
                             pTimeout(client.createStream({
+                                id: '/' + name,
                                 name,
                                 requireSignedData: true,
                                 requireEncryptedData: false,
