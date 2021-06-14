@@ -4,14 +4,14 @@ import { ethers } from 'ethers'
 
 import { StreamrClient } from '../../src/StreamrClient'
 
-import config from './config'
+import { clientOptions } from './config'
 import { fakePrivateKey } from '../utils'
 
 describe('LoginEndpoints', () => {
     let client: StreamrClient
 
     const createClient = (opts = {}) => new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         auth: {
             privateKey: fakePrivateKey()
         },

@@ -7,7 +7,7 @@ import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
 
-import config from './config'
+import { clientOptions } from './config'
 
 const { ControlMessage } = ControlLayer
 
@@ -24,7 +24,7 @@ describeRepeats('Subscriber', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

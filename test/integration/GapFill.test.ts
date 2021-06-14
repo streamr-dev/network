@@ -4,7 +4,7 @@ import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '..
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import { clientOptions } from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber, Subscription } from '../../src/subscribe'
 import { MessageRef } from 'streamr-client-protocol/dist/src/protocol/message_layer'
@@ -23,7 +23,7 @@ describeRepeats('GapFill with resends', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             ...opts,
             auth: {
                 privateKey: fakePrivateKey(),

@@ -4,7 +4,7 @@ import { describeRepeats, uid, fakePrivateKey, getPublishTestMessages } from '..
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import { clientOptions } from './config'
 import { Stream } from '../../src/stream'
 import { StorageNode } from '../../src/stream/StorageNode'
 
@@ -21,7 +21,7 @@ describeRepeats('StreamrClient Resend', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

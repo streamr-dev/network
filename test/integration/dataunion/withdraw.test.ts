@@ -9,7 +9,7 @@ import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import config from '../config'
+import { clientOptions, tokenAdminPrivateKey } from '../config'
 import authFetch from '../../../src/rest/authFetch'
 import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
@@ -17,15 +17,15 @@ import { EthereumAddress } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
-const adminWalletMainnet = new Wallet(config.clientOptions.auth.privateKey, providerMainnet)
-const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, providerSidechain)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
+const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
+const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
 
-const tokenAdminWallet = new Wallet(config.tokenAdminPrivateKey, providerMainnet)
-const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
+const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
+const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
 
-const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
+const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
 let testWalletId = 1000000 // ensure fixed length as string
 
@@ -40,7 +40,7 @@ async function testWithdraw(
     requiresMainnetETH: boolean,
     options: DataUnionWithdrawOptions,
 ) {
-    log('Connecting to Ethereum networks, config = %o', config)
+    log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
     const network = await providerMainnet.getNetwork()
     log('Connected to "mainnet" network: %o', network)
     const network2 = await providerSidechain.getNetwork()
@@ -50,7 +50,7 @@ async function testWithdraw(
     const tx1 = await tokenMainnet.mint(adminWalletMainnet.address, parseEther('100'))
     await tx1.wait()
 
-    const adminClient = new StreamrClient(config.clientOptions)
+    const adminClient = new StreamrClient(clientOptions)
 
     const dataUnion = await adminClient.deployDataUnion()
     const secret = await dataUnion.createSecret('test secret')
@@ -71,14 +71,14 @@ async function testWithdraw(
     }
 
     const memberClient = new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         auth: {
             privateKey: memberWallet.privateKey
         }
     })
 
     // product is needed for join requests to analyze the DU version
-    const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
+    const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
     await authFetch(createProductUrl, adminClient.session, {
         method: 'POST',
         body: JSON.stringify({
@@ -199,7 +199,7 @@ providerSidechain.on({
         return
     }
     const hash = keccak256(message)
-    const adminClient = new StreamrClient(config.clientOptions)
+    const adminClient = new StreamrClient(clientOptions)
     await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash, 100, 120000)
     log('Transported message (hash=%s)', hash)
 })

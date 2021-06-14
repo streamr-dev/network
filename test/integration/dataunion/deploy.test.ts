@@ -7,8 +7,8 @@ import { createMockAddress } from '../../utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-deploy')
 
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
 
 describe('DataUnion deploy', () => {
 
@@ -20,7 +20,7 @@ describe('DataUnion deploy', () => {
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()
         log('Connected to sidechain network: ', JSON.stringify(network2))
-        adminClient = new StreamrClient(config.clientOptions as any)
+        adminClient = new StreamrClient(clientOptions as any)
     }, 60000)
 
     afterAll(() => {

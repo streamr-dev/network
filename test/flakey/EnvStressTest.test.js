@@ -16,7 +16,7 @@ describe('EnvStressTest', () => {
     const createClient = (opts = {}) => new StreamrClient({
         autoConnect: false,
         autoDisconnect: false,
-        ...config.clientOptions,
+        ...clientOptions,
         ...opts,
     })
 

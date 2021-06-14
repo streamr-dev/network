@@ -289,7 +289,7 @@ export const createMockAddress = () => '0x000000000000000000000000000' + Date.no
 export const createClient = (providerSidechain?: providers.JsonRpcProvider) => {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
     return new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         auth: {
             privateKey: wallet.privateKey
         }

@@ -17,7 +17,7 @@ const Msg = () => {
 
 function createClient(opts) {
     return new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         ...opts,
     })
 }

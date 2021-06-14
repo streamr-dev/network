@@ -12,7 +12,7 @@ describe('Session', () => {
     let clientSessionToken: Todo
 
     const createClient = (opts = {}) => new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         autoConnect: false,
         autoDisconnect: false,
         ...opts,
