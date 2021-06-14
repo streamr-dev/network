@@ -4,7 +4,7 @@ import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StreamPart } from '../../../../src/types'
 import { fastPrivateKey, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
-import {StorageNodeRegistry} from "../../../../src/StorageNodeRegistry";
+import {StorageNodeRegistry} from "../../../../src/StorageNodeRegistry"
 
 const STREAM_PARTS: StreamPart[] = [ 
     { id: 'foo', partition: 0 },
