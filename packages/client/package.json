@@ -26,7 +26,7 @@
     "copy-package": "mkdir -p dist/; node copy-package.js; cp -f package-lock.json dist; cp -f README.md dist; cp -f LICENSE dist; cp -f readme-header-img.png dist; mkdir -p dist/src/stream/encryption/migrations; cp -f ./src/stream/encryption/migrations/* dist/src/stream/encryption/migrations; true",
     "bootstrap-dist": "npm run vendor && npm run copy-package && npm run fix-esm",
     "fix-esm": "mkdir -p dist/src/; cp -Rf src/index-esm.mjs dist/src/index-esm.mjs",
-    "build:types": "tsc --incremental --emitDeclarationOnly --stripInternal",
+    "build:types": "tsc --incremental --emitDeclarationOnly --stripInternal --project ./tsconfig.node.json",
     "build-node": "npm run bootstrap-dist && tsc --incremental --project ./tsconfig.node.json",
     "postbuild-node": "npm run copy-package",
     "build-browser": "npm run bootstrap-dist && NODE_ENV=development webpack --mode=development --progress",
