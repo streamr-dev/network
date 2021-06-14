@@ -6,7 +6,7 @@ import { StorageNode } from '../../src/stream/StorageNode'
 import { StreamrClient } from '../../src/StreamrClient'
 import { uid, fakeAddress } from '../utils'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 
 /**
  * These tests should be run in sequential order!

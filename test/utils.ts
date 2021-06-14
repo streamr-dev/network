@@ -2,6 +2,7 @@ import { inspect } from 'util'
 import { wait } from 'streamr-test-utils'
 import { providers, Wallet } from 'ethers'
 import { pTimeout, counterId, AggregatedError } from '../src/utils'
+import { clientOptions } from './integration/devEnvironment'
 import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
 import type { StreamPartDefinitionOptions } from '../src/stream'
@@ -9,7 +10,6 @@ import { StreamrClient } from '../src/StreamrClient'
 import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
 
 const crypto = require('crypto')
-const config = require('./integration/config')
 
 export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 

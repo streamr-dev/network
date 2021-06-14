@@ -4,7 +4,7 @@ import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
-import { clientOptions, tokenAdminPrivateKey } from '../config'
+import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 
 const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 

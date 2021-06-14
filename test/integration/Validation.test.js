@@ -4,7 +4,7 @@ import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '..
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 
 const MAX_MESSAGES = 10
 

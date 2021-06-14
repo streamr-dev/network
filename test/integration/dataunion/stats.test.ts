@@ -2,7 +2,7 @@ import { providers } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import config from '../config'
+import { clientOptions } from '../devEnvironment'
 import { DataUnion, MemberStatus } from '../../../src/dataunion/DataUnion'
 import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -26,7 +26,7 @@ describe('DataUnion stats', () => {
     const inactiveMember = createMockAddress()
 
     beforeAll(async () => {
-        log(`Connecting to Ethereum networks, config = ${JSON.stringify(config)}`)
+        log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()

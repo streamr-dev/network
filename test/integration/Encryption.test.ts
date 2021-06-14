@@ -9,7 +9,7 @@ import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
 import Debug from 'debug'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 10 * 1000

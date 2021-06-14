@@ -4,7 +4,7 @@ import { describeRepeats, uid, fakePrivateKey, getPublishTestMessages } from '..
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 import { Stream } from '../../src/stream'
 import { StorageNode } from '../../src/stream/StorageNode'
 

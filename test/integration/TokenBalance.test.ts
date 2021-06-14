@@ -3,7 +3,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { createClient, createMockAddress } from '../utils'
 
 import * as Token from '../../contracts/TestToken.json'
-import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from './config'
+import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from './devEnvironment'
 import { BigNumber, providers } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { EthereumAddress } from '../../src/types'

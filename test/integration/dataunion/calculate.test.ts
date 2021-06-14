@@ -2,7 +2,7 @@ import { providers, Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import config from '../config'
+import { clientOptions } from '../devEnvironment'
 import { createClient, expectInvalidAddress } from '../../utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-calculate')
@@ -22,7 +22,7 @@ describe('DataUnion calculate', () => {
     })
 
     it('calculate DU address before deployment', async () => {
-        log(`Connecting to Ethereum networks, config = ${JSON.stringify(config)}`)
+        log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()

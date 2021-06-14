@@ -4,7 +4,7 @@ import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src'
 import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'

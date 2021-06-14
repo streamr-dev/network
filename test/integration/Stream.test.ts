@@ -3,7 +3,7 @@ import { Stream } from '../../src/stream'
 import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
 import { StorageNode } from '../../src/stream/StorageNode'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 
 const createClient = (opts = {}) => new StreamrClient({
     ...clientOptions,

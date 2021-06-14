@@ -6,7 +6,7 @@ import { getEndpointUrl } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import config from '../config'
+import { clientOptions } from '../devEnvironment'
 import authFetch from '../../../src/rest/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')

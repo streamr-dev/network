@@ -3,7 +3,7 @@ import { wait, waitForEvent } from 'streamr-test-utils'
 import { uid, fakePrivateKey } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src/subscribe'
 import { StorageNode } from '../../src/stream/StorageNode'

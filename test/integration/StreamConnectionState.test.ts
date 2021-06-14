@@ -5,7 +5,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 import { Stream } from '../../src/stream'
 import { Subscriber, Subscription } from '../../src/subscribe'
 import { StreamrClientOptions } from '../../src'

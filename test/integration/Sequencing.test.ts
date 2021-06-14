@@ -4,7 +4,7 @@ import { uid, fakePrivateKey, getWaitForStorage } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import { clientOptions } from './config'
+import { clientOptions } from './devEnvironment'
 import { Stream } from '../../src/stream'
 
 const Msg = (opts?: any) => ({
