@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, fakePrivateKey, uid, getPublishTestMessages, addAfterFn } from '../utils'
+import { describeRepeats, fakePrivateKey, getPublishTestMessages, addAfterFn, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/stream'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
@@ -88,9 +88,7 @@ describeRepeats('Encryption Key Persistence', () => {
             client.connect(),
         ])
 
-        const name = uid('stream')
-        stream = await client.createStream({
-            name,
+        stream = await createTestStream(client, module, {
             requireEncryptedData: true,
         })
 

@@ -3,7 +3,7 @@ import { startTracker, startNetworkNode, Tracker, NetworkNode } from 'streamr-ne
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } from '../../../utils'
+import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 const httpPort1 = 12371
@@ -97,9 +97,7 @@ describe('DataMetadataEndpoints', () => {
     })
 
     async function setUpStream(): Promise<Stream> {
-        const freshStream = await client1.createStream({
-            name: 'DataMetadataEndpoints.test.ts-' + Date.now()
-        })
+        const freshStream = await createTestStream(client1, module)
         await assignmentEventManager.addStreamToStorageNode(freshStream.id, storageNodeAccount.address, client1)
         await waitForStreamPersistedInStorageNode(freshStream.id, 0, '127.0.0.1', httpPort1)
         return freshStream
@@ -122,12 +120,12 @@ describe('DataMetadataEndpoints', () => {
 
         await wait(WAIT_TIME_TO_LAND_IN_STORAGE)
 
-        const url = `http://localhost:${httpPort1}/api/v1/streams/${stream.id}/metadata/partitions/0`
+        const url = `http://localhost:${httpPort1}/api/v1/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
         expect(status).toEqual(200)
-        expect(res.totalBytes).toEqual(1199)
+        expect(res.totalBytes).toEqual(1443)
         expect(res.totalMessages).toEqual(4)
         expect(
             new Date(res.firstMessage).getTime()
