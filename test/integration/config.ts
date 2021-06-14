@@ -48,7 +48,7 @@ export const providerMainnet = new JsonRpcProvider(clientOptions.mainnet)
 
 export function getTestWallet(index: number, provider: JsonRpcProvider) {
     // TODO: change to 'streamr-client-javascript' once https://github.com/streamr-dev/smart-contracts-init/pull/36 is in docker
-    const hash = id('marketplace-contracts' + (index || ''))
+    const hash = id(`marketplace-contracts${index}`)
     return new Wallet(hash, provider)
 }
 
