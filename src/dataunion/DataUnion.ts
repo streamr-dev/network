@@ -520,11 +520,27 @@ export class DataUnion {
 
     /**
      * Transfer amount to specific member in DataunionSidechain
-     * @param memberAddress - the other member who gets their tokens out of the Data Union
+     * @param memberAddress - target member who gets the tokens added to their earnings in the the Data Union
      * @param amountTokenWei - the amount that want to add to the member
      * @returns receipt once transfer transaction is confirmed
      */
     async transferToMemberInContract(
+        memberAddress: EthereumAddress,
+        amountTokenWei: BigNumber|number|string
+    ): Promise<ContractReceipt> {
+        const address = getAddress(memberAddress) // throws if bad address
+        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+        const tx = await duSidechain.transferToMemberInContract(address, amountTokenWei)
+        return waitForTx(tx)
+    }
+
+    /**
+     * Transfer an amount of earnings to another member in DataunionSidechain
+     * @param memberAddress - the other member who gets their tokens out of the Data Union
+     * @param amountTokenWei - the amount that want to add to the member
+     * @returns receipt once transfer transaction is confirmed
+     */
+    async transferWithinContract(
         memberAddress: EthereumAddress,
         amountTokenWei: BigNumber|number|string
     ): Promise<ContractReceipt> {
