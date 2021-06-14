@@ -6,20 +6,12 @@ import { wait } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { PublishRequest } from 'streamr-client-protocol'
 import { Stream } from '../../src/stream'
-import { fakePrivateKey, getPublishTestMessages, CreateMessageOpts, Debug } from '../utils'
+import { fakePrivateKey, getPublishTestMessages, CreateMessageOpts, Debug, snapshot } from '../utils'
 import Connection from '../../src/Connection'
 import prettyBytes from 'pretty-bytes'
 import { randomFillSync } from 'crypto'
-import { writeHeapSnapshot } from 'v8'
-
-const { WRITE_SNAPSHOTS } = process.env
 
 const log = Debug('StreamrMemoryUsage Publish Memory Usage')
-
-function snapshot() {
-    if (!WRITE_SNAPSHOTS) { return '' }
-    return writeHeapSnapshot()
-}
 
 function logMemory() {
     const res = process.memoryUsage()

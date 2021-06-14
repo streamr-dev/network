@@ -1,14 +1,8 @@
-import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 import LeakDetector from 'jest-leak-detector'
 
-import { uid, Msg, fakePrivateKey, describeRepeats, getPublishTestMessages, collect } from '../utils'
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer } from '../../src/utils'
-import Connection from '../../src/Connection'
-import { StorageNode } from '../../src/stream/StorageNode'
-
-import { writeHeapSnapshot } from 'v8'
 
 import config from '../integration/config'
 
@@ -80,7 +74,7 @@ describeRepeats('Leaks', () => {
                 leakDetector = new LeakDetector(client)
                 await client.connect()
                 await client.session.getSessionToken()
-                writeHeapSnapshot()
+                snapshot()
             })
 
             afterEach(async () => {
@@ -88,7 +82,7 @@ describeRepeats('Leaks', () => {
                 const c = client
                 client = undefined
                 await c.disconnect()
-                writeHeapSnapshot()
+                snapshot()
             })
 
             test('create', async () => {
@@ -105,7 +99,6 @@ describeRepeats('Leaks', () => {
                 const stream = await client.createStream({
                     requireSignedData: true,
                 })
-                writeHeapSnapshot()
                 await client.cached.getUserInfo()
                 await client.cached.getUserId()
                 const ethAddress = await client.getAddress()
@@ -121,7 +114,6 @@ describeRepeats('Leaks', () => {
                 const stream = await client.createStream({
                     requireSignedData: true,
                 })
-                writeHeapSnapshot()
                 const publishTestMessages = getPublishTestMessages(client, {
                     retainMessages: false,
                     stream

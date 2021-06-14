@@ -1,13 +1,16 @@
 import crypto from 'crypto'
+import { writeHeapSnapshot } from 'v8'
+
 import { wait } from 'streamr-test-utils'
 import { providers, Wallet } from 'ethers'
+import { PublishRequest } from 'streamr-client-protocol'
+
 import { pTimeout, counterId, AggregatedError, pLimitFn } from '../src/utils'
 import { Debug, inspect } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
 import type { StreamPartDefinitionOptions, StreamProperties } from '../src/stream'
 import { StreamrClient } from '../src/StreamrClient'
-import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
 import config from './integration/config'
 
 const testDebugRoot = Debug('test')
@@ -387,4 +390,12 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
         id: createRelativeTestStreamId(module),
         ...props
     })
+}
+
+/**
+ * Write a heap snapshot file if WRITE_SNAPSHOTS env var is set.
+ */
+export function snapshot() {
+    if (!process.env.WRITE_SNAPSHOTS) { return '' }
+    return writeHeapSnapshot()
 }
