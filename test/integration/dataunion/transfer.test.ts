@@ -1,14 +1,15 @@
+/* eslint-disable no-await-in-loop */
 import { Contract, Wallet } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
-import * as Token from '../../../contracts/TestToken.json'
+import Token from '../../../contracts/TestToken.json'
+import DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress, relayTokensAbi, providerMainnet, providerSidechain, getMainnetTestWallet, getSidechainTestWallet } from '../devEnvironment'
 import { getEndpointUrl, until } from '../../../src/utils'
 import { MemberStatus } from '../../../src/dataunion/DataUnion'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { EthereumAddress } from '../../../src/types'
 import authFetch from '../../../src/rest/authFetch'
-import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 
 const log = debug('StreamrClient::DataUnion::integration-test-transfer')
 
@@ -52,11 +53,23 @@ describe('DataUnion earnings transfer methods', () => {
         await relayTx.wait()
         await until(async () => (await tokenSidechain.balanceOf(tokenAdminWallet.address)).gt('0'), 300000, 3000)
 
+        log('Distributing mainnet ETH to following addresses:')
+        for (let i = 1; i <= 2; i++) {
+            const testWallet = getMainnetTestWallet(i)
+            log('    #%d: %s', i, testWallet.address)
+            const sendTx = await tokenAdminWallet.sendTransaction({
+                to: testWallet.address,
+                value: parseEther('1')
+            })
+            await sendTx.wait()
+        }
+
         log('Distributing 10 sidechain DATA to following addresses:')
         for (let i = 1; i <= 2; i++) {
             const testWallet = getSidechainTestWallet(i)
             log('    #%d: %s', i, testWallet.address)
-            tokenSidechain.transfer(testWallet.address, parseEther('10')) // probably no need to wait, they aren't needed before first tx in setupTest
+            const sendTx = await tokenSidechain.transfer(testWallet.address, parseEther('10'))
+            await sendTx.wait()
         }
     }, 150000)
 
@@ -158,7 +171,7 @@ describe('DataUnion earnings transfer methods', () => {
             totalEarnings: parseEther('2'),
             withdrawableEarnings: parseEther('1'),
         })
-    }, 150000)
+    }, 1500000)
 
     it('transfer token from outside to member earnings', async () => {
         const {
@@ -207,5 +220,5 @@ describe('DataUnion earnings transfer methods', () => {
             totalEarnings: parseEther('2'),
             withdrawableEarnings: parseEther('1'),
         })
-    }, 150000)
+    }, 1500000)
 })
