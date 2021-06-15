@@ -46,9 +46,8 @@ export class PublishConnection implements Connection {
     
     init(ws: WebSocket, streamrClient: StreamrClient) {
         ws.on('message', (contentPayload: string) => {
-            let content
             try {
-                content = parsePayloadJson(contentPayload)
+                const content = parsePayloadJson(contentPayload)
                 const partitionKey = this.partitionKey ?? (this.partitionKeyField ? content[this.partitionKeyField] : undefined)
                 streamrClient.publish({
                     id: this.streamId,

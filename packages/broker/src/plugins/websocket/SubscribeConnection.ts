@@ -16,7 +16,7 @@ export class SubscribeConnection implements Connection {
 
     init(ws: WebSocket, streamrClient: StreamrClient) {
         const streamPartDefitions = (this.partitions !== undefined)
-            ? this.partitions.map((partition: number|undefined) => ({ id: this.streamId, partition }))
+            ? this.partitions.map((partition: number) => ({ id: this.streamId, partition }))
             : [{ id: this.streamId }]
         streamPartDefitions.forEach((streamDefinition) => {
             streamrClient.subscribe(streamDefinition, (message: any) => {

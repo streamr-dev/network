@@ -51,10 +51,6 @@ export class WebsocketServer {
             : http.createServer()
         this.wss = new WebSocket.Server({ noServer: true })
 
-        this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
-            connection.init(ws, this.streamrClient)
-        })
-
         this.httpServer.on('upgrade', (request: http.IncomingMessage, socket: Socket, head: Buffer) => {
             let connectionUrl: ConnectionUrl
             let connection: Connection
@@ -74,6 +70,10 @@ export class WebsocketServer {
             this.wss!.handleUpgrade(request, socket, head, (ws: WebSocket) => {
                 this.wss!.emit('connection', ws, request, connection)
             })
+        })
+
+        this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
+            connection.init(ws, this.streamrClient)
         })
 
         this.httpServer.listen(port)

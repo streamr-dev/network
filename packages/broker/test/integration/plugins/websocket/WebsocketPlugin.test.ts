@@ -62,7 +62,7 @@ describe('Websocket plugin', () => {
     })
 
     afterEach(async () => {
-        wsClient?.close(),
+        wsClient?.close()
         await streamrClient?.ensureDisconnected()
     })
 
