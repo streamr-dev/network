@@ -5,8 +5,7 @@ const { Benchmark } = require('benchmark')
 const StreamrClient = require('../../dist')
 const config = require('../integration/config')
 
-/* eslint-disable no-console */
-
+// note this is not the number of messages, just the start number
 let count = 100000 // pedantic: use large initial number so payload size is similar
 const Msg = () => {
     count += 1
@@ -131,11 +130,13 @@ async function run() {
 
     suite.on('complete', async () => {
         log('Disconnecting clients')
-        await Promise.all([
+        const tasks = [
             client1.disconnect(),
             client2.disconnect(),
             client3.disconnect(),
-        ])
+        ]
+        await Promise.allSettled(tasks)
+        await Promise.all(tasks)
         log('Clients disconnected')
     })
 
