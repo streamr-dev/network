@@ -304,11 +304,12 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
  * limit('channel2', fn)
  * ```
  */
+type LimitFn = ReturnType<typeof pLimit>
 
 export function LimitAsyncFnByKey<KeyType>(limit = 1) {
-    const pending = new Map()
+    const pending = new Map<KeyType, LimitFn>()
     const f = async (id: KeyType, fn: () => Promise<any>) => {
-        const limitFn = pending.get(id) || pending.set(id, pLimit(limit)).get(id)
+        const limitFn: LimitFn = (pending.get(id) || pending.set(id, pLimit(limit)).get(id)) as LimitFn
         try {
             return await limitFn(fn)
         } finally {
@@ -319,6 +320,18 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
                 }
             }
         }
+    }
+
+    f.getActiveCount = (id: KeyType): number => {
+        const limitFn = pending.get(id)
+        if (!limitFn) { return 0 }
+        return limitFn.activeCount
+    }
+
+    f.getPendingCount = (id: KeyType): number => {
+        const limitFn = pending.get(id)
+        if (!limitFn) { return 0 }
+        return limitFn.pendingCount
     }
 
     f.clear = () => {
