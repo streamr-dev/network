@@ -4,23 +4,26 @@ import { Logger } from 'streamr-network'
 import { ParsedQs } from 'qs'
 import { parsePositiveInteger, parseQueryParameter } from '../../helpers/parser'
 import { Connection } from './Connection'
+// @ts-expect-error no type definitions
+import Cutter from 'utf8-binary-cutter'
 
 const logger = new Logger(module)
 
 const STATUS_UNEXPECTED_CONDITION = 1011
+const MAX_ERROR_MESSAGE_LENGTH = 123 // https://html.spec.whatwg.org/multipage/web-sockets.html
 
 const parsePayloadJson = (contentAsString: string) => {
     try {
         return JSON.parse(contentAsString)
     } catch (e) {
-        throw new Error('Payload is not a JSON string')
+        throw new Error(`Payload is not a JSON string: ${e.message}`)
     }
 }
 
-const closeWithError = (error: any, context: string, ws: WebSocket) => {
+export const closeWithError = (error: Error, context: string, ws: WebSocket) => {
     const msg = `${context}: ${error.message}`
-    logger.error(error, msg)
-    ws.close(STATUS_UNEXPECTED_CONDITION, msg)
+    logger.error(msg, error)
+    ws.close(STATUS_UNEXPECTED_CONDITION, Cutter.truncateToBinarySize(msg, MAX_ERROR_MESSAGE_LENGTH))
 }
 
 export class PublishConnection implements Connection {

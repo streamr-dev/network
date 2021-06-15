@@ -127,10 +127,10 @@ describe('WebsocketServer', () => {
         it('invalid json', async () => {
             wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM)
             await waitForEvent(wsClient, 'open')
-            wsClient.send('invalid-payload')
+            wsClient.send('{ "x": invalid-payload } ')
             const closeEvent = await waitForEvent(wsClient, 'close')
             expect(closeEvent[0]).toBeTruthy()
-            expect(closeEvent[1]).toBe('Unable to publish: Payload is not a JSON string')
+            expect(closeEvent[1]).toBe('Unable to publish: Payload is not a JSON string: Unexpected token i in JSON at position 7')
         })
 
     })
