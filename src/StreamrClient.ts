@@ -473,11 +473,9 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         const version = await du.getVersion()
         if (version === 0) {
             throw new Error(`${contractAddress} is not a Data Union!`)
-        }
-        if (version === 1) {
+        } else if (version === 1) {
             throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
-        }
-        if (version === 2) {
+        } else if (version === 2) {
             return du
         }
         throw new Error(`${contractAddress} is an unknown Data Union version "${version}"`)
