@@ -230,3 +230,17 @@ export const sidechainAmbABI = [{
     stateMutability: 'view',
     type: 'function'
 }]
+
+export const erc20AllowanceAbi = [{
+    name: 'allowance',
+    inputs: [{ type: 'address' }, { type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'increaseAllowance',
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
+    outputs: [{ type: 'bool' }],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}]

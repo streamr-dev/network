@@ -13,6 +13,7 @@ import { until, getEndpointUrl, sleep } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import { Contracts } from './Contracts'
+import { erc20AllowanceAbi } from './abi'
 
 export interface DataUnionDeployOptions {
     owner?: EthereumAddress,
@@ -69,20 +70,6 @@ export interface MemberStats {
 export type AmbMessageHash = string
 
 const log = debug('StreamrClient::DataUnion')
-
-const erc20AllowanceAbi = [{
-    name: 'allowance',
-    inputs: [{ type: 'address' }, { type: 'address' }],
-    outputs: [{ type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function'
-}, {
-    name: 'increaseAllowance',
-    inputs: [{ type: 'address' }, { type: 'uint256' }],
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'nonpayable',
-    type: 'function'
-}]
 
 function getMessageHashes(tr: ContractReceipt): AmbMessageHash[] {
     // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData);
