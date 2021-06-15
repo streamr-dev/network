@@ -49,15 +49,26 @@ describe('DataUnion earnings transfer methods', () => {
         const tokenMediator = new Contract(tokenMediatorAddress, relayTokensAbi, tokenAdminWallet)
         const approveTx = await tokenMainnet.approve(tokenMediator.address, parseEther('100'))
         await approveTx.wait()
-        const relayTx = await tokenMediator.relayTokensAndCall(tokenMainnet.address, tokenAdminWallet.address, parseEther('100'), '0x1234') // dummy 0x1234
+        const relayTx = await tokenMediator.relayTokensAndCall(tokenMainnet.address, tokenAdminSidechainWallet.address, parseEther('100'), '0x1234') // dummy 0x1234
         await relayTx.wait()
-        await until(async () => (await tokenSidechain.balanceOf(tokenAdminWallet.address)).gt('0'), 300000, 3000)
+        await until(async () => (await tokenSidechain.balanceOf(tokenAdminSidechainWallet.address)).gt('0'), 300000, 3000)
 
         log('Distributing mainnet ETH to following addresses:')
         for (let i = 1; i <= 2; i++) {
             const testWallet = getMainnetTestWallet(i)
             log('    #%d: %s', i, testWallet.address)
             const sendTx = await tokenAdminWallet.sendTransaction({
+                to: testWallet.address,
+                value: parseEther('1')
+            })
+            await sendTx.wait()
+        }
+
+        log('Distributing sidechain ETH to following addresses:')
+        for (let i = 1; i <= 2; i++) {
+            const testWallet = getSidechainTestWallet(i)
+            log('    #%d: %s', i, testWallet.address)
+            const sendTx = await tokenAdminSidechainWallet.sendTransaction({
                 to: testWallet.address,
                 value: parseEther('1')
             })
