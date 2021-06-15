@@ -110,7 +110,6 @@ export default class Subscription extends Emitter {
             error = AggregatedError.from(error, onFinallyError)
         } finally {
             this._onDone.handleErrBack(error)
-            this.removeAllListeners()
         }
     }
 

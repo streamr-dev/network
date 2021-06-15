@@ -531,7 +531,9 @@ describeRepeats('StreamrClient Connection', () => {
                     id1: uid('msg')
                 }
                 const p = client.publish(stream.id, message)
+                p.catch(() => {}) // no unhandled
                 await wait(0)
+                client.debug('about to intentionally break publish...')
                 await client.disconnect() // start async disconnect after publish started
                 await expect(p).rejects.toThrow()
                 expect(client.isDisconnected()).toBeTruthy()
@@ -553,6 +555,7 @@ describeRepeats('StreamrClient Connection', () => {
                     id1: uid('msg')
                 }
                 const p = client.publish(stream.id, message)
+                p.catch(() => {}) // no unhandled
                 await wait(0)
                 client.debug('about to intentionally break publish...')
                 await client.disconnect() // start async disconnect after publish started

@@ -91,7 +91,7 @@ export default class SubscriptionSession extends Emitter {
             }
         }
 
-        let deleted = new Set()
+        let deleted = new Set<Subscription>()
         const check = () => {
             const { connection } = this.client
             return (
@@ -115,6 +115,7 @@ export default class SubscriptionSession extends Emitter {
                     } finally {
                         deleted.forEach((s) => {
                             this.deletedSubscriptions.delete(s)
+                            s.removeAllListeners()
                         })
                     }
                     if (!connection.isConnectionValid()) {
