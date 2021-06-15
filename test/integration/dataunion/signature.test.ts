@@ -6,13 +6,13 @@ import { getEndpointUrl } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import config from '../config'
+import { clientOptions } from '../devEnvironment'
 import authFetch from '../../../src/rest/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')
 
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, providerSidechain)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
 
 describe('DataUnion signature', () => {
 
@@ -21,7 +21,7 @@ describe('DataUnion signature', () => {
     })
 
     it('check validity', async () => {
-        const adminClient = new StreamrClient(config.clientOptions as any)
+        const adminClient = new StreamrClient(clientOptions as any)
         const dataUnion = await adminClient.deployDataUnion()
         const dataUnionAddress = dataUnion.getAddress()
         const secret = await dataUnion.createSecret('test secret')
@@ -31,7 +31,7 @@ describe('DataUnion signature', () => {
         const member2Wallet = new Wallet(`0x100000000000000000000000000000000000000012300000002${Date.now()}`, providerSidechain)
 
         const memberClient = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: memberWallet.privateKey
             }
@@ -39,7 +39,7 @@ describe('DataUnion signature', () => {
         const memberDataUnion = await memberClient.safeGetDataUnion(dataUnionAddress)
 
         // product is needed for join requests to analyze the DU version
-        const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
+        const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
         await authFetch(createProductUrl, adminClient.session, {
             method: 'POST',
             body: JSON.stringify({
@@ -53,7 +53,7 @@ describe('DataUnion signature', () => {
         // eslint-disable-next-line no-underscore-dangle
         const contract = await dataUnion._getContract()
         const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
-        const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
+        const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
         const signature = await memberDataUnion.signWithdrawAllTo(member2Wallet.address)
         const signature2 = await memberDataUnion.signWithdrawAmountTo(member2Wallet.address, parseEther('1'))

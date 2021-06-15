@@ -2,7 +2,7 @@ import { BigNumber, Contract, providers, Wallet } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
 import * as Token from '../../../contracts/TestToken.json'
-import config from '../config'
+import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress, relayTokensAbi } from '../devEnvironment'
 import { getEndpointUrl, until } from '../../../src/utils'
 import { MemberStatus } from '../../../src/dataunion/DataUnion'
 import { StreamrClient } from '../../../src/StreamrClient'
@@ -11,47 +11,17 @@ import authFetch from '../../../src/rest/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-transfer')
 
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
 
-const tokenAdminWallet = new Wallet(config.tokenAdminPrivateKey, providerMainnet)
-const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
+const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
+const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
 
-const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, providerSidechain)
-const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
+const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
+const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
 const sendTokensToSidechain = async (receiverAddress: EthereumAddress, amount: BigNumber) => {
-    const relayTokensAbi = [
-        {
-            inputs: [
-                {
-                    internalType: 'address',
-                    name: 'token',
-                    type: 'address'
-                },
-                {
-                    internalType: 'address',
-                    name: '_receiver',
-                    type: 'address'
-                },
-                {
-                    internalType: 'uint256',
-                    name: '_value',
-                    type: 'uint256'
-                },
-                {
-                    internalType: 'bytes',
-                    name: '_data',
-                    type: 'bytes'
-                }
-            ],
-            name: 'relayTokensAndCall',
-            outputs: [],
-            stateMutability: 'nonpayable',
-            type: 'function'
-        }
-    ]
-    const tokenMediator = new Contract(config.tokenMediator, relayTokensAbi, tokenAdminWallet)
+    const tokenMediator = new Contract(tokenMediatorAddress, relayTokensAbi, tokenAdminWallet)
     const tx1 = await tokenMainnet.approve(tokenMediator.address, amount)
     await tx1.wait()
     log('Approved')
@@ -66,7 +36,7 @@ describe('DataUnion transfer within contract', () => {
     let adminClient: StreamrClient
 
     beforeAll(async () => {
-        log(`Connecting to Ethereum networks, config = ${JSON.stringify(config)}`)
+        log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()
@@ -77,7 +47,7 @@ describe('DataUnion transfer within contract', () => {
 
         await sendTokensToSidechain(adminWalletSidechain.address, parseEther('10'))
 
-        adminClient = new StreamrClient(config.clientOptions as any)
+        adminClient = new StreamrClient(clientOptions as any)
     }, 150000)
 
     afterAll(() => {
@@ -94,7 +64,7 @@ describe('DataUnion transfer within contract', () => {
         log(`Sending tx from ${await adminClient.getAddress()}`)
 
         // product is needed for join requests to analyze the DU version
-        const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
+        const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
         await authFetch(createProductUrl, adminClient.session, {
             method: 'POST',
             body: JSON.stringify({
@@ -106,7 +76,7 @@ describe('DataUnion transfer within contract', () => {
 
         const memberWallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
         const memberClient = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: memberWallet.privateKey
             }

@@ -12,7 +12,7 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import { clientOptions } from './devEnvironment'
 import { Stream } from '../../src/stream'
 import { Subscriber } from '../../src/subscribe'
 import { StorageNode } from '../../src/stream/StorageNode'
@@ -39,7 +39,7 @@ describeRepeats('sequential resend subscribe', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

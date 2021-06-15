@@ -9,7 +9,7 @@ import debug from 'debug'
 
 import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
-import { until, getEndpointUrl, sleep } from '../utils'
+import { getEndpointUrl, sleep, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import { Contracts } from './Contracts'
@@ -92,6 +92,7 @@ async function waitForTx(tx: ContractTransaction, { retries = 60, retryInterval 
             log('Error message: %s', msg)
             if (retries > 0 && msg.includes('ancient block sync')) {
                 log('Sleeping for %dms then retrying %d more time(s).', retryInterval, retries)
+                // eslint-disable-next-line promise/no-nesting
                 return sleep(retryInterval).then(() => waitForTx(tx, { retries: retries - 1, retryInterval }))
             }
         }
@@ -491,6 +492,7 @@ export class DataUnion {
      * @param memberAddress - the member whose earnings are sent out
      * @param recipientAddress - the address to receive the tokens in mainnet
      * @param signature - from member, produced using signWithdrawAllTo
+     * @param sendToMainnet - false = send to sidechain address
      * @returns await on call .wait to actually send the tx
      */
     private async getWithdrawAllToSignedTx(

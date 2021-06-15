@@ -16,7 +16,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 import { Defer } from '../../src/utils'
 
-import config from './config'
+import { clientOptions } from './devEnvironment'
 import { Stream } from '../../src/stream'
 import { Subscriber } from '../../src/subscribe'
 import { StorageNode } from '../../src/stream/StorageNode'
@@ -43,7 +43,7 @@ describeRepeats('resends', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

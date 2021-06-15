@@ -1,7 +1,9 @@
 import { pTimeout } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
+
 import { fakePrivateKey, uid } from '../utils'
-import config from '../integration/config'
+
+const clientOptions = require('../integration/config')
 
 const TEST_REPEATS = 6
 const MAX_CONCURRENCY = 24
@@ -12,13 +14,6 @@ const INC_FACTOR = 1.5
 
 describe('EnvStressTest', () => {
     let client
-
-    const createClient = (opts = {}) => new StreamrClient({
-        autoConnect: false,
-        autoDisconnect: false,
-        ...config.clientOptions,
-        ...opts,
-    })
 
     describe('Stream Creation + Deletion', () => {
         const nextConcurrency = (j) => {
@@ -43,7 +38,8 @@ describe('EnvStressTest', () => {
                 for (let i = 0; i < TEST_REPEATS; i++) {
                     test(`Test ${i + 1} of ${TEST_REPEATS}`, async () => {
                         const testDesc = `with concurrency ${j} for test ${i + 1}`
-                        client = createClient({
+                        client = new StreamrClient({
+                            ...clientOptions,
                             auth: {
                                 privateKey: fakePrivateKey(),
                             },
