@@ -8,6 +8,7 @@ import { PublishRequest } from 'streamr-client-protocol'
 import { Stream } from '../../src/stream'
 import { fakePrivateKey, getPublishTestMessages, CreateMessageOpts, Debug, snapshot } from '../utils'
 import Connection from '../../src/Connection'
+import { counterId } from '../../src/utils'
 import prettyBytes from 'pretty-bytes'
 import { randomFillSync } from 'crypto'
 
@@ -57,6 +58,7 @@ describe.skip('no memleaks when publishing a high quantity of large messages', (
         client.onError = jest.fn()
         client.on('error', onError)
         stream = await client.createStream({
+            id: `/${counterId('stream')}`,
             requireSignedData: true,
         })
         publishTestMessages = getPublishTestMessages(client, {

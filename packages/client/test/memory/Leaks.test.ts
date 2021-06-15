@@ -3,6 +3,7 @@ import LeakDetector from 'jest-leak-detector'
 
 import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot, LeaksDetector } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { counterId } from '../../src/utils'
 
 import config from '../integration/config'
 
@@ -91,6 +92,7 @@ describeRepeats('Leaks', () => {
                 if (!client) { return }
 
                 await client.createStream({
+                    id: `/${counterId('stream')}`,
                     requireSignedData: true,
                 })
             })
@@ -99,6 +101,7 @@ describeRepeats('Leaks', () => {
                 if (!client) { return }
 
                 const stream = await client.createStream({
+                    id: `/${counterId('stream')}`,
                     requireSignedData: true,
                 })
                 await client.cached.getUserInfo()
@@ -114,6 +117,7 @@ describeRepeats('Leaks', () => {
                 if (!client) { return }
 
                 const stream = await client.createStream({
+                    id: `/${counterId('stream')}`,
                     requireSignedData: true,
                 })
                 const publishTestMessages = getPublishTestMessages(client, {
@@ -131,6 +135,7 @@ describeRepeats('Leaks', () => {
                     if (!client) { return }
 
                     const stream = await client.createStream({
+                        id: `/${counterId('stream')}`,
                         requireSignedData: true,
                     })
                     let sub = await client.subscribe(stream)
@@ -158,6 +163,7 @@ describeRepeats('Leaks', () => {
 
                         leaksDetector = new LeaksDetector()
                         const stream = await client.createStream({
+                            id: `/${counterId('stream')}`,
                             requireSignedData: true,
                         })
                         const sub = await client.subscribe(stream)
@@ -195,6 +201,7 @@ describeRepeats('Leaks', () => {
 
                         leaksDetector = new LeaksDetector()
                         const stream = await client.createStream({
+                            id: `/${counterId('stream')}`,
                             requireSignedData: true,
                         })
 

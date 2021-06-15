@@ -135,7 +135,7 @@ export class StreamEndpoints {
      * @category Important
      * @param props - if id is specified, it can be full streamId or path
      */
-    async createStream(props?: Partial<StreamProperties>) {
+    async createStream(props?: Partial<StreamProperties> & { id: string }) {
         this.client.debug('createStream %o', {
             props,
         })
@@ -164,20 +164,19 @@ export class StreamEndpoints {
         // Try looking up the stream by id or name, whichever is defined
         try {
             if (props.id) {
-                const stream = await this.getStream(props.id)
+                return await this.getStream(props.id)
+            }
+            return await this.getStreamByName(props.name!)
+        } catch (err: any) {
+            // try create stream if NOT_FOUND + also supplying an id.
+            if (props.id && err.errorCode === ErrorCode.NOT_FOUND) {
+                const stream = await this.createStream(props)
+                debug('Created stream: %s', props.id, stream)
                 return stream
             }
-            const stream = await this.getStreamByName(props.name!)
-            return stream
-        } catch (err: any) {
-            if (err.errorCode !== ErrorCode.NOT_FOUND) {
-                throw err
-            }
-        }
 
-        const stream = await this.createStream(props)
-        debug('Created stream: %s (%s)', props.name, stream.id)
-        return stream
+            throw err
+        }
     }
 
     async getStreamPublishers(streamId: string) {
