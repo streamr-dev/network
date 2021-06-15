@@ -112,7 +112,7 @@ export default class Publisher {
                 partitionKey,
             }),
             this.client.session.getSessionToken(), // fetch in parallel
-            await this.setupPublishHandle(), // autoconnect client if necessary
+            this.setupPublishHandle(), // autoconnect client if necessary
         ])
 
         asyncDepsTask.catch(() => {
