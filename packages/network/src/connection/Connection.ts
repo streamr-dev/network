@@ -270,7 +270,6 @@ export class Connection extends ConnectionEmitter {
         if (this.isFinished) {
             throw new Error('Connection already closed.')
         }
-
         this.connection = new nodeDataChannel.PeerConnection(this.selfId, {
             iceServers: this.stunUrls,
             maxMessageSize: this.maxMessageSize

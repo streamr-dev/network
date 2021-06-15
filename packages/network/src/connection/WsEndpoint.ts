@@ -540,11 +540,6 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
             return
         }
 
-        // @ts-expect-error private method
-        delete this.peerInfo.sessionId
-        // @ts-expect-error private method
-        delete peerInfo.sessionId 
-
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', address, code, reason)
         this.connections.delete(address)
@@ -571,6 +566,7 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
         ws.peerInfo = peerInfo
         // eslint-disable-next-line no-param-reassign
         ws.address = address
+
         this.peerBook.add(address, peerInfo)
         this.connections.set(address, ws)
         this.metrics.record('open', 1)
@@ -587,7 +583,6 @@ export class WsEndpoint extends EventEmitter implements IWsEndpoint {
             this.metrics.record('inSpeed', message.length)
             this.metrics.record('msgSpeed', 1)
             this.metrics.record('msgInSpeed', 1)
-
             // toString() needed for SSL connections as message will be Buffer instead of String
             setImmediate(() => this.onReceive(peerInfo, address, message.toString()))
         })
