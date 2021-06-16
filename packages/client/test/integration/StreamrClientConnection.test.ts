@@ -1,8 +1,8 @@
 import fetch from 'node-fetch'
-import { ControlLayer } from 'streamr-client-protocol'
+import { ControlLayer, ControlMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, createTestStream } from '../utils'
+import { describeRepeats, uid, fakePrivateKey, createTestStream, getPublishTestMessages } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -566,6 +566,40 @@ describeRepeats('StreamrClient Connection', () => {
                 // wait in case of delayed errors
                 await wait(500)
             })
+
+            it('does not error if logged out while publishing', async () => {
+                const MAX_MESSAGES = 5
+                client = createClient()
+                await client.connect()
+                const stream = await createTestStream(client, module)
+                let didLogout = false
+                const publishTestMessages = getPublishTestMessages(client)
+                const send = client.send.bind(client)
+                const sessionToken = await client.session.getSessionToken()
+                client.send = async (msg: ControlMessage) => {
+                    // logout after first message
+                    if (!didLogout) {
+                        didLogout = true
+                        const r = await send(msg)
+                        await client.logout()
+                        return r
+                    }
+
+                    return send(msg)
+                }
+
+                const published = await publishTestMessages.raw(MAX_MESSAGES, {
+                    stream,
+                    timeout: 10000,
+                    batchSize: MAX_MESSAGES,
+                })
+                expect(published).toHaveLength(MAX_MESSAGES)
+                // session tokens after first should be different
+                const sessionToken2 = published[1][1].sessionToken
+                expect(sessionToken2).not.toEqual(sessionToken)
+                expect(published.slice(1).map(([, m]) => m.sessionToken))
+                    .toEqual(Array(MAX_MESSAGES - 1).fill(sessionToken2))
+            }, 25000)
         })
 
         describe('subscribe', () => {

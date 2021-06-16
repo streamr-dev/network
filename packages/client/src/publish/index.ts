@@ -111,7 +111,6 @@ export default class Publisher {
                 timestamp,
                 partitionKey,
             }),
-            this.client.session.getSessionToken(), // fetch in parallel
             this.setupPublishHandle(), // autoconnect client if necessary
         ])
 
@@ -122,7 +121,8 @@ export default class Publisher {
 
         // no async before running sendQueue
         return this.sendQueue(streamId, async () => {
-            const [streamMessage, sessionToken] = await asyncDepsTask
+            const [streamMessage] = await asyncDepsTask
+            const sessionToken = await this.client.session.getSessionToken()
             try {
                 return await this.sendMessage(streamMessage, sessionToken)
             } finally {
