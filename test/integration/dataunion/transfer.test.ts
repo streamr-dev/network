@@ -217,7 +217,7 @@ describe('DataUnion earnings transfer methods', () => {
         })
         expect(statsAfter).toMatchObject({
             status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('0'),
+            earningsBeforeLastJoin: parseEther('1'), // the transfer to a member's earnings gets added to the "earnings before last join" which is per-member
             totalEarnings: parseEther('3'),
             withdrawableEarnings: parseEther('3'),
         })
@@ -227,11 +227,11 @@ describe('DataUnion earnings transfer methods', () => {
             totalEarnings: parseEther('2'),
             withdrawableEarnings: parseEther('2'),
         })
-        expect(stats2After).toMatchObject({
+        expect(stats2After).toMatchObject({ // other members remain unaffected
             status: MemberStatus.ACTIVE,
             earningsBeforeLastJoin: parseEther('0'),
             totalEarnings: parseEther('2'),
-            withdrawableEarnings: parseEther('1'),
+            withdrawableEarnings: parseEther('2'),
         })
     }, 1500000)
 })
