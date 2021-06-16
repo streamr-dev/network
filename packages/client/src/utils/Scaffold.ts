@@ -28,7 +28,7 @@ const noop = () => {}
 
 export default function Scaffold(
     sequence: Step[] = [],
-    _checkFn: () => Promise<boolean>,
+    _checkFn: (() => Promise<boolean>) | (() => boolean),
     { id = '', onError, onDone, onChange }: ScaffoldOptions = {}
 ) {
     let error: Error | undefined

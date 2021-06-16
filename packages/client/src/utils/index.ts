@@ -524,7 +524,7 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
  * Convert allSettled results into a thrown Aggregate error if necessary.
  */
 
-export async function allSettledValues(items: Parameters<typeof Promise['allSettled']>, errorMessage = '') {
+export async function allSettledValues(items: Parameters<(typeof Promise)['allSettled']>[0], errorMessage = '') {
     const result = await Promise.allSettled(items)
     const errs = result
         .filter(({ status }) => status === 'rejected')

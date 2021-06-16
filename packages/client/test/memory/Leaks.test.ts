@@ -3,7 +3,8 @@ import LeakDetector from 'jest-leak-detector'
 
 import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot, LeaksDetector } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { counterId } from '../../src/utils'
+import Subscription from '../../src/subscribe/Subscription'
+import { counterId, Defer } from '../../src/utils'
 
 import config from '../integration/config'
 
@@ -138,7 +139,8 @@ describeRepeats('Leaks', () => {
                         id: `/${counterId('stream')}`,
                         requireSignedData: true,
                     })
-                    let sub = await client.subscribe(stream)
+                    let sub: Subscription | undefined = await client.subscribe(stream)
+                    if (!sub) { throw new Error('no sub') }
                     const subLeak = new LeakDetector(sub)
                     const publishTestMessages = getPublishTestMessages(client, {
                         retainMessages: false,
@@ -229,6 +231,72 @@ describeRepeats('Leaks', () => {
                         if (!client) { return }
                         expect(await subLeak.isLeaking()).toBeFalsy()
                         await leaksDetector.checkNoLeaks()
+                    })
+                })
+
+                describe('subscriptions can be collected before all subscriptions removed', () => {
+                    let subLeak1: LeakDetector
+                    let subLeak2: LeakDetector
+
+                    beforeEach(async () => {
+                        if (!client) { return }
+
+                        // leaksDetector = new LeaksDetector()
+                        const stream = await client.createStream({
+                            id: `/${counterId('stream')}`,
+                            requireSignedData: true,
+                        })
+
+                        const publishTestMessages = getPublishTestMessages(client, {
+                            retainMessages: false,
+                            stream
+                        })
+                        const sub1Done = Defer()
+                        const received1: any[] = []
+                        const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
+                        let sub1: Subscription | undefined = await client.subscribe(stream, async (msg) => {
+                            received1.push(msg)
+                            if (received1.length === SOME_MESSAGES) {
+                                if (!sub1) { return }
+                                await sub1.unsubscribe()
+                                // unsub early
+                                sub1Done.resolve(undefined)
+                            }
+                        })
+
+                        subLeak1 = new LeakDetector(sub1)
+
+                        const sub2Done = Defer()
+                        const received2: any[] = []
+                        const sub2 = await client.subscribe(stream, (msg) => {
+                            received2.push(msg)
+                            if (received2.length === MAX_MESSAGES) {
+                                // don't unsubscribe yet, this shouldn't affect sub1 from being collected
+                                sub2Done.resolve(undefined)
+                            }
+                        })
+                        subLeak2 = new LeakDetector(sub2)
+
+                        await publishTestMessages(MAX_MESSAGES)
+                        await sub1Done
+                        await sub2Done
+                        // eslint-disable-next-line require-atomic-updates
+                        sub1 = undefined
+                        await wait(1000)
+                        snapshot()
+                        // sub1 should have been collected even though sub2 is still subscribed
+                        expect(await subLeak1.isLeaking()).toBeFalsy()
+                        expect(await subLeak2.isLeaking()).toBeTruthy()
+                        expect(received1).toHaveLength(SOME_MESSAGES)
+                        expect(received2).toHaveLength(MAX_MESSAGES)
+                        await sub2.unsubscribe()
+                        await wait(1000)
+                    }, 15000)
+
+                    test('does not leak subscription or messages', async () => {
+                        if (!client) { return }
+                        expect(await subLeak1.isLeaking()).toBeFalsy()
+                        expect(await subLeak2.isLeaking()).toBeFalsy()
                     })
                 })
             })

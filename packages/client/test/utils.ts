@@ -398,7 +398,10 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
  */
 export function snapshot() {
     if (!process.env.WRITE_SNAPSHOTS) { return '' }
-    return writeHeapSnapshot()
+    testDebugRoot('heap snapshot >>')
+    const value = writeHeapSnapshot()
+    testDebugRoot('heap snapshot <<', value)
+    return value
 }
 
 const testUtilsCounter = CounterId('test/utils')

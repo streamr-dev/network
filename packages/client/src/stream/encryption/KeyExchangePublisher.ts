@@ -95,6 +95,8 @@ async function PublisherKeyExhangeSubscription(client: StreamrClient, getGroupKe
     }
 
     const sub = await subscribeToKeyExchangeStream(client, onKeyExchangeMessage)
+    if (!sub) { return undefined }
+
     sub.on('error', (err: Error | StreamMessageProcessingError) => {
         if (!('streamMessage' in err)) {
             return // do nothing
@@ -157,7 +159,7 @@ export class PublisherKeyExhange {
         this.getSubTask = PublisherKeyExhangeSubscription(this.client, this.getGroupKeyStore).finally(() => {
             this.getSubTask = undefined
         }).then(async (sub) => {
-            if (!this.enabled) {
+            if (!this.enabled && sub) {
                 await sub.cancel()
                 return undefined
             }

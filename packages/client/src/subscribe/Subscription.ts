@@ -101,16 +101,25 @@ export default class Subscription extends Emitter {
      * @internal
      */
 
-    async onPipelineEnd(err?: Error) {
+    public async onPipelineEnd(err?: Error) {
         this.debug('onPipelineEnd', err)
         let error = err
+        this.pipeline = undefined
         try {
-            await this._onFinally(error)
+            const onFinally = this._onFinally
+            this._onFinally = () => {}
+            await onFinally(error)
         } catch (onFinallyError) {
             error = AggregatedError.from(error, onFinallyError)
         } finally {
             this._onDone.handleErrBack(error)
         }
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    count(): number {
+        // will be overridden by subscriptions
+        return 1
     }
 
     /** @internal */
@@ -149,19 +158,20 @@ export default class Subscription extends Emitter {
     }
 
     async cancel(...args: Todo[]) {
-        return this.pipeline.cancel(...args)
+        return this.pipeline?.cancel(...args)
     }
 
     isCancelled(...args: Todo[]): boolean {
+        if (!this.pipeline) { return false }
         return this.pipeline.isCancelled(...args)
     }
 
     async return(...args: Todo[]) {
-        return this.pipeline.return(...args)
+        return this.pipeline?.return(...args)
     }
 
     async throw(...args: Todo[]) {
-        return this.pipeline.throw(...args)
+        return this.pipeline?.throw(...args)
     }
 
     /**

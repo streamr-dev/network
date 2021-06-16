@@ -45,8 +45,9 @@ export default class SubscriptionSession extends Emitter {
         unsubscribe: typeof unsubscribe
     }
     validate
-    subscriptions: Set<Subscription>
-    deletedSubscriptions: Set<Todo>
+    /** active subs */
+    subscriptions: Set<Subscription> = new Set()
+    pendingRemoval: Set<Subscription> = new Set()
     updateSubscriptions?: Todo
     _subscribe
     _unsubscribe
@@ -59,8 +60,6 @@ export default class SubscriptionSession extends Emitter {
         this._subscribe = this.options.subscribe || subscribe
         this._unsubscribe = this.options.unsubscribe || unsubscribe
 
-        this.subscriptions = new Set() // active subs
-        this.deletedSubscriptions = new Set() // hold so we can clean up
         this.id = counterId(`SubscriptionSession:${this.options.id || ''}${this.options.key}`)
         this.debug = this.client.debug.extend(this.id)
         this.debug('create')
@@ -91,10 +90,9 @@ export default class SubscriptionSession extends Emitter {
             }
         }
 
-        let deleted = new Set<Subscription>()
         const check = () => {
             const { connection } = this.client
-            return (
+            return !!(
                 connection.isConnectionValid()
                 && !needsReset
                 // has some active subscription
@@ -110,14 +108,6 @@ export default class SubscriptionSession extends Emitter {
                     // don't clean up if just resetting
                     if (needsReset) { return }
 
-                    try {
-                        this.emit('unsubscribed')
-                    } finally {
-                        deleted.forEach((s) => {
-                            this.deletedSubscriptions.delete(s)
-                            s.removeAllListeners()
-                        })
-                    }
                     if (!connection.isConnectionValid()) {
                         await this.removeAll()
                     }
@@ -129,7 +119,6 @@ export default class SubscriptionSession extends Emitter {
                 connection.on('done', onDisconnected)
                 connection.on('disconnected', onDisconnected)
                 connection.on('disconnecting', onDisconnected)
-                this.emit('subscribing')
 
                 return () => {
                     connection.off('done', onDisconnected)
@@ -143,7 +132,6 @@ export default class SubscriptionSession extends Emitter {
                 await connection.addHandle(key)
                 return async () => {
                     if (needsReset) { return } // don't close connection if just resetting
-                    deleted = new Set(this.deletedSubscriptions)
                     await connection.removeHandle(key)
                 }
             },
@@ -155,28 +143,47 @@ export default class SubscriptionSession extends Emitter {
             // subscribe
             async () => {
                 await this._subscribe(this.client, this.options)
-                this.emit('subscribed')
-
                 return async () => {
                     if (needsReset) { return }
-                    this.emit('unsubscribing')
                     await this._unsubscribe(this.client, this.options)
                 }
             }
-        // @ts-expect-error
         ], check, {
-            onError(err) {
+            onChange: (isGoingUp) => {
+                if (needsReset) { return }
+
+                if (!isGoingUp) {
+                    this.emit('unsubscribing')
+                } else {
+                    this.emit('subscribing')
+                }
+            },
+            onDone: async (isGoingUp) => {
+                if (needsReset) { return }
+
+                if (isGoingUp) {
+                    this.emit('subscribed')
+                } else {
+                    this.emit('unsubscribed')
+                    const { connection } = this.client
+                    if (!connection.isConnectionValid()) {
+                        await this.removeAll()
+                    }
+                }
+            },
+            onError(err?: Error) {
                 if (err instanceof ConnectionError && !check()) {
                     // ignore error if state changed
                     needsReset = true
                     return
                 }
+
                 throw err
             }
         })
     }
 
-    has(sub: Todo) {
+    has(sub: Subscription): boolean {
         return this.subscriptions.has(sub)
     }
 
@@ -185,45 +192,42 @@ export default class SubscriptionSession extends Emitter {
      * then on self.
      */
 
-    emit(...args: Todo[]) {
-        const subs = this._getSubs()
-        if (args[0] === 'error') {
-            this.debug(args[0], args[1])
+    emit(event: string | symbol, ...args: any[]): boolean {
+        const subs = this.subscriptions
+        if (event === 'error') {
+            this.debug(event, ...args)
         } else {
-            this.debug(args[0])
+            this.debug(event)
         }
 
         try {
-            multiEmit(subs, ...args)
+            multiEmit(subs, event, ...args)
         } catch (error) {
             return super.emit('error', error)
         }
-        // @ts-expect-error
-        return super.emit(...args)
-    }
 
-    _getSubs() {
-        // all known subs
-        return new Set([
-            ...this.deletedSubscriptions,
-            ...this.subscriptions,
-        ])
+        return super.emit(event, ...args)
     }
 
     /**
      * Add subscription & appropriate connection handle.
      */
 
-    async add(sub: Todo) {
+    async add(sub: Subscription): Promise<void> {
+        if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
+        const { id } = sub
+
         this.subscriptions.add(sub)
-        this.debug('add', sub && sub.id)
+        this.debug('add >>', id)
         const { connection } = this.client
-        await connection.addHandle(`adding${sub.id}`)
+        await connection.addHandle(`adding${id}`)
         try {
-            await connection.needsConnection(`Subscribe ${sub.id}`)
+            await connection.needsConnection(`Subscribe ${id}`)
             await this.updateSubscriptions()
         } finally {
-            await connection.removeHandle(`adding${sub.id}`)
+            await connection.removeHandle(`adding${id}`)
+            sub.emit('subscribed')
+            this.debug('add <<', id)
         }
     }
 
@@ -231,24 +235,29 @@ export default class SubscriptionSession extends Emitter {
      * Remove subscription & appropriate connection handle.
      */
 
-    async remove(sub: Todo) {
-        this.subscriptions.delete(sub)
-
-        if (this.deletedSubscriptions.has(sub)) {
+    async remove(sub: Subscription): Promise<void> {
+        if (!sub || this.pendingRemoval.has(sub) || !this.subscriptions.has(sub)) {
             return
         }
 
-        if (this.subscriptions.has(sub)) {
-            this.debug('remove', sub && sub.id)
-        }
+        const { id } = sub
 
-        const cancelTask = sub.cancel()
+        this.debug('remove >>', id)
+        this.pendingRemoval.add(sub)
+        this.subscriptions.delete(sub)
+        sub.emit('unsubscribing')
+
         try {
-            this.subscriptions.delete(sub)
-            this.deletedSubscriptions.add(sub)
-            await this.updateSubscriptions()
+            await sub.cancel()
         } finally {
-            await cancelTask
+            try {
+                await this.updateSubscriptions()
+            } finally {
+                this.pendingRemoval.delete(sub)
+                sub.emit('unsubscribed')
+                sub.removeAllListeners()
+                this.debug('remove <<', id)
+            }
         }
     }
 
@@ -256,9 +265,8 @@ export default class SubscriptionSession extends Emitter {
      * Remove all subscriptions & subscription connection handles
      */
 
-    async removeAll() {
-        const subs = this._getSubs()
-        return Promise.all([...subs].map((sub) => (
+    async removeAll(): Promise<void> {
+        await Promise.all([...this.subscriptions].map((sub) => (
             this.remove(sub)
         )))
     }
@@ -267,7 +275,7 @@ export default class SubscriptionSession extends Emitter {
      * How many subscriptions
      */
 
-    count() {
+    count(): number {
         return this.subscriptions.size
     }
 }

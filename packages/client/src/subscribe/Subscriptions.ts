@@ -2,7 +2,7 @@ import { allSettledValues } from '../utils'
 import { validateOptions } from '../stream/utils'
 import Subscription from './Subscription'
 import SubscriptionSession from './SubscriptionSession'
-import { Todo, MaybeAsync } from '../types'
+import { MaybeAsync } from '../types'
 import StreamrClient, { StreamPartDefinition } from '..'
 
 async function defaultOnFinally(err?: Error) {
@@ -17,11 +17,10 @@ async function defaultOnFinally(err?: Error) {
 
 export default class Subscriptions {
     client: StreamrClient
-    subSessions: Map<Todo, Todo>
+    readonly subSessions: Map<string, SubscriptionSession> = new Map()
 
     constructor(client: StreamrClient) {
         this.client = client
-        this.subSessions = new Map()
     }
 
     async add(opts: StreamPartDefinition, onFinally: MaybeAsync<(err?: any) => void> = defaultOnFinally) {
@@ -36,24 +35,20 @@ export default class Subscriptions {
         const sub = new Subscription(this.client, {
             ...options,
             validate: subSession.validate,
-        }, async (err: Todo) => {
+        }, async (err?: Error) => {
             try {
                 await this.remove(sub)
             } finally {
                 await onFinally(err)
             }
         })
-
-        // @ts-expect-error
         sub.count = () => {
             // sub.count() gives number of subs on same stream+partition
-            return this.count(sub.options)
+            return this.count(options)
         }
 
         // sub didn't throw, add subsession
-        if (!this.subSessions.has(key)) { // double-check
-            this.subSessions.set(key, subSession)
-        }
+        this.subSessions.set(key, subSession)
 
         // add subscription to subSession
         try {
@@ -67,7 +62,7 @@ export default class Subscriptions {
         return sub
     }
 
-    async remove(sub: Todo) {
+    async remove(sub: Subscription): Promise<void> {
         const { key } = sub
         let cancelTask
         try {
@@ -91,7 +86,7 @@ export default class Subscriptions {
      */
     async removeAll(options?: StreamPartDefinition) {
         const subs = this.get(options)
-        return allSettledValues(subs.map((sub: Todo) => (
+        return allSettledValues(subs.map((sub: Subscription) => (
             this.remove(sub)
         )))
     }
@@ -112,7 +107,7 @@ export default class Subscriptions {
      * Count all matching subscriptions.
      */
 
-    count(options?: StreamPartDefinition) {
+    count(options?: StreamPartDefinition): number {
         if (options === undefined) { return this.countAll() }
         return this.get(options).length
     }
@@ -121,8 +116,8 @@ export default class Subscriptions {
      * Get all subscriptions.
      */
 
-    getAll() {
-        return [...this.subSessions.values()].reduce((o, s) => {
+    getAll(): Subscription[] {
+        return [...this.subSessions.values()].reduce((o: Subscription[], s: SubscriptionSession) => {
             o.push(...s.subscriptions)
             return o
         }, [])
@@ -132,7 +127,7 @@ export default class Subscriptions {
      * Get subscription session for matching sub options.
      */
 
-    getSubscriptionSession(options: Todo) {
+    getSubscriptionSession(options: StreamPartDefinition): SubscriptionSession | undefined {
         const { key } = validateOptions(options)
         return this.subSessions.get(key)
     }
@@ -141,7 +136,7 @@ export default class Subscriptions {
      * Get all subscriptions matching options.
      */
 
-    get(options?: StreamPartDefinition) {
+    get(options?: StreamPartDefinition): Subscription[] {
         if (options === undefined) { return this.getAll() }
 
         const { key } = validateOptions(options)

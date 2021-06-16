@@ -376,8 +376,8 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
      * @category Important
      */
     async subscribe(opts: SubscribeOptions & StreamPartDefinition, onMessage?: OnMessageCallback) {
-        let subTask: Todo
-        let sub: Todo
+        let subTask: Promise<Subscription> | undefined
+        let sub: Subscription | undefined
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
         const onEnd = (err?: Error) => {
             if (sub && typeof onMessage === 'function') {
