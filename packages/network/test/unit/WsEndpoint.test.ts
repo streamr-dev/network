@@ -92,6 +92,7 @@ describe('WsEndpoint with connections', () => {
         thirdWsEndpoint = await setUpEndpoint('thirdPeerId', 'node', 'Helsinki', 30468)
         await otherWsEndpoint.connect(wsEndpoint.getAddress())
         await thirdWsEndpoint.connect(wsEndpoint.getAddress())
+        
     })
 
     afterAll(async () => {
@@ -110,9 +111,9 @@ describe('WsEndpoint with connections', () => {
     it('getRtts() is empty', async () => {
         await waitForCondition(() => Object.entries(wsEndpoint.getRtts()).length !== 0)
         const rtts = wsEndpoint.getRtts()
-        expect(Object.keys(rtts)).toEqual(['otherPeerId', 'thirdPeerId'])
-        expect(rtts.otherPeerId).toBeGreaterThanOrEqual(0)
-        expect(rtts.thirdPeerId).toBeGreaterThanOrEqual(0)
+        expect(Object.keys(rtts)).toEqual([otherWsEndpoint.getPeerInfo().peerId, thirdWsEndpoint.getPeerInfo().peerId])
+        expect(rtts[otherWsEndpoint.getPeerInfo().peerId]).toBeGreaterThanOrEqual(0)
+        expect(rtts[thirdWsEndpoint.getPeerInfo().peerId]).toBeGreaterThanOrEqual(0)
     })
 
     it('getPeers() is empty', () => {
@@ -123,34 +124,27 @@ describe('WsEndpoint with connections', () => {
         ])
     })
 
-    it('getPeerInfos() is empty', () => {
+    it('getPeerInfos() is empty', () => {            
         expect(wsEndpoint.getPeerInfos()).toEqual([
-            PeerInfo.newNode(
-                'otherPeerId',
-                null,
-                undefined,
-                undefined,
-                {
-                    latitude: null,
-                    longitude: null,
-                    country: null,
-                    city: null }
-            ),
-            PeerInfo.newNode('thirdPeerId',
-                null,
-                undefined,
-                undefined,
-                {
-                    latitude: null,
-                    longitude: null,
-                    country: null,
-                    city: null
-                }
-            )
+            expect.objectContaining({
+                peerType: 'node',
+                controlLayerVersions: [ 1, 2 ],
+                messageLayerVersions: [ 30, 31, 32 ],
+                peerName: null,
+                location: { latitude: null, longitude: null, country: null, city: null },
+              
+            }),
+            expect.objectContaining({
+                peerType: 'node',
+                controlLayerVersions: [ 1, 2 ],
+                messageLayerVersions: [ 30, 31, 32 ],
+                peerName: null,
+                location: { latitude: null, longitude: null, country: null, city: null },  
+            })
         ])
     })
 
     it('resolveAddress throws error', () => {
-        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('ws://127.0.0.1:30467')
+        expect(wsEndpoint.resolveAddress(otherWsEndpoint.getPeerInfo().peerId)).toEqual('ws://127.0.0.1:30467')
     })
 })

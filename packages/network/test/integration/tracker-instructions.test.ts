@@ -21,6 +21,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     const s1 = new StreamIdAndPartition('stream-1', 0)
 
+    let nodeSessionId1: string 
+    let nodeSessionId2: string 
+
     beforeEach(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -50,6 +53,11 @@ describe('check tracker, nodes and statuses from nodes', () => {
         node1.start()
         node2.start()
 
+        // @ts-expect-error private method
+        nodeSessionId1 = node1.peerInfo.peerId
+        // @ts-expect-error private method
+        nodeSessionId2 = node2.peerInfo.peerId
+
         await Promise.all([
             // @ts-expect-error private variable
             waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
@@ -69,7 +77,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             requestId: 'requestId',
             streamId: s1.id,
             streamPartition: s1.partition,
-            nodeIds: ['node2', 'unknown'],
+            nodeIds: [nodeSessionId2, 'unknown'],
             counter: 0
         })
 
@@ -77,7 +85,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             requestId: 'requestId',
             streamId: s1.id,
             streamPartition: s1.partition,
-            nodeIds: ['node1', 'unknown'],
+            nodeIds: [nodeSessionId1, 'unknown'],
             counter: 0
         })
 
