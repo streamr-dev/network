@@ -23,6 +23,10 @@ describe('Node-to-Node protocol version negotiation', () => {
     let nodeToNode1: NodeToNode
     let nodeToNode2: NodeToNode
 
+    let peerInfo1: PeerInfo 
+    let peerInfo2: PeerInfo 
+    let peerInfo3: PeerInfo
+
     beforeEach(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -30,9 +34,9 @@ describe('Node-to-Node protocol version negotiation', () => {
             id: 'tracker'
         })
 
-        const peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31])
-        const peerInfo2 = new PeerInfo('node-endpoint2', PeerType.Node, [1, 2], [31, 32, 33])
-        const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
+        peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31])
+        peerInfo2 = new PeerInfo('node-endpoint2', PeerType.Node, [1, 2], [31, 32, 33])
+        peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
 
         // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
         const wsEp1 = await startEndpoint('127.0.0.1', 28555, peerInfo1, null, new MetricsContext(peerInfo1.peerId))
@@ -74,7 +78,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         nodeToNode1 = new NodeToNode(ep1)
         nodeToNode2 = new NodeToNode(ep2)
 
-        await runAndWaitForEvents(()=> {nodeToNode1.connectToNode('node-endpoint2', 'tracker')}, [
+        await runAndWaitForEvents(()=> {nodeToNode1.connectToNode(peerInfo2.peerId, 'tracker')}, [
             [nodeToNode1, ntnEvent.NODE_CONNECTED],
             [nodeToNode2, ntnEvent.NODE_CONNECTED]
         ])
@@ -93,8 +97,8 @@ describe('Node-to-Node protocol version negotiation', () => {
     })
 
     it('protocol versions are correctly negotiated',  () => {
-        expect(nodeToNode1.getNegotiatedProtocolVersionsOnNode('node-endpoint2')).toEqual([2,31])
-        expect(nodeToNode2.getNegotiatedProtocolVersionsOnNode('node-endpoint1')).toEqual([2,31])
+        expect(nodeToNode1.getNegotiatedProtocolVersionsOnNode(peerInfo2.peerId)).toEqual([2,31])
+        expect(nodeToNode2.getNegotiatedProtocolVersionsOnNode(peerInfo1.peerId)).toEqual([2,31])
     })
 
     it('messages are sent with the negotiated protocol version', (done) => {
@@ -106,26 +110,26 @@ describe('Node-to-Node protocol version negotiation', () => {
         })
         const i = 1
         const msg1 = new StreamMessage({
-            messageId: new MessageID('stream-1', 0, i, 0, 'node-endpoint1', 'msgChainId'),
+            messageId: new MessageID('stream-1', 0, i, 0, peerInfo1.peerId, 'msgChainId'),
             prevMsgRef: null,
             content: {
                 messageNo: i
             },
         })
-        nodeToNode1.sendData('node-endpoint2', msg1)
+        nodeToNode1.sendData(peerInfo2.peerId, msg1)
     })
 
     it('negotiated version is removed once node is disconnected', async () => {
-        await runAndWaitForEvents(()=> { ep1.close('node-endpoint2', 'test') }, [ep2, wrtcEvent.PEER_DISCONNECTED])
+        await runAndWaitForEvents(()=> { ep1.close(peerInfo2.peerId, 'test') }, [ep2, wrtcEvent.PEER_DISCONNECTED])
 
-        expect(ep1.getNegotiatedControlLayerProtocolVersionOnNode('node-endpoint2')).toEqual(undefined)
-        expect(ep2.getNegotiatedControlLayerProtocolVersionOnNode('node-endpoint1')).toEqual(undefined)
+        expect(ep1.getNegotiatedControlLayerProtocolVersionOnNode(peerInfo2.peerId)).toEqual(undefined)
+        expect(ep2.getNegotiatedControlLayerProtocolVersionOnNode(peerInfo1.peerId)).toEqual(undefined)
     })
 
     it('if there are no shared versions the connection is closed', async () => {
         let errors = 0
         try {
-            await ep3.connect('node-endpoint1', 'tracker')
+            await ep3.connect(peerInfo1.peerId, 'tracker')
         } catch (err) {
             errors += 1
         }

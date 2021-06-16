@@ -6,6 +6,7 @@ import { waitForEvent } from 'streamr-test-utils'
 
 import { startNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { PeerInfo } from '../connection/PeerInfo'
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -13,7 +14,8 @@ describe('node unsubscribing from a stream', () => {
     let tracker: Tracker
     let nodeA: NetworkNode
     let nodeB: NetworkNode
-
+    let peerInfoA: PeerInfo 
+    let peerInfoB: PeerInfo
     beforeEach(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -37,6 +39,11 @@ describe('node unsubscribing from a stream', () => {
 
         nodeA.start()
         nodeB.start()
+
+        // @ts-expect-error private method
+        peerInfoA = nodeA.peerInfo
+        // @ts-expect-error private method
+        peerInfoB = nodeB.peerInfo
 
         nodeA.subscribe('s', 2)
         nodeB.subscribe('s', 2)
@@ -92,7 +99,7 @@ describe('node unsubscribing from a stream', () => {
             waitForEvent(nodeB, NodeEvent.NODE_DISCONNECTED)
         ])
 
-        expect(aEventArgs).toEqual(['b'])
-        expect(bEventArgs).toEqual(['a'])
+        expect(aEventArgs).toEqual([peerInfoB.peerId])
+        expect(bEventArgs).toEqual([peerInfoA.peerId])
     })
 })

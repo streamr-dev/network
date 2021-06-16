@@ -17,6 +17,9 @@ describe('WebRtcEndpoint: back pressure handling', () => {
     let ep1: WebRtcEndpoint
     let ep2: WebRtcEndpoint
 
+    let peerInfo1: PeerInfo 
+    let peerInfo2: PeerInfo
+
     beforeEach(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -24,8 +27,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             id: 'tracker'
         })
 
-        const peerInfo1 = PeerInfo.newNode('ep1')
-        const peerInfo2 = PeerInfo.newNode('ep2')
+        peerInfo1 = PeerInfo.newNode('ep1')
+        peerInfo2 = PeerInfo.newNode('ep2')
 
         // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
         const wsEp1 = await startEndpoint('127.0.0.1', 28711, peerInfo1, null, new MetricsContext(peerInfo1.peerId))
@@ -50,7 +53,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             new MetricsContext('ep'),
             new NegotiatedProtocolVersions(peerInfo2)
         )
-        await ep1.connect('ep2', 'tracker')
+        await ep1.connect(peerInfo2.peerId, 'tracker')
     })
 
     afterEach(async () => {
@@ -65,14 +68,14 @@ describe('WebRtcEndpoint: back pressure handling', () => {
 
     function inflictHighBackPressure(): Promise<void> {
         for (let i = 0; i <= 25; ++i) {
-            ep1.send('ep2', new Array(1024 * 256).fill('X').join(''))
+            ep1.send(peerInfo2.peerId, new Array(1024 * 256).fill('X').join(''))
         }
         return wait(0) // Relinquish control to allow for setImmediate(() => this.attemptToFlushMessages())
     }
 
     it('emits HIGH_BACK_PRESSURE on high back pressure', (done) => {
         ep1.once(Event.HIGH_BACK_PRESSURE, (peerInfo) => {
-            expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
+            expect(peerInfo).toEqual(peerInfo2)
             done()
         })
         inflictHighBackPressure()
@@ -81,7 +84,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
     it('emits LOW_BACK_PRESSURE after high back pressure',  (done) => {
         ep1.once(Event.HIGH_BACK_PRESSURE, () => {
             ep1.once(Event.LOW_BACK_PRESSURE, (peerInfo) => {
-                expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
+                expect(peerInfo).toEqual(peerInfo2)
                 done()
             })
         })
