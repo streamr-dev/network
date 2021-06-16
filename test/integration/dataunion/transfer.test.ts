@@ -129,9 +129,11 @@ describe('DataUnion earnings transfer methods', () => {
 
         const transferTx = await tokenSidechain.transfer(dataUnionSidechain.address, parseEther('4'))
         await transferTx.wait()
+        log('sidechain token transfer done')
 
         const refreshTx = await dataUnionSidechain.refreshRevenue()
         await refreshTx.wait()
+        log('refreshRevenue done')
 
         return {
             memberWallet,
