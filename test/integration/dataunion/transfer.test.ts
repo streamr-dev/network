@@ -149,11 +149,19 @@ describe('DataUnion earnings transfer methods', () => {
             dataUnion
         } = await setupTest(1)
 
+        const memberClient = new StreamrClient({
+            ...clientOptions,
+            auth: {
+                privateKey: memberWallet.privateKey,
+            },
+        })
+        const memberDataunion = memberClient.getDataUnion(dataUnion.getAddress())
+
         const statsBefore = await dataUnion.getMemberStats(memberWallet.address)
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
         log('Stats before: %O, %O', statsBefore, stats2Before)
 
-        await dataUnion.transferWithinContract(member2Wallet.address, parseEther('1'))
+        await memberDataunion.transferWithinContract(member2Wallet.address, parseEther('1'))
         log(`Transfer 1 token worth of earnings with transferWithinContract: ${memberWallet.address} -> ${member2Wallet.address}`)
 
         const statsAfter = await dataUnion.getMemberStats(memberWallet.address)
