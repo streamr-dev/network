@@ -370,6 +370,62 @@ describe('Storage', () => {
         })
     })
 
+    describe('messages pushed in randomized order', () => {
+        const NUM_MESSAGES = 100
+        const MESSAGE_SIZE = 1000
+
+        let beforeEachWasRunAlready = false
+        beforeEach(async () => {
+            if (beforeEachWasRunAlready) {
+                return
+            }
+            beforeEachWasRunAlready = true
+            const messages = []
+            const randomBuffer = Buffer.alloc(MESSAGE_SIZE)
+            for (let i = 0; i < NUM_MESSAGES; i++) {
+                randomFillSync(randomBuffer)
+                const msg = buildMsg({
+                    streamId,
+                    streamPartition: 0,
+                    timestamp: (i + 1) * 1000,
+                    sequenceNumber: i,
+                    publisherId: 'publisher1',
+                    content: randomBuffer.toString('hex')
+                })
+                messages.push(msg)
+            }
+            const storePromises = []
+            for (const msg of messages.sort(() => .5 - Math.random())) { // biased, "semi-random" shuffle
+                storePromises.push(storage.store(msg))
+            }
+            const firstQuarter = Math.floor(storePromises.length * (1/4))
+            const halfPoint = Math.floor(storePromises.length * (2/4))
+            const lastQuarter = Math.floor(storePromises.length * (3/4))
+            await Promise.all(storePromises.slice(0, firstQuarter))
+            await Promise.all(storePromises.slice(firstQuarter, halfPoint))
+            await Promise.all(storePromises.slice(halfPoint, lastQuarter))
+            await Promise.all(storePromises.slice(lastQuarter))
+        }, 30 * 1000)
+
+        it('requestLast correctly returns last 10 messages', async () => {
+            const streamingResults = storage.requestLast(streamId, 0, 10)
+            const results = await toArray(streamingResults)
+            expect(results.map((msg) => msg.messageId.sequenceNumber)).toEqual([90, 91, 92, 93, 94, 95, 96, 97, 98, 99])
+        })
+
+        it('requestFrom correctly returns messages', async () => {
+            const streamingResults = storage.requestFrom(streamId, 0, 91000, 0,  null)
+            const results = await toArray(streamingResults)
+            expect(results.map((msg) => msg.messageId.sequenceNumber)).toEqual([90, 91, 92, 93, 94, 95, 96, 97, 98, 99])
+        })
+
+        it('requestRange correctly returns range of messages', async () => {
+            const streamingResults = storage.requestRange(streamId, 0, 41000, 0, 50000, 0, null, null)
+            const results = await toArray(streamingResults)
+            expect(results.map((msg) => msg.messageId.sequenceNumber)).toEqual([40, 41, 42, 43, 44, 45, 46, 47, 48, 49])
+        })
+    })
+
     describe('stream details', () => {
 
         test('getFirstMessageInStream', async () => {
