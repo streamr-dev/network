@@ -20,16 +20,19 @@ const tokenAdminSidechainWallet = new Wallet(tokenAdminPrivateKey, providerSidec
 const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
 
 async function addMember(dataUnionAddress: EthereumAddress, secret: string) {
-    const memberWallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
+    const privateKey = `0x100000000000000000000000000000000000000012300000001${Date.now()}`
+    log('Joining a new member with privatekey %s', privateKey)
     const memberClient = new StreamrClient({
         ...clientOptions,
         auth: {
-            privateKey: memberWallet.privateKey
+            privateKey
         }
     } as any)
     const memberDataUnion = memberClient.getDataUnion(dataUnionAddress) // TODO: await safeGetDataUnion
     const res = await memberDataUnion.join(secret)
-    log(`Member joined data union: ${JSON.stringify(res)}`)
+    log('Member joined data union: %O', res)
+
+    const memberWallet = new Wallet(privateKey, providerSidechain)
     return memberWallet
 }
 
@@ -127,6 +130,13 @@ describe('DataUnion earnings transfer methods', () => {
         const member2Wallet = await addMember(dataUnionAddress, secret)
         log(`DU member count: ${await dataUnionSidechain.activeMemberCount()}`)
 
+        log('Transfer sidechain ETH to %s for transferWithinContract tx', memberWallet.address)
+        const sendTx = await adminWalletSidechain.sendTransaction({
+            to: memberWallet.address,
+            value: parseEther('0.1')
+        })
+        await sendTx.wait()
+
         const transferTx = await tokenSidechain.transfer(dataUnionSidechain.address, parseEther('4'))
         await transferTx.wait()
         log('sidechain token transfer done')
@@ -161,8 +171,11 @@ describe('DataUnion earnings transfer methods', () => {
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
         log('Stats before: %O, %O', statsBefore, stats2Before)
 
+        log('%s sidechain-ETH balance: %s', memberWallet.address, await providerSidechain.getBalance(memberWallet.address))
+        log('%s sidechain-DATA balance: %s', memberWallet.address, await tokenSidechain.balanceOf(memberWallet.address))
+
+        log('Transfer 1 token worth of earnings with transferWithinContract: %s -> %s', memberWallet.address, member2Wallet.address)
         await memberDataunion.transferWithinContract(member2Wallet.address, parseEther('1'))
-        log(`Transfer 1 token worth of earnings with transferWithinContract: ${memberWallet.address} -> ${member2Wallet.address}`)
 
         const statsAfter = await dataUnion.getMemberStats(memberWallet.address)
         const stats2After = await dataUnion.getMemberStats(member2Wallet.address)
@@ -200,18 +213,18 @@ describe('DataUnion earnings transfer methods', () => {
             member2Wallet,
             dataUnion
         } = await setupTest(2)
+        const adminWalletSidechain = getSidechainTestWallet(2)
 
         const statsBefore = await dataUnion.getMemberStats(memberWallet.address)
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
         log('Stats before: %O, %O', statsBefore, stats2Before)
 
-        const adminWalletSidechain = getSidechainTestWallet(2)
+        log(`Approve DU ${dataUnion.getSidechainAddress()} to access 1 token from ${adminWalletSidechain.address}`)
         const approve = await tokenSidechain.connect(adminWalletSidechain).approve(dataUnion.getSidechainAddress(), parseEther('1'))
         await approve.wait()
-        log(`Approve DU ${dataUnion.getSidechainAddress()} to access 1 token from ${adminWalletSidechain.address}`)
 
+        log(`Transfer 1 token with transferToMemberInContract to ${memberWallet.address}`)
         await dataUnion.transferToMemberInContract(memberWallet.address, parseEther('1'))
-        log(`Transfer 1 token with transferWithinContract to ${memberWallet.address}`)
 
         const statsAfter = await dataUnion.getMemberStats(memberWallet.address)
         const stats2After = await dataUnion.getMemberStats(member2Wallet.address)
