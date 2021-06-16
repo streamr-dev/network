@@ -35,11 +35,11 @@ async function addMember(dataUnionAddress: EthereumAddress, secret: string) {
 
 describe('DataUnion earnings transfer methods', () => {
     beforeAll(async () => {
-        log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
+        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
         const network = await providerMainnet.getNetwork()
-        log('Connected to "mainnet" network: %o', network)
+        log('Connected to "mainnet" network: %O', network)
         const network2 = await providerSidechain.getNetwork()
-        log('Connected to sidechain network: %o', network2)
+        log('Connected to sidechain network: %O', network2)
 
         // TODO: all of the below should happen in smart-contracts-init?
 
@@ -149,14 +149,14 @@ describe('DataUnion earnings transfer methods', () => {
 
         const statsBefore = await dataUnion.getMemberStats(memberWallet.address)
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
-        log('Stats: %o, %o', statsBefore, stats2Before)
+        log('Stats before: %O, %O', statsBefore, stats2Before)
 
         await dataUnion.transferWithinContract(member2Wallet.address, parseEther('1'))
         log(`Transfer 1 token worth of earnings with transferWithinContract: ${memberWallet.address} -> ${member2Wallet.address}`)
 
         const statsAfter = await dataUnion.getMemberStats(memberWallet.address)
         const stats2After = await dataUnion.getMemberStats(member2Wallet.address)
-        log('Stats: %o, %o', statsAfter, stats2After)
+        log('Stats after: %O, %O', statsAfter, stats2After)
 
         expect(statsBefore).toMatchObject({
             status: MemberStatus.ACTIVE,
@@ -193,7 +193,7 @@ describe('DataUnion earnings transfer methods', () => {
 
         const statsBefore = await dataUnion.getMemberStats(memberWallet.address)
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
-        log('Stats: %o, %o', statsBefore, stats2Before)
+        log('Stats before: %O, %O', statsBefore, stats2Before)
 
         const adminWalletSidechain = getSidechainTestWallet(2)
         const approve = await tokenSidechain.connect(adminWalletSidechain).approve(dataUnion.getSidechainAddress(), parseEther('1'))
@@ -205,7 +205,7 @@ describe('DataUnion earnings transfer methods', () => {
 
         const statsAfter = await dataUnion.getMemberStats(memberWallet.address)
         const stats2After = await dataUnion.getMemberStats(member2Wallet.address)
-        log('Stats: %o, %o', statsAfter, stats2After)
+        log('Stats after: %O, %O', statsAfter, stats2After)
 
         expect(statsBefore).toMatchObject({
             status: MemberStatus.ACTIVE,

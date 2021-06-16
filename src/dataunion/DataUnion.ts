@@ -84,8 +84,8 @@ type WaitForTXOptions = {
 
 async function waitForTx(tx: ContractTransaction, { retries = 60, retryInterval = 60000 }: WaitForTXOptions = {}): Promise<ContractReceipt> {
     return tx.wait().catch((err) => {
-        log('Attempted transaction: %o', tx)
-        log('Got error: %o', err)
+        log('Attempted transaction: %O', tx)
+        log('Got error: %O', err)
         if (err.body) {
             const body = JSON.parse(err.body)
             const msg = body.error.message
