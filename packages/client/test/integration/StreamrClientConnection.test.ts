@@ -607,6 +607,20 @@ describeRepeats('StreamrClient Connection', () => {
 
                 await client.disconnect()
             })
+
+            it('does not error if disconnect then connect before subscribe', async () => {
+                client = createClient()
+                await client.connect()
+                const stream = await createTestStream(client, module)
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+
+                await client.disconnect()
+                await client.connect()
+                await client.subscribe({
+                    streamId: stream.id,
+                }, () => {})
+                await client.disconnect()
+            })
         })
     })
 })
