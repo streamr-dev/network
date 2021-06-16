@@ -154,11 +154,22 @@ export default class Subscription extends Emitter {
         }
 
         this.iterated = true
+        if (!this.pipeline) {
+            // subscription is done
+            // eslint-disable-next-line require-yield
+            return (function* Noop() {
+                return undefined
+            }())
+        }
         return this.pipeline
     }
 
     async cancel(...args: Todo[]) {
         return this.pipeline?.cancel(...args)
+    }
+
+    async end(...args: Todo[]) {
+        return this.pipeline?.end(...args)
     }
 
     isCancelled(...args: Todo[]): boolean {

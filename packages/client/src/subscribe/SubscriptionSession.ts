@@ -254,8 +254,6 @@ export default class SubscriptionSession extends Emitter {
                 await this.updateSubscriptions()
             } finally {
                 this.pendingRemoval.delete(sub)
-                sub.emit('unsubscribed')
-                sub.removeAllListeners()
                 this.debug('remove <<', id)
             }
         }

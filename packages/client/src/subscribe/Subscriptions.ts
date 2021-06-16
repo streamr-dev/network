@@ -39,7 +39,12 @@ export default class Subscriptions {
             try {
                 await this.remove(sub)
             } finally {
-                await onFinally(err)
+                try {
+                    await onFinally(err)
+                } finally {
+                    sub.emit('unsubscribed')
+                    sub.removeAllListeners()
+                }
             }
         })
         sub.count = () => {
