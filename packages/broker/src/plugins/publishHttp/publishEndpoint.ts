@@ -30,8 +30,8 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
         let partitionKey: string|undefined
         try {
             content = parseContent(req)
-            timestamp = parseQueryParameter<number>('timestamp', req, parseTimestamp)
-            partition = parseQueryParameter<number>('partition', req, parsePositiveInteger)
+            timestamp = parseQueryParameter<number>('timestamp', req.query, parseTimestamp)
+            partition = parseQueryParameter<number>('partition', req.query, parsePositiveInteger)
             partitionKey = req.query['partitionKey'] as string
         } catch (e) {
             res.status(400).send({
