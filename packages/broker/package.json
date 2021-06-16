@@ -55,6 +55,7 @@
     "memoizee": "^0.4.15",
     "merge2": "^1.4.1",
     "mqtt-connection": "^4.1.0",
+    "nat-type-identifier": "^2.0.9",
     "node-fetch": "^2.6.1",
     "p-limit": "^3.1.0",
     "pino": "^6.11.3",
