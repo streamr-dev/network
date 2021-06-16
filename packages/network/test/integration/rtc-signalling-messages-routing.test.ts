@@ -100,7 +100,6 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
         }))
     })
 
-
     it('LocalCandidate messages are delivered', async () => {
         const sentMsg = await originatorTrackerNode.sendRtcIceCandidate(
             'tracker',

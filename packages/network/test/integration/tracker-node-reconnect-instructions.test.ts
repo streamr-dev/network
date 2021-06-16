@@ -6,6 +6,7 @@ import { TrackerLayer } from 'streamr-client-protocol'
 import { startNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { PeerInfo } from '../connection/PeerInfo'
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions
@@ -16,6 +17,7 @@ describe('Check tracker instructions to node', () => {
     let nodeTwo: NetworkNode
     const streamId = 'stream-1'
 
+    let peerInfo1: PeerInfo 
     beforeAll(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -43,6 +45,9 @@ describe('Check tracker instructions to node', () => {
 
         nodeOne.start()
         nodeTwo.start()
+        
+        // @ts-expect-error private method
+        peerInfo1 = nodeOne.peerInfo
     })
 
     afterAll(async () => {
@@ -77,7 +82,7 @@ describe('Check tracker instructions to node', () => {
         // send empty list
         // @ts-expect-error private field
         await tracker.trackerServer.endpoint.send(
-            'node-1',
+            peerInfo1.peerId,
             new TrackerLayer.InstructionMessage({
                 requestId: 'requestId',
                 streamId,

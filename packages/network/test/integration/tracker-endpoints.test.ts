@@ -241,7 +241,7 @@ describe('tracker endpoint tmp', () => {
     it('/node-connections/', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/node-connections/`)
         expect(status).toEqual(200)
-        const expectedObject:any = {} 
+        const expectedObject: any = {} 
         expectedObject[nodeSessionId1] = [{neighborId: nodeSessionId2, rtt: null}]
         expectedObject[nodeSessionId2] = [{neighborId: nodeSessionId1, rtt: null}]
 
@@ -251,7 +251,7 @@ describe('tracker endpoint tmp', () => {
     it('/location/', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/location/`)
         expect(status).toEqual(200)
-        const expectedObject:any = {} 
+        const expectedObject: any = {} 
         expectedObject[nodeSessionId1] = {
             country: 'CH',
             city: 'Zug',
@@ -265,17 +265,13 @@ describe('tracker endpoint tmp', () => {
             latitude: null,
             longitude: null
         }
-
-        console.log('/LOCATION/ ', jsonResult)
          
         expect(jsonResult).toEqual(expectedObject)
     })
 
     it('/location/node-1/', async () => {
-        console.log(`http://127.0.0.1:${trackerPort}/location/${nodeSessionId1}/`)
-        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/location/${nodeSessionId1}/`)
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/location/${encodeURIComponent(nodeSessionId1)}/`)
         expect(status).toEqual(200)
-        console.log('jsonResult', jsonResult)
         expect(jsonResult).toEqual({
             country: 'CH',
             city: 'Zug',

@@ -12,9 +12,15 @@ describe('check and kill dead connections', () => {
     let node1: WsEndpoint
     let node2: WsEndpoint
 
+    let peerInfo1: PeerInfo 
+    let peerInfo2: PeerInfo
+
     beforeEach(async () => {
-        node1 = await startEndpoint('127.0.0.1', 43971, PeerInfo.newNode('node1'), null)
-        node2 = await startEndpoint('127.0.0.1', 43972, PeerInfo.newNode('node2'), null)
+        peerInfo1 = PeerInfo.newNode('node1')
+        peerInfo2 = PeerInfo.newNode('node2')
+
+        node1 = await startEndpoint('127.0.0.1', 43971, peerInfo1, null)
+        node2 = await startEndpoint('127.0.0.1', 43972, peerInfo2, null)
 
         node1.connect('ws://127.0.0.1:43972')
         await waitForEvent(node1, Event.PEER_CONNECTED)
@@ -49,7 +55,7 @@ describe('check and kill dead connections', () => {
         // @ts-expect-error private method
         expect(node1.onClose).toBeCalledTimes(1)
         // @ts-expect-error private method
-        expect(node1.onClose).toBeCalledWith('ws://127.0.0.1:43972', PeerInfo.newNode('node2'),
+        expect(node1.onClose).toBeCalledWith('ws://127.0.0.1:43972', peerInfo2,
             DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
 
         // @ts-expect-error private method
@@ -58,6 +64,6 @@ describe('check and kill dead connections', () => {
         node1.pingConnections()
 
         const [peerInfo] = await waitForEvent(node1, Event.PEER_DISCONNECTED)
-        expect(peerInfo).toEqual(PeerInfo.newNode('node2'))
+        expect(peerInfo).toEqual(peerInfo2)
     })
 })

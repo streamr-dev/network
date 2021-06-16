@@ -135,10 +135,10 @@ export class PeerInfo {
             return
         }
 
-        if (peerId.indexOf('#') >= 0){
+        if (peerId.indexOf('_sid_') >= 0){
             this.peerId = peerId
         } else {
-            this.peerId = `${peerId}#${uuidv4()}`
+            this.peerId = `${peerId}_sid_${uuidv4()}`
         }
 
     }

@@ -8,8 +8,13 @@ describe('passing address between WsEndpoints', () => {
     let wsEndpoint1: WsEndpoint
     let wsEndpoint2: WsEndpoint
 
+    let peerInfo1: PeerInfo 
+    let peerInfo2: PeerInfo
+
     beforeEach(async () => {
-        wsEndpoint1 = await startEndpoint('127.0.0.1', 31960, PeerInfo.newNode('wsEndpoint1'), null)
+        peerInfo1 = PeerInfo.newNode('wsEndpoint1')
+        peerInfo2 = PeerInfo.newNode('wsEndpoint2')
+        wsEndpoint1 = await startEndpoint('127.0.0.1', 31960, peerInfo1, null)
     })
 
     afterEach(async () => {
@@ -18,19 +23,19 @@ describe('passing address between WsEndpoints', () => {
     })
 
     it('bound address is passed to other WsEndpoint if advertisedWsUrl not set', async () => {
-        wsEndpoint2 = await startEndpoint('127.0.0.1', 31961, PeerInfo.newNode('wsEndpoint2'), null)
+        wsEndpoint2 = await startEndpoint('127.0.0.1', 31961, peerInfo2, null)
         wsEndpoint2.connect('ws://127.0.0.1:31960')
         await waitForEvent(wsEndpoint1, Event.PEER_CONNECTED)
-        const address = wsEndpoint1.resolveAddress('wsEndpoint2')
+        const address = wsEndpoint1.resolveAddress(peerInfo2.peerId)
         expect(address).toEqual('ws://127.0.0.1:31961')
     })
 
     it('advertised address is passed to other WsEndpoint if advertisedWsUrl set', async () => {
         const advertisedWsUrl = 'ws://advertised-ws-url:666'
-        wsEndpoint2 = await startEndpoint('127.0.0.1', 31961, PeerInfo.newNode('wsEndpoint2'), advertisedWsUrl)
+        wsEndpoint2 = await startEndpoint('127.0.0.1', 31961, peerInfo2, advertisedWsUrl)
         wsEndpoint2.connect('ws://127.0.0.1:31960')
         await waitForEvent(wsEndpoint1, Event.PEER_CONNECTED)
-        const address = wsEndpoint1.resolveAddress('wsEndpoint2')
+        const address = wsEndpoint1.resolveAddress(peerInfo2.peerId)
         expect(address).toEqual('ws://advertised-ws-url:666')
     })
 })
