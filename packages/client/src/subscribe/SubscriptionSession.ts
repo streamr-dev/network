@@ -102,19 +102,12 @@ export default class SubscriptionSession extends Emitter {
 
         this.updateSubscriptions = Scaffold([
             () => {
-                needsReset = false
-                return async () => {
-                    const { connection } = this.client
-                    // don't clean up if just resetting
-                    if (needsReset) { return }
-
-                    if (!connection.isConnectionValid()) {
-                        await this.removeAll()
-                    }
+                if (!needsReset) {
+                    this.emit('subscribing')
                 }
-            },
-            // add handlers for connection close events
-            () => {
+
+                needsReset = false
+                // add handlers for connection close events
                 const { connection } = this.client
                 connection.on('done', onDisconnected)
                 connection.on('disconnected', onDisconnected)
@@ -154,8 +147,6 @@ export default class SubscriptionSession extends Emitter {
 
                 if (!isGoingUp) {
                     this.emit('unsubscribing')
-                } else {
-                    this.emit('subscribing')
                 }
             },
             onDone: async (isGoingUp) => {
@@ -171,7 +162,8 @@ export default class SubscriptionSession extends Emitter {
                     }
                 }
             },
-            onError(err?: Error) {
+            onError: (err?: Error) => {
+                this.debug('error', err)
                 if (err instanceof ConnectionError && !check()) {
                     // ignore error if state changed
                     needsReset = true
@@ -195,9 +187,9 @@ export default class SubscriptionSession extends Emitter {
     emit(event: string | symbol, ...args: any[]): boolean {
         const subs = this.subscriptions
         if (event === 'error') {
-            this.debug(event, ...args)
+            this.debug('emit', event, ...args)
         } else {
-            this.debug(event)
+            this.debug('emit', event)
         }
 
         try {
