@@ -108,9 +108,9 @@ describe('LoginEndpoints', () => {
         })
 
         it('should be able to log in after logging out', async () => {
-            const userInfo = await client.getUserInfo()
+            await client.getUserInfo()
             await client.logout()
-            expect(await client.getUserInfo()).toEqual(userInfo)
+            await client.getUserInfo()
         })
     })
 })
