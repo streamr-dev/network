@@ -233,7 +233,13 @@ class StreamrStream {
         await this.update()
     }
 
-    async addToStorageNode(node: StorageNode|EthereumAddress, { timeout = 30000 }: { timeout: number } = { timeout: 30000 }) {
+    async addToStorageNode(node: StorageNode|EthereumAddress, {
+        timeout = 30000,
+        pollInterval = 200
+    }: {
+        timeout?: number,
+        pollInterval?: number
+    } = {}) {
         const address = (node instanceof StorageNode) ? node.getAddress() : node
         // currently we support only one storage node
         // -> we can validate that the given address is that address
@@ -241,6 +247,7 @@ class StreamrStream {
         if (getAddress(address) !== this._client.options.storageNode.address) {
             throw new Error('Unknown storage node: ' + address)
         }
+
         await authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
             this._client.session, {
@@ -252,9 +259,9 @@ class StreamrStream {
         )
         // wait for propagation: the storage node sees the database change in E&E and
         // is ready to store the any stream data which we publish
-        const POLL_INTERVAL = 500
-        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, POLL_INTERVAL,
-            () => `Propagation timeout when adding stream to a storage node: ${this.id}`)
+        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, pollInterval, () => (
+            `Propagation timeout when adding stream to a storage node: ${this.id}`
+        ))
     }
 
     private async isStreamStoredInStorageNode(streamId: string) {

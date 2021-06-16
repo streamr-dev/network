@@ -465,8 +465,7 @@ describeRepeats('StreamrClient Connection', () => {
 
             // key exchange stream subscription should not have been sent yet
             expect(connectionEventSpy.mock.calls.length).toEqual(1)
-            await client.disconnect()
-        }, 10000)
+        }, 15000)
 
         it('does not try to reconnect', async () => {
             client = createClient()
@@ -487,7 +486,10 @@ describeRepeats('StreamrClient Connection', () => {
             const onConnecting = jest.fn()
             client.once('connecting', onConnecting)
             // wait for possible reconnections
-            await wait(2000)
+            await Promise.race([
+                wait(2000),
+                client.nextConnection(),
+            ])
             expect(onConnecting).toHaveBeenCalledTimes(0)
             expect(client.isConnected()).toBe(false)
         }, 10000)
@@ -563,7 +565,7 @@ describeRepeats('StreamrClient Connection', () => {
                 expect(client.isDisconnected()).toBeTruthy()
                 // wait in case of delayed errors
                 await wait(500)
-            }, 10000)
+            })
         })
 
         describe('subscribe', () => {
