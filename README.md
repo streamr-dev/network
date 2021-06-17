@@ -385,12 +385,13 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 | createSecret(\[name])             | string              | Create a secret for a Data Union                               |
 | addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
 | removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
-| setAdminFee(newFeeFraction[, ethersOptions])                                                      | Transaction receipt     | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
+| setAdminFee(newFeeFraction[, ethersOptions]) `**`                                                     | Transaction receipt     | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
 | withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send some of the withdrawable earnings to the address signed off by the member |
 
-`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case. 
+`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.<br>
+`**` `ethersOptions` that `setAdminFee` takes can be found as ["overrides" documented in docs.ethers.io](https://docs.ethers.io/v5/api/contract/contract/#contract-functionsSend).
 
 Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
 
@@ -410,8 +411,6 @@ const receipt = await dataUnion.addMembers([
     "0x1234567890123456789012345678901234567892",
 ])
 ```
-
-`ethersOptions` that `setAdminFee` takes can be found as ["overrides" documented in docs.ethers.io](https://docs.ethers.io/v5/api/contract/contract/#contract-functionsSend).
 
 ### Member functions
 
