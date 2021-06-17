@@ -12,11 +12,11 @@
     "properties": {
         "rewardStreamId": {
             "type": "string",
-            "description": "streamr.eth/testnets/brubeck-rewards"
+            "default": "streamr.eth/testnets/brubeck-rewards"
         },
         "claimServerUrl": {
             "type": "string",
-            "description": "https://brubeck-rewards.streamr.network"
+            "default": "https://brubeck-rewards.streamr.network"
         },
         "maxClaimDelay": {
             "type": "number",
@@ -27,7 +27,7 @@
                 "string",
                 "null"
             ],
-            "description": "TODO: Streamr's STUN server host"
+            "default": "TODO: Streamr's STUN server host"
         }
     }
 }
