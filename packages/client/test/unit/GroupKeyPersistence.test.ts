@@ -5,13 +5,17 @@ import { tmpdir } from 'os'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
 import { GroupKeyPersistence } from '../../src/stream/encryption/GroupKeyStore'
 import { uid, addAfterFn, describeRepeats } from '../utils'
+import LeakDetector from 'jest-leak-detector'
 
+// this will produce a deprecation warning for rmdir, but the replacement, rm, is not available in Node 12.
+// TODO: replace rmdir with rm after dropping support for node 12.
 const { mkdtemp, rmdir, copyFile } = fs.promises
 
-describeRepeats('PersistentStore', () => {
+describeRepeats('GroupKeyPersistence', () => {
     let clientId: string
     let streamId: string
     let store: GroupKeyPersistence
+    let leakDetector: LeakDetector
 
     const addAfter = addAfterFn()
 
@@ -22,11 +26,19 @@ describeRepeats('PersistentStore', () => {
             clientId,
             streamId,
         })
+
+        leakDetector = new LeakDetector(store)
     })
 
     afterEach(async () => {
         if (!store) { return }
         await store.destroy()
+        // @ts-expect-error doesn't want us to unassign, but it's ok
+        store = undefined // eslint-disable-line require-atomic-updates
+    })
+
+    afterEach(async () => {
+        expect(await leakDetector.isLeaking()).toBeFalsy()
     })
 
     it('can get set and delete', async () => {
