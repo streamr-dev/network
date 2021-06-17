@@ -107,8 +107,8 @@ describe('TestnetMinerPlugin', () => {
         await waitForCondition(() => claimServer.claimRequestBody !== undefined)
         expect(claimServer.claimRequestBody.rewardCode).toBe(MOCK_REWARD_CODE)
         expect(claimServer.claimRequestBody.nodeAddress).toBe(new Wallet(nodePrivateKey).address)
-        expect(claimServer.claimRequestBody.clientServerLatency).toBeDefined()
-        expect(claimServer.claimRequestBody.waitTime).toBeDefined()
+        expect(claimServer.claimRequestBody.clientServerLatency).toBeGreaterThanOrEqual(0)
+        expect(claimServer.claimRequestBody.waitTime).toBeGreaterThanOrEqual(0)
         expect(claimServer.claimRequestBody.peers).toEqual([])
     })
 
