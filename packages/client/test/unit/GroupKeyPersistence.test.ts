@@ -9,6 +9,7 @@ import LeakDetector from 'jest-leak-detector'
 
 // this will produce a deprecation warning for rmdir, but the replacement, rm, is not available in Node 12.
 // TODO: replace rmdir with rm after dropping support for node 12.
+// @ts-expect-error see above
 const { mkdtemp, rmdir, copyFile } = fs.promises
 
 describeRepeats('GroupKeyPersistence', () => {
