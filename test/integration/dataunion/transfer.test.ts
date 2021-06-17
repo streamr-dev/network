@@ -165,7 +165,7 @@ describe('DataUnion earnings transfer methods', () => {
                 privateKey: memberWallet.privateKey,
             },
         })
-        const memberDataunion = memberClient.getDataUnion(dataUnion.getAddress())
+        const memberDataUnion = memberClient.getDataUnion(dataUnion.getAddress())
 
         const statsBefore = await dataUnion.getMemberStats(memberWallet.address)
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
@@ -175,7 +175,7 @@ describe('DataUnion earnings transfer methods', () => {
         log('%s sidechain-DATA balance: %s', memberWallet.address, await tokenSidechain.balanceOf(memberWallet.address))
 
         log('Transfer 1 token worth of earnings with transferWithinContract: %s -> %s', memberWallet.address, member2Wallet.address)
-        await memberDataunion.transferWithinContract(member2Wallet.address, parseEther('1'))
+        await memberDataUnion.transferWithinContract(member2Wallet.address, parseEther('1'))
 
         const statsAfter = await dataUnion.getMemberStats(memberWallet.address)
         const stats2After = await dataUnion.getMemberStats(member2Wallet.address)
