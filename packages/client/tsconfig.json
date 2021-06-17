@@ -1,13 +1,14 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.browser.json",
     "compilerOptions": {
-        "declarationDir": "dist/types",
-        "outDir": "dist"
+        "outDir": "dist",
+        "rootDirs": ["src", "test"]
     },
     "include": [
         "src/**/*",
         "vendor/**/*",
-        "contracts/**/*"
+        "contracts/**/*",
+        "test/**/*"
     ],
     "exclude": ["node_modules", "dist"]
 }

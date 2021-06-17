@@ -1,6 +1,5 @@
 import { inspect } from 'util'
 import EventEmitter from 'events'
-
 import { v4 as uuidv4 } from 'uuid'
 import uniqueId from 'lodash/uniqueId'
 import pMemoize from 'p-memoize'
@@ -19,7 +18,7 @@ export { AggregatedError, Scaffold }
 
 const UUID = uuidv4()
 
-export const SEPARATOR = ':'
+export const SEPARATOR = '-'
 /*
  * Incrementing + human readable uuid
  */
@@ -46,8 +45,7 @@ export function randomString(length = 20) {
  * counterId('test') => test.1
  */
 
-export const counterId = (() => {
-    const MAX_PREFIXES = 256
+export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefixes?: number } = {}) => {
     let counts: { [prefix: string]: number } = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false
     const counterIdFn = (prefix = 'ID', separator = SEPARATOR) => {
@@ -57,13 +55,16 @@ export const counterId = (() => {
         // warn once if too many prefixes
         if (!didWarn) {
             const numTracked = Object.keys(counts).length
-            if (numTracked > MAX_PREFIXES) {
+            if (numTracked > maxPrefixes) {
                 didWarn = true
-                console.warn(`counterId should not be used for a large number of unique prefixes: ${numTracked} > ${MAX_PREFIXES}`)
+                console.warn(`counterId should not be used for a large number of unique prefixes: ${numTracked} > ${maxPrefixes}`)
             }
         }
 
-        return `${prefix}${separator}${counts[prefix]}`
+        // connect prefix with separator
+        return [rootPrefix, prefix, counts[prefix]]
+            .filter((v) => v != null) // remove {root}Prefix if not set
+            .join(separator)
     }
 
     /**
@@ -82,7 +83,9 @@ export const counterId = (() => {
         }
     }
     return counterIdFn
-})()
+}
+
+export const counterId = CounterId()
 
 export function getVersionString() {
     const isProduction = process.env.NODE_ENV === 'production'
@@ -158,12 +161,14 @@ export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
     })
 
     const cachedFn = Object.assign(pMemoize(asyncFn, {
-        maxAge,
         cachePromiseRejection,
         cache,
         ...opts,
     }), {
-        clear: () => pMemoize.clear(cachedFn),
+        clear: () => {
+            pMemoize.clear(cachedFn)
+            cache.clear()
+        },
         clearMatching: (...args: L.Tail<Parameters<typeof clearMatching>>) => clearMatching(cache, ...args),
     })
 
@@ -299,13 +304,12 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
  * limit('channel2', fn)
  * ```
  */
+type LimitFn = ReturnType<typeof pLimit>
 
 export function LimitAsyncFnByKey<KeyType>(limit = 1) {
-    const pending = new Map()
-    const queueOnEmptyTasks = new Map()
+    const pending = new Map<KeyType, LimitFn>()
     const f = async (id: KeyType, fn: () => Promise<any>) => {
-        const limitFn = pending.get(id) || pending.set(id, pLimit(limit)).get(id)
-        const onQueueEmpty = queueOnEmptyTasks.get(id) || queueOnEmptyTasks.set(id, Defer()).get(id)
+        const limitFn: LimitFn = (pending.get(id) || pending.set(id, pLimit(limit)).get(id)) as LimitFn
         try {
             return await limitFn(fn)
         } finally {
@@ -314,27 +318,26 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
                     // clean up if no more active entries (if not cleared)
                     pending.delete(id)
                 }
-
-                if (queueOnEmptyTasks.has(id)) {
-                    queueOnEmptyTasks.get(id).resolve(undefined)
-                    queueOnEmptyTasks.delete(id)
-                }
-
-                onQueueEmpty.resolve()
             }
         }
     }
 
-    f.getOnQueueEmpty = async (id: KeyType) => {
-        return queueOnEmptyTasks.get(id) || queueOnEmptyTasks.set(id, Defer()).get(id)
+    f.getActiveCount = (id: KeyType): number => {
+        const limitFn = pending.get(id)
+        if (!limitFn) { return 0 }
+        return limitFn.activeCount
+    }
+
+    f.getPendingCount = (id: KeyType): number => {
+        const limitFn = pending.get(id)
+        if (!limitFn) { return 0 }
+        return limitFn.pendingCount
     }
 
     f.clear = () => {
         // note: does not cancel promises
         pending.forEach((p) => p.clearQueue())
         pending.clear()
-        queueOnEmptyTasks.forEach((p) => p.resolve(undefined))
-        queueOnEmptyTasks.clear()
     }
     return f
 }
@@ -372,24 +375,36 @@ export function pLimitFn(fn: F.Function, limit = 1) {
 }
 
 /**
+ * Unwrap a Promise type e.g. Awaited<Promise<T>> => T
+ * Required as TS doesn't (currently) understand Promise<T> is equivalent to Promise<Promise<T>>
+ */
+type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
+
+/**
  * Only allows one outstanding call.
  * Returns same promise while task is executing.
  */
 
-export function pOne(fn: F.Function) {
-    let inProgress: Promise<unknown> | undefined
-    return (...args: Parameters<typeof fn>) => {
-        if (!inProgress) {
-            inProgress = Promise.resolve(fn(...args)).finally(() => {
-                inProgress = undefined
-            })
+export function pOne<Args extends any[], R>(
+    fn: (...args: Args) => R
+): (...args: Args) => Promise<Awaited<R>> {
+    let inProgress: Promise<Awaited<R>> | undefined
+    return async (...args: Args): Promise<Awaited<R>> => {
+        if (inProgress) {
+            return inProgress
         }
+
+        inProgress = (async () => {
+            try {
+                return await Promise.resolve(fn(...args)) as Awaited<R>
+            } finally {
+                inProgress = undefined
+            }
+        })()
 
         return inProgress
     }
 }
-
-type Unwrap<T> = T extends Promise<infer U> ? U : T
 
 /**
  * Only allows calling `fn` once.
@@ -398,17 +413,17 @@ type Unwrap<T> = T extends Promise<infer U> ? U : T
 
 export function pOnce<Args extends any[], R>(
     fn: (...args: Args) => R
-): (...args: Args) => Promise<Unwrap<R>> {
+): (...args: Args) => Promise<Awaited<R>> {
     let inProgress: Promise<void> | undefined
     let started = false
-    let value: Unwrap<R>
+    let value: Awaited<R>
     let error: Error | undefined
     return async (...args: Args) => {
         if (!started) {
             started = true
             inProgress = (async () => {
                 try {
-                    value = await Promise.resolve(fn(...args)) as Unwrap<R>
+                    value = await Promise.resolve(fn(...args)) as Awaited<R>
                 } catch (err) {
                     error = err
                 } finally {
@@ -509,7 +524,7 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
  * Convert allSettled results into a thrown Aggregate error if necessary.
  */
 
-export async function allSettledValues(items: Parameters<typeof Promise['allSettled']>, errorMessage = '') {
+export async function allSettledValues(items: Parameters<(typeof Promise)['allSettled']>[0], errorMessage = '') {
     const result = await Promise.allSettled(items)
     const errs = result
         .filter(({ status }) => status === 'rejected')
@@ -541,24 +556,31 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     // sometimes if waiting until a value is returned. Maybe change if such use
     // case emerges.
     const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
-    let timeout = false
+    let isTimedOut = false
+    let t!: ReturnType<typeof setTimeout>
     if (timeOutMs > 0) {
-        setTimeout(() => { timeout = true }, timeOutMs)
+        t = setTimeout(() => { isTimedOut = true }, timeOutMs)
     }
-    // Promise wrapped condition function works for normal functions just the same as Promises
-    let wasDone
-    while (!wasDone && !timeout) { // eslint-disable-line no-await-in-loop
-        wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
-        if (!wasDone && !timeout) {
-            await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+
+    try {
+        // Promise wrapped condition function works for normal functions just the same as Promises
+        let wasDone = false
+        while (!wasDone && !isTimedOut) { // eslint-disable-line no-await-in-loop
+            wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
+            if (!wasDone && !isTimedOut) {
+                await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+            }
         }
 
-    }
-    if (timeout) {
-        if (failedMsgFn) {
-            err.message += ` ${failedMsgFn()}`
+        if (isTimedOut) {
+            if (failedMsgFn) {
+                err.message += ` ${failedMsgFn()}`
+            }
+            throw err
         }
-        throw err
+
+        return wasDone
+    } finally {
+        clearTimeout(t)
     }
-    return wasDone
 }

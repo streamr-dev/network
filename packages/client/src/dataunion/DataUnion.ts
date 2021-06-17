@@ -4,11 +4,11 @@ import { arrayify, hexZeroPad } from '@ethersproject/bytes'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import type { Signer } from '@ethersproject/abstract-signer'
-import debug from 'debug'
 
 import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
 import { until, getEndpointUrl } from '../utils'
+import { Debug } from '../utils/log'
 import authFetch from '../rest/authFetch'
 
 import { Contracts } from './Contracts'
@@ -67,7 +67,7 @@ export interface MemberStats {
 
 export type AmbMessageHash = string
 
-const log = debug('StreamrClient::DataUnion')
+const log = Debug('DataUnion')
 
 function getMessageHashes(tr: ContractReceipt): AmbMessageHash[] {
     // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData);
