@@ -326,7 +326,7 @@ export class DataUnion {
             duSidechain.getEarnings(address).catch(() => BigNumber.from(0)),
         ])
         const withdrawnEarnings = memberData[3]
-        const withdrawable = total ? total.sub(withdrawnEarnings) : BigNumber.from(0)
+        const withdrawable = total.gt(withdrawnEarnings) ? total.sub(withdrawnEarnings) : BigNumber.from(0)
         const STATUSES = [MemberStatus.NONE, MemberStatus.ACTIVE, MemberStatus.INACTIVE]
         return {
             status: STATUSES[memberData[0]],
