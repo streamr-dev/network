@@ -63,7 +63,7 @@
     "qs": "^6.10.1",
     "split2": "^3.2.2",
     "streamr-client": "^5.4.2",
-    "streamr-network": "^24.3.3",
+    "streamr-network": "^25.0.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.14.0",
     "utf8-binary-cutter": "^0.9.2",
     "uuid": "^8.3.2",
