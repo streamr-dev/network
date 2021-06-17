@@ -7,6 +7,7 @@ export const scheduleAtInterval = async (
     executeAtStart: boolean
 ): Promise<{ stop: () => void }> => {
     let timer: NodeJS.Timer|undefined
+    let stopRequested = false
     const scheduleNext = () => {
         timer = setTimeout(async () => {
             await task()
@@ -16,8 +17,13 @@ export const scheduleAtInterval = async (
     if (executeAtStart) {
         await task()
     }
-    scheduleNext()
+    if (!stopRequested) {
+        scheduleNext()
+    }
     return {
-        stop: () => clearTimeout(timer!)
+        stop: () => {
+            stopRequested = true
+            clearTimeout(timer!)
+        }
     }
 }
