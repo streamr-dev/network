@@ -39,6 +39,7 @@ async function testWithdraw(
     recipientAddress: EthereumAddress | null, // null means memberWallet.address
     requiresMainnetETH: boolean,
     options: DataUnionWithdrawOptions,
+    expectedWithdrawAmount?: BigNumber,
 ) {
     log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
     const network = await providerMainnet.getNetwork()
@@ -179,7 +180,7 @@ async function testWithdraw(
         totalEarnings: BigNumber.from('1000000000000000000'),
         withdrawableEarnings: BigNumber.from('1000000000000000000')
     })
-    expect(balanceIncrease.toString()).toBe(amount.toString())
+    expect(balanceIncrease.toString()).toBe((expectedWithdrawAmount || amount).toString())
 }
 
 log('Starting the simulated bridge-sponsored signature transport process')
@@ -259,6 +260,18 @@ describe('DataUnion withdraw', () => {
                         .withdrawAllToSigned(memberWallet.address, member2Wallet.address, signature, options)
                 }, member2Wallet.address, false, options)
             }, 3600000)
+
+            it("to anyone a specific amount with member's signature", async () => {
+                testWalletId += 1
+                const withdrawAmount = parseEther('0.5')
+                const member2Wallet = new Wallet(`0x100000000000000000000000000040000000000012300000007${testWalletId}`, providerSidechain)
+                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
+                    const signature = await memberClient.getDataUnion(dataUnionAddress).signWithdrawAmountTo(member2Wallet.address, withdrawAmount)
+                    return adminClient
+                        .getDataUnion(dataUnionAddress)
+                        .withdrawAmountToSigned(memberWallet.address, member2Wallet.address, withdrawAmount, signature, options)
+                }, member2Wallet.address, false, options, withdrawAmount)
+            }, 3600000)
         })
     })
 
@@ -271,7 +284,8 @@ describe('DataUnion withdraw', () => {
             expectInvalidAddress(() => dataUnion.signWithdrawAllTo('invalid-address')),
             expectInvalidAddress(() => dataUnion.signWithdrawAmountTo('invalid-address', '123')),
             expectInvalidAddress(() => dataUnion.withdrawAllToMember('invalid-address')),
-            expectInvalidAddress(() => dataUnion.withdrawAllToSigned('invalid-address', 'invalid-address', 'mock-signature'))
+            expectInvalidAddress(() => dataUnion.withdrawAllToSigned('invalid-address', 'invalid-address', 'mock-signature')),
+            expectInvalidAddress(() => dataUnion.withdrawAmountToSigned('invalid-address', 'invalid-address', parseEther('1'), 'mock-signature')),
         ])
     })
 })

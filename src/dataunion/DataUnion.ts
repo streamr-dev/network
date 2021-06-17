@@ -263,7 +263,7 @@ export class DataUnion {
      */
     async signWithdrawAmountTo(
         recipientAddress: EthereumAddress,
-        amountTokenWei: BigNumber|number|string
+        amountTokenWei: BigNumber | number | string
     ): Promise<string> {
         const to = getAddress(recipientAddress) // throws if bad address
         const signer = this.client.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
@@ -277,7 +277,7 @@ export class DataUnion {
 
     /** @internal */
     async _createWithdrawSignature(
-        amountTokenWei: BigNumber|number|string,
+        amountTokenWei: BigNumber | number | string,
         to: EthereumAddress,
         withdrawn: BigNumber,
         signer: Wallet | JsonRpcSigner
@@ -503,6 +503,52 @@ export class DataUnion {
     ) {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         return duSidechain.withdrawAllToSigned(memberAddress, recipientAddress, sendToMainnet, signature)
+    }
+
+    /**
+     * Admin: Withdraw a specific amount member's earnings to another address, signed by the member
+     * @param memberAddress - the member whose earnings are sent out
+     * @param recipientAddress - the address to receive the tokens in mainnet
+     * @param signature - from member, produced using signWithdrawAllTo
+     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
+     *          ELSE the message hash IF called with payForTransport=false and waitUntilTransportIsComplete=false,
+     *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
+     *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
+     */
+    async withdrawAmountToSigned(
+        memberAddress: EthereumAddress,
+        recipientAddress: EthereumAddress,
+        amountTokenWei: BigNumber | number | string,
+        signature: string,
+        options?: DataUnionWithdrawOptions
+    ) {
+        const from = getAddress(memberAddress) // throws if bad address
+        const to = getAddress(recipientAddress)
+        const amount = BigNumber.from(amountTokenWei)
+        return this._executeWithdraw(
+            () => this.getWithdrawAmountToSignedTx(from, to, amount, signature, options?.sendToMainnet),
+            to,
+            options
+        )
+    }
+
+    /**
+     * Admin: Withdraw a member's earnings to another address, signed by the member
+     * @param memberAddress - the member whose earnings are sent out
+     * @param recipientAddress - the address to receive the tokens in mainnet
+     * @param amount - in "token wei" to withdraw
+     * @param signature - from member, produced using signWithdrawAllTo
+     * @returns await on call .wait to actually send the tx
+     */
+    private async getWithdrawAmountToSignedTx(
+        memberAddress: EthereumAddress,
+        recipientAddress: EthereumAddress,
+        amount: BigNumber,
+        signature: string,
+        sendToMainnet: boolean = true,
+    ) {
+        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+        return duSidechain.withdrawToSigned(memberAddress, recipientAddress, amount, sendToMainnet, signature)
     }
 
     /**

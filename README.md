@@ -388,6 +388,7 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 | removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
+| withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send some of the withdrawable earnings to the address signed off by the member |
 
 `*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case. 
 
@@ -483,7 +484,7 @@ const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 
 ### Withdraw options
 
-The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
+The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned`, `withdrawAmountToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
 
 | Name              | Default               | Description                                                                           |
 | :---------------- | :-------------------- | :----------------------------------------------------------------------------------   |
