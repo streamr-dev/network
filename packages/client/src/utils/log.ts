@@ -8,31 +8,36 @@ export const DEFAULT_INSPECT_OPTS = {
     maxStringLength: 256
 }
 
-// add global support for pretty millisecond formatting with %n
-// @ts-expect-error humanize not in debug types
-Debug.formatters.n = (v) => Debug.humanize(v)
-
-// override %o & %O to ensure default opts apply
-Debug.formatters.o = function o(v: any) {
-    // @ts-expect-error inspectOpts not in debug types
-    this.inspectOpts.colors = this.useColors
-    return util.inspect(v, { ...this.inspectOpts, ...DEFAULT_INSPECT_OPTS })
-        .split('\n')
-        .map((str) => str.trim())
-        .join(' ')
-}
-
-Debug.formatters.O = function O(v: any) {
-    // @ts-expect-error inspectOpts not in debug types
-    this.inspectOpts.colors = this.useColors
-    return util.inspect(v, { ...this.inspectOpts, ...DEFAULT_INSPECT_OPTS })
-}
-
 const debug = Debug('Streamr')
-
 // @ts-expect-error inspectOpts not in debug types
 debug.inspectOpts = {
     ...DEFAULT_INSPECT_OPTS,
+}
+
+// add global support for pretty millisecond formatting with %n
+Debug.formatters.n = (v) => {
+    if (v == null || Number.isNaN(v)) { return String(v) }
+    // @ts-expect-error humanize not in debug types
+    return Debug.humanize(v)
+}
+
+// override default formatters for node
+if (typeof window === 'undefined') {
+    // override %o & %O to ensure default opts apply
+    Debug.formatters.o = function o(v: any) {
+        // @ts-expect-error inspectOpts not in debug types
+        this.inspectOpts.colors = this.useColors
+        return util.inspect(v, { ...this.inspectOpts, ...DEFAULT_INSPECT_OPTS })
+            .split('\n')
+            .map((str) => str.trim())
+            .join(' ')
+    }
+
+    Debug.formatters.O = function O(v: any) {
+        // @ts-expect-error inspectOpts not in debug types
+        this.inspectOpts.colors = this.useColors
+        return util.inspect(v, { ...this.inspectOpts, ...DEFAULT_INSPECT_OPTS })
+    }
 }
 
 const StreamrDebug = Object.assign(debug.extend.bind(debug), {
