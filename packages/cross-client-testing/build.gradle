@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+	id 'application'
 }
 
 group 'com.streamr'
@@ -8,8 +8,8 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
-    mavenCentral()
-    mavenLocal()
+	mavenCentral()
+	mavenLocal()
 }
 
 ext {
@@ -27,22 +27,9 @@ dependencies {
 	implementation("commons-lang:commons-lang:2.6")
 }
 
-tasks.register('fatJar', Jar) {
-	description = 'Creates a Jar file with all dependencies included.'
-	group = JavaBasePlugin.BUILD_TASK_NAME
-	duplicatesStrategy = 'exclude'
-
-    manifest {
-		attributes 'Implementation-Version': archiveVersion,
-			'Main-Class': 'com.streamr.client_testing.Main'
-    }
-
-	from sourceSets.main.output
-	dependsOn configurations.compileClasspath
-	from {
-		configurations.compileClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+jar {
+	manifest {
+		attributes "Implementation-Version": archiveVersion,
+			"Implementation-Title": project.name
 	}
-	exclude "META-INF/*.SF"
-	exclude "META-INF/*.DSA"
-	exclude "META-INF/*.RSA"
 }

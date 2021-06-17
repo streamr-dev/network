@@ -13,7 +13,7 @@ describe('InstructionRetryManager', () => {
     })
 
     afterEach(() => {
-        instructionRetryManager.reset()
+        instructionRetryManager.stop()
     })
 
     function createInstruction(streamId: string, counter: number) {
@@ -115,7 +115,7 @@ describe('InstructionRetryManager', () => {
             [createInstruction('stream-1', 1), 'tracker-1', false],
             [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
-        instructionRetryManager.reset()
+        instructionRetryManager.stop()
         await wait(220)
         expect(handlerCb.mock.calls).toEqual([
             [createInstruction('stream-1', 1), 'tracker-1', false],

@@ -66,23 +66,10 @@ export interface Status {
     singleStream: boolean // indicate whether this is a status update for only a single stream
 }
 
-export type OfferMessage = {
-    subType: RtcSubTypes.RTC_OFFER
+export type RtcIceCandidateMessage = {
+    subType: RtcSubTypes.ICE_CANDIDATE
     data: {
-        description: string
-    }
-}
-
-export type AnswerMessage = {
-    subType: RtcSubTypes.RTC_ANSWER
-    data: {
-        description: string
-    }
-}
-
-export type RemoteCandidateMessage = {
-    subType: RtcSubTypes.REMOTE_CANDIDATE
-    data: {
+        connectionId: string,
         candidate: string
         mid: string
     }
@@ -95,29 +82,27 @@ export type RtcConnectMessage = {
     }
 }
 
-export type LocalDescriptionMessage = {
-    subType: RtcSubTypes.LOCAL_DESCRIPTION
+export type RtcOfferMessage = {
+    subType: RtcSubTypes.RTC_OFFER
     data: {
-        type: "answer" | "offer"
+        connectionId: string,
+        description: string,
+    }
+}
+
+export type RtcAnswerMessage = {
+    subType: RtcSubTypes.RTC_ANSWER
+    data: {
+        connectionId: string,
         description: string
     }
 }
 
-export type LocalCandidateMessage = {
-    subType: RtcSubTypes.LOCAL_CANDIDATE
-    data: {
-        candidate: string
-        mid: string
-    }
-}
-
 export type RelayMessage = (
-    OfferMessage
-        | AnswerMessage
-        | RemoteCandidateMessage
+    RtcOfferMessage
+        | RtcAnswerMessage
+        | RtcIceCandidateMessage
         | RtcConnectMessage
-        | LocalDescriptionMessage
-        | LocalCandidateMessage
     ) & TrackerLayer.RelayMessage
 
 export interface RtcErrorMessage {

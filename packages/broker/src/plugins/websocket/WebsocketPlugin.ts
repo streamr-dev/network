@@ -1,56 +1,31 @@
-import ws from 'uWebSockets.js'
-import { MissingConfigError } from '../../errors/MissingConfigError'
-import { WebsocketServer } from './WebsocketServer'
 import { Plugin, PluginOptions } from '../../Plugin'
-import { StorageNodeRegistry } from '../../StorageNodeRegistry'
-import { StreamFetcher } from '../../StreamFetcher'
+import { SslCertificateConfig } from '../../types'
+import { WebsocketServer } from './WebsocketServer'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
 export interface WebsocketPluginConfig {
     port: number
-    privateKeyFileName: string|null, 
-    certFileName: string|null,
-    pingInterval: number
+    sslCertificate: SslCertificateConfig|null
 }
 
 export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
 
-    private websocketServer: WebsocketServer|undefined
+    private server?: WebsocketServer
 
     constructor(options: PluginOptions) {
         super(options)
+        if (this.streamrClient === undefined) {
+            throw new Error('StreamrClient is not available')   
+        }
     }
 
     async start() {
-        if (this.pluginConfig.port === undefined) {
-            throw new MissingConfigError('port')
-        }
-        let server
-        if (this.pluginConfig.privateKeyFileName && this.pluginConfig.certFileName) {
-            server = ws.SSLApp({
-                key_file_name: this.pluginConfig.privateKeyFileName,
-                cert_file_name: this.pluginConfig.certFileName,
-            })
-        } else {
-            server = ws.App()
-        }
-        const storageNodeRegistry = StorageNodeRegistry.createInstance(this.brokerConfig)
-        this.websocketServer = new WebsocketServer(
-            server,
-            this.pluginConfig.port,
-            this.networkNode,
-            new StreamFetcher(this.brokerConfig.streamrUrl),
-            this.publisher,
-            this.metricsContext,
-            this.subscriptionManager,
-            storageNodeRegistry,
-            this.brokerConfig.streamrUrl,
-            this.pluginConfig.pingInterval,
-        )
+        this.server = new WebsocketServer(this.streamrClient!)
+        await this.server.start(this.pluginConfig.port, this.apiAuthenticator, this.pluginConfig.sslCertificate ?? undefined)
     }
 
     async stop() {
-        return this.websocketServer!.close()
+        await this.server!.stop()
     }
 
     getConfigSchema() {

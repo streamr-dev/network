@@ -1,13 +1,12 @@
 import { wait } from 'streamr-test-utils'
 import { BroadcastMessage, ControlMessageType, StreamMessage } from 'streamr-client-protocol'
-import { describeRepeats, fakePrivateKey, uid, Msg, getPublishTestMessages } from '../utils'
+import { describeRepeats, fakePrivateKey, Msg, getPublishTestMessages, createRelativeTestStreamId, Debug } from '../utils'
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
 import { Stream, StreamOperation } from '../../src/stream'
 import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
-import Debug from 'debug'
 
 import config from './config'
 
@@ -114,9 +113,8 @@ describeRepeats('decryption', () => {
     }
 
     async function setupStream() {
-        const name = uid('stream')
         stream = await publisher.createStream({
-            name,
+            id: createRelativeTestStreamId(module),
             requireEncryptedData: true,
         })
 
@@ -141,8 +139,8 @@ describeRepeats('decryption', () => {
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
-            setupClient({ id: uid('publisher'), ...opts }),
-            setupClient({ id: uid('subscriber'), ...opts }),
+            setupClient({ id: createRelativeTestStreamId(module, 'publisher'), ...opts }),
+            setupClient({ id: createRelativeTestStreamId(module, 'subscriber'), ...opts }),
         ])
     }
 
@@ -317,9 +315,8 @@ describeRepeats('decryption', () => {
             }, TIMEOUT * 2)
 
             it('does not encrypt messages in stream without groupkey', async () => {
-                const name = uid('stream')
                 const stream2 = await publisher.createStream({
-                    name,
+                    id: createRelativeTestStreamId(module),
                     requireEncryptedData: false,
                 })
 
@@ -672,9 +669,8 @@ describeRepeats('decryption', () => {
         })
 
         it('does encrypt messages in stream that does not require encryption but groupkey is set anyway', async () => {
-            const name = uid('stream')
             const stream2 = await publisher.createStream({
-                name,
+                id: createRelativeTestStreamId(module),
                 requireEncryptedData: false,
             })
 
@@ -739,9 +735,8 @@ describeRepeats('decryption', () => {
         }, TIMEOUT * 2)
 
         it('sets group key per-stream', async () => {
-            const name = uid('stream')
             const stream2 = await publisher.createStream({
-                name,
+                id: createRelativeTestStreamId(module),
                 requireEncryptedData: true,
             })
 

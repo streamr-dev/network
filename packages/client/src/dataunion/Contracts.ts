@@ -4,7 +4,7 @@ import { Contract, ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
 import { verifyMessage } from '@ethersproject/wallet'
-import debug from 'debug'
+import { Debug } from '../utils/log'
 import { EthereumAddress, Todo } from '../types'
 import { dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
 import { until } from '../utils'
@@ -12,7 +12,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
 import { StreamrClient } from '../StreamrClient'
 
-const log = debug('StreamrClient::Contracts')
+const log = Debug('Contracts')
 
 function validateAddress(name: string, address: EthereumAddress) {
     if (!isAddress(address)) {

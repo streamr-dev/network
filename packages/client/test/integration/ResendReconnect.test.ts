@@ -1,6 +1,6 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
+import { fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
@@ -32,9 +32,7 @@ describe('resend/reconnect', () => {
         client = createClient()
         await client.connect()
 
-        stream = await client.createStream({
-            name: uid('resends')
-        })
+        stream = await createTestStream(client, module)
 
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
     }, 10000)
@@ -68,7 +66,7 @@ describe('resend/reconnect', () => {
             }, (message) => {
                 messages.push(message)
                 if (shouldDisconnect) {
-                    client.connection.socket.close()
+                    client.connection.socket?.close()
                 }
             })
 
@@ -86,8 +84,8 @@ describe('resend/reconnect', () => {
         it('can handle reconnection after unintentional disconnection 1', async () => {
             const onClose = Defer()
 
-            client.connection.socket.once('close', onClose.resolve)
-            client.connection.socket.close()
+            client.connection.socket?.once('close', onClose.resolve)
+            client.connection.socket?.close()
             await onClose
             // should reconnect and get new messages
             const prevMessages = messages.slice()
@@ -104,8 +102,8 @@ describe('resend/reconnect', () => {
             })
             const onClose = Defer()
 
-            client.connection.socket.once('close', onClose.resolve)
-            client.connection.socket.close()
+            client.connection.socket?.once('close', onClose.resolve)
+            client.connection.socket?.close()
             await client.connection.nextConnection()
 
             await wait(6000)

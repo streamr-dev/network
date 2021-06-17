@@ -12,8 +12,8 @@ import pkg from '../package.json'
 
 const program = new Command()
 program
-    .arguments('<name>')
-    .description('create a new stream')
+    .arguments('<id>')
+    .description('create a new stream: the id can be a full streamId or a path')
     .option('-d, --description <description>', 'define a description')
     .option('-c, --config <config>', 'define a configuration as JSON', (s: string) => JSON.parse(s))
     .option('-p, --partitions <count>', 'define a partition count',
@@ -21,9 +21,9 @@ program
 authOptions(program)
 envOptions(program)
     .version(pkg.version)
-    .action((name: string, options: any) => {
+    .action((id: string, options: any) => {
         const body: any = {
-            name,
+            id,
             description: options.description,
             config: options.config,
             partitions: options.partitions

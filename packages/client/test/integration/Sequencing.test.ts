@@ -1,6 +1,6 @@
 import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, getWaitForStorage } from '../utils'
+import { uid, fakePrivateKey, getWaitForStorage, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
@@ -50,9 +50,7 @@ describe('Sequencing', () => {
         client = createClient()
         await client.connect()
 
-        stream = await client.createStream({
-            name: uid('stream')
-        })
+        stream = await createTestStream(client, module)
     })
 
     afterEach(async () => {

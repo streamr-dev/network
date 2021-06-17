@@ -10,7 +10,7 @@ import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage } from "streamr-client-protocol"
-import { waitForEvent } from "streamr-test-utils"
+import { runAndWaitForEvents } from "streamr-test-utils"
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
@@ -35,9 +35,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
 
         // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = await startEndpoint('127.0.0.1', 28681, peerInfo1, null, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = await startEndpoint('127.0.0.1', 28682, peerInfo2, null, new MetricsContext(peerInfo2.peerId))
-        const wsEp3 = await startEndpoint('127.0.0.1', 28683, peerInfo3, null, new MetricsContext(peerInfo2.peerId))
+        const wsEp1 = await startEndpoint('127.0.0.1', 28555, peerInfo1, null, new MetricsContext(peerInfo1.peerId))
+        const wsEp2 = await startEndpoint('127.0.0.1', 28556, peerInfo2, null, new MetricsContext(peerInfo2.peerId))
+        const wsEp3 = await startEndpoint('127.0.0.1', 28557, peerInfo3, null, new MetricsContext(peerInfo2.peerId))
         trackerNode1 = new TrackerNode(wsEp1)
         trackerNode2 = new TrackerNode(wsEp2)
         trackerNode3 = new TrackerNode(wsEp3)
@@ -74,10 +74,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         nodeToNode1 = new NodeToNode(ep1)
         nodeToNode2 = new NodeToNode(ep2)
 
-        nodeToNode1.connectToNode('node-endpoint2', 'tracker')
-        await Promise.all([
-            waitForEvent(nodeToNode1, ntnEvent.NODE_CONNECTED),
-            waitForEvent(nodeToNode2, ntnEvent.NODE_CONNECTED)
+        await runAndWaitForEvents(()=> {nodeToNode1.connectToNode('node-endpoint2', 'tracker')}, [
+            [nodeToNode1, ntnEvent.NODE_CONNECTED],
+            [nodeToNode2, ntnEvent.NODE_CONNECTED]
         ])
     })
 
@@ -89,7 +88,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             trackerNode3.stop(),
             ep1.stop(),
             ep2.stop(),
-            ep3.stop(),
+            ep3.stop()
         ])
     })
 
@@ -117,8 +116,7 @@ describe('Node-to-Node protocol version negotiation', () => {
     })
 
     it('negotiated version is removed once node is disconnected', async () => {
-        ep1.close('node-endpoint2', 'test')
-        await waitForEvent(ep2, wrtcEvent.PEER_DISCONNECTED)
+        await runAndWaitForEvents(()=> { ep1.close('node-endpoint2', 'test') }, [ep2, wrtcEvent.PEER_DISCONNECTED])
 
         expect(ep1.getNegotiatedControlLayerProtocolVersionOnNode('node-endpoint2')).toEqual(undefined)
         expect(ep2.getNegotiatedControlLayerProtocolVersionOnNode('node-endpoint1')).toEqual(undefined)

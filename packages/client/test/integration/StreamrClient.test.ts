@@ -4,7 +4,7 @@ import path from 'path'
 import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
+import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg, createRelativeTestStreamId } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -13,6 +13,7 @@ import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src'
 import { StorageNode } from '../../src/stream/StorageNode'
+import SubscriptionSession from '../../src/subscribe/SubscriptionSession'
 
 const { StreamMessage } = MessageLayer
 
@@ -83,7 +84,7 @@ describeRepeats('StreamrClient', () => {
     const TIMEOUT = 30 * 1000
     const WAIT_TIME = 600
 
-    const attachSubListeners = (sub: Subscription) => {
+    const attachSubListeners = (sub: Subscription | SubscriptionSession) => {
         const onSubscribed = jest.fn()
         sub.on('subscribed', onSubscribed)
         const onResent = jest.fn()
@@ -100,6 +101,7 @@ describeRepeats('StreamrClient', () => {
     const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
         const name = uid('stream')
         const s = await client.createStream({
+            id: createRelativeTestStreamId(module),
             name,
             requireSignedData,
             ...opts,
@@ -202,7 +204,7 @@ describeRepeats('StreamrClient', () => {
                     streamId: stream.id,
                 }, () => {})
 
-                const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
+                const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream)!)
 
                 expect(client.getSubscriptions()).toHaveLength(1)
 
@@ -222,7 +224,7 @@ describeRepeats('StreamrClient', () => {
                 const subTask = client.subscribe({
                     streamId: stream.id,
                 }, () => {})
-                const subSession = client.subscriber.getSubscriptionSession(stream)
+                const subSession = client.subscriber.getSubscriptionSession(stream)!
                 const events = attachSubListeners(subSession)
                 let unsubTask!: ReturnType<typeof client.unsubscribe>
                 const startedSubscribing = Defer()
@@ -254,7 +256,7 @@ describeRepeats('StreamrClient', () => {
                         },
                     }, () => {})
 
-                    const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
+                    const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream)!)
 
                     expect(client.getSubscriptions()).toHaveLength(1)
 
@@ -280,7 +282,7 @@ describeRepeats('StreamrClient', () => {
                         },
                     }, onMessage)
 
-                    const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
+                    const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream)!)
                     const unsubTask = client.unsubscribe(stream)
                     expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
 

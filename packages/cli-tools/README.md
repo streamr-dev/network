@@ -79,8 +79,15 @@ streamr stream show <streamId> --private-key <key>
 ### create
 Create a new stream
 ```
-streamr stream create <name> --private-key <key>
+streamr stream create <id> --private-key <key>
 ```
+The id can be a full id or a path. If only path is specified, it is prefixed with your Ethereum address.
+```
+streamr stream create /foo/bar
+streamr stream create 0x1234567890123456789012345678901234567890/foobar
+streamr stream create yourdomain.ens/foobar
+```
+
 
 ### resend
 Request a resend of historical data printed as JSON objects to stdout line-by-line.

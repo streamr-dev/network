@@ -4,7 +4,8 @@
     "type": "object",
     "description": "WebSocket plugin configuration",
     "required": [
-        "port"
+        "port",
+        "sslCertificate"
     ],
     "additionalProperties": false,
     "properties": {
@@ -12,24 +13,27 @@
             "type": "integer",
             "description": "Port to start plugin on"
         },
-        "pingInterval": {
-            "type": "integer",
-            "description": "How often to ping client connections (in milliseconds)",
-            "minimum": 0
-        },
-        "certFileName": {
+        "sslCertificate": {
+            "description": "Files to use for SSL",
             "type": [
-                "string",
+                "object",
                 "null"
             ],
-            "description": "Path of certificate file to use for SSL"
-        },
-        "privateKeyFileName": {
-            "type": [
-                "string",
-                "null"
+            "required": [
+                "certFileName",
+                "privateKeyFileName"
             ],
-            "description": "Path of private key file to use for SSL"
+            "additionalProperties": false,
+            "properties": {
+                "certFileName": {
+                    "type": "string",
+                    "description": "Path of certificate file"
+                },
+                "privateKeyFileName": {
+                    "type": "string",
+                    "description": "Path of private key file"
+                }
+            }
         }
     }
 }
