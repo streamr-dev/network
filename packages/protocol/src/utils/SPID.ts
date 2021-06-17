@@ -1,3 +1,8 @@
+/**
+ * SPID - Stream + Partition ID
+ * See SPID constructor docs.
+ */
+
 import { format } from 'util'
 
 /**
@@ -38,7 +43,19 @@ class SPIDValidationError extends Error {
 }
 
 /**
- * SPID - Stream Partition ID
+ * SPID – Stream + Partition ID
+ * Simple Data container that represents a streamId + partition, and utilities
+ * to parse various formats into a SPID.
+ *
+ * Use this rather than inventing new data types to represenent or parse these.
+ *
+ * Usage:
+ * ```js
+ * const spid = new SPID(streamId, streamPartition)
+ * spid.id === streamId // true
+ * spid.partition === streamPartition // true
+ * ```
+ * See tests for more usage examples.
  */
 export default class SPID {
     /** stream id */
