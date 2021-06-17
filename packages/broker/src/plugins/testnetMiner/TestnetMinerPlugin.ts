@@ -79,7 +79,8 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private async claimRewardCode(rewardCode: string, peers: Peer[], delay: number): Promise<void> {
-        const metadata = {
+        const body = {
+            rewardCode,
             nodeAddress: this.nodeAddress,
             clientServerLatency: this.latestLatency,
             waitTime: delay,
@@ -88,10 +89,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         }
         try {
             await fetch(`${this.pluginConfig.claimServerUrl}/claim`, {
-                body: JSON.stringify({
-                    rewardCode,
-                    ...metadata
-                }),
+                body: JSON.stringify(body),
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
