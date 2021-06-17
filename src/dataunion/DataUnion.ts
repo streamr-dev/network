@@ -546,7 +546,7 @@ export class DataUnion {
     ): Promise<ContractReceipt> {
         const address = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        const tx = await duSidechain.transferToMemberInContract(address, amountTokenWei)
+        const tx = await duSidechain.transferWithinContract(address, amountTokenWei)
         return waitForTx(tx)
     }
 
