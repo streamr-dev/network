@@ -1,5 +1,4 @@
 import { Wallet } from 'ethers'
-import fetch from 'node-fetch'
 import fetchNatType from 'nat-type-identifier'
 import { Logger } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
@@ -8,6 +7,7 @@ import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Metrics } from '../../../../network/dist/helpers/MetricsContext'
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
+import { fetchOrThrow } from '../../helpers/fetch'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
@@ -88,7 +88,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             peers
         }
         try {
-            await fetch(`${this.pluginConfig.claimServerUrl}/claim`, {
+            await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/claim`, {
                 body: JSON.stringify(body),
                 method: 'POST',
                 headers: {
@@ -104,7 +104,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     private async getLatency(): Promise<number|undefined> {
         const startTime = Date.now()
         try {
-            await fetch(`${this.pluginConfig.claimServerUrl}/ping`)
+            await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/ping`)
             return Date.now() - startTime
         } catch (e) {
             logger.warn('Ping error')
