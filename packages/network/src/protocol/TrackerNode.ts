@@ -34,7 +34,8 @@ export class TrackerNode extends EventEmitter {
     private readonly endpoint: IWsEndpoint
     private readonly logger: Logger
 
-    constructor(endpoint: IWsEndpoint) {
+    // ServerWsEndpoint
+    constructor(wsServer: IWsEndpoint, wsClient:IWsEndpoint) {
         super()
         this.endpoint = endpoint
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))

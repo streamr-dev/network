@@ -1,16 +1,16 @@
 import { waitForEvent } from 'streamr-test-utils'
 
 import { DisconnectionReason } from '../../src/connection/IWsEndpoint'
-import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 
 describe('duplicate connections are closed', () => {
-    let wsEndpoint1: WsEndpoint
-    let wsEndpoint2: WsEndpoint
+    let wsEndpoint1: ServerWsEndpoint
+    let wsEndpoint2: ServerWsEndpoint
 
     beforeEach(async () => {
-        wsEndpoint1 = await startEndpoint('127.0.0.1', 28501, PeerInfo.newNode('wsEndpoint1'), null)
-        wsEndpoint2 = await startEndpoint('127.0.0.1', 28502, PeerInfo.newNode('wsEndpoint2'), null)
+        wsEndpoint1 = await startServerWsEndpoint('127.0.0.1', 28501, PeerInfo.newNode('wsEndpoint1'), null)
+        wsEndpoint2 = await startServerWsEndpoint('127.0.0.1', 28502, PeerInfo.newNode('wsEndpoint2'), null)
     })
 
     afterAll(async () => {

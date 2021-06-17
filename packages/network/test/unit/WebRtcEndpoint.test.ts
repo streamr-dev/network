@@ -1,5 +1,5 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
+import { startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -8,8 +8,9 @@ import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
+import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
-describe('WebRtcEndpoint', () => {
+describe('WebRtcEndpoint tmp', () => {
     let tracker: Tracker
     let trackerNode1: TrackerNode
     let trackerNode2: TrackerNode
@@ -23,10 +24,16 @@ describe('WebRtcEndpoint', () => {
             id: 'tracker'
         })
 
-        const ep1 = await startEndpoint('127.0.0.1', 28801, PeerInfo.newNode('node-1'), null, new MetricsContext(''))
-        const ep2 = await startEndpoint('127.0.0.1', 28802, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
-        trackerNode1 = new TrackerNode(ep1)
-        trackerNode2 = new TrackerNode(ep2)
+        const nodeOneInfo = PeerInfo.newNode('node-1')
+        const wsServer1 = await startServerWsEndpoint('127.0.0.1', 28801, nodeOneInfo, null, new MetricsContext(''))
+        const wsClient1 = await startClientWsEndpoint(nodeOneInfo, null)
+
+        const nodeTwoInfo = PeerInfo.newNode('node-2')
+        const wsServer2 = await startServerWsEndpoint('127.0.0.1', 28802, nodeTwoInfo, null, new MetricsContext(''))
+        const wsClient2 = await startClientWsEndpoint(nodeTwoInfo, null)
+
+        trackerNode1 = new TrackerNode(wsServer1)
+        trackerNode2 = new TrackerNode(wsServer2)
         await Promise.all([
             trackerNode1.connectToTracker(tracker.getAddress()),
             waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)

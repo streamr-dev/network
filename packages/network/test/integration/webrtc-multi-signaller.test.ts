@@ -1,5 +1,5 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
+import { startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -29,8 +29,8 @@ describe('WebRTC multisignaller test', () => {
             id: 'tracker2'
         })
 
-        const ep1 = await startEndpoint('127.0.0.1', 28717, PeerInfo.newNode('node-1'), null, new MetricsContext(''))
-        const ep2 = await startEndpoint('127.0.0.1', 28718, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
+        const ep1 = await startServerWsEndpoint('127.0.0.1', 28717, PeerInfo.newNode('node-1'), null, new MetricsContext(''))
+        const ep2 = await startServerWsEndpoint('127.0.0.1', 28718, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
 
         trackerNode1 = new TrackerNode(ep1)
         trackerNode2 = new TrackerNode(ep2)

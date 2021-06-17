@@ -3,17 +3,17 @@ import WebSocket from 'ws'
 import { waitForEvent, wait } from 'streamr-test-utils'
 
 import { Event, DisconnectionCode } from '../../src/connection/IWsEndpoint'
-import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker } from '../../src/composition'
 
 describe('ws-endpoint', () => {
-    const endpoints: WsEndpoint[] = []
+    const endpoints: ServerWsEndpoint[] = []
 
     it('create five endpoints and init connection between them, should be able to start and stop successfully', async () => {
         for (let i = 0; i < 5; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const endpoint = await startEndpoint('127.0.0.1', 30690 + i, PeerInfo.newNode(`endpoint-${i}`), null)
+            const endpoint = await startServerWsEndpoint('127.0.0.1', 30690 + i, PeerInfo.newNode(`endpoint-${i}`), null)
                 .catch((err) => {
                     throw err
                 })
@@ -49,8 +49,8 @@ describe('ws-endpoint', () => {
     })
 
     it('peer infos are exchanged between connecting endpoints', async () => {
-        const endpointOne = await startEndpoint('127.0.0.1', 30695, PeerInfo.newNode('endpointOne'), null)
-        const endpointTwo = await startEndpoint('127.0.0.1', 30696, PeerInfo.newNode('endpointTwo'), null)
+        const endpointOne = await startServerWsEndpoint('127.0.0.1', 30695, PeerInfo.newNode('endpointOne'), null)
+        const endpointTwo = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('endpointTwo'), null)
 
         const e1 = waitForEvent(endpointOne, Event.PEER_CONNECTED)
         const e2 = waitForEvent(endpointTwo, Event.PEER_CONNECTED)

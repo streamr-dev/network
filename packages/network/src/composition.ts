@@ -3,7 +3,7 @@ import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
 import { Location } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
-import { startEndpoint } from './connection/WsEndpoint'
+import { startServerWsEndpoint } from './connection/ServerWsEndpoint'
 import { Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
@@ -73,7 +73,7 @@ export function startTracker({
     certFileName,
 }: TrackerOptions): Promise<Tracker> {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
-    return startEndpoint(
+    return startServerWsEndpoint(
         host,
         port,
         peerInfo,
@@ -129,7 +129,7 @@ function startNode({
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions, peerInfoFn: PeerInfoFn): Promise<NetworkNode> {
     const peerInfo = peerInfoFn(id, name, undefined, undefined, location)
-    return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
+    return startServerWsEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
         const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)

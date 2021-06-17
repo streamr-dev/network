@@ -1,14 +1,15 @@
 import { Event } from '../../src/connection/IWsEndpoint'
-import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
+import { startClientWsEndpoint, ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 
-describe('WsEndpoint: back pressure handling', () => {
-    let ep1: WsEndpoint
-    let ep2: WsEndpoint
+describe('WsEndpoint: back pressure handling tmp', () => {
+    let ep1: ClientWsEndpoint
+    let ep2: ServerWsEndpoint
 
     beforeEach(async () => {
-        ep1 = await startEndpoint('127.0.0.1', 43974, PeerInfo.newNode('ep1'), null)
-        ep2 = await startEndpoint('127.0.0.1', 43975, PeerInfo.newNode('ep2'), null)
+        ep1 = await startClientWsEndpoint(PeerInfo.newNode('ep1'), null)
+        ep2 = await startServerWsEndpoint('127.0.0.1', 43975, PeerInfo.newNode('ep2'), null)
         await ep1.connect('ws://127.0.0.1:43975')
     })
 

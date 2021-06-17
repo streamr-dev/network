@@ -2,7 +2,7 @@ import { MessageLayer, ControlLayer, TrackerLayer } from 'streamr-client-protoco
 import { waitForEvent } from 'streamr-test-utils'
 
 import { WebRtcEndpoint } from "../../src/connection/WebRtcEndpoint"
-import { startEndpoint } from '../../src/connection/WsEndpoint'
+import { startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { StreamIdAndPartition } from '../../src/identifiers'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
@@ -33,9 +33,9 @@ describe('delivery of messages in protocol layer', () => {
 
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
-        const wsEndpoint1 = await startEndpoint('127.0.0.1', 28513, peerInfo1, null)
-        const wsEndpoint2 = await startEndpoint('127.0.0.1', 28514, peerInfo2, null)
-        const wsEndpoint3 = await startEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'), null)
+        const wsEndpoint1 = await startServerWsEndpoint('127.0.0.1', 28513, peerInfo1, null)
+        const wsEndpoint2 = await startServerWsEndpoint('127.0.0.1', 28514, peerInfo2, null)
+        const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'), null)
         trackerNode = new TrackerNode(wsEndpoint1)
         trackerNode2 = new TrackerNode(wsEndpoint2)
 

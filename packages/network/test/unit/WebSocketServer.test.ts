@@ -1,158 +1,176 @@
-import WebSocket from 'ws'
-
-import uWS from 'uWebSockets.js'
-
+import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
+import { startClientWsEndpoint, ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { startWebSocketServer, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { MetricsContext } from '../../src/helpers/MetricsContext'
+import { waitForCondition } from 'streamr-test-utils'
 
-const wssPort = 7777
+async function setUpWsClient(peerId:string, peerType:string, city:string): Promise<ClientWsEndpoint> {
+    const peerInfo = PeerInfo.fromObject({
+        peerId, 
+        peerType,
+        peerName: peerId,
+        location: {
+            latitude: null,
+            longitude: null,
+            country: 'Finland',
+            city
+        },
+        controlLayerVersions: null,
+        messageLayerVersions: null
+    })
+    const metricsContext = new MetricsContext(peerId)
+    const wsClient = await startClientWsEndpoint(peerInfo, peerId, metricsContext)
+    return wsClient
+}
+async function setUpWsServer(peerId: string, peerType: string, city: string, port: number): Promise<ServerWsEndpoint> {
+    const peerInfo = PeerInfo.fromObject({
+        peerId,
+        peerType,
+        peerName: peerId,
+        location: {
+            latitude: null,
+            longitude: null,
+            country: 'Finland',
+            city
+        },
+        controlLayerVersions: null,
+        messageLayerVersions: null
+    })
+    const metricsContext = new MetricsContext(peerId)
+    const wsEndpoint = await startServerWsEndpoint(
+        '127.0.0.1',
+        port,
+        peerInfo,
+        null,
+        metricsContext,
+        100
+    )
+    return wsEndpoint
+}
 
-describe('test starting startWebSocketServer', () => {
-    test('wss using only port', async () => {
-        const [wss, listenSocket] = await startWebSocketServer(null, wssPort)
-        expect(wss.constructor.name).toBe('uWS.App')
-        expect(typeof listenSocket).toBe('object')
-        uWS.us_listen_socket_close(listenSocket)
+describe('WsServer&WsClient with no connections tmp', () => {
+    let wsEndpoint: ServerWsEndpoint
+
+    beforeAll(async () => {
+        wsEndpoint = await setUpWsServer('peerId', 'tracker', 'Espoo', 30465)
     })
 
-    test('wss using host and port', async () => {
-        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort)
-        expect(wss.constructor.name).toBe('uWS.App')
-        expect(typeof listenSocket).toBe('object')
-        uWS.us_listen_socket_close(listenSocket)
+    afterAll(async () => {
+        await wsEndpoint.stop()
     })
 
-    test('wss raises error', () => {
-        return expect(startWebSocketServer(null, null as any))
-            .rejects
-            .toEqual('Text and data can only be passed by String, ArrayBuffer or TypedArray.')
+    it('getAddress() gives websocket address', () => {
+        expect(wsEndpoint.getAddress()).toEqual('ws://127.0.0.1:30465')
     })
 
-    test('receives unencrypted connections', (done) => {
-        startWebSocketServer('127.0.0.1', wssPort).then(([wss, listenSocket]) => {
-            const peerInfo = PeerInfo.newTracker('id', 'name')
-            const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
-            const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
-                undefined, {
-                    headers: {
-                        'streamr-peer-id': 'peerId',
-                        'streamr-peer-type': 'node',
-                    }
-                })
-            ws.on('open', async () => {
-                ws.close()
-                await endpoint.stop()
-                done()
-            })
-            ws.on('error', (err) => {
-                done(err)
-            })
-            return true
-        }).catch((err) => done(err))
-
+    it('getPeerInfo() gives peer info of endpoint', () => {
+        expect(wsEndpoint.getPeerInfo()).toEqual(PeerInfo.newTracker(
+            'peerId',
+            'peerId',
+            undefined,
+            undefined,
+            {
+                latitude: null,
+                longitude: null,
+                country: 'Finland',
+                city: 'Espoo'
+            }
+        ))
     })
 
-    test('receives encrypted connections', (done) => {
-        startWebSocketServer(
-            '127.0.0.1',
-            wssPort,
-            'test/fixtures/key.pem',
-            'test/fixtures/cert.pem'
-        ).then(([wss, listenSocket]) => {
-            const peerInfo = PeerInfo.newTracker('id', 'name')
-            const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, undefined)
-            const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
-                undefined, {
-                    rejectUnauthorized: false, // needed to accept self-signed certificate
-                    headers: {
-                        'streamr-peer-id': 'peerId',
-                        'streamr-peer-type': 'node',
-                    }
-                })
-            ws.on('open', async () => {
-                ws.close()
-                await endpoint.stop()
-                done()
-            })
-            ws.on('error', (err) => {
-                done(err)
-            })
-            return true
-        }).catch((err) => done(err))
-
+    it('isConnected() returns false', () => {
+        expect(wsEndpoint.isConnected('thirdPeerId')).toEqual(false)
     })
 
-    /**
-     * This test replicates weird behaviour I encountered while working on "NET-56: Make production
-     * tracker run under SSL". When messages arrive to (pure) ws client from a SSL-enabled uWS server,
-     * they arrive as type Buffer and not String... which is different to when SSL is disabled...
-     *
-     * UPDATE: Apparently turning WsEndpoint from JavaScript to TypeScript magically solved this problem.
-     * It no longer occurs. Weird indeed.
-     */
-    /* test('messages over encrypted connections arrive as binary', async (done) => {
-        const [wss, listenSocket] = await startWebSocketServer(
-            '127.0.0.1',
-            wssPort,
-            'test/fixtures/key.pem',
-            'test/fixtures/cert.pem'
-        )
+    it('getRtts() is empty', () => {
+        expect(wsEndpoint.getRtts()).toEqual({})
+    })
 
-        const peerInfo = PeerInfo.newTracker('serverId', 'name')
-        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
-        const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
-            undefined, {
-                rejectUnauthorized: false, // needed to accept self-signed certificate
-                headers: {
-                    'streamr-peer-id': 'clientId',
-                    'streamr-peer-type': 'node',
+    it('getPeers() is empty', () => {
+        expect(wsEndpoint.getPeers()).toEqual(new Map())
+    })
+
+    it('getPeerInfos() is empty', () => {
+        expect(wsEndpoint.getPeerInfos()).toEqual([])
+    })
+
+    it('resolveAddress throws error', () => {
+        expect(() => {
+            wsEndpoint.resolveAddress('otherPeerId')
+        }).toThrowError('Id otherPeerId not found in peer book')
+    })
+})
+
+describe('WsServer&WsClient with connections', () => {
+    let wsEndpoint: ServerWsEndpoint
+    let otherWsEndpoint: ClientWsEndpoint
+    let thirdWsEndpoint: ClientWsEndpoint
+
+    beforeAll(async () => {
+        wsEndpoint = await setUpWsServer('peerId', 'tracker', 'Espoo', 30466)
+        otherWsEndpoint = await setUpWsClient('otherPeerId', 'node', 'Helsinki')
+        thirdWsEndpoint = await setUpWsClient('thirdPeerId', 'node', 'Helsinki')
+        await otherWsEndpoint.connect(wsEndpoint.getAddress())
+        await thirdWsEndpoint.connect(wsEndpoint.getAddress())
+    })
+
+    afterAll(async () => {
+        await Promise.allSettled([
+            wsEndpoint.stop(),
+            otherWsEndpoint.stop(),
+            thirdWsEndpoint.stop()
+        ])
+    })
+
+    it('isConnected() is empty', () => {
+        expect(wsEndpoint.isConnected('otherPeerId')).toEqual(true)
+        expect(wsEndpoint.isConnected('thirdPeerId')).toEqual(true)
+    })
+
+    it('getRtts() is empty', async () => {
+        await waitForCondition(() => Object.entries(wsEndpoint.getRtts()).length !== 0)
+        const rtts = wsEndpoint.getRtts()
+        expect(Object.keys(rtts)).toEqual(['otherPeerId', 'thirdPeerId'])
+        expect(rtts.otherPeerId).toBeGreaterThanOrEqual(0)
+        expect(rtts.thirdPeerId).toBeGreaterThanOrEqual(0)
+    })
+
+    it('getPeers() is empty', () => {
+        const peers = wsEndpoint.getPeers()
+        expect([...peers.keys()]).toEqual([
+            'otherPeerId',
+            'thirdPeerId'
+        ])
+    })
+
+    it('getPeerInfos() is empty', () => {
+        expect(wsEndpoint.getPeerInfos()).toEqual([
+            PeerInfo.newNode(
+                'otherPeerId',
+                null,
+                undefined,
+                undefined,
+                {
+                    latitude: null,
+                    longitude: null,
+                    country: null,
+                    city: null }
+            ),
+            PeerInfo.newNode('thirdPeerId',
+                null,
+                undefined,
+                undefined,
+                {
+                    latitude: null,
+                    longitude: null,
+                    country: null,
+                    city: null
                 }
-            })
-        ws.on('message', async (msg) => {
-            expect(msg).toBeInstanceOf(Buffer) // Weird...
-            expect(msg.toString()).toEqual('Hello, World!')
-            ws.close()
-            await endpoint.stop()
-            done()
-        })
-        ws.on('error', (err) => {
-            done(err)
-        })
-        ws.on('open', () => {
-            endpoint.send('clientId', 'Hello, World!')
-        })
-    }) */
+            )
+        ])
+    })
 
-    /**
-     * Related to above test: check that messages indeed arrive as string from non-SSL uWS server.
-     */
-    test('messages over unencrypted connections arrive as string', (done) => {
-        startWebSocketServer('127.0.0.1', wssPort).then(([wss, listenSocket]) => {
-            const peerInfo = PeerInfo.newTracker('serverId', 'name')
-            const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
-            const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
-                undefined, {
-                    headers: {
-                        'streamr-peer-id': 'clientId',
-                        'streamr-peer-type': 'node',
-                        'control-layer-versions': "2",
-                        'message-layer-versions': "32"
-                    }
-                })
-            ws.on('message', async (msg) => {
-                expect(typeof msg).toEqual('string')
-                expect(msg).toEqual('Hello, World!')
-                ws.close()
-                await endpoint.stop()
-                done()
-            })
-            ws.on('error', (err) => {
-                done(err)
-            })
-            ws.on('open', () => {
-                endpoint.send('clientId', 'Hello, World!')
-            })
-            return true
-        }).catch((err) => done(err))
+    it('resolveAddress throws error', () => {
+        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('otherPeerId')
     })
 })
