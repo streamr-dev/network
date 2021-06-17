@@ -1,6 +1,5 @@
 import { Wallet } from 'ethers'
 import fetch from 'node-fetch'
-// @ts-expect-error no type definitions
 import fetchNatType from 'nat-type-identifier'
 import { Logger } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
@@ -116,7 +115,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         const result = await fetchNatType({ 
             logsEnabled: false, 
             sampleCount: NAT_ANALYSIS_SAMPLE_COUNT, 
-            stunHost: this.pluginConfig.stunServerHost 
+            stunHost: this.pluginConfig.stunServerHost!
         })
         logger.info(`NAT type: ${result}`)
         return result
