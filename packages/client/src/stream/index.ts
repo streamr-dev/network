@@ -10,7 +10,14 @@ import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
-export type StreamPartDefinitionOptions = { streamId?: string, streamPartition?: number, id?: string, partition?: number, stream?: Stream|string }
+export type StreamPartDefinitionOptions = {
+    streamId?: string,
+    streamPartition?: number,
+    id?: string,
+    partition?: number,
+    stream?: StreamrStream|string
+}
+
 export type StreamPartDefinition = string | StreamPartDefinitionOptions
 
 export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
@@ -79,7 +86,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
     }
 }
 
-export class Stream {
+class StreamrStream {
     // @ts-expect-error
     id: string
     // @ts-expect-error
@@ -110,7 +117,7 @@ export class Stream {
                 body: JSON.stringify(this.toObject()),
             },
         )
-        return json ? new Stream(this._client, json) : undefined
+        return json ? new StreamrStream(this._client, json) : undefined
     }
 
     /** @internal */
@@ -226,7 +233,13 @@ export class Stream {
         await this.update()
     }
 
-    async addToStorageNode(node: StorageNode|EthereumAddress, { timeout = 30000 }: { timeout: number } = { timeout: 30000 }) {
+    async addToStorageNode(node: StorageNode|EthereumAddress, {
+        timeout = 30000,
+        pollInterval = 200
+    }: {
+        timeout?: number,
+        pollInterval?: number
+    } = {}) {
         const address = (node instanceof StorageNode) ? node.getAddress() : node
         // currently we support only one storage node
         // -> we can validate that the given address is that address
@@ -234,6 +247,7 @@ export class Stream {
         if (getAddress(address) !== this._client.options.storageNode.address) {
             throw new Error('Unknown storage node: ' + address)
         }
+
         await authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
             this._client.session, {
@@ -245,9 +259,9 @@ export class Stream {
         )
         // wait for propagation: the storage node sees the database change in E&E and
         // is ready to store the any stream data which we publish
-        const POLL_INTERVAL = 500
-        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, POLL_INTERVAL,
-            () => `Propagation timeout when adding stream to a storage node: ${this.id}`)
+        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, pollInterval, () => (
+            `Propagation timeout when adding stream to a storage node: ${this.id}`
+        ))
     }
 
     private async isStreamStoredInStorageNode(streamId: string) {
@@ -284,4 +298,8 @@ export class Stream {
     async publish(content: object, timestamp?: number|string|Date, partitionKey?: string) {
         return this._client.publish(this.id, content, timestamp, partitionKey)
     }
+}
+
+export {
+    StreamrStream as Stream
 }

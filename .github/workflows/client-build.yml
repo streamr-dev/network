@@ -213,8 +213,10 @@ jobs:
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: benchmark publish
+        timeout-minutes: 15
         run: DEBUG='' npm run benchmark-publish > benchmark-publish.txt
       - name: benchmark subscribe
+        timeout-minutes: 15
         run: DEBUG='' npm run benchmark-subscribe > benchmark-subscribe.txt
       - uses: actions/upload-artifact@v2
         with:

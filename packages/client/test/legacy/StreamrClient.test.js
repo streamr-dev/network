@@ -2,7 +2,7 @@ import sinon from 'sinon'
 import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 import { wait, waitForEvent } from 'streamr-test-utils'
-import Debug from 'debug'
+import { Debug } from '../utils'
 
 import FailedToPublishError from '../../src/errors/FailedToPublishError'
 import Subscription from '../../src/Subscription'

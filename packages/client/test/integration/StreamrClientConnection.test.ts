@@ -1,8 +1,8 @@
 import fetch from 'node-fetch'
-import { ControlLayer } from 'streamr-client-protocol'
+import { ControlLayer, ControlMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, createTestStream } from '../utils'
+import { describeRepeats, uid, fakePrivateKey, createTestStream, getPublishTestMessages } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -280,7 +280,7 @@ describeRepeats('StreamrClient Connection', () => {
                 await client.disconnect()
             }))
 
-            client.connection.socket.close()
+            client.connection.socket?.close()
             await done
             await wait(2500)
             expect(client.isDisconnected()).toBeTruthy()
@@ -351,7 +351,7 @@ describeRepeats('StreamrClient Connection', () => {
             client = createClient()
             await client.connect()
 
-            client.connection.socket.close()
+            client.connection.socket?.close()
             expect(client.isConnected()).not.toBeTruthy()
             await client.connection.nextConnection()
             expect(client.isConnected()).toBeTruthy()
@@ -450,7 +450,7 @@ describeRepeats('StreamrClient Connection', () => {
             const msgs = await sub.collect()
 
             await wait(2000)
-            await client.connection.socket.close()
+            await client.connection.socket?.close()
             await client.connection.nextConnection()
 
             // check whole list of calls after reconnect and disconnect
@@ -465,8 +465,7 @@ describeRepeats('StreamrClient Connection', () => {
 
             // key exchange stream subscription should not have been sent yet
             expect(connectionEventSpy.mock.calls.length).toEqual(1)
-            await client.disconnect()
-        }, 10000)
+        }, 15000)
 
         it('does not try to reconnect', async () => {
             client = createClient()
@@ -487,7 +486,10 @@ describeRepeats('StreamrClient Connection', () => {
             const onConnecting = jest.fn()
             client.once('connecting', onConnecting)
             // wait for possible reconnections
-            await wait(2000)
+            await Promise.race([
+                wait(2000),
+                client.nextConnection(),
+            ])
             expect(onConnecting).toHaveBeenCalledTimes(0)
             expect(client.isConnected()).toBe(false)
         }, 10000)
@@ -531,7 +533,9 @@ describeRepeats('StreamrClient Connection', () => {
                     id1: uid('msg')
                 }
                 const p = client.publish(stream.id, message)
+                p.catch(() => {}) // no unhandled
                 await wait(0)
+                client.debug('about to intentionally break publish...')
                 await client.disconnect() // start async disconnect after publish started
                 await expect(p).rejects.toThrow()
                 expect(client.isDisconnected()).toBeTruthy()
@@ -553,6 +557,7 @@ describeRepeats('StreamrClient Connection', () => {
                     id1: uid('msg')
                 }
                 const p = client.publish(stream.id, message)
+                p.catch(() => {}) // no unhandled
                 await wait(0)
                 client.debug('about to intentionally break publish...')
                 await client.disconnect() // start async disconnect after publish started
@@ -560,7 +565,41 @@ describeRepeats('StreamrClient Connection', () => {
                 expect(client.isDisconnected()).toBeTruthy()
                 // wait in case of delayed errors
                 await wait(500)
-            }, 10000)
+            })
+
+            it('does not error if logged out while publishing', async () => {
+                const MAX_MESSAGES = 5
+                client = createClient()
+                await client.connect()
+                const stream = await createTestStream(client, module)
+                let didLogout = false
+                const publishTestMessages = getPublishTestMessages(client)
+                const send = client.send.bind(client)
+                const sessionToken = await client.session.getSessionToken()
+                client.send = async (msg: ControlMessage) => {
+                    // logout after first message
+                    if (!didLogout) {
+                        didLogout = true
+                        const r = await send(msg)
+                        await client.logout()
+                        return r
+                    }
+
+                    return send(msg)
+                }
+
+                const published = await publishTestMessages.raw(MAX_MESSAGES, {
+                    stream,
+                    timeout: 10000,
+                    batchSize: MAX_MESSAGES,
+                })
+                expect(published).toHaveLength(MAX_MESSAGES)
+                // session tokens after first should be different
+                const sessionToken2 = published[1][1].sessionToken
+                expect(sessionToken2).not.toEqual(sessionToken)
+                expect(published.slice(1).map(([, m]) => m.sessionToken))
+                    .toEqual(Array(MAX_MESSAGES - 1).fill(sessionToken2))
+            }, 25000)
         })
 
         describe('subscribe', () => {
@@ -600,6 +639,20 @@ describeRepeats('StreamrClient Connection', () => {
                     },
                 }, () => {})
 
+                await client.disconnect()
+            })
+
+            it('does not error if disconnect then connect before subscribe', async () => {
+                client = createClient()
+                await client.connect()
+                const stream = await createTestStream(client, module)
+                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+
+                await client.disconnect()
+                await client.connect()
+                await client.subscribe({
+                    streamId: stream.id,
+                }, () => {})
                 await client.disconnect()
             })
         })
