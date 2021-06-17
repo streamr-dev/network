@@ -58,7 +58,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         logger.info('Testnet miner plugin started')
     }
 
-    private async onRewardCodeReceived(rewardCode: string) {
+    private async onRewardCodeReceived(rewardCode: string): Promise<void> {
         logger.info(`Reward code received: ${rewardCode}`)
         this.metrics.set(METRIC_LATEST_CODE, Date.now())
         const peers = this.getPeers()
@@ -75,7 +75,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         }))
     }
 
-    private async claimRewardCode(rewardCode: string, peers: Peer[], delay: number) {
+    private async claimRewardCode(rewardCode: string, peers: Peer[], delay: number): Promise<void> {
         const metadata = {
             nodeAddress: this.nodeAddress,
             clientServerLatency: this.latestLatency,
@@ -100,13 +100,14 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         }
     }
 
-    private async getLatency() {
+    private async getLatency(): Promise<number|undefined> {
         const startTime = Date.now()
         try {
             await fetch(`${this.pluginConfig.claimServerUrl}/ping`)
             return Date.now() - startTime
         } catch (e) {
             logger.warn('Ping error')
+            return undefined
         }
     }
 
