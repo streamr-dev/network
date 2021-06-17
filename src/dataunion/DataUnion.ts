@@ -532,7 +532,7 @@ export class DataUnion {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
 
         // check first that we have enough allowance to do the transferFrom within the transferToMemberInContract
-        const tokenSidechainAddress = await duSidechain.token()
+        const tokenSidechainAddress = this.client.options.tokenSidechainAddress
         const sidechainProvider = this.client.ethereum.getSidechainProvider()
         const token = new Contract(tokenSidechainAddress, erc20AllowanceAbi, sidechainProvider)
         const allowance = await token.allowance(await duSidechain.signer.getAddress(), duSidechain.address)
