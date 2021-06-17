@@ -1,6 +1,9 @@
+/*
+ * @param {number} interval - number of milliseconds to wait after a task is completed
+ */
 export const scheduleAtInterval = async (
     task: () => Promise<void>, 
-    interval: number, // number of milliseconds to wait after a task is completed
+    interval: number,
     executeAtStart: boolean
 ): Promise<{ stop: () => void }> => {
     let timer: NodeJS.Timer|undefined
