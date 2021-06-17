@@ -7,10 +7,13 @@ import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Metrics } from '../../../../network/dist/helpers/MetricsContext'
 import { scheduleAtInterval } from '../../helpers/scheduler'
+import { withTimeout } from '../../helpers/withTimeout'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
 const NAT_ANALYSIS_SAMPLE_COUNT = 5
+const NAT_ANALYSIS_TIMEOUT = 60 * 1000
+const NAT_TYPE_UNKNOWN = 'Unknown'
 const METRIC_CONTEXT_NAME = 'broker/plugin/testnetMiner'
 const METRIC_LATEST_CODE = 'latestCode'
 
@@ -113,13 +116,18 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
 
     private async getNatType(): Promise<string> {
         logger.info('Analyzing NAT type')
-        const result = await fetchNatType({ 
-            logsEnabled: false, 
-            sampleCount: NAT_ANALYSIS_SAMPLE_COUNT, 
-            stunHost: this.pluginConfig.stunServerHost!
-        })
-        logger.info(`NAT type: ${result}`)
-        return result
+        try {
+            const result = await withTimeout(fetchNatType({ 
+                logsEnabled: false,
+                sampleCount: NAT_ANALYSIS_SAMPLE_COUNT,
+                stunHost: this.pluginConfig.stunServerHost!
+            }), NAT_ANALYSIS_TIMEOUT)
+            logger.info(`NAT type: ${result}`)
+            return result
+        } catch (e) {
+            logger.warn(`Unable to analyze NAT type: ${e.message}`)
+            return NAT_TYPE_UNKNOWN
+        }
     }
 
     async stop() {
