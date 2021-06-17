@@ -10,6 +10,7 @@ export interface PersistentStore<K, V> {
     size(): Promise<number>
     close(): Promise<void>
     destroy(): Promise<void>
+    exists(): Promise<boolean>
 }
 
 type GroupKeyId = string
@@ -63,6 +64,10 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
 
     async close() {
         return this.store.close()
+    }
+
+    async exists() {
+        return this.store.exists()
     }
 
     get [Symbol.toStringTag]() {
@@ -119,7 +124,10 @@ export default class GroupKeyStore {
     }
 
     async isEmpty() {
-        return !this.nextGroupKeys.length && await this.store.size() === 0
+        // any pending keys means it's not empty
+        if (this.nextGroupKeys.length) { return false }
+
+        return (await this.store.size()) === 0
     }
 
     async useGroupKey(): Promise<[GroupKey | undefined, GroupKey | undefined]> {
@@ -162,9 +170,14 @@ export default class GroupKeyStore {
         return this.store.get(id)
     }
 
+    async exists() {
+        return this.store.exists()
+    }
+
     async clear() {
         this.currentGroupKeyId = undefined
         this.nextGroupKeys.length = 0
+
         return this.store.clear()
     }
 
