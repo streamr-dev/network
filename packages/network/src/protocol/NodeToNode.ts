@@ -46,9 +46,9 @@ export class NodeToNode extends EventEmitter {
     connectToNode(
         receiverNodeId: string,
         trackerAddress: string,
-        isOffering?: boolean
+        trackerInstructed = true
     ): Promise<string> {
-        return this.endpoint.connect(receiverNodeId, trackerAddress, isOffering)
+        return this.endpoint.connect(receiverNodeId, trackerAddress, trackerInstructed)
     }
 
     sendData(receiverNodeId: string, streamMessage: MessageLayer.StreamMessage): Promise<ControlLayer.BroadcastMessage> {

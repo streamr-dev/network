@@ -1,9 +1,8 @@
 import { once } from 'events'
 import { DescriptionType } from 'node-datachannel'
 import { waitForCondition, wait } from 'streamr-test-utils'
-
 import { MessageQueue } from '../../src/connection/MessageQueue'
-import { Connection } from '../../src/connection/Connection'
+import { Connection, DeferredConnectionAttempt } from '../../src/connection/Connection'
 
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
@@ -42,13 +41,15 @@ describe('Connection', () => {
         }
         const messageQueueOne = new MessageQueue<string>()
         const messageQueueTwo = new MessageQueue<string>()
+        const deferredConnectionAttemptOne = new DeferredConnectionAttempt('two')
+        const deferredConnectionAttemptTwo = new DeferredConnectionAttempt('one')
         connectionOne = new Connection({
             selfId: 'one',
             targetPeerId: 'two',
             routerId: 'routerId',
             stunUrls: [],
-            isOffering: true,
             messageQueue: messageQueueOne,
+            deferredConnectionAttempt: deferredConnectionAttemptOne
         })
         connectionOne.on('localDescription', (...args) => oneFunctions.onLocalDescription(...args))
         connectionOne.on('localCandidate', (...args) => oneFunctions.onLocalCandidate(...args))
@@ -58,8 +59,8 @@ describe('Connection', () => {
             targetPeerId: 'one',
             routerId: 'routerId',
             stunUrls: [],
-            isOffering: false,
             messageQueue: messageQueueTwo,
+            deferredConnectionAttempt: deferredConnectionAttemptTwo
         })
 
         connectionTwo.on('localDescription', (...args) => twoFunctions.onLocalDescription(...args))
@@ -82,17 +83,9 @@ describe('Connection', () => {
         }
     })
 
-    afterEach(async () => {
-        if (connectionOne.isOpen()) {
-            const onClose1 = once(connectionOne, 'close')
-            connectionOne.close()
-            await onClose1
-        }
-        if (connectionTwo.isOpen()) {
-            const onClose2 = once(connectionTwo, 'close')
-            connectionTwo.close()
-            await onClose2
-        }
+    afterEach(()  => {
+        connectionOne.close()
+        connectionTwo.close()
     })
 
     it('connection can be established', async () => {
@@ -139,16 +132,6 @@ describe('Connection', () => {
         expect(connectionTwo.getRtt()).toBeGreaterThanOrEqual(0)
     })
 
-    it('connection timeouts if other end does not connect too', async () => {
-        expectErrors = true
-        // @ts-expect-error access private, only in test
-        connectionOne.newConnectionTimeout = 3000 // would be better to pass via constructor
-        connectionOne.connect()
-        await expect(async () => (
-            once(connectionOne, 'open')
-        )).rejects.toThrow('timed out')
-    })
-
     it('connection does not timeout if connection succeeds', async () => {
         // this test ensures failed connection timeout has been cleared
         const TIMEOUT = 3000
@@ -171,14 +154,22 @@ describe('Connection', () => {
 
         await Promise.all([once(connectionOne, 'open'), once(connectionTwo, 'open')])
 
-        connectionTwo.pong = () => {} // hacky: prevent connectionTwo from responding
+        connectionTwo.pong = () => {
+        } // hacky: prevent connectionTwo from responding
         // @ts-expect-error access private, only in test
         // eslint-disable-next-line require-atomic-updates
         connectionOne.pingPongTimeout = 50 // would be better to pass via constructor
-        connectionOne.ping()
-        connectionOne.ping()
 
-        await Promise.allSettled([once(connectionOne, 'close'), once(connectionTwo, 'close')])
+        await Promise.allSettled([
+            once(connectionOne, 'close'),
+            once(connectionTwo, 'close'),
+            connectionOne.ping(),
+            connectionOne.ping(),
+            connectionOne.ping(),
+            connectionOne.ping(),
+            connectionOne.ping(),
+            connectionOne.ping()
+        ])
 
         expect(connectionOne.isOpen()).toEqual(false)
         expect(connectionTwo.isOpen()).toEqual(false)

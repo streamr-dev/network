@@ -54,7 +54,7 @@ describe('check network stabilization', () => {
         ])
     })
 
-    it('network must become stable in less than 10 seconds',  () => {
+    it('network must become stable in less than 10 seconds',  async () => {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < 10; ++i) {
                 const beforeTopology = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())

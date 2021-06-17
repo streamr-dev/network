@@ -127,9 +127,14 @@ export default class Session extends EventEmitter {
             return
         }
 
-        this.updateState(State.LOGGING_OUT)
-        await this._client.logoutEndpoint()
-        this.options.sessionToken = undefined
-        this.updateState(State.LOGGED_OUT)
+        try {
+            this.updateState(State.LOGGING_OUT)
+            const t = this._client.logoutEndpoint()
+            this.options.sessionToken = undefined
+            this.sessionTokenPromise = undefined
+            await t
+        } finally {
+            this.updateState(State.LOGGED_OUT)
+        }
     }
 }

@@ -20,10 +20,12 @@ export function iteratorFinally(iterable, onFinally) {
     let error
     let onFinallyTask
     // ensure finally only runs once
-    const onFinallyOnce = (err) => {
+    let onFinallyOnce = (err) => {
         if (!onFinallyTask) {
             // eslint-disable-next-line promise/no-promise-in-callback
-            onFinallyTask = Promise.resolve().then(async () => onFinally(err))
+            onFinallyTask = Promise.resolve().then(async () => onFinally(err)).finally(() => {
+                onFinallyOnce = () => {}
+            })
         }
         return onFinallyTask
     }
@@ -142,7 +144,6 @@ const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
  * Creates a generator that can be cancelled and perform optional final cleanup.
  * const [cancal, generator] = CancelableGenerator(iterable, onFinally)
  */
-
 export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 250 } = {}) {
     let cancelled = false
     let finalCalled = false
@@ -391,6 +392,7 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
             await cancelAll(error)
         }
         cancelFns.clear()
+        firstSrc = undefined
         try {
             finallyCalled = true
             await onFinally(error)
