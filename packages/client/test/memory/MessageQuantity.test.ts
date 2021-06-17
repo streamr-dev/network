@@ -23,7 +23,9 @@ function logMemory() {
     }
 }
 
-describe('no memleaks when processing a high quantity of large messages', () => {
+// requires live TRAM_DEMO_STREAM to generate bulk data, but the stream seems
+// to fall over all the time so this test isn't very reliable
+describe.skip('no memleaks when processing a high quantity of large messages', () => {
     let client: StreamrClient
     let stream: Stream
     let expectErrors = 0 // check no errors by default

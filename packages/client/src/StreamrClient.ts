@@ -6,7 +6,7 @@ import EventEmitter from 'eventemitter3'
 import { ControlLayer } from 'streamr-client-protocol'
 import { Debug, Debugger } from './utils/log'
 
-import { counterId, uuid, CacheAsyncFn } from './utils'
+import { counterId, uuid, CacheAsyncFn, pOne } from './utils'
 import { validateOptions } from './stream/utils'
 import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
 import StreamrEthereum from './Ethereum'
@@ -125,10 +125,15 @@ class StreamrCached {
         this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
     }
 
-    clearStream(streamId: string) {
+    clearStream(streamId?: string) {
         this.getStream.clear()
-        this.isStreamPublisher.clearMatching((s: string) => s.startsWith(streamId))
-        this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(streamId))
+        if (streamId != null) {
+            this.isStreamPublisher.clearMatching((s: string) => s.startsWith(streamId))
+            this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(streamId))
+        } else {
+            this.isStreamPublisher.clear()
+            this.isStreamSubscriber.clear()
+        }
     }
 
     clearUser() {
@@ -138,7 +143,6 @@ class StreamrCached {
 
     clear() {
         this.clearUser()
-        // @ts-expect-error
         this.clearStream()
     }
 }
@@ -186,7 +190,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     // TODO annotate connection parameter as internal parameter if possible?
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
-        this.id = counterId(`${this.constructor.name}:${uid}${options.id || ''}`)
+        this.id = counterId(`${this.constructor.name}-${uid}${options.id || ''}`)
         this.debug = Debug(this.id)
 
         this.options = Config(options)
@@ -201,6 +205,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         // bind event handlers
         this.onConnectionConnected = this.onConnectionConnected.bind(this)
         this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
+        this.onConnectionDone = pOne(this.onConnectionDone.bind(this))
         this._onError = this._onError.bind(this)
         this.onConnectionError = this.onConnectionError.bind(this)
         this.getErrorEmitter = this.getErrorEmitter.bind(this)
@@ -213,6 +218,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         this.connection
             .on('connected', this.onConnectionConnected)
             .on('disconnected', this.onConnectionDisconnected)
+            .on('done', this.onConnectionDone)
             .on('error', this.onConnectionError)
 
         this.ethereum = new StreamrEthereum(this)
@@ -239,6 +245,23 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /** @internal */
     onConnectionError(err: Todo) {
         this.emit('error', new ConnectionError(err))
+    }
+
+    /** @internal */
+    onConnectionDone() {
+        this.stop().catch(() => {
+            // ignore
+        })
+    }
+
+    async stop() {
+        this.cached.clear()
+        await Promise.allSettled([
+            this.publisher.stop().catch(() => {}),
+            this.subscriber.stop().catch(() => {}),
+            this.session.logout().catch(() => {})
+        ])
+        this.cached.clear()
     }
 
     /** @internal */
@@ -301,12 +324,9 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /**
      * @category Important
      */
-    disconnect() {
-        this.publisher.stop()
-        return Promise.all([
-            this.subscriber.subscriptions.removeAll(),
-            this.connection.disconnect()
-        ])
+    async disconnect() {
+        await this.connection.disconnect()
+        await this.stop()
     }
 
     getSubscriptions() {
@@ -356,8 +376,8 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
      * @category Important
      */
     async subscribe(opts: SubscribeOptions & StreamPartDefinition, onMessage?: OnMessageCallback) {
-        let subTask: Todo
-        let sub: Todo
+        let subTask: Promise<Subscription> | undefined
+        let sub: Subscription | undefined
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
         const onEnd = (err?: Error) => {
             if (sub && typeof onMessage === 'function') {

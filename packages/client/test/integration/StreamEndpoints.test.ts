@@ -145,7 +145,7 @@ function TestStreamEndpoints(getName: () => string) {
                 await client.getOrCreateStream({
                     id: `${otherAddress}${newPath}`,
                 })
-            }).rejects.toThrow('Validation')
+            }).rejects.toThrow(/validation/gi)
         })
     })
 

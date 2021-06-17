@@ -20,10 +20,12 @@ export function iteratorFinally(iterable, onFinally) {
     let error
     let onFinallyTask
     // ensure finally only runs once
-    const onFinallyOnce = (err) => {
+    let onFinallyOnce = (err) => {
         if (!onFinallyTask) {
             // eslint-disable-next-line promise/no-promise-in-callback
-            onFinallyTask = Promise.resolve().then(async () => onFinally(err))
+            onFinallyTask = Promise.resolve().then(async () => onFinally(err)).finally(() => {
+                onFinallyOnce = () => {}
+            })
         }
         return onFinallyTask
     }
@@ -390,6 +392,7 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
             await cancelAll(error)
         }
         cancelFns.clear()
+        firstSrc = undefined
         try {
             finallyCalled = true
             await onFinally(error)

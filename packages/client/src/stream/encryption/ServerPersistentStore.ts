@@ -47,10 +47,6 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         this.dbFilePath = dbFilePath
         this.migrationsPath = migrationsPath
         this.init = pOnce(this.init.bind(this))
-        this.init().catch(() => {
-            // ignore error until used
-            // prevent unhandled rejection
-        })
     }
 
     private async tryExec<T>(fn: () => Promise<T>, maxRetries = 10, retriesLeft = maxRetries): Promise<T> {
