@@ -17,6 +17,7 @@ import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
+import { v4 as uuidv4 } from 'uuid'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -55,13 +56,14 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     }
 
     // Start network node
+    const sessionId = `${brokerAddress}#${uuidv4()}`
     const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
         ? config.network.advertisedWsUrl
         : await publicIp.v4().then((ip) => `ws://${ip}:${config.network.port}`)
     const networkNode = await startNetworkNode({
         host: config.network.hostname,
         port: config.network.port,
-        id: brokerAddress,
+        id: sessionId,
         name: networkNodeName,
         trackers,
         advertisedWsUrl,
