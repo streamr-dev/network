@@ -4,8 +4,10 @@
   </a>
 </p>
 <h1 align="left">
-  Streamr JavaScript Client
+  <strike> Streamr JavaScript Client </strike>
 </h1>
+
+## This repository is deprecated, Streamr Javascript Client development has moved into the [network-monorepo](https://github.com/streamr-dev/network-monorepo) 
 
 ![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/streamr-client-javascript/Test%20Build/master)
 [![GitHub release](https://img.shields.io/github/release/streamr-dev/streamr-client-javascript.svg?style=flat)](https://github.com/streamr-dev/streamr-client-javascript/releases/)
@@ -19,7 +21,7 @@ Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascrip
 
 ### Breaking changes notice
 
-* Date TBD: Support for unsigned data will be dropped.
+* Support for unsigned data will be dropped.
 
 ----
 
@@ -361,6 +363,11 @@ To get an existing (previously deployed) `DataUnion` instance:
 const dataUnion = client.getDataUnion(dataUnionAddress)
 ```
 
+Or to verify untrusted (e.g. user) input, use:
+```js
+const dataUnion = await client.safeGetDataUnion(dataUnionAddress)
+```
+
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
 These DataUnion-specific options can be given to `new StreamrClient` options:
 
@@ -381,6 +388,7 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 | setAdminFee(newFeeFraction[, ethersOptions])                                                      | Transaction receipt     | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
+| withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send some of the withdrawable earnings to the address signed off by the member |
 
 `*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case. 
 
@@ -478,7 +486,7 @@ const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 
 ### Withdraw options
 
-The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
+The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned`, `withdrawAmountToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
 
 | Name              | Default               | Description                                                                               |
 | :---------------- | :-------------------- | :--------------------------------------------------------------------------------------   |

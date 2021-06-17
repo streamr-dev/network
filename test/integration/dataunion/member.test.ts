@@ -2,7 +2,7 @@ import { providers, Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import config from '../config'
+import { clientOptions } from '../devEnvironment'
 import { DataUnion, JoinRequestState } from '../../../src/dataunion/DataUnion'
 import { createMockAddress, expectInvalidAddress, fakePrivateKey } from '../../utils'
 import authFetch from '../../../src/rest/authFetch'
@@ -10,17 +10,18 @@ import { getEndpointUrl } from '../../../src/utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-member')
 
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
 
 const joinMember = async (memberWallet: Wallet, secret: string|undefined, dataUnionAddress: string) => {
     const memberClient = new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         auth: {
             privateKey: memberWallet.privateKey,
         }
     } as any)
-    return memberClient.getDataUnion(dataUnionAddress).join(secret)
+    const du = await memberClient.safeGetDataUnion(dataUnionAddress)
+    return du.join(secret)
 }
 
 describe('DataUnion member', () => {
@@ -29,15 +30,15 @@ describe('DataUnion member', () => {
     let secret: string
 
     beforeAll(async () => {
-        log(`Connecting to Ethereum networks, config = ${JSON.stringify(config)}`)
+        log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()
         log('Connected to sidechain network: ', JSON.stringify(network2))
-        const adminClient = new StreamrClient(config.clientOptions as any)
+        const adminClient = new StreamrClient(clientOptions as any)
         dataUnion = await adminClient.deployDataUnion()
         // product is needed for join requests to analyze the DU version
-        const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
+        const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
         await authFetch(
             createProductUrl,
             adminClient.session,
