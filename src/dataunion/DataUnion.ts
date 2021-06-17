@@ -538,7 +538,7 @@ export class DataUnion {
         const allowance = await token.allowance(await duSidechain.signer.getAddress(), duSidechain.address)
         if (allowance.lt(amount)) {
             const difference = amount.sub(allowance)
-            const approveTx = token.increaseAllowance(duSidechain.address, difference)
+            const approveTx = await token.increaseAllowance(duSidechain.address, difference)
             const approveTr = await waitForTx(approveTx)
             log('Approval transaction receipt: %o', approveTr)
         }
