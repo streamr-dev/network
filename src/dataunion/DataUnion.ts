@@ -6,6 +6,7 @@ import { keccak256 } from '@ethersproject/keccak256'
 import { Wallet } from '@ethersproject/wallet'
 import { JsonRpcSigner } from '@ethersproject/providers'
 import debug from 'debug'
+import type { Overrides as EthersOptions } from '@ethersproject/contracts'
 
 import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
@@ -555,7 +556,7 @@ export class DataUnion {
     /**
      * Admin: set admin fee (between 0.0 and 1.0) for the data union
      */
-    async setAdminFee(newFeeFraction: number, ethersOptions = {}) {
+    async setAdminFee(newFeeFraction: number, ethersOptions: EthersOptions = {}) {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
@@ -726,7 +727,7 @@ export class DataUnion {
             return messageHash
         }
 
-        const ethersOptions: { gasPrice?: BigNumber | string } = {}
+        const ethersOptions: EthersOptions = {}
         if (gasPrice) {
             ethersOptions.gasPrice = gasPrice
         }
@@ -745,7 +746,7 @@ export class DataUnion {
     /**
      * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
      */
-    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000, ethersOptions = {}) {
+    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000, ethersOptions: EthersOptions = {}) {
         const helper = this.getContracts()
         const [sidechainAmb, mainnetAmb] = await Promise.all([
             helper.getSidechainAmb(),
