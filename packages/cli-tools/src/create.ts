@@ -1,6 +1,10 @@
 import { StreamProperties, StreamrClient, StreamrClientOptions} from 'streamr-client'
 
-export const create = (body: Partial<StreamProperties>, streamrOptions: StreamrClientOptions): void => {
+export const create = (
+    // id is required
+    body: Partial<StreamProperties> & Required<Pick<StreamProperties, "id">>,
+    streamrOptions: StreamrClientOptions
+): void => {
     const options = { ...streamrOptions }
 
     const client = new StreamrClient(options)

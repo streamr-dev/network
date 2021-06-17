@@ -358,13 +358,13 @@ describe('Storage', () => {
         })
 
         it('can requestFrom', async () => {
-            const streamingResults = storage.requestFrom(storedStreamId, 0, NUM_MESSAGES, 0, null)
+            const streamingResults = storage.requestFrom(storedStreamId, 0, 1000, 0, null)
             const results = await toArray(streamingResults)
             expect(results.length).toEqual(NUM_MESSAGES)
         })
 
         it('can requestFrom again', async () => {
-            const streamingResults = storage.requestFrom(storedStreamId, 0, NUM_MESSAGES, 0, null)
+            const streamingResults = storage.requestFrom(storedStreamId, 0, 1000, 0, null)
             const results = await toArray(streamingResults)
             expect(results.length).toEqual(NUM_MESSAGES)
         })
