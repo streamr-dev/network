@@ -16,8 +16,12 @@ import { StreamFetcher } from '../../StreamFetcher'
 import http from "http"
 import https from "https"
 import { parse as parseQuery } from 'querystring'
+// @ts-expect-error no type definitions
+import Cutter from 'utf8-binary-cutter'
 
 const logger = new Logger(module)
+
+const MAX_ERROR_MESSAGE_LENGTH = 123 // https://html.spec.whatwg.org/multipage/web-sockets.html
 
 export class WebsocketServer extends EventEmitter {
 
@@ -120,7 +124,7 @@ export class WebsocketServer extends EventEmitter {
         this.wss.on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
             function closeWithError(internalMsg: string, clientMsg: string) {
                 logger.trace(`rejected connection: ${internalMsg}`)
-                ws.close(1000, clientMsg.slice(0, 100)) // clientMsg has a max size in WS (~123 bytes)
+                ws.close(1000, Cutter.truncateToBinarySize(clientMsg, MAX_ERROR_MESSAGE_LENGTH))
             }
 
             if (request.url === undefined) {
