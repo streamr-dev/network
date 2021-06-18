@@ -530,12 +530,13 @@ export class DataUnion {
         const address = getAddress(memberAddress) // throws if bad address
         const amount = BigNumber.from(amountTokenWei)
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+        const signer = duSidechain.signer
+        const myAddress = await signer.getAddress()
 
         // check first that we have enough allowance to do the transferFrom within the transferToMemberInContract
         const tokenSidechainAddress = this.client.options.tokenSidechainAddress
-        const sidechainProvider = this.client.ethereum.getSidechainProvider()
-        const token = new Contract(tokenSidechainAddress, erc20AllowanceAbi, sidechainProvider)
-        const allowance = await token.allowance(await duSidechain.signer.getAddress(), duSidechain.address)
+        const token = new Contract(tokenSidechainAddress, erc20AllowanceAbi, signer)
+        const allowance = await token.allowance(myAddress, duSidechain.address)
         if (allowance.lt(amount)) {
             const difference = amount.sub(allowance)
             const approveTx = await token.increaseAllowance(duSidechain.address, difference)
