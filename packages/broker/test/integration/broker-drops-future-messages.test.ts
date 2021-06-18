@@ -2,7 +2,7 @@ import url from 'url'
 import WebSocket from 'ws'
 import fetch from 'node-fetch'
 import { startTracker, Protocol } from 'streamr-network'
-import { startBroker, createClient } from '../utils'
+import { startBroker, createClient, createTestStream } from '../utils'
 import StreamrClient from 'streamr-client'
 import { Todo } from '../types'
 
@@ -56,9 +56,7 @@ describe('broker drops future messages', () => {
         })
 
         client = createClient(wsPort)
-        const freshStream = await client.createStream({
-            name: 'broker-drops-future-messages' + Date.now()
-        })
+        const freshStream = await createTestStream(client, module)
         streamId = freshStream.id
         token = await client.session.getSessionToken()
     })
@@ -87,7 +85,7 @@ describe('broker drops future messages', () => {
             protocol: 'http',
             hostname: '127.0.0.1',
             port: httpPort,
-            pathname: `/api/v1/streams/${streamId}/data`,
+            pathname: `/api/v1/streams/${encodeURIComponent(streamId)}/data`,
             query
         })
 

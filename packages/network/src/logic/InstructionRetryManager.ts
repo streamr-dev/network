@@ -18,6 +18,7 @@ export class InstructionRetryManager {
         counter: number,
         }
     }
+    private stopped: boolean
 
     constructor(handleFn: HandleFn, intervalInMs: number) {
         this.logger = new Logger(module)
@@ -25,9 +26,13 @@ export class InstructionRetryManager {
         this.intervalInMs = intervalInMs
         this.instructionRetryIntervals = {}
         this.statusSendCounterLimit = 9
+        this.stopped = false
     }
 
     add(instructionMessage: TrackerLayer.InstructionMessage, trackerId: string): void {
+        if (this.stopped) {
+            return
+        }
         const id = StreamIdAndPartition.fromMessage(instructionMessage).key()
         if (this.instructionRetryIntervals[id]) {
             clearTimeout(this.instructionRetryIntervals[id].interval)
@@ -41,6 +46,9 @@ export class InstructionRetryManager {
     }
 
     async retryFunction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: string): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         const streamId = StreamIdAndPartition.fromMessage(instructionMessage).key()
         try {
             // First and every nth instruction retries will always send status messages to tracker
@@ -64,6 +72,9 @@ export class InstructionRetryManager {
     }
 
     removeStreamId(streamId: StreamKey): void {
+        if (this.stopped) {
+            return
+        }
         if (streamId in this.instructionRetryIntervals) {
             clearTimeout(this.instructionRetryIntervals[streamId].interval)
             delete this.instructionRetryIntervals[streamId]
@@ -71,11 +82,12 @@ export class InstructionRetryManager {
         }
     }
 
-    reset(): void {
+    stop(): void {
         Object.values(this.instructionRetryIntervals).forEach((obj) => {
             clearTimeout(obj.interval)
             obj.counter = 0
         })
         this.instructionRetryIntervals = {}
+        this.stopped = true
     }
 }

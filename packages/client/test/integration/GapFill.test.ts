@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '../utils'
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
@@ -44,9 +44,8 @@ describeRepeats('GapFill', () => {
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         await client.session.getSessionToken()
-        stream = await client.createStream({
-            requireSignedData: true,
-            name: uid('stream')
+        stream = await createTestStream(client, module, {
+            requireSignedData: true
         })
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
@@ -330,32 +329,14 @@ describeRepeats('GapFill', () => {
 
             it('rejects resend if no storage assigned', async () => {
                 // new stream, assign to storage node not called
-                stream = await client.createStream({
+                stream = await createTestStream(client, module, {
                     requireSignedData: true,
-                    name: uid('no-storage-stream')
                 })
 
                 await expect(async () => {
                     await client.resend({
                         stream,
                         last: MAX_MESSAGES,
-                    })
-                }).rejects.toThrow('storage')
-            }, 15000)
-
-            it('rejects resend+subscribe if no storage assigned', async () => {
-                // new stream, assign to storage node not called
-                stream = await client.createStream({
-                    requireSignedData: true,
-                    name: uid('no-storage-stream')
-                })
-
-                await expect(async () => {
-                    await client.subscribe({
-                        stream,
-                        resend: {
-                            last: 100,
-                        }
                     })
                 }).rejects.toThrow('storage')
             }, 15000)
@@ -478,9 +459,8 @@ describeRepeats('GapFill', () => {
             await client.connect()
             const { parse } = client.connection
             // new stream, assign to storage node not called
-            stream = await client.createStream({
+            stream = await createTestStream(client, module, {
                 requireSignedData: true,
-                name: uid('no-storage-stream')
             })
             const calledResend = jest.fn()
             let count = 0
@@ -529,6 +509,39 @@ describeRepeats('GapFill', () => {
             expect(client.connection.getState()).toBe('connected')
             // shouldn't retry if encountered no storage error
             expect(calledResend).toHaveBeenCalledTimes(0)
+        }, 20000)
+
+        it('subscribe+resend does not crash if no storage assigned', async () => {
+            await setupClient({
+                gapFillTimeout: 200,
+                retryResendAfter: 2000,
+                maxGapRequests: 99 // would time out test if doesn't give up when seeing no storage assigned
+            })
+
+            await client.connect()
+            // new stream, assign to storage node not called
+            stream = await createTestStream(client, module, {
+                requireSignedData: true,
+            })
+
+            const sub = await client.subscribe({
+                stream,
+                resend: { last: 2 }
+            })
+
+            const publishedTask = publishTestMessages(MAX_MESSAGES, {
+                stream,
+            })
+
+            const received: any[] = []
+            for await (const m of sub) {
+                received.push(m.getParsedContent())
+                if (received.length === MAX_MESSAGES) {
+                    break
+                }
+            }
+            const published = await publishedTask
+            expect(received).toEqual(published)
         }, 20000)
 
         it('ignores gaps if orderMessages disabled', async () => {

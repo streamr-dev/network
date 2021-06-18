@@ -3,14 +3,14 @@ import { wait } from 'streamr-test-utils'
 
 import {
     Msg,
-    uid,
     collect,
     describeRepeats,
     fakePrivateKey,
     getWaitForStorage,
     getPublishTestMessages,
     getTestSetTimeout,
-    addAfterFn
+    addAfterFn,
+    createTestStream
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
@@ -70,9 +70,7 @@ describeRepeats('resends', () => {
         ])
         client.debug('connecting before all tests <<')
         client.debug('createStream >>')
-        stream = await client.createStream({
-            name: uid('stream')
-        })
+        stream = await createTestStream(client, module)
         client.debug('createStream <<')
     })
 
@@ -135,9 +133,7 @@ describeRepeats('resends', () => {
         })
 
         it('throws error if no resend config', async () => {
-            emptyStream = await client.createStream({
-                name: uid('stream')
-            })
+            emptyStream = await createTestStream(client, module)
             await emptyStream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
             await expect(async () => {
                 await subscriber.resend({
@@ -148,9 +144,7 @@ describeRepeats('resends', () => {
         })
 
         it('handles nothing to resend', async () => {
-            emptyStream = await client.createStream({
-                name: uid('stream')
-            })
+            emptyStream = await createTestStream(client, module)
             await emptyStream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             const sub = await subscriber.resend({
@@ -168,9 +162,7 @@ describeRepeats('resends', () => {
         })
 
         it('resendSubscribe with nothing to resend', async () => {
-            emptyStream = await client.createStream({
-                name: uid('stream')
-            })
+            emptyStream = await createTestStream(client, module)
             await emptyStream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             const sub = await subscriber.resendSubscribe({

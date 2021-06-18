@@ -1,6 +1,6 @@
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey } from '../utils'
+import { uid, fakePrivateKey, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import config from './config'
@@ -70,9 +70,7 @@ describe('Subscription', () => {
         expectedErrors = 0
         client = createClient()
         client.on('error', onError)
-        stream = await client.createStream({
-            name: uid('stream')
-        })
+        stream = await createTestStream(client, module)
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         await client.connect()
     })
@@ -99,12 +97,28 @@ describe('Subscription', () => {
             ])
         })
 
-        it('fires events in correct order 2', async () => {
+        it('fires events in correct order 3', async () => {
             const subscriptionEvents = await createMonitoredSubscription({
                 resend: undefined,
             })
             await client.unsubscribe(stream)
             expect(subscriptionEvents).toEqual([
+                'unsubscribed',
+            ])
+        })
+
+        it('fires events in correct order with two subscriptions', async () => {
+            // both should fire unsubscribed
+            const subscriptionEvents = await createMonitoredSubscription()
+            const subscriptionEvents2 = await createMonitoredSubscription()
+            await client.unsubscribe(stream)
+            expect(subscriptionEvents).toEqual([
+                'resent',
+                'unsubscribed',
+            ])
+
+            expect(subscriptionEvents2).toEqual([
+                'resent',
                 'unsubscribed',
             ])
         })

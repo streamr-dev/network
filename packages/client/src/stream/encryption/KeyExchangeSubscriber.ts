@@ -21,7 +21,7 @@ type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
 
 const { MESSAGE_TYPES } = StreamMessage
 
-function waitForSubMessage(sub: Subscription, matchFn: MessageMatch) {
+function waitForSubMessage(sub: Subscription, matchFn: MessageMatch): ReturnType<typeof Defer> & Promise<StreamMessage | undefined> {
     const task = Defer<StreamMessage | undefined>()
     const onMessage = (content: any, streamMessage: StreamMessage) => {
         try {
@@ -41,7 +41,7 @@ function waitForSubMessage(sub: Subscription, matchFn: MessageMatch) {
     return task
 }
 
-async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil) {
+async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil): Promise<GroupKey[]> {
     const { messageType } = streamMessage
     const content = streamMessage.getParsedContent() || []
     let encryptedGroupKeys: EncryptedGroupKey[] = []
@@ -66,8 +66,8 @@ async function SubscriberKeyExhangeSubscription(
     client: StreamrClient,
     getGroupKeyStore: (streamId: string) => Promise<GroupKeyStore>,
     encryptionUtil: EncryptionUtil
-) {
-    let sub: Subscription
+): Promise<Subscription | undefined> {
+    let sub: Subscription | void
     async function onKeyExchangeMessage(_parsedContent: any, streamMessage: StreamMessage) {
         try {
             const { messageType } = streamMessage
@@ -81,11 +81,14 @@ async function SubscriberKeyExhangeSubscription(
                 groupKeyStore.add(groupKey)
             )))
         } catch (err) {
+            if (!sub) { return }
             sub.emit('error', err)
         }
     }
 
     sub = await subscribeToKeyExchangeStream(client, onKeyExchangeMessage)
+    if (!sub) { return undefined }
+
     sub.on('error', () => {}) // errors should not shut down subscription
     return sub
 }
@@ -117,14 +120,15 @@ export class SubscriberKeyExchange {
         streamId: string,
         publisherId: string,
         groupKeyIds: GroupKeyId[]
-    }) {
+    }): Promise<GroupKey[]> {
         const requestId = uuid('GroupKeyRequest')
         const rsaPublicKey = this.encryptionUtil.getPublicKey()
         const keyExchangeStreamId = getKeyExchangeStreamId(publisherId)
-        let sub!: Subscription
+        let sub: Subscription | void
         let responseTask
         try {
             sub = await this.getSubscription()
+            if (!sub) { return [] }
             responseTask = waitForSubMessage(sub, (content, streamMessage) => {
                 const { messageType } = streamMessage
                 const matchesMessageType = (
@@ -157,7 +161,7 @@ export class SubscriberKeyExchange {
         }
     }
 
-    async getGroupKeyStore(streamId: string) {
+    async getGroupKeyStore(streamId: string): Promise<GroupKeyStore> {
         const clientId = await this.client.getAddress()
         return new GroupKeyStore({
             clientId,
@@ -166,19 +170,19 @@ export class SubscriberKeyExchange {
         })
     }
 
-    async getKey(streamMessage: StreamMessage) {
+    async getKey(streamMessage: StreamMessage): Promise<GroupKey | undefined> {
         const streamId = streamMessage.getStreamId()
         const publisherId = streamMessage.getPublisherId()
         const { groupKeyId } = streamMessage
         if (!groupKeyId) {
-            return Promise.resolve()
+            return undefined
         }
 
         const groupKeyStore = await this.getGroupKeyStore(streamId)
 
-        if (!this.enabled) { return Promise.resolve() }
+        if (!this.enabled) { return undefined }
         const existingGroupKey = await groupKeyStore.get(groupKeyId)
-        if (!this.enabled) { return Promise.resolve() }
+        if (!this.enabled) { return undefined }
 
         if (existingGroupKey) {
             return existingGroupKey
@@ -190,10 +194,12 @@ export class SubscriberKeyExchange {
             groupKeyIds: [groupKeyId],
         })
 
+        if (!this.enabled) { return undefined }
         await Promise.all(receivedGroupKeys.map(async (groupKey: GroupKey) => (
             groupKeyStore.add(groupKey)
         )))
 
+        if (!this.enabled) { return undefined }
         return receivedGroupKeys.find((groupKey) => groupKey.id === groupKeyId)
     }
 
@@ -201,8 +207,8 @@ export class SubscriberKeyExchange {
         pMemoize.clear(this.getGroupKeyStore)
     }
 
-    async getGroupKey(streamMessage: StreamMessage) {
-        if (!streamMessage.groupKeyId) { return [] }
+    async getGroupKey(streamMessage: StreamMessage): Promise<GroupKey | undefined> {
+        if (!streamMessage.groupKeyId) { return undefined }
         await this.encryptionUtil.onReady()
 
         return this.getKey(streamMessage)

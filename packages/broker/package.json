@@ -1,6 +1,6 @@
 {
   "name": "streamr-broker",
-  "version": "22.0.0",
+  "version": "23.0.0",
   "description": "A full-featured broker node implementation for the Streamr Network.",
   "repository": {
     "type": "git",
@@ -46,7 +46,7 @@
     "ajv-formats": "^2.0.1",
     "arraybuffer-to-string": "^1.0.2",
     "body-parser": "^1.19.0",
-    "cassandra-driver": "4.6.1",
+    "cassandra-driver": "^4.6.3",
     "commander": "^7.2.0",
     "cors": "^2.7.1",
     "ethers": "^5.1.4",
@@ -62,9 +62,10 @@
     "public-ip": "^4.0.3",
     "qs": "^6.10.1",
     "split2": "^3.2.2",
-    "streamr-client": "^5.4.2",
-    "streamr-network": "^24.3.3",
+    "streamr-client": "^5.4.4",
+    "streamr-network": "^25.0.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.14.0",
+    "utf8-binary-cutter": "^0.9.2",
     "uuid": "^8.3.2",
     "ws": "^7.4.5"
   },

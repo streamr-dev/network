@@ -18,8 +18,8 @@ type StreamOptions = Subscription | StreamPartDefinition | { options: Subscripti
  */
 export class Subscriber {
 
-    client: StreamrClient
-    subscriptions: Subscriptions
+    readonly client: StreamrClient
+    readonly subscriptions: Subscriptions
 
     constructor(client: StreamrClient) {
         this.client = client
@@ -45,6 +45,14 @@ export class Subscriber {
 
     async subscribe(opts: StreamPartDefinition, onFinally?: Todo) {
         return this.subscriptions.add(opts, onFinally)
+    }
+
+    async unsubscribeAll() {
+        return this.subscriptions.removeAll()
+    }
+
+    async stop(): Promise<void> {
+        await this.unsubscribeAll()
     }
 
     async unsubscribe(options: StreamOptions): Promise<Todo> {
@@ -161,7 +169,9 @@ export class Subscriber {
         ], end)
         onEndFns.push(async () => it.cancel())
 
-        const resendTask = resendMessageStream.subscribe()
+        const resendTask = resendMessageStream.subscribe().catch(async (err) => {
+            await resendMessageStream.cancel(err)
+        })
 
         const realtimeTask = this.subscribe({
             ...options,

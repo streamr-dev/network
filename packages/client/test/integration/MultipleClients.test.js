@@ -1,7 +1,7 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { ControlLayer } from 'streamr-client-protocol'
 
-import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, addAfterFn } from '../utils'
+import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, addAfterFn, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId, Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -49,9 +49,7 @@ describeRepeats('PubSub with multiple clients', () => {
             }
         })
         mainClient.on('error', getOnError(errors))
-        stream = await mainClient.createStream({
-            name: uid('stream')
-        })
+        stream = await createTestStream(mainClient, module)
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
     })
 

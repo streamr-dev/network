@@ -8,14 +8,14 @@ import { once } from 'events'
 import { Wallet } from 'ethers'
 import { wait } from 'streamr-test-utils'
 import { PassThrough } from 'stream'
-import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
+import { WebsocketServer } from '../../../../src/plugins/legacyWebsocket/WebsocketServer'
 import { StreamFetcher } from '../../../../src/StreamFetcher'
 import { Publisher } from '../../../../src/Publisher'
 import { SubscriptionManager } from '../../../../src/SubscriptionManager'
 import { Todo } from '../../../../src/types'
 import { router as dataQueryEndpoints } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { StorageNodeRegistry } from '../../../../src/StorageNodeRegistry'
-import { createClient, StorageAssignmentEventManager, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { createClient, createTestStream, StorageAssignmentEventManager, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
@@ -74,9 +74,7 @@ describe('resend cancellation', () => {
 
     beforeEach(async () => {
         client = createClient(wsPort)
-        freshStream = await client.createStream({
-            name: 'resends-cancelled-on-client-disconnect.test.js-' + Date.now()
-        })
+        freshStream = await createTestStream(client, module)
         metricsContext = new MetricsContext(null as any)
         tracker = await startTracker({
             host: '127.0.0.1',

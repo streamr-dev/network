@@ -99,60 +99,63 @@ export async function waitForMatchingMessage({
     }
 
     await connection.nextConnection()
-    let cleanup = () => {}
+    let done: (err?: Error, value?: any) => void = () => {}
 
     const matchTask = new Promise((resolve, reject) => {
         const tryMatch = (...args: Todo[]) => {
             try {
                 return matchFn(...args)
             } catch (err) {
-                cleanup()
-                reject(err)
+                done(err)
                 return false
             }
         }
-        let onDisconnected: Todo
+
         const onResponse = (res: Todo) => {
             if (!tryMatch(res)) { return }
             // clean up err handler
-            cleanup()
-            resolve(res)
+            done(undefined, res)
         }
 
         const onErrorResponse = (res: Todo) => {
             if (!tryMatch(res)) { return }
             // clean up success handler
             const error = callError || new Error('waitForMatchingMessage Error')
-            cleanup()
             error.message += `: ${res.errorMessage}`
             // @ts-expect-error
             error.code = res.errorCode
-            reject(error)
+            done(error)
         }
 
-        cleanup = () => {
+        let onDisconnected: Todo
+        done = (err?: Error, value?: any) => {
             callError = undefined
-            if (cancelTask) { cancelTask.catch(() => {}) } // ignore
+            // eslint-disable-next-line promise/no-promise-in-callback
+            if (cancelTask) { cancelTask.catch(() => {}) } // ignore cancel errors
+
             connection.off('disconnected', onDisconnected)
+            connection.off('done', onDisconnected)
             connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
             types.forEach((type: Todo) => {
                 connection.off(type, onResponse)
             })
+
+            if (err) {
+                reject(err)
+            } else {
+                resolve(value)
+            }
         }
+
+        onDisconnected = () => done()
+        connection.once('disconnected', onDisconnected)
+        connection.once('done', onDisconnected)
 
         types.forEach((type: Todo) => {
             connection.on(type, onResponse)
         })
 
-        connection.on(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
-
-        onDisconnected = () => {
-            cleanup()
-            // @ts-expect-error
-            resolve() // noop
-        }
-
-        connection.once('disconnected', onDisconnected)
+        connection.once(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
     })
 
     try {
@@ -171,7 +174,7 @@ export async function waitForMatchingMessage({
             rejectOnTimeout,
         })
     } finally {
-        cleanup()
+        done()
     }
 }
 
@@ -219,5 +222,6 @@ export const createStreamId = async (streamIdOrPath: string, ownerProvider?: () 
     if (owner === undefined) {
         throw new Error(`Owner missing for stream id: ${streamIdOrPath}`)
     }
+
     return owner.toLowerCase() + streamIdOrPath
 }

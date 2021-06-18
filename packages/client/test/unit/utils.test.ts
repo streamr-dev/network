@@ -1,11 +1,12 @@
+import { Server } from 'http'
 import sinon from 'sinon'
-import Debug from 'debug'
 import express, { Application } from 'express'
 
 import authFetch from '../../src/rest/authFetch'
 import * as utils from '../../src/utils'
-import { describeRepeats } from '../utils'
-import { Server } from 'http'
+import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
+
+import { describeRepeats, Debug } from '../utils'
 
 const debug = Debug('StreamrClient::test::utils')
 
@@ -148,6 +149,16 @@ describeRepeats('utils', () => {
                 await utils.until(condition, 100, 20)
             }).rejects.toThrow('Timeout')
             expect(condition).toHaveBeenCalledTimes(5) // exactly 5
+        })
+    })
+
+    describe('util/log', () => {
+        const longString = 'longString'.repeat(DEFAULT_INSPECT_OPTS.maxStringLength)
+        it('inspect limits string length', () => {
+            expect(inspect({ longString }).length).toBeLessThan(DEFAULT_INSPECT_OPTS.maxStringLength * 1.2)
+        })
+        it('format limits string length', () => {
+            expect(format('%o', { longString }).length).toBeLessThan(DEFAULT_INSPECT_OPTS.maxStringLength * 1.2)
         })
     })
 })

@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages, addAfterFn } from '../utils'
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, addAfterFn, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -46,9 +46,8 @@ describeRepeats('Connection State', () => {
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         await client.session.getSessionToken()
-        stream = await client.createStream({
-            requireSignedData: true,
-            name: uid('stream')
+        stream = await createTestStream(client, module, {
+            requireSignedData: true
         })
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
@@ -206,7 +205,7 @@ describeRepeats('Connection State', () => {
                     // disconnect after every message
                     if (otherClient.connection.socket) {
                         sockets.add(otherClient.connection.socket)
-                        otherClient.connection.socket.close()
+                        otherClient.connection.socket?.close()
                     }
                 })
 
@@ -255,7 +254,7 @@ describeRepeats('Connection State', () => {
         it('should reconnect subscriptions when connection disconnected before subscribed & reconnected', async () => {
             const subTask = subscriber.subscribe(stream.id)
             await true
-            client.connection.socket.close()
+            client.connection.socket?.close()
             const published = await publishTestMessages(2)
             const sub = await subTask
             expect(client.getSubscriptions()).toHaveLength(1)
@@ -282,7 +281,7 @@ describeRepeats('Connection State', () => {
                 if (received.length === 2) {
                     expect(received).toEqual(published)
                     client.debug('test closing socket')
-                    client.connection.socket.close()
+                    client.connection.socket?.close()
                     // this will cause a gap fill
                     published.push(...(await publishTestMessages(2)))
                 }
@@ -421,7 +420,7 @@ describeRepeats('Connection State', () => {
                         throw new Error('not equal')
                     }
                     client.debug('test closing localOtherClient socket')
-                    localOtherClient.connection.socket.close()
+                    localOtherClient.connection.socket?.close()
                     // wait for reconnection before possibly disconnecting again
                     await localOtherClient.nextConnection()
                     const p = reconnected

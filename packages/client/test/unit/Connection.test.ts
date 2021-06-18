@@ -1,8 +1,7 @@
 import { AddressInfo, Server } from 'ws'
 import { wait } from 'streamr-test-utils'
-import Debug from 'debug'
+import { Debug, describeRepeats } from '../utils'
 
-import { describeRepeats } from '../utils'
 import Connection from '../../src/Connection'
 import { Defer } from '../../src/utils'
 import { Todo } from '../../src/types'
@@ -199,7 +198,7 @@ describeRepeats('Connection', () => {
                 s.connect(),
                 s.connect(),
             ])
-            s.socket.close()
+            s.socket?.close()
             await s.nextConnection()
 
             expect(s.getState()).toBe('connected')
@@ -687,7 +686,7 @@ describeRepeats('Connection', () => {
             await s.disconnect()
             const done = Defer()
             s.once('connected', done.wrap(async () => {
-                s.socket.close()
+                s.socket?.close()
                 await s.needsConnection()
                 expect(s.getState()).toBe('connected')
             }))
@@ -706,7 +705,7 @@ describeRepeats('Connection', () => {
             s.enableAutoDisconnect()
             const done = Defer()
             s.once('connected', done.wrap(async () => {
-                s.socket.close()
+                s.socket?.close()
                 await s.needsConnection()
                 expect(s.getState()).toBe('connected')
             }))
@@ -723,14 +722,14 @@ describeRepeats('Connection', () => {
     describe('reconnecting', () => {
         it('reconnects if unexpectedly disconnected', async () => {
             await s.connect()
-            s.socket.close()
+            s.socket?.close()
             await s.nextConnection()
             expect(s.getState()).toBe('connected')
         })
 
         it('reconnects if unexpectedly disconnected + needsConnection', async () => {
             await s.connect()
-            s.socket.close()
+            s.socket?.close()
             await s.needsConnection()
             expect(s.getState()).toBe('connected')
         })
@@ -738,7 +737,7 @@ describeRepeats('Connection', () => {
         it('reconnects if unexpectedly disconnected on connected', async () => {
             const connectTask = s.connect()
             s.once('connected', async () => {
-                s.socket.close()
+                s.socket?.close()
             })
             await connectTask
             expect(s.getState()).toBe('connected')
@@ -750,7 +749,7 @@ describeRepeats('Connection', () => {
             s.enableAutoConnect()
             s.enableAutoDisconnect()
             s.once('connected', async () => {
-                s.socket.close()
+                s.socket?.close()
             })
             await s.addHandle(1)
             await s.needsConnection()
@@ -761,7 +760,7 @@ describeRepeats('Connection', () => {
             await s.connect()
             s.enableAutoConnect()
             s.addHandle(1)
-            s.socket.close()
+            s.socket?.close()
             await s.nextConnection()
             expect(s.getState()).toBe('connected')
             s.removeHandle(1)
@@ -773,7 +772,7 @@ describeRepeats('Connection', () => {
             s.options.url = 'badurl'
             const done = Defer()
             s.once('error', done.resolve)
-            s.socket.close()
+            s.socket?.close()
             const err = await done
             expect(err).toBeTruthy()
             expect(onConnected).toHaveBeenCalledTimes(1)
@@ -786,7 +785,7 @@ describeRepeats('Connection', () => {
             expectErrors = 1
             await s.connect()
             s.options.url = 'badurl'
-            s.socket.close()
+            s.socket?.close()
             await expect(async () => (
                 s.nextConnection()
             )).rejects.toThrow('badurl')
@@ -815,7 +814,7 @@ describeRepeats('Connection', () => {
             s.once('connected', () => {
                 done.resolve(undefined)
             })
-            s.socket.close()
+            s.socket?.close()
             await done
             expect(s.getState()).toBe('connected')
             expect(retryCount).toEqual(3)
@@ -829,7 +828,7 @@ describeRepeats('Connection', () => {
             s.options.maxRetries = 2
             s.options.url = 'badurl'
             s.once('error', done.resolve)
-            s.socket.close()
+            s.socket?.close()
             const err = await done
             expect(err).toBeTruthy()
             // wait a moment for late errors
@@ -846,7 +845,7 @@ describeRepeats('Connection', () => {
             s.options.url = 'badurl'
             const done = Defer()
             s.once('error', done.resolve)
-            s.socket.close()
+            s.socket?.close()
             const err = await done
             expect(err).toBeTruthy()
             s.options.url = goodUrl
@@ -890,7 +889,7 @@ describeRepeats('Connection', () => {
             // once disconnected due to error, actually close
             s.once('disconnected', done.resolve)
             // trigger reconnecting cycle
-            s.socket.close()
+            s.socket?.close()
             await done
             // i.e. would reconnect if not closing
             s.options.url = goodUrl
@@ -912,7 +911,7 @@ describeRepeats('Connection', () => {
             // once disconnected due to error, actually close
             s.once('disconnected', done.resolve)
             // trigger reconnecting cycle
-            s.socket.close()
+            s.socket?.close()
             await done
             // wait a moment
             await wait(10)
@@ -968,7 +967,7 @@ describeRepeats('Connection', () => {
             await s.connect()
             const done = Defer()
             s.once('message', done.resolve)
-            s.socket.close() // will trigger reconnect
+            s.socket?.close() // will trigger reconnect
             await s.send('test')
             const { data }: any = await done
             expect(data).toEqual('test')
@@ -978,7 +977,7 @@ describeRepeats('Connection', () => {
             await s.connect()
             // eslint-disable-next-line require-atomic-updates
             s.options.url = 'badurl'
-            s.socket.close()
+            s.socket?.close()
             await expect(async () => {
                 await s.send('test')
             }).rejects.toThrow('badurl')
@@ -1213,7 +1212,7 @@ describeRepeats('Connection', () => {
             await s.connect()
             expect(transitionFns.onConnecting).toHaveBeenCalledTimes(1)
             expect(transitionFns.onConnected).toHaveBeenCalledTimes(1)
-            s.socket.close()
+            s.socket?.close()
             await s.nextConnection()
             expect(transitionFns.onDisconnecting).toHaveBeenCalledTimes(1)
             expect(transitionFns.onDisconnected).toHaveBeenCalledTimes(1)

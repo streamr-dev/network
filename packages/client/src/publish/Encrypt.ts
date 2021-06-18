@@ -8,7 +8,7 @@ import { PublisherKeyExhange } from '../stream/encryption/KeyExchangePublisher'
 const { StreamMessage } = MessageLayer
 
 export default function Encrypt(client: StreamrClient) {
-    let publisherKeyExchange: PublisherKeyExhange
+    let publisherKeyExchange: PublisherKeyExhange | undefined
 
     function getPublisherKeyExchange() {
         if (!publisherKeyExchange) {
@@ -69,9 +69,11 @@ export default function Encrypt(client: StreamrClient) {
         start() {
             return getPublisherKeyExchange().start()
         },
-        stop() {
-            if (!publisherKeyExchange) { return Promise.resolve() }
-            return getPublisherKeyExchange().stop()
+        async stop() {
+            if (!publisherKeyExchange) { return }
+            const exchange = publisherKeyExchange
+            publisherKeyExchange = undefined
+            await exchange.stop()
         }
     })
 }

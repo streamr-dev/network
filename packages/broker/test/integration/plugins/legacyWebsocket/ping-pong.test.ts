@@ -2,12 +2,12 @@ import { startTracker, startNetworkNode, MetricsContext, NetworkNode } from 'str
 import { waitForCondition } from 'streamr-test-utils'
 import uWS from 'uWebSockets.js'
 import StreamrClient from 'streamr-client'
-import { StreamFetcher } from '../../src/StreamFetcher'
-import { WebsocketServer } from '../../src/plugins/websocket/WebsocketServer'
-import { Publisher } from '../../src/Publisher'
-import { SubscriptionManager } from '../../src/SubscriptionManager'
-import { Todo } from '../../src/types'
-import { createClient } from '../utils'
+import { StreamFetcher } from '../../../../src/StreamFetcher'
+import { WebsocketServer } from '../../../../src/plugins/legacyWebsocket/WebsocketServer'
+import { Publisher } from '../../../../src/Publisher'
+import { SubscriptionManager } from '../../../../src/SubscriptionManager'
+import { Todo } from '../../../../src/types'
+import { createClient } from '../../../utils'
 
 const trackerPort = 17370
 const wsPort = 17351

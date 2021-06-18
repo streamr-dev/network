@@ -1,6 +1,6 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/stream'
-import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
+import { fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
 import { StorageNode } from '../../src/stream/StorageNode'
 
 import config from './config'
@@ -23,9 +23,7 @@ describe('Stream', () => {
         client = createClient()
         await client.connect()
 
-        stream = await client.createStream({
-            name: uid('stream-integration-test')
-        })
+        stream = await createTestStream(client, module)
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
     })
 

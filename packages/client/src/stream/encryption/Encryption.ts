@@ -1,6 +1,6 @@
 import crypto from 'crypto'
-import util from 'util'
 import { O } from 'ts-toolbelt'
+import { promisify } from 'util'
 
 // this is shimmed out for actual browser build allows us to run tests in node against browser API
 import { Crypto } from 'node-webcrypto-ossl'
@@ -8,13 +8,14 @@ import { arrayify, hexlify } from '@ethersproject/bytes'
 import { MessageLayer } from 'streamr-client-protocol'
 
 import { uuid } from '../../utils'
+import { inspect } from '../../utils/log'
 
 const { StreamMessage, EncryptedGroupKey } = MessageLayer
 
 export class StreamMessageProcessingError extends Error {
     streamMessage: MessageLayer.StreamMessage
     constructor(message = '', streamMessage: MessageLayer.StreamMessage) {
-        super(`Could not process. ${message} ${util.inspect(streamMessage)}`)
+        super(`Could not process. ${message} ${inspect(streamMessage)}`)
         this.streamMessage = streamMessage
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
@@ -24,7 +25,7 @@ export class StreamMessageProcessingError extends Error {
 
 export class UnableToDecryptError extends StreamMessageProcessingError {
     constructor(message = '', streamMessage: MessageLayer.StreamMessage) {
-        super(`Unable to decrypt. ${message} ${util.inspect(streamMessage)}`, streamMessage)
+        super(`Unable to decrypt. ${message} ${inspect(streamMessage)}`, streamMessage)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
@@ -76,30 +77,30 @@ class GroupKey {
 
     static validate(maybeGroupKey: GroupKey) {
         if (!maybeGroupKey) {
-            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (!(maybeGroupKey instanceof this)) {
-            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (!maybeGroupKey.id || typeof maybeGroupKey.id !== 'string') {
-            throw new InvalidGroupKeyError(`${this.name} id must be a string: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new InvalidGroupKeyError(`${this.name} id must be a string: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (maybeGroupKey.id.includes('---BEGIN')) {
             throw new InvalidGroupKeyError(
-                `${this.name} public/private key is not a valid group key id: ${util.inspect(maybeGroupKey)}`,
+                `${this.name} public/private key is not a valid group key id: ${inspect(maybeGroupKey)}`,
                 maybeGroupKey
             )
         }
 
         if (!maybeGroupKey.data || !Buffer.isBuffer(maybeGroupKey.data)) {
-            throw new InvalidGroupKeyError(`${this.name} data must be a Buffer: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new InvalidGroupKeyError(`${this.name} data must be a Buffer: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (!maybeGroupKey.hex || typeof maybeGroupKey.hex !== 'string') {
-            throw new InvalidGroupKeyError(`${this.name} hex must be a string: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new InvalidGroupKeyError(`${this.name} hex must be a string: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (maybeGroupKey.data.length !== 32) {
@@ -115,11 +116,11 @@ class GroupKey {
     constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {
         this.id = groupKeyId
         if (!groupKeyId) {
-            throw new InvalidGroupKeyError(`groupKeyId must not be falsey ${util.inspect(groupKeyId)}`)
+            throw new InvalidGroupKeyError(`groupKeyId must not be falsey ${inspect(groupKeyId)}`)
         }
 
         if (!groupKeyBufferOrHexString) {
-            throw new InvalidGroupKeyError(`groupKeyBufferOrHexString must not be falsey ${util.inspect(groupKeyBufferOrHexString)}`)
+            throw new InvalidGroupKeyError(`groupKeyBufferOrHexString must not be falsey ${inspect(groupKeyBufferOrHexString)}`)
         }
 
         if (typeof groupKeyBufferOrHexString === 'string') {
@@ -161,7 +162,7 @@ class GroupKey {
 
     static from(maybeGroupKey: GroupKeyish) {
         if (!maybeGroupKey || typeof maybeGroupKey !== 'object') {
-            throw new InvalidGroupKeyError(`Group key must be object ${util.inspect(maybeGroupKey)}`)
+            throw new InvalidGroupKeyError(`Group key must be object ${inspect(maybeGroupKey)}`)
         }
 
         if (maybeGroupKey instanceof GroupKey) {
@@ -178,7 +179,7 @@ class GroupKey {
         } catch (err) {
             if (err instanceof InvalidGroupKeyError) {
                 // wrap err with logging of original object
-                throw new InvalidGroupKeyError(`${err.stack}. From: ${util.inspect(maybeGroupKey)}`)
+                throw new InvalidGroupKeyError(`${err.stack}. From: ${inspect(maybeGroupKey)}`)
             }
             throw err
         }
@@ -418,7 +419,8 @@ export default class EncryptionUtil extends EncryptionUtilBase {
     }
 
     async _keyPairServer() {
-        const generateKeyPair = util.promisify(crypto.generateKeyPair)
+        // promisify here to work around browser/server packaging
+        const generateKeyPair = promisify(crypto.generateKeyPair)
         const { publicKey, privateKey } = await generateKeyPair('rsa', {
             modulusLength: 4096,
             publicKeyEncoding: {

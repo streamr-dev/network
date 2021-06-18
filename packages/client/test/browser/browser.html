@@ -27,6 +27,7 @@
         autoConnect: false,
         autoDisconnect: false
     })
+    client.enableDebugLogging()
 </script>
 </head>
 <body>
@@ -58,7 +59,7 @@ $('#connect').on('click', async () => {
 $('#create').on('click', async () => {
     resetResults()
     stream = await client.createStream({
-        name: streamName,
+        id: '/' + streamName,
         requireEncryptedData: true,
     })
     await stream.addToStorageNode(client.options.storageNode.address)

@@ -5,8 +5,9 @@
         "link": "lerna link",
         "bootstrap": "lerna bootstrap",
         "bootstrap-pkg": "npx lerna bootstrap --include-dependencies --scope",
-        "versions": "node ./show-versions.mjs",
-        "clean": "npx lerna clean"
+        "versions": "zx ./show-versions.mjs",
+        "clean": "npx lerna clean # remove all node_modules",
+        "clean-package-locks": "npx lerna exec --no-bail 'rm package-lock.json' # remove all package-lock files. npm run clean & npm run bootstrap to fully regenerate."
     },
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
