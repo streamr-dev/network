@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { Contract, Wallet } from 'ethers'
-import { parseEther } from 'ethers/lib/utils'
+import { formatEther, parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
 import Token from '../../../contracts/TestToken.json'
 import DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
@@ -181,30 +181,17 @@ describe('DataUnion earnings transfer methods', () => {
         const stats2After = await dataUnion.getMemberStats(member2Wallet.address)
         log('Stats after: %O, %O', statsAfter, stats2After)
 
-        expect(statsBefore).toMatchObject({
-            status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('0'),
-            totalEarnings: parseEther('2'),
-            withdrawableEarnings: parseEther('2'),
-        })
-        expect(statsAfter).toMatchObject({
-            status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('0'),
-            totalEarnings: parseEther('3'),
-            withdrawableEarnings: parseEther('3'),
-        })
-        expect(stats2Before).toMatchObject({
-            status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('0'),
-            totalEarnings: parseEther('2'),
-            withdrawableEarnings: parseEther('2'),
-        })
-        expect(stats2After).toMatchObject({
-            status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('0'),
-            totalEarnings: parseEther('2'),
-            withdrawableEarnings: parseEther('1'),
-        })
+        // 1 token is withdrawn from sender's earnings
+        expect(formatEther(statsBefore.totalEarnings)).toEqual('2.0')
+        expect(formatEther(statsBefore.withdrawableEarnings)).toEqual('2.0')
+        expect(formatEther(statsAfter.totalEarnings)).toEqual('2.0')
+        expect(formatEther(statsAfter.withdrawableEarnings)).toEqual('1.0')
+
+        // 1 token is added to recipient's earnings
+        expect(formatEther(stats2Before.totalEarnings)).toEqual('2.0')
+        expect(formatEther(stats2Before.withdrawableEarnings)).toEqual('2.0')
+        expect(formatEther(stats2After.totalEarnings)).toEqual('3.0')
+        expect(formatEther(stats2After.withdrawableEarnings)).toEqual('3.0')
     }, 1500000)
 
     it('transfer token from outside to member earnings', async () => {
@@ -230,29 +217,16 @@ describe('DataUnion earnings transfer methods', () => {
         const stats2After = await dataUnion.getMemberStats(member2Wallet.address)
         log('Stats after: %O, %O', statsAfter, stats2After)
 
-        expect(statsBefore).toMatchObject({
-            status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('0'),
-            totalEarnings: parseEther('2'),
-            withdrawableEarnings: parseEther('2'),
-        })
-        expect(statsAfter).toMatchObject({
-            status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('1'), // the transfer to a member's earnings gets added to the "earnings before last join" which is per-member
-            totalEarnings: parseEther('3'),
-            withdrawableEarnings: parseEther('3'),
-        })
-        expect(stats2Before).toMatchObject({
-            status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('0'),
-            totalEarnings: parseEther('2'),
-            withdrawableEarnings: parseEther('2'),
-        })
-        expect(stats2After).toMatchObject({ // other members remain unaffected
-            status: MemberStatus.ACTIVE,
-            earningsBeforeLastJoin: parseEther('0'),
-            totalEarnings: parseEther('2'),
-            withdrawableEarnings: parseEther('2'),
-        })
+        // 1 token is added to recipient's earnings
+        expect(formatEther(statsBefore.totalEarnings)).toEqual('2.0')
+        expect(formatEther(statsBefore.withdrawableEarnings)).toEqual('2.0')
+        expect(formatEther(statsAfter.totalEarnings)).toEqual('3.0')
+        expect(formatEther(statsAfter.withdrawableEarnings)).toEqual('3.0')
+
+        // other members remain unaffected
+        expect(formatEther(stats2Before.totalEarnings)).toEqual('2.0')
+        expect(formatEther(stats2Before.withdrawableEarnings)).toEqual('2.0')
+        expect(formatEther(stats2After.totalEarnings)).toEqual('2.0')
+        expect(formatEther(stats2After.withdrawableEarnings)).toEqual('2.0')
     }, 1500000)
 })
