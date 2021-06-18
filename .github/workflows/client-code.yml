@@ -32,62 +32,6 @@ jobs:
         with:
           all_but_latest: true
           access_token: ${{ github.token }}
-  lint:
-    name: Run linter using Node 14.x
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "14.x"
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
-        working-directory: './'
-        run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: npm run eslint
-        run: npm run eslint
-
-  test:
-    name: Test Unit using Node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [12.x, 14.x]
-    env:
-      TEST_REPEATS: 5
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
-        working-directory: './'
-        run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: test-unit
-        timeout-minutes: 7
-        run: npm run test-unit
-
   integration:
     name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -127,7 +71,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -145,45 +89,6 @@ jobs:
         with:
           name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
           path: packages/client/logs
-
-  flakey:
-    name: Flakey Tests using Node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [12.x, 14.x]
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
-        working-directory: './'
-        run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
-        with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
-        name: Run Test
-        with:
-          max_attempts: 2
-          timeout_minutes: 15
-          retry_on: error
-          command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
   memory:
     name:  Memory Tests using Node ${{ matrix.node-version }}
@@ -211,7 +116,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:

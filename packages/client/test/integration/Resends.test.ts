@@ -327,7 +327,8 @@ describe('StreamrClient resends', () => {
             }, 40000)
         })
 
-        describe('long resend', () => {
+        // copied into flakey/Resends.test.ts for now
+        describe.skip('long resend', () => {
             const LONG_RESEND = 500
 
             beforeEach(async () => {

@@ -1,0 +1,90 @@
+# Tests that can run without building or docker stack should go in here.
+name: Client – Fast Tests
+
+# Be sure to update both workflow files if you edit any env or trigger config
+env:
+  CI: true
+  DEBUG_COLORS: true
+  DEBUG: "Streamr*"
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+  schedule:
+    # run every day at 00:00
+    - cron:  '0 0 * * *'
+
+defaults:
+  run:
+    working-directory: packages/client
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          all_but_latest: true
+          access_token: ${{ github.token }}
+  lint:
+    name: Run linter using Node 14.x
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+      - name: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npm run bootstrap-pkg streamr-client
+      - name: lint
+        run: npm run eslint
+
+  test:
+    name: Test Unit using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x]
+    env:
+      TEST_REPEATS: 5
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+      - name: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npm run bootstrap-pkg streamr-client
+      - name: test-unit
+        timeout-minutes: 7
+        run: npm run test-unit
+

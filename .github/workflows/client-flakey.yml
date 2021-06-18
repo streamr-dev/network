@@ -1,5 +1,5 @@
-# Split out DataUnion tests
-name: Client – DataUnions
+# Any tests that can fail should go in here
+name: Client – Flakey
 
 # Be sure to update both workflow files if you edit any env or trigger config
 env:
@@ -32,32 +32,13 @@ jobs:
         with:
           all_but_latest: true
           access_token: ${{ github.token }}
-  data-unions-integration:
-    name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
+  flakey:
+    name: Flakey Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [12.x, 14.x]
-        test-name: [
-            "test-integration-dataunions",
-        ]
-        websocket-url:
-            - name: "default"
-              url:  ""
-            - name: "single-node-only"
-              url:  "ws://localhost:8690/api/v1/ws"
-
-        exclude:
-          # no need to test different ws urls for dataunion tests
-          - test-name: "test-integration-dataunions"
-            websocket-url:
-                - name: "single-node-only"
-                - url:  "ws://localhost:8690/api/v1/ws"
-    env:
-      TEST_NAME: ${{ matrix.test-name }}
-      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
-      TEST_REPEATS: 2
 
     steps:
       - uses: actions/checkout@v2
@@ -82,16 +63,10 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - name: Run Test
-        run: npm run $TEST_NAME
-      - name: Collect docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v1
+      - uses: nick-invision/retry@v2
+        name: Run Test
         with:
-          dest: 'packages/client/logs'
-      - name: Upload logs to GitHub
-        if: failure()
-        uses: actions/upload-artifact@master
-        with:
-          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
-          path: packages/client/logs
+          max_attempts: 2
+          timeout_minutes: 15
+          retry_on: error
+          command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
