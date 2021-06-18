@@ -50,7 +50,6 @@ export class WebsocketServer extends EventEmitter {
 
     constructor(
         httpServer: http.Server | https.Server,
-        port: number,
         networkNode: NetworkNode,
         streamFetcher: StreamFetcher,
         publisher: Publisher,

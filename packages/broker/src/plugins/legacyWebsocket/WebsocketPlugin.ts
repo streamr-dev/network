@@ -43,7 +43,6 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         const storageNodeRegistry = StorageNodeRegistry.createInstance(this.brokerConfig)
         this.websocketServer = new WebsocketServer(
             httpServer,
-            this.pluginConfig.port,
             this.networkNode,
             new StreamFetcher(this.brokerConfig.streamrUrl),
             this.publisher,
