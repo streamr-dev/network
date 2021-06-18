@@ -6,10 +6,11 @@ import { keccak256 } from '@ethersproject/keccak256'
 import { Wallet } from '@ethersproject/wallet'
 import { JsonRpcSigner } from '@ethersproject/providers'
 import debug from 'debug'
+import type { Overrides as EthersOptions } from '@ethersproject/contracts'
 
 import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
-import { until, getEndpointUrl, sleep } from '../utils'
+import { getEndpointUrl, sleep, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import { Contracts } from './Contracts'
@@ -43,6 +44,7 @@ export interface DataUnionWithdrawOptions {
     payForTransport?: boolean
     waitUntilTransportIsComplete?: boolean
     sendToMainnet?: boolean
+    gasPrice?: BigNumber | string
 }
 
 export interface DataUnionStats {
@@ -85,14 +87,15 @@ type WaitForTXOptions = {
 
 async function waitForTx(tx: ContractTransaction, { retries = 60, retryInterval = 60000 }: WaitForTXOptions = {}): Promise<ContractReceipt> {
     return tx.wait().catch((err) => {
-        log('Attempted transaction: %o', tx)
-        log('Got error: %o', err)
+        log('Attempted transaction: %O', tx)
+        log('Got error: %O', err)
         if (err.body) {
             const body = JSON.parse(err.body)
             const msg = body.error.message
             log('Error message: %s', msg)
             if (retries > 0 && msg.includes('ancient block sync')) {
                 log('Sleeping for %dms then retrying %d more time(s).', retryInterval, retries)
+                // eslint-disable-next-line promise/no-nesting
                 return sleep(retryInterval).then(() => waitForTx(tx, { retries: retries - 1, retryInterval }))
             }
         }
@@ -263,7 +266,7 @@ export class DataUnion {
      */
     async signWithdrawAmountTo(
         recipientAddress: EthereumAddress,
-        amountTokenWei: BigNumber|number|string
+        amountTokenWei: BigNumber | number | string
     ): Promise<string> {
         const to = getAddress(recipientAddress) // throws if bad address
         const signer = this.client.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
@@ -277,7 +280,7 @@ export class DataUnion {
 
     /** @internal */
     async _createWithdrawSignature(
-        amountTokenWei: BigNumber|number|string,
+        amountTokenWei: BigNumber | number | string,
         to: EthereumAddress,
         withdrawn: BigNumber,
         signer: Wallet | JsonRpcSigner
@@ -326,7 +329,7 @@ export class DataUnion {
             duSidechain.getEarnings(address).catch(() => BigNumber.from(0)),
         ])
         const withdrawnEarnings = memberData[3]
-        const withdrawable = total ? total.sub(withdrawnEarnings) : BigNumber.from(0)
+        const withdrawable = total.gt(withdrawnEarnings) ? total.sub(withdrawnEarnings) : BigNumber.from(0)
         const STATUSES = [MemberStatus.NONE, MemberStatus.ACTIVE, MemberStatus.INACTIVE]
         return {
             status: STATUSES[memberData[0]],
@@ -492,6 +495,7 @@ export class DataUnion {
      * @param memberAddress - the member whose earnings are sent out
      * @param recipientAddress - the address to receive the tokens in mainnet
      * @param signature - from member, produced using signWithdrawAllTo
+     * @param sendToMainnet - false = send to sidechain address
      * @returns await on call .wait to actually send the tx
      */
     private async getWithdrawAllToSignedTx(
@@ -505,21 +509,67 @@ export class DataUnion {
     }
 
     /**
+     * Admin: Withdraw a specific amount member's earnings to another address, signed by the member
+     * @param memberAddress - the member whose earnings are sent out
+     * @param recipientAddress - the address to receive the tokens in mainnet
+     * @param signature - from member, produced using signWithdrawAllTo
+     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
+     *          ELSE the message hash IF called with payForTransport=false and waitUntilTransportIsComplete=false,
+     *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
+     *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
+     */
+    async withdrawAmountToSigned(
+        memberAddress: EthereumAddress,
+        recipientAddress: EthereumAddress,
+        amountTokenWei: BigNumber | number | string,
+        signature: string,
+        options?: DataUnionWithdrawOptions
+    ) {
+        const from = getAddress(memberAddress) // throws if bad address
+        const to = getAddress(recipientAddress)
+        const amount = BigNumber.from(amountTokenWei)
+        return this._executeWithdraw(
+            () => this.getWithdrawAmountToSignedTx(from, to, amount, signature, options?.sendToMainnet),
+            to,
+            options
+        )
+    }
+
+    /**
+     * Admin: Withdraw a member's earnings to another address, signed by the member
+     * @param memberAddress - the member whose earnings are sent out
+     * @param recipientAddress - the address to receive the tokens in mainnet
+     * @param amount - in "token wei" to withdraw
+     * @param signature - from member, produced using signWithdrawAllTo
+     * @returns await on call .wait to actually send the tx
+     */
+    private async getWithdrawAmountToSignedTx(
+        memberAddress: EthereumAddress,
+        recipientAddress: EthereumAddress,
+        amount: BigNumber,
+        signature: string,
+        sendToMainnet: boolean = true,
+    ) {
+        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+        return duSidechain.withdrawToSigned(memberAddress, recipientAddress, amount, sendToMainnet, signature)
+    }
+
+    /**
      * Admin: set admin fee (between 0.0 and 1.0) for the data union
      */
-    async setAdminFee(newFeeFraction: number) {
+    async setAdminFee(newFeeFraction: number, ethersOptions: EthersOptions = {}) {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
         const duMainnet = this.getContracts().getMainnetContract(this.contractAddress)
-        const tx = await duMainnet.setAdminFee(adminFeeBN)
+        const tx = await duMainnet.setAdminFee(adminFeeBN, ethersOptions)
         return waitForTx(tx)
     }
 
     /**
      * Transfer amount to specific member in DataunionSidechain
-     * @param memberAddress - the other member who gets their tokens out of the Data Union
+     * @param memberAddress - target member who gets the tokens added to their earnings in the the Data Union
      * @param amountTokenWei - the amount that want to add to the member
      * @returns receipt once transfer transaction is confirmed
      */
@@ -545,6 +595,22 @@ export class DataUnion {
         }
 
         const tx = await duSidechain.transferToMemberInContract(address, amount)
+        return waitForTx(tx)
+    }
+
+    /**
+     * Transfer an amount of earnings to another member in DataunionSidechain
+     * @param memberAddress - the other member who gets their tokens out of the Data Union
+     * @param amountTokenWei - the amount that want to add to the member
+     * @returns receipt once transfer transaction is confirmed
+     */
+    async transferWithinContract(
+        memberAddress: EthereumAddress,
+        amountTokenWei: BigNumber|number|string
+    ): Promise<ContractReceipt> {
+        const address = getAddress(memberAddress) // throws if bad address
+        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+        const tx = await duSidechain.transferWithinContract(address, amountTokenWei)
         return waitForTx(tx)
     }
 
@@ -650,6 +716,7 @@ export class DataUnion {
             payForTransport = this.client.options.dataUnion.payForTransport,
             waitUntilTransportIsComplete = true,
             sendToMainnet = true,
+            gasPrice,
         } = options
 
         const getBalanceFunc = sendToMainnet
@@ -692,7 +759,11 @@ export class DataUnion {
             return messageHash
         }
 
-        const ambTr = await this.transportMessage(messageHash, pollingIntervalMs, retryTimeoutMs)
+        const ethersOptions: EthersOptions = {}
+        if (gasPrice) {
+            ethersOptions.gasPrice = gasPrice
+        }
+        const ambTr = await this.transportMessage(messageHash, pollingIntervalMs, retryTimeoutMs, ethersOptions)
         if (waitUntilTransportIsComplete) {
             log(`Waiting for balance ${balanceBefore.toString()} to change`)
             await until(async () => !(await getBalanceFunc()).eq(balanceBefore), retryTimeoutMs, pollingIntervalMs)
@@ -707,7 +778,7 @@ export class DataUnion {
     /**
      * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
      */
-    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000) {
+    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000, ethersOptions: EthersOptions = {}) {
         const helper = this.getContracts()
         const [sidechainAmb, mainnetAmb] = await Promise.all([
             helper.getSidechainAmb(),
@@ -737,6 +808,6 @@ export class DataUnion {
         }
 
         log(`Transporting signatures for hash=${messageHash}`)
-        return helper.transportSignaturesForMessage(messageHash)
+        return helper.transportSignaturesForMessage(messageHash, ethersOptions)
     }
 }

@@ -7,7 +7,7 @@ import PushQueue from '../../src/utils/PushQueue'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import { clientOptions } from './devEnvironment'
 import MessagePipeline from '../../src/subscribe/pipeline'
 import { Subscription } from '../../src/subscribe'
 import Validator from '../../src/subscribe/Validator'
@@ -56,7 +56,7 @@ describe('MessagePipeline', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

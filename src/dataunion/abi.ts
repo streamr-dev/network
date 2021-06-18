@@ -61,6 +61,12 @@ export const dataUnionSidechainABI = [{
     stateMutability: 'nonpayable',
     type: 'function'
 }, {
+    name: 'withdrawToSigned',
+    inputs: [{ type: 'address' }, { type: 'address' }, { type: 'uint256' }, { type: 'bool' }, { type: 'bytes' }],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, {
     // enum ActiveStatus {None, Active, Inactive, Blocked}
     // struct MemberInfo {
     //     ActiveStatus status;
@@ -127,10 +133,13 @@ export const dataUnionSidechainABI = [{
     type: 'event'
 }, {
     name: 'transferToMemberInContract',
-    inputs: [
-        { name: 'recipient', type: 'address', internalType: 'address' },
-        { name: 'amount', type: 'uint256', internalType: 'uint256' }
-    ],
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, {
+    name: 'transferWithinContract',
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'

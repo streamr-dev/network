@@ -6,7 +6,7 @@ import { Stream, StreamOperation } from '../../src/stream'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import { clientOptions } from './devEnvironment'
 
 const TIMEOUT = 10 * 1000
 
@@ -26,7 +26,7 @@ describeRepeats('Encryption Key Persistence', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
@@ -94,7 +94,7 @@ describeRepeats('Encryption Key Persistence', () => {
             requireEncryptedData: true,
         })
 
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+        await stream.addToStorageNode(clientOptions.storageNode.address)
 
         publishTestMessages = getPublishTestMessages(client, {
             stream,

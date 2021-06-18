@@ -5,7 +5,7 @@ import fetch from 'node-fetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { fakePrivateKey } from '../utils'
 
-import config from './config'
+import { clientOptions } from './devEnvironment'
 
 describe('authFetch', () => {
     let client: StreamrClient
@@ -31,7 +31,7 @@ describe('authFetch', () => {
         // @ts-expect-error
         fetch.mockImplementation(realFetch)
         client = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             autoConnect: false,
             autoDisconnect: false,
             auth: {
