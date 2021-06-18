@@ -12,9 +12,8 @@ describe('ws-endpoint', () => {
 
     it('create five endpoints and init connection between them, should be able to start and stop successfully', async () => {
         for (let i = 0; i < 5; i++) {
-            const endpointPeerInfo = PeerInfo.newNode(`endpoint-${i}`)
             // eslint-disable-next-line no-await-in-loop
-            const endpoint = await startEndpoint('127.0.0.1', 30690 + i, endpointPeerInfo, null)
+            const endpoint = await startEndpoint('127.0.0.1', 30690 + i, PeerInfo.newNode(`endpoint-${i}`), null)
                 .catch((err) => {
                     throw err
                 })
@@ -50,11 +49,8 @@ describe('ws-endpoint', () => {
     })
 
     it('peer infos are exchanged between connecting endpoints', async () => {
-        const peerInfoOne = PeerInfo.newNode('endpointOne')
-        const peerInfoTwo = PeerInfo.newNode('endpointTwo')
-
-        const endpointOne = await startEndpoint('127.0.0.1', 30695, peerInfoOne, null)
-        const endpointTwo = await startEndpoint('127.0.0.1', 30696, peerInfoTwo, null)
+        const endpointOne = await startEndpoint('127.0.0.1', 30695, PeerInfo.newNode('endpointOne'), null)
+        const endpointTwo = await startEndpoint('127.0.0.1', 30696, PeerInfo.newNode('endpointTwo'), null)
 
         const e1 = waitForEvent(endpointOne, Event.PEER_CONNECTED)
         const e2 = waitForEvent(endpointTwo, Event.PEER_CONNECTED)
@@ -64,8 +60,8 @@ describe('ws-endpoint', () => {
         const endpointOneArguments = await e1
         const endpointTwoArguments = await e2
 
-        expect(endpointOneArguments).toEqual([peerInfoTwo])
-        expect(endpointTwoArguments).toEqual([peerInfoOne])
+        expect(endpointOneArguments).toEqual([PeerInfo.newNode('endpointTwo')])
+        expect(endpointTwoArguments).toEqual([PeerInfo.newNode('endpointOne')])
 
         await endpointOne.stop()
         await endpointTwo.stop()
@@ -123,5 +119,4 @@ describe('ws-endpoint', () => {
             expect(close).toEqual([DisconnectionCode.MISSING_REQUIRED_PARAMETER, 'Error: peerType typiii not in peerTypes list'])
         })
     })
-    
 })

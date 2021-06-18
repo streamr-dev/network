@@ -15,9 +15,6 @@ describe('Signalling error scenarios', () => {
     let nodeTwo: NetworkNode
     const streamId = 'stream-1'
 
-    let nodeOneSessionId: string 
-    let nodeTwoSessionId: string
-
     beforeEach(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -44,11 +41,6 @@ describe('Signalling error scenarios', () => {
 
         nodeOne.start()
         nodeTwo.start()
-
-        // @ts-expect-error private variable
-        nodeOneSessionId = nodeOne.peerInfo.peerId 
-        // @ts-expect-error private variable
-        nodeTwoSessionId = nodeTwo.peerInfo.peerId
     })
 
     afterEach(async () => {
@@ -66,15 +58,15 @@ describe('Signalling error scenarios', () => {
         )
 
         // @ts-expect-error private field
-        nodeTwo.nodeToNode.endpoint.connections[nodeOneSessionId].logger.debug('closing via test...')
+        nodeTwo.nodeToNode.endpoint.connections['node-1'].logger.debug('closing via test...')
         
         // @ts-expect-error private field
-        await runAndWaitForEvents( ()=> { nodeTwo.nodeToNode.endpoint.connections[nodeOneSessionId].close() }, [
+        await runAndWaitForEvents( ()=> { nodeTwo.nodeToNode.endpoint.connections['node-1'].close() }, [
             nodeTwo, NodeEvent.NODE_CONNECTED], 30000
         )
         
         // @ts-expect-error private field
-        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual([nodeOneSessionId])
+        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
     }, 60000)
 
     it('connection recovers after timeout if both endpoints close during signalling', async () => {
@@ -88,9 +80,9 @@ describe('Signalling error scenarios', () => {
 
         await runAndWaitForEvents([
             // @ts-expect-error private field    
-            () => { nodeTwo.nodeToNode.endpoint.connections[nodeOneSessionId].close() }, 
+            () => { nodeTwo.nodeToNode.endpoint.connections['node-1'].close() }, 
             // @ts-expect-error private field
-            () => { nodeOne.nodeToNode.endpoint.connections[nodeTwoSessionId].close() }], [
+            () => { nodeOne.nodeToNode.endpoint.connections['node-2'].close() }], [
             [ nodeOne, NodeEvent.NODE_DISCONNECTED ],
             [ nodeTwo, NodeEvent.NODE_DISCONNECTED ],
             [ nodeOne, NodeEvent.NODE_CONNECTED ],
@@ -98,9 +90,9 @@ describe('Signalling error scenarios', () => {
         ], 10000)
 
         // @ts-expect-error private field
-        expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual([nodeTwoSessionId])
+        expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual(['node-2'])
         // @ts-expect-error private field
-        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual([nodeOneSessionId])
+        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
     }, 20000)
 
     it('nodes recover if both signaller connections fail during signalling', async () => {
@@ -108,9 +100,9 @@ describe('Signalling error scenarios', () => {
             waitForEvent(nodeTwo, NodeEvent.NODE_CONNECTED)
         ]).then(async () => {
             // @ts-expect-error private field
-            expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual([nodeTwoSessionId])
+            expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual(['node-2'])
             // @ts-expect-error private field
-            expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual([nodeOneSessionId])
+            expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
             return
         }).catch(async () => {
             expect(false)
@@ -161,8 +153,8 @@ describe('Signalling error scenarios', () => {
             [nodeTwo, NodeEvent.NODE_CONNECTED, 9998]
         ], 9996)
         // @ts-expect-error private field
-        expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual([nodeTwoSessionId])
+        expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual(['node-2'])
         // @ts-expect-error private field
-        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual([nodeOneSessionId])
+        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
     }, 20000)
 })

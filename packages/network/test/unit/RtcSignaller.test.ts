@@ -11,13 +11,11 @@ describe('RtcSignaller', () => {
     let peerInfo: PeerInfo
     let trackerNodeMock: any
     let rtcSignaller: RtcSignaller
-    let originator: PeerInfo 
 
     beforeEach(() => {
         peerInfo = PeerInfo.newNode('node')
         trackerNodeMock = new EventEmitter()
         rtcSignaller = new RtcSignaller(peerInfo, trackerNodeMock)
-        originator = PeerInfo.newNode('originator')
     })
 
     it('invoking onConnectionNeeded delegates to sendRtcConnect on trackerNode', () => {
@@ -45,7 +43,7 @@ describe('RtcSignaller', () => {
             TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
-                originator,
+                originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
                 subType: 'rtcConnect',
                 data: {}
@@ -54,7 +52,7 @@ describe('RtcSignaller', () => {
         )
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
-            originatorInfo: originator,
+            originatorInfo: PeerInfo.newNode('originator'),
             targetNode: 'node'
         })
     })
@@ -66,7 +64,7 @@ describe('RtcSignaller', () => {
             TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
-                originator,
+                originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
                 subType: 'rtcOffer',
                 data: {
@@ -77,7 +75,7 @@ describe('RtcSignaller', () => {
         )
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
-            originatorInfo: originator,
+            originatorInfo: PeerInfo.newNode('originator'),
             description: 'description',
         })
     })
@@ -89,7 +87,7 @@ describe('RtcSignaller', () => {
             TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
-                originator,
+                originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
                 subType: 'rtcAnswer',
                 data: {
@@ -100,7 +98,7 @@ describe('RtcSignaller', () => {
         )
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
-            originatorInfo: originator,
+            originatorInfo: PeerInfo.newNode('originator'),
             description: 'description'
         })
     })
@@ -112,7 +110,7 @@ describe('RtcSignaller', () => {
             TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
-                originator,
+                originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
                 subType: 'iceCandidate',
                 data: {
@@ -124,7 +122,7 @@ describe('RtcSignaller', () => {
         )
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
-            originatorInfo: originator,
+            originatorInfo: PeerInfo.newNode('originator'),
             candidate: 'candidate',
             mid: 'mid'
         })

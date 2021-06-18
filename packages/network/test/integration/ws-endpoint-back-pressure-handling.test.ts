@@ -6,14 +6,9 @@ describe('WsEndpoint: back pressure handling', () => {
     let ep1: WsEndpoint
     let ep2: WsEndpoint
 
-    let peerInfo1: PeerInfo 
-    let peerInfo2: PeerInfo
-
     beforeEach(async () => {
-        peerInfo1 = PeerInfo.newNode('ep1')
-        peerInfo2 = PeerInfo.newNode('ep2')
-        ep1 = await startEndpoint('127.0.0.1', 43974, peerInfo1, null)
-        ep2 = await startEndpoint('127.0.0.1', 43975, peerInfo2, null)
+        ep1 = await startEndpoint('127.0.0.1', 43974, PeerInfo.newNode('ep1'), null)
+        ep2 = await startEndpoint('127.0.0.1', 43975, PeerInfo.newNode('ep2'), null)
         await ep1.connect('ws://127.0.0.1:43975')
     })
 
@@ -28,11 +23,11 @@ describe('WsEndpoint: back pressure handling', () => {
         let hitHighBackPressure = false
         ep1.on(Event.HIGH_BACK_PRESSURE, (peerInfo) => {
             hitHighBackPressure = true
-            expect(peerInfo).toEqual(peerInfo2)
+            expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
             done()
         })
         while (!hitHighBackPressure) {
-            ep1.send(peerInfo2.peerId, 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            ep1.send('ep2', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
         }
     })
 
@@ -43,16 +38,16 @@ describe('WsEndpoint: back pressure handling', () => {
             hitHighBackPressure = true
 
             // drain doesn't seem to work, need to send _evaluateBackPressure
-            sendInterval = setInterval(() => ep1.send(peerInfo2.peerId, 'aaaa'), 30)
+            sendInterval = setInterval(() => ep1.send('ep2', 'aaaa'), 30)
 
             ep1.on(Event.LOW_BACK_PRESSURE, (peerInfo) => {
-                expect(peerInfo).toEqual(peerInfo2)
+                expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
                 clearInterval(sendInterval!)
                 done()
             })
         })
         while (!hitHighBackPressure) {
-            ep1.send(peerInfo2.peerId, 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            ep1.send('ep2', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
         }
     })
 })

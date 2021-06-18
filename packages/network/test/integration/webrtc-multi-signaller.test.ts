@@ -17,9 +17,6 @@ describe('WebRTC multisignaller test', () => {
     let endpoint1: WebRtcEndpoint
     let endpoint2: WebRtcEndpoint
 
-    let peerInfo1: PeerInfo 
-    let peerInfo2: PeerInfo 
-
     beforeEach(async () => {
         tracker1 = await startTracker({
             host: '127.0.0.1',
@@ -32,11 +29,8 @@ describe('WebRTC multisignaller test', () => {
             id: 'tracker2'
         })
 
-        peerInfo1 = PeerInfo.newNode('node-1')
-        peerInfo2 = PeerInfo.newNode('node-2')
-
-        const ep1 = await startEndpoint('127.0.0.1', 28717, peerInfo1, null, new MetricsContext(''))
-        const ep2 = await startEndpoint('127.0.0.1', 28718, peerInfo2, null, new MetricsContext(''))
+        const ep1 = await startEndpoint('127.0.0.1', 28717, PeerInfo.newNode('node-1'), null, new MetricsContext(''))
+        const ep2 = await startEndpoint('127.0.0.1', 28718, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
 
         trackerNode1 = new TrackerNode(ep1)
         trackerNode2 = new TrackerNode(ep2)
@@ -50,6 +44,8 @@ describe('WebRTC multisignaller test', () => {
         trackerNode2.connectToTracker(tracker2.getAddress())
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
 
+        const peerInfo1 = PeerInfo.newNode('node-1')
+        const peerInfo2 = PeerInfo.newNode('node-2')
         endpoint1 = new WebRtcEndpoint(peerInfo1, ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo1))
         endpoint2 = new WebRtcEndpoint(peerInfo2, ['stun:stun.l.google.com:19302'],
@@ -68,16 +64,16 @@ describe('WebRTC multisignaller test', () => {
     })
 
     it('WebRTC connection is established and signalling works if endpoints use different trackers for signalling', async () => {
-        endpoint1.connect(peerInfo2.peerId, 'tracker1', true).catch(() => null)
-        endpoint2.connect(peerInfo1.peerId, 'tracker2', false).catch(() => null)
+        endpoint1.connect('node-2', 'tracker1', true).catch(() => null)
+        endpoint2.connect('node-1', 'tracker2', false).catch(() => null)
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
         ])
 
-        endpoint1.send(peerInfo2.peerId, 'Hello')
+        endpoint1.send('node-2', 'Hello')
         await waitForEvent(endpoint2, EndpointEvent.MESSAGE_RECEIVED)
-        endpoint2.send(peerInfo1.peerId, 'Hello')
+        endpoint2.send('node-1', 'Hello')
         await waitForEvent(endpoint1, EndpointEvent.MESSAGE_RECEIVED)
     })
 

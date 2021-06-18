@@ -139,7 +139,6 @@ describe('test starting startWebSocketServer', () => {
                         'message-layer-versions': "32"
                     }
                 })
-            
             ws.on('message', async (msg) => {
                 expect(typeof msg).toEqual('string')
                 expect(msg).toEqual('Hello, World!')
@@ -151,10 +150,7 @@ describe('test starting startWebSocketServer', () => {
                 done(err)
             })
             ws.on('open', () => {
-                const peers = endpoint.getPeerInfos()
-                expect(peers.length).toEqual(1)
-                const peerId = peers[0].peerId
-                endpoint.send(peerId, 'Hello, World!')
+                endpoint.send('clientId', 'Hello, World!')
             })
             return true
         }).catch((err) => done(err))
