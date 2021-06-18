@@ -4,10 +4,8 @@
   </a>
 </p>
 <h1 align="left">
-  <strike> Streamr JavaScript Client </strike>
+  Streamr JavaScript Client
 </h1>
-
-## This repository is deprecated, Streamr Javascript Client development has moved into the [network-monorepo](https://github.com/streamr-dev/network-monorepo) 
 
 ![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/streamr-client-javascript/Test%20Build/master)
 [![GitHub release](https://img.shields.io/github/release/streamr-dev/streamr-client-javascript.svg?style=flat)](https://github.com/streamr-dev/streamr-client-javascript/releases/)
