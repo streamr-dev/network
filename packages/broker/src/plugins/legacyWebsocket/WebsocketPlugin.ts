@@ -5,6 +5,7 @@ import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Logger } from "streamr-network"
+import { once } from "events"
 import fs from "fs"
 import http from 'http'
 import https from "https"
@@ -52,12 +53,10 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
             this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
         )
-        return new Promise((resolve) => {
-            httpServer.listen(this.pluginConfig.port, () => {
-                logger.info(`started on port %s`, this.pluginConfig.port)
-                resolve(true)
-            })
-        })
+        httpServer.listen(this.pluginConfig.port)
+        await once(httpServer, 'listening')
+        logger.info(`started on port %s`, this.pluginConfig.port)
+        return true
     }
 
     async stop(): Promise<unknown> {
