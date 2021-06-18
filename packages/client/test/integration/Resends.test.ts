@@ -345,7 +345,7 @@ describe('StreamrClient resends', () => {
                 published = await publishTestMessages(LONG_RESEND, {
                     waitForLast: true,
                     // get all messages in case of bad disordering
-                    waitForLastCount: LONG_RESEND,
+                    waitForLastCount: LONG_RESEND * 2,
                     // speed up publish time
                     batchSize: 10,
                     delay: 1,
