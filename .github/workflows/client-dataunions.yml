@@ -1,0 +1,97 @@
+# Split out DataUnion tests
+name: Client – DataUnions
+
+# Be sure to update both workflow files if you edit any env or trigger config
+env:
+  CI: true
+  DEBUG_COLORS: true
+  DEBUG: "Streamr*"
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+  schedule:
+    # run every day at 00:00
+    - cron:  '0 0 * * *'
+
+defaults:
+  run:
+    working-directory: packages/client
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          all_but_latest: true
+          access_token: ${{ github.token }}
+  data-unions-integration:
+    name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [12.x, 14.x]
+        test-name: [
+            "test-integration-dataunions",
+        ]
+        websocket-url:
+            - name: "default"
+              url:  ""
+            - name: "single-node-only"
+              url:  "ws://localhost:8690/api/v1/ws"
+
+        exclude:
+          # no need to test different ws urls for dataunion tests
+          - test-name: "test-integration-dataunions"
+            websocket-url:
+                - name: "single-node-only"
+                - url:  "ws://localhost:8690/api/v1/ws"
+    env:
+      TEST_NAME: ${{ matrix.test-name }}
+      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
+      TEST_REPEATS: 2
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+      - name: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npm run bootstrap-pkg streamr-client
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+      - name: Run Test
+        run: npm run $TEST_NAME
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v1
+        with:
+          dest: 'packages/client/logs'
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@master
+        with:
+          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
+          path: packages/client/logs
