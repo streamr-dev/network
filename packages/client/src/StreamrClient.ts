@@ -230,6 +230,14 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         this.cached = new StreamrCached(this)
     }
 
+    enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
+        Debug.enable(prefix)
+    }
+
+    disableDebugLogging() { // eslint-disable-line class-methods-use-this
+        Debug.disable()
+    }
+
     /** @internal */
     async onConnectionConnected() {
         this.debug('Connected!')

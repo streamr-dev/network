@@ -31,7 +31,7 @@
     "commander": "^7.2.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
-    "streamr-client": "^5.4.2"
+    "streamr-client": "^5.4.4"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
