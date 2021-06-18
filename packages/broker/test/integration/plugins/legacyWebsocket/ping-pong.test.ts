@@ -40,7 +40,6 @@ describe('ping-pong test between broker and clients', () => {
         metricsContext = new MetricsContext(null as any)
         websocketServer = new WebsocketServer(
             http.createServer().listen(wsPort),
-            wsPort,
             networkNode,
             new StreamFetcher('http://127.0.0.1'),
             new Publisher(networkNode, {}, metricsContext),

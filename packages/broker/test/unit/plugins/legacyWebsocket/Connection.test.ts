@@ -5,7 +5,6 @@ import WebSocket from "ws"
 import { Protocol } from "streamr-network"
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import Mock = jest.Mock
-import { ErrorResponse } from '../../../../../protocol/src'
 import stream from 'stream'
 
 class FakeWebSocket extends EventEmitter {
@@ -287,7 +286,7 @@ describe('Connection', () => {
         fakeSocket.emit('message', 'INVALID_MESSAGE_INCOMING')
         await waitForCondition(() => fakeDuplexStream.write.mock.calls.length !== 0)
         expect(fakeDuplexStream.write).toHaveBeenCalledTimes(1)
-        expect(fakeDuplexStream.write).toHaveBeenCalledWith(new ErrorResponse({
+        expect(fakeDuplexStream.write).toHaveBeenCalledWith(new Protocol.ErrorResponse({
             requestId: '',
             errorMessage: 'Unexpected token I in JSON at position 0',
             errorCode: Protocol.ErrorCode.INVALID_REQUEST

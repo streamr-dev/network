@@ -98,7 +98,6 @@ describe('resend cancellation', () => {
         )
         websocketServer = new WebsocketServer(
             http.createServer().listen(wsPort),
-            wsPort,
             networkNode,
             new StreamFetcher(`http://${STREAMR_DOCKER_DEV_HOST}`),
             new Publisher(networkNode, {
