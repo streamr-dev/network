@@ -9,7 +9,7 @@ import { Event as NodeEvent } from '../../src/logic/Node'
 /**
  * This test verifies that tracker receives status messages from nodes with list of inBound and outBound connections
  */
-describe('check status message flow between tracker and two nodes', () => {
+describe('check status message flow between tracker and two nodes tmp', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
     let nodeTwo: NetworkNode
@@ -64,7 +64,7 @@ describe('check status message flow between tracker and two nodes', () => {
 
         nodeOne.start()
     })
-
+/*
     it('tracker should receive status from second node', (done) => {
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
@@ -186,4 +186,5 @@ describe('check status message flow between tracker and two nodes', () => {
             }
         })
     })
+    */
 })

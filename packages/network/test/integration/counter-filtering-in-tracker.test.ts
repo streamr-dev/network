@@ -7,7 +7,7 @@ import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/Track
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
-import { startClientWsEndpoint } from '../connection/ClientWsEndpoint'
+import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 const WAIT_TIME = 200
 
@@ -42,7 +42,7 @@ describe('tracker: counter filtering tmp', () => {
         const peerInfo2 = PeerInfo.newNode('trackerNode2')
         const wsServer1 = await startServerWsEndpoint('127.0.0.1', 30421, peerInfo1, null)
         const wsClient1 = await startClientWsEndpoint(peerInfo1, null)
-        trackerNode1 = new TrackerNode(wsServer1, wsClient1)
+        trackerNode1 = new TrackerNode(wsServer1)
 
         const wsServer2 = await startServerWsEndpoint('127.0.0.1', 30422, peerInfo2, null)
         trackerNode2 = new TrackerNode(wsServer2)

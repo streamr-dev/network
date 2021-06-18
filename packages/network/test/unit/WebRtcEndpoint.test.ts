@@ -1,5 +1,5 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
+import { ServerWsEndpoint, startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -8,7 +8,7 @@ import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
-import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint, startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 describe('WebRtcEndpoint tmp', () => {
     let tracker: Tracker
@@ -17,6 +17,12 @@ describe('WebRtcEndpoint tmp', () => {
     let endpoint1: WebRtcEndpoint
     let endpoint2: WebRtcEndpoint
 
+    let peerInfo1: PeerInfo 
+    let peerInfo2: PeerInfo 
+
+    let wsClient1: ClientWsEndpoint 
+    let wsClient2: ClientWsEndpoint 
+
     beforeEach(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -24,38 +30,54 @@ describe('WebRtcEndpoint tmp', () => {
             id: 'tracker'
         })
 
-        const nodeOneInfo = PeerInfo.newNode('node-1')
-        const wsServer1 = await startServerWsEndpoint('127.0.0.1', 28801, nodeOneInfo, null, new MetricsContext(''))
-        const wsClient1 = await startClientWsEndpoint(nodeOneInfo, null)
+        
+        tracker.on(TrackerEvent.NODE_CONNECTED, (nodeId) => {
+            console.log('tracker.connected', nodeId)
+        })
 
-        const nodeTwoInfo = PeerInfo.newNode('node-2')
-        const wsServer2 = await startServerWsEndpoint('127.0.0.1', 28802, nodeTwoInfo, null, new MetricsContext(''))
-        const wsClient2 = await startClientWsEndpoint(nodeTwoInfo, null)
+       
 
-        trackerNode1 = new TrackerNode(wsServer1)
-        trackerNode2 = new TrackerNode(wsServer2)
+
+
+        peerInfo1 = PeerInfo.newNode('node-1')
+        wsClient1 = await startClientWsEndpoint(peerInfo1, null)
+        trackerNode1 = new TrackerNode(wsClient1)
+        await trackerNode1.connectToTracker(tracker.getAddress())
+
+        /*
         await Promise.all([
             trackerNode1.connectToTracker(tracker.getAddress()),
             waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
-        ])
-        await Promise.all([
-            trackerNode2.connectToTracker(tracker.getAddress()),
-            waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
-        ])
+        ])*/
 
-        const peerInfo1 = PeerInfo.newNode('node-1')
-        const peerInfo2 = PeerInfo.newNode('node-2')
         endpoint1 = new WebRtcEndpoint(peerInfo1, ["stun:stun.l.google.com:19302"],
             new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo1))
+        
+
+        console.log('reached')
+
+
+        peerInfo2 = PeerInfo.newNode('node-2')
+        wsClient2 = await startClientWsEndpoint(peerInfo2, null)
+        trackerNode2 = new TrackerNode(wsClient2)
+        await trackerNode2.connectToTracker(tracker.getAddress())
+/*
+        await Promise.all([
+            waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
+        ])*/
+        console.log('reached2')
+
         endpoint2 = new WebRtcEndpoint(peerInfo2, ["stun:stun.l.google.com:19302"],
             new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo2))
-    })
+
+        console.log(tracker.getNodes())
+    }, 60 * 1000)
 
     afterEach(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            trackerNode1.stop(),
-            trackerNode2.stop(),
+            wsClient1.stop(),
+            wsClient2.stop(),
             endpoint1.stop(),
             endpoint2.stop()
         ])
@@ -103,7 +125,7 @@ describe('WebRtcEndpoint tmp', () => {
         await Promise.all(sendTasks)
     
     })
-    
+    /*
     it('connection between nodes is established when both nodes invoke non-tracker-instructed connect()', async () => {
         const promise = Promise.all([ 
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
@@ -406,4 +428,5 @@ describe('WebRtcEndpoint tmp', () => {
             await endpoint1.send('node-2', payload)
         }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
     })
+    */
 })

@@ -15,6 +15,7 @@ import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
+import { ClientWsEndpoint, startClientWsEndpoint } from './connection/ClientWsEndpoint'
 
 export {
     Location,
@@ -83,10 +84,11 @@ export function startTracker({
         privateKeyFileName,
         certFileName
     ).then((endpoint) => {
+        const wsClient = new ClientWsEndpoint(peerInfo, advertisedWsUrl)
         const tracker = new Tracker({
             peerInfo,
             protocols: {
-                trackerServer: new TrackerServer(endpoint)
+                trackerServer: new TrackerServer(wsClient)
             },
             metricsContext,
             maxNeighborsPerNode,
@@ -113,8 +115,6 @@ type PeerInfoFn = (
 ) => PeerInfo
 
 function startNode({
-    host,
-    port,
     id = uuidv4(),
     name,
     location,
@@ -129,7 +129,7 @@ function startNode({
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions, peerInfoFn: PeerInfoFn): Promise<NetworkNode> {
     const peerInfo = peerInfoFn(id, name, undefined, undefined, location)
-    return startServerWsEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
+    return startClientWsEndpoint(peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
         const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)

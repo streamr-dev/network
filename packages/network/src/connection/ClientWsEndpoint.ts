@@ -7,6 +7,7 @@ import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 
+
 interface Connection {
     // upgraded vars
     address?: string
@@ -495,9 +496,9 @@ export class ClientWsEndpoint extends EventEmitter implements IWsEndpoint {
 // made it async to match the startEndpoint method on WsServer
 export async function startClientWsEndpoint(
     peerInfo: PeerInfo,
-    advertisedWsUrl: string | null,
+    advertisedWsUrl?: string | null,
     metricsContext?: MetricsContext,
     pingInterval?: number | undefined
 ): Promise<ClientWsEndpoint> {
-    return new ClientWsEndpoint(peerInfo, advertisedWsUrl, metricsContext, pingInterval)
+    return new ClientWsEndpoint(peerInfo, advertisedWsUrl!, metricsContext, pingInterval)
 }
