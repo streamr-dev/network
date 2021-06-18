@@ -3,10 +3,10 @@ import { dirname, resolve, join } from 'path'
 import { promises as fs } from 'fs'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
-import Debug from 'debug'
 
 import { PersistentStore } from './GroupKeyStore'
 import { counterId, pOnce } from '../../utils'
+import { Debug } from '../../utils/log'
 
 // eslint-disable-next-line promise/param-names
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
@@ -27,6 +27,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
     private store?: Database
     private error?: Error
     private readonly initialData
+    private initCalled = false
     readonly migrationsPath: string
     readonly debug
 
@@ -38,7 +39,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         migrationsPath = join(__dirname, 'migrations')
     }: ServerPersistentStoreOptions) {
         this.id = counterId(this.constructor.name)
-        this.debug = Debug(`StreamrClient::${this.id}`)
+        this.debug = Debug(this.id)
         this.streamId = encodeURIComponent(streamId)
         this.clientId = encodeURIComponent(clientId)
         this.initialData = initialData
@@ -47,10 +48,24 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         this.dbFilePath = dbFilePath
         this.migrationsPath = migrationsPath
         this.init = pOnce(this.init.bind(this))
-        this.init().catch(() => {
-            // ignore error until used
-            // prevent unhandled rejection
-        })
+    }
+
+    async exists(): Promise<boolean> {
+        if (this.initCalled) {
+            // wait for init if in progress
+            await this.init()
+        }
+
+        try {
+            await fs.access(this.dbFilePath)
+            return true
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                return false
+            }
+
+            throw err
+        }
     }
 
     private async tryExec<T>(fn: () => Promise<T>, maxRetries = 10, retriesLeft = maxRetries): Promise<T> {
@@ -71,6 +86,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
     }
 
     async init() {
+        this.initCalled = true
         try {
             await fs.mkdir(dirname(this.dbFilePath), { recursive: true })
             // open the database
@@ -114,12 +130,22 @@ export default class ServerPersistentStore implements PersistentStore<string, st
     }
 
     async get(key: string) {
+        if (!this.initCalled) {
+            // can't have if doesn't exist
+            if (!(await this.exists())) { return undefined }
+        }
+
         await this.init()
         const value = await this.store!.get('SELECT groupKey FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
         return value?.groupKey
     }
 
     async has(key: string) {
+        if (!this.initCalled) {
+            // can't have if doesn't exist
+            if (!(await this.exists())) { return false }
+        }
+
         await this.init()
         const value = await this.store!.get('SELECT COUNT(*) FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
         return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
@@ -142,18 +168,34 @@ export default class ServerPersistentStore implements PersistentStore<string, st
     }
 
     async delete(key: string) {
+        if (!this.initCalled) {
+            // can't delete if if db doesn't exist
+            if (!(await this.exists())) { return false }
+        }
+
         await this.init()
         const result = await this.store!.run('DELETE FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
         return !!result?.changes
     }
 
     async clear() {
+        this.debug('clear')
+        if (!this.initCalled) {
+            // nothing to clear if doesn't exist
+            if (!(await this.exists())) { return false }
+        }
+
         await this.init()
         const result = await this.store!.run('DELETE FROM GroupKeys WHERE streamId = ?', this.streamId)
         return !!result?.changes
     }
 
     async size() {
+        if (!this.initCalled) {
+            // can only have size 0 if doesn't exist
+            if (!(await this.exists())) { return 0 }
+        }
+
         await this.init()
         const size = await this.store!.get('SELECT COUNT(*) FROM GroupKeys WHERE streamId = ?;', this.streamId)
         return size && size['COUNT(*)']
@@ -161,12 +203,22 @@ export default class ServerPersistentStore implements PersistentStore<string, st
 
     async close() {
         this.debug('close')
+        if (!this.initCalled) {
+            // nothing to close if never opened
+            return
+        }
+
         await this.init()
         await this.store!.close()
     }
 
     async destroy() {
         this.debug('destroy')
+        if (!this.initCalled) {
+            // nothing to destroy if doesn't exist
+            if (!(await this.exists())) { return }
+        }
+
         await this.clear()
         await this.close()
         this.init = pOnce(Object.getPrototypeOf(this).init.bind(this))

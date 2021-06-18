@@ -106,5 +106,11 @@ describe('LoginEndpoints', () => {
             const sessionToken2 = client.session.options.sessionToken
             assert.notDeepStrictEqual(sessionToken1, sessionToken2)
         })
+
+        it('should be able to log in after logging out', async () => {
+            await client.getUserInfo()
+            await client.logout()
+            await client.getUserInfo()
+        })
     })
 })

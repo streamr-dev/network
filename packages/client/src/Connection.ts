@@ -1,17 +1,11 @@
-import { inspect } from 'util'
-
 import EventEmitter from 'eventemitter3'
-import Debug from 'debug'
 import WebSocket from 'ws'
 
 import { Scaffold, counterId, pLimitFn, pOne } from './utils'
+import { Debug, inspect, Debugger } from './utils/log'
 import { Todo } from './types'
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-// add global support for pretty millisecond formatting with %n
-// @ts-expect-error
-Debug.formatters.n = (v) => Debug.humanize(v)
 
 export interface ConnectionOptions {
     url?: string,
@@ -51,7 +45,12 @@ export class ConnectionError extends Error {
 const openSockets = new Set()
 const FORCE_CLOSED = Symbol('FORCE_CLOSED')
 
-async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]) {
+type AugmentedWebsocket = WebSocket & {
+    id: string,
+    debug: Debugger,
+}
+
+async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]): Promise<AugmentedWebsocket> {
     return new Promise((resolve, reject) => {
         try {
             if (!url) {
@@ -63,12 +62,14 @@ async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]) {
             // @ts-expect-error
             const socket = process.browser ? new WebSocket(url) : new WebSocket(url, opts, ...args)
             let error: Todo
-            Object.assign(socket, {
-                id: counterId('ws'),
+            const id = counterId('ws')
+            const augmentedSocket: AugmentedWebsocket = Object.assign(socket, {
+                id,
+                debug: opts.debug.extend(id),
                 binaryType: 'arraybuffer',
                 onopen() {
                     openSockets.add(socket)
-                    resolve(socket)
+                    resolve(augmentedSocket)
                 },
                 onclose() {
                     openSockets.delete(socket)
@@ -78,28 +79,26 @@ async function OpenWebSocket(url: string, opts: Todo, ...args: Todo[]) {
                     error = new ConnectionError(event.error || event)
                 },
             })
-
-            // attach debug
-            // @ts-expect-error
-            socket.debug = opts.debug.extend(socket.id)
-            // @ts-expect-error
-            socket.debug.color = opts.debug.color // use existing colour
+            augmentedSocket.debug.color = opts.debug.color // use existing colour
         } catch (err) {
             reject(err)
         }
     })
 }
 
-async function CloseWebSocket(socket: Todo) {
+async function CloseWebSocket(socket: AugmentedWebsocket) {
     return new Promise((resolve, reject) => {
         if (!socket || socket.readyState === WebSocket.CLOSED) {
             resolve(undefined)
             return
         }
 
-        const waitThenClose = () => (
+        const waitThenClose = () => {
+            socket.removeEventListener('error', waitThenClose)
+            socket.removeEventListener('open', waitThenClose)
+            socket.removeEventListener('close', resolve)
             resolve(CloseWebSocket(socket))
-        )
+        }
 
         // @ts-expect-error
         if (socket.readyState === WebSocket.OPENING) {
@@ -204,17 +203,24 @@ function SocketConnector(connection: Connection) {
                 debug: connection._debug,
             })
             socket.addEventListener('close', onClose)
-            socket.addEventListener('close', () => {
+            const disableReconnect = () => {
                 // if forced closed by Connection.closeOpen, disable reconnect
                 if (socket[FORCE_CLOSED]) {
                     connection._setShouldDisconnect()
                 }
-            })
+            }
+
+            socket.addEventListener('close', disableReconnect)
             return async () => { // disconnect
                 startedConnecting = false
                 // remove close listener before closing
                 socket.removeEventListener('close', onClose)
-                await CloseWebSocket(socket)
+
+                try {
+                    await CloseWebSocket(socket)
+                } finally {
+                    socket.removeEventListener('close', disableReconnect)
+                }
             }
         },
         // set socket
@@ -301,8 +307,8 @@ export default class Connection extends EventEmitter {
     retryCount: Todo
     wantsState: Todo
     connectionHandles: Todo
-    step: Todo
-    socket?: Todo
+    stepConnection: Todo
+    socket?: AugmentedWebsocket
     didDisableAutoConnect?: Todo
     isWaiting?: Todo
     _isReconnecting: Todo
@@ -322,11 +328,12 @@ export default class Connection extends EventEmitter {
         }))
     }
 
-    constructor(options: ConnectionOptions = {}, debug?: Debug.Debugger) {
+    constructor(options: ConnectionOptions = {}, debug?: Debugger) {
         super()
+        const id = counterId(this.constructor.name)
         this._debug = debug !== undefined
-            ? debug.extend(counterId(this.constructor.name))
-            : Debug(`StreamrClient::${counterId(this.constructor.name)}`)
+            ? debug.extend(id)
+            : Debug(id)
 
         this.options = options
         this.options.autoConnect = !!this.options.autoConnect
@@ -337,19 +344,18 @@ export default class Connection extends EventEmitter {
         this.wantsState = STATE.AUTO // target state or auto
         this.connectionHandles = new Set() // autoConnect when this is not empty, autoDisconnect when empty
         this.backoffWait = pLimitFn(this.backoffWait.bind(this))
-        this.step = SocketConnector(this)
+        this.stepConnection = SocketConnector(this)
         this.debug = this.debug.bind(this)
-        // @ts-expect-error
         this.maybeConnect = pOne(this.maybeConnect.bind(this))
         this.nextConnection = pOne(this.nextConnection.bind(this))
         this.nextDisconnection = pOne(this.nextDisconnection.bind(this))
     }
 
-    debug(...args: Todo[]) {
+    debug(formatter: any, ...args: any[]) {
         if (this.socket) {
-            return this.socket.debug(...args)
+            return this.socket.debug(formatter, ...args)
         }
-        return this._debug(...args)
+        return this._debug(formatter, ...args)
     }
 
     emit(event: Todo, ...args: Todo[]) {
@@ -415,7 +421,7 @@ export default class Connection extends EventEmitter {
         this.enableAutoConnect(false)
         this.enableAutoDisconnect(false)
         this.retryCount = 0
-        await this.step()
+        await this.stepConnection()
         if (!this.isConnectionValid()) {
             const err = new ConnectionError('disconnected before connected')
             if (this.isWaiting) {
@@ -456,13 +462,13 @@ export default class Connection extends EventEmitter {
         }
     }
 
-    async nextConnection() {
+    async nextConnection(): Promise<void> {
         if (this.isConnected()) {
-            return Promise.resolve()
+            return
         }
 
         this.isWaiting = true
-        return new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
             let onError: Todo
             let onDone: Todo
             const onConnected = () => {
@@ -538,7 +544,7 @@ export default class Connection extends EventEmitter {
     }
 
     async maybeConnect() {
-        await this.step()
+        await this.stepConnection()
     }
 
     async needsConnection(msg?: Todo) {
@@ -575,18 +581,18 @@ export default class Connection extends EventEmitter {
         this.debug('disconnect()')
         this._setShouldDisconnect()
 
-        await this.step()
+        await this.stepConnection()
         if (this.isConnectionValid()) {
             throw new ConnectionError('connected before disconnected')
         }
     }
 
-    async nextDisconnection() {
+    async nextDisconnection(): Promise<void> {
         if (this.isDisconnected()) {
-            return Promise.resolve()
+            return
         }
 
-        return new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
             let onError: Todo
             const onDisconnected = () => {
                 this.off('error', onError)
@@ -643,7 +649,7 @@ export default class Connection extends EventEmitter {
         const hadConnection = this.connectionHandles.has(id)
         this.connectionHandles.delete(id)
         if (hadConnection && this._couldAutoDisconnect()) {
-            await this.step()
+            await this.stepConnection()
         }
     }
 
@@ -656,7 +662,7 @@ export default class Connection extends EventEmitter {
         )
     }
 
-    async send(msg: Todo) {
+    async send(msg: any): Promise<any> {
         this.sendID = this.sendID + 1 || 1
         const handle = `send${this.sendID}`
         this.debug('(%s) send()', this.getState())
@@ -675,8 +681,12 @@ export default class Connection extends EventEmitter {
         }
     }
 
-    async _send(msg: Todo) {
+    async _send(msg: any): Promise<any> {
         return new Promise((resolve, reject) => {
+            if (!this.socket) {
+                throw new ConnectionError('No socket for connection!')
+            }
+
             this.debug('(%s) >> %o', this.getState(), msg)
             // promisify send
             const data = typeof msg.serialize === 'function' ? msg.serialize() : msg

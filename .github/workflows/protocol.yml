@@ -9,10 +9,6 @@ on:
   pull_request:
     branches:
       - '*'
-    paths:
-      - 'packages/protocol/*'
-      - 'packages/protocol/**/*'
-      - '.github/workflows/protocol.yml'
   schedule:
     # run every day at 00:00
     - cron:  '0 0 * * *'

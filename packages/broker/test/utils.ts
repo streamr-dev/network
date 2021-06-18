@@ -221,3 +221,16 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
         ...props
     })
 }
+
+export const createQueue = () => {
+    const items: any[] = []
+    return {
+        push: (item: any) => {
+            items.push(item)
+        },
+        pop: async () => {
+            await waitForCondition(() => items.length > 0)
+            return items.shift()
+        }
+    }
+}
