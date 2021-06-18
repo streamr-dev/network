@@ -1,10 +1,9 @@
 import fetch from 'node-fetch'
-import { Config } from './config'
 import { GenericError } from './errors/GenericError'
+import { StorageNodeRegistryItem, Config } from './config'
 import { Logger } from 'streamr-network'
 
 export class StorageNodeRegistry {
-
     urlByAddress: Record<string,string> = {}
     streamrUrl: string
     logger: Logger
@@ -18,9 +17,9 @@ export class StorageNodeRegistry {
         return this.urlByAddress[address]
     }
 
-    static createInstance(config: Config): StorageNodeRegistry {
+    static createInstance(config: Config, storageNodeRegistry: StorageNodeRegistryItem[]): StorageNodeRegistry {
         const urlByAddress: Record<string,string> = {}
-        config.storageNodeRegistry.forEach((item) => {
+        storageNodeRegistry.forEach((item) => {
             urlByAddress[item.address] = item.url
         })
         return new StorageNodeRegistry(urlByAddress, config.streamrUrl)
