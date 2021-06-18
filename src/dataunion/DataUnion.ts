@@ -14,6 +14,7 @@ import { getEndpointUrl, sleep, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import { Contracts } from './Contracts'
+import { erc20AllowanceAbi } from './abi'
 
 export interface DataUnionDeployOptions {
     owner?: EthereumAddress,
@@ -577,8 +578,23 @@ export class DataUnion {
         amountTokenWei: BigNumber|number|string
     ): Promise<ContractReceipt> {
         const address = getAddress(memberAddress) // throws if bad address
+        const amount = BigNumber.from(amountTokenWei)
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        const tx = await duSidechain.transferToMemberInContract(address, amountTokenWei)
+        const signer = duSidechain.signer
+        const myAddress = await signer.getAddress()
+
+        // check first that we have enough allowance to do the transferFrom within the transferToMemberInContract
+        const tokenSidechainAddress = this.client.options.tokenSidechainAddress
+        const token = new Contract(tokenSidechainAddress, erc20AllowanceAbi, signer)
+        const allowance = await token.allowance(myAddress, duSidechain.address)
+        if (allowance.lt(amount)) {
+            const difference = amount.sub(allowance)
+            const approveTx = await token.increaseAllowance(duSidechain.address, difference)
+            const approveTr = await waitForTx(approveTx)
+            log('Approval transaction receipt: %o', approveTr)
+        }
+
+        const tx = await duSidechain.transferToMemberInContract(address, amount)
         return waitForTx(tx)
     }
 

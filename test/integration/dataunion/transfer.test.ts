@@ -6,7 +6,6 @@ import Token from '../../../contracts/TestToken.json'
 import DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress, relayTokensAbi, providerMainnet, providerSidechain, getMainnetTestWallet, getSidechainTestWallet } from '../devEnvironment'
 import { getEndpointUrl, until } from '../../../src/utils'
-import { MemberStatus } from '../../../src/dataunion/DataUnion'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { EthereumAddress } from '../../../src/types'
 import authFetch from '../../../src/rest/authFetch'
@@ -85,7 +84,7 @@ describe('DataUnion earnings transfer methods', () => {
             const sendTx = await tokenSidechain.transfer(testWallet.address, parseEther('10'))
             await sendTx.wait()
         }
-    }, 150000)
+    }, 1500000)
 
     afterAll(() => {
         providerMainnet.removeAllListeners()
@@ -194,7 +193,7 @@ describe('DataUnion earnings transfer methods', () => {
         expect(formatEther(stats2After.withdrawableEarnings)).toEqual('3.0')
     }, 1500000)
 
-    it('transfer token from outside to member earnings', async () => {
+    it.each([true, false])('transfer token from outside to member earnings, approveFirst=%p', async (approveFirst: boolean) => {
         const {
             memberWallet,
             member2Wallet,
@@ -206,9 +205,12 @@ describe('DataUnion earnings transfer methods', () => {
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
         log('Stats before: %O, %O', statsBefore, stats2Before)
 
-        log(`Approve DU ${dataUnion.getSidechainAddress()} to access 1 token from ${adminWalletSidechain.address}`)
-        const approve = await tokenSidechain.connect(adminWalletSidechain).approve(dataUnion.getSidechainAddress(), parseEther('1'))
-        await approve.wait()
+        // if approval hasn't been done, transferToMemberInContract should do it
+        if (approveFirst) {
+            const approve = await tokenSidechain.approve(dataUnion.getSidechainAddress(), parseEther('1'))
+            await approve.wait()
+            log(`Approve DU ${dataUnion.getSidechainAddress()} to access 1 token from ${adminWalletSidechain.address}`)
+        }
 
         log(`Transfer 1 token with transferToMemberInContract to ${memberWallet.address}`)
         await dataUnion.transferToMemberInContract(memberWallet.address, parseEther('1'))
