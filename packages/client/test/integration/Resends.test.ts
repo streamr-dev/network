@@ -344,6 +344,11 @@ describe('StreamrClient resends', () => {
                 client.debug(`Publishing ${LONG_RESEND} messages...`)
                 published = await publishTestMessages(LONG_RESEND, {
                     waitForLast: true,
+                    // get all messages in case of bad disordering
+                    waitForLastCount: LONG_RESEND,
+                    // speed up publish time
+                    batchSize: 10,
+                    delay: 1,
                 })
                 client.debug(`Published ${LONG_RESEND} messages`)
                 await client.disconnect()
