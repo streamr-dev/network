@@ -217,16 +217,11 @@ jobs:
   test-exports:
     name: Check Types & Exports using Node 14.x
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: "14.x"
-      - uses: actions/download-artifact@v2
-        with:
-          name: client-build
-          path: packages/client/dist
       - name: Cache Node.js modules
         uses: actions/cache@v2
         with:
