@@ -68,7 +68,7 @@ export class Connection extends EventEmitter {
             this.respondedPong = true
         })
         socket.on('close', () => {
-            logger.trace('socket "%s" closed connections (was on streams="%o")', this.id, this.streamsAsString())
+            logger.trace('socket "%s" closed connections (was on streams="%o")', this.id, this.getStreamsAsString())
             this.emit('close')
         })
         socket.on('error', (err) => {
@@ -117,7 +117,7 @@ export class Connection extends EventEmitter {
         this.getStreams().forEach(cb)
     }
 
-    streamsAsString(): string[] {
+    getStreamsAsString(): string[] {
         return this.streams.map((s: Stream) => s.toString())
     }
 

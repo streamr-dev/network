@@ -116,12 +116,12 @@ describe('Connection', () => {
             })
         })
 
-        describe('streamsAsString', () => {
+        describe('getStreamsAsString', () => {
             it('returns an array of string representation of the streams', () => {
                 connection.addStream(new Stream('stream1', 0, ''))
                 connection.addStream(new Stream('stream2', 0, ''))
                 connection.addStream(new Stream('stream3', 0, ''))
-                expect(connection.streamsAsString()).toEqual([
+                expect(connection.getStreamsAsString()).toEqual([
                     'stream1::0',
                     'stream2::0',
                     'stream3::0',
