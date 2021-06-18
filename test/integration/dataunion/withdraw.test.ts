@@ -41,11 +41,11 @@ async function testWithdraw(
     options: DataUnionWithdrawOptions,
     expectedWithdrawAmount?: BigNumber,
 ) {
-    log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
+    log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
     const network = await providerMainnet.getNetwork()
-    log('Connected to "mainnet" network: %o', network)
+    log('Connected to "mainnet" network: %O', network)
     const network2 = await providerSidechain.getNetwork()
-    log('Connected to sidechain network: %o', network2)
+    log('Connected to sidechain network: %O', network2)
 
     log('Minting 100 tokens to %s', adminWalletMainnet.address)
     const tx1 = await tokenMainnet.mint(adminWalletMainnet.address, parseEther('100'))
@@ -90,7 +90,7 @@ async function testWithdraw(
     })
     const res = await memberClient.getDataUnion(dataUnion.getAddress()).join(secret)
     // await adminClient.addMembers([memberWallet.address], { dataUnion })
-    log('Member joined data union %o', res)
+    log('Member joined data union %O', res)
 
     // eslint-disable-next-line no-underscore-dangle
     const contract = await dataUnion._getContract()
@@ -120,7 +120,7 @@ async function testWithdraw(
     log('Transferred %s tokens, next sending to bridge', formatEther(amount))
     const tx2 = await contract.sendTokensToBridge()
     const tr2 = await tx2.wait()
-    log('sendTokensToBridge returned %o', tr2)
+    log('sendTokensToBridge returned %O', tr2)
 
     log('Waiting for the tokens to appear at sidechain %s', contract.sidechain.address)
     await until(async () => !(await tokenSidechain.balanceOf(contract.sidechain.address)).eq('0'), 300000, 3000)
@@ -130,14 +130,14 @@ async function testWithdraw(
     const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
     const tx3 = await sidechainContract.refreshRevenue()
     const tr3 = await tx3.wait()
-    log('refreshRevenue returned %o', tr3)
-    log('DU sidechain totalEarnings: %o', await contract.sidechain.totalEarnings())
+    log('refreshRevenue returned %O', tr3)
+    log('DU sidechain totalEarnings: %O', await contract.sidechain.totalEarnings())
 
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
 
     const stats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
-    log('Stats: %o', stats)
+    log('Stats: %O', stats)
 
     const getRecipientBalance = async () => (
         options.sendToMainnet
@@ -162,7 +162,7 @@ async function testWithdraw(
         log('Transporting message "%s"', ret)
         ret = await dataUnion.transportMessage(String(ret))
     }
-    log('Tokens withdrawn, return value: %o', ret)
+    log('Tokens withdrawn, return value: %O', ret)
 
     // "skip waiting" or "without checking the recipient account" case
     // we need to wait nevertheless, to be able to assert that balance in fact changed

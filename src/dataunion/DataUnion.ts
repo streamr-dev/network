@@ -86,8 +86,8 @@ type WaitForTXOptions = {
 
 async function waitForTx(tx: ContractTransaction, { retries = 60, retryInterval = 60000 }: WaitForTXOptions = {}): Promise<ContractReceipt> {
     return tx.wait().catch((err) => {
-        log('Attempted transaction: %o', tx)
-        log('Got error: %o', err)
+        log('Attempted transaction: %O', tx)
+        log('Got error: %O', err)
         if (err.body) {
             const body = JSON.parse(err.body)
             const msg = body.error.message
@@ -328,7 +328,7 @@ export class DataUnion {
             duSidechain.getEarnings(address).catch(() => BigNumber.from(0)),
         ])
         const withdrawnEarnings = memberData[3]
-        const withdrawable = total ? total.sub(withdrawnEarnings) : BigNumber.from(0)
+        const withdrawable = total.gt(withdrawnEarnings) ? total.sub(withdrawnEarnings) : BigNumber.from(0)
         const STATUSES = [MemberStatus.NONE, MemberStatus.ACTIVE, MemberStatus.INACTIVE]
         return {
             status: STATUSES[memberData[0]],
@@ -568,7 +568,7 @@ export class DataUnion {
 
     /**
      * Transfer amount to specific member in DataunionSidechain
-     * @param memberAddress - the other member who gets their tokens out of the Data Union
+     * @param memberAddress - target member who gets the tokens added to their earnings in the the Data Union
      * @param amountTokenWei - the amount that want to add to the member
      * @returns receipt once transfer transaction is confirmed
      */
@@ -579,6 +579,22 @@ export class DataUnion {
         const address = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.transferToMemberInContract(address, amountTokenWei)
+        return waitForTx(tx)
+    }
+
+    /**
+     * Transfer an amount of earnings to another member in DataunionSidechain
+     * @param memberAddress - the other member who gets their tokens out of the Data Union
+     * @param amountTokenWei - the amount that want to add to the member
+     * @returns receipt once transfer transaction is confirmed
+     */
+    async transferWithinContract(
+        memberAddress: EthereumAddress,
+        amountTokenWei: BigNumber|number|string
+    ): Promise<ContractReceipt> {
+        const address = getAddress(memberAddress) // throws if bad address
+        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+        const tx = await duSidechain.transferWithinContract(address, amountTokenWei)
         return waitForTx(tx)
     }
 

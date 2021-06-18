@@ -133,10 +133,13 @@ export const dataUnionSidechainABI = [{
     type: 'event'
 }, {
     name: 'transferToMemberInContract',
-    inputs: [
-        { name: 'recipient', type: 'address', internalType: 'address' },
-        { name: 'amount', type: 'uint256', internalType: 'uint256' }
-    ],
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, {
+    name: 'transferWithinContract',
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'

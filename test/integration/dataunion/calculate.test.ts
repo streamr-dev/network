@@ -22,7 +22,7 @@ describe('DataUnion calculate', () => {
     })
 
     it('calculate DU address before deployment', async () => {
-        log('Connecting to Ethereum networks, clientOptions: %o', clientOptions)
+        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()
