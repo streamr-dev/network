@@ -4,22 +4,22 @@ import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
-import config from '../config'
+import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 
 const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
-const adminWalletMainnet = new Wallet(config.clientOptions.auth.privateKey, providerMainnet)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
+const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
 
 describe('DataUnion admin fee', () => {
     let adminClient: StreamrClient
 
-    const tokenAdminWallet = new Wallet(config.tokenAdminPrivateKey, providerMainnet)
-    const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
+    const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
+    const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
 
     beforeAll(async () => {
-        log(`Connecting to Ethereum networks, config = ${JSON.stringify(config)}`)
+        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()
@@ -27,7 +27,7 @@ describe('DataUnion admin fee', () => {
         log(`Minting 100 tokens to ${adminWalletMainnet.address}`)
         const tx1 = await tokenMainnet.mint(adminWalletMainnet.address, parseEther('100'))
         await tx1.wait()
-        adminClient = new StreamrClient(config.clientOptions as any)
+        adminClient = new StreamrClient(clientOptions as any)
     }, 10000)
 
     afterAll(() => {

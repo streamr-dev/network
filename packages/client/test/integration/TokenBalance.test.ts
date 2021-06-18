@@ -3,7 +3,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { createClient, createMockAddress } from '../utils'
 
 import * as Token from '../../contracts/TestToken.json'
-import config from './config'
+import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from './devEnvironment'
 import { BigNumber, providers } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { EthereumAddress } from '../../src/types'
@@ -11,12 +11,12 @@ import { until } from '../../src/utils'
 import debug from 'debug'
 import StreamrClient from '../../src'
 
-const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const tokenAdminMainnetWallet = new Wallet(config.tokenAdminPrivateKey, providerMainnet)
-const tokenAdminSidechainWallet = new Wallet(config.tokenAdminPrivateKey, providerSidechain)
-const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, tokenAdminMainnetWallet)
-const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const tokenAdminMainnetWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
+const tokenAdminSidechainWallet = new Wallet(tokenAdminPrivateKey, providerSidechain)
+const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminMainnetWallet)
+const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
 
 const log = debug('StreamrClient::test::token-balance')
 
@@ -51,7 +51,7 @@ const sendTokensToSidechain = async (receiverAddress: EthereumAddress, amount: B
             type: 'function'
         }
     ]
-    const tokenMediator = new Contract(config.tokenMediator, relayTokensAbi, tokenAdminMainnetWallet)
+    const tokenMediator = new Contract(tokenMediatorAddress, relayTokensAbi, tokenAdminMainnetWallet)
     const tx1 = await tokenMainnet.approve(tokenMediator.address, amount)
     await tx1.wait()
     log('Approved')

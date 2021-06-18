@@ -4,7 +4,7 @@ import { uid, fakePrivateKey, getWaitForStorage, createTestStream } from '../uti
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import { clientOptions } from './devEnvironment'
 import { Stream } from '../../src/stream'
 
 const Msg = (opts?: any) => ({
@@ -30,7 +30,7 @@ describe('Sequencing', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

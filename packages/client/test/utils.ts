@@ -12,7 +12,7 @@ import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
 import type { StreamPartDefinitionOptions, StreamProperties } from '../src/stream'
 import { StreamrClient } from '../src/StreamrClient'
-import config from './integration/config'
+import { clientOptions } from './integration/devEnvironment'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -361,7 +361,7 @@ export const createMockAddress = () => '0x000000000000000000000000000' + Date.no
 export const createClient = (providerSidechain?: providers.JsonRpcProvider) => {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
     return new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         auth: {
             privateKey: wallet.privateKey
         }
