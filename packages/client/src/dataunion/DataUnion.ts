@@ -418,9 +418,7 @@ export class DataUnion {
     /**
      * Add given Ethereum addresses as data union members
      */
-    async addMembers(
-        memberAddressList: EthereumAddress[],
-    ) {
+    async addMembers(memberAddressList: EthereumAddress[]): Promise<ContractReceipt> {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.addMembers(members)
@@ -431,9 +429,7 @@ export class DataUnion {
     /**
      * Remove given members from data union
      */
-    async removeMembers(
-        memberAddressList: EthereumAddress[],
-    ) {
+    async removeMembers(memberAddressList: EthereumAddress[]): Promise<ContractReceipt> {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.partMembers(members)
