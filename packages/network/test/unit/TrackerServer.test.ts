@@ -1,6 +1,6 @@
 import { TrackerServer } from '../../src/protocol/TrackerServer'
 import { Event } from '../../src/connection/IWsEndpoint'
-import { WsEndpoint } from '../../src/connection/WsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 
 describe(TrackerServer, () => {
@@ -20,7 +20,7 @@ describe(TrackerServer, () => {
                     PeerInfo.newStorage('storageNode', 'storageNode', undefined , undefined, null)
                 ]
             }
-        } as WsEndpoint)
+        } as ServerWsEndpoint)
         expect(trackerServer.getNodeIds()).toEqual(['nodeOne', 'nodeTwo', 'storageNode'])
     })
 })

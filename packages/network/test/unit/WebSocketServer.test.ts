@@ -4,7 +4,7 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { waitForCondition } from 'streamr-test-utils'
 
-async function setUpWsClient(peerId:string, peerType:string, city:string): Promise<ClientWsEndpoint> {
+async function setUpWsClient(peerId: string, peerType: string, city: string): Promise<ClientWsEndpoint> {
     const peerInfo = PeerInfo.fromObject({
         peerId, 
         peerType,
@@ -48,7 +48,7 @@ async function setUpWsServer(peerId: string, peerType: string, city: string, por
     return wsEndpoint
 }
 
-describe('WsServer&WsClient with no connections tmp', () => {
+describe('WsServer&WsClient with no connections', () => {
     let wsEndpoint: ServerWsEndpoint
 
     beforeAll(async () => {

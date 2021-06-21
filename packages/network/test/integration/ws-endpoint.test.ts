@@ -6,6 +6,7 @@ import { Event, DisconnectionCode } from '../../src/connection/IWsEndpoint'
 import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker } from '../../src/composition'
+import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 describe('ws-endpoint', () => {
     const endpoints: ServerWsEndpoint[] = []
@@ -25,21 +26,22 @@ describe('ws-endpoint', () => {
         }
 
         const promises: Promise<any>[] = []
-
         for (let i = 0; i < 5; i++) {
+            const client = await startClientWsEndpoint(PeerInfo.newNode(`client-${i}`), null)
+
             promises.push(waitForEvent(endpoints[i], Event.PEER_CONNECTED))
 
-            const nextEndpoint = i + 1 === 5 ? endpoints[0] : endpoints[i + 1]
+            //const nextEndpoint = i + 1 === 5 ? endpoints[0] : endpoints[i + 1]
 
             // eslint-disable-next-line no-await-in-loop
-            endpoints[i].connect(nextEndpoint.getAddress())
+            client.connect(endpoints[i].getAddress())
         }
 
         await Promise.all(promises)
         await wait(100)
 
         for (let i = 0; i < 5; i++) {
-            expect(endpoints[i].getPeers().size).toEqual(2)
+            expect(endpoints[i].getPeers().size).toEqual(1)
         }
 
         for (let i = 0; i < 5; i++) {
@@ -49,22 +51,22 @@ describe('ws-endpoint', () => {
     })
 
     it('peer infos are exchanged between connecting endpoints', async () => {
-        const endpointOne = await startServerWsEndpoint('127.0.0.1', 30695, PeerInfo.newNode('endpointOne'), null)
-        const endpointTwo = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('endpointTwo'), null)
+        const client = await startClientWsEndpoint(PeerInfo.newNode('client'), null)
+        const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'), null)
 
-        const e1 = waitForEvent(endpointOne, Event.PEER_CONNECTED)
-        const e2 = waitForEvent(endpointTwo, Event.PEER_CONNECTED)
+        const e1 = waitForEvent(client, Event.PEER_CONNECTED)
+        const e2 = waitForEvent(server, Event.PEER_CONNECTED)
 
-        endpointOne.connect(endpointTwo.getAddress())
+        client.connect(server.getAddress())
 
-        const endpointOneArguments = await e1
-        const endpointTwoArguments = await e2
+        const clientArguments = await e1
+        const serverArguments = await e2
 
-        expect(endpointOneArguments).toEqual([PeerInfo.newNode('endpointTwo')])
-        expect(endpointTwoArguments).toEqual([PeerInfo.newNode('endpointOne')])
+        expect(clientArguments).toEqual([PeerInfo.newNode('server')])
+        expect(serverArguments).toEqual([PeerInfo.newNode('client')])
 
-        await endpointOne.stop()
-        await endpointTwo.stop()
+        await client.stop()
+        await server.stop()
     })
 
     describe('test direct connections from simple websocket', () => {

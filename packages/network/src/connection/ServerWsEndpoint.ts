@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import { DisconnectionCode, DisconnectionReason, Event, IWsEndpoint } from './IWsEndpoint'
 import uWS from 'uWebSockets.js'
-import WebSocket from 'ws'
 import { PeerBook } from './PeerBook'
 import { PeerInfo, PeerType } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
@@ -24,7 +23,6 @@ interface Connection {
     rttStart?: number
     rtt?: number
 }
-
 
 interface UWSConnection extends uWS.WebSocket, Connection {}
 
@@ -58,15 +56,6 @@ function terminateWs(ws: UWSConnection, logger: Logger): void {
         ws.close()
     } catch (e) {
         logger.error('failed to terminate ws, reason %s', e)
-    }
-}
-
-function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
-    return {
-        'streamr-peer-id': peerInfo.peerId,
-        'streamr-peer-type': peerInfo.peerType,
-        'control-layer-versions': peerInfo.controlLayerVersions.join(','),
-        'message-layer-versions': peerInfo.messageLayerVersions.join(',')
     }
 }
 
@@ -274,6 +263,7 @@ export class ServerWsEndpoint extends EventEmitter implements IWsEndpoint {
             this.metrics.record('sendFailed', 1)
             this.logger.warn('sending to %s [%s] failed, reason %s, readyState is %s',
                 recipientId, recipientAddress, e, ws.readyState)
+            errorCallback(e)
             terminateWs(ws, this.logger)
         }
     }
@@ -386,7 +376,6 @@ export class ServerWsEndpoint extends EventEmitter implements IWsEndpoint {
         if (this.advertisedWsUrl) {
             return this.advertisedWsUrl
         }
-
         return `ws://${this.serverHost}:${this.serverPort}`
     }
 

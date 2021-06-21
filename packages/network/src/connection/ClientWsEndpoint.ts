@@ -7,7 +7,6 @@ import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 
-
 interface Connection {
     // upgraded vars
     address?: string
@@ -27,7 +26,6 @@ interface WsConnection extends WebSocket, Connection {}
 
 const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 const LOW_BACK_PRESSURE = 1024 * 1024
-const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
 
 function closeWs(
     ws: WsConnection,
@@ -82,7 +80,6 @@ export class ClientWsEndpoint extends EventEmitter implements IWsEndpoint {
     ) {
         super()
 
-        
         if (!(peerInfo instanceof PeerInfo)) {
             throw new Error('peerInfo not instance of PeerInfo')
         }
@@ -334,8 +331,6 @@ export class ClientWsEndpoint extends EventEmitter implements IWsEndpoint {
                     closeWs(ws, DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN, this.logger)
                 })
 
-                
-
                 setTimeout(() => resolve(), 100)
             } catch (e) {
                 this.logger.error('error while shutting down uWS server: %s', e)
@@ -362,7 +357,9 @@ export class ClientWsEndpoint extends EventEmitter implements IWsEndpoint {
     }
 
     getAddress(): string {
-        return this.advertisedWsUrl!
+        // in contrast with ServerWsEndpoint's 
+        // `ws://${this.serverHost}:${this.serverPort}`  
+        return this.peerInfo.peerId
     }
 
     getPeerInfo(): Readonly<PeerInfo> {

@@ -4,16 +4,17 @@ import { waitForEvent } from 'streamr-test-utils'
 import { Event, DisconnectionReason, DisconnectionCode } from '../../src/connection/IWsEndpoint' 
 import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
+import { ClientWsEndpoint, startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 const STATE_OPEN = 1
 const STATE_CLOSING = 2
 
 describe('check and kill dead connections', () => {
-    let node1: ServerWsEndpoint
+    let node1: ClientWsEndpoint
     let node2: ServerWsEndpoint
 
     beforeEach(async () => {
-        node1 = await startServerWsEndpoint('127.0.0.1', 43971, PeerInfo.newNode('node1'), null)
+        node1 = await startClientWsEndpoint(PeerInfo.newNode('node1'), null)
         node2 = await startServerWsEndpoint('127.0.0.1', 43972, PeerInfo.newNode('node2'), null)
 
         node1.connect('ws://127.0.0.1:43972')

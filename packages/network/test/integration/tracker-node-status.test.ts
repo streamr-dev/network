@@ -9,7 +9,9 @@ import { Event as NodeEvent } from '../../src/logic/Node'
 /**
  * This test verifies that tracker receives status messages from nodes with list of inBound and outBound connections
  */
-describe('check status message flow between tracker and two nodes tmp', () => {
+
+// Seems to only be able to perform one connection on the tracker using the split ws client/server (???)
+describe('check status message flow between tracker and two nodes', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
     let nodeTwo: NetworkNode
@@ -30,6 +32,7 @@ describe('check status message flow between tracker and two nodes tmp', () => {
             port: 30750,
             id: TRACKER_ID
         })
+
         nodeOne = await startNetworkNode({
             host: '127.0.0.1',
             port: 30751,
@@ -37,6 +40,7 @@ describe('check status message flow between tracker and two nodes tmp', () => {
             trackers: [tracker.getAddress()],
             pingInterval: 100
         })
+        
         nodeTwo = await startNetworkNode({
             host: '127.0.0.1',
             port: 30752,
@@ -64,7 +68,7 @@ describe('check status message flow between tracker and two nodes tmp', () => {
 
         nodeOne.start()
     })
-/*
+
     it('tracker should receive status from second node', (done) => {
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
@@ -186,5 +190,4 @@ describe('check status message flow between tracker and two nodes tmp', () => {
             }
         })
     })
-    */
 })

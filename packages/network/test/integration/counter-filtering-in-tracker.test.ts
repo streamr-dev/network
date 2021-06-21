@@ -5,7 +5,6 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker, Tracker } from '../../src/composition'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
@@ -27,7 +26,7 @@ const formStatus = (counter1: number, counter2: number, nodes1: string[], nodes2
     singleStream
 })
 
-describe('tracker: counter filtering tmp', () => {
+describe('tracker: counter filtering', () => {
     let tracker: Tracker
     let trackerNode1: TrackerNode
     let trackerNode2: TrackerNode
@@ -40,12 +39,12 @@ describe('tracker: counter filtering tmp', () => {
         })
         const peerInfo1 = PeerInfo.newNode('trackerNode1')
         const peerInfo2 = PeerInfo.newNode('trackerNode2')
-        const wsServer1 = await startServerWsEndpoint('127.0.0.1', 30421, peerInfo1, null)
         const wsClient1 = await startClientWsEndpoint(peerInfo1, null)
-        trackerNode1 = new TrackerNode(wsServer1)
+        trackerNode1 = new TrackerNode(wsClient1)
 
-        const wsServer2 = await startServerWsEndpoint('127.0.0.1', 30422, peerInfo2, null)
-        trackerNode2 = new TrackerNode(wsServer2)
+        const wsClient2 = await startClientWsEndpoint(peerInfo2, null)
+
+        trackerNode2 = new TrackerNode(wsClient2)
         trackerNode1.connectToTracker(tracker.getAddress())
         trackerNode2.connectToTracker(tracker.getAddress())
 

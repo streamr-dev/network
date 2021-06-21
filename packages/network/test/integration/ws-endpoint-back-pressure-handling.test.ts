@@ -3,7 +3,7 @@ import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/Se
 import { startClientWsEndpoint, ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 
-describe('WsEndpoint: back pressure handling tmp', () => {
+describe('WsEndpoint: back pressure handling', () => {
     let ep1: ClientWsEndpoint
     let ep2: ServerWsEndpoint
 

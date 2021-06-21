@@ -1,5 +1,4 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { ServerWsEndpoint, startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -10,7 +9,7 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { ClientWsEndpoint, startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
-describe('WebRtcEndpoint tmp', () => {
+describe('WebRtcEndpoint', () => {
     let tracker: Tracker
     let trackerNode1: TrackerNode
     let trackerNode2: TrackerNode
@@ -30,47 +29,40 @@ describe('WebRtcEndpoint tmp', () => {
             id: 'tracker'
         })
 
-        
-        tracker.on(TrackerEvent.NODE_CONNECTED, (nodeId) => {
-            console.log('tracker.connected', nodeId)
-        })
-
-       
-
-
-
         peerInfo1 = PeerInfo.newNode('node-1')
         wsClient1 = await startClientWsEndpoint(peerInfo1, null)
         trackerNode1 = new TrackerNode(wsClient1)
-        await trackerNode1.connectToTracker(tracker.getAddress())
-
-        /*
+        
         await Promise.all([
             trackerNode1.connectToTracker(tracker.getAddress()),
             waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
-        ])*/
-
-        endpoint1 = new WebRtcEndpoint(peerInfo1, ["stun:stun.l.google.com:19302"],
-            new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo1))
-        
-
-        console.log('reached')
-
+        ])
+       
+        endpoint1 = new WebRtcEndpoint(
+            peerInfo1, 
+            ["stun:stun.l.google.com:19302"],
+            new RtcSignaller(peerInfo1, trackerNode1), 
+            new MetricsContext(''), 
+            new NegotiatedProtocolVersions(peerInfo1)
+        )
 
         peerInfo2 = PeerInfo.newNode('node-2')
         wsClient2 = await startClientWsEndpoint(peerInfo2, null)
         trackerNode2 = new TrackerNode(wsClient2)
-        await trackerNode2.connectToTracker(tracker.getAddress())
-/*
+
         await Promise.all([
+            trackerNode2.connectToTracker(tracker.getAddress()),
             waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
-        ])*/
-        console.log('reached2')
+        ])
 
-        endpoint2 = new WebRtcEndpoint(peerInfo2, ["stun:stun.l.google.com:19302"],
-            new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo2))
+        endpoint2 = new WebRtcEndpoint(
+            peerInfo2, 
+            ["stun:stun.l.google.com:19302"],
+            new RtcSignaller(peerInfo2, trackerNode2), 
+            new MetricsContext(''), 
+            new NegotiatedProtocolVersions(peerInfo2)
+        )
 
-        console.log(tracker.getNodes())
     }, 60 * 1000)
 
     afterEach(async () => {
@@ -125,7 +117,7 @@ describe('WebRtcEndpoint tmp', () => {
         await Promise.all(sendTasks)
     
     })
-    /*
+    
     it('connection between nodes is established when both nodes invoke non-tracker-instructed connect()', async () => {
         const promise = Promise.all([ 
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
@@ -428,5 +420,5 @@ describe('WebRtcEndpoint tmp', () => {
             await endpoint1.send('node-2', payload)
         }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
     })
-    */
+    
 })

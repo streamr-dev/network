@@ -15,7 +15,7 @@ import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
-import { ClientWsEndpoint, startClientWsEndpoint } from './connection/ClientWsEndpoint'
+import { startClientWsEndpoint } from './connection/ClientWsEndpoint'
 
 export {
     Location,
@@ -84,11 +84,10 @@ export function startTracker({
         privateKeyFileName,
         certFileName
     ).then((endpoint) => {
-        const wsClient = new ClientWsEndpoint(peerInfo, advertisedWsUrl)
         const tracker = new Tracker({
             peerInfo,
             protocols: {
-                trackerServer: new TrackerServer(wsClient)
+                trackerServer: new TrackerServer(endpoint)
             },
             metricsContext,
             maxNeighborsPerNode,
@@ -131,6 +130,7 @@ function startNode({
     const peerInfo = peerInfoFn(id, name, undefined, undefined, location)
     return startClientWsEndpoint(peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)
+
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
         const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
         const nodeToNode = new NodeToNode(new WebRtcEndpoint(

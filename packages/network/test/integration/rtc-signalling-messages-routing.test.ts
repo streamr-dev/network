@@ -3,11 +3,11 @@ import { waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { RtcSubTypes } from '../../src/logic/RtcMessage'
-import { startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { startTracker } from '../../src/composition'
+import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 const { RelayMessage, ErrorMessage } = TrackerLayer
 
@@ -25,8 +25,8 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             port: 28660,
             id: 'tracker'
         })
-        const originatorEndpoint = await startServerWsEndpoint('127.0.0.1', 28661, PeerInfo.newNode('originator'), null)
-        const targetEndpoint = await startServerWsEndpoint('127.0.0.1', 28662, PeerInfo.newNode('target'), null)
+        const originatorEndpoint = await startClientWsEndpoint(PeerInfo.newNode('originator'), null)
+        const targetEndpoint = await startClientWsEndpoint(PeerInfo.newNode('target'), null)
 
         originatorTrackerNode = new TrackerNode(originatorEndpoint)
         targetTrackerNode = new TrackerNode(targetEndpoint)
