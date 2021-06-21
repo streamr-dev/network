@@ -60,32 +60,32 @@ jobs:
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
       - timeout-minutes: 2
-        run: npx jest test/unit/AggregatedError.test.ts
+        run: npx jest --detectOpenHandles test/unit/AggregatedError.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/Encryption.test.ts
+        run: npx jest --detectOpenHandles test/unit/Encryption.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/iterators.test.js
+        run: npx jest --detectOpenHandles test/unit/iterators.test.js
       - timeout-minutes: 2
-        run: npx jest test/unit/MessageCreator.test.ts
+        run: npx jest --detectOpenHandles test/unit/MessageCreator.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/PushQueue.test.js
+        run: npx jest --detectOpenHandles test/unit/PushQueue.test.js
       - timeout-minutes: 2
-        run: npx jest test/unit/pUtils.test.js
+        run: npx jest --detectOpenHandles test/unit/pUtils.test.js
       - timeout-minutes: 2
-        run: npx jest test/unit/Scaffold.test.ts
+        run: npx jest --detectOpenHandles test/unit/Scaffold.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/Session.test.ts
+        run: npx jest --detectOpenHandles test/unit/Session.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/Signer.test.ts
+        run: npx jest --detectOpenHandles test/unit/Signer.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/Stream.test.ts
+        run: npx jest --detectOpenHandles test/unit/Stream.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/StreamUtils.test.ts
+        run: npx jest --detectOpenHandles test/unit/StreamUtils.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/utils.test.ts
+        run: npx jest --detectOpenHandles test/unit/utils.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/GroupKeyStore.test.ts
+        run: npx jest --detectOpenHandles test/unit/GroupKeyStore.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/GroupKeyPersistence.test.ts
+        run: npx jest --detectOpenHandles test/unit/GroupKeyPersistence.test.ts
       - timeout-minutes: 2
-        run: npx jest test/unit/Connection.test.ts
+        run: npx jest --detectOpenHandles test/unit/Connection.test.ts
