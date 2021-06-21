@@ -31,15 +31,24 @@ describeRepeats('Connection', () => {
         }).once('listening', () => {
             port = (wss.address() as AddressInfo).port
             done()
-        })
-
-        wss.on('connection', (ws) => {
+        }).once('connection', (ws) => {
             ws.on('message', (msg) => ws.send(msg))
         })
     })
 
     afterAll((done) => {
-        wss.close(done)
+        if (s) {
+            s.removeAllListeners()
+        }
+
+        if (wss) {
+            wss.removeAllListeners()
+            wss.close(done)
+        }
+    })
+
+    afterAll(async () => {
+        await wait(1000) // wait a moment for wss to truly close
     })
 
     beforeEach(() => {

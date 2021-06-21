@@ -1,6 +1,7 @@
 import { Server } from 'http'
 import sinon from 'sinon'
 import express, { Application } from 'express'
+import { wait } from 'streamr-test-utils'
 
 import authFetch from '../../src/rest/authFetch'
 import * as utils from '../../src/utils'
@@ -46,6 +47,10 @@ describeRepeats('utils', () => {
 
     afterAll((done) => {
         server.close(done)
+    })
+
+    afterAll(async () => {
+        await wait(1000) // wait a moment for server to truly close
     })
 
     describe('authFetch', () => {
