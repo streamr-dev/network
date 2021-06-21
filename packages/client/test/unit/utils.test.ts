@@ -16,73 +16,77 @@ interface TestResponse {
 }
 
 describeRepeats('utils', () => {
-    let session: any
-    let expressApp: Application
-    let server: Server
-    const baseUrl = 'http://127.0.0.1:30000'
-    const testUrl = '/some-test-url'
+    describe('with mock server', () => {
+        let session: any
+        let expressApp: Application
+        let server: Server
+        const baseUrl = 'http://127.0.0.1:30000'
+        const testUrl = '/some-test-url'
 
-    beforeAll((done) => {
-        session = sinon.stub()
-        session.options = {}
-        expressApp = express()
+        beforeEach((done) => {
+            session = sinon.stub()
+            session.options = {}
+            expressApp = express()
 
-        function handle(req: any, res: any) {
-            if (req.get('Authorization') !== 'Bearer session-token') {
-                res.sendStatus(401)
-            } else {
-                res.status(200).send({
-                    test: 'test',
-                })
+            function handle(req: any, res: any) {
+                if (req.get('Authorization') !== 'Bearer session-token') {
+                    res.sendStatus(401)
+                } else {
+                    res.status(200).send({
+                        test: 'test',
+                    })
+                }
             }
-        }
 
-        expressApp.get(testUrl, (req: any, res: any) => handle(req, res))
+            expressApp.get(testUrl, (req: any, res: any) => handle(req, res))
 
-        server = expressApp.listen(30000, () => {
-            debug('Mock server started on port 30000\n')
-            done()
-        })
-    })
-
-    afterAll((done) => {
-        server.close(done)
-    })
-
-    afterAll(async () => {
-        await wait(1000) // wait a moment for server to truly close
-    })
-
-    describe('authFetch', () => {
-        it('should return normally when valid session token is passed', async () => {
-            session.getSessionToken = sinon.stub().resolves('session-token')
-            const res = await authFetch<TestResponse>(baseUrl + testUrl, session)
-            expect(session.getSessionToken.calledOnce).toBeTruthy()
-            expect(res.test).toBeTruthy()
+            server = expressApp.listen(30000, () => {
+                debug('Mock server started on port 30000\n')
+                done()
+            })
         })
 
-        it('should return 401 error when invalid session token is passed twice', async () => {
-            session.getSessionToken = sinon.stub().resolves('invalid token')
-            const onCaught = jest.fn()
-            await authFetch<TestResponse>(baseUrl + testUrl, session).catch((err) => {
-                onCaught()
+        afterEach((done) => {
+            server.close(done)
+        })
+
+        afterAll(async () => {
+            await wait(1000) // wait a moment for server to truly close
+        })
+
+        describe('authFetch', () => {
+            it('should return normally when valid session token is passed', async () => {
+                session.getSessionToken = sinon.stub().resolves('session-token')
+                const res = await authFetch<TestResponse>(baseUrl + testUrl, session)
+                expect(session.getSessionToken.calledOnce).toBeTruthy()
+                expect(res.test).toBeTruthy()
+            })
+
+            it('should return 401 error when invalid session token is passed twice', async () => {
+                session.getSessionToken = sinon.stub().resolves('invalid token')
+                const onCaught = jest.fn()
+                const err = await authFetch<TestResponse>(baseUrl + testUrl, session).catch((error) => {
+                    onCaught()
+                    return error
+                })
+
                 expect(session.getSessionToken.calledTwice).toBeTruthy()
                 expect(err.toString()).toMatch(
                     `${baseUrl + testUrl} returned with error code 401. Unauthorized`
                 )
                 expect(err.body).toEqual('Unauthorized')
+                expect(onCaught).toHaveBeenCalledTimes(1)
             })
-            expect(onCaught).toHaveBeenCalledTimes(1)
-        })
 
-        it('should return normally when valid session token is passed after expired session token', async () => {
-            session.getSessionToken = sinon.stub()
-            session.getSessionToken.onCall(0).resolves('expired-session-token')
-            session.getSessionToken.onCall(1).resolves('session-token')
+            it('should return normally when valid session token is passed after expired session token', async () => {
+                session.getSessionToken = sinon.stub()
+                session.getSessionToken.onCall(0).resolves('expired-session-token')
+                session.getSessionToken.onCall(1).resolves('session-token')
 
-            const res = await authFetch<TestResponse>(baseUrl + testUrl, session)
-            expect(session.getSessionToken.calledTwice).toBeTruthy()
-            expect(res.test).toBeTruthy()
+                const res = await authFetch<TestResponse>(baseUrl + testUrl, session)
+                expect(session.getSessionToken.calledTwice).toBeTruthy()
+                expect(res.test).toBeTruthy()
+            })
         })
     })
 
