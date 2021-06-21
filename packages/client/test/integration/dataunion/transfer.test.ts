@@ -4,19 +4,22 @@ import { formatEther, parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
 import Token from '../../../contracts/TestToken.json'
 import DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress, relayTokensAbi, providerMainnet, providerSidechain, getMainnetTestWallet, getSidechainTestWallet } from '../devEnvironment'
+import {
+    clientOptions,
+    tokenAdminPrivateKey,
+    tokenMediatorAddress,
+    relayTokensAbi,
+    getProviderMainnet,
+    getProviderSidechain,
+    getMainnetTestWallet,
+    getSidechainTestWallet,
+} from '../devEnvironment'
 import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { EthereumAddress } from '../../../src/types'
 import authFetch from '../../../src/rest/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-transfer')
-
-const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
-const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
-
-const tokenAdminSidechainWallet = new Wallet(tokenAdminPrivateKey, providerSidechain)
-const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
 
 async function addMember(dataUnionAddress: EthereumAddress, secret: string) {
     const privateKey = `0x100000000000000000000000000000000000000012300000001${Date.now()}`
@@ -31,16 +34,23 @@ async function addMember(dataUnionAddress: EthereumAddress, secret: string) {
     const res = await memberDataUnion.join(secret)
     log('Member joined data union: %O', res)
 
-    const memberWallet = new Wallet(privateKey, providerSidechain)
+    const memberWallet = new Wallet(privateKey, getProviderSidechain())
     return memberWallet
 }
 
 describe('DataUnion earnings transfer methods', () => {
+
+    const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, getProviderMainnet())
+    const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
+
+    const tokenAdminSidechainWallet = new Wallet(tokenAdminPrivateKey, getProviderSidechain())
+    const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
+
     beforeAll(async () => {
         log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
-        const network = await providerMainnet.getNetwork()
+        const network = await tokenAdminWallet.provider.getNetwork()
         log('Connected to "mainnet" network: %O', network)
-        const network2 = await providerSidechain.getNetwork()
+        const network2 = await tokenAdminSidechainWallet.provider.getNetwork()
         log('Connected to sidechain network: %O', network2)
 
         // TODO: all of the below should happen in smart-contracts-init?
@@ -51,7 +61,12 @@ describe('DataUnion earnings transfer methods', () => {
         const tokenMediator = new Contract(tokenMediatorAddress, relayTokensAbi, tokenAdminWallet)
         const approveTx = await tokenMainnet.approve(tokenMediator.address, parseEther('100'))
         await approveTx.wait()
-        const relayTx = await tokenMediator.relayTokensAndCall(tokenMainnet.address, tokenAdminSidechainWallet.address, parseEther('100'), '0x1234') // dummy 0x1234
+        const relayTx = await tokenMediator.relayTokensAndCall(
+            tokenMainnet.address,
+            tokenAdminSidechainWallet.address,
+            parseEther('100'),
+            '0x1234' // dummy 0x1234
+        )
         await relayTx.wait()
         await until(async () => (await tokenSidechain.balanceOf(tokenAdminSidechainWallet.address)).gt('0'), 300000, 3000)
 
@@ -87,8 +102,10 @@ describe('DataUnion earnings transfer methods', () => {
     }, 1500000)
 
     afterAll(() => {
-        providerMainnet.removeAllListeners()
-        providerSidechain.removeAllListeners()
+        tokenAdminSidechainWallet.provider.removeAllListeners()
+        tokenAdminWallet.provider.removeAllListeners()
+        tokenMainnet.removeAllListeners()
+        tokenSidechain.removeAllListeners()
     })
 
     async function setupTest(testIndex: number) {
@@ -170,7 +187,7 @@ describe('DataUnion earnings transfer methods', () => {
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
         log('Stats before: %O, %O', statsBefore, stats2Before)
 
-        log('%s sidechain-ETH balance: %s', memberWallet.address, await providerSidechain.getBalance(memberWallet.address))
+        log('%s sidechain-ETH balance: %s', memberWallet.address, await getProviderSidechain().getBalance(memberWallet.address))
         log('%s sidechain-DATA balance: %s', memberWallet.address, await tokenSidechain.balanceOf(memberWallet.address))
 
         log('Transfer 1 token worth of earnings with transferWithinContract: %s -> %s', memberWallet.address, member2Wallet.address)

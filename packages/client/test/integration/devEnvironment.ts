@@ -10,8 +10,8 @@ export const tokenMediatorAddress = '0xedD2aa644a6843F2e5133Fe3d6BD3F4080d97D9F'
 // can mint mainnet DATA tokens
 export const tokenAdminPrivateKey = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
 
-export const providerSidechain = new JsonRpcProvider(clientOptions.sidechain)
-export const providerMainnet = new JsonRpcProvider(clientOptions.mainnet)
+export const getProviderSidechain = () => new JsonRpcProvider(clientOptions.sidechain)
+export const getProviderMainnet = () => new JsonRpcProvider(clientOptions.mainnet)
 
 export function getTestWallet(index: number, provider: JsonRpcProvider) {
     // TODO: change to 'streamr-client-javascript' once https://github.com/streamr-dev/smart-contracts-init/pull/36 is in docker
@@ -20,11 +20,11 @@ export function getTestWallet(index: number, provider: JsonRpcProvider) {
 }
 
 export function getMainnetTestWallet(index: number) {
-    return getTestWallet(index, providerMainnet)
+    return getTestWallet(index, getProviderMainnet())
 }
 
 export function getSidechainTestWallet(index: number) {
-    return getTestWallet(index, providerSidechain)
+    return getTestWallet(index, getProviderSidechain())
 }
 
 export const relayTokensAbi = [
