@@ -1,4 +1,4 @@
-import { AddressInfo, Server } from 'ws'
+import WebSocket, { AddressInfo, Server } from 'ws'
 import { wait } from 'streamr-test-utils'
 import { Debug, describeRepeats } from '../utils'
 
@@ -25,25 +25,37 @@ describeRepeats('Connection', () => {
     let errors: Todo
 
     let expectErrors = 0 // check no errors by default
-    beforeAll((done) => {
+    beforeEach((done) => {
+        let ws: WebSocket
         wss = new Server({
             port: 0,
         }).once('listening', () => {
             port = (wss.address() as AddressInfo).port
             done()
-        }).once('connection', (ws) => {
+        }).once('connection', (newWs) => {
+            ws = newWs
             ws.on('message', (msg) => ws.send(msg))
+        }).once('close', () => {
+            ws.removeAllListeners()
         })
     })
 
-    afterAll((done) => {
+    afterEach(async () => {
         if (s) {
             s.removeAllListeners()
         }
 
         if (wss) {
-            wss.removeAllListeners()
-            wss.close(done)
+            await new Promise((resolve, reject) => {
+                wss.close((err) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(undefined)
+                    }
+                    wss.removeAllListeners()
+                })
+            })
         }
     })
 
