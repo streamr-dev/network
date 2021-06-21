@@ -41,17 +41,20 @@ describe('StorageNodeRegistry', () => {
     })
     
     beforeEach(() => {
+        const storageNodes = [{
+            address: '0x1111111111111111111111111111111111111111',
+            url: 'http://one.mock'
+        }, {
+            address: '0x3333333333333333333333333333333333333333',
+            url: 'http://three.mock'
+        }]
         const config = {
-            storageNodeRegistry: [{
-                address: '0x1111111111111111111111111111111111111111',
-                url: 'http://one.mock'
-            }, {
-                address: '0x3333333333333333333333333333333333333333',
-                url: 'http://three.mock'
-            }],
+            storageNodeConfig: {
+                storageNodes
+            },
             streamrUrl: `http://127.0.0.1:${mockCoreApiServerPort}`
-        } as Config
-        registry = StorageNodeRegistry.createInstance(config)
+        } as unknown as Config
+        registry = StorageNodeRegistry.createInstance(config, storageNodes)
     })
 
     it('get url by address', () => {

@@ -55,7 +55,7 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeRegistry
+            storageNodeConfig: { registry: storageNodeRegistry }
         })
         brokerNode1 = await startBroker({
             name: 'brokerNode1',
@@ -65,7 +65,7 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort2,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
-            storageNodeRegistry
+            storageNodeConfig: { registry: storageNodeRegistry }
         })
         brokerNode2 = await startBroker({
             name: 'brokerNode2',
@@ -75,7 +75,7 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort3,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
-            storageNodeRegistry
+            storageNodeConfig: { registry: storageNodeRegistry }
         })
 
         // Create clients
