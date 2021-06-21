@@ -32,31 +32,6 @@ jobs:
         with:
           all_but_latest: true
           access_token: ${{ github.token }}
-  lint:
-    name: Run linter using Node 14.x
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "14.x"
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
-        working-directory: './'
-        run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: npm run eslint
-        run: npm run eslint
-
   test:
     name: Test Unit using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -84,142 +59,33 @@ jobs:
         run: |
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: test-unit
-        timeout-minutes: 7
-        run: npm run test-unit
-
-  integration:
-    name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [12.x, 14.x]
-        test-name: [
-            "test-integration-no-resend",
-            "test-integration-resend",
-        ]
-        websocket-url:
-            - name: "default"
-              url:  ""
-            - name: "single-node-only"
-              url:  "ws://localhost:8690/api/v1/ws"
-    env:
-      TEST_NAME: ${{ matrix.test-name }}
-      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
-      TEST_REPEATS: 2
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
-        working-directory: './'
-        run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
-        with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - name: Run Test
-        run: npm run $TEST_NAME
-      - name: Collect docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v1
-        with:
-          dest: 'packages/client/logs'
-      - name: Upload logs to GitHub
-        if: failure()
-        uses: actions/upload-artifact@master
-        with:
-          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
-          path: packages/client/logs
-
-  flakey:
-    name: Flakey Tests using Node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [12.x, 14.x]
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
-        working-directory: './'
-        run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
-        with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
-        name: Run Test
-        with:
-          max_attempts: 2
-          timeout_minutes: 15
-          retry_on: error
-          command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
-
-  memory:
-    name:  Memory Tests using Node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [12.x, 14.x]
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
-        working-directory: './'
-        run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
-        with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
-        name: Run Test
-        with:
-          max_attempts: 2
-          timeout_minutes: 20
-          retry_on: error
-          command: cd packages/client && npm run test-memory
+      - timeout-minutes: 2
+        run: npx jest test/unit/AggregatedError.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Encryption.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/iterators.test.js
+      - timeout-minutes: 2
+        run: npx jest test/unit/MessageCreator.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/PushQueue.test.js
+      - timeout-minutes: 2
+        run: npx jest test/unit/pUtils.test.js
+      - timeout-minutes: 2
+        run: npx jest test/unit/Scaffold.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Session.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Signer.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Stream.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/StreamUtils.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/utils.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/GroupKeyStore.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/GroupKeyPersistence.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Connection.test.ts
