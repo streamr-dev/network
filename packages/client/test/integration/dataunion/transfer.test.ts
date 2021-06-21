@@ -43,7 +43,7 @@ describe('DataUnion earnings transfer methods', () => {
         const network2 = await providerSidechain.getNetwork()
         log('Connected to sidechain network: %O', network2)
 
-        // TODO: all of the below should happen in smart-contracts-init?
+        // TODO: ALL of the below should be unnecessary after test wallets are properly set up in smart-contracts-init
 
         log('Minting 200 tokens to %s and sending 100 to sidechain', tokenAdminWallet.address)
         const mintTx = await tokenMainnet.mint(tokenAdminWallet.address, parseEther('200'))

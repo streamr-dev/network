@@ -157,6 +157,15 @@ export class DataUnion {
         return response
     }
 
+    /**
+     * Voluntarily leave the Data Union
+     * @returns side-chain transaction receipt
+     */
+    async part(): Promise<ContractReceipt> {
+        const memberAddress = await this.client.getAddress()
+        return this.removeMembers([memberAddress])
+    }
+
     async isMember(memberAddress: EthereumAddress): Promise<boolean> {
         const address = getAddress(memberAddress)
         const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
