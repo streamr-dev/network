@@ -5,37 +5,28 @@ const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localh
 
 describe('StorageNodeRegistry', () => {
 
-    test('throw exception if address is wrong (ENS)', async (done) => {
-        try {
+    test('throw exception if address is wrong (ENS)', async () => {
+        await expect(async () => (
             await getStorageNodeRegistryFromContract({
                 contractAddress: 'address', jsonRpcProvider
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: network does not support ENS')
-            done()
-        }
+        )).rejects.toThrow('network does not support ENS')
     })
 
-    test('throw exception if address is wrong', async (done) => {
-        try {
+    test('throw exception if address is wrong', async () => {
+        await expect(async () => (
             await getStorageNodeRegistryFromContract({
                 contractAddress: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', jsonRpcProvider
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: call revert exception')
-            done()
-        }
+        )).rejects.toThrow('call revert exception')
     })
 
-    test('throw exception if jsonRpcProvider is wrong', async (done) => {
-        try {
+    test('throw exception if jsonRpcProvider is wrong', async () => {
+        await expect(async () => (
             await getStorageNodeRegistryFromContract({
                 contractAddress, jsonRpcProvider: 'jsonRpcProvider'
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: could not detect network')
-            done()
-        }
+        )).rejects.toThrow('could not detect network')
     })
 
     describe('getAllStorageNodes', () => {
