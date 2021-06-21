@@ -12,7 +12,10 @@ import { fetchOrThrow } from '../../helpers/fetch'
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
 const NAT_ANALYSIS_SAMPLE_COUNT = 5
-const NAT_ANALYSIS_TIMEOUT = 60 * 1000
+const NAT_ANALYSIS_TIMEOUT = {
+    maxWaitTime: 60 * 1000,
+    errorCode: 'NAT_ANALYSIS_TIMEOUT'
+}
 const NAT_TYPE_UNKNOWN = 'Unknown'
 const METRIC_CONTEXT_NAME = 'broker/plugin/testnetMiner'
 const METRIC_LATEST_CODE = 'latestCode'
@@ -119,7 +122,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
                 logsEnabled: false,
                 sampleCount: NAT_ANALYSIS_SAMPLE_COUNT,
                 stunHost: this.pluginConfig.stunServerHost!
-            }), NAT_ANALYSIS_TIMEOUT)
+            }), NAT_ANALYSIS_TIMEOUT.maxWaitTime, NAT_ANALYSIS_TIMEOUT.errorCode)
             logger.info(`NAT type: ${result}`)
             return result
         } catch (e) {

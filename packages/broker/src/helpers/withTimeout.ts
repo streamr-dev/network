@@ -1,7 +1,9 @@
-export const withTimeout = async <T>(promise: Promise<T>, timeout: number): Promise<T> => {
+import { GenericError } from '../errors/GenericError'
+
+export const withTimeout = async <T>(promise: Promise<T>, timeout: number, errorCode: string): Promise<T> => {
     return new Promise(async (resolve, reject) => {
         const timer = setTimeout(() => {
-            reject(new Error('Timeout'))
+            reject(new GenericError('Timeout', errorCode))
         }, timeout)
         let result
         try {
