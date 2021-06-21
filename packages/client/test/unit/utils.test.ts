@@ -46,8 +46,16 @@ describeRepeats('utils', () => {
             })
         })
 
-        afterEach((done) => {
-            server.close(done)
+        afterEach(async () => {
+            await new Promise((resolve, reject) => {
+                server.close((err) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(undefined)
+                    }
+                })
+            })
         })
 
         afterAll(async () => {

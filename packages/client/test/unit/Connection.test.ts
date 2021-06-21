@@ -1,4 +1,4 @@
-import { AddressInfo, Server } from 'ws'
+import WebSocket, { AddressInfo, Server } from 'ws'
 import { wait } from 'streamr-test-utils'
 import { Debug, describeRepeats } from '../utils'
 
