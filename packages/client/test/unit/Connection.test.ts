@@ -46,7 +46,7 @@ describeRepeats('Connection', () => {
         s = new Connection({
             url: `ws://localhost:${port}/`,
             maxRetries: 2,
-            disconnectDelay: 1,
+            disconnectDelay: 3,
         })
 
         onConnected = jest.fn()
@@ -441,20 +441,26 @@ describeRepeats('Connection', () => {
 
         it('can handle disconnect before connect complete', async () => {
             s.retryCount = 2 // adds some delay
+            const onConnectedTooEarly = () => {
+                throw new Error('test invalidated as connected before we could disconnect')
+            }
+            s.once('connected', onConnectedTooEarly)
             await Promise.all([
+                new Promise((resolve, reject) => {
+                    s.once('connecting', () => {
+                        setImmediate(() => {
+                            s.off('connected', onConnectedTooEarly)
+                            // eslint-disable-next-line promise/catch-or-return
+                            s.disconnect().then(resolve, reject)
+                        })
+                    })
+                }),
                 expect(async () => (
                     s.connect()
                 )).rejects.toThrow(),
-                new Promise((resolve, reject) => {
-                    s.once('connecting', () => {
-                        // purposely unchained
-                        // eslint-disable-next-line promise/catch-or-return
-                        wait(0).then(() => (
-                            s.disconnect()
-                        )).then(resolve, reject)
-                    })
-                })
-            ])
+            ]).finally(() => {
+                s.off('connected', onConnectedTooEarly)
+            })
             expect(s.getState()).toBe('disconnected')
             expect(onConnected).toHaveBeenCalledTimes(0)
             expect(onConnecting).toHaveBeenCalledTimes(1)
@@ -465,22 +471,30 @@ describeRepeats('Connection', () => {
 
         it('can handle connect before disconnect complete', async () => {
             await s.connect()
+
+            const onDisconnectedTooEarly = () => {
+                throw new Error('test invalidated as fully disconnected before we could connect')
+            }
+
             await Promise.all([
                 new Promise((resolve, reject) => {
+                    s.once('disconnected', onDisconnectedTooEarly)
                     s.once('disconnecting', () => {
-                        // purposely unchained
-                        // eslint-disable-next-line promise/catch-or-return
-                        Promise.resolve().then(() => (
-                            s.connect()
-                        )).then(resolve, reject)
+                        setImmediate(() => {
+                            s.off('disconnected', onDisconnectedTooEarly)
+                            // eslint-disable-next-line promise/catch-or-return
+                            s.connect().then(resolve, reject)
+                        })
                     })
                 }),
                 expect(async () => (
                     s.disconnect()
                 )).rejects.toThrow(),
-            ])
+            ]).finally(() => {
+                s.off('disconnected', onDisconnectedTooEarly)
+            })
             expect(s.getState()).toBe('connected')
-            expect(onConnected).toHaveBeenCalledTimes(1)
+            expect(onConnected).toHaveBeenCalledTimes(2)
             expect(onDisconnected).toHaveBeenCalledTimes(0)
             expect(onDisconnecting).toHaveBeenCalledTimes(1)
             expect(onConnecting).toHaveBeenCalledTimes(1)
