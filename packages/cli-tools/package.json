@@ -38,11 +38,11 @@
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
     "@types/jest": "^26.0.23",
-    "@typescript-eslint/eslint-plugin": "^4.24.0",
-    "@typescript-eslint/parser": "^4.24.0",
-    "eslint": "^7.26.0",
+    "@typescript-eslint/eslint-plugin": "^4.27.0",
+    "@typescript-eslint/parser": "^4.27.0",
+    "eslint": "^7.29.0",
     "eslint-config-streamr-ts": "^3.0.1",
     "eslint-plugin-promise": "^5.1.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.3.4"
   }
 }
