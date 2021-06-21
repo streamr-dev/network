@@ -8,6 +8,7 @@ import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../storage
 import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { GenericError } from '../../errors/GenericError'
 import { formAuthorizationHeader } from '../../helpers/authentication'
+import { Logger } from "streamr-network"
 
 type ResendLastRequest = Protocol.ControlLayer.ResendLastRequest
 type ResendFromRequest = Protocol.ControlLayer.ResendFromRequest
@@ -18,6 +19,8 @@ export interface HistoricalDataResponse {
     abort: () => void
     startTime: number
 }
+
+const logger = new Logger(module)
 
 const getDataQueryEndpointUrl = (request: ResendFromRequest|ResendLastRequest|ResendRangeRequest, baseUrl: string) => {
     const createUrl = (endpointSuffix: string, query: any) => {
@@ -62,25 +65,39 @@ export const createResponse = async (
     request: ResendFromRequest|ResendLastRequest|ResendRangeRequest,
     storageNodeRegistry: StorageNodeRegistry
 ): Promise<HistoricalDataResponse> => {
-    const storageNodeUrl = await storageNodeRegistry.getUrlByStreamId(request.streamId)
-    const url = getDataQueryEndpointUrl(request, `${storageNodeUrl}/api/v1`)
-    const abortController = new AbortController()
-    const headers = formAuthorizationHeader(request.sessionToken)
-    const response = await fetch(url, {
-        headers,
-        signal: abortController.signal
-    })
-    if (response.status === 200) {
-        const data = response.body.pipe(split2((message: string) => Protocol.StreamMessage.deserialize(message)))
-        return {
-            data,
-            abort: () => {
-                data.destroy()
-                abortController.abort()
-            },
-            startTime: Date.now()
+    const storageNodeUrls = await storageNodeRegistry.getUrlsByStreamId(request.streamId)
+
+    // Form data query endpoints and shuffle the resulting array
+    const urls = storageNodeUrls.map((storageNodeUrl) => {
+        return getDataQueryEndpointUrl(request, `${storageNodeUrl}/api/v1`)
+    }).sort(() => Math.random() - 0.5) // shuffle
+
+    for (let i = 0; i < urls.length; i++) {
+        const url = urls[i]
+        const abortController = new AbortController()
+        const headers = formAuthorizationHeader(request.sessionToken)
+        const response = await fetch(url, {
+            headers,
+            signal: abortController.signal
+        })
+        if (response.status === 200) {
+            const data = response.body.pipe(split2((message: string) => Protocol.StreamMessage.deserialize(message)))
+            return {
+                data,
+                abort: () => {
+                    data.destroy()
+                    abortController.abort()
+                },
+                startTime: Date.now()
+            }
+        } else {
+            logger.debug(`Storage node fetch error: ${response.status} ${url}`)
         }
-    } else {
-        return Promise.reject(new GenericError(`Storage node fetch error: ${response.status} ${url}`, 'STORAGE_NODE_FETCH_ERROR'))
     }
+    return Promise.reject(
+        new GenericError(
+            `Storage node fetch error: Failed to fetch historical data from all storage nodes`,
+            'STORAGE_NODE_FETCH_ERROR'
+        )
+    )
 }

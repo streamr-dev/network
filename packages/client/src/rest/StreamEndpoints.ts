@@ -171,7 +171,7 @@ export class StreamEndpoints {
             // try create stream if NOT_FOUND + also supplying an id.
             if (props.id && err.errorCode === ErrorCode.NOT_FOUND) {
                 const stream = await this.createStream(props)
-                debug('Created stream: %s', props.id, stream)
+                debug('Created stream: %s', props.id, stream.toObject())
                 return stream
             }
 

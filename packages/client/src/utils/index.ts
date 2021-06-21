@@ -87,9 +87,18 @@ export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefi
 
 export const counterId = CounterId()
 
-export function getVersionString() {
-    const isProduction = process.env.NODE_ENV === 'production'
+function getVersion() {
+    // dev deps are removed for production build
+    const hasDevDependencies = !!(pkg.devDependencies && Object.keys(pkg.devDependencies).length)
+    const isProduction = process.env.NODE_ENV === 'production' || hasDevDependencies
     return `${pkg.version}${!isProduction ? 'dev' : ''}`
+}
+
+// hardcode this at module exec time as can't change
+const versionString = getVersion()
+
+export function getVersionString() {
+    return versionString
 }
 
 /**

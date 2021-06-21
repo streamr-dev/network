@@ -237,7 +237,7 @@ await client.connect()
 | subscribe(options, callback) | Subscribes to a stream. Messages in this stream are passed to the `callback` function. See below for subscription options. Returns a Promise resolving a `Subscription` object. |
 | unsubscribe(Subscription)    | Unsubscribes the given `Subscription`. Returns a promise.                                                                                                                       |
 | unsubscribeAll(`streamId`)   | Unsubscribes all `Subscriptions` for `streamId`. Returns a promise.                                                                                                             |
-| getSubscriptions(`streamId`) | Returns a list of `Subscriptions` for `streamId`. Returns a promise.                                                                                                            |
+| getSubscriptions() | Returns a list of all active `Subscriptions` on this client. Returns a promise.                                                                                                            |
 
 ### Message handler callback
 

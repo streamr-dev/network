@@ -2,7 +2,6 @@ import ws from 'uWebSockets.js'
 import { MissingConfigError } from '../../errors/MissingConfigError'
 import { WebsocketServer } from './WebsocketServer'
 import { Plugin, PluginOptions } from '../../Plugin'
-import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
@@ -34,7 +33,6 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         } else {
             server = ws.App()
         }
-        const storageNodeRegistry = StorageNodeRegistry.createInstance(this.brokerConfig)
         this.websocketServer = new WebsocketServer(
             server,
             this.pluginConfig.port,
@@ -43,7 +41,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
             this.publisher,
             this.metricsContext,
             this.subscriptionManager,
-            storageNodeRegistry,
+            this.storageNodeRegistry,
             this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
         )

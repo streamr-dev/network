@@ -4,12 +4,14 @@ import { get, set, del, clear, keys, createStore } from 'idb-keyval'
 export default class BrowserPersistentStore implements PersistentStore<string, string> {
     readonly clientId: string
     readonly streamId: string
-    private store?: any
+    private store
+    private dbName: string
 
     constructor({ clientId, streamId }: { clientId: string, streamId: string }) {
         this.streamId = encodeURIComponent(streamId)
         this.clientId = encodeURIComponent(clientId)
-        this.store = createStore(`streamr-client::${clientId}::${streamId}`, 'GroupKeys')
+        this.dbName = `streamr-client::${clientId}::${streamId}`
+        this.store = createStore(this.dbName, 'GroupKeys')
     }
 
     async has(key: string) {
@@ -55,6 +57,13 @@ export default class BrowserPersistentStore implements PersistentStore<string, s
     async destroy() {
         await this.clear()
         await this.close()
+    }
+
+    async exists() { // eslint-disable-line class-methods-use-this
+        // always true for browser
+        // can't currently implement without opening db, defeating purpose
+        // waiting for indexedDB.databases() to gain browser support.
+        return true
     }
 
     get [Symbol.toStringTag]() {
