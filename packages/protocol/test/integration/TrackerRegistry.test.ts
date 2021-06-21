@@ -4,37 +4,28 @@ const contractAddress = '0xBFCF120a8fD17670536f1B27D9737B775b2FD4CF'
 const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}:8545`
 
 describe('TrackerRegistry', () => {
-    test('throw exception if address is wrong (ENS)', async (done) => {
-        try {
+    test('throw exception if address is wrong (ENS)', async () => {
+        await expect(async () => (
             await getTrackerRegistryFromContract({
                 contractAddress: 'address', jsonRpcProvider
             })
-        } catch (e) {
-            expect(e.toString()).toContain('ENS')
-            done()
-        }
+        )).rejects.toThrow('ENS')
     })
 
-    test('throw exception if address is wrong', async (done) => {
-        try {
+    test('throw exception if address is wrong', async () => {
+        await expect(async () => (
             await getTrackerRegistryFromContract({
                 contractAddress: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', jsonRpcProvider
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: call revert exception')
-            done()
-        }
+        )).rejects.toThrow('call revert exception')
     })
 
-    test('throw exception if jsonRpcProvider is wrong', async (done) => {
-        try {
+    test('throw exception if jsonRpcProvider is wrong', async () => {
+        await expect(async () => (
             await getTrackerRegistryFromContract({
                 contractAddress, jsonRpcProvider: 'jsonRpcProvider'
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: could not detect network')
-            done()
-        }
+        )).rejects.toThrow('could not detect network')
     })
 
     describe('getAllTrackers', () => {
