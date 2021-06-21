@@ -59,6 +59,37 @@ jobs:
         run: |
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: test-unit
-        timeout-minutes: 7
-        run: npm run test-unit
+      - timeout-minutes: 2
+        run: npx jest test/unit/AggregatedError.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Connection.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Encryption.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/GroupKeyPersistence.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/GroupKeyStore.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/iterators.test.js
+      - timeout-minutes: 2
+        run: npx jest test/unit/IteratorTest.js
+      - timeout-minutes: 2
+        run: npx jest test/unit/MessageCreator.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/PushQueue.test.js
+      - timeout-minutes: 2
+        run: npx jest test/unit/pUtils.test.js
+      - timeout-minutes: 2
+        run: npx jest test/unit/Scaffold.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Session.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Signer.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/Stream.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/StreamUtils.test.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/StubbedStreamrClient.ts
+      - timeout-minutes: 2
+        run: npx jest test/unit/utils.test.ts
