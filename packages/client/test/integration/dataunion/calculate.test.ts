@@ -1,4 +1,4 @@
-import { providers, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
