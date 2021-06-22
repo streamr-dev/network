@@ -1,7 +1,7 @@
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import { clientOptions } from '../devEnvironment'
+import clientOptions from '../config'
 import { DataUnion, MemberStatus } from '../../../src/dataunion/DataUnion'
 import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { BigNumber } from '@ethersproject/bignumber'

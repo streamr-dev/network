@@ -9,7 +9,7 @@ import { StreamrClientOptions } from '../../src'
 import { StorageNode } from '../../src/stream/StorageNode'
 
 import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 
 const MAX_MESSAGES = 10
 

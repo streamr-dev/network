@@ -5,7 +5,7 @@ import fetch from 'node-fetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { fakePrivateKey } from '../utils'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 
 describe('authFetch', () => {
     let client: StreamrClient

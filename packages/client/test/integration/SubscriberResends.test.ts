@@ -16,7 +16,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 import { Defer } from '../../src/utils'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber } from '../../src/subscribe'
 import { StorageNode } from '../../src/stream/StorageNode'
