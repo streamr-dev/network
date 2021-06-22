@@ -1,6 +1,6 @@
 import { Contract } from '@ethersproject/contracts'
 import { Wallet } from '@ethersproject/wallet'
-import { createClient, createMockAddress } from '../utils'
+import { getRandomClient, createMockAddress } from '../utils'
 
 import * as Token from '../../contracts/TestToken.json'
 import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from './devEnvironment'
@@ -67,7 +67,7 @@ describe('Token', () => {
     let client: StreamrClient
 
     beforeAll(async () => {
-        client = createClient()
+        client = getRandomClient()
     })
 
     it('getTokenBalance', async () => {

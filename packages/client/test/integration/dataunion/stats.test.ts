@@ -4,7 +4,7 @@ import debug from 'debug'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { clientOptions } from '../devEnvironment'
 import { DataUnion, MemberStatus } from '../../../src/dataunion/DataUnion'
-import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
+import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { BigNumber } from '@ethersproject/bignumber'
 
 const log = debug('StreamrClient::DataUnion::integration-test-stats')
@@ -35,7 +35,7 @@ describe('DataUnion stats', () => {
         dataUnion = await adminClient.deployDataUnion()
         await dataUnion.addMembers(activeMemberAddressList.concat([inactiveMember]))
         await dataUnion.removeMembers([inactiveMember])
-        queryClient = createClient(providerSidechain)
+        queryClient = getRandomClient()
     }, 60000)
 
     afterAll(() => {

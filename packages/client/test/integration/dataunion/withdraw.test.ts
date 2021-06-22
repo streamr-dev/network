@@ -11,7 +11,7 @@ import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 import authFetch from '../../../src/rest/authFetch'
-import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
+import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
 import { EthereumAddress } from '../../../src'
 
@@ -276,7 +276,7 @@ describe('DataUnion withdraw', () => {
     })
 
     it('Validate address', async () => {
-        const client = createClient(providerSidechain)
+        const client = getRandomClient()
         const dataUnion = client.getDataUnion(createMockAddress())
         return Promise.all([
             expectInvalidAddress(() => dataUnion.getWithdrawableEarnings('invalid-address')),
