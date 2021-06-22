@@ -97,5 +97,5 @@ describe('Check tracker instructions to node', () => {
         expect(nodeOne.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(0)
         // @ts-expect-error private field
         expect(nodeTwo.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(0)
-    }, 15000)
+    })
 })
