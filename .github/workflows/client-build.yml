@@ -58,7 +58,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
       - uses: actions/upload-artifact@v2
@@ -92,7 +92,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: test-types
         run: npm run test-types
       - name: npm run test-exports
@@ -124,7 +124,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -163,7 +163,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -210,7 +210,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: benchmark publish
         timeout-minutes: 15
         run: DEBUG='' npm run benchmark-publish > benchmark-publish.txt

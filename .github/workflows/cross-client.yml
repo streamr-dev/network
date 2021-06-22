@@ -71,7 +71,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope @streamr/cross-client-testing --include-dependencies
+          npm run bootstrap-pkg @streamr/cross-client-testing
       - uses: actions/setup-java@v1
         with:
           java-version: '8'

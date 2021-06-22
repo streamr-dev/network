@@ -51,7 +51,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-broker --include-dependencies
+          npm run bootstrap-pkg streamr-broker
       - run: npm run eslint
       - run: npm run test-unit
   test-integration:
@@ -79,7 +79,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-broker --include-dependencies
+          npm run bootstrap-pkg streamr-broker
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -204,7 +204,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-broker --include-dependencies
+          npm run bootstrap-pkg streamr-broker
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword

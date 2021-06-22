@@ -53,7 +53,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
+          npm run bootstrap-pkg streamr-network
       - run: npm run eslint
       - run: npm run test-unit
         env:
@@ -121,7 +121,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
+          npm run bootstrap-pkg streamr-network
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword
