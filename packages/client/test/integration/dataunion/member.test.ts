@@ -10,9 +10,6 @@ import { getEndpointUrl } from '../../../src/utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-member')
 
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
-
 const joinMember = async (memberWallet: Wallet, secret: string|undefined, dataUnionAddress: string) => {
     const memberClient = new StreamrClient({
         ...clientOptions,
@@ -30,11 +27,7 @@ describe('DataUnion member', () => {
     let secret: string
 
     beforeAll(async () => {
-        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
-        const network = await providerMainnet.getNetwork()
-        log('Connected to "mainnet" network: ', JSON.stringify(network))
-        const network2 = await providerSidechain.getNetwork()
-        log('Connected to sidechain network: ', JSON.stringify(network2))
+        log('ClientOptions: %O', clientOptions)
         const adminClient = new StreamrClient(clientOptions as any)
         dataUnion = await adminClient.deployDataUnion()
         // product is needed for join requests to analyze the DU version
@@ -53,11 +46,6 @@ describe('DataUnion member', () => {
         )
         secret = await dataUnion.createSecret()
     }, 60000)
-
-    afterAll(() => {
-        providerMainnet.removeAllListeners()
-        providerSidechain.removeAllListeners()
-    })
 
     it('random user is not a member', async () => {
         const userAddress = createMockAddress()
