@@ -13,6 +13,11 @@ export const tokenAdminPrivateKey = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b8
 export const providerSidechain = new JsonRpcProvider(clientOptions.sidechain)
 export const providerMainnet = new JsonRpcProvider(clientOptions.mainnet)
 
+afterAll(() => {
+    providerMainnet.removeAllListeners()
+    providerSidechain.removeAllListeners()
+})
+
 export function getTestWallet(index: number, provider: JsonRpcProvider) {
     // TODO: change to 'streamr-client-javascript' once https://github.com/streamr-dev/smart-contracts-init/pull/36 is in docker
     const hash = id(`marketplace-contracts${index}`)

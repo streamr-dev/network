@@ -1,4 +1,3 @@
-import { providers } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
@@ -8,9 +7,6 @@ import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../
 import { BigNumber } from '@ethersproject/bignumber'
 
 const log = debug('StreamrClient::DataUnion::integration-test-stats')
-
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
 
 describe('DataUnion stats', () => {
 
@@ -26,22 +22,13 @@ describe('DataUnion stats', () => {
     const inactiveMember = createMockAddress()
 
     beforeAll(async () => {
-        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
-        const network = await providerMainnet.getNetwork()
-        log('Connected to "mainnet" network: ', JSON.stringify(network))
-        const network2 = await providerSidechain.getNetwork()
-        log('Connected to sidechain network: ', JSON.stringify(network2))
+        log('ClientOptions: %O', clientOptions)
         adminClient = new StreamrClient(clientOptions as any)
         dataUnion = await adminClient.deployDataUnion()
         await dataUnion.addMembers(activeMemberAddressList.concat([inactiveMember]))
         await dataUnion.removeMembers([inactiveMember])
         queryClient = getRandomClient()
     }, 60000)
-
-    afterAll(() => {
-        providerMainnet.removeAllListeners()
-        providerSidechain.removeAllListeners()
-    })
 
     it('DataUnion stats', async () => {
         const stats = await queryClient.getDataUnion(dataUnion.getAddress()).getStats()

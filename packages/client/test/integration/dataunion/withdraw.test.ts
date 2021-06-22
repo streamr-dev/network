@@ -206,11 +206,6 @@ providerSidechain.on({
 })
 
 describe('DataUnion withdraw', () => {
-    afterAll(() => {
-        providerMainnet.removeAllListeners()
-        providerSidechain.removeAllListeners()
-    })
-
     describe.each([
         [false, true, true], // sidechain withdraw
         [true, true, true], // self-service mainnet withdraw
