@@ -54,7 +54,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-test-utils --include-dependencies
+          npm run bootstrap-pkg streamr-test-utils
 
       - name: eslint
         run: npm run eslint
@@ -94,7 +94,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-test-utils --include-dependencies
+          npm run bootstrap-pkg streamr-test-utils
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword
