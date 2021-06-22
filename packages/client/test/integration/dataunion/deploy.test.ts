@@ -1,8 +1,7 @@
-import { providers } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import { clientOptions } from '../devEnvironment'
+import clientOptions from '../config'
 import { createMockAddress } from '../../utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-deploy')

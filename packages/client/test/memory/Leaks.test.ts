@@ -6,7 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import Subscription from '../../src/subscribe/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
-import { clientOptions } from '../integration/devEnvironment'
+import clientOptions from '../integration/config'
 
 const MAX_MESSAGES = 5
 

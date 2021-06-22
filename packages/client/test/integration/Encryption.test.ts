@@ -8,7 +8,7 @@ import { Stream, StreamOperation } from '../../src/stream'
 import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000

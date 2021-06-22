@@ -6,7 +6,7 @@ import { Stream, StreamOperation } from '../../src/stream'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
 import Connection from '../../src/Connection'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 
 const TIMEOUT = 10 * 1000
 
