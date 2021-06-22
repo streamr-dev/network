@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 
 import { wait } from 'streamr-test-utils'
-import { providers, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { PublishRequest } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
@@ -12,7 +12,7 @@ import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
 import type { StreamPartDefinitionOptions, StreamProperties } from '../src/stream'
 import { StreamrClient } from '../src/StreamrClient'
-import { clientOptions } from './integration/devEnvironment'
+import clientOptions from './integration/config'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
