@@ -82,34 +82,33 @@ export function isOffering(myId: string, theirId: string): boolean {
 }
 
 export abstract class WebRtcConnection extends ConnectionEmitter {
-    private connectionId = 'none'
     private readonly routerId: string
-    private peerInfo: PeerInfo
-
     private readonly maxPingPongAttempts: number
     private readonly pingInterval: number
     private readonly flushRetryTimeout: number
     private readonly messageQueue: MessageQueue<string>
     private readonly baseLogger: Logger
 
+    private connectionId = 'none'
+    private peerInfo: PeerInfo
     private flushRef: NodeJS.Immediate | null
     private flushTimeoutRef: NodeJS.Timeout | null
     private connectionTimeoutRef: NodeJS.Timeout | null
     private pingTimeoutRef: NodeJS.Timeout | null
     private deferredConnectionAttempt: DeferredConnectionAttempt | null
+    private readonly newConnectionTimeout: number
     private paused: boolean
     private isFinished: boolean
+    private pingAttempts = 0
+    private rtt: number | null
+    private rttStart: number | null
 
     protected readonly id: string
     protected readonly maxMessageSize: number
     protected readonly selfId: string
-    protected readonly stunUrls: string[]
-    protected readonly newConnectionTimeout: number
+    protected readonly stunUrls: ReadonlyArray<string>
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
-    protected pingAttempts = 0
-    protected rtt: number | null
-    protected rttStart: number | null
 
     constructor({
         selfId,
