@@ -69,7 +69,9 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     private dataChannel: DataChannel | null
     private dataChannelEmitter?: EventEmitter
     private connectionEmitter?: EventEmitter
-    
+    private lastState?: string
+    protected lastGatheringState?: string
+
     constructor(opts: ConstructorOptions) {
         super(opts)
 
@@ -159,6 +161,8 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
         this.dataChannel = null
         this.connection = null
+        this.lastState = undefined
+        this.lastGatheringState = undefined
     }
 
     getBufferedAmount(): number {
@@ -183,6 +187,14 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         } catch (err) {
             return false
         }
+    }
+
+    getLastState(): string | undefined {
+        return this.lastState
+    }
+
+    getLastGatheringState(): string | undefined {
+        return this.lastGatheringState
     }
 
     private onStateChange(state: string): void {

@@ -104,8 +104,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly selfId: string
     protected readonly stunUrls: string[]
     protected readonly newConnectionTimeout: number
-    protected lastState: string | null
-    protected lastGatheringState: string | null
     protected paused: boolean
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
@@ -149,8 +147,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.isFinished = false
 
         this.paused = false
-        this.lastState = null
-        this.lastGatheringState = null
 
         this.flushTimeoutRef = null
         this.connectionTimeoutRef = null
@@ -280,10 +276,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         return this.rtt
     }
 
-    getLastState(): string | null {
-        return this.lastState
-    }
-
     ping(): void {
         if (this.isFinished) {
             return
@@ -394,8 +386,8 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     private processFailedMessage(queueItem: QueueItem<any>, e: Error): void {
         queueItem.incrementTries({
             error: e.toString(),
-            'connection.iceConnectionState': this.lastGatheringState,
-            'connection.connectionState': this.lastState
+            'connection.iceConnectionState': this.getLastGatheringState(),
+            'connection.connectionState': this.getLastState()
         })
         if (queueItem.isFailed()) {
             const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
@@ -419,6 +411,8 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     abstract isOpen(): boolean
     protected abstract doConnect(): void
     protected abstract doClose(err?: Error): void
+    abstract getLastState(): string | undefined
+    abstract getLastGatheringState(): string | undefined
 
     /**
      * Invoked when a message is ready to be sent. Connectivity is ensured
