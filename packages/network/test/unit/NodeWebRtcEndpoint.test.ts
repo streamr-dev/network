@@ -5,16 +5,16 @@ import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { waitForCondition, waitForEvent, wait, runAndWaitForEvents } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { NodeWebRtcEndpoint } from '../../src/connection/NodeWebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 
-describe('WebRtcEndpoint', () => {
+describe('NodeWebRtcEndpoint', () => {
     let tracker: Tracker
     let trackerNode1: TrackerNode
     let trackerNode2: TrackerNode
-    let endpoint1: WebRtcEndpoint
-    let endpoint2: WebRtcEndpoint
+    let endpoint1: NodeWebRtcEndpoint
+    let endpoint2: NodeWebRtcEndpoint
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -38,9 +38,9 @@ describe('WebRtcEndpoint', () => {
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
-        endpoint1 = new WebRtcEndpoint(peerInfo1, ["stun:stun.l.google.com:19302"],
+        endpoint1 = new NodeWebRtcEndpoint(peerInfo1, ["stun:stun.l.google.com:19302"],
             new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo1))
-        endpoint2 = new WebRtcEndpoint(peerInfo2, ["stun:stun.l.google.com:19302"],
+        endpoint2 = new NodeWebRtcEndpoint(peerInfo2, ["stun:stun.l.google.com:19302"],
             new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo2))
     })
 

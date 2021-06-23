@@ -1,5 +1,5 @@
 import { Event as wrtcEvent } from '../../src/connection/IWebRtcEndpoint'
-import { WebRtcEndpoint } from "../../src/connection/WebRtcEndpoint"
+import { NodeWebRtcEndpoint } from "../../src/connection/NodeWebRtcEndpoint"
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
@@ -17,9 +17,9 @@ describe('Node-to-Node protocol version negotiation', () => {
     let trackerNode1: TrackerNode
     let trackerNode2: TrackerNode
     let trackerNode3: TrackerNode
-    let ep1: WebRtcEndpoint
-    let ep2: WebRtcEndpoint
-    let ep3: WebRtcEndpoint
+    let ep1: NodeWebRtcEndpoint
+    let ep2: NodeWebRtcEndpoint
+    let ep3: NodeWebRtcEndpoint
     let nodeToNode1: NodeToNode
     let nodeToNode2: NodeToNode
 
@@ -47,7 +47,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         await trackerNode3.connectToTracker(tracker.getAddress())
 
         // Set up WebRTC endpoints
-        ep1 = new WebRtcEndpoint(
+        ep1 = new NodeWebRtcEndpoint(
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, trackerNode1),
@@ -55,7 +55,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             new NegotiatedProtocolVersions(peerInfo1),
             5000
         )
-        ep2 = new WebRtcEndpoint(
+        ep2 = new NodeWebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, trackerNode2),
@@ -63,7 +63,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             new NegotiatedProtocolVersions(peerInfo2),
             5000
         )
-        ep3 = new WebRtcEndpoint(
+        ep3 = new NodeWebRtcEndpoint(
             peerInfo3,
             [],
             new RtcSignaller(peerInfo3, trackerNode3),

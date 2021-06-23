@@ -1,7 +1,7 @@
 import { MessageLayer, ControlLayer, TrackerLayer } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
-import { WebRtcEndpoint } from "../../src/connection/WebRtcEndpoint"
+import { NodeWebRtcEndpoint } from "../../src/connection/NodeWebRtcEndpoint"
 import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { StreamIdAndPartition } from '../../src/identifiers'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
@@ -39,14 +39,14 @@ describe('delivery of messages in protocol layer', () => {
         trackerNode = new TrackerNode(wsEndpoint1)
         trackerNode2 = new TrackerNode(wsEndpoint2)
 
-        const wrtcEndpoint1 = new WebRtcEndpoint(
+        const wrtcEndpoint1 = new NodeWebRtcEndpoint(
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, trackerNode),
             new MetricsContext('node1'),
             new NegotiatedProtocolVersions(peerInfo1)
         )
-        const wrtcEndpoint2 =  new WebRtcEndpoint(
+        const wrtcEndpoint2 =  new NodeWebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, trackerNode2),

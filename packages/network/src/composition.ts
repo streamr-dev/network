@@ -9,7 +9,7 @@ import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
 import { TrackerNode } from './protocol/TrackerNode'
 import { RtcSignaller } from './logic/RtcSignaller'
-import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
+import { NodeWebRtcEndpoint } from './connection/NodeWebRtcEndpoint'
 import { NodeToNode } from './protocol/NodeToNode'
 import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
@@ -133,7 +133,7 @@ function startNode({
         const trackerNode = new TrackerNode(endpoint)
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
         const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
-        const nodeToNode = new NodeToNode(new WebRtcEndpoint(
+        const nodeToNode = new NodeToNode(new NodeWebRtcEndpoint(
             peerInfo,
             stunUrls,
             webRtcSignaller, 
