@@ -419,6 +419,13 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     abstract isOpen(): boolean
     protected abstract doConnect(): void
     protected abstract doClose(err?: Error): void
+
+    /**
+     * Invoked when a message is ready to be sent. Connectivity is ensured
+     * with a check to `isOpen` before invocation.
+     * @param message - mesasge to be sent
+     * @return return false if the message could not be delivered
+     */
     protected abstract doSendMessage(message: string): boolean
 
     /**
