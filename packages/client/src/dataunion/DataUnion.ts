@@ -732,7 +732,7 @@ export class DataUnion {
     /** @internal */
     static _fromContractAddress(contractAddress: string, client: StreamrClient) {
         const contracts = new Contracts(client)
-        const sidechainAddress = contracts.getDataUnionSidechainAddress(getAddress(contractAddress)) // throws if bad address
+        const sidechainAddress = contracts.getDataUnionSidechainAddress(contractAddress) // throws if bad address
         return new DataUnion(contractAddress, sidechainAddress, client)
     }
 
