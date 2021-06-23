@@ -81,6 +81,31 @@ export function isOffering(myId: string, theirId: string): boolean {
     return myId < theirId
 }
 
+/**
+ * Shared base class for WebRTC connections implemented in different libraries.
+ * Encapsulates the common needs of such connections such as:
+ *
+ *  - Determining offerer / answerer roles upon connecting
+ *  - Connection timeout
+ *  - Message queueing and retries on message delivery failures
+ *  - Backpressure handling
+ *  - Ping/Pong mechanism for RTT calculation and dead connection detection
+ *  - Deferred promise handling in case of connection re-attempts
+ *  - Closing of connection and associated clean up
+ *  - Ensuring event loop isn't greedily reserved for long periods of time
+ *
+ *  Implementers of this base class should make sure to implement the
+ *  abstract methods. Implementers should also make sure their base classes
+ *  invoke all "emit"-prefixed protected methods:
+ *  - emitOpen
+ *  - emitLocalDescription
+ *  - emitLocalCandidate
+ *  - emitMessage
+ *  - emitLowBackpressure
+ *
+ *  See the respective JSDocs for more information.
+ *
+ */
 export abstract class WebRtcConnection extends ConnectionEmitter {
     private readonly routerId: string
     private readonly maxPingPongAttempts: number
