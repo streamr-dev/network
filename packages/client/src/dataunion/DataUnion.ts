@@ -739,7 +739,7 @@ export class DataUnion {
     /** @internal */
     static _fromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}, client: StreamrClient) {
         const contracts = new Contracts(client)
-        const contractAddress = contracts.getDataUnionMainnetAddress(dataUnionName, getAddress(deployerAddress)) // throws if bad address
+        const contractAddress = contracts.getDataUnionMainnetAddress(dataUnionName, deployerAddress) // throws if bad address
         return DataUnion._fromContractAddress(contractAddress, client) // eslint-disable-line no-underscore-dangle
     }
 
