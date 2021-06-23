@@ -3,13 +3,13 @@ import { wait, waitForEvent } from 'streamr-test-utils'
 import { uid, fakePrivateKey, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
-import config from './config'
+import clientOptions from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src/subscribe'
 import { StorageNode } from '../../src/stream/StorageNode'
 
 const createClient = (opts = {}) => new StreamrClient({
-    ...config.clientOptions,
+    ...clientOptions,
     auth: {
         privateKey: fakePrivateKey(),
     },

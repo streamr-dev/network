@@ -3,10 +3,10 @@ import { Stream } from '../../src/stream'
 import { fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
 import { StorageNode } from '../../src/stream/StorageNode'
 
-import config from './config'
+import clientOptions from './config'
 
 const createClient = (opts = {}) => new StreamrClient({
-    ...config.clientOptions,
+    ...clientOptions,
     auth: {
         privateKey: fakePrivateKey(),
     },

@@ -4,7 +4,7 @@ import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStre
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import clientOptions from './config'
 
 const MAX_MESSAGES = 10
 
@@ -18,7 +18,7 @@ describeRepeats('Validation', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
