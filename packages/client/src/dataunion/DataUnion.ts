@@ -283,7 +283,7 @@ export class DataUnion {
     ): Promise<string> {
         const to = getAddress(recipientAddress) // throws if bad address
         const signer = this.client.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
-        return DataUnion._createSetBinanceRecipientSignature(to, signer, this.getContracts())
+        return DataUnion._createSetBinanceRecipientSignature(to, signer, this.getContracts()) // eslint-disable-line no-underscore-dangle
     }
 
     /** @internal */
