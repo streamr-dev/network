@@ -87,11 +87,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         return this.dataChannel!.sendMessage(message)
     }
 
-    connect(): void {
-        if (this.isFinished) {
-            throw new Error('Connection already closed.')
-        }
-
+    protected doConnect(): void {
         this.connection = new nodeDataChannel.PeerConnection(this.selfId, {
             iceServers: this.stunUrls,
             maxMessageSize: this.maxMessageSize
@@ -110,12 +106,6 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         } else {
             this.connectionEmitter.on('dataChannel', this.onDataChannel)
         }
-
-        this.connectionTimeoutRef = setTimeout(() => {
-            if (this.isFinished) { return }
-            this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
-            this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
-        }, this.newConnectionTimeout)
     }
 
     setRemoteDescription(description: string, type: DescriptionType): void {
@@ -142,20 +132,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         }
     }
 
-    close(err?: Error): void {
-        if (this.isFinished) {
-            // already closed, noop
-            return
-        }
-
-        this.isFinished = true
-
-        if (err) {
-            this.logger.warn('conn.close(): %s', err)
-        } else {
-            this.logger.trace('conn.close()')
-        }
-
+    protected doClose(_err?: Error): void {
         if (this.connectionEmitter) {
             this.connectionEmitter.removeAllListeners()
         }
@@ -182,8 +159,6 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
         this.dataChannel = null
         this.connection = null
-
-        this.doClose()
     }
 
     getBufferedAmount(): number {
@@ -220,13 +195,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         } else if (state === 'failed') {
             this.close(new Error('connection failed'))
         } else if (state === 'connecting') {
-            // reset timeout on connecting
-            clearTimeout(this.connectionTimeoutRef!)
-            this.connectionTimeoutRef = setTimeout(() => {
-                if (this.isFinished) { return }
-                this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
-                this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
-            }, this.newConnectionTimeout)
+            this.restartConnectionTimeout()
         }
     }
 
@@ -288,11 +257,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private openDataChannel(dataChannel: DataChannel): void {
-        if (this.connectionTimeoutRef !== null) {
-            clearTimeout(this.connectionTimeoutRef)
-        }
         this.dataChannel = dataChannel
-        this.setFlushRef()
         this.emitOpen()
     }
 }

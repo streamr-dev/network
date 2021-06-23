@@ -94,17 +94,16 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
    
     private flushRef: NodeJS.Immediate | null
     private flushTimeoutRef: NodeJS.Timeout | null
-
+    private connectionTimeoutRef: NodeJS.Timeout | null
     private pingTimeoutRef: NodeJS.Timeout | null
     private deferredConnectionAttempt: DeferredConnectionAttempt | null
+    private isFinished: boolean
 
     protected readonly logger: Logger
     protected readonly maxMessageSize: number
-    protected isFinished: boolean
     protected readonly selfId: string
     protected readonly stunUrls: string[]
-    protected connectionTimeoutRef: NodeJS.Timeout | null
-    protected readonly newConnectionTimeout: number 
+    protected readonly newConnectionTimeout: number
     protected lastState: string | null
     protected lastGatheringState: string | null
     protected paused: boolean
@@ -168,6 +167,18 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         })
     }
 
+    connect(): void {
+        if (this.isFinished) {
+            throw new Error('Connection already closed.')
+        }
+        this.doConnect()
+        this.connectionTimeoutRef = setTimeout(() => {
+            if (this.isFinished) { return }
+            this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
+            this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
+        }, this.newConnectionTimeout)
+    }
+
     getDeferredConnectionAttempt(): DeferredConnectionAttempt | null {
         return this.deferredConnectionAttempt
     }
@@ -178,7 +189,19 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         return att
     }
 
-    protected doClose(err?: Error): void {
+    close(err?: Error): void {
+        if (this.isFinished) {
+            // already closed, noop
+            return
+        }
+        this.isFinished = true
+
+        if (err) {
+            this.logger.warn('conn.close(): %s', err)
+        } else {
+            this.logger.trace('conn.close()')
+        }
+
         if (this.flushRef) {
             clearImmediate(this.flushRef)
         }
@@ -197,19 +220,17 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.pingTimeoutRef = null
         this.flushRef = null
 
+        try {
+            this.doClose(err)
+        } catch(e) {
+            this.logger.warn(`doClose (subclass) threw: %s`, e)
+        }
+
         if (err) {
             this.emitClose(err)
             return
         }
         this.emitClose('closed')
-    }
-    protected emitOpen(): void {
-        if (this.deferredConnectionAttempt) {
-            const def = this.deferredConnectionAttempt
-            this.deferredConnectionAttempt = null
-            def.resolve()
-        }
-        this.emit('open')
     }
 
     protected emitClose(reason: Error | string): void {
@@ -391,12 +412,40 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
     }
     
-    abstract connect(): void
     abstract setRemoteDescription(description: string, type: string): void
-    abstract addRemoteCandidate(candidate: string, mid: string): void 
-    abstract close(err?: Error): void
-    abstract getBufferedAmount(): number 
-    abstract getMaxMessageSize(): number 
+    abstract addRemoteCandidate(candidate: string, mid: string): void
+    abstract getBufferedAmount(): number
+    abstract getMaxMessageSize(): number
     abstract isOpen(): boolean
+    protected abstract doConnect(): void
+    protected abstract doClose(err?: Error): void
     protected abstract doSendMessage(message: string): boolean
+
+    /**
+     * Subclass should call this method when the connection has opened!
+     */
+    protected emitOpen(): void {
+        if (this.connectionTimeoutRef !== null) {
+            clearTimeout(this.connectionTimeoutRef)
+        }
+        if (this.deferredConnectionAttempt) {
+            const def = this.deferredConnectionAttempt
+            this.deferredConnectionAttempt = null
+            def.resolve()
+        }
+        this.setFlushRef()
+        this.emit('open')
+    }
+
+    /**
+     * Forcefully restart the connection timeout (e.g. on state change) from subclass.
+     */
+    protected restartConnectionTimeout(): void {
+        clearTimeout(this.connectionTimeoutRef!)
+        this.connectionTimeoutRef = setTimeout(() => {
+            if (this.isFinished) { return }
+            this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
+            this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
+        }, this.newConnectionTimeout)
+    }
 }
