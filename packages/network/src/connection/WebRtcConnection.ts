@@ -82,16 +82,16 @@ export function isOffering(myId: string, theirId: string): boolean {
 }
 
 export abstract class WebRtcConnection extends ConnectionEmitter {
-    public readonly id: string
     private connectionId = 'none'
-    private peerInfo: PeerInfo
     private readonly routerId: string
-    
+    private peerInfo: PeerInfo
+
     private readonly maxPingPongAttempts: number
     private readonly pingInterval: number
     private readonly flushRetryTimeout: number
     private readonly messageQueue: MessageQueue<string>
-   
+    private readonly baseLogger: Logger
+
     private flushRef: NodeJS.Immediate | null
     private flushTimeoutRef: NodeJS.Timeout | null
     private connectionTimeoutRef: NodeJS.Timeout | null
@@ -100,7 +100,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     private paused: boolean
     private isFinished: boolean
 
-    protected readonly logger: Logger
+    protected readonly id: string
     protected readonly maxMessageSize: number
     protected readonly selfId: string
     protected readonly stunUrls: string[]
@@ -143,7 +143,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.flushRetryTimeout = flushRetryTimeout
         this.messageQueue = messageQueue
         this.deferredConnectionAttempt = deferredConnectionAttempt
-        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
+        this.baseLogger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
         this.isFinished = false
         this.paused = false
 
@@ -155,7 +155,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.rtt = null
         this.rttStart = null
 
-        this.logger.trace('create %o', {
+        this.baseLogger.trace('create %o', {
             selfId: this.selfId,
             messageQueue: this.messageQueue.size(),
             peerInfo: this.peerInfo,
@@ -169,7 +169,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.doConnect()
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
-            this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
+            this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
     }
@@ -192,9 +192,9 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.isFinished = true
 
         if (err) {
-            this.logger.warn('conn.close(): %s', err)
+            this.baseLogger.warn('conn.close(): %s', err)
         } else {
-            this.logger.trace('conn.close()')
+            this.baseLogger.trace('conn.close()')
         }
 
         if (this.flushRef) {
@@ -218,7 +218,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         try {
             this.doClose(err)
         } catch(e) {
-            this.logger.warn(`doClose (subclass) threw: %s`, e)
+            this.baseLogger.warn(`doClose (subclass) threw: %s`, e)
         }
 
         if (err) {
@@ -272,7 +272,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
         if (this.isOpen()) {
             if (this.pingAttempts >= this.maxPingPongAttempts) {
-                this.logger.warn(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
+                this.baseLogger.warn(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
                 this.close(new Error('pong not received'))
             } else {
                 this.rttStart = Date.now()
@@ -281,7 +281,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                         this.doSendMessage('ping')
                     }
                 } catch (e) {
-                    this.logger.warn(`failed to send ping to ${this.peerInfo.peerId} with error: ${e}`)
+                    this.baseLogger.warn(`failed to send ping to ${this.peerInfo.peerId} with error: ${e}`)
                 }
                 this.pingAttempts += 1
             }
@@ -301,7 +301,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                 this.doSendMessage('pong')
             }
         } catch (e) {
-            this.logger.warn(`failed to send pong to ${this.peerInfo.peerId} with error: ${e}`)
+            this.baseLogger.warn(`failed to send pong to ${this.peerInfo.peerId} with error: ${e}`)
         }
     }
 
@@ -334,7 +334,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
             const queueItem = this.messageQueue.peek()
             if (queueItem.isFailed()) {
-                this.logger.debug('popping failed queue item: %o', queueItem, numOfSuccessSends)
+                this.baseLogger.debug('popping failed queue item: %o', queueItem, numOfSuccessSends)
                 this.messageQueue.pop()
             } else if (queueItem.getMessage().length > this.getMaxMessageSize())  {
                 const errorMessage = 'Dropping message due to size '
@@ -342,7 +342,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     + ' exceeding the limit of '
                     + this.getMaxMessageSize()
                 queueItem.immediateFail(errorMessage)
-                this.logger.warn(errorMessage)
+                this.baseLogger.warn(errorMessage)
                 this.messageQueue.pop()
             } else if (this.paused || this.getBufferedAmount() >= this.bufferThresholdHigh) {
                 if (!this.paused) {
@@ -370,7 +370,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     queueItem.delivered()
                     numOfSuccessSends += 1
                 } else {
-                    this.logger.debug('queue item was not sent: %o', {
+                    this.baseLogger.debug('queue item was not sent: %o', {
                         wasOpen: isOpen,
                         numOfSuccessSends,
                         queueItem,
@@ -390,7 +390,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         })
         if (queueItem.isFailed()) {
             const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
-            this.logger.warn('failed to send message after %d tries due to\n\t%s',
+            this.baseLogger.warn('failed to send message after %d tries due to\n\t%s',
                 MessageQueue.MAX_TRIES,
                 infoText)
             this.messageQueue.pop()
@@ -484,7 +484,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         clearTimeout(this.connectionTimeoutRef!)
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
-            this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
+            this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
     }

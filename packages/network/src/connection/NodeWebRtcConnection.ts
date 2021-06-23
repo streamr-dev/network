@@ -2,6 +2,8 @@ import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
 import { ConstructorOptions, WebRtcConnection } from './WebRtcConnection'
+import { Logger } from "../helpers/Logger"
+import { NameDirectory } from "../NameDirectory"
 
 nodeDataChannel.initLogger("Error" as LogLevel)
 
@@ -64,7 +66,7 @@ function DataChannelEmitter(dataChannel: DataChannel) {
 }
 
 export class NodeWebRtcConnection extends WebRtcConnection {
-
+    private readonly logger: Logger
     private connection: PeerConnection | null
     private dataChannel: DataChannel | null
     private dataChannelEmitter?: EventEmitter
@@ -75,6 +77,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     constructor(opts: ConstructorOptions) {
         super(opts)
 
+        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
         this.connection = null
         this.dataChannel = null
         this.onStateChange = this.onStateChange.bind(this)
