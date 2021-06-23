@@ -12,7 +12,7 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber } from '../../src/subscribe'
 import { StorageNode } from '../../src/stream/StorageNode'

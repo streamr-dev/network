@@ -1,7 +1,7 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { fakePrivateKey } from '../utils'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 
 describe('Session', () => {
     const createClient = (opts = {}) => new StreamrClient({

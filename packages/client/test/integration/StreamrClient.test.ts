@@ -9,7 +9,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src'
 import { StorageNode } from '../../src/stream/StorageNode'

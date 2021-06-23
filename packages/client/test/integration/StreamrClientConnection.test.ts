@@ -8,7 +8,7 @@ import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 
 const WebSocket = require('ws')
 

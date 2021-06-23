@@ -86,11 +86,6 @@ describe('DataUnion earnings transfer methods', () => {
         }
     }, 1500000)
 
-    afterAll(() => {
-        providerMainnet.removeAllListeners()
-        providerSidechain.removeAllListeners()
-    })
-
     async function setupTest(testIndex: number) {
         const adminWallet = getMainnetTestWallet(testIndex)
         const adminWalletSidechain = getSidechainTestWallet(testIndex)

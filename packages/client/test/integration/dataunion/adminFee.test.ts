@@ -30,11 +30,6 @@ describe('DataUnion admin fee', () => {
         adminClient = new StreamrClient(clientOptions as any)
     }, 10000)
 
-    afterAll(() => {
-        providerMainnet.removeAllListeners()
-        providerSidechain.removeAllListeners()
-    })
-
     it('can set admin fee', async () => {
         const dataUnion = await adminClient.deployDataUnion()
         const oldFee = await dataUnion.getAdminFee()

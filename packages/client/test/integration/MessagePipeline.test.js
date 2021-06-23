@@ -7,7 +7,7 @@ import PushQueue from '../../src/utils/PushQueue'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 import MessagePipeline from '../../src/subscribe/pipeline'
 import { Subscription } from '../../src/subscribe'
 import Validator from '../../src/subscribe/Validator'

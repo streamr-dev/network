@@ -1,32 +1,19 @@
-import { providers } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import { clientOptions } from '../devEnvironment'
+import clientOptions from '../config'
 import { createMockAddress } from '../../utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-deploy')
-
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
 
 describe('DataUnion deploy', () => {
 
     let adminClient: StreamrClient
 
     beforeAll(async () => {
-        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
-        const network = await providerMainnet.getNetwork()
-        log('Connected to "mainnet" network: ', JSON.stringify(network))
-        const network2 = await providerSidechain.getNetwork()
-        log('Connected to sidechain network: ', JSON.stringify(network2))
+        log('ClientOptions: %O', clientOptions)
         adminClient = new StreamrClient(clientOptions as any)
     }, 60000)
-
-    afterAll(() => {
-        providerMainnet.removeAllListeners()
-        providerSidechain.removeAllListeners()
-    })
 
     describe('owner', () => {
 

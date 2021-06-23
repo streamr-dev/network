@@ -1,4 +1,4 @@
-import { BigNumber, Contract, providers, Wallet } from 'ethers'
+import { BigNumber, Contract, Wallet } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
 
@@ -6,19 +6,14 @@ import { getEndpointUrl } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import { clientOptions } from '../devEnvironment'
+import { clientOptions, providerSidechain } from '../devEnvironment'
 import authFetch from '../../../src/rest/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')
 
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
 const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
 
 describe('DataUnion signature', () => {
-
-    afterAll(() => {
-        providerSidechain.removeAllListeners()
-    })
 
     it('check validity', async () => {
         const adminClient = new StreamrClient(clientOptions as any)

@@ -4,7 +4,7 @@ import { ethers } from 'ethers'
 
 import { StreamrClient } from '../../src/StreamrClient'
 
-import { clientOptions } from './devEnvironment'
+import clientOptions from './config'
 import { fakePrivateKey } from '../utils'
 
 describe('LoginEndpoints', () => {
