@@ -11,3 +11,4 @@ gradlew.bat
 .DS_Store
 logs/
 node_modules/
+/client_testing-1.0-SNAPSHOT/

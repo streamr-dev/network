@@ -4,7 +4,7 @@ import { Contract, ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
-import debug from 'debug'
+import { Debug } from '../utils/log'
 import { EthereumAddress, Todo } from '../types'
 import { binanceAdapterABI, dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
 import { until } from '../utils'
@@ -12,7 +12,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
 import { StreamrClient } from '../StreamrClient'
 
-const log = debug('StreamrClient::Contracts')
+const log = Debug('Contracts')
 
 function validateAddress(name: string, address: EthereumAddress) {
     if (!isAddress(address)) {
@@ -150,7 +150,7 @@ export class Contracts {
     }
 
     // move signatures from sidechain to mainnet
-    async transportSignaturesForMessage(messageHash: string): Promise<ContractReceipt | null> {
+    async transportSignaturesForMessage(messageHash: string, ethersOptions = {}): Promise<ContractReceipt | null> {
         const sidechainAmb = await this.getSidechainAmb()
         const message = await sidechainAmb.message(messageHash)
         const messageId = '0x' + message.substr(2, 64)
@@ -226,7 +226,7 @@ export class Contracts {
 
         const signer = this.ethereum.getSigner()
         log(`Sending message from signer=${await signer.getAddress()}`)
-        const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures)
+        const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures, ethersOptions)
         const trAMB = await txAMB.wait()
         return trAMB
     }

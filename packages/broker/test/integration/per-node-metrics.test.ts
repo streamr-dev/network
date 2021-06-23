@@ -1,7 +1,7 @@
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import {startTracker, Tracker} from 'streamr-network'
 import { Todo } from '../types'
-import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST } from '../utils'
+import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from '../utils'
 import { Wallet } from 'ethers'
 
 const httpPort = 47741
@@ -71,9 +71,7 @@ describe('per-node metrics', () => {
         client1 = createClient(wsPort, Wallet.createRandom().privateKey, {
             storageNode: storageNodeRegistry[0]
         })
-        legacyStream = await client1.getOrCreateStream({
-            name: 'per-node-stream-metrics.test.js-legacyStream'
-        })
+        legacyStream = await createTestStream(client1, module)
 
         await legacyStream.grantPermission('stream_get' as StreamOperation, undefined)
         await legacyStream.grantPermission('stream_publish' as StreamOperation, nodeAddress)
@@ -91,7 +89,7 @@ describe('per-node metrics', () => {
             trackerPort,
             httpPort,
             enableCassandra: true,
-            storageNodeRegistry,
+            storageNodeConfig: { registry: storageNodeRegistry },
             storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
             // therefore StorageAssignmentEventManager test helper cannot be used
         })
@@ -120,7 +118,7 @@ describe('per-node metrics', () => {
                     storageNode: storageNodeAccount.address
                 }
             },
-            storageNodeRegistry
+            storageNodeConfig: { registry: storageNodeRegistry }
         })
 
         client2 = createClient(wsPort, tmpAccount.privateKey)

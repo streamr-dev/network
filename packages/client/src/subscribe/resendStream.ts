@@ -14,11 +14,10 @@ const { ControlMessage } = ControlLayer
  * Sends resend request, handles responses.
  */
 
-export default function resendStream(client: StreamrClient, opts = {}, onFinally = async () => {}) {
+export default function resendStream(client: StreamrClient, opts = {}, onFinally: (err?: Error) => Promise<void> = async () => {}) {
     const options = validateOptions(opts)
     const { connection } = client
     const requestId = counterId(`${options.key}-resend`)
-    // @ts-expect-error doesn't know if options is valid
     const msgStream = messageStream(client.connection, {
         ...options,
         isUnicast: true,

@@ -20,20 +20,20 @@ describe('RtcSignaller', () => {
 
     it('invoking onConnectionNeeded delegates to sendRtcConnect on trackerNode', () => {
         trackerNodeMock.sendRtcConnect = jest.fn().mockResolvedValue(true)
-        rtcSignaller.onConnectionNeeded('router', 'targetNode')
+        rtcSignaller.sendRtcConnect('router', 'targetNode')
         expect(trackerNodeMock.sendRtcConnect).toHaveBeenCalledWith('router', 'targetNode', peerInfo)
     })
 
-    it('invoking onLocalCandidate delegates to sendLocalCandidate on trackerNode', () => {
-        trackerNodeMock.sendLocalCandidate = jest.fn().mockResolvedValue(true)
-        rtcSignaller.onLocalCandidate('router', 'targetNode', 'candidate', 'mid')
-        expect(trackerNodeMock.sendLocalCandidate).toHaveBeenCalledWith('router', 'targetNode', peerInfo, 'candidate', 'mid')
+    it('invoking sendRtcIceCandidate delegates to sendRtcIceCandidate on trackerNode', () => {
+        trackerNodeMock.sendRtcIceCandidate = jest.fn().mockResolvedValue(true)
+        rtcSignaller.sendRtcIceCandidate('router', 'targetNode', 'connectionid', 'candidate', 'mid')
+        expect(trackerNodeMock.sendRtcIceCandidate).toHaveBeenCalledWith('router', 'targetNode', 'connectionid', peerInfo, 'candidate', 'mid')
     })
 
-    it('invoking onLocalDescription delegates to sendLocalDescription on trackerNode', () => {
-        trackerNodeMock.sendLocalDescription = jest.fn().mockResolvedValue(true)
-        rtcSignaller.onLocalDescription('router', 'targetNode', 'type' as any, 'description')
-        expect(trackerNodeMock.sendLocalDescription).toHaveBeenCalledWith('router', 'targetNode', peerInfo, 'type', 'description')
+    it('invoking sendRtcOffer delegates to sendRtcOffer on trackerNode', () => {
+        trackerNodeMock.sendRtcOffer = jest.fn().mockResolvedValue(true)
+        rtcSignaller.sendRtcOffer('router', 'targetNode', 'connectionid', 'description')
+        expect(trackerNodeMock.sendRtcOffer).toHaveBeenCalledWith('router', 'targetNode', 'connectionid', peerInfo, 'description')
     })
 
     it('connectListener invoked when trackerNode emits rtcConnect message', () => {
@@ -103,16 +103,16 @@ describe('RtcSignaller', () => {
         })
     })
 
-    it('remoteCandidateListener invoked when trackerNode emits remoteCandidate message', () => {
+    it('iceCandidateListener invoked when trackerNode emits iceCandidate message', () => {
         const cbFn = jest.fn()
-        rtcSignaller.setRemoteCandidateListener(cbFn)
+        rtcSignaller.setIceCandidateListener(cbFn)
         trackerNodeMock.emit(
             TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
-                subType: 'remoteCandidate',
+                subType: 'iceCandidate',
                 data: {
                     candidate: 'candidate',
                     mid: 'mid'

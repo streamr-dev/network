@@ -3,13 +3,13 @@ import { wait, waitForEvent } from 'streamr-test-utils'
 import { uid, fakePrivateKey, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
-import config from './config'
+import clientOptions from './config'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src/subscribe'
 import { StorageNode } from '../../src/stream/StorageNode'
 
 const createClient = (opts = {}) => new StreamrClient({
-    ...config.clientOptions,
+    ...clientOptions,
     auth: {
         privateKey: fakePrivateKey(),
     },
@@ -97,12 +97,28 @@ describe('Subscription', () => {
             ])
         })
 
-        it('fires events in correct order 2', async () => {
+        it('fires events in correct order 3', async () => {
             const subscriptionEvents = await createMonitoredSubscription({
                 resend: undefined,
             })
             await client.unsubscribe(stream)
             expect(subscriptionEvents).toEqual([
+                'unsubscribed',
+            ])
+        })
+
+        it('fires events in correct order with two subscriptions', async () => {
+            // both should fire unsubscribed
+            const subscriptionEvents = await createMonitoredSubscription()
+            const subscriptionEvents2 = await createMonitoredSubscription()
+            await client.unsubscribe(stream)
+            expect(subscriptionEvents).toEqual([
+                'resent',
+                'unsubscribed',
+            ])
+
+            expect(subscriptionEvents2).toEqual([
+                'resent',
                 'unsubscribed',
             ])
         })

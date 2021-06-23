@@ -27,7 +27,7 @@ export function formConfig({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeRegistry = [],
+    storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
     reporting = false
 }: Todo): Config {
@@ -100,7 +100,7 @@ export function formConfig({
         },
         streamrUrl,
         streamrAddress,
-        storageNodeRegistry,
+        storageNodeConfig,
         httpServer: httpPort ? {
             port: httpPort,
             privateKeyFileName: null,
@@ -224,4 +224,17 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
         id: '/test/' + getTestName(module) + '/' + Date.now(),
         ...props
     })
+}
+
+export const createQueue = () => {
+    const items: any[] = []
+    return {
+        push: (item: any) => {
+            items.push(item)
+        },
+        pop: async () => {
+            await waitForCondition(() => items.length > 0)
+            return items.shift()
+        }
+    }
 }

@@ -20,8 +20,11 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.web3j.crypto.ECKeyPair;
+import org.web3j.crypto.Keys;
+import org.web3j.utils.Numeric;
 
-import java.io.IOException;
+import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,13 +53,18 @@ public class StreamTester {
     private int decryptionErrorsCount = 0;
 
     public StreamTester(String streamName, String restApiUrl, String websocketApiUrl, int minInterval, int maxInterval, int maxMessages, boolean testCorrectness) {
-        StreamrClientOptions options = new StreamrClientOptions(new EthereumAuthenticationMethod(generatePrivateKey()),
+        String privateKey = generatePrivateKey();
+        StreamrClientOptions options = new StreamrClientOptions(new EthereumAuthenticationMethod(privateKey),
                 SigningOptions.getDefault(), EncryptionOptions.getDefault(), websocketApiUrl, restApiUrl);
         options.setStorageNodeAddress(DEV_STORAGE_NODE_ADDRESS);
         options.setStorageNodeUrl(DEV_STORAGE_NODE_URL);
         this.creator = new StreamrClient(options);
         try {
-            stream = creator.createStream(new Stream(streamName, ""));
+            // TODO: consider cleaning below when 3.0.0 is landed (and the private static helper method)
+            String address = publicKeyFromPrivateKey(privateKey);
+            Stream protoStream = new Stream(streamName, "");
+            protoStream.setId(address + "/" + UUID.randomUUID());
+            stream = creator.createStream(protoStream);
             creator.addStreamToStorageNode(stream.getId(), new StorageNode(DEV_STORAGE_NODE_ADDRESS));
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -65,6 +73,12 @@ public class StreamTester {
         this.maxInterval = maxInterval;
         this.maxMessages = maxMessages;
         this.testCorrectness = testCorrectness;
+    }
+
+    private static String publicKeyFromPrivateKey(String privateKey) {
+        String withoutPrefix = Numeric.cleanHexPrefix(privateKey);
+        ECKeyPair account = ECKeyPair.create(new BigInteger(withoutPrefix, 16));
+        return Numeric.prependHexPrefix(Keys.getAddress(account.getPublicKey()));
     }
 
     public void addPublishers(PublishFunction publishFunction, StreamrClientWrapper ... publishers) {

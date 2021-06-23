@@ -7,7 +7,6 @@ import { IWsEndpoint, Event as WsEndpointEvent } from '../connection/IWsEndpoint
 import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
-import { DescriptionType } from 'node-datachannel'
 import { NameDirectory } from '../NameDirectory'
 
 export enum Event {
@@ -51,28 +50,48 @@ export class TrackerNode extends EventEmitter {
         }))
     }
 
-    sendLocalDescription(
-        trackerId: string, 
+    sendRtcOffer(
+        trackerId: string,
         targetNode: string, 
+        connectionId: string,
         originatorInfo: PeerInfo, 
-        type: DescriptionType, 
         description: string
     ): Promise<TrackerLayer.RelayMessage> {
         return this.send(trackerId, new TrackerLayer.RelayMessage({
             requestId: uuidv4(),
             originator: originatorInfo,
             targetNode,
-            subType: RtcSubTypes.LOCAL_DESCRIPTION,
+            subType: RtcSubTypes.RTC_OFFER,
             data: {
-                type,
+                connectionId,
                 description
             }
         }))
     }
 
-    sendLocalCandidate(
-        trackerId: string, 
+    sendRtcAnswer(
+        trackerId: string,
         targetNode: string, 
+        connectionId: string,
+        originatorInfo: PeerInfo, 
+        description: string
+    ): Promise<TrackerLayer.RelayMessage> {
+        return this.send(trackerId, new TrackerLayer.RelayMessage({
+            requestId: uuidv4(),
+            originator: originatorInfo,
+            targetNode,
+            subType: RtcSubTypes.RTC_ANSWER,
+            data: {
+                connectionId,
+                description
+            }
+        }))
+    }
+
+    sendRtcIceCandidate(
+        trackerId: string,
+        targetNode: string, 
+        connectionId: string,
         originatorInfo: PeerInfo,
         candidate: string, 
         mid: string
@@ -81,8 +100,9 @@ export class TrackerNode extends EventEmitter {
             requestId: uuidv4(),
             originator: originatorInfo,
             targetNode,
-            subType: RtcSubTypes.LOCAL_CANDIDATE,
+            subType: RtcSubTypes.ICE_CANDIDATE,
             data: {
+                connectionId,
                 candidate,
                 mid
             }

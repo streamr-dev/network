@@ -4,9 +4,9 @@
  */
 import EventEmitter from 'eventemitter3'
 import { ControlLayer } from 'streamr-client-protocol'
-import Debug from 'debug'
 import fetch, { Response, RequestInit } from 'node-fetch'
-import { counterId, uuid, CacheAsyncFn, getEndpointUrl } from './utils'
+import { counterId, uuid, CacheAsyncFn, getEndpointUrl, pOne } from './utils'
+import { Debug, Debugger } from './utils/log'
 import { validateOptions } from './stream/utils'
 import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
 import StreamrEthereum from './Ethereum'
@@ -57,7 +57,7 @@ const balanceOfAbi = [{
  */
 class StreamrConnection extends Connection {
     // TODO define args type when we convert Connection class to TypeScript
-    constructor(options: ConnectionOptions, debug?: Debug.Debugger) {
+    constructor(options: ConnectionOptions, debug?: Debugger) {
         super(options, debug)
         this.on('message', this.onConnectionMessage)
     }
@@ -126,10 +126,15 @@ class StreamrCached {
         this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
     }
 
-    clearStream(streamId: string) {
+    clearStream(streamId?: string) {
         this.getStream.clear()
-        this.isStreamPublisher.clearMatching((s: string) => s.startsWith(streamId))
-        this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(streamId))
+        if (streamId != null) {
+            this.isStreamPublisher.clearMatching((s: string) => s.startsWith(streamId))
+            this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(streamId))
+        } else {
+            this.isStreamPublisher.clear()
+            this.isStreamSubscriber.clear()
+        }
     }
 
     clearUser() {
@@ -139,7 +144,6 @@ class StreamrCached {
 
     clear() {
         this.clearUser()
-        // @ts-expect-error
         this.clearStream()
     }
 }
@@ -170,7 +174,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /** @internal */
     id: string
     /** @internal */
-    debug: Debug.Debugger
+    debug: Debugger
     options: StrictStreamrClientOptions
     session: Session
     /** @internal */
@@ -187,7 +191,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     // TODO annotate connection parameter as internal parameter if possible?
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
-        this.id = counterId(`${this.constructor.name}:${uid}${options.id || ''}`)
+        this.id = counterId(`${this.constructor.name}-${uid}${options.id || ''}`)
         this.debug = Debug(this.id)
 
         this.options = Config(options)
@@ -202,6 +206,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         // bind event handlers
         this.onConnectionConnected = this.onConnectionConnected.bind(this)
         this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
+        this.onConnectionDone = pOne(this.onConnectionDone.bind(this))
         this._onError = this._onError.bind(this)
         this.onConnectionError = this.onConnectionError.bind(this)
         this.getErrorEmitter = this.getErrorEmitter.bind(this)
@@ -214,6 +219,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         this.connection
             .on('connected', this.onConnectionConnected)
             .on('disconnected', this.onConnectionDisconnected)
+            .on('done', this.onConnectionDone)
             .on('error', this.onConnectionError)
 
         this.ethereum = new StreamrEthereum(this)
@@ -223,6 +229,14 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         Plugin(this, new StreamEndpoints(this))
         Plugin(this, new LoginEndpoints(this))
         this.cached = new StreamrCached(this)
+    }
+
+    enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
+        Debug.enable(prefix)
+    }
+
+    disableDebugLogging() { // eslint-disable-line class-methods-use-this
+        Debug.disable()
     }
 
     /** @internal */
@@ -243,13 +257,30 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     }
 
     /** @internal */
+    onConnectionDone() {
+        this.stop().catch(() => {
+            // ignore
+        })
+    }
+
+    async stop() {
+        this.cached.clear()
+        await Promise.allSettled([
+            this.publisher.stop().catch(() => {}),
+            this.subscriber.stop().catch(() => {}),
+            this.session.logout().catch(() => {})
+        ])
+        this.cached.clear()
+    }
+
+    /** @internal */
     getErrorEmitter(source: Todo) {
         return (err: Todo) => {
             if (!(err instanceof ConnectionError || err.reason instanceof ConnectionError)) {
                 // emit non-connection errors
                 this.emit('error', err)
             } else {
-                source.debug(err)
+                source.debug('error', err)
             }
         }
     }
@@ -302,12 +333,9 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /**
      * @category Important
      */
-    disconnect() {
-        this.publisher.stop()
-        return Promise.all([
-            this.subscriber.subscriptions.removeAll(),
-            this.connection.disconnect()
-        ])
+    async disconnect() {
+        await this.connection.disconnect()
+        await this.stop()
     }
 
     getSubscriptions() {
@@ -357,8 +385,8 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
      * @category Important
      */
     async subscribe(opts: SubscribeOptions & StreamPartDefinition, onMessage?: OnMessageCallback) {
-        let subTask: Todo
-        let sub: Todo
+        let subTask: Promise<Subscription> | undefined
+        let sub: Subscription | undefined
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
         const onEnd = (err?: Error) => {
             if (sub && typeof onMessage === 'function') {
@@ -467,6 +495,19 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
 
     getDataUnion(contractAddress: EthereumAddress) {
         return DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
+    }
+
+    async safeGetDataUnion(contractAddress: EthereumAddress) {
+        const du = DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
+        const version = await du.getVersion()
+        if (version === 0) {
+            throw new Error(`${contractAddress} is not a Data Union!`)
+        } else if (version === 1) {
+            throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
+        } else if (version === 2) {
+            return du
+        }
+        throw new Error(`${contractAddress} is an unknown Data Union version "${version}"`)
     }
 
     async deployDataUnion(options?: DataUnionDeployOptions) {

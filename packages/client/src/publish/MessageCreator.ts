@@ -9,7 +9,7 @@ import { GroupKey } from '../stream'
 import { StreamrClient } from '../StreamrClient'
 import MessageChainer from './MessageChainer'
 import StreamPartitioner from './StreamPartitioner'
-import { StreamIDish, getStreamId } from './utils'
+import { StreamIDish, getStreamId, getStreamPartition } from './utils'
 
 export default class StreamMessageCreator {
     computeStreamPartition
@@ -52,10 +52,10 @@ export default class StreamMessageCreator {
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    create(streamObjectOrId: StreamIDish, {
+    async create(streamObjectOrId: StreamIDish, {
         content,
         timestamp,
-        partitionKey = 0,
+        partitionKey,
         msgChainId,
         ...opts
     }: {
@@ -63,7 +63,7 @@ export default class StreamMessageCreator {
         timestamp: string | number | Date,
         partitionKey?: string | number,
         msgChainId?: string,
-    }) {
+    }): Promise<StreamMessage> {
         const streamId = getStreamId(streamObjectOrId)
         // streamId as queue key
         return this.queue(streamId, async () => {
@@ -74,7 +74,11 @@ export default class StreamMessageCreator {
             ])
 
             // figure out partition
-            const streamPartition = this.computeStreamPartition(stream.partitions, partitionKey)
+            const definedPartition = getStreamPartition(streamObjectOrId)
+            if ((definedPartition !== undefined) && (partitionKey !== undefined)) {
+                throw new Error('Invalid combination of "partition" and "partitionKey"')
+            }
+            const streamPartition = definedPartition ?? this.computeStreamPartition(stream.partitions, partitionKey ?? 0)
 
             // chain messages
             const chainMessage = this.getMsgChainer({
@@ -117,9 +121,11 @@ export default class StreamMessageCreator {
         return this.encrypt.start()
     }
 
-    clear() {
+    async stop() {
         this.computeStreamPartition.clear()
         this.queue.clear()
+        this.getMsgChainer.clear()
+        await this.encrypt.stop()
     }
 }
 
