@@ -4,8 +4,8 @@
  */
 import EventEmitter from 'eventemitter3'
 import { ControlLayer } from 'streamr-client-protocol'
-import fetch, { Response, RequestInit } from 'node-fetch'
-import { counterId, uuid, CacheAsyncFn, getEndpointUrl, pOne } from './utils'
+import fetch from 'node-fetch'
+import { CacheAsyncFn, counterId, getEndpointUrl, pOne, uuid } from './utils'
 import { Debug, Debugger } from './utils/log'
 import { validateOptions } from './stream/utils'
 import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
@@ -15,14 +15,14 @@ import Connection, { ConnectionError, ConnectionOptions } from './Connection'
 import Publisher from './publish'
 import { Subscriber, Subscription } from './subscribe'
 import { getUserId } from './user'
-import { Todo, MaybeAsync, EthereumAddress } from './types'
+import { EthereumAddress, MaybeAsync, Todo } from './types'
 import { StreamEndpoints } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
 import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
-import { StreamPartDefinition, GroupKey } from './stream'
+import { GroupKey, StreamPartDefinition } from './stream'
 import { BytesLike } from '@ethersproject/bytes'
 import Contracts from './dataunion/Contracts'
 
@@ -523,22 +523,19 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return DataUnion._setBinanceDepositAddressFromSignature(from, binanceRecipient, signature, this) // eslint-disable-line no-underscore-dangle
     }
 
+    // TODO: define returned object's type
     async setBinanceDepositAddressViaWithdrawServer(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike): Promise<object> {
-        const body: any = {
+        const url = getEndpointUrl(this.options.withdrawServerUrl, 'binanceAdapterSetRecipient')
+        const body = {
             memberAddress: from,
             binanceRecipientAddress: binanceRecipient,
             signature
         }
-
-        const url = getEndpointUrl(this.options.withdrawServerUrl, 'binanceAdapterSetRecipient')
-
-        const request: RequestInit = {
+        return fetch(url, {
             method: 'POST',
             body: JSON.stringify(body),
             headers: { 'Content-Type': 'application/json' }
-        }
-        const response: Response = await fetch(url, request)
-        return response
+        })
     }
 
     async getBinanceDepositAddress(userAddress: EthereumAddress) {
