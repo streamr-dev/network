@@ -1,0 +1,11 @@
+**/node_modules
+**/npm-debug.log
+**/test
+**/.idea/
+**/*.iml
+.*
+**/*.png
+**/*.md
+**/*.xml
+**/LICENSE
+**/jest.config.js

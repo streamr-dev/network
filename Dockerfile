@@ -1,15 +1,16 @@
 FROM node:14-buster as build
-WORKDIR /usr/src/broker
+WORKDIR /usr/src/monorepo
 COPY . .
-RUN npm ci --only=production
+RUN npm ci
+RUN npm run bootstrap-pkg streamr-broker
 # Build TypeScript files ("npm ci" doesn't trigger the build automatically: https://github.com/npm/npm/issues/17346)
-RUN npm run build 
+RUN (cd packages/broker && npm run build)
 
 FROM node:14-buster-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
-COPY --from=build /usr/src/broker /usr/src/broker
+COPY --from=build /usr/src/monorepo/packages/broker /usr/src/broker
 WORKDIR /usr/src/broker
 
 # Make ports available to the world outside this container
