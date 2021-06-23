@@ -9,12 +9,13 @@ import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
 import { TrackerNode } from './protocol/TrackerNode'
 import { RtcSignaller } from './logic/RtcSignaller'
-import { NodeWebRtcEndpoint } from './connection/NodeWebRtcEndpoint'
 import { NodeToNode } from './protocol/NodeToNode'
 import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
+import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
+import { NodeWebRtcConnectionFactory } from './connection/webRtcConnectionFactories'
 
 export {
     Location,
@@ -133,12 +134,13 @@ function startNode({
         const trackerNode = new TrackerNode(endpoint)
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
         const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
-        const nodeToNode = new NodeToNode(new NodeWebRtcEndpoint(
+        const nodeToNode = new NodeToNode(new WebRtcEndpoint(
             peerInfo,
             stunUrls,
             webRtcSignaller, 
             metricsContext,
             negotiatedProtocolVersions,
+            NodeWebRtcConnectionFactory,
             newWebrtcConnectionTimeout,
             pingInterval,
             webrtcDatachannelBufferThresholdLow,

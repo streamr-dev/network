@@ -1,5 +1,4 @@
 import { Event as wrtcEvent } from '../../src/connection/IWebRtcEndpoint'
-import { NodeWebRtcEndpoint } from "../../src/connection/NodeWebRtcEndpoint"
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
@@ -11,15 +10,17 @@ import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProto
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { NodeWebRtcConnectionFactory } from '../../src/connection/webRtcConnectionFactories'
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
     let trackerNode1: TrackerNode
     let trackerNode2: TrackerNode
     let trackerNode3: TrackerNode
-    let ep1: NodeWebRtcEndpoint
-    let ep2: NodeWebRtcEndpoint
-    let ep3: NodeWebRtcEndpoint
+    let ep1: WebRtcEndpoint
+    let ep2: WebRtcEndpoint
+    let ep3: WebRtcEndpoint
     let nodeToNode1: NodeToNode
     let nodeToNode2: NodeToNode
 
@@ -47,28 +48,31 @@ describe('Node-to-Node protocol version negotiation', () => {
         await trackerNode3.connectToTracker(tracker.getAddress())
 
         // Set up WebRTC endpoints
-        ep1 = new NodeWebRtcEndpoint(
+        ep1 = new WebRtcEndpoint(
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, trackerNode1),
             new MetricsContext('node-endpoint1'),
             new NegotiatedProtocolVersions(peerInfo1),
+            NodeWebRtcConnectionFactory,
             5000
         )
-        ep2 = new NodeWebRtcEndpoint(
+        ep2 = new WebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, trackerNode2),
             new MetricsContext('node-endpoint2'),
             new NegotiatedProtocolVersions(peerInfo2),
+            NodeWebRtcConnectionFactory,
             5000
         )
-        ep3 = new NodeWebRtcEndpoint(
+        ep3 = new WebRtcEndpoint(
             peerInfo3,
             [],
             new RtcSignaller(peerInfo3, trackerNode3),
             new MetricsContext('node-endpoint3'),
             new NegotiatedProtocolVersions(peerInfo3),
+            NodeWebRtcConnectionFactory,
             5000
         )
         nodeToNode1 = new NodeToNode(ep1)

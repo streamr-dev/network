@@ -1,5 +1,4 @@
 import { Event } from '../../src/connection/IWebRtcEndpoint'
-import { NodeWebRtcEndpoint } from '../../src/connection/NodeWebRtcEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
@@ -9,13 +8,15 @@ import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { wait } from 'streamr-test-utils'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { NodeWebRtcConnectionFactory } from '../../src/connection/webRtcConnectionFactories'
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
     let trackerNode1: TrackerNode
     let trackerNode2: TrackerNode
-    let ep1: NodeWebRtcEndpoint
-    let ep2: NodeWebRtcEndpoint
+    let ep1: WebRtcEndpoint
+    let ep2: WebRtcEndpoint
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -36,19 +37,21 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         await trackerNode2.connectToTracker(tracker.getAddress())
 
         // Set up WebRTC endpoints
-        ep1 = new NodeWebRtcEndpoint(
+        ep1 = new WebRtcEndpoint(
             peerInfo1,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, trackerNode1),
             new MetricsContext('ep1'),
-            new NegotiatedProtocolVersions(peerInfo1)
+            new NegotiatedProtocolVersions(peerInfo1),
+            NodeWebRtcConnectionFactory
         )
-        ep2 = new NodeWebRtcEndpoint(
+        ep2 = new WebRtcEndpoint(
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo2, trackerNode2),
             new MetricsContext('ep'),
-            new NegotiatedProtocolVersions(peerInfo2)
+            new NegotiatedProtocolVersions(peerInfo2),
+            NodeWebRtcConnectionFactory
         )
         await ep1.connect('ep2', 'tracker')
     })
