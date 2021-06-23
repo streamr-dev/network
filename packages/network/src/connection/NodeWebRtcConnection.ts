@@ -63,25 +63,6 @@ function DataChannelEmitter(dataChannel: DataChannel) {
     return emitter
 }
 
-/**
- * Strict types for EventEmitter interface.
- */
-interface Events {
-    localDescription: (type: DescriptionType, description: string) => void
-    localCandidate: (candidate: string, mid: string) => void
-    open: () => void
-    message: (msg: string)  => void
-    close: (err?: Error) => void
-    error: (err: Error) => void
-    bufferLow: () => void
-    bufferHigh: () => void
-}
-
-// reminder: only use Connection emitter for external handlers
-// to make it safe for consumers to call removeAllListeners
-// i.e. no this.on('event')
-export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
-
 export class NodeWebRtcConnection extends WebRtcConnection {
 
     private connection: PeerConnection | null
