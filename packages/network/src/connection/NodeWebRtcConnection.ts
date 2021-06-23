@@ -223,11 +223,11 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private onLocalDescription(description: string, type: DescriptionType): void {
-        this.emit('localDescription', type, description)
+        this.emitLocalDescription(description, type)
     }
 
     private onLocalCandidate(candidate: string, mid: string): void {
-        this.emit('localCandidate', candidate, mid)
+        this.emitLocalCandidate(candidate, mid)
     }
 
     private setupDataChannel(dataChannel: DataChannel): void {

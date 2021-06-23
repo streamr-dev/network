@@ -423,7 +423,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected abstract doSendMessage(message: string): boolean
 
     /**
-     * Subclass should call this method when the connection has opened!
+     * Subclass should call this method when the connection has opened.
      */
     protected emitOpen(): void {
         if (this.connectionTimeoutRef !== null) {
@@ -436,6 +436,20 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
         this.setFlushRef()
         this.emit('open')
+    }
+
+    /**
+     * Subclass should call this method when a new local description is available.
+     */
+    protected emitLocalDescription(description: string, type: string): void {
+        this.emit('localDescription', type, description)
+    }
+
+    /**
+     * Subclass should call this method when a new local candidate is available.
+     */
+    protected emitLocalCandidate(candidate: string, mid: string): void {
+        this.emit('localCandidate', candidate, mid)
     }
 
     /**
