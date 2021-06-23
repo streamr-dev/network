@@ -2,7 +2,12 @@
   "extends": "@streamr/dev-config/ts/tsconfig.node.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDirs": ["src", "test"]
+    "rootDirs": ["src", "test"],
+    "types": [
+      "puppeteer",
+      "jest-environment-puppeteer",
+      "expect-puppeteer"
+    ]
   },
   "include": [
     "src/**/*",
