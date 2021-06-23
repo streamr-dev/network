@@ -97,6 +97,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     private connectionTimeoutRef: NodeJS.Timeout | null
     private pingTimeoutRef: NodeJS.Timeout | null
     private deferredConnectionAttempt: DeferredConnectionAttempt | null
+    private paused: boolean
     private isFinished: boolean
 
     protected readonly logger: Logger
@@ -104,7 +105,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly selfId: string
     protected readonly stunUrls: string[]
     protected readonly newConnectionTimeout: number
-    protected paused: boolean
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
     protected pingAttempts = 0
@@ -145,7 +145,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.deferredConnectionAttempt = deferredConnectionAttempt
         this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
         this.isFinished = false
-
         this.paused = false
 
         this.flushTimeoutRef = null
@@ -251,15 +250,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         return this.messageQueue.add(message)
     }
 
-    protected setFlushRef(): void {
-        if (this.flushRef === null) {
-            this.flushRef = setImmediate(() => {
-                this.flushRef = null
-                this.attemptToFlushMessages()
-            })
-        }
-    }
-
     setPeerInfo(peerInfo: PeerInfo): void {
         this.peerInfo = peerInfo
     }
@@ -321,6 +311,15 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
     isOffering(): boolean {
         return isOffering(this.selfId, this.peerInfo.peerId)
+    }
+
+    private setFlushRef(): void {
+        if (this.flushRef === null) {
+            this.flushRef = setImmediate(() => {
+                this.flushRef = null
+                this.attemptToFlushMessages()
+            })
+        }
     }
    
     private attemptToFlushMessages(): void {
@@ -450,6 +449,18 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
      */
     protected emitLocalCandidate(candidate: string, mid: string): void {
         this.emit('localCandidate', candidate, mid)
+    }
+
+    /**
+     * Subclass should call this method when backpressure has reached low watermark.
+     */
+    protected emitLowBackpressure(): void {
+        if (!this.paused) {
+            return
+        }
+        this.paused = false
+        this.setFlushRef()
+        this.emit('bufferLow')
     }
 
     /**

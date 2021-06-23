@@ -231,7 +231,6 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private setupDataChannel(dataChannel: DataChannel): void {
-        this.paused = false
         this.dataChannelEmitter = DataChannelEmitter(dataChannel)
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         this.dataChannelEmitter.on('open', () => {
@@ -249,10 +248,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         })
 
         this.dataChannelEmitter.on('bufferedAmountLow', () => {
-            if (!this.paused) { return }
-            this.paused = false
-            this.setFlushRef()
-            this.emit('bufferLow')
+            this.emitLowBackpressure()
         })
 
         this.dataChannelEmitter.on('message', (msg) => {
