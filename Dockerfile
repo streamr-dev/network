@@ -2,7 +2,7 @@ FROM node:14-buster as build
 WORKDIR /usr/src/monorepo
 COPY . .
 RUN npm ci
-RUN npm run bootstrap-pkg streamr-broker
+RUN npm run bootstrap
 # Build TypeScript files ("npm ci" doesn't trigger the build automatically: https://github.com/npm/npm/issues/17346)
 RUN (cd packages/broker && npm run build)
 
