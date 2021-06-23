@@ -356,14 +356,14 @@ describe('WebRtcEndpoint', () => {
                 )
 
                 await runAndWaitForEvents([
-                        () => {
-                            endpoint1.connect('node-2', 'tracker')
-                        },
-                        () => {
-                            endpoint2.connect('node-1', 'tracker')
-                        }],
-                    [endpoint1, EndpointEvent.PEER_CONNECTED],
-                    30000
+                    () => {
+                        endpoint1.connect('node-2', 'tracker')
+                    },
+                    () => {
+                        endpoint2.connect('node-1', 'tracker')
+                    }],
+                [endpoint1, EndpointEvent.PEER_CONNECTED],
+                30000
                 )
             }
 
