@@ -70,7 +70,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     private dataChannelEmitter?: EventEmitter
     private connectionEmitter?: EventEmitter
     private lastState?: string
-    protected lastGatheringState?: string
+    private lastGatheringState?: string
 
     constructor(opts: ConstructorOptions) {
         super(opts)
