@@ -78,7 +78,6 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         this.onStateChange = this.onStateChange.bind(this)
         this.onLocalCandidate = this.onLocalCandidate.bind(this)
         this.onLocalDescription = this.onLocalDescription.bind(this)
-        this.onStateChange = this.onStateChange.bind(this)
         this.onGatheringStateChange = this.onGatheringStateChange.bind(this)
         this.onDataChannel = this.onDataChannel.bind(this)
         
