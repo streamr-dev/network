@@ -130,6 +130,10 @@ export class Contracts {
         return new Contract(this.binanceAdapterAddress, binanceAdapterABI, await this.ethereum.getSidechainSigner())
     }
 
+    getBinanceAdapterReadOnly() {
+        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, this.ethereum.getSidechainProvider())
+    }
+
     async getBinanceSmartChainAmb(binanceSenderPrivateKey: BytesLike) {
         const signer = new Wallet(binanceSenderPrivateKey, this.ethereum.getBinanceProvider())
         return new Contract(this.binanceSmartChainAMBAddress, mainnetAmbABI, signer)

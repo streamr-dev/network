@@ -283,21 +283,7 @@ export class DataUnion {
     ): Promise<string> {
         const to = getAddress(recipientAddress) // throws if bad address
         const signer = this.client.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
-        return this._createSetBinanceRecipientSignature(to, signer)
-    }
-
-    /** @internal */
-    async _createSetBinanceRecipientSignature(
-        to: EthereumAddress,
-        signer: Signer
-    ) {
-        const binanceAdapter : Contract = await this.getContracts().getBinanceAdapter()
-        const nextNonce = (await binanceAdapter.binanceRecipient(await signer.getAddress()))[1].add(BigNumber.from(1))
-        const message = to
-            + hexZeroPad(nextNonce.toHexString(), 32).slice(2)
-            + binanceAdapter.address.slice(2)
-        const signature = await signer.signMessage(arrayify(message))
-        return signature
+        return DataUnion._createSetBinanceRecipientSignature(to, signer, this.getContracts())
     }
 
     /** @internal */
@@ -701,11 +687,12 @@ export class DataUnion {
     static async _createSetBinanceRecipientSignature(
         to: EthereumAddress,
         signer: Signer,
-        client: StreamrClient
+        ethereumUtils: Contracts, // TODO: rename Contracts class to EthereumUtils or something "descriptive"/non-confusing like that (see ETH-101)
     ) {
-        const contracts = new Contracts(client)
-        const binanceAdapter: Contract = await contracts.getBinanceAdapter()
-        const nextNonce = (await binanceAdapter.binanceRecipient(await signer.getAddress()))[1].add(BigNumber.from(1))
+        const binanceAdapter: Contract = ethereumUtils.getBinanceAdapterReadOnly()
+        const senderAddress = await signer.getAddress()
+        const currentNonce: BigNumber = (await binanceAdapter.binanceRecipient(senderAddress))[1]
+        const nextNonce = currentNonce.add(1)
         const message = to
             + hexZeroPad(nextNonce.toHexString(), 32).slice(2)
             + binanceAdapter.address.slice(2)
@@ -716,7 +703,7 @@ export class DataUnion {
     /** @internal */
     static async _getBinanceDepositAddress(userAddress: string, client: StreamrClient) {
         const contracts = new Contracts(client)
-        const adapter = await contracts.getBinanceAdapter()
+        const adapter = contracts.getBinanceAdapterReadOnly()
         const recip = (await adapter.binanceRecipient(userAddress))[0]
         if (recip === AddressZero) {
             return undefined
@@ -735,7 +722,8 @@ export class DataUnion {
     /** @internal */
     static async _setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike, client: StreamrClient) {
         const contracts = new Contracts(client)
-        const tx = await (await contracts.getBinanceAdapter()).setBinanceRecipientFromSig(from, binanceRecipient, signature)
+        const adapter = await contracts.getBinanceAdapter()
+        const tx = await adapter.setBinanceRecipientFromSig(from, binanceRecipient, signature)
         return tx.wait()
     }
 
