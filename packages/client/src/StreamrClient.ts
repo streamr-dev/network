@@ -24,7 +24,7 @@ import { getAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
 import { StreamPartDefinition, GroupKey } from './stream'
 import { BytesLike } from '@ethersproject/bytes'
-import { Contracts } from './dataunion/Contracts'
+import Contracts from './dataunion/Contracts'
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
 export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>

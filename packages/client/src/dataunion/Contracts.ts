@@ -20,7 +20,7 @@ function validateAddress(name: string, address: EthereumAddress) {
     }
 }
 
-export class Contracts {
+export default class Contracts {
 
     ethereum: StreamrEthereum
     factoryMainnetAddress: EthereumAddress

@@ -13,7 +13,7 @@ import { Debug } from '../utils/log'
 import { getEndpointUrl, sleep, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
-import { Contracts } from './Contracts'
+import Contracts from './Contracts'
 import { erc20AllowanceAbi } from './abi'
 
 export interface DataUnionDeployOptions {
