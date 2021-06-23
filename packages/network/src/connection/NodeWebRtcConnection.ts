@@ -253,14 +253,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
         this.dataChannelEmitter.on('message', (msg) => {
             this.logger.trace('dc.onmessage')
-            if (msg === 'ping') {
-                this.pong()
-            } else if (msg === 'pong') {
-                this.pingAttempts = 0
-                this.rtt = Date.now() - this.rttStart!
-            } else {
-                this.emit('message', msg.toString()) // TODO: what if we get binary?
-            }
+            this.emitMessage(msg.toString())
         })
     }
 

@@ -452,6 +452,20 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     }
 
     /**
+     * Subclass should call this method when it has received a message.
+     */
+    protected emitMessage(msg: string): void {
+        if (msg === 'ping') {
+            this.pong()
+        } else if (msg === 'pong') {
+            this.pingAttempts = 0
+            this.rtt = Date.now() - this.rttStart!
+        } else {
+            this.emit('message', msg)
+        }
+    }
+
+    /**
      * Subclass should call this method when backpressure has reached low watermark.
      */
     protected emitLowBackpressure(): void {
