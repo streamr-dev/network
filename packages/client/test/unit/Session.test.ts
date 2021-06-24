@@ -3,7 +3,7 @@ import sinon from 'sinon'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
-import config from '../integration/config'
+import clientOptions from '../integration/config'
 import { Todo } from '../../src/types'
 
 describe('Session', () => {
@@ -12,7 +12,7 @@ describe('Session', () => {
     let clientSessionToken: Todo
 
     const createClient = (opts = {}) => new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         autoConnect: false,
         autoDisconnect: false,
         ...opts,

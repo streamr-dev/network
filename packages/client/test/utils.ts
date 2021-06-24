@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 
 import { wait } from 'streamr-test-utils'
-import { providers, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { PublishRequest } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
@@ -12,7 +12,7 @@ import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
 import type { StreamPartDefinitionOptions, StreamProperties } from '../src/stream'
 import { StreamrClient } from '../src/StreamrClient'
-import config from './integration/config'
+import clientOptions from './integration/config'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -358,10 +358,10 @@ export function getPublishTestMessages(client: StreamrClient, defaultOptsOrStrea
 
 export const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
 
-export const createClient = (providerSidechain?: providers.JsonRpcProvider) => {
-    const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
+export function getRandomClient() {
+    const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`)
     return new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         auth: {
             privateKey: wallet.privateKey
         }

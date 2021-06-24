@@ -7,6 +7,7 @@ import legacyWebsocketPluginDefinition from './plugins/legacyWebsocket/Websocket
 import mqttPluginDefinition from './plugins/mqtt/MqttPlugin'
 import legacyMqttPluginDefinition from './plugins/legacyMqtt/MqttPlugin'
 import storagePluginDefinition from './plugins/storage/StoragePlugin'
+import testnetMinerPluginDefinition from './plugins/testnetMiner/TestnetMinerPlugin'
 
 const DEFINITIONS: readonly PluginDefinition<any>[] = [
     publishHttpPluginDefinition,
@@ -16,7 +17,8 @@ const DEFINITIONS: readonly PluginDefinition<any>[] = [
     legacyWebsocketPluginDefinition,
     mqttPluginDefinition,
     legacyMqttPluginDefinition,
-    storagePluginDefinition
+    storagePluginDefinition,
+    testnetMinerPluginDefinition
 ]
 
 export const getPluginDefinition = (name: string): PluginDefinition<any>|never => {
