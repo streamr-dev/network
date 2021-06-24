@@ -35,7 +35,7 @@ Used to subscribe to a stream and output real-time JSON objects to stdout line-b
 
 For example, to subscribe to a public stream such as the tram demo do
 ```
-streamr stream subscribe 7wa7APtlTq6EC5iTCBy6dw
+streamr stream subscribe streamr.eth/demos/helsinki-trams
 ```
 
 To subscribe to a private stream and authenticate with an Ethereum private key:
@@ -96,7 +96,7 @@ Request a resend of historical data printed as JSON objects to stdout line-by-li
 
 For example, to fetch the 10 latest messages of a public stream such as the tram demo do
 ```
-streamr stream resend last 10 7wa7APtlTq6EC5iTCBy6dw
+streamr stream resend last 10 streamr.eth/demos/helsinki-trams
 ```
 
 
@@ -123,7 +123,7 @@ You can pipe the line-by-line JSON objects output by `subscribe` to
 your program written in any language. Just make the program read JSON objects
 from stdin.
 ```
-streamr stream subscribe 7wa7APtlTq6EC5iTCBy6dw | ruby calculate-average-speed.rb
+streamr stream subscribe streamr.eth/demos/helsinki-trams | ruby calculate-average-speed.rb
 ```
 
 #### Publishing to a stream from any programming language
@@ -148,12 +148,12 @@ If you have a working stream in production that you'd also like to use in your
 development environment, you can combine the `subscribe` and `publish` commands to effectively copy
 the real-time events.
 ```
-streamr stream subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr stream publish --dev <streamId> --private-key <key>
+streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish --dev <streamId> --private-key <key>
 ```
 
 And the same for staging environment:
 ```
-streamr stream subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr stream publish --stg <streamId> --private-key <key>
+streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish --stg <streamId> --private-key <key>
 ```
 
 ## Develop
