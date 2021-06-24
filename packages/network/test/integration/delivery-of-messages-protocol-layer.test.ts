@@ -11,8 +11,8 @@ import { RtcSignaller } from "../../src/logic/RtcSignaller"
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
-import { NodeWebRtcConnectionFactory } from '../../src/connection/webRtcConnectionFactories'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 

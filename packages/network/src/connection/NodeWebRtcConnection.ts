@@ -4,6 +4,7 @@ import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection
 import { ConstructorOptions, WebRtcConnection } from './WebRtcConnection'
 import { Logger } from "../helpers/Logger"
 import { NameDirectory } from "../NameDirectory"
+import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 
 nodeDataChannel.initLogger("Error" as LogLevel)
 
@@ -64,6 +65,15 @@ function DataChannelEmitter(dataChannel: DataChannel) {
     dataChannel.onMessage((...args: HandlerParameters<DataChannel['onMessage']>) => emitter.emit('message', ...args))
     return emitter
 }
+
+export const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+    createConnection(opts: ConstructorOptions): WebRtcConnection {
+        return new NodeWebRtcConnection(opts)
+    },
+    cleanUp(): void {
+        nodeDataChannel.cleanup()
+    }
+})
 
 export class NodeWebRtcConnection extends WebRtcConnection {
     private readonly logger: Logger

@@ -15,7 +15,7 @@ import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from './connection/webRtcConnectionFactories'
+import { NodeWebRtcConnectionFactory } from "./connection/NodeWebRtcConnection"
 
 export {
     Location,

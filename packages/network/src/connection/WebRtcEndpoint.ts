@@ -17,7 +17,6 @@ import { MessageQueue } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
 import { NegotiatedProtocolVersions } from "./NegotiatedProtocolVersions"
 import { v4 as uuidv4 } from 'uuid'
-import { WebRtcConnectionFactory } from './webRtcConnectionFactories'
 
 class WebRtcError extends Error {
     constructor(msg: string) {
@@ -25,6 +24,11 @@ class WebRtcError extends Error {
         // exclude this constructor from stack trace
         Error.captureStackTrace(this, WebRtcError)
     }
+}
+
+export interface WebRtcConnectionFactory {
+    createConnection(opts: ConstructorOptions): WebRtcConnection
+    cleanUp(): void
 }
 
 export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
@@ -42,7 +46,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private stopped = false
     private readonly bufferThresholdLow: number
     private readonly bufferThresholdHigh: number
-    private maxMessageSize
+    private readonly maxMessageSize
 
     constructor(
         peerInfo: PeerInfo,

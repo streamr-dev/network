@@ -11,7 +11,7 @@ import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from '../../src/connection/webRtcConnectionFactories'
+import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
