@@ -1,7 +1,7 @@
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin, PluginDefinition, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
@@ -94,8 +94,15 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             this.storageConfig!.cleanup()
         ])
     }
+}
 
-    getConfigSchema() {
+const DEFINITION: PluginDefinition<StoragePluginConfig> = {
+    name: 'storage',
+    createInstance: (options: PluginOptions) => {
+        return new StoragePlugin(options)
+    },
+    getConfigSchema: () => {
         return PLUGIN_CONFIG_SCHEMA
     }
 }
+export default DEFINITION

@@ -1,5 +1,5 @@
 import { router as dataProduceEndpoints } from './DataProduceEndpoints'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin, PluginDefinition, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 
 export class PublishHttpPlugin extends Plugin<void> {
@@ -16,3 +16,14 @@ export class PublishHttpPlugin extends Plugin<void> {
     async stop() {
     }
 }
+
+const DEFINITION: PluginDefinition<void> = {
+    name: 'legacyPublishHttp',
+    createInstance: (options: PluginOptions) => {
+        return new PublishHttpPlugin(options)
+    },
+    getConfigSchema: () => {
+        return undefined
+    }
+}
+export default DEFINITION

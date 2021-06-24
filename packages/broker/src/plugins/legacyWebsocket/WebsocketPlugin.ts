@@ -1,7 +1,7 @@
 import ws from 'uWebSockets.js'
 import { MissingConfigError } from '../../errors/MissingConfigError'
 import { WebsocketServer } from './WebsocketServer'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin, PluginDefinition, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
@@ -50,8 +50,15 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
     async stop() {
         return this.websocketServer!.close()
     }
+}
 
-    getConfigSchema() {
+const DEFINITION: PluginDefinition<WebsocketPluginConfig> = {
+    name: 'legacyWebsocket',
+    createInstance: (options: PluginOptions) => {
+        return new WebsocketPlugin(options)
+    },
+    getConfigSchema: () => {
         return PLUGIN_CONFIG_SCHEMA
     }
 }
+export default DEFINITION

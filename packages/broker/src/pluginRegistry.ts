@@ -1,32 +1,32 @@
-import { PluginOptions } from './Plugin'
-import { PublishHttpPlugin } from './plugins/publishHttp/PublishHttpPlugin'
-import { PublishHttpPlugin as LegacyPublishHttpPlugin } from './plugins/legacyPublishHttp/PublishHttpPlugin'
-import { MetricsPlugin } from './plugins/metrics/MetricsPlugin'
-import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
-import { WebsocketPlugin as LegacyWebsocketPlugin } from './plugins/legacyWebsocket/WebsocketPlugin'
-import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
-import { MqttPlugin as LegacyMqttPlugin } from './plugins/legacyMqtt/MqttPlugin'
-import { StoragePlugin } from './plugins/storage/StoragePlugin'
+import { PluginDefinition, PluginOptions } from './Plugin'
+import publishHttpPluginDefinition from './plugins/publishHttp/PublishHttpPlugin'
+import legacyPublishHttpPluginDefinition from './plugins/legacyPublishHttp/PublishHttpPlugin'
+import metricsPluginDefinition from './plugins/metrics/MetricsPlugin'
+import websocketPluginDefinition from './plugins/websocket/WebsocketPlugin'
+import legacyWebsocketPluginDefinition from './plugins/legacyWebsocket/WebsocketPlugin'
+import mqttPluginDefinition from './plugins/mqtt/MqttPlugin'
+import legacyMqttPluginDefinition from './plugins/legacyMqtt/MqttPlugin'
+import storagePluginDefinition from './plugins/storage/StoragePlugin'
+
+const DEFINITIONS: readonly PluginDefinition<any>[] = [
+    publishHttpPluginDefinition,
+    legacyPublishHttpPluginDefinition,
+    metricsPluginDefinition,
+    websocketPluginDefinition,
+    legacyWebsocketPluginDefinition,
+    mqttPluginDefinition,
+    legacyMqttPluginDefinition,
+    storagePluginDefinition
+]
+
+export const getPluginDefinition = (name: string): PluginDefinition<any>|never => {
+    const definition = DEFINITIONS.find((d: PluginDefinition<any>) => d.name == name) 
+    if (definition === undefined) {
+        throw new Error(`Unknown plugin: ${name}`)
+    }
+    return definition
+}
 
 export const createPlugin = (name: string, pluginOptions: PluginOptions) => {
-    switch (name) {
-        case 'publishHttp':
-            return new PublishHttpPlugin(pluginOptions)
-        case 'legacyPublishHttp':
-            return new LegacyPublishHttpPlugin(pluginOptions)
-        case 'metrics':
-            return new MetricsPlugin(pluginOptions)
-        case 'websocket':
-            return new WebsocketPlugin(pluginOptions)
-        case 'legacyWebsocket':
-            return new LegacyWebsocketPlugin(pluginOptions)
-        case 'mqtt':
-            return new MqttPlugin(pluginOptions)
-        case 'legacyMqtt':
-            return new LegacyMqttPlugin(pluginOptions)
-        case 'storage':
-            return new StoragePlugin(pluginOptions)
-        default:
-            throw new Error(`Unknown plugin: ${name}`)
-    }
+    return getPluginDefinition(name).createInstance(pluginOptions)
 }

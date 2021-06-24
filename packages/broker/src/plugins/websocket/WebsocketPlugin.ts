@@ -1,4 +1,4 @@
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin, PluginDefinition, PluginOptions } from '../../Plugin'
 import { SslCertificateConfig } from '../../types'
 import { WebsocketServer } from './WebsocketServer'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -27,8 +27,15 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
     async stop() {
         await this.server!.stop()
     }
+}
 
-    getConfigSchema() {
+const DEFINITION: PluginDefinition<WebsocketPluginConfig> = {
+    name: 'websocket',
+    createInstance: (options: PluginOptions) => {
+        return new WebsocketPlugin(options)
+    },
+    getConfigSchema: () => {
         return PLUGIN_CONFIG_SCHEMA
     }
 }
+export default DEFINITION

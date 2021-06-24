@@ -2,7 +2,7 @@ import net from 'net'
 import { MissingConfigError } from '../../errors/MissingConfigError'
 import { Logger } from 'streamr-network'
 import { MqttServer } from './MqttServer'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin, PluginDefinition, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
@@ -42,8 +42,15 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
     async stop() {
         return this.mqttServer!.close()
     }
+}
 
-    getConfigSchema() {
+const DEFINITION: PluginDefinition<MqttPluginConfig> = {
+    name: 'legacyMqtt',
+    createInstance: (options: PluginOptions) => {
+        return new MqttPlugin(options)
+    },
+    getConfigSchema: () => {
         return PLUGIN_CONFIG_SCHEMA
     }
 }
+export default DEFINITION

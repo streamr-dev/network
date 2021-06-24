@@ -3,7 +3,6 @@ import { Config } from './config'
 import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
 import express from 'express'
-import { validateConfig } from './helpers/validateConfig'
 import { Schema } from 'ajv'
 import { StreamrClient } from 'streamr-client'
 import { ApiAuthenticator } from './apiAuthenticator'
@@ -46,10 +45,6 @@ export abstract class Plugin<T> {
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]
         this.storageNodeRegistry = options.storageNodeRegistry
-        const configSchema = this.getConfigSchema()
-        if (configSchema !== undefined) {
-            validateConfig(this.pluginConfig, configSchema, `${this.name} plugin`)
-        }
     }
 
     addHttpServerRouter(router: express.Router): void {
@@ -70,8 +65,10 @@ export abstract class Plugin<T> {
      * It is be called only if the plugin was started successfully
      */
     abstract stop(): Promise<unknown>
+}
 
-    getConfigSchema(): Schema|undefined {
-        return undefined
-    }
+export interface PluginDefinition<T> {
+    name: string,
+    createInstance(options: PluginOptions): Plugin<T>
+    getConfigSchema(): Schema|undefined
 }

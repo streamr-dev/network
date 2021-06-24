@@ -1,5 +1,5 @@
 import { createEndpoint } from './publishEndpoint'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin, PluginDefinition, PluginOptions } from '../../Plugin'
 
 export class PublishHttpPlugin extends Plugin<void> {
 
@@ -17,3 +17,14 @@ export class PublishHttpPlugin extends Plugin<void> {
     async stop() {
     }
 }
+
+const DEFINITION: PluginDefinition<void> = {
+    name: 'publishHttp',
+    createInstance: (options: PluginOptions) => {
+        return new PublishHttpPlugin(options)
+    },
+    getConfigSchema: () => {
+        return undefined
+    }
+}
+export default DEFINITION

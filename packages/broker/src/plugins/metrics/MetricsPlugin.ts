@@ -1,5 +1,5 @@
 import { router as volumeEndpoint } from './VolumeEndpoint'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin, PluginDefinition, PluginOptions } from '../../Plugin'
 
 export class MetricsPlugin extends Plugin<void> {
 
@@ -14,3 +14,14 @@ export class MetricsPlugin extends Plugin<void> {
     async stop() {
     }
 }
+
+const DEFINITION: PluginDefinition<void> = {
+    name: 'metrics',
+    createInstance: (options: PluginOptions) => {
+        return new MetricsPlugin(options)
+    },
+    getConfigSchema: () => {
+        return undefined
+    }
+}
+export default DEFINITION

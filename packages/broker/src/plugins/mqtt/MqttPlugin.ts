@@ -1,4 +1,4 @@
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin, PluginDefinition, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { MqttServer } from './MqttServer'
 import { Bridge } from './Bridge'
@@ -29,8 +29,15 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
     async stop() {
         await this.server!.stop()
     }
+}
 
-    getConfigSchema() {
+const DEFINITION: PluginDefinition<MqttPluginConfig> = {
+    name: 'mqtt',
+    createInstance: (options: PluginOptions) => {
+        return new MqttPlugin(options)
+    },
+    getConfigSchema: () => {
         return PLUGIN_CONFIG_SCHEMA
     }
 }
+export default DEFINITION

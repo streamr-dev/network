@@ -9,12 +9,11 @@ import { Publisher } from './Publisher'
 import { VolumeLogger } from './VolumeLogger'
 import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
-import { validateConfig } from './helpers/validateConfig'
+import { validateBrokerConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
 import { Config, NetworkSmartContract, StorageNodeRegistryItem } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
-import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
 import { StorageNodeRegistry } from "./StorageNodeRegistry"
@@ -29,7 +28,7 @@ export interface Broker {
 }
 
 export const startBroker = async (config: Config): Promise<Broker> => {
-    validateConfig(config, BROKER_CONFIG_SCHEMA)
+    validateBrokerConfig(config)
 
     logger.info(`Starting broker version ${CURRENT_VERSION}`)
 
