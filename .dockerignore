@@ -3,9 +3,4 @@
 **/test
 **/.idea/
 **/*.iml
-.*
-**/*.png
-**/*.md
-**/*.xml
-**/LICENSE
 **/jest.config.js
