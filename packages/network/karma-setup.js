@@ -9,6 +9,6 @@ window.test.each = (inputs) => (testName, test) =>
     inputs.forEach((args) => window.it(testName, () => test(...args)))
 window.test.todo = function () {
     return undefined
-};
+}
 window.jest = jest
 window.expect = expect

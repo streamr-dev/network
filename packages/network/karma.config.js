@@ -1,5 +1,7 @@
 const webpack = require('webpack')
 const path = require('path')
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
+require('console-browserify')
 
 module.exports = function (config) {
     config.set({
@@ -46,19 +48,23 @@ module.exports = function (config) {
                     },
                 ],
             },
+            plugins: [
+                new NodePolyfillPlugin(),
+            ],
             resolve: {
                 extensions: ['.tsx', '.ts', '.js'],
                 fallback: {
                     "fs": false,
+                    "graceful-fs": false,
                     "events": false,
                     "path": false,
                     "constants": false,
                     "assert": false,
-                //     "http": false,
+                    "http": false,
                     "stream": false,
                     "util": false,
                     "module": false,
-                //     "child-process": false,
+                    "console-browserify": require.resolve('console-browserify'),
                 }
             },
             output: {
