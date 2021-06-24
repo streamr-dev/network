@@ -1,4 +1,5 @@
 import * as commander from 'commander'
+import { Wallet } from 'ethers'
 import { StreamrClientOptions } from 'streamr-client'
 
 export interface EnvironmentOptions {
@@ -90,4 +91,20 @@ export function createFnParseInt(name: string): (s: string) => number {
         }
         return n
     }
+}
+
+export const createStreamId = (streamIdOrPath: string|undefined, options: any) => {
+    if (streamIdOrPath === undefined) {
+        return undefined
+    }
+    const PATH_PREFIX = '/'
+    if (!streamIdOrPath.startsWith(PATH_PREFIX)) {
+        return streamIdOrPath
+    }
+    const privateKey = options.privateKey
+    if (privateKey === undefined) {
+        console.error(`relative stream id ${streamIdOrPath} requires authentication`)
+        process.exit(1)
+    }
+    return new Wallet(privateKey).address.toLowerCase() + streamIdOrPath
 }
