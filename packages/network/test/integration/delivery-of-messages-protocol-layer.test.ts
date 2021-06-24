@@ -1,7 +1,6 @@
 import { MessageLayer, ControlLayer, TrackerLayer } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
-import { NodeWebRtcEndpoint } from "../../src/connection/NodeWebRtcEndpoint"
 import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { StreamIdAndPartition } from '../../src/identifiers'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
@@ -12,6 +11,8 @@ import { RtcSignaller } from "../../src/logic/RtcSignaller"
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -39,19 +40,21 @@ describe('delivery of messages in protocol layer', () => {
         trackerNode = new TrackerNode(wsEndpoint1)
         trackerNode2 = new TrackerNode(wsEndpoint2)
 
-        const wrtcEndpoint1 = new NodeWebRtcEndpoint(
+        const wrtcEndpoint1 = new WebRtcEndpoint(
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, trackerNode),
             new MetricsContext('node1'),
-            new NegotiatedProtocolVersions(peerInfo1)
+            new NegotiatedProtocolVersions(peerInfo1),
+            NodeWebRtcConnectionFactory
         )
-        const wrtcEndpoint2 =  new NodeWebRtcEndpoint(
+        const wrtcEndpoint2 =  new WebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, trackerNode2),
             new MetricsContext('node2'),
-            new NegotiatedProtocolVersions(peerInfo2)
+            new NegotiatedProtocolVersions(peerInfo2),
+            NodeWebRtcConnectionFactory
         )
 
         // @ts-expect-error: private field

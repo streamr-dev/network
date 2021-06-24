@@ -2,6 +2,9 @@ import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
 import { ConstructorOptions, WebRtcConnection } from './WebRtcConnection'
+import { Logger } from "../helpers/Logger"
+import { NameDirectory } from "../NameDirectory"
+import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 
 nodeDataChannel.initLogger("Error" as LogLevel)
 
@@ -63,41 +66,33 @@ function DataChannelEmitter(dataChannel: DataChannel) {
     return emitter
 }
 
-/**
- * Strict types for EventEmitter interface.
- */
-interface Events {
-    localDescription: (type: DescriptionType, description: string) => void
-    localCandidate: (candidate: string, mid: string) => void
-    open: () => void
-    message: (msg: string)  => void
-    close: (err?: Error) => void
-    error: (err: Error) => void
-    bufferLow: () => void
-    bufferHigh: () => void
-}
-
-// reminder: only use Connection emitter for external handlers
-// to make it safe for consumers to call removeAllListeners
-// i.e. no this.on('event')
-export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
+export const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+    createConnection(opts: ConstructorOptions): WebRtcConnection {
+        return new NodeWebRtcConnection(opts)
+    },
+    cleanUp(): void {
+        nodeDataChannel.cleanup()
+    }
+})
 
 export class NodeWebRtcConnection extends WebRtcConnection {
-
+    private readonly logger: Logger
     private connection: PeerConnection | null
     private dataChannel: DataChannel | null
     private dataChannelEmitter?: EventEmitter
     private connectionEmitter?: EventEmitter
-    
+    private lastState?: string
+    private lastGatheringState?: string
+
     constructor(opts: ConstructorOptions) {
         super(opts)
 
+        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
         this.connection = null
         this.dataChannel = null
         this.onStateChange = this.onStateChange.bind(this)
         this.onLocalCandidate = this.onLocalCandidate.bind(this)
         this.onLocalDescription = this.onLocalDescription.bind(this)
-        this.onStateChange = this.onStateChange.bind(this)
         this.onGatheringStateChange = this.onGatheringStateChange.bind(this)
         this.onDataChannel = this.onDataChannel.bind(this)
         
@@ -107,13 +102,9 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         return this.dataChannel!.sendMessage(message)
     }
 
-    connect(): void {
-        if (this.isFinished) {
-            throw new Error('Connection already closed.')
-        }
-
+    protected doConnect(): void {
         this.connection = new nodeDataChannel.PeerConnection(this.selfId, {
-            iceServers: this.stunUrls,
+            iceServers: [...this.stunUrls],
             maxMessageSize: this.maxMessageSize
         })
 
@@ -130,12 +121,6 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         } else {
             this.connectionEmitter.on('dataChannel', this.onDataChannel)
         }
-
-        this.connectionTimeoutRef = setTimeout(() => {
-            if (this.isFinished) { return }
-            this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
-            this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
-        }, this.newConnectionTimeout)
     }
 
     setRemoteDescription(description: string, type: DescriptionType): void {
@@ -162,20 +147,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         }
     }
 
-    close(err?: Error): void {
-        if (this.isFinished) {
-            // already closed, noop
-            return
-        }
-
-        this.isFinished = true
-
-        if (err) {
-            this.logger.warn('conn.close(): %s', err)
-        } else {
-            this.logger.trace('conn.close()')
-        }
-
+    protected doClose(_err?: Error): void {
         if (this.connectionEmitter) {
             this.connectionEmitter.removeAllListeners()
         }
@@ -202,8 +174,8 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
         this.dataChannel = null
         this.connection = null
-
-        this.doClose()
+        this.lastState = undefined
+        this.lastGatheringState = undefined
     }
 
     getBufferedAmount(): number {
@@ -230,6 +202,14 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         }
     }
 
+    getLastState(): string | undefined {
+        return this.lastState
+    }
+
+    getLastGatheringState(): string | undefined {
+        return this.lastGatheringState
+    }
+
     private onStateChange(state: string): void {
         this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
 
@@ -240,13 +220,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         } else if (state === 'failed') {
             this.close(new Error('connection failed'))
         } else if (state === 'connecting') {
-            // reset timeout on connecting
-            clearTimeout(this.connectionTimeoutRef!)
-            this.connectionTimeoutRef = setTimeout(() => {
-                if (this.isFinished) { return }
-                this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
-                this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
-            }, this.newConnectionTimeout)
+            this.restartConnectionTimeout()
         }
     }
 
@@ -262,15 +236,14 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private onLocalDescription(description: string, type: DescriptionType): void {
-        this.emit('localDescription', type, description)
+        this.emitLocalDescription(description, type)
     }
 
     private onLocalCandidate(candidate: string, mid: string): void {
-        this.emit('localCandidate', candidate, mid)
+        this.emitLocalCandidate(candidate, mid)
     }
 
     private setupDataChannel(dataChannel: DataChannel): void {
-        this.paused = false
         this.dataChannelEmitter = DataChannelEmitter(dataChannel)
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         this.dataChannelEmitter.on('open', () => {
@@ -288,31 +261,17 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         })
 
         this.dataChannelEmitter.on('bufferedAmountLow', () => {
-            if (!this.paused) { return }
-            this.paused = false
-            this.setFlushRef()
-            this.emit('bufferLow')
+            this.emitLowBackpressure()
         })
 
         this.dataChannelEmitter.on('message', (msg) => {
             this.logger.trace('dc.onmessage')
-            if (msg === 'ping') {
-                this.pong()
-            } else if (msg === 'pong') {
-                this.pingAttempts = 0
-                this.rtt = Date.now() - this.rttStart!
-            } else {
-                this.emit('message', msg.toString()) // TODO: what if we get binary?
-            }
+            this.emitMessage(msg.toString())
         })
     }
 
     private openDataChannel(dataChannel: DataChannel): void {
-        if (this.connectionTimeoutRef !== null) {
-            clearTimeout(this.connectionTimeoutRef)
-        }
         this.dataChannel = dataChannel
-        this.setFlushRef()
         this.emitOpen()
     }
 }
