@@ -176,7 +176,7 @@ export class Node extends EventEmitter {
         )
     }
 
-    onConnectedToTracker(tracker: string): void {
+    private onConnectedToTracker(tracker: string): void {
         this.logger.trace('connected to tracker %s', tracker)
         const serverUrl = this.trackerNode.getServerUrlByTrackerId(tracker)
         if (serverUrl !== undefined) {
@@ -207,7 +207,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    onTrackerInstructionReceived(trackerId: string, instructionMessage: TrackerLayer.InstructionMessage): void {
+    private onTrackerInstructionReceived(trackerId: string, instructionMessage: TrackerLayer.InstructionMessage): void {
         this.instructionThrottler.add(instructionMessage, trackerId)
     }
 
@@ -234,10 +234,8 @@ export class Node extends EventEmitter {
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            
-            await promiseTimeout(this.nodeConnectTimeout, 
+            await promiseTimeout(this.nodeConnectTimeout,
                 this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
-            
             this.clearDisconnectionTimer(nodeId)
             this.subscribeToStreamOnNode(nodeId, streamId, false)
             return nodeId
@@ -387,7 +385,6 @@ export class Node extends EventEmitter {
 
     stop(): Promise<unknown> {
         this.logger.trace('stopping')
-        
         this.instructionThrottler.stop()
         this.instructionRetryManager.stop()
 
@@ -498,7 +495,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    onNodeDisconnected(node: string): void {
+    private onNodeDisconnected(node: string): void {
         this.metrics.record('onNodeDisconnect', 1)
         const streams = this.streams.removeNodeFromAllStreams(node)
         this.logger.trace('removed all subscriptions of node %s', node)
@@ -511,7 +508,7 @@ export class Node extends EventEmitter {
         this.emit(Event.NODE_DISCONNECTED, node)
     }
 
-    onTrackerDisconnected(tracker: string): void {
+    private onTrackerDisconnected(tracker: string): void {
         this.logger.trace('disconnected from tracker %s', tracker)
     }
 

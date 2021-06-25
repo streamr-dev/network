@@ -33,7 +33,7 @@ export class Logger {
                 levelFirst: true,
             }
         }
-        this.logger = (destinationStream !== undefined) ? pino(options, destinationStream) : pino(options) 
+        this.logger = (destinationStream !== undefined) ? pino(options, destinationStream) : pino(options)
     }
 
     private static createName(module: NodeJS.Module, context?: string) {
