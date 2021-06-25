@@ -1,24 +1,17 @@
-import fs from 'fs'
-import path from 'path'
-
-import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
+import { startTracker, Tracker } from 'streamr-network'
 
-import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
-import { BrubeckClient } from '../../src/brubeck/BrubeckClient'
-import { Defer } from '../../src/utils'
-import Connection from '../../src/Connection'
+import { describeRepeats, uid, fakePrivateKey, Msg } from '../../utils'
+import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
+import Connection from '../../../src/Connection'
 
-import config from './config'
-import { Stream } from '../../src/stream'
-import { Subscription } from '../../src'
-import { StorageNode } from '../../src/stream/StorageNode'
+import config from '../config'
+import { Stream } from '../../../src/stream'
 
-const { StreamMessage } = MessageLayer
-
-const MAX_MESSAGES = 10
+const trackerPort = 30302
 
 describeRepeats('StreamrClient', () => {
+    let tracker: Tracker
     let expectErrors = 0 // check no errors by default
     let errors: any[] = []
 
@@ -29,7 +22,7 @@ describeRepeats('StreamrClient', () => {
     let onError = jest.fn()
     let client: BrubeckClient
 
-    const createClient = (opts = {}) => {
+    const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...config.clientOptions,
             auth: {
@@ -37,10 +30,14 @@ describeRepeats('StreamrClient', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
-            // disconnectDelay: 500,
-            // publishAutoDisconnectDelay: 250,
             maxRetries: 2,
             ...opts,
+            network: {
+                trackers: [
+                    `ws://127.0.0.1:${trackerPort}`,
+                ],
+                ...opts.network,
+            },
         })
         return c
     }
@@ -71,41 +68,28 @@ describeRepeats('StreamrClient', () => {
     })
 
     let stream: Stream
-    let waitForStorage: (...args: any[]) => Promise<void>
-    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
-    // These tests will take time, especially on Travis
-    const TIMEOUT = 30 * 1000
-    const WAIT_TIME = 600
-
-    const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
-        const name = uid('stream')
+    const createStream = async ({ ...opts } = {}) => {
+        const id = `/${uid('stream')}`
         const s = await client.client.createStream({
-            name,
-            requireSignedData,
+            id,
             ...opts,
         })
-        await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+        // await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         expect(s.id).toBeTruthy()
-        expect(s.name).toEqual(name)
-        expect(s.requireSignedData).toBe(requireSignedData)
         return s
     }
 
     beforeEach(async () => {
+        tracker = await startTracker({
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
+        })
         client = createClient()
-        await Promise.all([
-            client.getSessionToken(),
-            client.connect(),
-        ])
+        await client.getSessionToken()
         stream = await createStream()
-        publishTestMessages = getPublishTestMessages(client.client, {
-            stream,
-        })
-        waitForStorage = getWaitForStorage(client.client, {
-            stream,
-        })
         expect(onError).toHaveBeenCalledTimes(0)
     })
 
@@ -122,22 +106,20 @@ describeRepeats('StreamrClient', () => {
             client.debug('disconnecting after test')
             await client.disconnect()
         }
+    })
 
-        const openSockets = Connection.getOpen()
-        if (openSockets !== 0) {
-            await Connection.closeOpen()
-            throw new Error(`sockets not closed: ${openSockets}`)
-        }
+    afterEach(async () => {
+        await tracker.stop()
     })
 
     describe('Pub/Sub', () => {
-        it('can successfully publish', async () => {
-            await client.client.connect()
-            const sub = await client.client.subscribe({
+        it('can successfully pub/sub 1 message', async () => {
+            const sub = await client.subscribe({
                 streamId: stream.id,
             })
             const testMsg = Msg()
-            await client.publish(stream.id, testMsg)
+            const publisher = client
+            await publisher.publish(stream.id, testMsg)
             const received = []
             for await (const msg of sub) {
                 received.push(msg.getParsedContent())
@@ -146,7 +128,6 @@ describeRepeats('StreamrClient', () => {
                 }
             }
             expect(received).toEqual([testMsg])
-        }, TIMEOUT)
-
+        })
     })
 })

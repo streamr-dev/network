@@ -87,6 +87,16 @@ export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefi
 
 export const counterId = CounterId()
 
+type AnyInstance = {
+    constructor: {
+        name: string
+    }
+}
+
+export function instanceId(instance: AnyInstance) {
+    return counterId(instance.constructor.name)
+}
+
 function getVersion() {
     // dev deps are removed for production build
     const hasDevDependencies = !!(pkg.devDependencies && Object.keys(pkg.devDependencies).length)

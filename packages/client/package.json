@@ -173,6 +173,7 @@
     "sqlite3": "^5.0.2",
     "streamr-client-protocol": "^8.2.1",
     "streamr-network": "^25.0.0",
+    "strict-event-emitter-types": "^2.0.0",
     "ts-toolbelt": "^9.6.0",
     "uuid": "^8.3.2",
     "webpack-node-externals": "^3.0.0",
