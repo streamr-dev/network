@@ -49,7 +49,7 @@ interface Options {
     signature?: string | null
 }
 
-export default class StreamMessage {
+export default class StreamMessage<T = unknown> {
     static LATEST_VERSION = LATEST_VERSION
 
     // TODO can we remove these static field and use the enum object directly?
@@ -71,7 +71,6 @@ export default class StreamMessage {
 
     messageId: MessageID
     prevMsgRef: MessageRef | null
-    content: any
     messageType: StreamMessageType
     contentType: ContentType
     encryptionType: EncryptionType
@@ -79,7 +78,7 @@ export default class StreamMessage {
     newGroupKey: EncryptedGroupKey | null
     signatureType: SignatureType
     signature: string | null
-    parsedContent: any
+    parsedContent?: T
     serializedContent: string
 
     constructor({
@@ -126,7 +125,6 @@ export default class StreamMessage {
             this.serializedContent = JSON.stringify(content)
         } else {
             // this.parsedContent gets written lazily
-            this.parsedContent = null
             this.serializedContent = content
         }
         validateIsNotEmptyString('content', this.serializedContent)
@@ -134,53 +132,54 @@ export default class StreamMessage {
         StreamMessage.validateSequence(this)
     }
 
-    getStreamId() {
+    getStreamId(): string {
         return this.messageId.streamId
     }
 
-    getStreamPartition() {
+    getStreamPartition(): number {
         return this.messageId.streamPartition
     }
 
-    getTimestamp() {
+    getTimestamp(): number {
         return this.messageId.timestamp
     }
 
-    getSequenceNumber() {
+    getSequenceNumber(): number {
         return this.messageId.sequenceNumber
     }
 
-    getPublisherId() {
+    getPublisherId(): string {
         return this.messageId.publisherId
     }
 
-    getMsgChainId() {
+    getMsgChainId(): string {
         return this.messageId.msgChainId
     }
 
-    getMessageRef() {
+    getMessageRef(): MessageRef {
         return new MessageRef(this.getTimestamp(), this.getSequenceNumber())
     }
 
-    getPreviousMessageRef() {
+    getPreviousMessageRef(): MessageRef | null {
         return this.prevMsgRef
     }
 
-    getMessageID() {
+    getMessageID(): MessageID {
         return this.messageId
     }
 
-    getSerializedContent() {
+    getSerializedContent(): string {
         return this.serializedContent
     }
 
     /**
      * Lazily parses the content to JSON
      */
-    getParsedContent() {
-        if (!this.parsedContent) {
+    getParsedContent(): T {
+        if (this.parsedContent == null) {
             // Don't try to parse encrypted messages
             if (this.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE && this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
+                // @ts-expect-error need type narrowing for encrypted vs unencrypted
                 return this.serializedContent
             }
 
@@ -199,25 +198,30 @@ export default class StreamMessage {
                 throw new Error(`Unsupported contentType for getParsedContent: ${this.contentType}`)
             }
         }
-        return this.parsedContent
+
+        // should be expected type by here
+        return this.parsedContent as T
     }
 
-    getContent(parsedContent = true) {
+    getContent(): string
+    getContent(parsedContent: false): string
+    getContent(parsedContent: true): T
+    getContent(parsedContent = true): string | T {
         if (parsedContent) {
             return this.getParsedContent()
         }
         return this.getSerializedContent()
     }
 
-    getNewGroupKey() {
+    getNewGroupKey(): EncryptedGroupKey | null {
         return this.newGroupKey
     }
 
-    isByeMessage() {
-        return !!this.getParsedContent()[BYE_KEY]
+    isByeMessage(): boolean {
+        return !!((this.getParsedContent() as any)[BYE_KEY])
     }
 
-    getPayloadToSign() {
+    getPayloadToSign(): string {
         if (this.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
             // Nullable fields
             const prev = (this.prevMsgRef ? `${this.prevMsgRef.timestamp}${this.prevMsgRef.sequenceNumber}` : '')
@@ -235,7 +239,7 @@ export default class StreamMessage {
         throw new Error(`Unrecognized signature type: ${this.signatureType}`)
     }
 
-    static registerSerializer(version: number, serializer: Serializer<StreamMessage>) {
+    static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {
         // Check the serializer interface
         if (!serializer.fromArray) {
             throw new Error(`Serializer ${JSON.stringify(serializer)} doesn't implement a method fromArray!`)
@@ -252,11 +256,11 @@ export default class StreamMessage {
         serializerByVersion[version] = serializer
     }
 
-    static unregisterSerializer(version: number) {
+    static unregisterSerializer(version: number): void {
         delete serializerByVersion[version]
     }
 
-    static getSerializer(version: number) {
+    static getSerializer(version: number): Serializer<StreamMessage<unknown>> {
         const clazz = serializerByVersion[version]
         if (!clazz) {
             throw new UnsupportedVersionError(version, `Supported versions: [${StreamMessage.getSupportedVersions()}]`)
@@ -264,11 +268,11 @@ export default class StreamMessage {
         return clazz
     }
 
-    static getSupportedVersions() {
+    static getSupportedVersions(): number[] {
         return Object.keys(serializerByVersion).map((key) => parseInt(key, 10))
     }
 
-    serialize(version = LATEST_VERSION) {
+    serialize(version = LATEST_VERSION): string {
         const serializer = StreamMessage.getSerializer(version)
         return JSON.stringify(serializer.toArray(this))
     }
@@ -276,7 +280,7 @@ export default class StreamMessage {
     /**
      * Takes a serialized representation (array or string) of a message, and returns a StreamMessage instance.
      */
-    static deserialize(msg: any[] | string) {
+    static deserialize(msg: any[] | string): StreamMessage {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
 
         /* eslint-disable prefer-destructuring */
@@ -287,35 +291,35 @@ export default class StreamMessage {
         return C.fromArray(messageArray)
     }
 
-    static validateMessageType(messageType: StreamMessageType) {
+    static validateMessageType(messageType: StreamMessageType): void {
         if (!StreamMessage.VALID_MESSAGE_TYPES.has(messageType)) {
             throw new ValidationError(`Unsupported message type: ${messageType}`)
         }
     }
 
-    static validateContentType(contentType: ContentType) {
+    static validateContentType(contentType: ContentType): void {
         if (!StreamMessage.VALID_CONTENT_TYPES.has(contentType)) {
             throw new ValidationError(`Unsupported content type: ${contentType}`)
         }
     }
 
-    static validateEncryptionType(encryptionType: EncryptionType) {
+    static validateEncryptionType(encryptionType: EncryptionType): void {
         if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
             throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
         }
     }
 
-    static validateSignatureType(signatureType: SignatureType) {
+    static validateSignatureType(signatureType: SignatureType): void {
         if (!StreamMessage.VALID_SIGNATURE_TYPES.has(signatureType)) {
             throw new ValidationError(`Unsupported signature type: ${signatureType}`)
         }
     }
 
-    static versionSupportsEncryption(streamMessageVersion: number) {
+    static versionSupportsEncryption(streamMessageVersion: number): boolean {
         return streamMessageVersion >= 31
     }
 
-    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null}) {
+    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null}): void {
         if (!prevMsgRef) {
             return
         }
@@ -324,12 +328,16 @@ export default class StreamMessage {
 
         // cannot have same timestamp + sequence
         if (comparison === 0) {
-            throw new ValidationError(`prevMessageRef cannot be identical to current. Current: ${messageId.toMessageRef().toArray()} Previous: ${prevMsgRef.toArray()}`)
+            throw new ValidationError(
+                `prevMessageRef cannot be identical to current. Current: ${messageId.toMessageRef().toArray()} Previous: ${prevMsgRef.toArray()}`
+            )
         }
 
         // previous cannot be newer
         if (comparison < 0) {
-            throw new ValidationError(`prevMessageRef must come before current. Current: ${messageId.toMessageRef().toArray()} Previous: ${prevMsgRef.toArray()}`)
+            throw new ValidationError(
+                `prevMessageRef must come before current. Current: ${messageId.toMessageRef().toArray()} Previous: ${prevMsgRef.toArray()}`
+            )
         }
     }
 
