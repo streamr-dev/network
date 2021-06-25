@@ -77,7 +77,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         await Promise.race([
+            // @ts-expect-error private
             node1.onTrackerInstructionReceived('tracker', trackerInstruction1),
+            // @ts-expect-error private
             node2.onTrackerInstructionReceived('tracker', trackerInstruction2)
         ]).catch(() => {})
 

@@ -69,6 +69,7 @@
     "@types/lru-cache": "^5.1.0",
     "@types/node": "^16.3.2",
     "@types/pino": "^6.3.8",
+    "@types/pino-pretty": "^4.7.0",
     "@types/uuid": "^8.3.0",
     "@types/websocket": "^1.0.3",
     "@types/ws": "^7.4.4",
@@ -108,7 +109,7 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.3",
-    "pino-pretty": "^4.7.1",
+    "pino-pretty": "^5.0.2",
     "utf-8-validate": "^5.0.5"
   }
 }
