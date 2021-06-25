@@ -96,7 +96,7 @@ export default class PushQueue<T> {
         this.autoEnd = autoEnd
         this.timeout = timeout
         this._onEnd = onEnd
-        this.buffer = [...items]
+        this.buffer = []
 
         this[Symbol.asyncIterator] = this[Symbol.asyncIterator].bind(this)
         this.onAbort = this.onAbort.bind(this)
@@ -116,7 +116,7 @@ export default class PushQueue<T> {
                 once: true
             })
         }
-
+        this.push(...items)
         this.iterator = this.iterate()
     }
 
@@ -208,9 +208,10 @@ export default class PushQueue<T> {
         return !(this.finished || this.ended)
     }
 
-    async return() {
+    async return(v?: T) {
         this.finished = true
         await this._cleanup()
+        return v
     }
 
     async throw(err: Error) {
@@ -312,14 +313,14 @@ export default class PushQueue<T> {
                 this.buffer.length = 0 // prevent endless loop
                 while (buffer.length && !this.error && !this.finished) {
                     this.pending = Math.max(this.pending - 1, 0)
-                    const value = buffer.shift()
+                    const value = (buffer.shift() as T | null)
                     const endTask = handleTerminalValues(value)
                     if (endTask) {
                         await endTask
                         break
                     }
 
-                    yield value
+                    yield value as T // value can not be null
                 }
 
                 // handle queued error
@@ -340,8 +341,8 @@ export default class PushQueue<T> {
                 }
 
                 const deferred = Defer<T>()
-                this.nextQueue.push(deferred)
                 deferred.catch(() => {}) // prevent unhandledrejection
+                this.nextQueue.push(deferred)
                 const value = await deferred
 
                 // ignore value if finished
@@ -376,7 +377,7 @@ export default class PushQueue<T> {
             error,
         })
 
-        return this.return()
+        await this.return()
     }
 
     isCancelled() {
