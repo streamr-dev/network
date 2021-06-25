@@ -1,7 +1,27 @@
 // the jest.fn() API
-import jest from 'jest-mock'
+import * as jest from 'jest-mock'
+import { ModernFakeTimers } from '@jest/fake-timers'
 // The matchers API
 import expect from 'expect'
+
+const timers = new ModernFakeTimers({global: window, config: null })
+
+jest.advanceTimersByTime = timers.advanceTimersByTime
+jest.advanceTimersToNextTimer = timers.advanceTimersToNextTimer
+jest.clearAllTimers = timers.clearAllTimers
+jest.dispose = timers.dispose
+jest.getRealSystemTime = timers.getRealSystemTime
+jest.getTimerCount = timers.getTimerCount
+jest.reset = timers.reset
+jest.runAllTicks = timers.runAllTicks
+jest.runAllTimers = timers.runAllTimers
+jest.runOnlyPendingTimers = timers.runOnlyPendingTimers
+jest.setSystemTime = timers.setSystemTime
+jest.useFakeTimers = timers.useFakeTimers
+jest.useRealTimers = timers.useRealTimers
+jest._checkFakeTimers = timers._checkFakeTimers
+
+Object.assign(jest,timers)
 
 // Add missing Jest functions
 window.test = window.it

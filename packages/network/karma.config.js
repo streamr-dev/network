@@ -21,20 +21,22 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         // Here I'm including all of the the Jest tests which are all under the __tests__ directory.
         // You may need to tweak this patter to find your test files/
-        files: ['test/unit/StreamManager.test.ts.ts'],
+        files: ['./karma-setup.js', 
+                './test/unit/StreamManager.test.ts', 
+                './test/unit/MessageBuffer.test.ts'],
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             // Use webpack to bundle our tests files
-            'test/unit/StreamManager.test.ts': ['webpack'],
-        },
-        files: ['./karma-setup.js', 'test/unit/StreamManager.test.ts'],
-        preprocessors: {
             './karma-setup.js': ['webpack'],
-            'test/unit/StreamManager.test.ts': ['webpack'],
+            './test/unit/StreamManager.test.ts': ['webpack'],
+            './test/unit/MessageBuffer.test.ts': ['webpack']
         },
         browsers: ['ChromeHeadless'],
+        client:{
+            clearContext: false // leave Jasmine Spec Runner output visible in browser
+          },
         webpack: {
             // Your webpack config here
             entry: './src/index.ts',
@@ -56,7 +58,6 @@ module.exports = function (config) {
                 fallback: {
                     "fs": false,
                     "graceful-fs": false,
-                    "events": false,
                     "path": false,
                     "constants": false,
                     "assert": false,
