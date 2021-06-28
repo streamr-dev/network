@@ -15,12 +15,12 @@ const connectionOpts1: ConstructorOptions = {
 }
 
 const connectionOpts2: ConstructorOptions = {
-    selfId: 'peer1',
-    targetPeerId: 'peer2',
+    selfId: 'peer2',
+    targetPeerId: 'peer1',
     routerId: 'tracker',
     stunUrls: [],
     messageQueue: new MessageQueue<string>(),
-    deferredConnectionAttempt: new DeferredConnectionAttempt('peer2')
+    deferredConnectionAttempt: new DeferredConnectionAttempt('peer1')
 }
 
 describe('NodeWebRtcConnection', () => {
@@ -48,8 +48,8 @@ describe('NodeWebRtcConnection', () => {
             () => {
                 conn2.connect()
             }], [
-            [conn1, 'resolve'],
-            [conn2, 'resolve']
+            [conn1, 'open'],
+            [conn2, 'open']
         ])
     })
 
