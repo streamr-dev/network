@@ -11,6 +11,13 @@ interface MessagingPluginApi<T> {
     subscribe: (messageQueue: Queue<Message>, streamId: string, client: T) => Promise<void>
 }
 
+interface Ports {
+    plugin: number,
+    legacyWebsocket: number
+    tracker: number
+    network: number
+}
+
 const MOCK_MESSAGE = { 
     content: { 
         foo: 'bar' 
@@ -35,15 +42,10 @@ const assertReceivedMessage = (message: Message) => {
 export const createMessagingPluginTest = <T>(
     pluginName: string, 
     api: MessagingPluginApi<T>, 
-    pluginPort: number, 
+    ports: Ports, 
     testModule: NodeJS.Module,
     pluginConfig: any = {}
 ) => {
-
-    // some free ports
-    const LEGACY_WEBSOCKET_PORT = pluginPort + 1
-    const TRACKER_PORT = pluginPort + 2
-    const NETWORK_PORT = pluginPort + 3
 
     describe(`Plugin: ${pluginName}`, () => {
 
@@ -58,20 +60,20 @@ export const createMessagingPluginTest = <T>(
             tracker = await startTracker({
                 id: 'tracker',
                 host: '127.0.0.1',
-                port: TRACKER_PORT,
+                port: ports.tracker,
             })
             broker = await startBroker({
                 name: 'broker',
                 privateKey: brokerUser.privateKey,
-                networkPort: NETWORK_PORT,
-                trackerPort: TRACKER_PORT,
-                wsPort: LEGACY_WEBSOCKET_PORT,
+                networkPort: ports.network,
+                trackerPort: ports.tracker,
+                wsPort: ports.legacyWebsocket,
                 apiAuthentication: {
                     keys: [MOCK_API_KEY]
                 },
                 extraPlugins: {
                     [pluginName]: {
-                        port: pluginPort,
+                        port: ports.plugin,
                         payloadMetadata: true,
                         ...pluginConfig
                     }
@@ -87,7 +89,7 @@ export const createMessagingPluginTest = <T>(
         })
 
         beforeEach(async () => {
-            streamrClient = createClient(LEGACY_WEBSOCKET_PORT, brokerUser.privateKey, {
+            streamrClient = createClient(ports.legacyWebsocket, brokerUser.privateKey, {
                 autoDisconnect: false
             })
             stream = await createTestStream(streamrClient, testModule)

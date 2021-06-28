@@ -5,6 +5,9 @@ import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 import { Queue } from '../../../utils'
 
 const MQTT_PORT = 12430
+const LEGACY_WEBSOCKET_PORT = 12431
+const TRACKER_PORT = 12432
+const NETWORK_PORT = 12433
 
 createMessagingPluginTest('mqtt',
     {
@@ -29,6 +32,11 @@ createMessagingPluginTest('mqtt',
             await client.subscribe(streamId)
         }
     },
-    MQTT_PORT,
+    {
+        plugin: MQTT_PORT,
+        legacyWebsocket: LEGACY_WEBSOCKET_PORT,
+        tracker: TRACKER_PORT,
+        network: NETWORK_PORT
+    },
     module
 )
