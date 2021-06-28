@@ -4,6 +4,8 @@ COPY . .
 RUN npm set unsafe-perm true
 RUN npm ci
 RUN npm run bootstrap-pkg streamr-broker
+RUN npx lerna exec -- npm prune --production
+RUN npx lerna link
 
 FROM node:14-buster-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
