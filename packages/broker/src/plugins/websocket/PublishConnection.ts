@@ -31,7 +31,7 @@ export class PublishConnection implements Connection {
         ws.on('message', (payload: string) => {
             try {
                 const { content, metadata } = payloadFormat.createMessage(payload)
-                const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)
+                const partitionKey = this.partitionKey ?? (this.partitionKeyField ? content[this.partitionKeyField] : undefined)
                 streamrClient.publish({
                     id: this.streamId,
                     partition: this.partition
