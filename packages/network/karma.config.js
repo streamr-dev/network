@@ -13,13 +13,11 @@ module.exports = function (config) {
         frameworks: ['jasmine'],
         files: [
             './karma-setup.js',
-            './test/unit/StreamManager.test.ts',
-            './test/unit/MessageBuffer.test.ts',
+            './test/unit/BrowserWebRtcConnection.test.ts',
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
-            './test/unit/StreamManager.test.ts': ['webpack'],
-            './test/unit/MessageBuffer.test.ts': ['webpack']
+            './test/unit/BrowserWebRtcConnection.test.ts': ['webpack'],
         },
         browsers: ['ChromeHeadless'],
         client:{
@@ -32,8 +30,10 @@ module.exports = function (config) {
                 rules: [
                     {
                         test: /\.tsx?$/,
-                        use: 'ts-loader',
                         exclude: /node_modules/,
+                        use: [{loader: 'ts-loader',
+                        options: {configFile: 'tsconfig.webpack.json'}
+                        }]
                     },
                 ],
             },
@@ -44,15 +44,15 @@ module.exports = function (config) {
                 extensions: ['.tsx', '.ts', '.js'],
                 fallback: {
                     "fs": false,
-                    "graceful-fs": false,
-                    "path": false,
                     "constants": false,
                     "assert": false,
                     "http": false,
                     "stream": false,
                     "util": false,
                     "module": false,
-                    "console-browserify": require.resolve('console-browserify'),
+                    //"NodeJS.Module": require.resolve('node-module-polyfill'),
+                    //"module": require.resolve('node-module-polyfill'),
+                    "console-browserify": require.resolve('console-browserify')
                 }
             },
             output: {

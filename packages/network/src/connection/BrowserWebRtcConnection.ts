@@ -179,7 +179,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 		}
 
         dataChannel.onerror = (err) => {
-            this.logger.warn('dc.onError: %s', err)
+            this.logger.warn('dc.onError: %s', err.error.message)
         }
 
         dataChannel.onbufferedamountlow = () => {

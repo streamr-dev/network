@@ -46,6 +46,7 @@
     "lodash": "^4.17.21",
     "lru-cache": "^6.0.0",
     "node-datachannel": "^0.1.4",
+    "node-module-polyfill": "^1.0.1",
     "pino": "^6.11.3",
     "speedometer": "^1.1.0",
     "streamr-client-protocol": "^8.2.1",
