@@ -1,12 +1,8 @@
 import { MetadataPayloadFormat, PlainPayloadFormat } from '../../../src/helpers/PayloadFormat'
 
-const MOCK_OBJECT = {
+const MOCK_CONTENT = {
     foo: 'bar'
 }
-const MOCK_ARRAY = [
-    'foo',
-    'bar'
-]
 const MOCK_METADATA = {
     timestamp: 123,
     sequenceNumber: 456,
@@ -22,23 +18,18 @@ describe('PayloadFormat', () => {
 
         describe('createMessage', () => {
 
-            it('object', () => {
-                expect(format.createMessage(JSON.stringify(MOCK_OBJECT))).toEqual({
-                    content: MOCK_OBJECT,
-                    metadata: {}
-                })
-            })
-
-            it('array', () => {
-                expect(format.createMessage(JSON.stringify(MOCK_ARRAY))).toEqual({
-                    content: MOCK_ARRAY,
+            it('happy path', () => {
+                expect(format.createMessage(JSON.stringify(MOCK_CONTENT))).toEqual({
+                    content: MOCK_CONTENT,
                     metadata: {}
                 })
             })
 
             it.each([
+                [''],
                 ['foobar'],
-                [undefined]
+                [undefined],
+                [[]]
             ])('invalid: %p', (payload: any) => {
                 expect(() => format.createMessage(payload)).toThrow()
             })
@@ -47,17 +38,15 @@ describe('PayloadFormat', () => {
 
         describe('createPayload', () => {
 
-            it('object', () => {
-                expect(JSON.parse(format.createPayload(MOCK_OBJECT))).toEqual(MOCK_OBJECT)
-            })
-
-            it('array', () => {
-                expect(JSON.parse(format.createPayload(MOCK_ARRAY))).toEqual(MOCK_ARRAY)
+            it('happy path', () => {
+                expect(JSON.parse(format.createPayload(MOCK_CONTENT))).toEqual(MOCK_CONTENT)
             })
 
             it.each([
+                [''],
                 ['foobar'],
-                [undefined]
+                [undefined],
+                [[]],
             ])('invalid: %p', (content: any) => {
                 expect(() => format.createPayload(content)).toThrow()
             })
@@ -72,31 +61,23 @@ describe('PayloadFormat', () => {
 
         describe('createMessage', () => {
 
-            it('object', () => {
+            it('happy path', () => {
                 expect(format.createMessage(JSON.stringify({
-                    content: MOCK_OBJECT,
+                    content: MOCK_CONTENT,
                     metadata: MOCK_METADATA
                 }))).toEqual({
-                    content: MOCK_OBJECT,
-                    metadata: MOCK_METADATA
-                })
-            })
-
-            it('array', () => {
-                expect(format.createMessage(JSON.stringify({
-                    content: MOCK_ARRAY,
-                    metadata: MOCK_METADATA
-                }))).toEqual({
-                    content: MOCK_ARRAY,
+                    content: MOCK_CONTENT,
                     metadata: MOCK_METADATA
                 })
             })
 
             it.each([
+                [''],
                 ['foobar'],
                 [undefined],
                 [JSON.stringify({ content: 'foobar' })],
                 [JSON.stringify({ content: undefined })],
+                [JSON.stringify({ content: [] })],
                 [JSON.stringify({ content: {}, metadata: 'foobar' })]
             ])('invalid: %p', (payload: any) => {
                 expect(() => format.createMessage(payload)).toThrow()
@@ -106,24 +87,21 @@ describe('PayloadFormat', () => {
 
         describe('createPayload', () => {
 
-            it('object', () => {
-                expect(JSON.parse(format.createPayload(MOCK_OBJECT, MOCK_METADATA))).toEqual({
-                    content: MOCK_OBJECT,
-                    metadata: MOCK_METADATA
-                })
-            })
-
-            it('array', () => {
-                expect(JSON.parse(format.createPayload(MOCK_ARRAY, MOCK_METADATA))).toEqual({
-                    content: MOCK_ARRAY,
+            it('happy path', () => {
+                expect(JSON.parse(format.createPayload(MOCK_CONTENT, MOCK_METADATA))).toEqual({
+                    content: MOCK_CONTENT,
                     metadata: MOCK_METADATA
                 })
             })
 
             it.each([
+                ['', {}],
                 ['foobar', {}],
                 [undefined, {}],
-                [{}, 'foobar']
+                [[], {}],
+                [{}, ''],
+                [{}, 'foobar'],
+                [{}, []]
             ])('invalid: %p %p', (content: any, metadata: any) => {
                 expect(() => format.createPayload(content, metadata)).toThrow()
             })

@@ -1,10 +1,10 @@
 export interface PayloadFormat {
     createMessage: (payload: string) => Message|never
-    createPayload: (content: any, metadata?: Metadata) => string|never
+    createPayload: (content: Record<string,unknown>, metadata?: Metadata) => string|never
 }
 
 export interface Message {
-    content: any
+    content: Record<string,unknown>
     metadata: Metadata
 }
 
@@ -23,22 +23,29 @@ const pickProperties = (fields: string[], from: Record<string,unknown>): Record<
     return result
 }
 
+const isJavascriptObject = (content: any): boolean => {
+    return (content instanceof Object) && (!(content instanceof Array))
+}
+
 const assertContent = (content: any): void|never => {
     if ((content === undefined) || (content === null)) {
         throw new Error('Content missing')
     }
-    if (!(content instanceof Array || content instanceof Object)) {
-        throw new Error('Content is not an object or an array')
+    if (!isJavascriptObject(content)) {
+        throw new Error('Content is not an object')
     }
 }
 
 const assertMetadata = (metadata: any): void|never => {
-    if (!(metadata instanceof Object)) {
+    if (!isJavascriptObject(metadata)) {
         throw new Error('Metadata is not an object')
     }
 }
 
 const parsePayloadJson = (payload: string) => {
+    if (payload.length === 0) {
+        throw new Error('Payload missing')
+    }
     try {
         return JSON.parse(payload)
     } catch (e) {
@@ -48,13 +55,15 @@ const parsePayloadJson = (payload: string) => {
 
 export class PlainPayloadFormat implements PayloadFormat {
     createMessage(payload: string): Message|never {
+        const content = parsePayloadJson(payload)
+        assertContent(content)
         return {
-            content: parsePayloadJson(payload),
+            content,
             metadata: {}
         }
     }
 
-    createPayload(content: any): string|never {
+    createPayload(content: Record<string,unknown>): string|never {
         assertContent(content)
         return JSON.stringify(content)
     }
@@ -76,7 +85,7 @@ export class MetadataPayloadFormat implements PayloadFormat {
         return { content, metadata }
     }
 
-    createPayload(content: any, metadata?: Metadata): string|never {
+    createPayload(content: Record<string,unknown>, metadata?: Metadata): string|never {
         assertContent(content)
         const payload: any = {
             content
