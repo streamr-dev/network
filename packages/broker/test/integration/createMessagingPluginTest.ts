@@ -98,7 +98,7 @@ export const createMessagingPluginTest = <T>(
 
         afterEach(async () => {
             if (pluginClient !== undefined) {
-                api.closeClient(pluginClient)
+                await api.closeClient(pluginClient)
             }
             await streamrClient?.ensureDisconnected()
         })
