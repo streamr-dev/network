@@ -2,15 +2,15 @@ import { once } from 'events'
 import { DescriptionType } from 'node-datachannel'
 import { waitForCondition, wait } from 'streamr-test-utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
-import { Connection, DeferredConnectionAttempt } from '../../src/connection/Connection'
-
+import { NodeWebRtcConnection } from '../../src/connection/NodeWebRtcConnection'
+import { DeferredConnectionAttempt } from '../../src/connection/WebRtcConnection'
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
  * is "abstracted away" by local functions.
  */
 describe('Connection', () => {
-    let connectionOne: Connection
-    let connectionTwo: Connection
+    let connectionOne: NodeWebRtcConnection
+    let connectionTwo: NodeWebRtcConnection
     let oneFunctions: any
     let twoFunctions: any
 
@@ -43,7 +43,7 @@ describe('Connection', () => {
         const messageQueueTwo = new MessageQueue<string>()
         const deferredConnectionAttemptOne = new DeferredConnectionAttempt('two')
         const deferredConnectionAttemptTwo = new DeferredConnectionAttempt('one')
-        connectionOne = new Connection({
+        connectionOne = new NodeWebRtcConnection({
             selfId: 'one',
             targetPeerId: 'two',
             routerId: 'routerId',
@@ -54,7 +54,7 @@ describe('Connection', () => {
         connectionOne.on('localDescription', (...args) => oneFunctions.onLocalDescription(...args))
         connectionOne.on('localCandidate', (...args) => oneFunctions.onLocalCandidate(...args))
 
-        connectionTwo = new Connection({
+        connectionTwo = new NodeWebRtcConnection({
             selfId: 'two',
             targetPeerId: 'one',
             routerId: 'routerId',
