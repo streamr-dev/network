@@ -1,9 +1,10 @@
 // the jest.fn() API
-import * as jest from 'jest-mock'
+import * as jestMock from 'jest-mock'
 import { ModernFakeTimers } from '@jest/fake-timers'
 // The matchers API
 import expect from 'expect'
 
+let jest = jestMock
 const timers = new ModernFakeTimers({global: window, config: null })
 
 jest.advanceTimersByTime = timers.advanceTimersByTime
