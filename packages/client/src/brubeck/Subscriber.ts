@@ -3,7 +3,7 @@ import { validateOptions } from '../stream/utils'
 import SubscriptionSession from './SubscriptionSession'
 import { StreamPartDefinition } from '..'
 import { BrubeckClient } from './BrubeckClient'
-import Subscription from './Subscription'
+import Subscription, { SubscriptionOnMessage } from './Subscription'
 import { Context } from './Context'
 
 /**
@@ -22,17 +22,22 @@ export default class Subscriber implements Context {
         this.debug = this.client.debug.extend(this.id)
     }
 
-    async subscribe<T>(opts: StreamPartDefinition) {
-        return this.add<T>(opts)
+    async subscribe<T>(opts: StreamPartDefinition, onMessage?: SubscriptionOnMessage<T>) {
+        const sub: Subscription<T> = await this.add<T>(opts)
+        if (onMessage) {
+            sub.onMessage(onMessage)
+        }
+
+        return sub
     }
 
-    async add<T>(opts: StreamPartDefinition) {
+    async add<T>(opts: StreamPartDefinition): Promise<Subscription<T>> {
         const options = validateOptions(opts)
         const { key } = options
 
         // get/create subscription session
         // don't add SubscriptionSession to subSessions until after subscription successfully created
-        const subSession = this.subSessions.get(key) || new SubscriptionSession(this.client, options)
+        const subSession = (this.subSessions.get(key) as SubscriptionSession<T>) || new SubscriptionSession<T>(this.client, options)
 
         // create subscription
         const sub = new Subscription<T>(subSession, options)
@@ -82,7 +87,7 @@ export default class Subscriber implements Context {
      * Remove all subscriptions, optionally only those matching options.
      */
     async removeAll(options?: StreamPartDefinition) {
-        const subs = this.get(options)
+        const subs = !options ? this.getAllSubscriptions() : this.getSubscriptions(options)
         return allSettledValues(subs.map((sub) => (
             this.remove(sub)
         )))
@@ -106,15 +111,15 @@ export default class Subscriber implements Context {
 
     count(options?: StreamPartDefinition): number {
         if (options === undefined) { return this.countAll() }
-        return this.get(options).length
+        return this.getSubscriptions(options).length
     }
 
     /**
      * Get all subscriptions.
      */
 
-    getAll<T = unknown>(): Subscription<T>[] {
-        return [...this.subSessions.values()].reduce((o: Subscription<T>[], s: SubscriptionSession<T>) => {
+    getAllSubscriptions(): Subscription<unknown>[] {
+        return [...this.subSessions.values()].reduce((o: Subscription<unknown>[], s: SubscriptionSession<unknown>) => {
             o.push(...s.subscriptions)
             return o
         }, [])
@@ -126,18 +131,25 @@ export default class Subscriber implements Context {
 
     getSubscriptionSession<T>(options: StreamPartDefinition): SubscriptionSession<T> | undefined {
         const { key } = validateOptions(options)
-        return this.subSessions.get(key)
+        const subSession = this.subSessions.get(key)
+        if (!subSession) {
+            return undefined
+        }
+
+        return subSession as SubscriptionSession<T>
     }
 
     /**
-     * Get all subscriptions matching options.
+     * Get subscriptions matching options.
      */
 
-    get<T = unknown>(options?: StreamPartDefinition): Subscription<T>[] {
-        if (options === undefined) { return this.getAll() }
+    getSubscriptions<T = unknown>(options?: StreamPartDefinition) {
+        if (!options) {
+            return this.getAllSubscriptions()
+        }
 
         const { key } = validateOptions(options)
-        const subSession = this.subSessions.get(key)
+        const subSession = this.subSessions.get(key) as SubscriptionSession<T>
         if (!subSession) { return [] }
 
         return [...subSession.subscriptions]

@@ -1,3 +1,4 @@
+import { inspect } from '../utils/log'
 import { StreamMessage } from 'streamr-client-protocol'
 import { BrubeckClient } from './BrubeckClient'
 import StreamMessageCreator from '../publish/MessageCreator'
@@ -6,6 +7,9 @@ import { FailedToPublishError } from '../publish'
 import { counterId } from '../utils'
 import { Context } from './Context'
 import { CancelableGenerator } from '../utils/iterators'
+import { validateOptions } from '../stream/utils'
+
+const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type PublishMessageOptions<T> = {
     content: T
@@ -111,6 +115,62 @@ export default class BrubeckPublisher implements Context {
         } finally {
             this.inProgress.delete(items)
         }
+    }
+
+    async waitForStorage(streamMessage: StreamMessage, opts = {}) {
+        /* eslint-disable no-await-in-loop */
+        const {
+            streamId,
+            streamPartition = 0,
+            interval = 500,
+            timeout = 10000,
+            count = 100,
+            messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => msgTarget.signature === msgGot.signature
+        } = validateOptions({
+            ...opts,
+        })
+
+        const start = Date.now()
+        let last: any
+        // eslint-disable-next-line no-constant-condition
+        let found = false
+        while (!found) {
+            const duration = Date.now() - start
+            if (duration > timeout) {
+                this.debug('waitForStorage timeout %o', {
+                    timeout,
+                    duration
+                }, {
+                    streamMessage,
+                    last: last!.map((l: any) => l.content),
+                })
+                const err: any = new Error(`timed out after ${duration}ms waiting for message: ${inspect(streamMessage)}`)
+                err.streamMessage = streamMessage
+                throw err
+            }
+
+            last = await this.client.client.getStreamLast({
+                // @ts-expect-error
+                streamId,
+                streamPartition,
+                count,
+            })
+
+            for (const lastMsg of last) {
+                if (messageMatchFn(streamMessage, lastMsg)) {
+                    found = true
+                    return
+                }
+            }
+
+            this.debug('message not found, retrying... %o', {
+                msg: streamMessage.getParsedContent(),
+                last: last.map(({ content }: any) => content)
+            })
+
+            await wait(interval)
+        }
+        /* eslint-enable no-await-in-loop */
     }
 
     async stop() {

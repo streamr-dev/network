@@ -83,11 +83,11 @@ export class BrubeckClient implements Context {
         return this.publisher.publish<T>(streamObjectOrId, content, timestamp, partitionKey)
     }
 
-    async subscribe<T>(...args: Parameters<Subscriber['subscribe']>): ReturnType<Subscriber['subscribe']> {
+    async subscribe<T>(...args: Parameters<Subscriber['subscribe']>) {
         return this.subscriber.subscribe<T>(...args)
     }
 
-    async unsubscribe(...args: Parameters<Subscriber['unsubscribe']>): ReturnType<Subscriber['unsubscribe']> {
+    async unsubscribe(...args: Parameters<Subscriber['unsubscribe']>) {
         return this.subscriber.unsubscribe(...args)
     }
 }

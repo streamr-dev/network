@@ -30,7 +30,7 @@ export default class MessageStream<T> extends MessageStreamEmitter implements Co
     /** @internal */
     key: string
     /** @internal */
-    stream = new PushQueue<StreamMessage>([])
+    buffer = new PushQueue<StreamMessage>([])
     /** @internal */
     isIterating = false
     /** @internal */
@@ -112,7 +112,7 @@ export default class MessageStream<T> extends MessageStreamEmitter implements Co
 
             this.isIterating = true
 
-            for await (const msg of this.stream) {
+            for await (const msg of this.buffer) {
                 yield msg
             }
         } catch (err) {
@@ -124,31 +124,31 @@ export default class MessageStream<T> extends MessageStreamEmitter implements Co
     }
 
     push(message: StreamMessage<T>) {
-        return this.stream.push(message)
+        return this.buffer.push(message)
     }
 
     from(source: AsyncIterable<StreamMessage<T>>) {
-        return this.stream.from(source)
+        return this.buffer.from(source)
     }
 
     async cancel(err?: Error) {
-        return this.stream?.cancel(err)
+        return this.buffer?.cancel(err)
     }
 
     async end(message?: StreamMessage<T>) {
-        return this.stream?.end(message)
+        return this.buffer?.end(message)
     }
 
     isCancelled(): boolean {
-        return !!this.stream?.isCancelled()
+        return !!this.buffer?.isCancelled()
     }
 
     async return() {
-        return this.stream?.return()
+        return this.buffer?.return()
     }
 
     async throw(error: Error) {
-        return this.stream?.throw(error)
+        return this.buffer?.throw(error)
     }
 
 }
