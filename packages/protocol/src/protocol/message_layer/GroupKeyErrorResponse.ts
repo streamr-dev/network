@@ -16,6 +16,8 @@ export interface Options {
     groupKeyIds: string[]
 }
 
+type GroupKeyErrorResponseSerialized = [string, string, ErrorCode, string, string[]]
+
 export default class GroupKeyErrorResponse extends GroupKeyMessage {
 
     requestId: string
@@ -39,11 +41,11 @@ export default class GroupKeyErrorResponse extends GroupKeyMessage {
         this.groupKeyIds = groupKeyIds
     }
 
-    toArray() {
+    toArray(): GroupKeyErrorResponseSerialized {
         return [this.requestId, this.streamId, this.errorCode, this.errorMessage, this.groupKeyIds]
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: GroupKeyErrorResponseSerialized): GroupKeyErrorResponse {
         const [requestId, streamId, errorCode, errorMessage, groupKeyIds] = arr
         return new GroupKeyErrorResponse({
             requestId,

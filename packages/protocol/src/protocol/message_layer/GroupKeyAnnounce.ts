@@ -10,6 +10,8 @@ export interface Options {
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
+type GroupKeyAnnounceSerialized = [string, string[][]]
+
 export default class GroupKeyAnnounce extends GroupKeyMessage {
 
     encryptedGroupKeys: EncryptedGroupKey[]
@@ -23,16 +25,18 @@ export default class GroupKeyAnnounce extends GroupKeyMessage {
         // Validate content of encryptedGroupKeys
         this.encryptedGroupKeys.forEach((it: EncryptedGroupKey) => {
             if (!(it instanceof EncryptedGroupKey)) {
-                throw new ValidationError(`Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`)
+                throw new ValidationError(
+                    `Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`
+                )
             }
         })
     }
 
-    toArray() {
+    toArray(): GroupKeyAnnounceSerialized {
         return [this.streamId, this.encryptedGroupKeys.map((it: EncryptedGroupKey)=> it.toArray())]
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: GroupKeyAnnounceSerialized): GroupKeyAnnounce {
         const [streamId, encryptedGroupKeys] = arr
         return new GroupKeyAnnounce({
             streamId,

@@ -10,6 +10,8 @@ interface Options {
     groupKeyIds: string[]
 }
 
+export type GroupKeyRequestSerialized = [string, string, string, string[]]
+
 export default class GroupKeyRequest extends GroupKeyMessage {
 
     requestId: string
@@ -29,12 +31,12 @@ export default class GroupKeyRequest extends GroupKeyMessage {
         this.groupKeyIds = groupKeyIds
     }
 
-    toArray() {
+    toArray(): GroupKeyRequestSerialized {
         return [this.requestId, this.streamId, this.rsaPublicKey, this.groupKeyIds]
     }
 
-    static fromArray(arr: any[]) {
-        const [requestId, streamId, rsaPublicKey, groupKeyIds] = arr
+    static fromArray(args: GroupKeyRequestSerialized): GroupKeyRequest {
+        const [requestId, streamId, rsaPublicKey, groupKeyIds] = args
         return new GroupKeyRequest({
             requestId,
             streamId,

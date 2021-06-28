@@ -11,6 +11,8 @@ interface Options {
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
+type GroupKeyResponseSerialized = [string, string, string[][]]
+
 export default class GroupKeyResponse extends GroupKeyMessage {
 
     requestId: string
@@ -28,16 +30,18 @@ export default class GroupKeyResponse extends GroupKeyMessage {
         // Validate content of encryptedGroupKeys
         this.encryptedGroupKeys.forEach((it: EncryptedGroupKey) => {
             if (!(it instanceof EncryptedGroupKey)) {
-                throw new ValidationError(`Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`)
+                throw new ValidationError(
+                    `Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`
+                )
             }
         })
     }
 
-    toArray() {
+    toArray(): GroupKeyResponseSerialized {
         return [this.requestId, this.streamId, this.encryptedGroupKeys.map((it: EncryptedGroupKey) => it.toArray())]
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: GroupKeyResponseSerialized): GroupKeyResponse {
         const [requestId, streamId, encryptedGroupKeys] = arr
         return new GroupKeyResponse({
             requestId,
