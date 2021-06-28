@@ -3,7 +3,7 @@ import ValidationError from '../../errors/ValidationError'
 
 import StreamMessage from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
-import EncryptedGroupKey from './EncryptedGroupKey'
+import EncryptedGroupKey, { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
 
 interface Options {
     requestId: string
@@ -11,7 +11,7 @@ interface Options {
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
-type GroupKeyResponseSerialized = [string, string, string[][]]
+type GroupKeyResponseSerialized = [string, string,EncryptedGroupKeySerialized[]]
 
 export default class GroupKeyResponse extends GroupKeyMessage {
 
@@ -46,8 +46,12 @@ export default class GroupKeyResponse extends GroupKeyMessage {
         return new GroupKeyResponse({
             requestId,
             streamId,
-            encryptedGroupKeys: encryptedGroupKeys.map((it: any[]) => EncryptedGroupKey.fromArray(it)),
+            encryptedGroupKeys: encryptedGroupKeys.map((it) => EncryptedGroupKey.fromArray(it)),
         })
+    }
+
+    static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyResponseSerialized> {
+        return streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
     }
 }
 

@@ -44,6 +44,10 @@ export default class GroupKeyRequest extends GroupKeyMessage {
             groupKeyIds,
         })
     }
+
+    static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyRequestSerialized> {
+        return streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+    }
 }
 
 GroupKeyMessage.classByMessageType[StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST] = GroupKeyRequest

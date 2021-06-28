@@ -5,11 +5,13 @@ import MessageRef from './MessageRef'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
 
 // TODO refactor deserialization to separate class (Serializer<GroupKeyMessage>)
+//
+type GroupKeyMessageType = Omit<typeof GroupKeyMessage, 'new'> // remove new, don't care about how to construct since we have from/to methods
 
 export default abstract class GroupKeyMessage {
     // messageType -> class mapping
     static classByMessageType: {
-        [key: number]: Omit<typeof GroupKeyMessage, 'new'> // remove new, don't care about how to construct since we have from/to methods
+        [key: number]: GroupKeyMessageType
     } = {}
 
     streamId: string

@@ -55,6 +55,10 @@ export default class GroupKeyErrorResponse extends GroupKeyMessage {
             groupKeyIds,
         })
     }
+
+    static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyErrorResponseSerialized> {
+        return streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
+    }
 }
 
 GroupKeyMessage.classByMessageType[StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE] = GroupKeyErrorResponse

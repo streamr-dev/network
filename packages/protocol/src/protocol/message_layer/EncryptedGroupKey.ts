@@ -1,5 +1,6 @@
 import { validateIsString } from '../../utils/validations'
 
+export type EncryptedGroupKeySerialized = [string, string]
 export default class EncryptedGroupKey {
 
     groupKeyId: string
@@ -23,11 +24,11 @@ export default class EncryptedGroupKey {
         this.serialized = serialized
     }
 
-    toArray() {
+    toArray(): EncryptedGroupKeySerialized {
         return [this.groupKeyId, this.encryptedGroupKeyHex]
     }
 
-    serialize() {
+    serialize(): string {
         // Return the cached serialized form to ensure that it stays unchanged (important for validation)
         if (this.serialized) {
             return this.serialized
@@ -35,12 +36,12 @@ export default class EncryptedGroupKey {
         return JSON.stringify(this.toArray())
     }
 
-    static deserialize(json: any) {
+    static deserialize(json: string): EncryptedGroupKey {
         const [groupKeyId, encryptedGroupKeyHex] = JSON.parse(json)
         return new EncryptedGroupKey(groupKeyId, encryptedGroupKeyHex, json)
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: EncryptedGroupKeySerialized): EncryptedGroupKey {
         const [groupKeyId, encryptedGroupKeyHex] = arr
         return new EncryptedGroupKey(groupKeyId, encryptedGroupKeyHex)
     }
