@@ -1,60 +1,86 @@
-import { terminal } from 'terminal-kit'
+import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
 import { writeFileSync } from 'fs'
 import path from 'path'
 
 export class ConfigWizard {
     readonly singleLineMenuOptions: any = {
-        style:terminal.inverse
     }
     constructor(startMessage: string){
-        terminal.clear()
         this.log(startMessage)
     }
 
     log(...args: any){
-        terminal.inverse(...args)
+        console.log(...args)
+    }
+
+    async captureMultipleOption(
+        preText: string,
+        items: Array<{[key: string]: string}>
+    ) {
+        const res = await inquirer.prompt([
+            {
+                type: 'checkbox',
+                name:'selectedItems',
+                message: preText,
+                choices: items
+            }
+        ])
+
+        return res.selectedItems
     }
 
     async captureUserOption(
         preText: string, 
         items: Array<string>
     ): Promise<string>{
-        return new Promise((resolve, reject) => {
-            this.log(preText)
-            terminal.singleLineMenu(items, this.singleLineMenuOptions, (err, res) => {
-                if (err) {reject (err)}
-                resolve(res.selectedText)
-            })
-        })
+        const res = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'optionList',
+                message: preText,
+                choices: items,
+
+            }
+        ])
+
+        return res.optionList   
     }
 
     async captureUserInput(
         preText: string
     ): Promise<string>{
-        this.log(preText, '[ENTER to finish]')
-        
-        const input = await terminal.inputField({}).promise 
-        return input!.toString()
+        preText += ' > '        
+        const input = await inquirer.prompt([
+            {
+                type:'input',
+                name:'text',
+                message:preText
+            }
+        ])
+
+        return input.text
     }
 }
 
+export interface PluginTemplateType {
+    port: number
+}
 export interface BrokerConfigTemplate {
     ethereumPrivateKey: string
+    plugins: {[plugin: string]: PluginTemplateType}
 }
 
 export class BrokerConfigWizard extends ConfigWizard{
     config: BrokerConfigTemplate
 
     constructor(){
+        console.clear()
         super('Broker Configuration Wizard started')
         this.config = {
-            ethereumPrivateKey:''
+            ethereumPrivateKey:'',
+            plugins:{}
         }
-    }
-
-    log(...args: any){
-        super.log("\n[BCW] > ", ...args)
     }
 
     generatePrivateKey(): string{
@@ -74,11 +100,65 @@ export class BrokerConfigWizard extends ConfigWizard{
     }
 
     storeConfig(destinationFolder = '../configs/'){
-        const filename = `broker-config-wizard-${Date.now()}.json`
+        const filename = `wizard-config.json`
         const finalPath = path.join(__dirname, destinationFolder, filename)
         writeFileSync(finalPath, JSON.stringify(this.config))
         this.log(`Configuration stored in ${finalPath}`)
         return finalPath
+    }
+
+    async selectPlugins(){
+        const res = await this.captureMultipleOption('Select the plugins to enable', 
+            [
+                {name: 'Websocket'},
+                {name:'MQTT'},
+                {name:'HttpPublish'}
+            ]
+        )
+
+        const defaultWebsocketPort = 7171 
+        const defaultMqttPort = 7272 
+        const defaultHttpPort = 7373
+
+        for (let i = 0; i < res.length; i++){
+            if (res[i] === 'Websocket'){
+                const portString = await this.captureUserInput(`Select a port for the Websocket Plugin [Enter for default: ${defaultWebsocketPort}]`)
+                let port = parseInt(portString)
+                if (portString === '') {
+                    port = defaultWebsocketPort
+                }
+
+                if (!Number.isNaN(port) && Number.isInteger(port) && port > 1023 && port < 49151){
+                    this.config.plugins['websocket'] = { port }
+                }
+            }
+
+            if (res[i] === 'MQTT'){
+                const portString = await this.captureUserInput(`Select a port for the MQTT Plugin [Enter for default: ${defaultMqttPort}]`)
+                let port = parseInt(portString)
+                if (portString === '') {
+                    port = defaultMqttPort
+                }
+                if (!Number.isNaN(port) && Number.isInteger(port) && port > 1023 && port < 49151){
+                    this.config.plugins['mqtt'] = { port }
+                }
+
+            }
+
+            if (res[i] === 'HttpPublish'){
+                const portString = await this.captureUserInput(`Select a port for the HttpPublish Plugin [Enter for default: ${defaultHttpPort}]`)
+                let port = parseInt(portString)
+                if (portString === '') {
+                    port = defaultHttpPort
+                }
+
+                if (!Number.isNaN(port) && Number.isInteger(port) && port > 1023 && port < 49151){
+                    this.config.plugins['httpPublish'] = { port }
+                }
+
+            }
+        }
+
     }
 }
 
@@ -95,9 +175,13 @@ export async function startBrokerConfigWizard (destinationFolder?: string) {
         } else {
             throw new Error(`Invalid option ${generateOrImport} provided`)
         }
+
+        // enable selected plugins 
+        await wizard.selectPlugins()
     
         wizard.storeConfig(destinationFolder)
         wizard.log('Broker Config Wizard ran succesfully')
+        wizard.log('Generated configuration:', wizard.config)
     } catch (e){
         console.error('Error running the Broker Config Wizard')
         console.error(e)
