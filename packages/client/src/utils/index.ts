@@ -496,7 +496,7 @@ type pTimeoutOpts = {
 
 type pTimeoutArgs = [timeout?: number, message?: string] | [pTimeoutOpts]
 
-export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs) {
+export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): Promise<T | undefined> {
     let opts: pTimeoutOpts = {}
     if (args[0] && typeof args[0] === 'object') {
         [opts] = args
@@ -511,7 +511,7 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
     }
 
     let timedOut = false
-    const p = Defer()
+    const p = Defer<T>()
     const t = setTimeout(() => {
         timedOut = true
         if (rejectOnTimeout) {
@@ -527,7 +527,7 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
             clearTimeout(t)
             if (timedOut) {
                 // ignore errors after timeout
-                return
+                return undefined
             }
 
             throw err

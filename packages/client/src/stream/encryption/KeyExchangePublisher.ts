@@ -35,6 +35,11 @@ async function catchKeyExchangeError(client: StreamrClient, streamMessage: Strea
         return await fn()
     } catch (error) {
         const subscriberId = streamMessage.getPublisherId()
+        if (!GroupKeyRequest.is(streamMessage)) {
+            // ignore weird message
+            return undefined
+        }
+
         const msg = streamMessage.getParsedContent()
         const { streamId, requestId, groupKeyIds } = GroupKeyRequest.fromArray(msg)
         return client.publish(getKeyExchangeStreamId(subscriberId), new GroupKeyErrorResponse({
@@ -50,7 +55,7 @@ async function catchKeyExchangeError(client: StreamrClient, streamMessage: Strea
 async function PublisherKeyExchangeSubscription(client: StreamrClient, getGroupKeyStore: (streamId: string) => Promise<GroupKeyStore>) {
     async function onKeyExchangeMessage(_parsedContent: any, streamMessage: StreamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
-            if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
+            if (!GroupKeyRequest.is(streamMessage)) {
                 return
             }
 

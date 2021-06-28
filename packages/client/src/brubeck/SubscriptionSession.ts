@@ -4,6 +4,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 
 import { AggregatedError, Scaffold, counterId } from '../utils'
 import { validateOptions } from '../stream/utils'
+import Subscription from './Subscription'
 import MessageStream from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 import { Todo } from '../types'
@@ -38,14 +39,14 @@ export type SubscriptionSessionOptions = ReturnType<typeof validateOptions> & {
  * Adds connection handles as needed.
  */
 
-export default class SubscriptionSession extends Emitter {
+export default class SubscriptionSession<T> extends Emitter {
     id
     debug
     client: BrubeckClient
     options: SubscriptionSessionOptions
     /** active subs */
-    subscriptions: Set<MessageStream> = new Set()
-    pendingRemoval: Set<MessageStream> = new Set()
+    subscriptions: Set<Subscription<T>> = new Set()
+    pendingRemoval: Set<Subscription<T>> = new Set()
     active = false
     stopped = false
     buffer
@@ -58,8 +59,8 @@ export default class SubscriptionSession extends Emitter {
         this.id = counterId(`SubscriptionSession:${this.options.id || ''}${this.options.key}`)
         this.debug = this.client.debug.extend(this.id)
         this.onMessage = this.onMessage.bind(this)
-        this.buffer = new MessageStream(this, this.options)
-        this.pipeline = new MessageStream(this, this.options)
+        this.buffer = new MessageStream<T>(this, this.options)
+        this.pipeline = new MessageStream<T>(this, this.options)
         this.pipeline.from(SubscribePipeline(this.client.client, this.buffer, this.options))
         this.pipeline.on('error', (error) => this.emit('error', error))
         this.pipeline.on('end', () => this.emit('end'))
@@ -69,7 +70,7 @@ export default class SubscriptionSession extends Emitter {
 
     onPipelineMessage = (msg: StreamMessage) => {
         this.subscriptions.forEach((sub) => {
-            sub.push(msg)
+            sub.push(msg as StreamMessage<T>)
         })
     }
 
@@ -83,7 +84,7 @@ export default class SubscriptionSession extends Emitter {
         if (this.options.streamId !== streamId || this.options.streamPartition !== streamPartition) {
             return
         }
-        this.buffer.push(msg)
+        this.buffer.push(msg as StreamMessage<T>)
     }
 
     private async subscribe({ streamId, streamPartition }: { streamId: string, streamPartition: number }) {
@@ -109,7 +110,7 @@ export default class SubscriptionSession extends Emitter {
         }
     ], () => !!this.subscriptions.size)
 
-    has(sub: MessageStream): boolean {
+    has(sub: Subscription<T>): boolean {
         return this.subscriptions.has(sub)
     }
 
@@ -139,7 +140,7 @@ export default class SubscriptionSession extends Emitter {
      * Add subscription & appropriate connection handle.
      */
 
-    async add(sub: MessageStream): Promise<void> {
+    async add(sub: Subscription<T>): Promise<void> {
         if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
         this.subscriptions.add(sub)
         await this.updateSubscriptions()
@@ -149,7 +150,7 @@ export default class SubscriptionSession extends Emitter {
      * Remove subscription & appropriate connection handle.
      */
 
-    async remove(sub: MessageStream): Promise<void> {
+    async remove(sub: Subscription<T>): Promise<void> {
         if (!sub || this.pendingRemoval.has(sub) || !this.subscriptions.has(sub)) {
             return
         }

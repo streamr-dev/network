@@ -6,6 +6,7 @@ import Publisher from './Publisher'
 import Subscriber from './Subscriber'
 import Debug from 'debug'
 import { Context } from './Context'
+import { StreamIDish } from '../publish/utils'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -60,7 +61,11 @@ export class BrubeckClient implements Context {
 
     async disconnect() {
         const node = await this.getNode()
-        return node.stop()
+        await Promise.allSettled([
+            this.publisher.stop(),
+            this.subscriber.stop(),
+            node.stop(),
+        ])
     }
 
     async getNode(): Promise<NetworkNode> {
@@ -69,12 +74,17 @@ export class BrubeckClient implements Context {
         return node
     }
 
-    async publish(...args: Parameters<Publisher['publish']>): ReturnType<Publisher['publish']> {
-        return this.publisher.publish(...args)
+    async publish<T>(
+        streamObjectOrId: StreamIDish,
+        content: T,
+        timestamp?: string | number | Date,
+        partitionKey?: string | number
+    ) {
+        return this.publisher.publish<T>(streamObjectOrId, content, timestamp, partitionKey)
     }
 
-    async subscribe(...args: Parameters<Subscriber['subscribe']>): ReturnType<Subscriber['subscribe']> {
-        return this.subscriber.subscribe(...args)
+    async subscribe<T>(...args: Parameters<Subscriber['subscribe']>): ReturnType<Subscriber['subscribe']> {
+        return this.subscriber.subscribe<T>(...args)
     }
 
     async unsubscribe(...args: Parameters<Subscriber['unsubscribe']>): ReturnType<Subscriber['unsubscribe']> {

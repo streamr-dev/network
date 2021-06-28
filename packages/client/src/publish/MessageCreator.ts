@@ -52,7 +52,7 @@ export default class StreamMessageCreator {
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create(streamObjectOrId: StreamIDish, {
+    async create<T>(streamObjectOrId: StreamIDish, {
         content,
         timestamp,
         partitionKey,
@@ -63,7 +63,7 @@ export default class StreamMessageCreator {
         timestamp: string | number | Date,
         partitionKey?: string | number,
         msgChainId?: string,
-    }): Promise<StreamMessage> {
+    }): Promise<StreamMessage<T>> {
         const streamId = getStreamId(streamObjectOrId)
         // streamId as queue key
         return this.queue(streamId, async () => {

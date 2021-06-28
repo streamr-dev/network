@@ -16,9 +16,9 @@ export { SignatureRequiredError } from '../subscribe/Validator'
  * Subscription message processing pipeline
  */
 
-export default function MessagePipeline(
+export default function MessagePipeline<T>(
     client: StreamrClient,
-    source: MessageStream,
+    source: MessageStream<T>,
     opts: any = {},
     onFinally = async (err?: Error) => { if (err) { throw err } }
 ) {

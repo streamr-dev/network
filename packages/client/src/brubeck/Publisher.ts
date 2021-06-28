@@ -1,14 +1,21 @@
+import { StreamMessage } from 'streamr-client-protocol'
 import { BrubeckClient } from './BrubeckClient'
 import StreamMessageCreator from '../publish/MessageCreator'
 import { getStreamId, StreamIDish } from '../publish/utils'
 import { FailedToPublishError } from '../publish'
 import { counterId } from '../utils'
 import { Context } from './Context'
+import { CancelableGenerator } from '../utils/iterators'
 
-type PublishMessageOptions = {
-    content: any
+type PublishMessageOptions<T> = {
+    content: T
     timestamp?: string | number | Date
     partitionKey?: string | number
+}
+
+type Cancelable = {
+    cancel(err?: Error): Promise<void>
+    isCancelled: () => boolean
 }
 
 export default class BrubeckPublisher implements Context {
@@ -16,6 +23,7 @@ export default class BrubeckPublisher implements Context {
     messageCreator
     id
     debug
+    inProgress = new Set<Cancelable>()
 
     constructor(client: BrubeckClient) {
         this.client = client
@@ -24,12 +32,12 @@ export default class BrubeckPublisher implements Context {
         this.debug = this.client.debug.extend(this.id)
     }
 
-    async publishMessage(streamObjectOrId: StreamIDish, {
+    async publishMessage<T>(streamObjectOrId: StreamIDish, {
         content,
         timestamp = new Date(),
         partitionKey
-    }: PublishMessageOptions) {
-        const streamMessage = await this.messageCreator.create(streamObjectOrId, {
+    }: PublishMessageOptions<T>): Promise<StreamMessage<T>> {
+        const streamMessage = await this.messageCreator.create<T>(streamObjectOrId, {
             content,
             timestamp,
             partitionKey,
@@ -37,12 +45,18 @@ export default class BrubeckPublisher implements Context {
 
         const node = await this.client.getNode()
         node.publish(streamMessage)
+        return streamMessage
     }
 
-    async publish(streamObjectOrId: StreamIDish, content: any, timestamp?: string | number | Date, partitionKey?: string | number) {
+    async publish<T>(
+        streamObjectOrId: StreamIDish,
+        content: T,
+        timestamp?: string | number | Date,
+        partitionKey?: string | number
+    ): Promise<StreamMessage<T>> {
         // wrap publish in error emitter
         try {
-            return await this.publishMessage(streamObjectOrId, {
+            return await this.publishMessage<T>(streamObjectOrId, {
                 content,
                 timestamp,
                 partitionKey,
@@ -57,5 +71,53 @@ export default class BrubeckPublisher implements Context {
             )
             throw error
         }
+    }
+
+    async collect<T>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
+        const msgs = []
+        for await (const msg of target) {
+            if (n === 0) {
+                break
+            }
+
+            msgs.push(msg)
+            if (msgs.length === n) {
+                break
+            }
+        }
+
+        return msgs
+    }
+
+    async* publishFrom<T>(streamObjectOrId: StreamIDish, seq: AsyncIterable<T>) {
+        const items = CancelableGenerator(seq)
+        this.inProgress.add(items)
+        try {
+            for await (const msg of items) {
+                yield await this.publish(streamObjectOrId, msg)
+            }
+        } finally {
+            this.inProgress.delete(items)
+        }
+    }
+
+    async* publishWithMetadata<T>(streamObjectOrId: StreamIDish, seq: AsyncIterable<PublishMessageOptions<T>>) {
+        const items = CancelableGenerator(seq)
+        this.inProgress.add(items)
+        try {
+            for await (const msg of items) {
+                yield await this.publishMessage(streamObjectOrId, msg)
+            }
+        } finally {
+            this.inProgress.delete(items)
+        }
+    }
+
+    async stop() {
+        await Promise.allSettled([
+            ...[...this.inProgress].map((item) => item.cancel())
+        ])
+
+        await this.messageCreator.stop()
     }
 }

@@ -4,13 +4,37 @@ import { startTracker, Tracker } from 'streamr-network'
 import { describeRepeats, uid, fakePrivateKey, Msg } from '../../utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import Connection from '../../../src/Connection'
+import { counterId } from '../../../src/utils'
 
 import config from '../config'
 import { Stream } from '../../../src/stream'
 
 const trackerPort = 30302
+type PublishManyOpts = Partial<{
+    delay: number,
+}>
+
+async function* publishManyGenerator(total: number, opts: PublishManyOpts = {}) {
+    const { delay = 10 } = opts
+    const batchId = counterId('publishMany')
+    for (let i = 0; i < total; i++) {
+        yield {
+            content: Msg({
+                batchId,
+                value: `${i + 1} of ${total}`
+            })
+        }
+
+        if (delay) {
+            // eslint-disable-next-line no-await-in-loop
+            await wait(delay)
+        }
+    }
+}
 
 describeRepeats('StreamrClient', () => {
+    const MAX_MESSAGES = 10
+
     let tracker: Tracker
     let expectErrors = 0 // check no errors by default
     let errors: any[] = []
@@ -118,8 +142,7 @@ describeRepeats('StreamrClient', () => {
                 streamId: stream.id,
             })
             const testMsg = Msg()
-            const publisher = client
-            await publisher.publish(stream.id, testMsg)
+            await client.publish(stream.id, testMsg)
             const received = []
             for await (const msg of sub) {
                 received.push(msg.getParsedContent())
@@ -128,6 +151,23 @@ describeRepeats('StreamrClient', () => {
                 }
             }
             expect(received).toEqual([testMsg])
+        })
+
+        it('can successfully pub/sub multiple messages', async () => {
+            const sub = await client.subscribe({
+                streamId: stream.id,
+            })
+            const source = publishManyGenerator(MAX_MESSAGES)
+            const published = await client.publisher.collect(client.publisher.publishFrom(stream, source), MAX_MESSAGES)
+            const received = []
+            for await (const msg of sub) {
+                received.push(msg.getParsedContent())
+                if (received.length === published.length) {
+                    break
+                }
+            }
+
+            expect(received).toEqual(published.map((s) => s.getParsedContent()))
         })
     })
 })

@@ -14,10 +14,14 @@ export type MessageStreamOptions = {
   streamPartition: number
 }
 
+const MessageStreamEmitter = Emitter as {
+    new(): StrictEventEmitter<Emitter, IStreamMessageEmitter>
+}
+
 /**
  * @category Important
  */
-class MessageStreamBase extends Emitter implements Context {
+export default class MessageStream<T> extends MessageStreamEmitter implements Context {
     id: string
     streamId: string
     streamPartition: number
@@ -33,6 +37,7 @@ class MessageStreamBase extends Emitter implements Context {
     debug
 
     constructor(context: Context, opts: MessageStreamOptions) {
+        // @ts-expect-error captureRejections isn't in strict event emitter interface
         super({ captureRejections: true })
         this.context = context
         const { streamId, streamPartition, key, id } = validateOptions(opts)
@@ -48,8 +53,8 @@ class MessageStreamBase extends Emitter implements Context {
 
     onListener = (event: string | symbol) => {
         if (event === 'message') {
+            this.off('newListener', this.onListener)
             this.flow()
-
         }
     }
 
@@ -118,11 +123,11 @@ class MessageStreamBase extends Emitter implements Context {
         }
     }
 
-    push(message: StreamMessage) {
+    push(message: StreamMessage<T>) {
         return this.stream.push(message)
     }
 
-    from(source: AsyncIterable<StreamMessage>) {
+    from(source: AsyncIterable<StreamMessage<T>>) {
         return this.stream.from(source)
     }
 
@@ -130,7 +135,7 @@ class MessageStreamBase extends Emitter implements Context {
         return this.stream?.cancel(err)
     }
 
-    async end(message?: StreamMessage) {
+    async end(message?: StreamMessage<T>) {
         return this.stream?.end(message)
     }
 
@@ -148,6 +153,3 @@ class MessageStreamBase extends Emitter implements Context {
 
 }
 
-export default class MessageStream extends (MessageStreamBase as {
-    new(context: Context, opts: MessageStreamOptions): StrictEventEmitter<MessageStreamBase, IStreamMessageEmitter>
-}) {}

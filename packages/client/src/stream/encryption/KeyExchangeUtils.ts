@@ -54,7 +54,10 @@ export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKe
     }).filter(Boolean) as [])
 }
 
-export async function subscribeToKeyExchangeStream(client: StreamrClient, onKeyExchangeMessage: (msg: any, streamMessage: StreamMessage) => void) {
+export async function subscribeToKeyExchangeStream<T>(
+    client: StreamrClient,
+    onKeyExchangeMessage: (msg: T, streamMessage: StreamMessage<T>) => void
+) {
     const { options } = client
     if ((!options.auth!.privateKey && !options.auth!.ethereum) || !options.keyExchange) {
         return Promise.resolve()

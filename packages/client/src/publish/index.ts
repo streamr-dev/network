@@ -13,7 +13,7 @@ export class FailedToPublishError extends Error {
     streamId
     msg
     reason
-    constructor(streamId: string, msg: string, reason?: Error) {
+    constructor(streamId: string, msg: any, reason?: Error) {
         super(`Failed to publish to stream ${streamId} due to: ${reason && reason.stack ? reason.stack : reason}. Message was: ${inspect(msg)}`)
         this.streamId = streamId
         this.msg = msg

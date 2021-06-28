@@ -42,13 +42,11 @@ function waitForSubMessage(sub: Subscription, matchFn: MessageMatch): ReturnType
 }
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil): Promise<GroupKey[]> {
-    const { messageType } = streamMessage
-    const content = streamMessage.getParsedContent() || []
     let encryptedGroupKeys: EncryptedGroupKey[] = []
-    if (messageType === MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
-        encryptedGroupKeys = GroupKeyResponse.fromArray(content).encryptedGroupKeys || []
-    } else if (messageType === MESSAGE_TYPES.GROUP_KEY_ANNOUNCE) {
-        const msg = GroupKeyAnnounce.fromArray(content)
+    if (GroupKeyResponse.is(streamMessage)) {
+        encryptedGroupKeys = GroupKeyResponse.fromArray(streamMessage.getParsedContent() || []).encryptedGroupKeys || []
+    } else if (GroupKeyAnnounce.is(streamMessage)) {
+        const msg = GroupKeyAnnounce.fromArray(streamMessage.getParsedContent() || [])
         encryptedGroupKeys = msg.encryptedGroupKeys || []
     }
 

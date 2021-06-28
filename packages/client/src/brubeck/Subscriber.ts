@@ -3,7 +3,6 @@ import { validateOptions } from '../stream/utils'
 import SubscriptionSession from './SubscriptionSession'
 import { StreamPartDefinition } from '..'
 import { BrubeckClient } from './BrubeckClient'
-import MessageStream from './MessageStream'
 import Subscription from './Subscription'
 import { Context } from './Context'
 
@@ -15,7 +14,7 @@ export default class Subscriber implements Context {
     client: BrubeckClient
     id
     debug
-    readonly subSessions: Map<string, SubscriptionSession> = new Map()
+    readonly subSessions: Map<string, SubscriptionSession<unknown>> = new Map()
 
     constructor(client: BrubeckClient) {
         this.client = client
@@ -23,11 +22,11 @@ export default class Subscriber implements Context {
         this.debug = this.client.debug.extend(this.id)
     }
 
-    async subscribe(opts: StreamPartDefinition) {
-        return this.add(opts)
+    async subscribe<T>(opts: StreamPartDefinition) {
+        return this.add<T>(opts)
     }
 
-    async add(opts: StreamPartDefinition) {
+    async add<T>(opts: StreamPartDefinition) {
         const options = validateOptions(opts)
         const { key } = options
 
@@ -36,7 +35,7 @@ export default class Subscriber implements Context {
         const subSession = this.subSessions.get(key) || new SubscriptionSession(this.client, options)
 
         // create subscription
-        const sub = new Subscription(subSession, options)
+        const sub = new Subscription<T>(subSession, options)
         sub.once('end', () => {
             this.remove(sub)
         })
@@ -56,7 +55,7 @@ export default class Subscriber implements Context {
         return sub
     }
 
-    async remove(sub: MessageStream): Promise<void> {
+    async remove(sub: Subscription<any>): Promise<void> {
         const { key } = sub
         let cancelTask
         try {
@@ -84,7 +83,7 @@ export default class Subscriber implements Context {
      */
     async removeAll(options?: StreamPartDefinition) {
         const subs = this.get(options)
-        return allSettledValues(subs.map((sub: MessageStream) => (
+        return allSettledValues(subs.map((sub) => (
             this.remove(sub)
         )))
     }
@@ -114,8 +113,8 @@ export default class Subscriber implements Context {
      * Get all subscriptions.
      */
 
-    getAll(): MessageStream[] {
-        return [...this.subSessions.values()].reduce((o: MessageStream[], s: SubscriptionSession) => {
+    getAll<T = unknown>(): Subscription<T>[] {
+        return [...this.subSessions.values()].reduce((o: Subscription<T>[], s: SubscriptionSession<T>) => {
             o.push(...s.subscriptions)
             return o
         }, [])
@@ -125,7 +124,7 @@ export default class Subscriber implements Context {
      * Get subscription session for matching sub options.
      */
 
-    getSubscriptionSession(options: StreamPartDefinition): SubscriptionSession | undefined {
+    getSubscriptionSession<T>(options: StreamPartDefinition): SubscriptionSession<T> | undefined {
         const { key } = validateOptions(options)
         return this.subSessions.get(key)
     }
@@ -134,7 +133,7 @@ export default class Subscriber implements Context {
      * Get all subscriptions matching options.
      */
 
-    get(options?: StreamPartDefinition): MessageStream[] {
+    get<T = unknown>(options?: StreamPartDefinition): Subscription<T>[] {
         if (options === undefined) { return this.getAll() }
 
         const { key } = validateOptions(options)
@@ -142,6 +141,10 @@ export default class Subscriber implements Context {
         if (!subSession) { return [] }
 
         return [...subSession.subscriptions]
+    }
+
+    stop() {
+        return this.removeAll()
     }
 }
 
