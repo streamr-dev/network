@@ -212,7 +212,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
     private onStateChange(state: string): void {
         this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
-        console.log(state)
+
         this.lastState = state
 
         if (state === 'disconnected' || state === 'closed') {
