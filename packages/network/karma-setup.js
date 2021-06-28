@@ -20,6 +20,8 @@ jest.runOnlyPendingTimers = timers.runOnlyPendingTimers
 jest.setSystemTime = timers.setSystemTime
 jest.useFakeTimers = timers.useFakeTimers
 jest.useRealTimers = timers.useRealTimers
+
+// eslint-disable-next-line no-underscore-dangle
 jest._checkFakeTimers = timers._checkFakeTimers
 
 Object.assign(jest,timers)
