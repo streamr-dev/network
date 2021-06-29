@@ -36,10 +36,10 @@ export enum EncryptionType {
     AES = 2
 }
 
-interface Options {
+type Options<T> = {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
-    content: any
+    content: T | string
     messageType?: StreamMessageType
     contentType?: ContentType
     encryptionType?: EncryptionType
@@ -92,7 +92,7 @@ export default class StreamMessage<T = unknown> {
         newGroupKey = null,
         signatureType = StreamMessage.SIGNATURE_TYPES.NONE,
         signature = null,
-    }: Options) {
+    }: Options<T>) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
 
@@ -120,13 +120,14 @@ export default class StreamMessage<T = unknown> {
         validateIsString('signature', signature, true)
         this.signature = signature
 
-        if (typeof content === 'object' && contentType === StreamMessage.CONTENT_TYPES.JSON) {
-            this.parsedContent = content
-            this.serializedContent = JSON.stringify(content)
-        } else {
+        if (typeof content === 'string') {
             // this.parsedContent gets written lazily
             this.serializedContent = content
+        } else {
+            this.parsedContent = content
+            this.serializedContent = JSON.stringify(content)
         }
+
         validateIsNotEmptyString('content', this.serializedContent)
 
         StreamMessage.validateSequence(this)
