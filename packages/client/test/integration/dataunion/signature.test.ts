@@ -1,4 +1,4 @@
-import { BigNumber, Contract, providers, Wallet } from 'ethers'
+import { BigNumber, Contract, Wallet } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
 
@@ -6,60 +6,53 @@ import { getEndpointUrl } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import config from '../config'
+import { clientOptions, providerSidechain } from '../devEnvironment'
 import authFetch from '../../../src/rest/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')
 
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, providerSidechain)
+const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
 
 describe('DataUnion signature', () => {
 
-    afterAll(() => {
-        providerSidechain.removeAllListeners()
-    })
-
     it('check validity', async () => {
-        const adminClient = new StreamrClient(config.clientOptions as any)
+        const adminClient = new StreamrClient(clientOptions as any)
         const dataUnion = await adminClient.deployDataUnion()
+        const dataUnionAddress = dataUnion.getAddress()
         const secret = await dataUnion.createSecret('test secret')
-        log(`DataUnion ${dataUnion.getAddress()} is ready to roll`)
+        log(`DataUnion ${dataUnionAddress} is ready to roll`)
 
         const memberWallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
         const member2Wallet = new Wallet(`0x100000000000000000000000000000000000000012300000002${Date.now()}`, providerSidechain)
 
         const memberClient = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: memberWallet.privateKey
             }
         } as any)
+        const memberDataUnion = await memberClient.safeGetDataUnion(dataUnionAddress)
 
         // product is needed for join requests to analyze the DU version
-        const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
+        const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
         await authFetch(createProductUrl, adminClient.session, {
             method: 'POST',
             body: JSON.stringify({
-                beneficiaryAddress: dataUnion.getAddress(),
+                beneficiaryAddress: dataUnionAddress,
                 type: 'DATAUNION',
                 dataUnionVersion: 2
             })
         })
-        await memberClient.getDataUnion(dataUnion.getAddress()).join(secret)
+        await memberDataUnion.join(secret)
 
         // eslint-disable-next-line no-underscore-dangle
         const contract = await dataUnion._getContract()
         const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
-        const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
+        const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
-        const signature = await memberClient.getDataUnion(dataUnion.getAddress()).signWithdrawAllTo(member2Wallet.address)
-        const signature2 = await memberClient
-            .getDataUnion(dataUnion.getAddress())
-            .signWithdrawAmountTo(member2Wallet.address, parseEther('1'))
-        const signature3 = await memberClient
-            .getDataUnion(dataUnion.getAddress())
-            .signWithdrawAmountTo(member2Wallet.address, 3000000000000000) // 0.003 tokens
+        const signature = await memberDataUnion.signWithdrawAllTo(member2Wallet.address)
+        const signature2 = await memberDataUnion.signWithdrawAmountTo(member2Wallet.address, parseEther('1'))
+        const signature3 = await memberDataUnion.signWithdrawAmountTo(member2Wallet.address, 3000000000000000) // 0.003 tokens
 
         const isValid = await sidechainContract.signatureIsValid(memberWallet.address, member2Wallet.address, '0', signature) // '0' = all earnings
         const isValid2 = await sidechainContract.signatureIsValid(memberWallet.address, member2Wallet.address, parseEther('1'), signature2)

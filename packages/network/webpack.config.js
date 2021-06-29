@@ -16,6 +16,9 @@ module.exports = {
         fallback: {
             "events": require.resolve("events/"),
             "path": require.resolve("path-browserify")
+        },
+        alias: {
+            process: "process/browser"
         }
     },
     output: {
@@ -27,5 +30,11 @@ module.exports = {
         'geoip-lite': 'commonjs geoip-lite',
         'node-datachannel': 'commonjs node-datachannel'
 
-    }
+    },
+    plugins: [
+		new webpack.ProvidePlugin({
+            process: 'process/browser',
+        })
+	],
+    
 }

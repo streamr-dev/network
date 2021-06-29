@@ -1,4 +1,4 @@
-const { startNetworkNode } = require('./composition')
+import { startNetworkNode } from "./composition"
 
 startNetworkNode({
     host: "127.0.0.1",

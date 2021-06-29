@@ -1,11 +1,11 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { fakePrivateKey } from '../utils'
 
-import config from './config'
+import clientOptions from './config'
 
 describe('Session', () => {
     const createClient = (opts = {}) => new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         ...opts,
         autoConnect: false,
         autoDisconnect: false,

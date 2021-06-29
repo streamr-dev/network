@@ -4,9 +4,7 @@
     "outDir": "dist",
     "rootDirs": ["src", "test"],
     "types": [
-      "puppeteer",
-      "jest-environment-puppeteer",
-      "expect-puppeteer"
+    "jest"
     ]
   },
   "include": [
