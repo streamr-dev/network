@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { DisconnectionCode, DisconnectionReason, Event, IWsEndpoint } from './IWsEndpoint'
+import { DisconnectionCode, DisconnectionReason, Event } from './IWsEndpoint'
 import uWS from 'uWebSockets.js'
 import { PeerBook } from './PeerBook'
 import { PeerInfo, PeerType } from './PeerInfo'
@@ -59,7 +59,7 @@ function terminateWs(ws: UWSConnection, logger: Logger): void {
     }
 }
 
-export class ServerWsEndpoint extends EventEmitter implements IWsEndpoint {
+export class ServerWsEndpoint extends EventEmitter {
     private readonly serverHost: string
     private readonly serverPort: number
     private readonly wss: uWS.TemplatedApp
@@ -281,7 +281,7 @@ export class ServerWsEndpoint extends EventEmitter implements IWsEndpoint {
         }
     }
 
-    onReceive(peerInfo: PeerInfo, address: string, message: string): void {
+    private onReceive(peerInfo: PeerInfo, address: string, message: string): void {
         this.logger.trace('<== received from %s [%s] message "%s"', peerInfo, address, message)
         this.emit(Event.MESSAGE_RECEIVED, peerInfo, message)
     }
@@ -301,35 +301,6 @@ export class ServerWsEndpoint extends EventEmitter implements IWsEndpoint {
                 this.logger.warn('closing connection to %s [%s] failed because of %s', recipientId, recipientAddress, e)
             }
         }
-    }
-
-    async connect(peerAddress: string): Promise<string> {
-        if (this.isConnected(peerAddress)) {
-            const ws = this.connections.get(peerAddress)!
-
-            if (ws.readyState === ws.OPEN) {
-                this.logger.trace('already connected to %s', peerAddress)
-                return Promise.resolve(this.peerBook.getPeerId(peerAddress))
-            }
-
-            this.logger.trace('already connected to %s, but readyState is %s, closing connection',
-                peerAddress, ws.readyState)
-            this.close(this.peerBook.getPeerId(peerAddress))
-        }
-
-        if (peerAddress === this.getAddress()) {
-            this.metrics.record('open:ownAddress', 1)
-            this.logger.warn('not allowed to connect to own address %s', peerAddress)
-            return Promise.reject(new Error('trying to connect to own address'))
-        }
-
-        if (this.pendingConnections.has(peerAddress)) {
-            this.logger.trace('pending connection to %s', peerAddress)
-            return this.pendingConnections.get(peerAddress)!
-        }
-
-        this.logger.trace('===> connecting to %s', peerAddress)
-        return peerAddress
     }
 
     stop(): Promise<void> {

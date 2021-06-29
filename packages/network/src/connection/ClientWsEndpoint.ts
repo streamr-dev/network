@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { DisconnectionCode, DisconnectionReason, Event, IWsEndpoint } from './IWsEndpoint'
+import { DisconnectionCode, DisconnectionReason, Event } from './IWsEndpoint'
 import WebSocket from 'ws'
 import { PeerBook } from './PeerBook'
 import { PeerInfo, PeerType } from './PeerInfo'
@@ -61,7 +61,7 @@ function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     }
 }
 
-export class ClientWsEndpoint extends EventEmitter implements IWsEndpoint {
+export class ClientWsEndpoint extends EventEmitter {
     private readonly peerInfo: PeerInfo
     private readonly advertisedWsUrl: string | null
 
@@ -212,7 +212,7 @@ export class ClientWsEndpoint extends EventEmitter implements IWsEndpoint {
         }
     }
 
-    onReceive(peerInfo: PeerInfo, address: string, message: string): void {
+    private onReceive(peerInfo: PeerInfo, address: string, message: string): void {
         this.logger.trace('<== received from %s [%s] message "%s"', peerInfo, address, message)
         this.emit(Event.MESSAGE_RECEIVED, peerInfo, message)
     }
@@ -362,60 +362,12 @@ export class ClientWsEndpoint extends EventEmitter implements IWsEndpoint {
         return this.peerInfo.peerId
     }
 
-    getPeerInfo(): Readonly<PeerInfo> {
-        return this.peerInfo
-    }
-
     getPeers(): ReadonlyMap<string, WsConnection> {
         return this.connections
     }
 
-    getPeerInfos(): PeerInfo[] {
-        return Array.from(this.connections.keys())
-            .map((address) => this.peerBook.getPeerInfo(address))
-            .filter((x) => x !== null) as PeerInfo[]
-    }
-
     resolveAddress(peerId: string): string | never {
         return this.peerBook.getAddress(peerId)
-    }
-
-    private onIncomingConnection(ws: WsConnection): void {
-        const { address, peerId, peerType, controlLayerVersions, messageLayerVersions } = ws
-
-        try {
-            if (!address) {
-                throw new Error('address not given')
-            }
-            if (!peerId) {
-                throw new Error('peerId not given')
-            }
-            if (!peerType) {
-                throw new Error('peerType not given')
-            }
-            if (!controlLayerVersions) {
-                throw new Error('controlLayerVersions not given')
-            }
-            if (!messageLayerVersions) {
-                throw new Error('messageLayerVersions not given')
-            }
-            const controlLayerVersionsArray = controlLayerVersions.split(',').map((version) => parseInt(version))
-            const messageLayerVersionsArray = messageLayerVersions.split(',').map((version) => parseInt(version))
-
-            const clientPeerInfo = new PeerInfo(peerId, peerType, controlLayerVersionsArray, messageLayerVersionsArray)
-            if (this.isConnected(address)) {
-                this.metrics.record('open:duplicateSocket', 1)
-                ws.close(DisconnectionCode.DUPLICATE_SOCKET, DisconnectionReason.DUPLICATE_SOCKET)
-                return
-            }
-
-            this.logger.trace('<=== %s connecting to me', address)
-            this.onNewConnection(ws, address, clientPeerInfo, false)
-        } catch (e) {
-            this.logger.trace('dropped incoming connection because of %s', e)
-            this.metrics.record('open:missingParameter', 1)
-            closeWs(ws, DisconnectionCode.MISSING_REQUIRED_PARAMETER, e.toString(), this.logger)
-        }
     }
 
     private onClose(address: string, peerInfo: PeerInfo, code = 0, reason = ''): void {

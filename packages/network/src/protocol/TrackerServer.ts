@@ -3,11 +3,12 @@ import { v4 as uuidv4 } from 'uuid'
 import { TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
-import { IWsEndpoint, Event as WsEndpointEvent } from '../connection/IWsEndpoint'
+import { Event as WsEndpointEvent } from '../connection/IWsEndpoint'
 import { StreamIdAndPartition } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
+import { ServerWsEndpoint } from "../connection/ServerWsEndpoint"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',
@@ -28,10 +29,10 @@ export interface TrackerNode {
 }
 
 export class TrackerServer extends EventEmitter {
-    private readonly endpoint: IWsEndpoint
+    private readonly endpoint: ServerWsEndpoint
     private readonly logger: Logger
 
-    constructor(endpoint: IWsEndpoint) {
+    constructor(endpoint: ServerWsEndpoint) {
         super()
         this.endpoint = endpoint
         endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
