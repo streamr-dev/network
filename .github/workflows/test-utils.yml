@@ -9,10 +9,6 @@ on:
   pull_request:
     branches:
       - '*'
-    paths:
-      - 'packages/test-utils/*'
-      - 'packages/test-utils/**/*'
-      - '.github/workflows/test-utils.yml'
   schedule:
     # run every day at 00:00
     - cron:  '0 0 * * *'

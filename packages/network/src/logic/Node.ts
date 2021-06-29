@@ -59,7 +59,7 @@ export interface Node {
 }
 
 export class Node extends EventEmitter {
-    private readonly nodeToNode: NodeToNode
+    protected readonly nodeToNode: NodeToNode
     private readonly trackerNode: TrackerNode
     private readonly peerInfo: PeerInfo
     private readonly connectToBootstrapTrackersInterval: number
@@ -73,7 +73,7 @@ export class Node extends EventEmitter {
 
     private readonly logger: Logger
     private readonly disconnectionTimers: { [key: string]: NodeJS.Timeout }
-    private readonly streams: StreamManager
+    protected readonly streams: StreamManager
     private readonly messageBuffer: MessageBuffer<[MessageLayer.StreamMessage, string | null]>
     private readonly seenButNotPropagatedSet: SeenButNotPropagatedSet
     private readonly trackerRegistry: Utils.TrackerRegistry<string>

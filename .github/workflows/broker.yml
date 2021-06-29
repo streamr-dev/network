@@ -7,10 +7,8 @@ on:
     branches:
       - main
   pull_request:
-    paths:
-      - 'packages/broker/*'
-      - 'packages/broker/**/*'
-      - '.github/workflows/broker.yml'
+    branches:
+      - '*'
   schedule:
     # run every day at 00:00
     - cron:  '0 0 * * *'

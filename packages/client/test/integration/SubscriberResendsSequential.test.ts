@@ -12,7 +12,7 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import clientOptions from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber } from '../../src/subscribe'
 import { StorageNode } from '../../src/stream/StorageNode'
@@ -34,12 +34,12 @@ describeRepeats('sequential resend subscribe', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
 
-    let published: any[] // keeps track of stream message data so we can verify they were resent
-    let publishedRequests: any[] // tracks publish requests so we can pass them to waitForStorage
+    let published: any[] = [] // keeps track of stream message data so we can verify they were resent
+    let publishedRequests: any[] = [] // tracks publish requests so we can pass them to waitForStorage
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

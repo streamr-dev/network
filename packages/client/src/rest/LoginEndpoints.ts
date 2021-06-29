@@ -29,7 +29,7 @@ async function getSessionToken(url: string, props: any) {
 export class LoginEndpoints {
 
     /** @internal */
-    client: StreamrClient
+    readonly client: StreamrClient
 
     constructor(client: StreamrClient) {
         this.client = client
