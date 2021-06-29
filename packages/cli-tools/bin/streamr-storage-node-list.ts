@@ -6,7 +6,7 @@ import {
     authOptions,
     exitWithHelpIfArgsNotBetween,
     formStreamrOptionsWithEnv,
-    createStreamId,
+    getStreamId,
 } from './common'
 import pkg from '../package.json'
 import EasyTable from 'easy-table'
@@ -31,7 +31,7 @@ envOptions(program)
     .version(pkg.version)
     .action((options: any) => {
         const client = new StreamrClient(formStreamrOptionsWithEnv(options))
-        const streamId = createStreamId(options.stream, options)
+        const streamId = getStreamId(options.stream, options)
         getStorageNodes(streamId, client).then((addresses: string[]) => {
             if (addresses.length > 0) {
                 console.info(EasyTable.print(addresses.map((address: string) => ({

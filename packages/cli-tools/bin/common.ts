@@ -93,7 +93,7 @@ export function createFnParseInt(name: string): (s: string) => number {
     }
 }
 
-export const createStreamId = (streamIdOrPath: string|undefined, options: any) => {
+export const getStreamId = (streamIdOrPath: string|undefined, options: any) => {
     if (streamIdOrPath === undefined) {
         return undefined
     }

@@ -2,7 +2,7 @@
 import { Command } from 'commander'
 import es from 'event-stream'
 import { publishStream } from '../src/publish'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, createStreamId } from './common'
+import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, getStreamId } from './common'
 import pkg from '../package.json'
 
 const program = new Command()
@@ -14,7 +14,7 @@ authOptions(program)
 envOptions(program)
     .version(pkg.version)
     .action((streamIdOrPath: string, options: any) => {
-        const streamId = createStreamId(streamIdOrPath, options)!
+        const streamId = getStreamId(streamIdOrPath, options)!
         const ps = publishStream(streamId, options.partitionKey, formStreamrOptionsWithEnv(options))
         process.stdin
             .pipe(es.split())

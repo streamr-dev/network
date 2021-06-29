@@ -2,7 +2,7 @@
 import { Command } from 'commander'
 import { StreamrClientOptions } from 'streamr-client'
 import { resend } from '../src/resend'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, createStreamId } from './common'
+import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, getStreamId } from './common'
 import pkg from '../package.json'
 
 function assertBothOrNoneDefined(option1: string, option2: string, errorMessage: string, commandOptions: any) {
@@ -34,7 +34,7 @@ program
         const clientOptions: StreamrClientOptions & { subscribe?: boolean } = formStreamrOptionsWithEnv(command.parent!.opts())
         clientOptions.orderMessages = !options.disableOrdering
         clientOptions.subscribe = options.subscribe
-        const streamId = createStreamId(streamIdOrPath, command.parent!.opts())!
+        const streamId = getStreamId(streamIdOrPath, command.parent!.opts())!
         resend(streamId, resendOptions, clientOptions)
     })
 
@@ -55,7 +55,7 @@ program
         const clientOptions: StreamrClientOptions & { subscribe?: boolean } = formStreamrOptionsWithEnv(command.parent!.opts())
         clientOptions.orderMessages = !options.disableOrdering
         clientOptions.subscribe = options.subscribe
-        const streamId = createStreamId(streamIdOrPath, command.parent!.opts())!
+        const streamId = getStreamId(streamIdOrPath, command.parent!.opts())!
         resend(streamId, resendOptions, clientOptions)
     })
 
@@ -81,7 +81,7 @@ program
         assertBothOrNoneDefined('publisherId', 'msgChainId', '--publisher-id must be accompanied by option --msg-chain-id', options)
         const clientOptions = formStreamrOptionsWithEnv(command.parent!.opts())
         clientOptions.orderMessages = !options.disableOrdering
-        const streamId = createStreamId(streamIdOrPath, command.parent!.opts())!
+        const streamId = getStreamId(streamIdOrPath, command.parent!.opts())!
         resend(streamId, resendOptions, clientOptions)
     })
 

@@ -5,7 +5,7 @@ import {
     authOptions,
     exitWithHelpIfArgsNotBetween,
     formStreamrOptionsWithEnv,
-    createStreamId
+    getStreamId
 } from './common'
 import pkg from '../package.json'
 import { StreamrClient } from 'streamr-client'
@@ -19,7 +19,7 @@ envOptions(program)
     .version(pkg.version)
     .action(async (streamIdOrPath: string, permissionId: number, options: any) => {
         const client = new StreamrClient(formStreamrOptionsWithEnv(options))
-        const streamId = createStreamId(streamIdOrPath, options)!
+        const streamId = getStreamId(streamIdOrPath, options)!
         const stream = await client.getStream(streamId)
         stream.revokePermission(permissionId)
     })
