@@ -1,4 +1,5 @@
-import { Defer, pTimeout } from './index'
+import { Defer, pTimeout, instanceId } from './index'
+import { Debug } from './log'
 
 async function endGenerator(gtr: AsyncGenerator, error?: Error) {
     return error
@@ -31,6 +32,20 @@ export class AbortError extends Error {
             Error.captureStackTrace(this, this.constructor)
         }
     }
+}
+
+function isError(err: any): err is Error {
+    if (!err) { return false }
+
+    if (err instanceof Error) { return true }
+
+    return !!(
+        err
+        && err.stack
+        && err.message
+        && typeof err.stack === 'string'
+        && typeof err.message === 'string'
+    )
 }
 
 type AnyIterable<T> = Iterable<T> | AsyncIterable<T>
@@ -73,11 +88,13 @@ type PushQueueOptions = Partial<{
 }>
 
 export default class PushQueue<T> {
+    id
+    debug
     autoEnd
     timeout
     signal
     iterator
-    buffer: T[] | [...T[], null]
+    buffer: T[] | [...T[], null] | [...T[], Error]
     error?: Error// queued error
     nextQueue: (ReturnType<typeof Defer>)[] = [] // queued promises for next()
     finished = false
@@ -93,6 +110,9 @@ export default class PushQueue<T> {
         timeout = 0,
         autoEnd = true
     }: PushQueueOptions = {}) {
+        this.id = instanceId(this)
+        this.debug = Debug(this.id)
+        this.debug('create')
         this.autoEnd = autoEnd
         this.timeout = timeout
         this._onEnd = onEnd
@@ -179,10 +199,12 @@ export default class PushQueue<T> {
      * signals no more data should be buffered
      */
 
-    end(v?: T | null) {
+    end(v?: T | null | Error) {
         if (this.ended) {
             return
         }
+
+        this.debug('end')
 
         if (v != null) {
             this.push(v)
@@ -209,6 +231,7 @@ export default class PushQueue<T> {
     }
 
     async return(v?: T) {
+        if (this.finished) { return v }
         this.finished = true
         await this._cleanup()
         return v
@@ -220,10 +243,14 @@ export default class PushQueue<T> {
         }
 
         this.finished = true
+        this.debug('throw')
         const p = this.nextQueue.shift()
         if (p) {
+            this.debug('throw 1')
             p.reject(err)
+            await this._cleanup()
         } else {
+            this.debug('throw 2')
             // for next()
             this.error = err
         }
@@ -261,26 +288,31 @@ export default class PushQueue<T> {
         return this.onEnd(error)
     }
 
-    push(...values: (T | null)[]) {
+    push(...values: (T | null | Error)[]) {
         if (this.finished || this.ended) {
             // do nothing if done
             return
         }
 
         // if values contains null, treat null as end
-        const nullIndex = values.findIndex((v) => v === null)
+        const endIndex = values.findIndex((v) => v === null || isError(v))
         let validValues = values as T[]
-        if (nullIndex !== -1) {
+        if (endIndex !== -1) {
             this.ended = true
-            // include null but trim rest
-            validValues = values.slice(0, nullIndex + 1) as T[]
+            // include end but trim rest
+            validValues = values.slice(0, endIndex + 1) as T[]
         }
 
         // resolve pending next calls
         while (this.nextQueue.length && validValues.length) {
             const p = this.nextQueue.shift()
             if (p) {
-                p.resolve(validValues.shift())
+                const value = validValues.shift()
+                if (isError(value)) {
+                    p.reject(value)
+                } else {
+                    p.resolve(null)
+                }
             }
         }
 
@@ -297,7 +329,7 @@ export default class PushQueue<T> {
                 return this.return()
             }
 
-            if (value instanceof Error) {
+            if (isError(value)) {
                 return this.throw(value)
             }
 
@@ -313,7 +345,7 @@ export default class PushQueue<T> {
                 this.buffer.length = 0 // prevent endless loop
                 while (buffer.length && !this.error && !this.finished) {
                     this.pending = Math.max(this.pending - 1, 0)
-                    const value = (buffer.shift() as T | null)
+                    const value = (buffer.shift() as T | null | Error)
                     const endTask = handleTerminalValues(value)
                     if (endTask) {
                         await endTask
@@ -327,6 +359,7 @@ export default class PushQueue<T> {
                 if (this.error) {
                     const err = this.error
                     this.error = undefined
+                    this.debug('queued error')
                     throw err
                 }
 
@@ -372,6 +405,7 @@ export default class PushQueue<T> {
         if (error) {
             this.error = error
         }
+        this.debug('cancel. Queued next: %d, buffered data: %d', this.nextQueue.length, this.buffer.length)
         await endGeneratorTimeout(this.iterator, {
             timeout: this.timeout,
             error,

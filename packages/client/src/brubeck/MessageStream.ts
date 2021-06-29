@@ -1,81 +1,91 @@
 import Emitter, { captureRejectionSymbol } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 
-import { counterId } from '../utils'
-import { validateOptions } from '../stream/utils'
+import { instanceId } from '../utils'
 
 import { Context } from './Context'
 import PushQueue from '../utils/PushQueue'
-import { StreamMessage } from '../../../protocol/dist/src'
-import { IStreamMessageEmitter } from './StreamMessageEmitter'
+import { StreamMessage } from 'streamr-client-protocol'
 
-export type MessageStreamOptions = {
-  streamId: string,
-  streamPartition: number
+export type MessageStreamEventsBase<T> = {
+    end: () => void
+    message: (streamMessage: StreamMessage<T>) => void
+    error: (error: Error) => void
 }
 
-const MessageStreamEmitter = Emitter as {
-    new(): StrictEventEmitter<Emitter, IStreamMessageEmitter>
+type MessageStreamEvents<T> = MessageStreamEventsBase<T> & {
+    // newListener event type doesn't come out of the box.
+    // Uses MessageStreamEventsBase to get correct event types.
+    newListener<E extends keyof MessageStreamEventsBase<T>> (event: E, ...args: any[]): void
 }
+
+// have to export this otherwise it complains
+export type StrictMessageStreamEmitter = {
+    new<T>(...args: ConstructorParameters<typeof Emitter>): StrictEventEmitter<Emitter, MessageStreamEvents<T>>
+}
+
+// add strict types
+const MessageStreamEmitter = Emitter as StrictMessageStreamEmitter
 
 /**
  * @category Important
+ * Wraps PushQueue
+ * Adds events & error handling
  */
-export default class MessageStream<T> extends MessageStreamEmitter implements Context {
+export default class MessageStream<T> extends MessageStreamEmitter<T> implements Context {
     id: string
-    streamId: string
-    streamPartition: number
     /** @internal */
     context: Context
     /** @internal */
-    key: string
-    /** @internal */
-    buffer = new PushQueue<StreamMessage>([])
+    buffer = new PushQueue<StreamMessage<T>>([])
     /** @internal */
     isIterating = false
     /** @internal */
     debug
+    isErrored = false
 
-    constructor(context: Context, opts: MessageStreamOptions) {
-        // @ts-expect-error captureRejections isn't in strict event emitter interface
+    constructor(context: Context, { idSuffix }: { idSuffix?: string } = {}) {
         super({ captureRejections: true })
         this.context = context
-        const { streamId, streamPartition, key, id } = validateOptions(opts)
-        this.id = `${counterId(`${this.constructor.name}`)}${id || ''}${key}`
-        this.key = key
-        this.streamId = streamId
-        this.streamPartition = streamPartition
+        this.id = !idSuffix ? instanceId(this) : `${instanceId(this)}-${idSuffix}`
         this.debug = context.debug.extend(this.id)
         this.debug('create')
-        this.on('error', this.onError)
         this.on('newListener', this.onListener)
     }
 
     onListener = (event: string | symbol) => {
         if (event === 'message') {
             this.off('newListener', this.onListener)
-            this.flow()
+            this.flow().catch(() => {})
         }
     }
 
-    async flow() {
-        for await (const msg of this) {
-            try {
-                this.emit('message', msg)
-            } catch (err) {
-                this.emit('error', err)
-            }
-        }
-    }
-
-    onError = async (error: Error) => {
-        if (this.listenerCount('error') > 1) {
+    async handleError(err: Error) {
+        if (this.listenerCount('error')) {
+            // emit error instead of throwing if some error listener
+            this.emit('error', err)
             return
         }
 
-        this.debug('emitting error but no error listeners, cancelling subscription', error)
-        this.off('error', this.onError)
-        await this.cancel(error)
+        if (this.buffer.isWritable()) {
+            await this.buffer.throw(err)
+        }
+
+        throw err
+    }
+
+    async flow() {
+        try {
+            for await (const msg of this) {
+                try {
+                    this.emit('message', msg)
+                } catch (err) {
+                    await this.handleError(err)
+                }
+            }
+        } catch (err) {
+            await this.handleError(err)
+        }
     }
 
     [captureRejectionSymbol](error: Error, event: string | symbol) {
@@ -88,35 +98,42 @@ export default class MessageStream<T> extends MessageStreamEmitter implements Co
      * Returns array when subscription is ended or n messages collected.
      */
     async collect(n?: number) {
-        const msgs = []
-        for await (const msg of this) {
-            if (n === 0) {
-                break
-            }
-
-            msgs.push(msg.getParsedContent())
-            if (msgs.length === n) {
-                break
-            }
+        if (this.isIterating) {
+            throw new Error('Cannot collect if already iterated or onMessage.')
         }
 
+        const msgs = []
+        try {
+            for await (const msg of this) {
+                if (n === 0) {
+                    break
+                }
+
+                msgs.push(msg.getParsedContent())
+                if (msgs.length === n) {
+                    break
+                }
+            }
+        } catch (err) {
+            await this.handleError(err)
+        }
         return msgs
     }
 
     async* [Symbol.asyncIterator]() {
+        if (this.isIterating) {
+            throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
+        }
+
         try {
             // only iterate sub once
-            if (this.isIterating) {
-                throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
-            }
-
             this.isIterating = true
 
             for await (const msg of this.buffer) {
                 yield msg
             }
         } catch (err) {
-            this.emit('error', err)
+            await this.handleError(err)
         } finally {
             this.emit('end')
             this.removeAllListeners()
@@ -135,7 +152,7 @@ export default class MessageStream<T> extends MessageStreamEmitter implements Co
         return this.buffer?.cancel(err)
     }
 
-    async end(message?: StreamMessage<T>) {
+    async end(message?: StreamMessage<T> | Error) {
         return this.buffer?.end(message)
     }
 
@@ -150,6 +167,4 @@ export default class MessageStream<T> extends MessageStreamEmitter implements Co
     async throw(error: Error) {
         return this.buffer?.throw(error)
     }
-
 }
-
