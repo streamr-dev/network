@@ -1,5 +1,4 @@
 import { wait } from 'streamr-test-utils'
-import { startTracker, Tracker } from 'streamr-network'
 
 import { describeRepeats, uid, fakePrivateKey, Msg } from '../../utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
@@ -9,12 +8,8 @@ import { publishManyGenerator } from './utils'
 import config from '../config'
 import { Stream } from '../../../src/stream'
 
-const trackerPort = 30302
-
 describeRepeats('StreamrClient', () => {
     const MAX_MESSAGES = 10
-
-    let tracker: Tracker
     let expectErrors = 0 // check no errors by default
     let errors: any[] = []
 
@@ -24,6 +19,7 @@ describeRepeats('StreamrClient', () => {
 
     let onError = jest.fn()
     let client: BrubeckClient
+    // const trackerPort = useTracker()
 
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
@@ -35,12 +31,12 @@ describeRepeats('StreamrClient', () => {
             autoDisconnect: false,
             maxRetries: 2,
             ...opts,
-            network: {
-                trackers: [
-                    `ws://127.0.0.1:${trackerPort}`,
-                ],
-                ...opts.network,
-            },
+            // network: {
+                // trackers: [
+                    // `ws://127.0.0.1:${trackerPort}`,
+                // ],
+                // ...opts.network,
+            // },
         })
         return c
     }
@@ -85,11 +81,6 @@ describeRepeats('StreamrClient', () => {
     }
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker'
-        })
         client = createClient()
         await client.getSessionToken()
         stream = await createStream()
@@ -109,10 +100,6 @@ describeRepeats('StreamrClient', () => {
             client.debug('disconnecting after test')
             await client.disconnect()
         }
-    })
-
-    afterEach(async () => {
-        await tracker.stop()
     })
 
     describe('Pub/Sub', () => {

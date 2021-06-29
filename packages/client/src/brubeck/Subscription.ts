@@ -11,6 +11,7 @@ export type SubscriptionOptions = {
 export type SubscriptionOnMessage<T> = (msg: T, streamMessage: StreamMessage<T>) => void
 export default class Subscription<T> extends MessageStream<T> {
     context: SubscriptionSession<T>
+    key: string
     streamId: string
     streamPartition: number
 
@@ -18,6 +19,7 @@ export default class Subscription<T> extends MessageStream<T> {
         const { key, streamId, streamPartition } = validateOptions(subSession)
         super(subSession, { idSuffix: key })
         this.context = subSession
+        this.key = key
         this.streamId = streamId
         this.streamPartition = streamPartition
     }

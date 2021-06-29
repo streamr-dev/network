@@ -4,15 +4,15 @@ import path from 'path'
 import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, Msg, createRelativeTestStreamId } from '../../utils'
+import { describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId } from '../../utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import { Defer } from '../../../src/utils'
-import { getPublishTestMessages } from './utils'
+import { getPublishTestMessages, useTracker } from './utils'
 
 import config from '../config'
 import { Stream } from '../../../src/stream'
-import Subscription from '../../../src/brubeck/Subscription'
-import { StorageNode } from '../../../src/stream/StorageNode'
+// import Subscription from '../../../src/brubeck/Subscription'
+// import { StorageNode } from '../../../src/stream/StorageNode'
 
 const { StreamMessage } = MessageLayer
 
@@ -26,10 +26,11 @@ describeRepeats('StreamrClient', () => {
         errs.push(err)
     })
 
+    // const trackerPort = useTracker()
     let onError = jest.fn()
     let client: BrubeckClient
 
-    const createClient = (opts = {}) => {
+    const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...config.clientOptions,
             auth: {
@@ -40,6 +41,12 @@ describeRepeats('StreamrClient', () => {
             // disconnectDelay: 500,
             // publishAutoDisconnectDelay: 250,
             maxRetries: 2,
+            // network: {
+                // trackers: [
+                    // `ws://127.0.0.1:${trackerPort}`,
+                // ],
+                // ...opts.network,
+            // },
             ...opts,
         })
         return c
@@ -66,26 +73,12 @@ describeRepeats('StreamrClient', () => {
     })
 
     let stream: Stream
-    let waitForStorage: (...args: any[]) => Promise<void>
+    // let waitForStorage: (...args: any[]) => Promise<void>
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     // These tests will take time, especially on Travis
     const TIMEOUT = 30 * 1000
     const WAIT_TIME = 600
-
-    // const attachSubListeners = (sub: Subscription | SubscriptionSession) => {
-        // const onSubscribed = jest.fn()
-        // sub.on('subscribed', onSubscribed)
-        // const onResent = jest.fn()
-        // sub.on('resent', onResent)
-        // const onUnsubscribed = jest.fn()
-        // sub.on('unsubscribed', onUnsubscribed)
-        // return {
-            // onSubscribed,
-            // onUnsubscribed,
-            // onResent,
-        // }
-    // }
 
     const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
         const name = uid('stream')
@@ -186,6 +179,68 @@ describeRepeats('StreamrClient', () => {
                 await subTask
                 await wait(WAIT_TIME)
             }, TIMEOUT)
+        })
+
+        it('client.subscribe (realtime)', async () => {
+            const id = Date.now()
+            const done = Defer()
+            await client.subscribe({
+                streamId: stream.id,
+            }, done.wrap(async (parsedContent, streamMessage) => {
+                expect(parsedContent.id).toBe(id)
+
+                // Check signature stuff
+                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(streamMessage.getPublisherId()).toBeTruthy()
+                expect(streamMessage.signature).toBeTruthy()
+            }))
+
+            // Publish after subscribed
+            await client.publish(stream, {
+                id,
+            })
+            await done
+        })
+
+        it('client.subscribe with onMessage & collect', async () => {
+            const onMessageMsgs: any[] = []
+            const done = Defer()
+            const sub = await client.subscribe({
+                streamId: stream.id,
+            }, async (msg) => {
+                onMessageMsgs.push(msg)
+                if (onMessageMsgs.length === MAX_MESSAGES) {
+                    done.resolve(undefined)
+                }
+            })
+
+            const published = await publishTestMessages(MAX_MESSAGES)
+            await expect(async () => sub.collect(1)).rejects.toThrow('iterate')
+            await done
+            expect(onMessageMsgs).toEqual(published)
+        })
+
+        it('publish and subscribe a sequence of messages', async () => {
+            const done = Defer()
+            const received: any[] = []
+            const sub = await client.subscribe({
+                streamId: stream.id,
+            }, done.wrapError((parsedContent, streamMessage) => {
+                received.push(parsedContent)
+                // Check signature stuff
+                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(streamMessage.getPublisherId()).toBeTruthy()
+                expect(streamMessage.signature).toBeTruthy()
+                if (received.length === MAX_MESSAGES) {
+                    done.resolve(client.unsubscribe(sub))
+                }
+            }))
+
+            // Publish after subscribed
+            const published = await publishTestMessages(MAX_MESSAGES)
+
+            await done
+            expect(received).toEqual(published)
         })
     })
 
@@ -316,68 +371,6 @@ describeRepeats('StreamrClient', () => {
                 expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                 expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
             }, TIMEOUT)
-        })
-
-        it('client.subscribe (realtime)', async () => {
-            const id = Date.now()
-            const done = Defer()
-            const sub = await client.subscribe({
-                streamId: stream.id,
-            }, done.wrap(async (parsedContent, streamMessage) => {
-                expect(parsedContent.id).toBe(id)
-
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                expect(streamMessage.getPublisherId()).toBeTruthy()
-                expect(streamMessage.signature).toBeTruthy()
-            }))
-
-            // Publish after subscribed
-            await stream.publish({
-                id,
-            })
-            await done
-            // All good, unsubscribe
-            await client.unsubscribe(sub)
-        })
-
-        it('client.subscribe with onMessage & collect', async () => {
-            const onMessageMsgs: any[] = []
-            const sub = await client.subscribe({
-                streamId: stream.id,
-            }, async (msg) => {
-                onMessageMsgs.push(msg)
-            })
-
-            const published = await publishTestMessages(MAX_MESSAGES)
-            await expect(async () => sub.collect(1)).rejects.toThrow('iterate')
-            expect(onMessageMsgs).toEqual(published)
-        })
-
-        it('publish and subscribe a sequence of messages', async () => {
-            client.enableAutoConnect()
-            const done = Defer()
-            const received: any[] = []
-            const sub = await client.subscribe({
-                streamId: stream.id,
-            }, done.wrapError((parsedContent, streamMessage) => {
-                received.push(parsedContent)
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                expect(streamMessage.getPublisherId()).toBeTruthy()
-                expect(streamMessage.signature).toBeTruthy()
-                if (received.length === MAX_MESSAGES) {
-                    done.resolve(client.unsubscribe(sub))
-                }
-            }))
-
-            // Publish after subscribed
-            const published = await publishTestMessages(MAX_MESSAGES, {
-                wait: 100,
-            })
-
-            await done
-            expect(received).toEqual(published)
         })
 
         test('publish does not disconnect after each message with autoDisconnect', async () => {

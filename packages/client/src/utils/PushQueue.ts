@@ -246,11 +246,8 @@ export default class PushQueue<T> {
         this.debug('throw')
         const p = this.nextQueue.shift()
         if (p) {
-            this.debug('throw 1')
             p.reject(err)
-            await this._cleanup()
         } else {
-            this.debug('throw 2')
             // for next()
             this.error = err
         }
@@ -311,7 +308,7 @@ export default class PushQueue<T> {
                 if (isError(value)) {
                     p.reject(value)
                 } else {
-                    p.resolve(null)
+                    p.resolve(value)
                 }
             }
         }
@@ -402,7 +399,7 @@ export default class PushQueue<T> {
     async cancel(error?: Error) {
         this.finished = true
         this._isCancelled = true
-        if (error) {
+        if (error && !this.error) {
             this.error = error
         }
         this.debug('cancel. Queued next: %d, buffered data: %d', this.nextQueue.length, this.buffer.length)

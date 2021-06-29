@@ -64,13 +64,10 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
-                // @ts-expect-error
-                prevMesssageRef: null,
                 content: {
                     foo: 'bar',
                 },
-                // @ts-expect-error
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                 signature: null,
@@ -84,13 +81,10 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
-                // @ts-expect-error
-                prevMesssageRef: null,
                 content: {
                     foo: 'bar',
                 },
-                // @ts-expect-error
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                 signature: null,

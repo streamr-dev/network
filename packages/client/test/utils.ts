@@ -3,7 +3,7 @@ import { writeHeapSnapshot } from 'v8'
 
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { PublishRequest } from 'streamr-client-protocol'
+import { PublishRequest, StreamMessage } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { pTimeout, counterId, CounterId, AggregatedError, pLimitFn } from '../src/utils'
@@ -86,17 +86,21 @@ export function addAfterFn() {
     }
 }
 
-export const Msg = (opts?: any) => ({
+interface Json {
+  [key: string]: null | string | number | boolean | Json | Json[]
+}
+
+export const Msg = (opts?: Json) => ({
     value: uid('msg'),
     ...opts,
 })
 
-function defaultMessageMatchFn(msgTarget: any, msgGot: any) {
+function defaultMessageMatchFn(msgTarget: PublishRequest, msgGot: StreamMessage) {
     if (msgTarget.streamMessage.signature) {
         // compare signatures by default
         return msgTarget.streamMessage.signature === msgGot.signature
     }
-    return JSON.stringify(msgGot.content) === JSON.stringify(msgTarget.streamMessage.getParsedContent())
+    return JSON.stringify(msgGot.getParsedContent()) === JSON.stringify(msgTarget.streamMessage.getParsedContent())
 }
 
 export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {

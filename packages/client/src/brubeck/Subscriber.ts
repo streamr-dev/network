@@ -23,7 +23,7 @@ export default class Subscriber implements Context {
     }
 
     async subscribe<T>(opts: StreamPartDefinition, onMessage?: SubscriptionOnMessage<T>) {
-        const sub: Subscription<T> = await this.add<T>(opts)
+        const sub: Subscription<T> = await this.add(opts)
         if (onMessage) {
             sub.onMessage(onMessage)
         }
@@ -37,16 +37,16 @@ export default class Subscriber implements Context {
 
         // get/create subscription session
         // don't add SubscriptionSession to subSessions until after subscription successfully created
-        const subSession = (this.subSessions.get(key) as SubscriptionSession<T>) || new SubscriptionSession<T>(this.client, options)
+        const subSession = this.subSessions.get(key) as SubscriptionSession<T> || new SubscriptionSession<T>(this.client, options)
 
         // create subscription
-        const sub = new Subscription<T>(subSession, options)
+        const sub = new Subscription<T>(subSession)
         sub.once('end', () => {
             this.remove(sub)
         })
 
         // sub didn't throw, add subsession
-        this.subSessions.set(key, subSession)
+        this.subSessions.set(key, subSession as SubscriptionSession<unknown>)
 
         // add subscription to subSession
         try {

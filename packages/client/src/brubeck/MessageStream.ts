@@ -50,6 +50,7 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
         this.id = !idSuffix ? instanceId(this) : `${instanceId(this)}-${idSuffix}`
         this.debug = context.debug.extend(this.id)
         this.debug('create')
+        this[Symbol.asyncIterator] = this[Symbol.asyncIterator].bind(this)
         this.on('newListener', this.onListener)
     }
 
@@ -66,11 +67,7 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
             this.emit('error', err)
             return
         }
-
-        if (this.buffer.isWritable()) {
-            await this.buffer.throw(err)
-        }
-
+        await this.cancel(err)
         throw err
     }
 
@@ -88,7 +85,7 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
         }
     }
 
-    [captureRejectionSymbol](error: Error, event: string | symbol) {
+    [captureRejectionSymbol] = (error: Error, event: string | symbol) => {
         this.debug('rejection handling event %s with', event, error)
         return this.cancel(error)
     }
@@ -148,15 +145,19 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
         return this.buffer.from(source)
     }
 
-    async cancel(err?: Error) {
-        return this.buffer?.cancel(err)
-    }
-
     async end(message?: StreamMessage<T> | Error) {
         return this.buffer?.end(message)
     }
 
-    isCancelled(): boolean {
+    cancel = async (err?: Error) => {
+        if (this.buffer?.isCancelled()) {
+            return Promise.resolve(undefined)
+        }
+
+        return this.buffer?.cancel(err)
+    }
+
+    isCancelled = (): boolean => {
         return !!this.buffer?.isCancelled()
     }
 
