@@ -2,29 +2,71 @@ import { EventEmitter } from 'events'
 import { DisconnectionCode, DisconnectionReason, Event } from './IWsEndpoint'
 import uWS from 'uWebSockets.js'
 import { PeerBook } from './PeerBook'
-import { PeerInfo, PeerType } from './PeerInfo'
+import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 
 const staticLogger = new Logger(module)
 
-interface Connection {
-    // upgraded vars
-    address?: string
-    peerId?: string
-    peerType?: PeerType
-    controlLayerVersions?: string
-    messageLayerVersions?: string
+//interface UWSConnection extends uWS.WebSocket, Connection {}
 
-    peerInfo: PeerInfo
-    highBackPressure: boolean
-    respondedPong?: boolean
-    rttStart?: number
+class UWSConnection {
+    private readonly socket: uWS.WebSocket
+    public readonly peerInfo: PeerInfo
+
+    respondedPong = true
+    highBackPressure = false
     rtt?: number
-}
+    rttStart?: number
 
-interface UWSConnection extends uWS.WebSocket, Connection {}
+    constructor(socket: uWS.WebSocket, peerInfo: PeerInfo) {
+        this.socket = socket
+        this.peerInfo = peerInfo
+    }
+
+    end(code: DisconnectionCode, reason: DisconnectionReason): void {
+        try {
+            this.socket.end(code, reason)
+        } catch (e) {
+            staticLogger.error('failed to close ws, reason: %s', e)
+        }
+    }
+
+    getPeerId(): string {
+        return this.peerInfo.peerId
+    }
+
+    getBufferedAmount(): number {
+        return this.socket.getBufferedAmount()
+    }
+
+    getRemoteAddress(): string {
+        return this.socket.getRemoteAddressAsText().toString()
+    }
+
+    close() {
+        try {
+            this.socket.close()
+        } catch (e) {
+            staticLogger.error('failed to terminate ws, reason %s', e)
+        }
+    }
+
+    // TODO: toString() representatin for logging
+
+    ping(): void {
+        this.socket.ping()
+    }
+
+    send(message: string): void {
+        this.socket.send(message)
+    }
+
+    getReadyState(): number {
+        return this.socket.readySocket
+    }
+}
 
 const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 const LOW_BACK_PRESSURE = 1024 * 1024
@@ -32,31 +74,6 @@ const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
 
 function ab2str (buf: ArrayBuffer | SharedArrayBuffer): string {
     return Buffer.from(buf).toString('utf8')
-}
-
-function closeWs(
-    ws: UWSConnection,
-    code: DisconnectionCode,
-    reason: DisconnectionReason,
-    logger: Logger
-): void {
-    try {
-        ws.end(code, reason)
-    } catch (e) {
-        logger.error('failed to close ws, reason: %s', e)
-    }
-}
-
-function getBufferedAmount(ws: UWSConnection): number {
-    return ws.getBufferedAmount()
-}
-
-function terminateWs(ws: UWSConnection, logger: Logger): void {
-    try {
-        ws.close()
-    } catch (e) {
-        logger.error('failed to terminate ws, reason %s', e)
-    }
 }
 
 export class ServerWsEndpoint extends EventEmitter {
@@ -68,8 +85,8 @@ export class ServerWsEndpoint extends EventEmitter {
     private readonly advertisedWsUrl: string | null
 
     private readonly logger: Logger
-    private readonly connections: Map<string, UWSConnection>
-    private readonly pendingConnections: Map<string, Promise<string>>
+    private readonly connectionById: Map<string, UWSConnection> // id => connection
+    private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
     private readonly peerBook: PeerBook
     private readonly pingInterval: NodeJS.Timeout
     private readonly metrics: Metrics
@@ -104,8 +121,8 @@ export class ServerWsEndpoint extends EventEmitter {
         this.advertisedWsUrl = advertisedWsUrl
 
         this.logger = new Logger(module)
-        this.connections = new Map()
-        this.pendingConnections = new Map()
+        this.connectionById = new Map()
+        this.connectionByUwsSocket = new Map()
         this.peerBook = new PeerBook()
 
         this.wss.ws('/ws', {
@@ -116,17 +133,10 @@ export class ServerWsEndpoint extends EventEmitter {
             upgrade: (res, req, context) => {
                 res.writeStatus('101 Switching Protocols')
                     .writeHeader('streamr-peer-id', this.peerInfo.peerId)
-                    .writeHeader('streamr-peer-type', this.peerInfo.peerType)
-                    .writeHeader('control-layer-versions', this.peerInfo.controlLayerVersions.join(','))
-                    .writeHeader('message-layer-versions', this.peerInfo.messageLayerVersions.join(','))
 
                 /* This immediately calls open handler, you must not use res after this call */
                 res.upgrade({
-                    address: req.getQuery('address'),
-                    peerId: req.getHeader('streamr-peer-id'),
-                    peerType: req.getHeader('streamr-peer-type'),
-                    controlLayerVersions: req.getHeader('control-layer-versions'),
-                    messageLayerVersions: req.getHeader('message-layer-versions')
+                    peerId: req.getHeader('streamr-peer-id')
                 },
                 /* Spell these correctly */
                 req.getHeader('sec-websocket-key'),
@@ -135,34 +145,33 @@ export class ServerWsEndpoint extends EventEmitter {
                 context)
             },
             open: (ws) => {
-                this.onIncomingConnection(ws as UWSConnection)
+                this.onIncomingConnection(ws)
             },
             message: (ws, message, _isBinary) => {
-                const connection = this.connections.get(ws.address)
-
+                const connection = this.connectionByUwsSocket.get(ws)
                 if (connection) {
-                    this.onReceive(ws.peerInfo, ws.address, ab2str(message))
+                    this.onReceive(connection, ab2str(message))
                 }
             },
             drain: (ws) => {
-                this.evaluateBackPressure(ws as UWSConnection)
+                const connection = this.connectionByUwsSocket.get(ws)
+                if (connection) {
+                    this.evaluateBackPressure(connection)
+                }
             },
             close: (ws, code, message) => {
                 const reason = ab2str(message)
 
-                const connection = this.connections.get(ws.address)
-
+                const connection = this.connectionByUwsSocket.get(ws)
                 if (connection) {
-                    // added 'close' event for test - duplicate-connections-are-closed.test.js
-                    this.emit('close', ws, code, reason)
-                    this.onClose(ws.address, this.peerBook.getPeerInfo(ws.address)!, code, reason)
+                    this.onClose(connection, ws, code, reason)
                 }
             },
             pong: (ws) => {
-                const connection = this.connections.get(ws.address)
+                const connection = this.connectionByUwsSocket.get(ws)
 
                 if (connection) {
-                    this.logger.trace('<== received from %s "pong" frame', ws.address)
+                    this.logger.trace('received from %s "pong" frame', connection.getRemoteAddress())
                     connection.respondedPong = true
                     connection.rtt = Date.now() - connection.rttStart!
                 }
@@ -187,37 +196,33 @@ export class ServerWsEndpoint extends EventEmitter {
             .addRecordedMetric('close')
             .addRecordedMetric('sendFailed')
             .addRecordedMetric('webSocketError')
-            .addQueriedMetric('connections', () => this.connections.size)
-            .addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
+            .addQueriedMetric('connections', () => this.connectionById.size)
             .addQueriedMetric('rtts', () => this.getRtts())
             .addQueriedMetric('totalWebSocketBuffer', () => {
-                return [...this.connections.values()]
-                    .reduce((totalBufferSizeSum, ws) => totalBufferSizeSum + getBufferedAmount(ws), 0)
+                return [...this.connectionById.values()]
+                    .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
             })
     }
 
     private pingConnections(): void {
-        const addresses = [...this.connections.keys()]
-        addresses.forEach((address) => {
-            const ws = this.connections.get(address)!
-
+        this.connectionByUwsSocket.forEach((connection, ws) => {
             try {
                 // didn't get "pong" in pingInterval
-                if (ws.respondedPong !== undefined && !ws.respondedPong) {
+                if (!connection.respondedPong) {
                     throw new Error('ws is not active')
                 }
 
                 // eslint-disable-next-line no-param-reassign
-                ws.respondedPong = false
-                ws.rttStart = Date.now()
-                ws.ping()
-                this.logger.trace('pinging %s (current rtt %s)', address, ws.rtt)
+                connection.respondedPong = false
+                connection.rttStart = Date.now()
+                connection.ping()
+                this.logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.rtt)
             } catch (e) {
-                this.logger.warn(`failed pinging %s, error %s, terminating connection`, address, e)
-                terminateWs(ws, this.logger)
+                this.logger.warn(`failed pinging %s, error %s, terminating connection`, connection.getPeerId(), e)
+                connection.close()
                 this.onClose(
-                    address,
-                    this.peerBook.getPeerInfo(address)!,
+                    connection,
+                    ws,
                     DisconnectionCode.DEAD_CONNECTION,
                     DisconnectionReason.DEAD_CONNECTION
                 )
@@ -226,24 +231,22 @@ export class ServerWsEndpoint extends EventEmitter {
     }
 
     send(recipientId: string, message: string): Promise<string> {
-        const recipientAddress = this.resolveAddress(recipientId)
         return new Promise<string>((resolve, reject) => {
-            if (!this.isConnected(recipientAddress)) {
+            if (!this.isConnected(recipientId)) {
                 this.metrics.record('sendFailed', 1)
-                this.logger.trace('cannot send to %s [%s], not connected', recipientId, recipientAddress)
-                reject(new Error(`cannot send to ${recipientId} [${recipientAddress}] because not connected`))
+                this.logger.trace('cannot send to %s, not connected', recipientId)
+                reject(new Error(`cannot send to ${recipientId} because not connected`))
             } else {
-                const ws = this.connections.get(recipientAddress)!
-                this.socketSend(ws, message, recipientId, recipientAddress, resolve, reject)
+                const connection = this.connectionById.get(recipientId)!
+                this.socketSend(connection, message, recipientId, resolve, reject)
             }
         })
     }
 
     private socketSend(
-        ws: UWSConnection,
+        connection: UWSConnection,
         message: string,
         recipientId: string,
-        recipientAddress: string,
         successCallback: (peerId: string) => void,
         errorCallback: (err: Error) => void
     ): void {
@@ -256,49 +259,47 @@ export class ServerWsEndpoint extends EventEmitter {
         }
 
         try {
-            ws.send(message)
-            onSuccess(recipientAddress, recipientId, message)
-            this.evaluateBackPressure(ws)
+            connection.send(message)
+            onSuccess(connection.getRemoteAddress(), recipientId, message)
+            this.evaluateBackPressure(connection)
         } catch (e) {
             this.metrics.record('sendFailed', 1)
             this.logger.warn('sending to %s [%s] failed, reason %s, readyState is %s',
-                recipientId, recipientAddress, e, ws.readyState)
+                recipientId, connection.getRemoteAddress(), e, connection.getReadyState())
             errorCallback(e)
-            terminateWs(ws, this.logger)
+            connection.close()
         }
     }
 
-    private evaluateBackPressure(ws: UWSConnection): void {
-        const bufferedAmount = getBufferedAmount(ws)
-        if (!ws.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
-            this.logger.trace('Back pressure HIGH for %s at %d', ws.peerInfo, bufferedAmount)
-            this.emit(Event.HIGH_BACK_PRESSURE, ws.peerInfo)
-            ws.highBackPressure = true
-        } else if (ws.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
-            this.logger.trace('Back pressure LOW for %s at %d', ws.peerInfo, bufferedAmount)
-            this.emit(Event.LOW_BACK_PRESSURE, ws.peerInfo)
-            ws.highBackPressure = false
+    private evaluateBackPressure(connection: UWSConnection): void {
+        const bufferedAmount = connection.getBufferedAmount()
+        if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
+            this.logger.trace('Back pressure HIGH for %s at %d', connection.peerInfo, bufferedAmount)
+            this.emit(Event.HIGH_BACK_PRESSURE, connection.peerInfo)
+            connection.highBackPressure = true
+        } else if (connection.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
+            this.logger.trace('Back pressure LOW for %s at %d', connection.peerInfo, bufferedAmount)
+            this.emit(Event.LOW_BACK_PRESSURE, connection.peerInfo)
+            connection.highBackPressure = false
         }
     }
 
-    private onReceive(peerInfo: PeerInfo, address: string, message: string): void {
-        this.logger.trace('<== received from %s [%s] message "%s"', peerInfo, address, message)
-        this.emit(Event.MESSAGE_RECEIVED, peerInfo, message)
+    private onReceive(connection: UWSConnection, message: string): void {
+        this.logger.trace('<== received from %s [%s] message "%s"', connection.peerInfo, connection.getRemoteAddress(), message)
+        this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
     }
 
     close(recipientId: string, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
-        const recipientAddress = this.resolveAddress(recipientId)
-
         this.metrics.record('close', 1)
-        if (!this.isConnected(recipientAddress)) {
-            this.logger.trace('cannot close connection to %s [%s] because not connected', recipientId, recipientAddress)
+        if (!this.isConnected(recipientId)) {
+            this.logger.trace('cannot close connection to %s because not connected', recipientId)
         } else {
-            const ws = this.connections.get(recipientAddress)!
+            const connection = this.connectionById.get(recipientId)!
             try {
-                this.logger.trace('closing connection to %s [%s], reason %s', recipientId, recipientAddress, reason)
-                closeWs(ws, DisconnectionCode.GRACEFUL_SHUTDOWN, reason, this.logger)
+                this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
+                connection.end(DisconnectionCode.GRACEFUL_SHUTDOWN, reason)
             } catch (e) {
-                this.logger.warn('closing connection to %s [%s] failed because of %s', recipientId, recipientAddress, e)
+                this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
             }
         }
     }
@@ -308,8 +309,8 @@ export class ServerWsEndpoint extends EventEmitter {
 
         return new Promise<void>((resolve, reject) => {
             try {
-                this.connections.forEach((ws) => {
-                    closeWs(ws, DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN, this.logger)
+                this.connectionById.forEach((connection) => {
+                    connection.end(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
                 })
 
                 if (this.listenSocket) {
@@ -326,18 +327,15 @@ export class ServerWsEndpoint extends EventEmitter {
         })
     }
 
-    isConnected(address: string): boolean {
-        return this.connections.has(address)
+    isConnected(peerId: string): boolean {
+        return this.connectionById.has(peerId)
     }
 
     getRtts(): Rtts {
-        const connections = [...this.connections.keys()]
         const rtts: Rtts = {}
-        connections.forEach((address) => {
-            const { rtt } = this.connections.get(address)!
-            const nodeId = this.peerBook.getPeerId(address)
-            if (rtt !== undefined && rtt !== null) {
-                rtts[nodeId] = rtt
+        this.connectionById.forEach((connection) => {
+            if (connection.rtt !== undefined) {
+                rtts[connection.getPeerId()] = connection.rtt
             }
         })
         return rtts
@@ -359,58 +357,48 @@ export class ServerWsEndpoint extends EventEmitter {
     }
 
     getPeers(): ReadonlyMap<string, UWSConnection> {
-        return this.connections
+        return this.connectionById
     }
 
     getPeerInfos(): PeerInfo[] {
-        return Array.from(this.connections.keys())
-            .map((address) => this.peerBook.getPeerInfo(address))
-            .filter((x) => x !== null) as PeerInfo[]
+        return Array.from(this.connectionById.values())
+            .map((connection) => connection.peerInfo)
     }
 
+    // TODO: maybe return undefined instead of throwing when unknown peerId
     resolveAddress(peerId: string): string | never {
-        return this.peerBook.getAddress(peerId)
+        if (!this.connectionById.has(peerId)) {
+            throw new Error(`resolveAddress: ${peerId} not found`)
+        }
+        return this.connectionById.get(peerId)!.getRemoteAddress()
     }
 
-    private onIncomingConnection(ws: UWSConnection): void {
-        const { address, peerId, peerType, controlLayerVersions, messageLayerVersions } = ws
+    private onIncomingConnection(ws: uWS.WebSocket): void {
+        const { peerId } = ws // monkey-patched in upgrade
 
         try {
-            if (!address) {
-                throw new Error('address not given')
-            }
             if (!peerId) {
                 throw new Error('peerId not given')
             }
-            if (!peerType) {
-                throw new Error('peerType not given')
-            }
-            if (!controlLayerVersions) {
-                throw new Error('controlLayerVersions not given')
-            }
-            if (!messageLayerVersions) {
-                throw new Error('messageLayerVersions not given')
-            }
-            const controlLayerVersionsArray = controlLayerVersions.split(',').map((version) => parseInt(version))
-            const messageLayerVersionsArray = messageLayerVersions.split(',').map((version) => parseInt(version))
 
-            const clientPeerInfo = new PeerInfo(peerId, peerType, controlLayerVersionsArray, messageLayerVersionsArray)
-            if (this.isConnected(address)) {
+            // TODO: should this actually close the existing connection and keep the new one? It could be that the node
+            // has re-connected after dropping but the server has yet to detect this.
+            if (this.isConnected(peerId)) {
                 this.metrics.record('open:duplicateSocket', 1)
                 ws.close()
                 return
             }
 
-            this.logger.trace('<=== %s connecting to me', address)
-            this.onNewConnection(ws, address, clientPeerInfo, false)
+            this.logger.trace('<=== %s connecting to me', peerId)
+            this.onNewConnection(ws, peerId)
         } catch (e) {
             this.logger.trace('dropped incoming connection because of %s', e)
             this.metrics.record('open:missingParameter', 1)
-            closeWs(ws, DisconnectionCode.MISSING_REQUIRED_PARAMETER, e.toString(), this.logger)
+            ws.end(DisconnectionCode.MISSING_REQUIRED_PARAMETER, e.toString()) // TODO: reason not necessarily missing require parameter
         }
     }
 
-    private onClose(address: string, peerInfo: PeerInfo, code = 0, reason = ''): void {
+    private onClose(connection: UWSConnection, ws: uWS.WebSocket, code = 0, reason = ''): void {
         if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
             this.metrics.record('open:duplicateSocket', 1)
             this.logger.trace('socket %s dropped from other side because existing connection already exists')
@@ -418,38 +406,25 @@ export class ServerWsEndpoint extends EventEmitter {
         }
 
         this.metrics.record('close', 1)
-        this.logger.trace('socket to %s closed (code %d, reason %s)', address, code, reason)
-        this.connections.delete(address)
-        this.logger.trace('removed %s [%s] from connection list', peerInfo, address)
-        this.emit(Event.PEER_DISCONNECTED, peerInfo, reason)
+        this.logger.trace('socket to %s [%s] closed (code %d, reason %s)',
+            connection.getPeerId(), connection.getRemoteAddress(), code, reason)
+        this.connectionById.delete(connection.peerInfo.peerId)
+        this.connectionByUwsSocket.delete(ws)
+        this.logger.trace('removed %s [%s] from connection list', connection.getPeerId(), connection.getRemoteAddress())
+        this.emit(Event.PEER_DISCONNECTED, connection.peerInfo, reason)
     }
 
     private onNewConnection(
-        ws: UWSConnection,
-        address: string,
-        peerInfo: PeerInfo, out: boolean
+        ws: uWS.WebSocket,
+        peerId: string
     ): boolean {
-        // Handle scenario where two peers have opened a socket to each other at the same time.
-        // Second condition is a tiebreaker to avoid both peers of simultaneously disconnecting their socket,
-        // thereby leaving no connection behind.
-        if (this.isConnected(address) && this.getAddress().localeCompare(address) === 1) {
-            this.metrics.record('open:duplicateSocket', 1)
-            this.logger.trace('dropped new connection with %s because an existing connection already exists', address)
-            closeWs(ws, DisconnectionCode.DUPLICATE_SOCKET, DisconnectionReason.DUPLICATE_SOCKET, this.logger)
-            return false
-        }
-
-        // eslint-disable-next-line no-param-reassign
-        ws.peerInfo = peerInfo
-        // eslint-disable-next-line no-param-reassign
-        ws.address = address
-        this.peerBook.add(address, peerInfo)
-        this.connections.set(address, ws)
+        const uwsConnection = new UWSConnection(ws, PeerInfo.newNode(peerId))
+        //this.peerBook.add(address, peerInfo)
+        this.connectionById.set(peerId, uwsConnection)
+        this.connectionByUwsSocket.set(ws, uwsConnection)
         this.metrics.record('open', 1)
-        this.logger.trace('added %s [%s] to connection list', peerInfo, address)
-        this.logger.trace('%s connected to %s', out ? '===>' : '<===', address)
-        this.emit(Event.PEER_CONNECTED, peerInfo)
-
+        this.logger.trace('added %s [%s] to connection list', peerId, uwsConnection.getRemoteAddress())
+        this.emit(Event.PEER_CONNECTED, uwsConnection.peerInfo)
         return true
     }
 
