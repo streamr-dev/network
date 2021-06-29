@@ -56,14 +56,18 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     }
 
     // Start network node
-    const sessionId = `${brokerAddress}#${uuidv4()}`
+    let sessionId 
+    if (!config.plugins['storage']){
+        sessionId = `${brokerAddress}#${uuidv4()}`
+    }
+    
     const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
         ? config.network.advertisedWsUrl
         : await publicIp.v4().then((ip) => `ws://${ip}:${config.network.port}`)
     const networkNode = await startNetworkNode({
         host: config.network.hostname,
         port: config.network.port,
-        id: sessionId,
+        id: sessionId || brokerAddress,
         name: networkNodeName,
         trackers,
         advertisedWsUrl,
