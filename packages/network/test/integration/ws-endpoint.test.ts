@@ -24,7 +24,7 @@ describe('ws-endpoint', () => {
         for (let i = 0; i < 5; i++) {
             expect(endpoints[i].getPeers().size).toBe(0)
         }
-
+        const clients = []
         const promises: Promise<any>[] = []
         for (let i = 0; i < 5; i++) {
             const client = await startClientWsEndpoint(PeerInfo.newNode(`client-${i}`), null)
@@ -35,6 +35,7 @@ describe('ws-endpoint', () => {
 
             // eslint-disable-next-line no-await-in-loop
             client.connect(endpoints[i].getAddress())
+            clients.push(client)
         }
 
         await Promise.all(promises)
@@ -47,6 +48,7 @@ describe('ws-endpoint', () => {
         for (let i = 0; i < 5; i++) {
             // eslint-disable-next-line no-await-in-loop
             await endpoints[i].stop()
+            await clients[i].stop()
         }
     })
 

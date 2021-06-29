@@ -10,7 +10,7 @@ import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { wait } from 'streamr-test-utils'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 
-describe('WebRtcEndpoint: back pressure handling tmp', () => {
+describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
     let trackerNode1: TrackerNode
     let trackerNode2: TrackerNode
