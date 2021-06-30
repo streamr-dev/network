@@ -203,18 +203,11 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         return this.serverUrlByPeerId.get(peerId)
     }
 
-    private onClose(connection: WsConnection, serverUrl: ServerUrl, code = 0, reason = ''): void {
-        if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
-            this.metrics.record('open:duplicateSocket', 1)
-        }
-
-        this.metrics.record('close', 1)
-        this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
-        this.connectionById.delete(connection.getPeerId())
+    protected onClose(connection: WsConnection, code = 0, reason = ''): void {
+        super.onClose(connection, code, reason)
+        const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
         this.connectionsByServerUrl.delete(serverUrl)
         this.serverUrlByPeerId.delete(connection.getPeerId())
-        this.logger.trace('removed %s from connection list', connection.getPeerId())
-        this.emit(Event.PEER_DISCONNECTED, connection.peerInfo, reason)
     }
 
     private onNewConnection(
@@ -260,7 +253,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
                 this.metrics.record('open:duplicateSocket', 1)
             }
 
-            this.onClose(connection, serverUrl, code, reason)
+            this.onClose(connection, code, reason)
         })
     }
 }

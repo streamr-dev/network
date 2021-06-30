@@ -12,8 +12,8 @@ import {
 const staticLogger = new Logger(module)
 
 class UWSConnection implements SharedConnection {
-    private readonly socket: uWS.WebSocket
-    public readonly peerInfo: PeerInfo
+    readonly socket: uWS.WebSocket
+    readonly peerInfo: PeerInfo
 
     highBackPressure = false
     respondedPong = true
@@ -139,7 +139,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
 
                 const connection = this.connectionByUwsSocket.get(ws)
                 if (connection) {
-                    this.onClose(connection, ws, code, reason)
+                    this.onClose(connection, code, reason)
                 }
             },
             pong: (ws) => {
@@ -231,18 +231,9 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         }
     }
 
-    private onClose(connection: UWSConnection, ws: uWS.WebSocket, code = 0, reason = ''): void {
-        if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
-            this.metrics.record('open:duplicateSocket', 1)
-        }
-
-        this.metrics.record('close', 1)
-        this.logger.trace('socket to %s closed (code %d, reason %s)',
-            connection.getPeerId(), code, reason)
-        this.connectionById.delete(connection.peerInfo.peerId)
-        this.connectionByUwsSocket.delete(ws)
-        this.logger.trace('removed %s from connection list', connection.getPeerId())
-        this.emit(Event.PEER_DISCONNECTED, connection.peerInfo, reason)
+    protected onClose(connection: UWSConnection, code = 0, reason = ''): void {
+        super.onClose(connection, code, reason)
+        this.connectionByUwsSocket.delete(connection.socket)
     }
 
     private onNewConnection(

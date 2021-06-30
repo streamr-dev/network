@@ -146,6 +146,23 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         return this.connectionById
     }
 
+    /**
+     * Implementer should invoke this whenever a connection is closed.
+     */
+    protected onClose(connection: C, code = 0, reason = ''): void {
+        if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
+            this.metrics.record('open:duplicateSocket', 1)
+        }
+
+        this.metrics.record('close', 1)
+        this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
+        this.connectionById.delete(connection.getPeerId())
+        this.emit(Event.PEER_DISCONNECTED, connection.peerInfo, reason)
+    }
+
+    /**
+     * Implementer can invoke this whenever low watermark of buffer hit
+     */
     protected evaluateBackPressure(connection: SharedConnection): void {
         const bufferedAmount = connection.getBufferedAmount()
         if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
