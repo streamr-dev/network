@@ -31,12 +31,7 @@ export class LocationManager {
         } else if (!isValidNodeLocation(this.nodeLocations[nodeId])) {
             let geoIpRecord: null | Lookup = null
             if (address) {
-                try {
-                    const ip = address.split(':')[1].replace('//', '')
-                    geoIpRecord = lookup(ip)
-                } catch (e) {
-                    this.logger.warn('could not parse IP from address %s', address)
-                }
+                geoIpRecord = lookup(address)
             }
             if (geoIpRecord) {
                 this.nodeLocations[nodeId] = {
