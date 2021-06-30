@@ -1,15 +1,20 @@
-import { EventEmitter } from 'events'
 import uWS from 'uWebSockets.js'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 import { PingPongWs } from "./PingPongWs"
-import { DisconnectionCode, DisconnectionReason, Event, UnknownPeerError } from "./AbstractWsEndpoint"
+import {
+    AbstractWsEndpoint,
+    DisconnectionCode,
+    DisconnectionReason,
+    Event, HIGH_BACK_PRESSURE, SharedConnection,
+    UnknownPeerError
+} from "./AbstractWsEndpoint"
 
 const staticLogger = new Logger(module)
 
-class UWSConnection {
+class UWSConnection implements SharedConnection {
     private readonly socket: uWS.WebSocket
     public readonly peerInfo: PeerInfo
 
@@ -62,15 +67,13 @@ class UWSConnection {
     }
 }
 
-const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
-const LOW_BACK_PRESSURE = 1024 * 1024
 const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
 
 function ab2str (buf: ArrayBuffer | SharedArrayBuffer): string {
     return Buffer.from(buf).toString('utf8')
 }
 
-export class ServerWsEndpoint extends EventEmitter {
+export class ServerWsEndpoint extends AbstractWsEndpoint {
     private readonly serverHost: string
     private readonly serverPort: number
     private readonly wss: uWS.TemplatedApp
@@ -78,7 +81,7 @@ export class ServerWsEndpoint extends EventEmitter {
     private readonly peerInfo: PeerInfo
     private readonly advertisedWsUrl: string | null
 
-    private readonly logger: Logger
+    protected readonly logger: Logger
     private readonly connectionById: Map<string, UWSConnection> // id => connection
     private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
     private readonly pingPongWs: PingPongWs
@@ -233,19 +236,6 @@ export class ServerWsEndpoint extends EventEmitter {
                 recipientId, connection.getRemoteAddress(), e)
             errorCallback(e)
             connection.terminate()
-        }
-    }
-
-    private evaluateBackPressure(connection: UWSConnection): void {
-        const bufferedAmount = connection.getBufferedAmount()
-        if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
-            this.logger.trace('Back pressure HIGH for %s at %d', connection.peerInfo, bufferedAmount)
-            this.emit(Event.HIGH_BACK_PRESSURE, connection.peerInfo)
-            connection.highBackPressure = true
-        } else if (connection.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
-            this.logger.trace('Back pressure LOW for %s at %d', connection.peerInfo, bufferedAmount)
-            this.emit(Event.LOW_BACK_PRESSURE, connection.peerInfo)
-            connection.highBackPressure = false
         }
     }
 

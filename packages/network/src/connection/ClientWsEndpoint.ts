@@ -1,15 +1,20 @@
-import { EventEmitter } from 'events'
 import WebSocket from 'ws'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 import { PingPongWs } from "./PingPongWs"
-import { DisconnectionCode, DisconnectionReason, Event, UnknownPeerError } from "./AbstractWsEndpoint"
+import {
+    AbstractWsEndpoint,
+    DisconnectionCode,
+    DisconnectionReason,
+    Event, SharedConnection,
+    UnknownPeerError
+} from "./AbstractWsEndpoint"
 
 const staticLogger = new Logger(module)
 
-class WsConnection {
+class WsConnection implements SharedConnection {
     private readonly socket: WebSocket
     public readonly peerInfo: PeerInfo
 
@@ -66,9 +71,6 @@ class WsConnection {
     }
 }
 
-const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
-const LOW_BACK_PRESSURE = 1024 * 1024
-
 function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     return {
         'streamr-peer-id': peerInfo.peerId
@@ -78,11 +80,11 @@ function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
 type PeerId = string
 type ServerUrl = string
 
-export class ClientWsEndpoint extends EventEmitter {
+export class ClientWsEndpoint extends AbstractWsEndpoint {
     private readonly peerInfo: PeerInfo
     private readonly advertisedWsUrl: string | null
 
-    private readonly logger: Logger
+    protected readonly logger: Logger
     private readonly connectionsByPeerId: Map<PeerId, WsConnection>
     private readonly connectionsByServerUrl: Map<ServerUrl, WsConnection>
     private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
@@ -183,19 +185,6 @@ export class ClientWsEndpoint extends EventEmitter {
             this.logger.warn('sending to %s [%s] failed, reason %s',
                 recipientId, connection.getRemoteAddress(), e)
             connection.terminate()
-        }
-    }
-
-    private evaluateBackPressure(connection: WsConnection): void {
-        const bufferedAmount = connection.getBufferedAmount()
-        if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
-            this.logger.trace('Back pressure HIGH for %s at %d', connection.peerInfo, bufferedAmount)
-            this.emit(Event.HIGH_BACK_PRESSURE, connection.peerInfo)
-            connection.highBackPressure = true
-        } else if (connection.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
-            this.logger.trace('Back pressure LOW for %s at %d', connection.peerInfo, bufferedAmount)
-            this.emit(Event.LOW_BACK_PRESSURE, connection.peerInfo)
-            connection.highBackPressure = false
         }
     }
 

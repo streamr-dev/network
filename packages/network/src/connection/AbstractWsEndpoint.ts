@@ -1,5 +1,31 @@
-export class AbstractWsEndpoint {
+import { EventEmitter } from "events"
+import { Logger } from "../helpers/Logger"
+import { PeerInfo } from "./PeerInfo"
 
+export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
+export const LOW_BACK_PRESSURE = 1024 * 1024
+
+export interface SharedConnection {
+    highBackPressure: boolean
+    peerInfo: PeerInfo
+    getBufferedAmount(): number
+}
+
+export abstract class AbstractWsEndpoint extends EventEmitter {
+    protected abstract logger: Logger
+
+    protected evaluateBackPressure(connection: SharedConnection): void {
+        const bufferedAmount = connection.getBufferedAmount()
+        if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
+            this.logger.trace('Back pressure HIGH for %s at %d', connection.peerInfo, bufferedAmount)
+            this.emit(Event.HIGH_BACK_PRESSURE, connection.peerInfo)
+            connection.highBackPressure = true
+        } else if (connection.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
+            this.logger.trace('Back pressure LOW for %s at %d', connection.peerInfo, bufferedAmount)
+            this.emit(Event.LOW_BACK_PRESSURE, connection.peerInfo)
+            connection.highBackPressure = false
+        }
+    }
 }
 
 export enum Event {
