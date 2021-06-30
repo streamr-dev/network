@@ -178,8 +178,13 @@ export class Node extends EventEmitter {
 
     onConnectedToTracker(tracker: string): void {
         this.logger.trace('connected to tracker %s', tracker)
-        this.trackerBook[this.trackerNode.resolveAddress(tracker)] = tracker
-        this.prepareAndSendFullStatus(tracker)
+        const serverUrl = this.trackerNode.getServerUrlByTrackerId(tracker)
+        if (serverUrl !== undefined) {
+            this.trackerBook[serverUrl] = tracker
+            this.prepareAndSendFullStatus(tracker)
+        } else {
+            this.logger.warn('onConnectedToTracker: unknown tracker %s', tracker)
+        }
     }
 
     subscribeToStreamIfHaveNotYet(streamId: StreamIdAndPartition, sendStatus = true): void {

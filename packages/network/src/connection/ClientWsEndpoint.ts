@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import { DisconnectionCode, DisconnectionReason, Event, UnknownPeerError } from './IWsEndpoint'
 import WebSocket from 'ws'
-import { PeerBook } from './PeerBook'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
@@ -85,8 +84,8 @@ export class ClientWsEndpoint extends EventEmitter {
     private readonly logger: Logger
     private readonly connectionsByPeerId: Map<PeerId, WsConnection>
     private readonly connectionsByServerUrl: Map<ServerUrl, WsConnection>
+    private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     private readonly pendingConnections: Map<ServerUrl, Promise<string>>
-    private readonly peerBook: PeerBook
     private readonly pingInterval: NodeJS.Timeout
     private readonly metrics: Metrics
 
@@ -111,8 +110,8 @@ export class ClientWsEndpoint extends EventEmitter {
         this.logger = new Logger(module)
         this.connectionsByPeerId = new Map()
         this.connectionsByServerUrl = new Map()
+        this.serverUrlByPeerId = new Map()
         this.pendingConnections = new Map()
-        this.peerBook = new PeerBook()
 
         this.logger.trace('listening on %s', this.getAddress())
         this.pingInterval = setInterval(() => this.pingConnections(), pingInterval)
@@ -358,9 +357,8 @@ export class ClientWsEndpoint extends EventEmitter {
         return this.connectionsByPeerId
     }
 
-    // TODO: should be renamed to resolveServerUrl or smth
-    resolveAddress(peerId: string): string | never {
-        return this.peerBook.getAddress(peerId)
+    getServerUrlByPeerId(peerId: PeerId): string | undefined {
+        return this.serverUrlByPeerId.get(peerId)
     }
 
     private onClose(connection: WsConnection, serverUrl: ServerUrl, code = 0, reason = ''): void {
@@ -372,6 +370,7 @@ export class ClientWsEndpoint extends EventEmitter {
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
         this.connectionsByPeerId.delete(connection.getPeerId())
         this.connectionsByServerUrl.delete(serverUrl)
+        this.serverUrlByPeerId.delete(connection.getPeerId())
         this.logger.trace('removed %s from connection list', connection.getPeerId())
         this.emit(Event.PEER_DISCONNECTED, connection.peerInfo, reason)
     }
@@ -384,9 +383,9 @@ export class ClientWsEndpoint extends EventEmitter {
 
         const connection = new WsConnection(ws, serverPeerInfo)
         this.addListeners(ws, connection, serverUrl)
-        this.peerBook.add(serverUrl, serverPeerInfo)
         this.connectionsByPeerId.set(connection.getPeerId(), connection)
         this.connectionsByServerUrl.set(serverUrl, connection)
+        this.serverUrlByPeerId.set(connection.getPeerId(), serverUrl)
         this.metrics.record('open', 1)
         this.logger.trace('added %s [%s] to connection list', connection.getPeerId(), serverUrl)
         this.emit(Event.PEER_CONNECTED, connection.peerInfo)

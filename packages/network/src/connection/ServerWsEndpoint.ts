@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import { DisconnectionCode, DisconnectionReason, Event, UnknownPeerError } from './IWsEndpoint'
 import uWS from 'uWebSockets.js'
-import { NotFoundInPeerBookError, PeerBook } from './PeerBook'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
@@ -83,7 +82,6 @@ export class ServerWsEndpoint extends EventEmitter {
     private readonly logger: Logger
     private readonly connectionById: Map<string, UWSConnection> // id => connection
     private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
-    private readonly peerBook: PeerBook
     private readonly pingInterval: NodeJS.Timeout
     private readonly metrics: Metrics
 
@@ -119,7 +117,6 @@ export class ServerWsEndpoint extends EventEmitter {
         this.logger = new Logger(module)
         this.connectionById = new Map()
         this.connectionByUwsSocket = new Map()
-        this.peerBook = new PeerBook()
 
         this.wss.ws('/ws', {
             compression: 0,
@@ -201,7 +198,7 @@ export class ServerWsEndpoint extends EventEmitter {
     }
 
     private pingConnections(): void {
-        this.connectionByUwsSocket.forEach((connection, ws) => {
+        this.connectionByUwsSocket.forEach((connection) => {
             try {
                 // didn't get "pong" in pingInterval
                 if (!connection.respondedPong) {
@@ -407,7 +404,6 @@ export class ServerWsEndpoint extends EventEmitter {
         peerId: string
     ): boolean {
         const uwsConnection = new UWSConnection(ws, PeerInfo.newNode(peerId))
-        //this.peerBook.add(address, peerInfo)
         this.connectionById.set(peerId, uwsConnection)
         this.connectionByUwsSocket.set(ws, uwsConnection)
         this.metrics.record('open', 1)

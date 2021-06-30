@@ -125,8 +125,8 @@ export class TrackerNode extends EventEmitter {
         return this.endpoint.send(receiverNodeId, message.serialize()).then(() => message)
     }
 
-    resolveAddress(trackerId: string): string {
-        return this.endpoint.resolveAddress(trackerId)
+    getServerUrlByTrackerId(trackerId: string): string | undefined {
+        return this.endpoint.getServerUrlByPeerId(trackerId)
     }
 
     stop(): Promise<void> {
