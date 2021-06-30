@@ -105,7 +105,7 @@ export default class BrubeckPublisher implements Context {
         }
     }
 
-    async* publishWithMetadata<T>(streamObjectOrId: StreamIDish, seq: AsyncIterable<PublishMessageOptions<T>>) {
+    async* publishFromMetadata<T>(streamObjectOrId: StreamIDish, seq: AsyncIterable<PublishMessageOptions<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {

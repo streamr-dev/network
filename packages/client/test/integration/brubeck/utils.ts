@@ -8,13 +8,17 @@ import { validateOptions } from '../../../src/stream/utils'
 
 type PublishManyOpts = Partial<{
     delay: number,
+    timestamp: number | (() => number)
+    sequenceNumber: number | (() => number)
 }>
 
-export async function* publishManyGenerator(total: number, opts: PublishManyOpts = {}) {
-    const { delay = 10 } = opts
+export async function* publishManyGenerator(total: number = 5, opts: PublishManyOpts = {}) {
+    const { delay = 10, sequenceNumber, timestamp } = opts
     const batchId = counterId('publishMany')
     for (let i = 0; i < total; i++) {
         yield {
+            timestamp: typeof timestamp === 'function' ? timestamp() : timestamp,
+            sequenceNumber: typeof sequenceNumber === 'function' ? sequenceNumber() : sequenceNumber,
             content: Msg({
                 batchId,
                 value: `${i + 1} of ${total}`
@@ -28,11 +32,14 @@ export async function* publishManyGenerator(total: number, opts: PublishManyOpts
     }
 }
 
-export function getPublishTestMessages(client: BrubeckClient, stream: StreamPartDefinitionOptions, opts = {}) {
-    return async (maxMessages: number) => {
+export function getPublishTestMessages(client: BrubeckClient, stream: StreamPartDefinitionOptions, defaultOpts: PublishManyOpts = {}) {
+    return async (maxMessages: number = 5, opts: PublishManyOpts = {}) => {
         const streamOptions = validateOptions(stream)
-        const source = publishManyGenerator(maxMessages, opts)
-        const msgs = await client.publisher.collect(client.publisher.publishFrom(streamOptions, source), maxMessages)
+        const source = publishManyGenerator(maxMessages, {
+            ...defaultOpts,
+            ...opts,
+        })
+        const msgs = await client.publisher.collect(client.publisher.publishFromMetadata(streamOptions, source), maxMessages)
         return msgs.map((s) => s.getParsedContent())
     }
 }
