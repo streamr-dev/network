@@ -202,21 +202,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
         this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
     }
 
-    close(recipientId: string, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
-        this.metrics.record('close', 1)
-        if (!this.isConnected(recipientId)) {
-            this.logger.trace('cannot close connection to %s because not connected', recipientId)
-        } else {
-            const connection = this.connectionById.get(recipientId)!
-            try {
-                this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
-                connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, reason)
-            } catch (e) {
-                this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
-            }
-        }
-    }
-
     stop(): Promise<void> {
         this.pingPongWs.stop()
 

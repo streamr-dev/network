@@ -10,7 +10,6 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     Event, SharedConnection,
-    UnknownPeerError
 } from "./AbstractWsEndpoint"
 
 const staticLogger = new Logger(module)
@@ -148,21 +147,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
     private onReceive(connection: WsConnection, message: string): void {
         this.logger.trace('<== received from %s [%s] message "%s"', connection.peerInfo, connection.getRemoteAddress(), message)
         this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
-    }
-
-    close(recipientId: string, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
-        this.metrics.record('close', 1)
-        if (!this.isConnectedToPeerId(recipientId)) {
-            this.logger.trace('cannot close connection to %s because not connected', recipientId)
-        } else {
-            const connection = this.connectionsByPeerId.get(recipientId)!
-            try {
-                this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
-                connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, reason)
-            } catch (e) {
-                this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
-            }
-        }
     }
 
     connect(serverUrl: ServerUrl): Promise<PeerId> {

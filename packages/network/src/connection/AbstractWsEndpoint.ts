@@ -6,12 +6,42 @@ import { Metrics } from "../helpers/MetricsContext"
 export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 export const LOW_BACK_PRESSURE = 1024 * 1024
 
+export enum Event {
+    PEER_CONNECTED = 'streamr:peer:connect',
+    PEER_DISCONNECTED = 'streamr:peer:disconnect',
+    MESSAGE_RECEIVED = 'streamr:message-received',
+    HIGH_BACK_PRESSURE = 'streamr:high-back-pressure',
+    LOW_BACK_PRESSURE = 'streamr:low-back-pressure'
+}
+
+export enum DisconnectionCode {
+    GRACEFUL_SHUTDOWN = 1000,
+    MISSING_REQUIRED_PARAMETER = 1002,
+}
+
+export enum DisconnectionReason {
+    GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
+    DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
+    NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
+}
+
+export class UnknownPeerError extends Error {
+    static CODE = 'UnknownPeerError'
+    readonly code = UnknownPeerError.CODE
+
+    constructor(msg: string) {
+        super(msg)
+        Error.captureStackTrace(this, UnknownPeerError)
+    }
+}
+
 export interface SharedConnection {
     highBackPressure: boolean
     peerInfo: PeerInfo
     getBufferedAmount(): number
     send(message: string): Promise<void>
     terminate(): void
+    close(code: DisconnectionCode, reason: DisconnectionReason): void
 }
 
 export abstract class AbstractWsEndpoint extends EventEmitter {
@@ -44,6 +74,19 @@ export abstract class AbstractWsEndpoint extends EventEmitter {
         }
     }
 
+    close(recipientId: string, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
+        this.metrics.record('close', 1)
+        const connection = this.getConnectionByPeerId(recipientId)
+        if (connection !== undefined) {
+            try {
+                this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
+                connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, reason)
+            } catch (e) {
+                this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
+            }
+        }
+    }
+
     protected evaluateBackPressure(connection: SharedConnection): void {
         const bufferedAmount = connection.getBufferedAmount()
         if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
@@ -55,34 +98,5 @@ export abstract class AbstractWsEndpoint extends EventEmitter {
             this.emit(Event.LOW_BACK_PRESSURE, connection.peerInfo)
             connection.highBackPressure = false
         }
-    }
-}
-
-export enum Event {
-    PEER_CONNECTED = 'streamr:peer:connect',
-    PEER_DISCONNECTED = 'streamr:peer:disconnect',
-    MESSAGE_RECEIVED = 'streamr:message-received',
-    HIGH_BACK_PRESSURE = 'streamr:high-back-pressure',
-    LOW_BACK_PRESSURE = 'streamr:low-back-pressure'
-}
-
-export enum DisconnectionCode {
-    GRACEFUL_SHUTDOWN = 1000,
-    MISSING_REQUIRED_PARAMETER = 1002,
-}
-
-export enum DisconnectionReason {
-    GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
-    DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
-    NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
-}
-
-export class UnknownPeerError extends Error {
-    static CODE = 'UnknownPeerError'
-    readonly code = UnknownPeerError.CODE
-
-    constructor(msg: string) {
-        super(msg)
-        Error.captureStackTrace(this, UnknownPeerError)
     }
 }
