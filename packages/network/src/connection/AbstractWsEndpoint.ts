@@ -1,7 +1,7 @@
 import { EventEmitter } from "events"
 import { Logger } from "../helpers/Logger"
 import { PeerInfo } from "./PeerInfo"
-import { Metrics } from "../helpers/MetricsContext"
+import { Metrics, MetricsContext } from "../helpers/MetricsContext"
 import { Rtts } from "../identifiers"
 import { PingPongWs } from "./PingPongWs"
 
@@ -47,11 +47,37 @@ export interface SharedConnection {
 }
 
 export abstract class AbstractWsEndpoint extends EventEmitter {
+    protected metrics: Metrics
     protected abstract logger: Logger
-    protected abstract metrics: Metrics // TODO: whole definition will move here eventually
     protected abstract pingPongWs: PingPongWs
 
     protected abstract getConnectionByPeerId(peerId: string): SharedConnection | undefined
+    protected abstract getConnections(): Array<SharedConnection>
+
+    constructor(metricsContext: MetricsContext) {
+        super()
+        this.metrics = metricsContext.create('WsEndpoint')
+            .addRecordedMetric('inSpeed')
+            .addRecordedMetric('outSpeed')
+            .addRecordedMetric('msgSpeed')
+            .addRecordedMetric('msgInSpeed')
+            .addRecordedMetric('msgOutSpeed')
+            .addRecordedMetric('open')
+            .addRecordedMetric('open:duplicateSocket')
+            .addRecordedMetric('open:failedException')
+            .addRecordedMetric('open:headersNotReceived')
+            .addRecordedMetric('open:missingParameter')
+            .addRecordedMetric('open:ownAddress')
+            .addRecordedMetric('close')
+            .addRecordedMetric('sendFailed')
+            .addRecordedMetric('webSocketError')
+            .addQueriedMetric('connections', () => this.getConnections().length)
+            .addQueriedMetric('rtts', () => this.getRtts())
+            .addQueriedMetric('totalWebSocketBuffer', () => {
+                return this.getConnections()
+                    .reduce((sum, connection) => sum + connection.getBufferedAmount(), 0)
+            })
+    }
 
     async send(recipientId: string, message: string): Promise<void> {
         const connection = this.getConnectionByPeerId(recipientId)

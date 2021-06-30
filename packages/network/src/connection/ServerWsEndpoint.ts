@@ -83,7 +83,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
     private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
     protected readonly pingPongWs: PingPongWs
     protected readonly logger: Logger
-    protected readonly metrics: Metrics
 
     constructor(
         host: string,
@@ -95,7 +94,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
         metricsContext = new MetricsContext(peerInfo.peerId),
         pingInterval = 5 * 1000
     ) {
-        super()
+        super(metricsContext)
 
         if (!wss) {
             throw new Error('wss not given')
@@ -172,28 +171,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
         })
 
         this.logger.trace('listening on %s', this.getAddress())
-
-        this.metrics = metricsContext.create('WsEndpoint')
-            .addRecordedMetric('inSpeed')
-            .addRecordedMetric('outSpeed')
-            .addRecordedMetric('msgSpeed')
-            .addRecordedMetric('msgInSpeed')
-            .addRecordedMetric('msgOutSpeed')
-            .addRecordedMetric('open')
-            .addRecordedMetric('open:duplicateSocket')
-            .addRecordedMetric('open:failedException')
-            .addRecordedMetric('open:headersNotReceived')
-            .addRecordedMetric('open:missingParameter')
-            .addRecordedMetric('open:ownAddress')
-            .addRecordedMetric('close')
-            .addRecordedMetric('sendFailed')
-            .addRecordedMetric('webSocketError')
-            .addQueriedMetric('connections', () => this.connectionById.size)
-            .addQueriedMetric('rtts', () => this.getRtts())
-            .addQueriedMetric('totalWebSocketBuffer', () => {
-                return this.getConnections()
-                    .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
-            })
     }
 
     stop(): Promise<void> {
@@ -303,7 +280,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
         return true
     }
 
-    private getConnections(): Array<UWSConnection> {
+    protected getConnections(): Array<UWSConnection> {
         return [...this.connectionById.values()]
     }
 

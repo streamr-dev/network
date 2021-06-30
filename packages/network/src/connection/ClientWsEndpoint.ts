@@ -90,7 +90,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
 
     protected readonly pingPongWs: PingPongWs
     protected readonly logger: Logger
-    protected readonly metrics: Metrics
 
     constructor(
         peerInfo: PeerInfo,
@@ -98,7 +97,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
         metricsContext = new MetricsContext(peerInfo.peerId),
         pingInterval = 5 * 1000
     ) {
-        super()
+        super(metricsContext)
 
         if (!(peerInfo instanceof PeerInfo)) {
             throw new Error('peerInfo not instance of PeerInfo')
@@ -118,29 +117,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
 
         this.logger.trace('listening on %s', this.getAddress())
-
-        this.metrics = metricsContext.create('WsEndpoint')
-            .addRecordedMetric('inSpeed')
-            .addRecordedMetric('outSpeed')
-            .addRecordedMetric('msgSpeed')
-            .addRecordedMetric('msgInSpeed')
-            .addRecordedMetric('msgOutSpeed')
-            .addRecordedMetric('open')
-            .addRecordedMetric('open:duplicateSocket')
-            .addRecordedMetric('open:failedException')
-            .addRecordedMetric('open:headersNotReceived')
-            .addRecordedMetric('open:missingParameter')
-            .addRecordedMetric('open:ownAddress')
-            .addRecordedMetric('close')
-            .addRecordedMetric('sendFailed')
-            .addRecordedMetric('webSocketError')
-            .addQueriedMetric('connections', () => this.connectionsByPeerId.size)
-            .addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
-            .addQueriedMetric('rtts', () => this.getRtts())
-            .addQueriedMetric('totalWebSocketBuffer', () => {
-                return this.getConnections()
-                    .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
-            })
+        this.metrics.addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
     }
 
     connect(serverUrl: ServerUrl): Promise<PeerId> {
@@ -312,7 +289,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
         })
     }
 
-    private getConnections(): Array<WsConnection> {
+    protected getConnections(): Array<WsConnection> {
         return [...this.connectionsByPeerId.values()]
     }
 
