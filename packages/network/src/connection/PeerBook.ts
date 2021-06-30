@@ -17,10 +17,6 @@ export class PeerBook {
         this.peerInfos[peerAddress] = peerInfo
     }
 
-    getPeerInfo(peerAddress: string): PeerInfo | null | never {
-        return this.peerInfos[peerAddress] || null
-    }
-
     remove(peerAddress: string): void {
         delete this.peerInfos[peerAddress]
     }
@@ -31,13 +27,5 @@ export class PeerBook {
             throw new NotFoundInPeerBookError(`PeerId ${peerId} not found in peer book`)
         }
         return address
-    }
-
-    getPeerId(address: string): string | never {
-        const peerInfo = this.peerInfos[address]
-        if (!peerInfo) {
-            throw new NotFoundInPeerBookError(`Address ${address} not found in peer book`)
-        }
-        return peerInfo.peerId
     }
 }

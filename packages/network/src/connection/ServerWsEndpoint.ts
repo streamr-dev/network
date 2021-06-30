@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
-import { DisconnectionCode, DisconnectionReason, Event } from './IWsEndpoint'
+import { DisconnectionCode, DisconnectionReason, Event, UnknownPeerError } from './IWsEndpoint'
 import uWS from 'uWebSockets.js'
-import { PeerBook } from './PeerBook'
+import { NotFoundInPeerBookError, PeerBook } from './PeerBook'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
@@ -220,12 +220,12 @@ export class ServerWsEndpoint extends EventEmitter {
         })
     }
 
-    send(recipientId: string, message: string): Promise<string> {
+    async send(recipientId: string, message: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             if (!this.isConnected(recipientId)) {
                 this.metrics.record('sendFailed', 1)
                 this.logger.trace('cannot send to %s, not connected', recipientId)
-                reject(new Error(`cannot send to ${recipientId} because not connected`))
+                reject(new UnknownPeerError(`cannot send to ${recipientId} because not connected`))
             } else {
                 const connection = this.connectionById.get(recipientId)!
                 this.socketSend(connection, message, recipientId, resolve, reject)

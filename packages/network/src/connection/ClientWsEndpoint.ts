@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { DisconnectionCode, DisconnectionReason, Event } from './IWsEndpoint'
+import { DisconnectionCode, DisconnectionReason, Event, UnknownPeerError } from './IWsEndpoint'
 import WebSocket from 'ws'
 import { PeerBook } from './PeerBook'
 import { PeerInfo } from './PeerInfo'
@@ -157,12 +157,6 @@ export class ClientWsEndpoint extends EventEmitter {
             } catch (e) {
                 this.logger.warn(`failed pinging %s, error %s, terminating connection`, connection.getPeerId(), e)
                 connection.terminate()
-                /*this.onClose(
-                    address,
-                    this.peerBook.getPeerInfo(address)!,
-                    DisconnectionCode.DEAD_CONNECTION,
-                    DisconnectionReason.DEAD_CONNECTION
-                )*/ // TODO: do we need this manual callback?
             }
         })
     }
@@ -172,7 +166,7 @@ export class ClientWsEndpoint extends EventEmitter {
             if (!this.isConnectedToPeerId(recipientId)) {
                 this.metrics.record('sendFailed', 1)
                 this.logger.trace('cannot send to %s, not connected', recipientId)
-                reject(new Error(`cannot send to ${recipientId} because not connected`))
+                reject(new UnknownPeerError(`cannot send to ${recipientId} because not connected`))
             } else {
                 const connection = this.connectionsByPeerId.get(recipientId)!
                 this.socketSend(connection, message, recipientId, resolve, reject)
@@ -424,8 +418,6 @@ export class ClientWsEndpoint extends EventEmitter {
         ws.once('close', (code: number, reason: string): void => {
             if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
                 this.metrics.record('open:duplicateSocket', 1)
-                this.logger.trace('socket %s dropped from other side because existing connection already exists')
-                return
             }
 
             this.onClose(connection, serverUrl, code, reason)

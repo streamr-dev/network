@@ -21,3 +21,13 @@ export enum DisconnectionReason {
     MISSING_REQUIRED_PARAMETER = 'streamr:node:missing-required-parameter',
     DEAD_CONNECTION = 'streamr:endpoint:dead-connection'
 }
+
+export class UnknownPeerError extends Error {
+    static CODE = 'UnknownPeerError'
+    readonly code = UnknownPeerError.CODE
+
+    constructor(msg: string) {
+        super(msg)
+        Error.captureStackTrace(this, UnknownPeerError)
+    }
+}
