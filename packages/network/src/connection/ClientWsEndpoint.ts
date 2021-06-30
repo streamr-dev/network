@@ -144,18 +144,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
                     .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
             })
     }
-    async send(recipientId: string, message: string): Promise<string> {
-        return new Promise<string>(async (resolve, reject) => {
-            if (!this.isConnectedToPeerId(recipientId)) {
-                this.metrics.record('sendFailed', 1)
-                this.logger.trace('cannot send to %s, not connected', recipientId)
-                reject(new UnknownPeerError(`cannot send to ${recipientId} because not connected`))
-            } else {
-                const connection = this.connectionsByPeerId.get(recipientId)!
-                await this.socketSend(connection, message, recipientId, resolve, reject)
-            }
-        })
-    }
 
     private onReceive(connection: WsConnection, message: string): void {
         this.logger.trace('<== received from %s [%s] message "%s"', connection.peerInfo, connection.getRemoteAddress(), message)
@@ -356,6 +344,10 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
 
     private getConnections(): Array<WsConnection> {
         return [...this.connectionsByPeerId.values()]
+    }
+
+    protected getConnectionByPeerId(peerId: string): SharedConnection | undefined {
+        return this.connectionsByPeerId.get(peerId)
     }
 }
 

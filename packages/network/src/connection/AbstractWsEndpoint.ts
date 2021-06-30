@@ -18,6 +18,21 @@ export abstract class AbstractWsEndpoint extends EventEmitter {
     protected abstract logger: Logger
     protected abstract metrics: Metrics // TODO: whole definition will move here eventually
 
+    protected abstract getConnectionByPeerId(peerId: string): SharedConnection | undefined
+
+    async send(recipientId: string, message: string): Promise<string> {
+        return new Promise<string>(async (resolve, reject) => {
+            const connection = this.getConnectionByPeerId(recipientId)
+            if (connection !== undefined) {
+                await this.socketSend(connection, message, recipientId, resolve, reject)
+            } else {
+                this.metrics.record('sendFailed', 1)
+                this.logger.trace('cannot send to %s, not connected', recipientId)
+                reject(new UnknownPeerError(`cannot send to ${recipientId} because not connected`))
+            }
+        })
+    }
+
     protected async socketSend(
         connection: SharedConnection,
         message: string,

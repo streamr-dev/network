@@ -350,6 +350,10 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
         return [...this.connectionById.values()]
     }
 
+    protected getConnectionByPeerId(peerId: string): SharedConnection | undefined {
+        return this.connectionById.get(peerId)
+    }
+
 }
 
 export function startWebSocketServer(
