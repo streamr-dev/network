@@ -8,8 +8,6 @@ import { Rtts } from '../identifiers'
 
 const staticLogger = new Logger(module)
 
-//interface UWSConnection extends uWS.WebSocket, Connection {}
-
 class UWSConnection {
     private readonly socket: uWS.WebSocket
     public readonly peerInfo: PeerInfo
