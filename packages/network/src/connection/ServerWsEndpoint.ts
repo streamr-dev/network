@@ -25,11 +25,19 @@ class UWSConnection {
         this.peerInfo = peerInfo
     }
 
-    end(code: DisconnectionCode, reason: DisconnectionReason): void {
+    close(code: DisconnectionCode, reason: DisconnectionReason): void {
         try {
             this.socket.end(code, reason)
         } catch (e) {
-            staticLogger.error('failed to close ws, reason: %s', e)
+            staticLogger.error('failed to gracefully close ws, reason: %s', e)
+        }
+    }
+
+    terminate() {
+        try {
+            this.socket.close()
+        } catch (e) {
+            staticLogger.error('failed to terminate ws, reason: %s', e)
         }
     }
 
@@ -42,15 +50,7 @@ class UWSConnection {
     }
 
     getRemoteAddress(): string {
-        return this.socket.getRemoteAddressAsText().toString()
-    }
-
-    close() {
-        try {
-            this.socket.close()
-        } catch (e) {
-            staticLogger.error('failed to terminate ws, reason %s', e)
-        }
+        return ab2str(this.socket.getRemoteAddressAsText())
     }
 
     // TODO: toString() representatin for logging
@@ -267,7 +267,7 @@ export class ServerWsEndpoint extends EventEmitter {
             this.logger.warn('sending to %s [%s] failed, reason %s, readyState is %s',
                 recipientId, connection.getRemoteAddress(), e, connection.getReadyState())
             errorCallback(e)
-            connection.close()
+            connection.terminate()
         }
     }
 
@@ -297,7 +297,7 @@ export class ServerWsEndpoint extends EventEmitter {
             const connection = this.connectionById.get(recipientId)!
             try {
                 this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
-                connection.end(DisconnectionCode.GRACEFUL_SHUTDOWN, reason)
+                connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, reason)
             } catch (e) {
                 this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
             }
@@ -309,9 +309,9 @@ export class ServerWsEndpoint extends EventEmitter {
 
         return new Promise<void>((resolve, reject) => {
             try {
-                this.connectionById.forEach((connection) => {
-                    connection.end(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
-                })
+                /*this.connectionById.forEach((connection) => {
+                    connection.closeTemp(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
+                })*/
 
                 if (this.listenSocket) {
                     this.logger.trace('shutting down uWS server')
@@ -401,16 +401,14 @@ export class ServerWsEndpoint extends EventEmitter {
     private onClose(connection: UWSConnection, ws: uWS.WebSocket, code = 0, reason = ''): void {
         if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
             this.metrics.record('open:duplicateSocket', 1)
-            this.logger.trace('socket %s dropped from other side because existing connection already exists')
-            return
         }
 
         this.metrics.record('close', 1)
-        this.logger.trace('socket to %s [%s] closed (code %d, reason %s)',
-            connection.getPeerId(), connection.getRemoteAddress(), code, reason)
+        this.logger.trace('socket to %s closed (code %d, reason %s)',
+            connection.getPeerId(), code, reason)
         this.connectionById.delete(connection.peerInfo.peerId)
         this.connectionByUwsSocket.delete(ws)
-        this.logger.trace('removed %s [%s] from connection list', connection.getPeerId(), connection.getRemoteAddress())
+        this.logger.trace('removed %s from connection list', connection.getPeerId())
         this.emit(Event.PEER_DISCONNECTED, connection.peerInfo, reason)
     }
 
