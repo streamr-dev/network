@@ -31,6 +31,8 @@ export interface TrackerNode {
     on(event: Event.RTC_ERROR_RECEIVED, listener: (msg: TrackerLayer.ErrorMessage, trackerId: string) => void): this
 }
 
+export type UUID = string
+
 export class TrackerNode extends EventEmitter {
     private readonly endpoint: ClientWsEndpoint
     private readonly logger: Logger
@@ -45,22 +47,25 @@ export class TrackerNode extends EventEmitter {
         this.logger = new Logger(module)
     }
 
-    sendStatus(trackerId: string, status: Status): Promise<TrackerLayer.StatusMessage> {
-        return this.send(trackerId, new TrackerLayer.StatusMessage({
-            requestId: uuidv4(),
+    async sendStatus(trackerId: string, status: Status): Promise<UUID> {
+        const requestId = uuidv4()
+        await this.send(trackerId, new TrackerLayer.StatusMessage({
+            requestId,
             status
         }))
+        return requestId
     }
 
-    sendRtcOffer(
+    async sendRtcOffer(
         trackerId: string,
         targetNode: string, 
         connectionId: string,
         originatorInfo: PeerInfo, 
         description: string
-    ): Promise<TrackerLayer.RelayMessage> {
-        return this.send(trackerId, new TrackerLayer.RelayMessage({
-            requestId: uuidv4(),
+    ): Promise<UUID> {
+        const requestId = uuidv4()
+        await this.send(trackerId, new TrackerLayer.RelayMessage({
+            requestId,
             originator: originatorInfo,
             targetNode,
             subType: RtcSubTypes.RTC_OFFER,
@@ -69,17 +74,19 @@ export class TrackerNode extends EventEmitter {
                 description
             }
         }))
+        return requestId
     }
 
-    sendRtcAnswer(
+    async sendRtcAnswer(
         trackerId: string,
         targetNode: string, 
         connectionId: string,
         originatorInfo: PeerInfo, 
         description: string
-    ): Promise<TrackerLayer.RelayMessage> {
-        return this.send(trackerId, new TrackerLayer.RelayMessage({
-            requestId: uuidv4(),
+    ): Promise<UUID> {
+        const requestId = uuidv4()
+        await this.send(trackerId, new TrackerLayer.RelayMessage({
+            requestId,
             originator: originatorInfo,
             targetNode,
             subType: RtcSubTypes.RTC_ANSWER,
@@ -88,18 +95,20 @@ export class TrackerNode extends EventEmitter {
                 description
             }
         }))
+        return requestId
     }
 
-    sendRtcIceCandidate(
+    async sendRtcIceCandidate(
         trackerId: string,
         targetNode: string, 
         connectionId: string,
         originatorInfo: PeerInfo,
         candidate: string, 
         mid: string
-    ): Promise<TrackerLayer.RelayMessage> {
-        return this.send(trackerId, new TrackerLayer.RelayMessage({
-            requestId: uuidv4(),
+    ): Promise<UUID> {
+        const requestId = uuidv4()
+        await this.send(trackerId, new TrackerLayer.RelayMessage({
+            requestId,
             originator: originatorInfo,
             targetNode,
             subType: RtcSubTypes.ICE_CANDIDATE,
@@ -109,20 +118,23 @@ export class TrackerNode extends EventEmitter {
                 mid
             }
         }))
+        return requestId
     }
 
-    sendRtcConnect(trackerId: string, targetNode: string, originatorInfo: PeerInfo): Promise<TrackerLayer.RelayMessage> {
-        return this.send(trackerId, new TrackerLayer.RelayMessage({
-            requestId: uuidv4(),
+    async sendRtcConnect(trackerId: string, targetNode: string, originatorInfo: PeerInfo): Promise<UUID> {
+        const requestId = uuidv4()
+        await this.send(trackerId, new TrackerLayer.RelayMessage({
+            requestId,
             originator: originatorInfo,
             targetNode,
             subType: RtcSubTypes.RTC_CONNECT,
             data: new Object()
         }))
+        return requestId
     }
 
-    send<T>(receiverNodeId: string, message: T & TrackerLayer.TrackerMessage): Promise<T> {
-        return this.endpoint.send(receiverNodeId, message.serialize()).then(() => message)
+    async send<T>(receiverNodeId: string, message: T & TrackerLayer.TrackerMessage): Promise<void> {
+        await this.endpoint.send(receiverNodeId, message.serialize())
     }
 
     getServerUrlByTrackerId(trackerId: string): string | undefined {

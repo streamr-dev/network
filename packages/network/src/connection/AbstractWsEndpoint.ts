@@ -20,49 +20,27 @@ export abstract class AbstractWsEndpoint extends EventEmitter {
 
     protected abstract getConnectionByPeerId(peerId: string): SharedConnection | undefined
 
-    async send(recipientId: string, message: string): Promise<string> {
-        return new Promise<string>(async (resolve, reject) => {
-            const connection = this.getConnectionByPeerId(recipientId)
-            if (connection !== undefined) {
-                await this.socketSend(connection, message, recipientId, resolve, reject)
-            } else {
+    async send(recipientId: string, message: string): Promise<void> {
+        const connection = this.getConnectionByPeerId(recipientId)
+        if (connection !== undefined) {
+            try {
+                this.evaluateBackPressure(connection)
+                await connection.send(message)
+            } catch (err) {
                 this.metrics.record('sendFailed', 1)
-                this.logger.trace('cannot send to %s, not connected', recipientId)
-                reject(new UnknownPeerError(`cannot send to ${recipientId} because not connected`))
+                this.logger.warn('sending to %s failed, reason %s', recipientId, err)
+                connection.terminate()
+                throw err
             }
-        })
-    }
 
-    protected async socketSend(
-        connection: SharedConnection,
-        message: string,
-        recipientId: string,
-        successCallback: (peerId: string) => void,
-        errorCallback: (err: Error) => void
-    ): Promise<void> {
-        const onSuccess = (peerId: string, msg: string): void => {
-            this.logger.trace('sent to %s message "%s"', recipientId, msg)
-            this.metrics.record('outSpeed', msg.length)
+            this.logger.trace('sent to %s message "%s"', recipientId, message)
+            this.metrics.record('outSpeed', message.length)
             this.metrics.record('msgSpeed', 1)
             this.metrics.record('msgOutSpeed', 1)
-            successCallback(peerId)
-        }
-
-        try {
-            this.evaluateBackPressure(connection)
-            await connection.send(message)
-        } catch (err) {
+        } else {
             this.metrics.record('sendFailed', 1)
-            this.logger.warn('sending to %s failed, reason %s', recipientId, err)
-            connection.terminate()
-            errorCallback(err)
-            return
-        }
-
-        try {
-            onSuccess(recipientId, message)
-        } catch (err) {
-            errorCallback(err)
+            this.logger.trace('cannot send to %s, not connected', recipientId)
+            throw new UnknownPeerError(`cannot send to ${recipientId} because not connected`)
         }
     }
 

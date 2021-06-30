@@ -9,7 +9,6 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     Event, HIGH_BACK_PRESSURE, SharedConnection,
-    UnknownPeerError
 } from "./AbstractWsEndpoint"
 
 const staticLogger = new Logger(module)
@@ -196,19 +195,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
                 return this.getConnections()
                     .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
             })
-    }
-
-    async send(recipientId: string, message: string): Promise<string> {
-        return new Promise<string>(async (resolve, reject) => {
-            if (!this.isConnected(recipientId)) {
-                this.metrics.record('sendFailed', 1)
-                this.logger.trace('cannot send to %s, not connected', recipientId)
-                reject(new UnknownPeerError(`cannot send to ${recipientId} because not connected`))
-            } else {
-                const connection = this.connectionById.get(recipientId)!
-                await this.socketSend(connection, message, recipientId, resolve, reject)
-            }
-        })
     }
 
     private onReceive(connection: UWSConnection, message: string): void {
