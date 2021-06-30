@@ -101,7 +101,6 @@ export default class PushQueue<T> {
     nextQueue: (ReturnType<typeof Defer>)[] = [] // queued promises for next()
     pending: number = 0
     _onEnd: PushQueueOptions['onEnd']
-    _isCancelled = false
 
     constructor(items: T[] = [], {
         signal,
@@ -197,6 +196,10 @@ export default class PushQueue<T> {
      */
 
     end = pOnce((v?: T | null | Error) => {
+        if (!this.isBufferReadable || !this.isBufferWritable) {
+            return
+        }
+
         this.debug('end')
 
         if (v != null) {
@@ -243,6 +246,11 @@ export default class PushQueue<T> {
     }
 
     throw = pOnce(async (err: Error) => {
+        if (!this.isBufferReadable) {
+            await this._cleanup()
+            return
+        }
+
         this.isBufferWritable = false
         this.isBufferReadable = false
         this.debug('throw')
@@ -256,6 +264,11 @@ export default class PushQueue<T> {
     })
 
     cancel = pOnce(async (error?: Error) => {
+        if (!this.isBufferReadable) {
+            await this._cleanup()
+            return
+        }
+
         this.isBufferWritable = false
         this.isBufferReadable = false
         if (error && !this.error) {
@@ -271,7 +284,7 @@ export default class PushQueue<T> {
     })
 
     isCancelled = () => {
-        return this.isBufferReadable
+        return !this.isBufferReadable
     }
 
     _cleanup = pOnce(async () => {
