@@ -33,7 +33,7 @@ describe('check and kill dead connections', () => {
 
         // get alive connection
         const connection = node1.getPeers().get('ws://127.0.0.1:43972')
-        expect(connection!.readyState).toEqual(STATE_OPEN)
+        expect(connection!.getReadyState()).toEqual(STATE_OPEN)
 
         // @ts-expect-error private method
         jest.spyOn(node1, 'onClose').mockImplementation()
@@ -45,7 +45,7 @@ describe('check and kill dead connections', () => {
         // @ts-expect-error private method
         node1.pingConnections()
 
-        expect(connection!.readyState).toEqual(STATE_CLOSING)
+        expect(connection!.getReadyState()).toEqual(STATE_CLOSING)
 
         // @ts-expect-error private method
         expect(node1.onClose).toBeCalledTimes(1)

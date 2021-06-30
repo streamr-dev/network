@@ -97,7 +97,7 @@ describe('WsServer&WsClient with no connections', () => {
     it('resolveAddress throws error', () => {
         expect(() => {
             wsEndpoint.resolveAddress('otherPeerId')
-        }).toThrowError('Id otherPeerId not found in peer book')
+        }).toThrowError('resolveAddress: otherPeerId not found')
     })
 })
 
