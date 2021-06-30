@@ -176,20 +176,10 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         return p
     }
 
-    stop(): Promise<void> {
+    async stop(): Promise<void> {
         this.pingPongWs.stop()
-
-        return new Promise<void>((resolve, reject) => {
-            try {
-                this.getConnections().forEach((connection) => {
-                    connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
-                })
-
-                setTimeout(() => resolve(), 100)
-            } catch (e) {
-                this.logger.error('error while shutting down uWS server: %s', e)
-                reject(new Error(`Failed to stop websocket server, because of ${e}`))
-            }
+        this.getConnections().forEach((connection) => {
+            connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
         })
     }
 

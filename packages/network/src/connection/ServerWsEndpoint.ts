@@ -155,27 +155,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         this.logger.trace('listening on %s', this.getAddress())
     }
 
-    stop(): Promise<void> {
+    async stop(): Promise<void> {
         this.pingPongWs.stop()
-
-        return new Promise<void>((resolve, reject) => {
-            try {
-                /*this.connectionById.forEach((connection) => {
-                    connection.closeTemp(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
-                })*/
-
-                if (this.listenSocket) {
-                    this.logger.trace('shutting down uWS server')
-                    uWS.us_listen_socket_close(this.listenSocket)
-                    this.listenSocket = null
-                }
-
-                setTimeout(() => resolve(), 100)
-            } catch (e) {
-                this.logger.error('error while shutting down uWS server: %s', e)
-                reject(new Error(`Failed to stop websocket server, because of ${e}`))
-            }
-        })
+        if (this.listenSocket) {
+            this.logger.trace('shutting down uWS server')
+            uWS.us_listen_socket_close(this.listenSocket)
+            this.listenSocket = null
+        }
+        return new Promise((resolve) => setTimeout(resolve, 100))
     }
 
     getAddress(): string {
