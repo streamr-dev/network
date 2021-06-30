@@ -7,7 +7,7 @@ import {
     AbstractWsEndpoint,
     DisconnectionCode,
     DisconnectionReason,
-    Event, SharedConnection,
+    SharedConnection,
 } from "./AbstractWsEndpoint"
 
 const staticLogger = new Logger(module)
@@ -95,22 +95,20 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         this.serverUrlByPeerId = new Map()
         this.pendingConnections = new Map()
 
-        this.logger.trace('listening on %s', this.getAddress())
         this.metrics.addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
     }
 
     connect(serverUrl: ServerUrl): Promise<PeerId> {
-        if (this.isConnectedToServerUrl(serverUrl)) {
-            const connection = this.connectionsByServerUrl.get(serverUrl)!
-
-            if (connection.getReadyState() === WebSocket.OPEN) {
+        const existingConnection = this.connectionsByServerUrl.get(serverUrl)
+        if (existingConnection !== undefined) {
+            if (existingConnection.getReadyState() === WebSocket.OPEN) {
                 this.logger.trace('already connected to %s', serverUrl)
-                return Promise.resolve(connection.getPeerId())
+                return Promise.resolve(existingConnection.getPeerId())
             }
 
             this.logger.trace('already connected to %s, but readyState is %s, closing connection',
-                serverUrl, connection.getReadyState())
-            this.close(connection.getPeerId())
+                serverUrl, existingConnection.getReadyState())
+            this.close(existingConnection.getPeerId())
         }
 
         if (this.pendingConnections.has(serverUrl)) {
@@ -181,16 +179,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         this.getConnections().forEach((connection) => {
             connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
         })
-    }
-
-    isConnectedToServerUrl(serverUrl: string): boolean {
-        return this.connectionsByServerUrl.has(serverUrl)
-    }
-
-    getAddress(): string {
-        // in contrast with ServerWsEndpoint's 
-        // `ws://${this.serverHost}:${this.serverPort}`  
-        return this.peerInfo.peerId
     }
 
     getServerUrlByPeerId(peerId: PeerId): string | undefined {

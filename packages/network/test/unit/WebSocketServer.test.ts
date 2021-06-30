@@ -63,21 +63,6 @@ describe('WsServer&WsClient with no connections', () => {
         expect(wsEndpoint.getAddress()).toEqual('ws://127.0.0.1:30465')
     })
 
-    it('getPeerInfo() gives peer info of endpoint', () => {
-        expect(wsEndpoint.getPeerInfo()).toEqual(PeerInfo.newTracker(
-            'peerId',
-            'peerId',
-            undefined,
-            undefined,
-            {
-                latitude: null,
-                longitude: null,
-                country: 'Finland',
-                city: 'Espoo'
-            }
-        ))
-    })
-
     it('getRtts() is empty', () => {
         expect(wsEndpoint.getRtts()).toEqual({})
     })
@@ -90,10 +75,8 @@ describe('WsServer&WsClient with no connections', () => {
         expect(wsEndpoint.getPeerInfos()).toEqual([])
     })
 
-    it('resolveAddress throws error', () => {
-        expect(() => {
-            wsEndpoint.resolveAddress('otherPeerId')
-        }).toThrowError('resolveAddress: otherPeerId not found')
+    it('resolveAddress returns undefined', () => {
+        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual(undefined)
     })
 })
 

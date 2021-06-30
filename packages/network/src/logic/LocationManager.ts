@@ -25,7 +25,7 @@ export class LocationManager {
         return this.nodeLocations[nodeId]
     }
 
-    updateLocation({ nodeId, location, address }: { nodeId: string, location: Location | null, address: string }): void {
+    updateLocation({ nodeId, location, address }: { nodeId: string, location: Location | null, address?: string }): void {
         if (isValidNodeLocation(location)) {
             this.nodeLocations[nodeId] = location!
         } else if (!isValidNodeLocation(this.nodeLocations[nodeId])) {

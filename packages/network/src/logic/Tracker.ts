@@ -125,6 +125,7 @@ export class Tracker extends EventEmitter {
         return this.trackerServer.stop()
     }
 
+    // Utility method for tests, TODO: could be removed?
     getAddress(): string {
         return this.trackerServer.getAddress()
     }

@@ -151,7 +151,7 @@ export class TrackerServer extends EventEmitter {
         return this.endpoint.getAddress()
     }
 
-    resolveAddress(peerId: string): string {
+    resolveAddress(peerId: string): string | undefined {
         return this.endpoint.resolveAddress(peerId)
     }
 

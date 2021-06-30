@@ -6,7 +6,7 @@ import {
     AbstractWsEndpoint,
     DisconnectionCode,
     DisconnectionReason,
-    Event, HIGH_BACK_PRESSURE, SharedConnection,
+    HIGH_BACK_PRESSURE, SharedConnection,
 } from "./AbstractWsEndpoint"
 
 const staticLogger = new Logger(module)
@@ -176,21 +176,13 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         return this.wss
     }
 
-    getPeerInfo(): Readonly<PeerInfo> {
-        return this.peerInfo
-    }
-
     getPeerInfos(): PeerInfo[] {
         return Array.from(this.connectionById.values())
             .map((connection) => connection.peerInfo)
     }
 
-    // TODO: maybe return undefined instead of throwing when unknown peerId
-    resolveAddress(peerId: string): string | never {
-        if (!this.connectionById.has(peerId)) {
-            throw new Error(`resolveAddress: ${peerId} not found`)
-        }
-        return this.connectionById.get(peerId)!.getRemoteAddress()
+    resolveAddress(peerId: string): string | undefined {
+        return this.connectionById.get(peerId)?.getRemoteAddress()
     }
 
     private onIncomingConnection(ws: uWS.WebSocket): void {
