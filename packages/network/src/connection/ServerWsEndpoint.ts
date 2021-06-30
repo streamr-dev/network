@@ -62,10 +62,6 @@ class UWSConnection {
     send(message: string): void {
         this.socket.send(message)
     }
-
-    getReadyState(): number {
-        return this.socket.readySocket
-    }
 }
 
 const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
@@ -258,8 +254,8 @@ export class ServerWsEndpoint extends EventEmitter {
             this.evaluateBackPressure(connection)
         } catch (e) {
             this.metrics.record('sendFailed', 1)
-            this.logger.warn('sending to %s [%s] failed, reason %s, readyState is %s',
-                recipientId, connection.getRemoteAddress(), e, connection.getReadyState())
+            this.logger.warn('sending to %s [%s] failed, reason %s',
+                recipientId, connection.getRemoteAddress(), e)
             errorCallback(e)
             connection.terminate()
         }
