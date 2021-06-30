@@ -1,10 +1,12 @@
 import { allSettledValues, instanceId } from '../utils'
+import { inspect } from '../utils/log'
 import { validateOptions } from '../stream/utils'
 import SubscriptionSession from './SubscriptionSession'
 import { StreamPartDefinition } from '..'
 import { BrubeckClient } from './BrubeckClient'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
 import { Context } from './Context'
+import { Stream } from '../stream'
 
 /**
  * Keeps track of subscriptions.
@@ -148,11 +150,30 @@ export default class Subscriber implements Context {
             return this.getAllSubscriptions()
         }
 
-        const { key } = validateOptions(options)
-        const subSession = this.subSessions.get(key) as SubscriptionSession<T>
-        if (!subSession) { return [] }
+        let streamId: string
+        let streamPartition: number | undefined
+        if (options instanceof Stream) {
+            streamId = options.id
+        } else if (typeof options === 'string') {
+            streamId = options
+        } else {
+            if (!options.streamId) {
+                throw new Error(`options.streamId required, got ${inspect(options)}`)
+            }
 
-        return [...subSession.subscriptions]
+            streamId = options.streamId
+            streamPartition = options.streamPartition != null ? options.streamPartition : undefined
+        }
+
+        return [...this.subSessions.values()].filter((subSession) => {
+            if (streamId !== subSession.streamId) { return false } // no matching streamId
+
+            if (streamPartition == null) { return true } // if no partition passed, only need matching streamId
+
+            return streamPartition === subSession.streamPartition // matches both
+        }).flatMap((subSession) => ([
+            ...subSession.subscriptions
+        ])) as Subscription<T>[]
     }
 
     stop() {

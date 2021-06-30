@@ -44,6 +44,8 @@ export default class SubscriptionSession<T> extends Emitter {
     debug
     client: BrubeckClient
     options: SubscriptionSessionOptions
+    streamId
+    streamPartition
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()
     pendingRemoval: Set<Subscription<T>> = new Set()
@@ -58,9 +60,11 @@ export default class SubscriptionSession<T> extends Emitter {
         this.options = validateOptions(options)
         this.id = counterId(`SubscriptionSession:${this.options.id || ''}${this.options.key}`)
         this.debug = this.client.debug.extend(this.id)
+        this.streamId = this.options.streamId
+        this.streamPartition = this.options.streamPartition
         this.onMessage = this.onMessage.bind(this)
-        this.buffer = new MessageStream<T>(this, this.options)
-        this.pipeline = new MessageStream<T>(this, this.options)
+        this.buffer = new MessageStream<T>(this)
+        this.pipeline = new MessageStream<T>(this)
         this.pipeline.from(SubscribePipeline(this.client.client, this.buffer, this.options))
         this.pipeline.on('error', (error) => this.emit('error', error))
         this.pipeline.on('end', () => this.emit('end'))

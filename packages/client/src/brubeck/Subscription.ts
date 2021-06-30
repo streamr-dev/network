@@ -36,6 +36,6 @@ export default class Subscription<T> extends MessageStream<T> {
     }
 
     unsubscribe() {
-        return this.end()
+        return this.cancel()
     }
 }

@@ -155,11 +155,13 @@ describeRepeats('StreamrClient', () => {
             })
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
-                const sub = await client.subscriber.subscribe<{ test: string }>({
+                const subTask = client.subscriber.subscribe<{ test: string }>({
                     streamId: stream.id,
                 }, () => {})
-
                 expect(client.subscriber.getSubscriptions()).toHaveLength(1) // has subscription immediately
+
+                const sub = await subTask
+
                 expect(client.subscriber.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
                 expect(client.subscriber.getSubscriptions()).toHaveLength(0)
