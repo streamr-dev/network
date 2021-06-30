@@ -196,11 +196,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
             })
     }
 
-    private onReceive(connection: UWSConnection, message: string): void {
-        this.logger.trace('<== received from %s [%s] message "%s"', connection.peerInfo, connection.getRemoteAddress(), message)
-        this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
-    }
-
     stop(): Promise<void> {
         this.pingPongWs.stop()
 

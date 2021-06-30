@@ -3,7 +3,6 @@ import util from 'util'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
-import { Rtts } from '../identifiers'
 import { PingPongWs } from "./PingPongWs"
 import {
     AbstractWsEndpoint,
@@ -142,11 +141,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
                 return this.getConnections()
                     .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
             })
-    }
-
-    private onReceive(connection: WsConnection, message: string): void {
-        this.logger.trace('<== received from %s [%s] message "%s"', connection.peerInfo, connection.getRemoteAddress(), message)
-        this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
     }
 
     connect(serverUrl: ServerUrl): Promise<PeerId> {

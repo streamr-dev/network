@@ -77,6 +77,11 @@ export abstract class AbstractWsEndpoint extends EventEmitter {
         }
     }
 
+    protected onReceive(connection: SharedConnection, message: string): void {
+        this.logger.trace('<== received from %s message "%s"', connection.peerInfo, message)
+        this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
+    }
+
     close(recipientId: string, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
         this.metrics.record('close', 1)
         const connection = this.getConnectionByPeerId(recipientId)
