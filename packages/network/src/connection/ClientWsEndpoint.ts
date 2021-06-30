@@ -148,7 +148,11 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
                         this.metrics.record('open:headersNotReceived', 1)
                         reject(new Error('dropping outgoing connection because connection headers never received'))
                     } else {
-                        connection = this.onNewConnection(ws, serverUrl, serverPeerInfo)
+                        connection = new WsConnection(ws, serverPeerInfo)
+                        this.addListeners(ws, connection, serverUrl)
+                        this.connectionsByServerUrl.set(serverUrl, connection)
+                        this.serverUrlByPeerId.set(connection.getPeerId(), serverUrl)
+                        this.onNewConnection(connection)
                         resolve(connection.getPeerId())
                     }
                 })
@@ -208,24 +212,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
         this.connectionsByServerUrl.delete(serverUrl)
         this.serverUrlByPeerId.delete(connection.getPeerId())
-    }
-
-    private onNewConnection(
-        ws: WebSocket,
-        serverUrl: ServerUrl,
-        serverPeerInfo: PeerInfo
-    ): WsConnection {
-
-        const connection = new WsConnection(ws, serverPeerInfo)
-        this.addListeners(ws, connection, serverUrl)
-        this.connectionById.set(connection.getPeerId(), connection)
-        this.connectionsByServerUrl.set(serverUrl, connection)
-        this.serverUrlByPeerId.set(connection.getPeerId(), serverUrl)
-        this.metrics.record('open', 1)
-        this.logger.trace('added %s [%s] to connection list', connection.getPeerId(), serverUrl)
-        this.emit(Event.PEER_CONNECTED, connection.peerInfo)
-
-        return connection
     }
 
     private addListeners(

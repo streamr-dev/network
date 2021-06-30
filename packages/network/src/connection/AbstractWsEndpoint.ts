@@ -161,6 +161,16 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
     }
 
     /**
+     * Implementer should invoke this whenever a new connection is formed
+     */
+    protected onNewConnection(connection: C): void {
+        this.connectionById.set(connection.getPeerId(), connection)
+        this.metrics.record('open', 1)
+        this.logger.trace('added %s to connection list', connection.getPeerId())
+        this.emit(Event.PEER_CONNECTED, connection.peerInfo)
+    }
+
+    /**
      * Implementer can invoke this whenever low watermark of buffer hit
      */
     protected evaluateBackPressure(connection: SharedConnection): void {

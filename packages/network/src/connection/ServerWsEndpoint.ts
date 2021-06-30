@@ -222,8 +222,9 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
                 return
             }
 
-            this.logger.trace('<=== %s connecting to me', peerId)
-            this.onNewConnection(ws, peerId)
+            const uwsConnection = new UWSConnection(ws, PeerInfo.newNode(peerId))
+            this.connectionByUwsSocket.set(ws, uwsConnection)
+            this.onNewConnection(uwsConnection)
         } catch (e) {
             this.logger.trace('dropped incoming connection because of %s', e)
             this.metrics.record('open:missingParameter', 1)
@@ -234,19 +235,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
     protected onClose(connection: UWSConnection, code = 0, reason = ''): void {
         super.onClose(connection, code, reason)
         this.connectionByUwsSocket.delete(connection.socket)
-    }
-
-    private onNewConnection(
-        ws: uWS.WebSocket,
-        peerId: string
-    ): boolean {
-        const uwsConnection = new UWSConnection(ws, PeerInfo.newNode(peerId))
-        this.connectionById.set(peerId, uwsConnection)
-        this.connectionByUwsSocket.set(ws, uwsConnection)
-        this.metrics.record('open', 1)
-        this.logger.trace('added %s [%s] to connection list', peerId, uwsConnection.getRemoteAddress())
-        this.emit(Event.PEER_CONNECTED, uwsConnection.peerInfo)
-        return true
     }
 }
 
