@@ -171,6 +171,6 @@ describe('WsServer&WsClient with connections', () => {
     })
 
     it('resolveAddress throws error', () => {
-        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('otherPeerId')
+        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('127.0.0.1')
     })
 })
