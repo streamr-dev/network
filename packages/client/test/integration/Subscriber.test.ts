@@ -8,6 +8,9 @@ import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
 
 import clientOptions from './config'
+import { Stream } from '../../src/stream'
+import { Subscriber, Subscription } from '../../src/subscribe'
+import { Todo } from '../../src/types'
 
 const { ControlMessage } = ControlLayer
 
@@ -17,10 +20,10 @@ const NUM_MESSAGES = 6
 describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
-    let client
-    let stream
-    let M
-    let publishTestMessages
+    let client: StreamrClient
+    let stream: Stream
+    let M: Subscriber
+    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -65,7 +68,7 @@ describeRepeats('Subscriber', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
         if (client) {
@@ -74,7 +77,7 @@ describeRepeats('Subscriber', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         if (client) {
             client.debug('disconnecting after test >>')
             await client.disconnect()
@@ -89,9 +92,9 @@ describeRepeats('Subscriber', () => {
     })
 
     it('attaches listener at subscribe time', async () => {
-        const beforeCount = client.connection.listenerCount(ControlMessage.TYPES.BroadcastMessage)
+        const beforeCount = client.connection.listenerCount(String(ControlMessage.TYPES.BroadcastMessage))
         const sub = await M.subscribe(stream.id)
-        const afterCount = client.connection.listenerCount(ControlMessage.TYPES.BroadcastMessage)
+        const afterCount = client.connection.listenerCount(String(ControlMessage.TYPES.BroadcastMessage))
         expect(afterCount).toBeGreaterThan(beforeCount)
         expect(M.count(stream.id)).toBe(1)
         await sub.cancel()
@@ -198,8 +201,9 @@ describeRepeats('Subscriber', () => {
 
                 const sub = await M.subscribe({
                     ...stream,
+                    // @ts-expect-error not in type but works
                     afterSteps: [
-                        async function* ThrowError(s) {
+                        async function* ThrowError(s: AsyncIterable<Todo>) {
                             let count = 0
                             for await (const msg of s) {
                                 if (count === MAX_ITEMS) {
@@ -218,7 +222,7 @@ describeRepeats('Subscriber', () => {
                     timestamp: 111111,
                 })
 
-                const received = []
+                const received: Todo[] = []
                 await expect(async () => {
                     for await (const m of sub) {
                         received.push(m.getParsedContent())
@@ -232,8 +236,9 @@ describeRepeats('Subscriber', () => {
 
                 const sub = await M.subscribe({
                     ...stream,
+                    // @ts-expect-error not in type but works
                     afterSteps: [
-                        async function* ThrowError1(s) {
+                        async function* ThrowError1(s: AsyncIterable<Todo>) {
                             let count = 0
                             for await (const msg of s) {
                                 if (count === MAX_ITEMS) {
@@ -243,7 +248,7 @@ describeRepeats('Subscriber', () => {
                                 yield msg
                             }
                         },
-                        async function* ThrowError2(s) {
+                        async function* ThrowError2(s: AsyncIterable<Todo>) {
                             let count = 0
                             for await (const msg of s) {
                                 if (count === MAX_ITEMS) {
@@ -262,7 +267,7 @@ describeRepeats('Subscriber', () => {
                     timestamp: 111111,
                 })
 
-                const received = []
+                const received: any[] = []
                 await expect(async () => {
                     for await (const m of sub) {
                         received.push(m.getParsedContent())
@@ -272,15 +277,16 @@ describeRepeats('Subscriber', () => {
             })
 
             describe('error is bad groupkey', () => {
-                let sub
+                let sub: Subscription
                 const BAD_GROUP_KEY_ID = 'BAD_GROUP_KEY_ID'
 
                 beforeEach(async () => {
                     await client.publisher.startKeyExchange()
                     sub = await M.subscribe({
                         ...stream,
+                        // @ts-expect-error not in type but works
                         beforeSteps: [
-                            async function* ThrowError(s) {
+                            async function* ThrowError(s: AsyncIterable<Todo>) {
                                 let count = 0
                                 for await (const msg of s) {
                                     if (count === MAX_ITEMS) {
@@ -302,7 +308,7 @@ describeRepeats('Subscriber', () => {
                         timestamp: 111111,
                     })
 
-                    const received = []
+                    const received: Todo[] = []
                     await expect(async () => {
                         for await (const m of sub) {
                             received.push(m.getParsedContent())
@@ -320,7 +326,7 @@ describeRepeats('Subscriber', () => {
                     sub.on('error', onSubscriptionError)
 
                     const received = []
-                    let t
+                    let t!: ReturnType<typeof setTimeout>
                     for await (const m of sub) {
                         received.push(m.getParsedContent())
                         if (received.length === published.length - 1) {
@@ -350,7 +356,7 @@ describeRepeats('Subscriber', () => {
                         timestamp: 111111,
                     })
 
-                    const received = []
+                    const received: any[] = []
                     const onSubscriptionError = jest.fn((err) => {
                         throw err
                     })
@@ -373,8 +379,8 @@ describeRepeats('Subscriber', () => {
 
     describe('ending a subscription', () => {
         it('can kill stream using async end', async () => {
-            const unsubscribeEvents = []
-            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            const unsubscribeEvents: Todo[] = []
+            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                 unsubscribeEvents.push(m)
             })
 
@@ -382,8 +388,8 @@ describeRepeats('Subscriber', () => {
             expect(M.count(stream.id)).toBe(1)
 
             await publishTestMessages()
-            let t
-            let expectedLength
+            let t!: ReturnType<typeof setTimeout>
+            let expectedLength = -1
             const received = []
             try {
                 for await (const m of sub) {
@@ -407,8 +413,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can kill stream with throw', async () => {
-            const unsubscribeEvents = []
-            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            const unsubscribeEvents: Todo[] = []
+            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                 unsubscribeEvents.push(m)
             })
 
@@ -418,7 +424,7 @@ describeRepeats('Subscriber', () => {
             await publishTestMessages()
 
             const err = new Error('expected error')
-            const received = []
+            const received: Todo[] = []
             await expect(async () => {
                 for await (const m of sub) {
                     received.push(m.getParsedContent())
@@ -515,8 +521,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('finishes unsubscribe before returning', async () => {
-            const unsubscribeEvents = []
-            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            const unsubscribeEvents: Todo[] = []
+            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                 unsubscribeEvents.push(m)
             })
 
@@ -539,8 +545,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('finishes unsubscribe before returning from cancel', async () => {
-            const unsubscribeEvents = []
-            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            const unsubscribeEvents: Todo[] = []
+            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                 unsubscribeEvents.push(m)
             })
 
@@ -563,8 +569,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can cancel + return and it will wait for unsubscribe', async () => {
-            const unsubscribeEvents = []
-            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            const unsubscribeEvents: Todo[] = []
+            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                 unsubscribeEvents.push(m)
             })
 
@@ -593,8 +599,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can cancel multiple times and it will wait for unsubscribe', async () => {
-            const unsubscribeEvents = []
-            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            const unsubscribeEvents: Todo[] = []
+            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                 unsubscribeEvents.push(m)
             })
 
@@ -624,8 +630,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('will clean up if iterator returned before start', async () => {
-            const unsubscribeEvents = []
-            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            const unsubscribeEvents: Todo[] = []
+            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                 unsubscribeEvents.push(m)
             })
 
@@ -647,8 +653,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can subscribe then unsubscribe in parallel', async () => {
-            const unsubscribeEvents = []
-            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            const unsubscribeEvents: Todo[] = []
+            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                 unsubscribeEvents.push(m)
             })
 
@@ -674,9 +680,9 @@ describeRepeats('Subscriber', () => {
     })
 
     describe('mid-stream stop methods', () => {
-        let sub1
-        let sub2
-        let published
+        let sub1: Subscription
+        let sub2: Subscription
+        let published: Todo[]
 
         beforeEach(async () => {
             sub1 = await M.subscribe(stream.id)
@@ -685,13 +691,13 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can subscribe to stream multiple times then unsubscribe all mid-stream', async () => {
-            let sub1Received
-            let sub1ReceivedAtUnsubscribe
+            let sub1Received: Todo[] = []
+            let sub1ReceivedAtUnsubscribe: Todo[] = []
             const gotOne = Defer()
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received }) => {
                     sub1Received = received
-                    gotOne.resolve()
+                    gotOne.resolve(undefined)
                 }),
                 collect(sub2, async ({ received }) => {
                     await gotOne
