@@ -39,7 +39,7 @@ describe('check and kill dead connections', () => {
 
         const event = waitForEvent(clientEndpoint, Event.PEER_DISCONNECTED)
         // @ts-expect-error private method
-        clientEndpoint.pingConnections()
+        clientEndpoint.pingPongWs.pingConnections()
         const [peerInfo, reason] = await event
 
         expect(peerInfo).toEqual(PeerInfo.newTracker('serverEndpoint'))

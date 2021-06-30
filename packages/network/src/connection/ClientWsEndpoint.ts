@@ -5,6 +5,7 @@ import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
+import { PingPongWs } from "./PingPongWs"
 
 const staticLogger = new Logger(module)
 
@@ -12,8 +13,8 @@ class WsConnection {
     private readonly socket: WebSocket
     public readonly peerInfo: PeerInfo
 
-    respondedPong = true
     highBackPressure = false
+    respondedPong = true
     rtt?: number
     rttStart?: number
 
@@ -86,7 +87,7 @@ export class ClientWsEndpoint extends EventEmitter {
     private readonly connectionsByServerUrl: Map<ServerUrl, WsConnection>
     private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     private readonly pendingConnections: Map<ServerUrl, Promise<string>>
-    private readonly pingInterval: NodeJS.Timeout
+    private readonly pingPongWs: PingPongWs
     private readonly metrics: Metrics
 
     constructor(
@@ -112,9 +113,9 @@ export class ClientWsEndpoint extends EventEmitter {
         this.connectionsByServerUrl = new Map()
         this.serverUrlByPeerId = new Map()
         this.pendingConnections = new Map()
+        this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
 
         this.logger.trace('listening on %s', this.getAddress())
-        this.pingInterval = setInterval(() => this.pingConnections(), pingInterval)
 
         this.metrics = metricsContext.create('WsEndpoint')
             .addRecordedMetric('inSpeed')
@@ -139,27 +140,6 @@ export class ClientWsEndpoint extends EventEmitter {
                     .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
             })
     }
-
-    private pingConnections(): void {
-        this.getConnections().forEach((connection) => {
-            try {
-                // didn't get "pong" in pingInterval
-                if (!connection.respondedPong) {
-                    throw new Error('ws is not active')
-                }
-
-                // eslint-disable-next-line no-param-reassign
-                connection.respondedPong = false
-                connection.rttStart = Date.now()
-                connection.ping()
-                this.logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.rtt)
-            } catch (e) {
-                this.logger.warn(`failed pinging %s, error %s, terminating connection`, connection.getPeerId(), e)
-                connection.terminate()
-            }
-        })
-    }
-
     send(recipientId: string, message: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             if (!this.isConnectedToPeerId(recipientId)) {
@@ -313,7 +293,7 @@ export class ClientWsEndpoint extends EventEmitter {
     }
 
     stop(): Promise<void> {
-        clearInterval(this.pingInterval)
+        this.pingPongWs.stop()
 
         return new Promise<void>((resolve, reject) => {
             try {
@@ -338,13 +318,7 @@ export class ClientWsEndpoint extends EventEmitter {
     }
 
     getRtts(): Rtts {
-        const rtts: Rtts = {}
-        this.getConnections().forEach((connection) => {
-            if (connection.rtt !== undefined) {
-                rtts[connection.getPeerId()] = connection.rtt
-            }
-        })
-        return rtts
+        return this.pingPongWs.getRtts()
     }
 
     getAddress(): string {
@@ -410,8 +384,7 @@ export class ClientWsEndpoint extends EventEmitter {
 
         ws.on('pong', () => {
             this.logger.trace(`=> got pong event ws ${serverUrl}`)
-            connection.respondedPong = true
-            connection.rtt = Date.now() - connection.rttStart!
+            this.pingPongWs.onPong(connection)
         })
 
         ws.once('close', (code: number, reason: string): void => {

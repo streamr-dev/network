@@ -5,6 +5,7 @@ import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
+import { PingPongWs } from "./PingPongWs"
 
 const staticLogger = new Logger(module)
 
@@ -12,8 +13,8 @@ class UWSConnection {
     private readonly socket: uWS.WebSocket
     public readonly peerInfo: PeerInfo
 
-    respondedPong = true
     highBackPressure = false
+    respondedPong = true
     rtt?: number
     rttStart?: number
 
@@ -80,7 +81,7 @@ export class ServerWsEndpoint extends EventEmitter {
     private readonly logger: Logger
     private readonly connectionById: Map<string, UWSConnection> // id => connection
     private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
-    private readonly pingInterval: NodeJS.Timeout
+    private readonly pingPongWs: PingPongWs
     private readonly metrics: Metrics
 
     constructor(
@@ -115,6 +116,7 @@ export class ServerWsEndpoint extends EventEmitter {
         this.logger = new Logger(module)
         this.connectionById = new Map()
         this.connectionByUwsSocket = new Map()
+        this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
 
         this.wss.ws('/ws', {
             compression: 0,
@@ -163,14 +165,12 @@ export class ServerWsEndpoint extends EventEmitter {
 
                 if (connection) {
                     this.logger.trace('received from %s "pong" frame', connection.getRemoteAddress())
-                    connection.respondedPong = true
-                    connection.rtt = Date.now() - connection.rttStart!
+                    this.pingPongWs.onPong(connection)
                 }
             }
         })
 
         this.logger.trace('listening on %s', this.getAddress())
-        this.pingInterval = setInterval(() => this.pingConnections(), pingInterval)
 
         this.metrics = metricsContext.create('WsEndpoint')
             .addRecordedMetric('inSpeed')
@@ -190,29 +190,9 @@ export class ServerWsEndpoint extends EventEmitter {
             .addQueriedMetric('connections', () => this.connectionById.size)
             .addQueriedMetric('rtts', () => this.getRtts())
             .addQueriedMetric('totalWebSocketBuffer', () => {
-                return [...this.connectionById.values()]
+                return this.getConnections()
                     .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
             })
-    }
-
-    private pingConnections(): void {
-        this.connectionByUwsSocket.forEach((connection) => {
-            try {
-                // didn't get "pong" in pingInterval
-                if (!connection.respondedPong) {
-                    throw new Error('ws is not active')
-                }
-
-                // eslint-disable-next-line no-param-reassign
-                connection.respondedPong = false
-                connection.rttStart = Date.now()
-                connection.ping()
-                this.logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.rtt)
-            } catch (e) {
-                this.logger.warn(`failed pinging %s, error %s, terminating connection`, connection.getPeerId(), e)
-                connection.terminate()
-            }
-        })
     }
 
     async send(recipientId: string, message: string): Promise<string> {
@@ -290,7 +270,7 @@ export class ServerWsEndpoint extends EventEmitter {
     }
 
     stop(): Promise<void> {
-        clearInterval(this.pingInterval)
+        this.pingPongWs.stop()
 
         return new Promise<void>((resolve, reject) => {
             try {
@@ -317,13 +297,7 @@ export class ServerWsEndpoint extends EventEmitter {
     }
 
     getRtts(): Rtts {
-        const rtts: Rtts = {}
-        this.connectionById.forEach((connection) => {
-            if (connection.rtt !== undefined) {
-                rtts[connection.getPeerId()] = connection.rtt
-            }
-        })
-        return rtts
+        return this.pingPongWs.getRtts()
     }
 
     getAddress(): string {
@@ -408,6 +382,10 @@ export class ServerWsEndpoint extends EventEmitter {
         this.logger.trace('added %s [%s] to connection list', peerId, uwsConnection.getRemoteAddress())
         this.emit(Event.PEER_CONNECTED, uwsConnection.peerInfo)
         return true
+    }
+
+    private getConnections(): Array<UWSConnection> {
+        return [...this.connectionById.values()]
     }
 
 }
