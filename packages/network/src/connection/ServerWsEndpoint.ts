@@ -62,7 +62,7 @@ class UWSConnection implements SharedConnection {
         this.socket.ping()
     }
 
-    send(message: string): void {
+    async send(message: string): Promise<void> {
         this.socket.send(message)
     }
 }
@@ -81,11 +81,11 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
     private readonly peerInfo: PeerInfo
     private readonly advertisedWsUrl: string | null
 
-    protected readonly logger: Logger
     private readonly connectionById: Map<string, UWSConnection> // id => connection
     private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
     private readonly pingPongWs: PingPongWs
-    private readonly metrics: Metrics
+    protected readonly logger: Logger
+    protected readonly metrics: Metrics
 
     constructor(
         host: string,
@@ -199,44 +199,16 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
     }
 
     async send(recipientId: string, message: string): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
+        return new Promise<string>(async (resolve, reject) => {
             if (!this.isConnected(recipientId)) {
                 this.metrics.record('sendFailed', 1)
                 this.logger.trace('cannot send to %s, not connected', recipientId)
                 reject(new UnknownPeerError(`cannot send to ${recipientId} because not connected`))
             } else {
                 const connection = this.connectionById.get(recipientId)!
-                this.socketSend(connection, message, recipientId, resolve, reject)
+                await this.socketSend(connection, message, recipientId, resolve, reject)
             }
         })
-    }
-
-    private socketSend(
-        connection: UWSConnection,
-        message: string,
-        recipientId: string,
-        successCallback: (peerId: string) => void,
-        errorCallback: (err: Error) => void
-    ): void {
-        const onSuccess = (address: string, peerId: string, msg: string): void => {
-            this.logger.trace('sent to %s [%s] message "%s"', recipientId, address, msg)
-            this.metrics.record('outSpeed', msg.length)
-            this.metrics.record('msgSpeed', 1)
-            this.metrics.record('msgOutSpeed', 1)
-            successCallback(peerId)
-        }
-
-        try {
-            connection.send(message)
-            onSuccess(connection.getRemoteAddress(), recipientId, message)
-            this.evaluateBackPressure(connection)
-        } catch (e) {
-            this.metrics.record('sendFailed', 1)
-            this.logger.warn('sending to %s [%s] failed, reason %s',
-                recipientId, connection.getRemoteAddress(), e)
-            errorCallback(e)
-            connection.terminate()
-        }
     }
 
     private onReceive(connection: UWSConnection, message: string): void {

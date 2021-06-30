@@ -1,4 +1,5 @@
 import WebSocket from 'ws'
+import util from 'util'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
@@ -66,8 +67,8 @@ class WsConnection implements SharedConnection {
         this.socket.ping()
     }
 
-    send(message: string, cb: (err?: Error) => void): void {
-        this.socket.send(message, cb)
+    async send(message: string): Promise<void> {
+        await util.promisify((cb: any) => this.socket.send(message, cb))()
     }
 }
 
@@ -84,13 +85,14 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
     private readonly peerInfo: PeerInfo
     private readonly advertisedWsUrl: string | null
 
-    protected readonly logger: Logger
     private readonly connectionsByPeerId: Map<PeerId, WsConnection>
     private readonly connectionsByServerUrl: Map<ServerUrl, WsConnection>
     private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     private readonly pendingConnections: Map<ServerUrl, Promise<string>>
     private readonly pingPongWs: PingPongWs
-    private readonly metrics: Metrics
+
+    protected readonly logger: Logger
+    protected readonly metrics: Metrics
 
     constructor(
         peerInfo: PeerInfo,
@@ -142,50 +144,17 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
                     .reduce((totalBufferSizeSum, connection) => totalBufferSizeSum + connection.getBufferedAmount(), 0)
             })
     }
-    send(recipientId: string, message: string): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
+    async send(recipientId: string, message: string): Promise<string> {
+        return new Promise<string>(async (resolve, reject) => {
             if (!this.isConnectedToPeerId(recipientId)) {
                 this.metrics.record('sendFailed', 1)
                 this.logger.trace('cannot send to %s, not connected', recipientId)
                 reject(new UnknownPeerError(`cannot send to ${recipientId} because not connected`))
             } else {
                 const connection = this.connectionsByPeerId.get(recipientId)!
-                this.socketSend(connection, message, recipientId, resolve, reject)
+                await this.socketSend(connection, message, recipientId, resolve, reject)
             }
         })
-    }
-
-    private socketSend(
-        connection: WsConnection,
-        message: string,
-        recipientId: string,
-        successCallback: (peerId: string) => void,
-        errorCallback: (err: Error) => void
-    ): void {
-        const onSuccess = (address: string, peerId: string, msg: string): void => {
-            this.logger.trace('sent to %s [%s] message "%s"', recipientId, address, msg)
-            this.metrics.record('outSpeed', msg.length)
-            this.metrics.record('msgSpeed', 1)
-            this.metrics.record('msgOutSpeed', 1)
-            successCallback(peerId)
-        }
-
-        try {
-            connection.send(message, (err) => {
-                if (err) {
-                    this.metrics.record('sendFailed', 1)
-                    errorCallback(err)
-                } else {
-                    onSuccess(connection.getRemoteAddress(), recipientId, message)
-                }
-            })
-            this.evaluateBackPressure(connection)
-        } catch (e) {
-            this.metrics.record('sendFailed', 1)
-            this.logger.warn('sending to %s [%s] failed, reason %s',
-                recipientId, connection.getRemoteAddress(), e)
-            connection.terminate()
-        }
     }
 
     private onReceive(connection: WsConnection, message: string): void {
