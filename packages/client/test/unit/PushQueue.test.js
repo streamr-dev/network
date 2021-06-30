@@ -837,4 +837,81 @@ describe('PushQueue', () => {
             expect(msgs).toEqual([]) // still gives buffered items
         })
     })
+
+    describe('while pending next', () => {
+        it('can cancel', async () => {
+            const onEnd = jest.fn()
+            const q = new PushQueue([], { onEnd })
+            q.push(expected[0])
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === 1) {
+                    setTimeout(() => {
+                        q.cancel()
+                    }, WAIT * 2)
+                }
+            }
+            expect(msgs).toEqual(expected.slice(0, 1))
+            expect(onEnd).toHaveBeenCalledTimes(1)
+        })
+
+        it('can return', async () => {
+            const onEnd = jest.fn()
+            const q = new PushQueue([], { onEnd })
+            q.push(expected[0])
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === 1) {
+                    setTimeout(() => {
+                        q.return()
+                    }, WAIT * 2)
+                }
+            }
+            expect(msgs).toEqual(expected.slice(0, 1))
+            expect(onEnd).toHaveBeenCalledTimes(1)
+        })
+
+        it('can end', async () => {
+            const onEnd = jest.fn()
+            const q = new PushQueue([], { onEnd })
+            q.push(expected[0])
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === 1) {
+                    setTimeout(() => {
+                        q.end()
+                    }, WAIT * 2)
+                }
+            }
+            expect(msgs).toEqual(expected.slice(0, 1))
+            expect(onEnd).toHaveBeenCalledTimes(1)
+        })
+
+        it('can throw', async () => {
+            const onEnd = jest.fn()
+            const q = new PushQueue([], { onEnd })
+            const err = new Error('expected')
+            q.push(expected[0])
+
+            const msgs = []
+            await expect(async () => {
+                for await (const msg of q) {
+                    msgs.push(msg)
+                    if (msgs.length === 1) {
+                        setTimeout(() => {
+                            q.throw(err)
+                        }, WAIT * 2)
+                    }
+                }
+            }).rejects.toThrow(err)
+            expect(msgs).toEqual(expected.slice(0, 1))
+            expect(onEnd).toHaveBeenCalledTimes(1)
+        })
+    })
 })

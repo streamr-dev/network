@@ -1,4 +1,4 @@
-import { Defer, pTimeout, instanceId } from './index'
+import { Defer, pTimeout, instanceId, pOnce } from './index'
 import { Debug } from './log'
 
 async function endGenerator(gtr: AsyncGenerator, error?: Error) {
@@ -97,11 +97,12 @@ export default class PushQueue<T> {
     buffer: T[] | [...T[], null] | [...T[], Error]
     error?: Error// queued error
     nextQueue: (ReturnType<typeof Defer>)[] = [] // queued promises for next()
-    finished = false
     pending: number = 0
+    /** saw terminal data, about to finish */
     ended = false
+    /** finished processing e.g. return/cancel/throw called */
+    finished = false
     _onEnd: PushQueueOptions['onEnd']
-    _onEndCalled = false
     _isCancelled = false
 
     constructor(items: T[] = [], {
@@ -119,11 +120,6 @@ export default class PushQueue<T> {
         this.buffer = []
 
         this[Symbol.asyncIterator] = this[Symbol.asyncIterator].bind(this)
-        this.onAbort = this.onAbort.bind(this)
-        this.onEnd = this.onEnd.bind(this)
-        this.cancel = this.cancel.bind(this)
-        this.isCancelled = this.isCancelled.bind(this)
-        this.end = this.end.bind(this)
 
         // abort signal handling
         if (signal) {
@@ -180,30 +176,30 @@ export default class PushQueue<T> {
         }
 
         if (end) {
+            this.debug('from end')
             this.end()
         }
 
         return Promise.resolve()
     }
 
-    onEnd(err?: Error, ...args: any[]) {
-        if (this._onEndCalled || !this._onEnd) {
+    pipe(next: PushQueue<unknown>, opts: Parameters<PushQueue<unknown>['from']>[1]) {
+        return next.from(this, opts)
+    }
+
+    onEnd = pOnce((err?: Error, ...args: any[]) => {
+        if (!this._onEnd) {
             return Promise.resolve()
         }
 
-        this._onEndCalled = true
         return this._onEnd(err, ...args)
-    }
+    })
 
     /**
      * signals no more data should be buffered
      */
 
-    end(v?: T | null | Error) {
-        if (this.ended) {
-            return
-        }
-
+    end = pOnce((v?: T | null | Error) => {
         this.debug('end')
 
         if (v != null) {
@@ -212,11 +208,11 @@ export default class PushQueue<T> {
 
         this.push(null)
         this.ended = true
-    }
+    })
 
-    onAbort() {
+    onAbort = pOnce(() => {
         return this.throw(new AbortError())
-    }
+    })
 
     async next(...args:[] | [unknown]) {
         return this.iterator.next(...args)
@@ -227,21 +223,21 @@ export default class PushQueue<T> {
     }
 
     isReadable() {
-        return !(this.finished || this.ended)
+        return !this.finished
     }
 
-    async return(v?: T) {
-        if (this.finished) { return v }
+    get length() {
+        const count = this.pending + this.buffer.length
+        return this.ended && count ? count - 1 : count
+    }
+
+    return = async (v?: T) => {
         this.finished = true
         await this._cleanup()
         return v
     }
 
-    async throw(err: Error) {
-        if (this.finished) {
-            return
-        }
-
+    throw = pOnce(async (err: Error) => {
         this.finished = true
         this.debug('throw')
         const p = this.nextQueue.shift()
@@ -251,14 +247,29 @@ export default class PushQueue<T> {
             // for next()
             this.error = err
         }
+    })
+
+    cancel = pOnce(async (error?: Error) => {
+        this.finished = true
+        this._isCancelled = true
+        if (error && !this.error) {
+            this.error = error
+        }
+        this.debug('cancel. Queued next: %d, buffered data: %d', this.nextQueue.length, this.buffer.length)
+        await endGeneratorTimeout(this.iterator, {
+            timeout: this.timeout,
+            error,
+        })
+
+        await this._cleanup()
+    })
+
+    isCancelled = () => {
+        return this._isCancelled
     }
 
-    get length() {
-        const count = this.pending + this.buffer.length
-        return this.ended && count ? count - 1 : count
-    }
-
-    async _cleanup() {
+    _cleanup = pOnce(async () => {
+        this.debug('cleanup')
         // capture error and pending next promises
         const { error, nextQueue } = this
         this.finished = true
@@ -283,10 +294,14 @@ export default class PushQueue<T> {
         }
 
         return this.onEnd(error)
-    }
+    })
 
     push(...values: (T | null | Error)[]) {
         if (this.finished || this.ended) {
+            this.debug('push after finished/ended', {
+                finished: this.finished,
+                ended: this.ended,
+            })
             // do nothing if done
             return
         }
@@ -392,41 +407,16 @@ export default class PushQueue<T> {
         }.call(this)
     }
 
-    pipe(next: PushQueue<unknown>, opts: Parameters<PushQueue<unknown>['from']>[1]) {
-        return next.from(this, opts)
-    }
-
-    async cancel(error?: Error) {
-        this.finished = true
-        this._isCancelled = true
-        if (error && !this.error) {
-            this.error = error
-        }
-        this.debug('cancel. Queued next: %d, buffered data: %d', this.nextQueue.length, this.buffer.length)
-        await endGeneratorTimeout(this.iterator, {
-            timeout: this.timeout,
-            error,
-        })
-
-        await this.return()
-    }
-
-    isCancelled() {
-        return this._isCancelled
-    }
-
     async* [Symbol.asyncIterator]() {
         // NOTE: consider throwing if trying to iterate after finished
         // or maybe returning a new iterator?
         try {
             yield* this.iterator
         } finally {
-            this._cleanup()
-            this.finished = true
             if (this.signal) {
                 this.signal.removeEventListener('abort', this.onAbort)
             }
-            await this.onEnd(this.error)
+            await this._cleanup()
         }
     }
 }
