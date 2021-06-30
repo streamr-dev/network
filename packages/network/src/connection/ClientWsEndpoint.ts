@@ -1,9 +1,8 @@
 import WebSocket from 'ws'
 import util from 'util'
 import { PeerInfo } from './PeerInfo'
-import { Metrics, MetricsContext } from '../helpers/MetricsContext'
+import { MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
-import { PingPongWs } from "./PingPongWs"
 import {
     AbstractWsEndpoint,
     DisconnectionCode,
@@ -80,41 +79,23 @@ type PeerId = string
 type ServerUrl = string
 
 export class ClientWsEndpoint extends AbstractWsEndpoint {
-    private readonly peerInfo: PeerInfo
-    private readonly advertisedWsUrl: string | null
-
     private readonly connectionsByPeerId: Map<PeerId, WsConnection>
     private readonly connectionsByServerUrl: Map<ServerUrl, WsConnection>
     private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     private readonly pendingConnections: Map<ServerUrl, Promise<string>>
 
-    protected readonly pingPongWs: PingPongWs
-    protected readonly logger: Logger
-
     constructor(
         peerInfo: PeerInfo,
         advertisedWsUrl: string | null,
-        metricsContext = new MetricsContext(peerInfo.peerId),
-        pingInterval = 5 * 1000
+        metricsContext?: MetricsContext,
+        pingInterval?: number
     ) {
-        super(metricsContext)
+        super(peerInfo, advertisedWsUrl, metricsContext, pingInterval)
 
-        if (!(peerInfo instanceof PeerInfo)) {
-            throw new Error('peerInfo not instance of PeerInfo')
-        }
-        if (advertisedWsUrl === undefined) {
-            throw new Error('advertisedWsUrl not given')
-        }
-
-        this.peerInfo = peerInfo
-        this.advertisedWsUrl = advertisedWsUrl
-
-        this.logger = new Logger(module)
         this.connectionsByPeerId = new Map()
         this.connectionsByServerUrl = new Map()
         this.serverUrlByPeerId = new Map()
         this.pendingConnections = new Map()
-        this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
 
         this.logger.trace('listening on %s', this.getAddress())
         this.metrics.addQueriedMetric('pendingConnections', () => this.pendingConnections.size)

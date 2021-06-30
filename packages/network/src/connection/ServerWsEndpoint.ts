@@ -76,13 +76,8 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
     private readonly serverPort: number
     private readonly wss: uWS.TemplatedApp
     private listenSocket: uWS.us_listen_socket | null
-    private readonly peerInfo: PeerInfo
-    private readonly advertisedWsUrl: string | null
-
     private readonly connectionById: Map<string, UWSConnection> // id => connection
     private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
-    protected readonly pingPongWs: PingPongWs
-    protected readonly logger: Logger
 
     constructor(
         host: string,
@@ -91,32 +86,22 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
         listenSocket: uWS.us_listen_socket,
         peerInfo: PeerInfo,
         advertisedWsUrl: string | null,
-        metricsContext = new MetricsContext(peerInfo.peerId),
-        pingInterval = 5 * 1000
+        metricsContext?: MetricsContext,
+        pingInterval?: number
     ) {
-        super(metricsContext)
+        super(peerInfo, advertisedWsUrl, metricsContext, pingInterval)
 
         if (!wss) {
             throw new Error('wss not given')
         }
-        if (!(peerInfo instanceof PeerInfo)) {
-            throw new Error('peerInfo not instance of PeerInfo')
-        }
-        if (advertisedWsUrl === undefined) {
-            throw new Error('advertisedWsUrl not given')
-        }
 
-        this.serverHost = host
-        this.serverPort = port
-        this.wss = wss
-        this.listenSocket = listenSocket
-        this.peerInfo = peerInfo
-        this.advertisedWsUrl = advertisedWsUrl
-
-        this.logger = new Logger(module)
         this.connectionById = new Map()
         this.connectionByUwsSocket = new Map()
-        this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
+
+        this.wss = wss
+        this.listenSocket = listenSocket
+        this.serverHost = host
+        this.serverPort = port
 
         this.wss.ws('/ws', {
             compression: 0,

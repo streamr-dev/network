@@ -1,16 +1,8 @@
 import { Logger } from "../helpers/Logger"
 import { Rtts } from "../identifiers"
+import { SharedConnection } from "./AbstractWsEndpoint"
 
-interface SupportedConnection {
-    respondedPong: boolean
-    rtt?: number
-    rttStart?: number
-    ping: () => void
-    getPeerId: () => string
-    terminate: () => void
-}
-
-export type GetConnections = () => Array<SupportedConnection>
+export type GetConnections = () => Array<SharedConnection>
 
 const logger = new Logger(module)
 
@@ -23,7 +15,7 @@ export class PingPongWs {
         this.pingInterval = setInterval(() => this.pingConnections(), pingIntervalInMs)
     }
 
-    onPong(connection: SupportedConnection): void {
+    onPong(connection: SharedConnection): void {
         connection.respondedPong = true
         connection.rtt = Date.now() - connection.rttStart!
     }

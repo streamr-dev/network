@@ -38,6 +38,11 @@ export class UnknownPeerError extends Error {
 }
 
 export interface SharedConnection {
+    respondedPong: boolean
+    rtt?: number
+    rttStart?: number
+    ping: () => void
+    getPeerId: () => string
     highBackPressure: boolean
     peerInfo: PeerInfo
     getBufferedAmount(): number
@@ -48,14 +53,28 @@ export interface SharedConnection {
 
 export abstract class AbstractWsEndpoint extends EventEmitter {
     protected metrics: Metrics
-    protected abstract logger: Logger
-    protected abstract pingPongWs: PingPongWs
+
+    protected readonly peerInfo: PeerInfo
+    protected readonly advertisedWsUrl: string | null
+    protected readonly logger: Logger
+    protected readonly pingPongWs: PingPongWs
 
     protected abstract getConnectionByPeerId(peerId: string): SharedConnection | undefined
     protected abstract getConnections(): Array<SharedConnection>
 
-    constructor(metricsContext: MetricsContext) {
+    constructor(
+        peerInfo: PeerInfo,
+        advertisedWsUrl: string | null,
+        metricsContext: MetricsContext = new MetricsContext(peerInfo.peerId),
+        pingInterval = 5 * 1000
+    ) {
         super()
+
+        this.peerInfo = peerInfo
+        this.advertisedWsUrl = advertisedWsUrl
+        this.logger = new Logger(module)
+        this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
+
         this.metrics = metricsContext.create('WsEndpoint')
             .addRecordedMetric('inSpeed')
             .addRecordedMetric('outSpeed')
