@@ -219,10 +219,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
         })
     }
 
-    isConnected(peerId: string): boolean {
-        return this.connectionById.has(peerId)
-    }
-
     getAddress(): string {
         if (this.advertisedWsUrl) {
             return this.advertisedWsUrl
@@ -265,7 +261,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
 
             // TODO: should this actually close the existing connection and keep the new one? It could be that the node
             // has re-connected after dropping but the server has yet to detect this.
-            if (this.isConnected(peerId)) {
+            if (this.getConnectionByPeerId(peerId) !== undefined) {
                 this.metrics.record('open:duplicateSocket', 1)
                 ws.close()
                 return

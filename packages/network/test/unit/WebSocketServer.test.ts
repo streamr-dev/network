@@ -78,10 +78,6 @@ describe('WsServer&WsClient with no connections', () => {
         ))
     })
 
-    it('isConnected() returns false', () => {
-        expect(wsEndpoint.isConnected('thirdPeerId')).toEqual(false)
-    })
-
     it('getRtts() is empty', () => {
         expect(wsEndpoint.getRtts()).toEqual({})
     })
@@ -120,11 +116,6 @@ describe('WsServer&WsClient with connections', () => {
             otherWsEndpoint.stop(),
             thirdWsEndpoint.stop()
         ])
-    })
-
-    it('isConnected() is empty', () => {
-        expect(wsEndpoint.isConnected('otherPeerId')).toEqual(true)
-        expect(wsEndpoint.isConnected('thirdPeerId')).toEqual(true)
     })
 
     it('getRtts() is empty', async () => {
