@@ -1,8 +1,7 @@
 import uWS from 'uWebSockets.js'
 import { PeerInfo } from './PeerInfo'
-import { Metrics, MetricsContext } from '../helpers/MetricsContext'
+import { MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
-import { PingPongWs } from "./PingPongWs"
 import {
     AbstractWsEndpoint,
     DisconnectionCode,
@@ -71,12 +70,11 @@ function ab2str (buf: ArrayBuffer | SharedArrayBuffer): string {
     return Buffer.from(buf).toString('utf8')
 }
 
-export class ServerWsEndpoint extends AbstractWsEndpoint {
+export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
     private readonly serverHost: string
     private readonly serverPort: number
     private readonly wss: uWS.TemplatedApp
     private listenSocket: uWS.us_listen_socket | null
-    private readonly connectionById: Map<string, UWSConnection> // id => connection
     private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
 
     constructor(
@@ -95,7 +93,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
             throw new Error('wss not given')
         }
 
-        this.connectionById = new Map()
         this.connectionByUwsSocket = new Map()
 
         this.wss = wss
@@ -149,7 +146,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
                 const connection = this.connectionByUwsSocket.get(ws)
 
                 if (connection) {
-                    this.logger.trace('received from %s "pong" frame', connection.getRemoteAddress())
+                    this.logger.trace('received from %s "pong" frame', connection.getPeerId())
                     this.pingPongWs.onPong(connection)
                 }
             }
@@ -194,10 +191,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
 
     getPeerInfo(): Readonly<PeerInfo> {
         return this.peerInfo
-    }
-
-    getPeers(): ReadonlyMap<string, UWSConnection> {
-        return this.connectionById
     }
 
     getPeerInfos(): PeerInfo[] {
@@ -264,15 +257,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
         this.emit(Event.PEER_CONNECTED, uwsConnection.peerInfo)
         return true
     }
-
-    protected getConnections(): Array<UWSConnection> {
-        return [...this.connectionById.values()]
-    }
-
-    protected getConnectionByPeerId(peerId: string): SharedConnection | undefined {
-        return this.connectionById.get(peerId)
-    }
-
 }
 
 export function startWebSocketServer(

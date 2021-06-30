@@ -51,18 +51,16 @@ export interface SharedConnection {
     close(code: DisconnectionCode, reason: DisconnectionReason): void
 }
 
-export abstract class AbstractWsEndpoint extends EventEmitter {
+export abstract class AbstractWsEndpoint<C extends SharedConnection> extends EventEmitter {
     protected metrics: Metrics
 
     protected readonly peerInfo: PeerInfo
     protected readonly advertisedWsUrl: string | null
     protected readonly logger: Logger
     protected readonly pingPongWs: PingPongWs
+    protected readonly connectionById: Map<string, C> = new Map<string, C>()
 
-    protected abstract getConnectionByPeerId(peerId: string): SharedConnection | undefined
-    protected abstract getConnections(): Array<SharedConnection>
-
-    constructor(
+    protected constructor(
         peerInfo: PeerInfo,
         advertisedWsUrl: string | null,
         metricsContext: MetricsContext = new MetricsContext(peerInfo.peerId),
@@ -144,6 +142,10 @@ export abstract class AbstractWsEndpoint extends EventEmitter {
         return this.pingPongWs.getRtts()
     }
 
+    getPeers(): ReadonlyMap<string, C> {
+        return this.connectionById
+    }
+
     protected evaluateBackPressure(connection: SharedConnection): void {
         const bufferedAmount = connection.getBufferedAmount()
         if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
@@ -155,5 +157,13 @@ export abstract class AbstractWsEndpoint extends EventEmitter {
             this.emit(Event.LOW_BACK_PRESSURE, connection.peerInfo)
             connection.highBackPressure = false
         }
+    }
+
+    protected getConnections(): Array<C> {
+        return [...this.connectionById.values()]
+    }
+
+    protected getConnectionByPeerId(peerId: string): C | undefined {
+        return this.connectionById.get(peerId)
     }
 }

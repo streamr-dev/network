@@ -78,8 +78,7 @@ function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
 type PeerId = string
 type ServerUrl = string
 
-export class ClientWsEndpoint extends AbstractWsEndpoint {
-    private readonly connectionsByPeerId: Map<PeerId, WsConnection>
+export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
     private readonly connectionsByServerUrl: Map<ServerUrl, WsConnection>
     private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     private readonly pendingConnections: Map<ServerUrl, Promise<string>>
@@ -92,7 +91,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
     ) {
         super(peerInfo, advertisedWsUrl, metricsContext, pingInterval)
 
-        this.connectionsByPeerId = new Map()
         this.connectionsByServerUrl = new Map()
         this.serverUrlByPeerId = new Map()
         this.pendingConnections = new Map()
@@ -201,10 +199,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
         return this.peerInfo.peerId
     }
 
-    getPeers(): ReadonlyMap<string, WsConnection> {
-        return this.connectionsByPeerId
-    }
-
     getServerUrlByPeerId(peerId: PeerId): string | undefined {
         return this.serverUrlByPeerId.get(peerId)
     }
@@ -216,7 +210,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
 
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
-        this.connectionsByPeerId.delete(connection.getPeerId())
+        this.connectionById.delete(connection.getPeerId())
         this.connectionsByServerUrl.delete(serverUrl)
         this.serverUrlByPeerId.delete(connection.getPeerId())
         this.logger.trace('removed %s from connection list', connection.getPeerId())
@@ -231,7 +225,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
 
         const connection = new WsConnection(ws, serverPeerInfo)
         this.addListeners(ws, connection, serverUrl)
-        this.connectionsByPeerId.set(connection.getPeerId(), connection)
+        this.connectionById.set(connection.getPeerId(), connection)
         this.connectionsByServerUrl.set(serverUrl, connection)
         this.serverUrlByPeerId.set(connection.getPeerId(), serverUrl)
         this.metrics.record('open', 1)
@@ -268,14 +262,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
 
             this.onClose(connection, serverUrl, code, reason)
         })
-    }
-
-    protected getConnections(): Array<WsConnection> {
-        return [...this.connectionsByPeerId.values()]
-    }
-
-    protected getConnectionByPeerId(peerId: string): SharedConnection | undefined {
-        return this.connectionsByPeerId.get(peerId)
     }
 }
 
