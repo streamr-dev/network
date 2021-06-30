@@ -1,10 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 import { waitForEvent } from 'streamr-test-utils'
 
-import { Event, DisconnectionReason } from '../../src/connection/IWsEndpoint'
 import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ClientWsEndpoint, startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { DisconnectionReason, Event } from "../../src/connection/AbstractWsEndpoint"
 
 const STATE_OPEN = 1
 

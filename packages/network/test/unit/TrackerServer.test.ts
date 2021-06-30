@@ -1,7 +1,7 @@
 import { TrackerServer } from '../../src/protocol/TrackerServer'
-import { Event } from '../../src/connection/IWsEndpoint'
 import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
+import { Event } from "../../src/connection/AbstractWsEndpoint"
 
 describe(TrackerServer, () => {
     it('getNodeIds', () => {

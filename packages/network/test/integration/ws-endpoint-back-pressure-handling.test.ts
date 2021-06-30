@@ -1,7 +1,7 @@
-import { Event } from '../../src/connection/IWsEndpoint'
 import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { startClientWsEndpoint, ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
+import { Event } from "../../src/connection/AbstractWsEndpoint"
 
 describe('WsEndpoint: back pressure handling', () => {
     let epClient: ClientWsEndpoint

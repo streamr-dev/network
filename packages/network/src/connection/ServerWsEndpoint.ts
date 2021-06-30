@@ -1,11 +1,11 @@
 import { EventEmitter } from 'events'
-import { DisconnectionCode, DisconnectionReason, Event, UnknownPeerError } from './IWsEndpoint'
 import uWS from 'uWebSockets.js'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 import { PingPongWs } from "./PingPongWs"
+import { DisconnectionCode, DisconnectionReason, Event, UnknownPeerError } from "./AbstractWsEndpoint"
 
 const staticLogger = new Logger(module)
 

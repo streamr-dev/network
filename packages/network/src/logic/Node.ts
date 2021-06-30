@@ -5,7 +5,6 @@ import { TrackerNode, Event as TrackerNodeEvent } from '../protocol/TrackerNode'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
 import { Status, StreamIdAndPartition } from '../identifiers'
-import { DisconnectionReason } from '../connection/IWsEndpoint'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { PerStreamMetrics } from './PerStreamMetrics'
@@ -16,6 +15,7 @@ import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
 import { InstructionRetryManager } from "./InstructionRetryManager"
 import { NameDirectory } from '../NameDirectory'
+import { DisconnectionReason } from "../connection/AbstractWsEndpoint"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
