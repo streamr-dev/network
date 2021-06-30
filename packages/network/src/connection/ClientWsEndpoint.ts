@@ -88,8 +88,8 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
     private readonly connectionsByServerUrl: Map<ServerUrl, WsConnection>
     private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     private readonly pendingConnections: Map<ServerUrl, Promise<string>>
-    private readonly pingPongWs: PingPongWs
 
+    protected readonly pingPongWs: PingPongWs
     protected readonly logger: Logger
     protected readonly metrics: Metrics
 
@@ -241,14 +241,6 @@ export class ClientWsEndpoint extends AbstractWsEndpoint {
 
     isConnectedToServerUrl(serverUrl: string): boolean {
         return this.connectionsByServerUrl.has(serverUrl)
-    }
-
-    isConnectedToPeerId(peerId: string): boolean {
-        return this.connectionsByPeerId.has(peerId)
-    }
-
-    getRtts(): Rtts {
-        return this.pingPongWs.getRtts()
     }
 
     getAddress(): string {

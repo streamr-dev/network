@@ -2,7 +2,6 @@ import uWS from 'uWebSockets.js'
 import { PeerInfo } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
-import { Rtts } from '../identifiers'
 import { PingPongWs } from "./PingPongWs"
 import {
     AbstractWsEndpoint,
@@ -82,7 +81,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
 
     private readonly connectionById: Map<string, UWSConnection> // id => connection
     private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
-    private readonly pingPongWs: PingPongWs
+    protected readonly pingPongWs: PingPongWs
     protected readonly logger: Logger
     protected readonly metrics: Metrics
 
@@ -227,10 +226,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint {
 
     isConnected(peerId: string): boolean {
         return this.connectionById.has(peerId)
-    }
-
-    getRtts(): Rtts {
-        return this.pingPongWs.getRtts()
     }
 
     getAddress(): string {

@@ -2,6 +2,8 @@ import { EventEmitter } from "events"
 import { Logger } from "../helpers/Logger"
 import { PeerInfo } from "./PeerInfo"
 import { Metrics } from "../helpers/MetricsContext"
+import { Rtts } from "../identifiers"
+import { PingPongWs } from "./PingPongWs"
 
 export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 export const LOW_BACK_PRESSURE = 1024 * 1024
@@ -47,6 +49,7 @@ export interface SharedConnection {
 export abstract class AbstractWsEndpoint extends EventEmitter {
     protected abstract logger: Logger
     protected abstract metrics: Metrics // TODO: whole definition will move here eventually
+    protected abstract pingPongWs: PingPongWs
 
     protected abstract getConnectionByPeerId(peerId: string): SharedConnection | undefined
 
@@ -85,6 +88,10 @@ export abstract class AbstractWsEndpoint extends EventEmitter {
                 this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
             }
         }
+    }
+
+    getRtts(): Rtts {
+        return this.pingPongWs.getRtts()
     }
 
     protected evaluateBackPressure(connection: SharedConnection): void {
