@@ -3,7 +3,7 @@ import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
 import { Location } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
-import { startEndpoint } from './connection/WsEndpoint'
+import { startEndpoint } from './connection/WebSocketEndpoint'
 import { Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
@@ -16,6 +16,7 @@ import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "./connection/NodeWebRtcConnection"
+import { WsConnectionFactory } from './connection/WsConnection'
 
 export {
     Location,
@@ -79,6 +80,7 @@ export function startTracker({
         port,
         peerInfo,
         advertisedWsUrl,
+        WsConnectionFactory,
         metricsContext,
         pingInterval,
         privateKeyFileName,
@@ -130,7 +132,7 @@ function startNode({
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions, peerInfoFn: PeerInfoFn): Promise<NetworkNode> {
     const peerInfo = peerInfoFn(id, name, undefined, undefined, location)
-    return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
+    return startEndpoint(host, port, peerInfo, advertisedWsUrl, WsConnectionFactory, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
         const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)

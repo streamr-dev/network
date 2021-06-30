@@ -7,6 +7,12 @@ import { PeerInfo, PeerType } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
+import { WebSocketConnection } from './WebSocketConnection'
+
+
+export interface WebSocketConnectionFactory {
+    createConnection(): WebSocketConnection
+}
 
 const staticLogger = new Logger(module)
 
