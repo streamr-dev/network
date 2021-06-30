@@ -1,3 +1,4 @@
+import { wait } from 'streamr-test-utils'
 import { counterId } from '../../src/utils'
 import { Context } from '../../src/brubeck/Context'
 import { Debug, Msg } from '../utils'
@@ -146,5 +147,42 @@ describe('MessageStream', () => {
 
         expect(onEnd).toHaveBeenCalledTimes(1)
         expect(received).toEqual([streamMessage])
+    })
+
+    it('can collect', async () => {
+        const testMessage = Msg()
+        const s = new MessageStream<typeof testMessage>(context)
+
+        const onEnd = jest.fn()
+        s.on('end', onEnd)
+        const streamMessage = new StreamMessage({
+            messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+            content: testMessage,
+        })
+        s.push(streamMessage)
+        const received = await s.collect(1)
+
+        expect(onEnd).toHaveBeenCalledTimes(1)
+        expect(received).toEqual([streamMessage.getParsedContent()])
+    })
+
+    it('can cancel collect', async () => {
+        const testMessage = Msg()
+        const s = new MessageStream<typeof testMessage>(context)
+
+        const onEnd = jest.fn()
+        s.on('end', onEnd)
+        const streamMessage = new StreamMessage({
+            messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+            content: testMessage,
+        })
+        s.push(streamMessage)
+        const collectTask = s.collect()
+        await wait(10)
+        await s.cancel()
+        const received = await collectTask
+
+        expect(onEnd).toHaveBeenCalledTimes(1)
+        expect(received).toEqual([streamMessage.getParsedContent()])
     })
 })
