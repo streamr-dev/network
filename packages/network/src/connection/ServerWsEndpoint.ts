@@ -219,13 +219,7 @@ export class ServerWsEndpoint extends EventEmitter {
                 this.logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.rtt)
             } catch (e) {
                 this.logger.warn(`failed pinging %s, error %s, terminating connection`, connection.getPeerId(), e)
-                connection.close()
-                this.onClose(
-                    connection,
-                    ws,
-                    DisconnectionCode.DEAD_CONNECTION,
-                    DisconnectionReason.DEAD_CONNECTION
-                )
+                connection.terminate()
             }
         })
     }
