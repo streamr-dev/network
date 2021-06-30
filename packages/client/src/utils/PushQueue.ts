@@ -95,13 +95,11 @@ export default class PushQueue<T> {
     signal
     iterator
     buffer: T[] | [...T[], null] | [...T[], Error]
+    isBufferWritable = true
+    isBufferReadable = true
     error?: Error// queued error
     nextQueue: (ReturnType<typeof Defer>)[] = [] // queued promises for next()
     pending: number = 0
-    /** saw terminal data, about to finish */
-    ended = false
-    /** finished processing e.g. return/cancel/throw called */
-    finished = false
     _onEnd: PushQueueOptions['onEnd']
     _isCancelled = false
 
@@ -176,7 +174,6 @@ export default class PushQueue<T> {
         }
 
         if (end) {
-            this.debug('from end')
             this.end()
         }
 
@@ -207,7 +204,6 @@ export default class PushQueue<T> {
         }
 
         this.push(null)
-        this.ended = true
     })
 
     onAbort = pOnce(() => {
@@ -219,26 +215,36 @@ export default class PushQueue<T> {
     }
 
     isWritable() {
-        return !(this.finished || this.ended)
+        return this.isBufferWritable
     }
 
     isReadable() {
-        return !this.finished
+        return this.isBufferReadable
     }
 
     get length() {
+        if (!this.isBufferReadable) {
+            return 0
+        }
+
         const count = this.pending + this.buffer.length
-        return this.ended && count ? count - 1 : count
+        if (this.buffer[this.buffer.length - 1] === null) {
+            return count - 1
+        }
+
+        return count
     }
 
     return = async (v?: T) => {
-        this.finished = true
+        this.isBufferWritable = false
+        this.isBufferReadable = false
         await this._cleanup()
         return v
     }
 
     throw = pOnce(async (err: Error) => {
-        this.finished = true
+        this.isBufferWritable = false
+        this.isBufferReadable = false
         this.debug('throw')
         const p = this.nextQueue.shift()
         if (p) {
@@ -250,8 +256,8 @@ export default class PushQueue<T> {
     })
 
     cancel = pOnce(async (error?: Error) => {
-        this.finished = true
-        this._isCancelled = true
+        this.isBufferWritable = false
+        this.isBufferReadable = false
         if (error && !this.error) {
             this.error = error
         }
@@ -265,14 +271,15 @@ export default class PushQueue<T> {
     })
 
     isCancelled = () => {
-        return this._isCancelled
+        return this.isBufferReadable
     }
 
     _cleanup = pOnce(async () => {
         this.debug('cleanup')
         // capture error and pending next promises
         const { error, nextQueue } = this
-        this.finished = true
+        this.isBufferReadable = false
+        this.isBufferWritable = false
         this.error = undefined
         this.pending = 0
         // empty buffer then reassign
@@ -297,11 +304,7 @@ export default class PushQueue<T> {
     })
 
     push(...values: (T | null | Error)[]) {
-        if (this.finished || this.ended) {
-            this.debug('push after finished/ended', {
-                finished: this.finished,
-                ended: this.ended,
-            })
+        if (!this.isBufferWritable) {
             // do nothing if done
             return
         }
@@ -310,7 +313,7 @@ export default class PushQueue<T> {
         const endIndex = values.findIndex((v) => v === null || isError(v))
         let validValues = values as T[]
         if (endIndex !== -1) {
-            this.ended = true
+            this.isBufferWritable = false
             // include end but trim rest
             validValues = values.slice(0, endIndex + 1) as T[]
         }
@@ -355,7 +358,7 @@ export default class PushQueue<T> {
                 const buffer = this.buffer.slice()
                 this.pending += buffer.length
                 this.buffer.length = 0 // prevent endless loop
-                while (buffer.length && !this.error && !this.finished) {
+                while (buffer.length && !this.error && this.isBufferReadable) {
                     this.pending = Math.max(this.pending - 1, 0)
                     const value = (buffer.shift() as T | null | Error)
                     const endTask = handleTerminalValues(value)
@@ -376,7 +379,7 @@ export default class PushQueue<T> {
                 }
 
                 // done
-                if (this.finished) {
+                if (!this.isBufferReadable) {
                     return
                 }
 
@@ -391,7 +394,7 @@ export default class PushQueue<T> {
                 const value = await deferred
 
                 // ignore value if finished
-                if (this.finished) {
+                if (!this.isBufferReadable) {
                     return
                 }
 
