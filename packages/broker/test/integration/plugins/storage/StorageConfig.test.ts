@@ -23,8 +23,6 @@ const STREAMR_URL = `http://${STREAMR_DOCKER_DEV_HOST}`
 const HTTP_PORT = 17770
 const WS_PORT = 17771
 const TRACKER_PORT = 17772
-const STORAGE_NODE_PORT = 17773
-const BROKER_PORT = 17774
 
 describe('StorageConfig', () => {
     let cassandraClient: Client
@@ -60,7 +58,6 @@ describe('StorageConfig', () => {
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: STORAGE_NODE_PORT,
             trackerPort: TRACKER_PORT,
             httpPort: HTTP_PORT,
             streamrUrl: STREAMR_URL,
@@ -70,7 +67,6 @@ describe('StorageConfig', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey: brokerAccount.privateKey,
-            networkPort: BROKER_PORT,
             trackerPort: TRACKER_PORT,
             wsPort: WS_PORT,
             streamrUrl: STREAMR_URL,

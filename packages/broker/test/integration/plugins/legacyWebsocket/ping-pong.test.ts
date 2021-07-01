@@ -1,4 +1,4 @@
-import { startTracker, startNetworkNode, MetricsContext, NetworkNode } from 'streamr-network'
+import { startTracker, createNetworkNode, MetricsContext, NetworkNode } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import uWS from 'uWebSockets.js'
 import StreamrClient from 'streamr-client'
@@ -11,7 +11,6 @@ import { createClient } from '../../../utils'
 
 const trackerPort = 17370
 const wsPort = 17351
-const networkNodePort = 17361
 
 describe('ping-pong test between broker and clients', () => {
     let tracker: Todo
@@ -31,9 +30,7 @@ describe('ping-pong test between broker and clients', () => {
     })
 
     beforeEach(async () => {
-        networkNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: networkNodePort,
+        networkNode = createNetworkNode({
             id: 'networkNode',
             trackers: [tracker.getAddress()]
         })

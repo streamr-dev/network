@@ -10,7 +10,6 @@ import { createMockUser, createClient, startBroker } from '../../../utils'
 const MQTT_PORT = 1884
 const WS_PORT = 12395
 const TRACKER_PORT = 12396
-const NETWORK_PORT = 12397
 const MOCK_API_KEY = 'mock-api-key'
 
 const createMqttClient = () => {
@@ -41,7 +40,6 @@ describe('MQTT plugin', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey: user.privateKey,
-            networkPort: NETWORK_PORT,
             trackerPort: TRACKER_PORT,
             wsPort: WS_PORT,
             extraPlugins: {

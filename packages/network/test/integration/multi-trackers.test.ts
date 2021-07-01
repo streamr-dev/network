@@ -3,7 +3,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
@@ -47,16 +47,12 @@ describe('multi trackers', () => {
             port: 49002,
             id: 'trackerThree'
         })
-        const trackerAddresses = [trackerOne.getAddress(), trackerTwo.getAddress(), trackerThree.getAddress()]
-        nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 49003,
+        const trackerAddresses = [trackerOne.getUrl(), trackerTwo.getUrl(), trackerThree.getUrl()]
+        nodeOne = createNetworkNode({
             id: 'nodeOne',
             trackers: trackerAddresses
         })
-        nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 49004,
+        nodeTwo = createNetworkNode({
             id: 'nodeTwo',
             trackers: trackerAddresses
         })

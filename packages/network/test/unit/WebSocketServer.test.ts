@@ -1,7 +1,8 @@
-import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
-import { startClientWsEndpoint, ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
+import { startServerWsEndpoint } from '../utils'
 import { waitForCondition } from 'streamr-test-utils'
 
 async function setUpWsClient(peerId: string, peerType: string, city: string): Promise<ClientWsEndpoint> {
@@ -19,7 +20,7 @@ async function setUpWsClient(peerId: string, peerType: string, city: string): Pr
         messageLayerVersions: null
     })
     const metricsContext = new MetricsContext(peerId)
-    const wsClient = await startClientWsEndpoint(peerInfo, peerId, metricsContext)
+    const wsClient = new ClientWsEndpoint(peerInfo, metricsContext)
     return wsClient
 }
 async function setUpWsServer(peerId: string, peerType: string, city: string, port: number): Promise<ServerWsEndpoint> {
@@ -41,7 +42,6 @@ async function setUpWsServer(peerId: string, peerType: string, city: string, por
         '127.0.0.1',
         port,
         peerInfo,
-        null,
         metricsContext,
         100
     )
@@ -59,27 +59,8 @@ describe('WsServer&WsClient with no connections', () => {
         await wsEndpoint.stop()
     })
 
-    it('getAddress() gives websocket address', () => {
-        expect(wsEndpoint.getAddress()).toEqual('ws://127.0.0.1:30465')
-    })
-
-    it('getPeerInfo() gives peer info of endpoint', () => {
-        expect(wsEndpoint.getPeerInfo()).toEqual(PeerInfo.newTracker(
-            'peerId',
-            'peerId',
-            undefined,
-            undefined,
-            {
-                latitude: null,
-                longitude: null,
-                country: 'Finland',
-                city: 'Espoo'
-            }
-        ))
-    })
-
-    it('isConnected() returns false', () => {
-        expect(wsEndpoint.isConnected('thirdPeerId')).toEqual(false)
+    it('getUrl() gives websocket address', () => {
+        expect(wsEndpoint.getUrl()).toEqual('ws://127.0.0.1:30465')
     })
 
     it('getRtts() is empty', () => {
@@ -94,10 +75,8 @@ describe('WsServer&WsClient with no connections', () => {
         expect(wsEndpoint.getPeerInfos()).toEqual([])
     })
 
-    it('resolveAddress throws error', () => {
-        expect(() => {
-            wsEndpoint.resolveAddress('otherPeerId')
-        }).toThrowError('Id otherPeerId not found in peer book')
+    it('resolveAddress returns undefined', () => {
+        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual(undefined)
     })
 })
 
@@ -110,8 +89,8 @@ describe('WsServer&WsClient with connections', () => {
         wsEndpoint = await setUpWsServer('peerId', 'tracker', 'Espoo', 30466)
         otherWsEndpoint = await setUpWsClient('otherPeerId', 'node', 'Helsinki')
         thirdWsEndpoint = await setUpWsClient('thirdPeerId', 'node', 'Helsinki')
-        await otherWsEndpoint.connect(wsEndpoint.getAddress())
-        await thirdWsEndpoint.connect(wsEndpoint.getAddress())
+        await otherWsEndpoint.connect(wsEndpoint.getUrl())
+        await thirdWsEndpoint.connect(wsEndpoint.getUrl())
     })
 
     afterAll(async () => {
@@ -120,11 +99,6 @@ describe('WsServer&WsClient with connections', () => {
             otherWsEndpoint.stop(),
             thirdWsEndpoint.stop()
         ])
-    })
-
-    it('isConnected() is empty', () => {
-        expect(wsEndpoint.isConnected('otherPeerId')).toEqual(true)
-        expect(wsEndpoint.isConnected('thirdPeerId')).toEqual(true)
     })
 
     it('getRtts() is empty', async () => {
@@ -171,6 +145,6 @@ describe('WsServer&WsClient with connections', () => {
     })
 
     it('resolveAddress throws error', () => {
-        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('otherPeerId')
+        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('127.0.0.1')
     })
 })

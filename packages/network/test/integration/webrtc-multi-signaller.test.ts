@@ -7,7 +7,7 @@ import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
-import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 describe('WebRTC multisignaller test', () => {
     let tracker1: Tracker
@@ -29,19 +29,19 @@ describe('WebRTC multisignaller test', () => {
             id: 'tracker2'
         })
 
-        const ep1 = await startClientWsEndpoint(PeerInfo.newNode('node-1'), null, new MetricsContext(''))
-        const ep2 = await startClientWsEndpoint(PeerInfo.newNode('node-2'), null, new MetricsContext(''))
+        const ep1 = new ClientWsEndpoint(PeerInfo.newNode('node-1'), new MetricsContext(''))
+        const ep2 = new ClientWsEndpoint(PeerInfo.newNode('node-2'), new MetricsContext(''))
 
         trackerNode1 = new TrackerNode(ep1)
         trackerNode2 = new TrackerNode(ep2)
 
-        trackerNode1.connectToTracker(tracker1.getAddress())
+        trackerNode1.connectToTracker(tracker1.getUrl())
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker1.getAddress())
+        trackerNode2.connectToTracker(tracker1.getUrl())
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode1.connectToTracker(tracker2.getAddress())
+        trackerNode1.connectToTracker(tracker2.getUrl())
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker2.getAddress())
+        trackerNode2.connectToTracker(tracker2.getUrl())
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
 
         const peerInfo1 = PeerInfo.newNode('node-1')
