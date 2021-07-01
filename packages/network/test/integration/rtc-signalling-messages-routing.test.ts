@@ -3,7 +3,7 @@ import { waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { RtcSubTypes } from '../../src/logic/RtcMessage'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
+import { startEndpoint } from '../../src/connection/WebSocketEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'

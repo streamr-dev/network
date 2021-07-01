@@ -1,5 +1,4 @@
-import { ConstructorOptions, WebSocketConnection } from './WebSocketConnection';
-import { WebSocketConnectionFactory } from './WsEndpoint';
+import { ConstructorOptions } from './WebSocketConnection';
 import WebSocket from 'ws'
 import { PeerInfo, PeerType } from './PeerInfo';
 import { Logger } from '../helpers/Logger';

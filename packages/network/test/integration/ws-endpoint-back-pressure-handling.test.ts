@@ -1,10 +1,10 @@
 import { Event } from '../../src/connection/IWsEndpoint'
-import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { startEndpoint, WebSocketEndpoint } from '../../src/connection/WebSocketEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 
 describe('WsEndpoint: back pressure handling', () => {
-    let ep1: WsEndpoint
-    let ep2: WsEndpoint
+    let ep1: WebSocketEndpoint
+    let ep2: WebSocketEndpoint
 
     beforeEach(async () => {
         ep1 = await startEndpoint('127.0.0.1', 43974, PeerInfo.newNode('ep1'), null)

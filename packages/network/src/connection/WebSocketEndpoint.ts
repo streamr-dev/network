@@ -11,6 +11,7 @@ import { ConstructorOptions, WebSocketConnection } from './WebSocketConnection'
 import { UWsServer } from './UWsServer'
 import { ClientWebSocketConnection } from './ClientWebSocketConnection'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
+import { WsConnectionFactory } from './WsConnection'
 
 
 export interface ClientWebSocketConnectionFactory {
@@ -295,14 +296,18 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
         return this.connections.hasOwnProperty(address)
     }
 
-    getRtts(): Readonly<Rtts> {
+    getRtts(): Rtts {
         const rtts: Rtts = {}
-        Object.entries(this.connections).forEach(([targetPeerId, connection]) => {
+        Object.entries(this.connections).forEach(([address, connection]) => {
             const rtt = connection.getRtt()
+            this.logger.info('single rtt: '+rtt)     
+            const nodeId = this.peerBook.getPeerId(address)
             if (rtt !== undefined && rtt !== null) {
-                rtts[targetPeerId] = rtt
+                rtts[nodeId] = rtt
             }
         })
+        this.logger.info('connections: ' + JSON.stringify(Object.keys(this.connections)))
+        this.logger.info('rtts: ' + JSON.stringify(rtts))
         return rtts
     }
 
@@ -332,6 +337,14 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     getWss(): uWS.TemplatedApp {
 		return this.uwsServer?.getWss()!
 	}
+
+    getPeers(): ReadonlyMap<string, WebSocketConnection> {
+        const map = new Map()
+        for (let addr in this.connections) {
+            map.set(addr, this.connections[addr])
+        }
+        return map
+    }
 
 
     private onNewConnection(
@@ -366,14 +379,18 @@ export async function startEndpoint(
     port: number,
     peerInfo: PeerInfo,
     advertisedWsUrl: string | null,
-    connectionFactory: ClientWebSocketConnectionFactory,
+    connectionFactory?: ClientWebSocketConnectionFactory,
     metricsContext?: MetricsContext,
     pingInterval?: number | undefined,
     privateKeyFileName?: string | undefined,
     certFileName?: string | undefined,
 ): Promise<WebSocketEndpoint> {
 
-    const endpoint = new WebSocketEndpoint(host, port, privateKeyFileName, certFileName, connectionFactory, peerInfo, advertisedWsUrl, metricsContext, pingInterval)
+    let factory = connectionFactory 
+    if (!factory) {
+        factory = WsConnectionFactory
+    }
+    const endpoint = new WebSocketEndpoint(host, port, privateKeyFileName, certFileName, factory, peerInfo, advertisedWsUrl, metricsContext, pingInterval)
     await endpoint.start()
     return endpoint
 }

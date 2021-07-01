@@ -1,5 +1,5 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
+import { startEndpoint } from '../../src/connection/WebSocketEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -28,8 +28,8 @@ describe('WebRtcEndpoint', () => {
                 id: 'tracker'
             })
 
-            const ep1 = await startEndpoint('127.0.0.1', 28801, PeerInfo.newNode('node-1'), null, new MetricsContext(''))
-            const ep2 = await startEndpoint('127.0.0.1', 28802, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
+            const ep1 = await startEndpoint('127.0.0.1', 28801, PeerInfo.newNode('node-1'), null, undefined, new MetricsContext(''))
+            const ep2 = await startEndpoint('127.0.0.1', 28802, PeerInfo.newNode('node-2'), null, undefined, new MetricsContext(''))
             trackerNode1 = new TrackerNode(ep1)
             trackerNode2 = new TrackerNode(ep2)
             await Promise.all([

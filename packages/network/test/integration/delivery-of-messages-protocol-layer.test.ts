@@ -1,7 +1,7 @@
 import { MessageLayer, ControlLayer, TrackerLayer } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
-import { startEndpoint } from '../../src/connection/WsEndpoint'
+import { startEndpoint } from '../../src/connection/WebSocketEndpoint'
 import { StreamIdAndPartition } from '../../src/identifiers'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
