@@ -97,19 +97,7 @@ export function startTracker({
     })
 }
 
-export function startNetworkNode(opts: NetworkNodeOptions): Promise<NetworkNode> {
-    return startNode(opts, PeerInfo.newNode)
-}
-
-type PeerInfoFn = (
-    id: string,
-    name: string | undefined,
-    controlLayerVersion?: number[],
-    messageLayerVersion?: number[],
-    location?: Location | null | undefined
-) => PeerInfo
-
-function startNode({
+export const startNetworkNode = ({
     id = uuidv4(),
     name,
     location,
@@ -121,8 +109,8 @@ function startNode({
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
     stunUrls = ['stun:stun.l.google.com:19302']
-}: NetworkNodeOptions, peerInfoFn: PeerInfoFn): Promise<NetworkNode> {
-    const peerInfo = peerInfoFn(id, name, undefined, undefined, location)
+}: NetworkNodeOptions): Promise<NetworkNode> => {
+    const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
     return startClientWsEndpoint(peerInfo, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)
 
