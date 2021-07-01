@@ -19,7 +19,7 @@ Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascrip
 
 ### Breaking changes notice
 
-* Support for unsigned data will be dropped.
+* Support for unsigned data will be dropped in the second half of 2021 or in 2022. This means that every data point will require a signature using the publisher's private key.
 
 ----
 
@@ -191,7 +191,7 @@ const client = new StreamrClient({
 })
 ```
 
-(Authenticating with a pre-existing session token, for internal use by the Streamr app):
+Authenticating with a pre-existing session token (used internally by the Streamr app):
 
 ```js
 const client = new StreamrClient({
@@ -200,6 +200,24 @@ const client = new StreamrClient({
     }
 })
 ```
+
+To extract the session token from an authenticated client:
+
+```js
+const bearerToken = await client.session.getSessionToken()
+```
+
+Then for example, 
+```js
+    axios({
+        headers: {
+            Authorization: `Bearer ${bearerToken}`,
+        },
+        ...
+    )}
+```
+
+Note, session tokens expire after four hours and may need to be refreshed.
 
 ## Connecting
 

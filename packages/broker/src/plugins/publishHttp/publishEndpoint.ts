@@ -2,20 +2,10 @@ import express, { Request, Response } from 'express'
 import { StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
 import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
+import { PlainPayloadFormat } from '../../helpers/PayloadFormat'
 
 const logger = new Logger(module)
-
-const parseContent = (req: Request) => {
-    if (req.body.length === 0) {
-        throw new Error('No request body')
-    }
-    const contentAsString = req.body.toString()
-    try {
-        return JSON.parse(contentAsString)
-    } catch (e) {
-        throw new Error('Request body is not a JSON string')
-    }
-}
+const PAYLOAD_FORMAT = new PlainPayloadFormat()
 
 export const createEndpoint = (streamrClient: StreamrClient): express.Router => {
     const router = express.Router()
@@ -24,12 +14,12 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
         type() { return true },
     }))
     router.post('/streams/:streamId/', async (req: Request, res: Response) => {
-        let content: any
+        let content: Record<string,unknown>
         let timestamp: number|undefined
         let partition: number|undefined
         let partitionKey: string|undefined
         try {
-            content = parseContent(req)
+            content = PAYLOAD_FORMAT.createMessage(req.body.toString()).content
             timestamp = parseQueryParameter<number>('timestamp', req.query, parseTimestamp)
             partition = parseQueryParameter<number>('partition', req.query, parsePositiveInteger)
             partitionKey = req.query['partitionKey'] as string

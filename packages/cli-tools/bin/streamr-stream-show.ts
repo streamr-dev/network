@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import { show } from '../src/show'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'
+import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, getStreamId } from './common'
 import pkg from '../package.json'
 
 const program = new Command()
@@ -12,7 +12,8 @@ program
 authOptions(program)
 envOptions(program)
     .version(pkg.version)
-    .action((streamId: string, options: any) => {
+    .action((streamIdOrPath: string, options: any) => {
+        const streamId = getStreamId(streamIdOrPath, options)!
         show(streamId, options.includePermissions, formStreamrOptionsWithEnv(options))
     })
     .parse(process.argv)

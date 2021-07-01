@@ -222,15 +222,15 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
     })
 }
 
-export const createQueue = () => {
-    const items: any[] = []
-    return {
-        push: (item: any) => {
-            items.push(item)
-        },
-        pop: async () => {
-            await waitForCondition(() => items.length > 0)
-            return items.shift()
-        }
+export class Queue<T> {
+    items: T[] = []
+
+    push(item: T) {
+        this.items.push(item)
+    }
+
+    async pop(): Promise<T> {
+        await waitForCondition(() => this.items.length > 0)
+        return this.items.shift()!
     }
 }

@@ -4,10 +4,11 @@ import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { waitForEvent } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 
 describe('WebRTC multisignaller test', () => {
     let tracker1: Tracker
@@ -46,10 +47,22 @@ describe('WebRTC multisignaller test', () => {
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
-        endpoint1 = new WebRtcEndpoint(peerInfo1, ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo1))
-        endpoint2 = new WebRtcEndpoint(peerInfo2, ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo2))
+        endpoint1 = new WebRtcEndpoint(
+            peerInfo1,
+            ['stun:stun.l.google.com:19302'],
+            new RtcSignaller(peerInfo1, trackerNode1),
+            new MetricsContext(''),
+            new NegotiatedProtocolVersions(peerInfo1),
+            NodeWebRtcConnectionFactory
+        )
+        endpoint2 = new WebRtcEndpoint(
+            peerInfo2,
+            ['stun:stun.l.google.com:19302'],
+            new RtcSignaller(peerInfo2, trackerNode2),
+            new MetricsContext(''),
+            new NegotiatedProtocolVersions(peerInfo2),
+            NodeWebRtcConnectionFactory
+        )
     })
 
     afterEach(async () => {
