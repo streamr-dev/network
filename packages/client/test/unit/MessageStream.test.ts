@@ -8,7 +8,7 @@ import { StreamMessage, MessageID } from 'streamr-client-protocol'
 describe('MessageStream', () => {
     let context: Context
 
-    beforeEach(() => {
+    beforeEach(async () => {
         const id = counterId('MessageStreamTest')
         context = {
             id,
@@ -37,8 +37,11 @@ describe('MessageStream', () => {
         const testMessage = Msg()
         const s = new MessageStream<typeof testMessage>(context)
         const err = new Error(counterId('expected error'))
+        s.debug(err)
         const received: StreamMessage<typeof testMessage>[] = []
-        s.throw(err)
+        await expect(async () => {
+            await s.throw(err)
+        }).rejects.toThrow(err)
         await expect(async () => {
             for await (const msg of s) {
                 received.push(msg)
@@ -53,6 +56,7 @@ describe('MessageStream', () => {
         const testMessage = Msg()
         const s = new MessageStream<typeof testMessage>(context)
         const err = new Error(counterId('expected error'))
+        s.debug(err)
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
@@ -75,11 +79,10 @@ describe('MessageStream', () => {
     it('emits errors', async () => {
         const testMessage = Msg()
         const s = new MessageStream<typeof testMessage>(context)
-        const onMessageStreamError = jest.fn((err) => {
-            throw err
-        })
+        const onMessageStreamError = jest.fn()
         s.on('error', onMessageStreamError)
         const err = new Error(counterId('expected error'))
+        s.debug(err)
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
@@ -94,30 +97,6 @@ describe('MessageStream', () => {
                 await s.throw(err)
             }
         }).rejects.toThrow(err)
-        expect(onEnd).toHaveBeenCalledTimes(1)
-        expect(onMessageStreamError).toHaveBeenCalledTimes(1)
-
-        expect(received).toEqual([streamMessage])
-    })
-
-    it('does not reject iteration if no rethrow error event', async () => {
-        const testMessage = Msg()
-        const s = new MessageStream<typeof testMessage>(context)
-        const onMessageStreamError = jest.fn()
-        s.on('error', onMessageStreamError)
-        const err = new Error(counterId('expected error'))
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
-        s.push(streamMessage)
-        const onEnd = jest.fn()
-        s.on('end', onEnd)
-        const received: StreamMessage<typeof testMessage>[] = []
-        for await (const msg of s) {
-            received.push(msg)
-            await s.throw(err)
-        }
         expect(onEnd).toHaveBeenCalledTimes(1)
         expect(onMessageStreamError).toHaveBeenCalledTimes(1)
 

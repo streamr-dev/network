@@ -1,8 +1,7 @@
 import Emitter, { captureRejectionSymbol } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 
-import { instanceId } from '../utils'
-
+import { instanceId, pOnce } from '../utils'
 import { Context } from './Context'
 import PushQueue from '../utils/PushQueue'
 import { StreamMessage } from 'streamr-client-protocol'
@@ -37,12 +36,13 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
     /** @internal */
     context: Context
     /** @internal */
-    buffer = new PushQueue<StreamMessage<T>>([])
+    buffer: PushQueue<StreamMessage<T>>
     /** @internal */
     isIterating = false
     /** @internal */
     debug
     isErrored = false
+    didStart = false
 
     constructor(context: Context, { idSuffix }: { idSuffix?: string } = {}) {
         super({ captureRejections: true })
@@ -52,6 +52,7 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
         this.debug('create')
         this[Symbol.asyncIterator] = this[Symbol.asyncIterator].bind(this)
         this.on('newListener', this.onListener)
+        this.buffer = new PushQueue<StreamMessage<T>>([], { onEnd: this.cleanup })
     }
 
     onListener = (event: string | symbol) => {
@@ -81,7 +82,7 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
                 }
             }
         } catch (err) {
-            await this.handleError(err)
+            await this.cleanup(err)
         }
     }
 
@@ -118,6 +119,7 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
     }
 
     async* [Symbol.asyncIterator]() {
+        this.didStart = true
         if (this.isIterating) {
             throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
         }
@@ -132,10 +134,20 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
         } catch (err) {
             await this.handleError(err)
         } finally {
+            await this.cleanup()
+        }
+    }
+
+    private cleanup = pOnce(async (err?: Error) => {
+        try {
+            if (err) {
+                await this.handleError(err)
+            }
+        } finally {
             this.emit('end')
             this.removeAllListeners()
         }
-    }
+    })
 
     push(message: StreamMessage<T>) {
         return this.buffer.push(message)
@@ -150,10 +162,6 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
     }
 
     cancel = async (err?: Error) => {
-        if (this.buffer?.isCancelled()) {
-            return Promise.resolve(undefined)
-        }
-
         return this.buffer?.cancel(err)
     }
 
