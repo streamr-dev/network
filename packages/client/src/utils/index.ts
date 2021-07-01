@@ -142,7 +142,7 @@ type Collection<K, V> = {
     delete: Map<K, V>['delete']
 }
 
-function clearMatching(cache: Collection<unknown, unknown>, matchFn: (key: unknown) => boolean) {
+function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => boolean) {
     for (const key of cache.keys()) {
         if (matchFn(key)) {
             cache.delete(key)
@@ -165,15 +165,21 @@ function clearMatching(cache: Collection<unknown, unknown>, matchFn: (key: unkno
  * cachedAsyncFn.clear()
  * ```
  */
-
-export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
+export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
     onEviction = () => {},
+    cacheKey = (args: ArgsType) => args[0], // type+provide default so we can infer KeyType
     ...opts
+}: {
+    maxSize?: number
+    maxAge?: number
+    cachePromiseRejection?: boolean
+    onEviction?: (...args: any[]) => void
+    cacheKey?: (args: ArgsType) => KeyType
 } = {}) {
-    const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
+    const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
         onEviction,
@@ -182,13 +188,14 @@ export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
     const cachedFn = Object.assign(pMemoize(asyncFn, {
         cachePromiseRejection,
         cache,
+        cacheKey,
         ...opts,
     }), {
         clear: () => {
-            pMemoize.clear(cachedFn)
+            pMemoize.clear(cachedFn as any)
             cache.clear()
         },
-        clearMatching: (...args: L.Tail<Parameters<typeof clearMatching>>) => clearMatching(cache, ...args),
+        clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
     })
 
     return cachedFn

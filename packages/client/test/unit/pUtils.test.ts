@@ -63,4 +63,41 @@ describe('CacheAsyncFn', () => {
         await cachedFn(1)
         expect(fn).toHaveBeenCalledTimes(7)
     })
+
+    it('adopts type of wrapped function', async () => {
+        // actually checking via ts-expect-error
+        // assertions don't matter,
+        async function fn(_s: string): Promise<number> {
+            return 3
+        }
+
+        const cachedFn = CacheAsyncFn(fn)
+        const a: number = await cachedFn('abc') // ok
+        expect(a).toEqual(3)
+        // @ts-expect-error not enough args
+        await cachedFn()
+        // @ts-expect-error too many args
+        await cachedFn('abc', 3)
+        // @ts-expect-error wrong argument type
+        await cachedFn(3)
+
+        // @ts-expect-error wrong return type
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const c: string = await cachedFn('abc')
+        expect(c).toEqual(3)
+        const d = cachedFn.clear()
+        expect(d).toBe(undefined)
+        cachedFn.clearMatching((_d: string) => true)
+        // @ts-expect-error wrong match argument type
+        cachedFn.clearMatching((_d: number) => true)
+        const cachedFn2 = CacheAsyncFn(fn, {
+            cacheKey: ([s]) => {
+                return s.length
+            }
+        })
+
+        cachedFn2.clearMatching((_d: number) => true)
+        // @ts-expect-error wrong match argument type
+        cachedFn2.clearMatching((_d: string) => true)
+    })
 })
