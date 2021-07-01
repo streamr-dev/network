@@ -2,7 +2,7 @@ import { wait } from 'streamr-test-utils'
 import AbortController from 'node-abort-controller'
 
 import PushQueue from '../../src/utils/PushQueue'
-import { Defer } from '../../src/utils'
+import { Defer, counterId } from '../../src/utils'
 
 import IteratorTest from './IteratorTest'
 
@@ -164,7 +164,7 @@ describe('PushQueue', () => {
 
         it('errors if source errors', async () => {
             expect.assertions(5)
-            const err = new Error('expected')
+            const err = new Error(counterId('expected'))
             const q = PushQueue.from(async function* GenerateError() {
                 yield* generate()
                 throw err
@@ -190,7 +190,7 @@ describe('PushQueue', () => {
 
         it('errors if source errors immediately', async () => {
             expect.assertions(5)
-            const err = new Error('expected')
+            const err = new Error(counterId('expected'))
             // eslint-disable-next-line require-yield
             const q = PushQueue.from(async function* GenerateError() {
                 throw err
@@ -217,7 +217,7 @@ describe('PushQueue', () => {
 
         it('errors if sync source errors immediately', async () => {
             expect.assertions(5)
-            const err = new Error('expected')
+            const err = new Error(counterId('expected'))
             // eslint-disable-next-line require-yield
             const q = PushQueue.from(function* GenerateError() {
                 throw err
@@ -556,7 +556,7 @@ describe('PushQueue', () => {
                 onEnd,
             })
 
-            const err = new Error('expected')
+            const err = new Error(counterId('expected'))
             const msgs = []
             await expect(async () => {
                 for await (const msg of q) {
@@ -765,7 +765,10 @@ describe('PushQueue', () => {
         const q = new PushQueue()
         q.push('a') // should no-op
         const err = new Error('expected error')
-        q.throw(err)
+        await expect(async () => {
+            await q.throw(err)
+        }).rejects.toThrow(err)
+
         q.push('c') // should no-op
 
         const msgs = []
@@ -931,7 +934,7 @@ describe('PushQueue', () => {
         it('can throw', async () => {
             const onEnd = jest.fn()
             const q = new PushQueue([], { onEnd })
-            const err = new Error('expected')
+            const err = new Error(counterId('expected'))
             q.push(expected[0])
 
             const msgs = []

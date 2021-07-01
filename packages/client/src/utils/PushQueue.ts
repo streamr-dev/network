@@ -1,4 +1,5 @@
 import { Defer, pTimeout, instanceId, pOnce } from './index'
+import { iteratorFinally } from './iterators'
 import { Debug } from './log'
 
 async function endGenerator(gtr: AsyncGenerator, error?: Error) {
@@ -101,6 +102,7 @@ export default class PushQueue<T> {
     nextQueue: (ReturnType<typeof Defer>)[] = [] // queued promises for next()
     pending: number = 0
     _onEnd: PushQueueOptions['onEnd']
+    isStarted = false
 
     constructor(items: T[] = [], {
         signal,
@@ -117,20 +119,15 @@ export default class PushQueue<T> {
         this.buffer = []
 
         this[Symbol.asyncIterator] = this[Symbol.asyncIterator].bind(this)
-
+        this.iterator = iteratorFinally(this.iterate(), this._cleanup)
+        this.push(...items)
         // abort signal handling
         if (signal) {
             this.signal = signal
-            if (signal.aborted) {
-                this.onAbort()
-            }
-
             signal.addEventListener('abort', this.onAbort, {
                 once: true
             })
         }
-        this.push(...items)
-        this.iterator = this.iterate()
     }
 
     static from<TT>(iterable: AnyIterable<TT>, opts = {}) {
@@ -169,7 +166,7 @@ export default class PushQueue<T> {
                 }
             }
         } catch (err) {
-            return this.throw(err)
+            return this.push(err)
         }
 
         if (end) {
@@ -185,6 +182,10 @@ export default class PushQueue<T> {
 
     onEnd = pOnce((err?: Error, ...args: any[]) => {
         if (!this._onEnd) {
+            if (err) {
+                throw err
+            }
+
             return Promise.resolve()
         }
 
@@ -209,8 +210,9 @@ export default class PushQueue<T> {
         this.push(null)
     })
 
-    onAbort = pOnce(() => {
-        return this.throw(new AbortError())
+    private onAbort = pOnce(() => {
+        // nobody to listen
+        return this.cancel(new AbortError()).catch(() => {})
     })
 
     async next(...args:[] | [unknown]) {
@@ -231,7 +233,8 @@ export default class PushQueue<T> {
         }
 
         const count = this.pending + this.buffer.length
-        if (this.buffer[this.buffer.length - 1] === null) {
+        const last = this.buffer[this.buffer.length - 1]
+        if (last === null || isError(last)) {
             return count - 1
         }
 
@@ -261,6 +264,11 @@ export default class PushQueue<T> {
             // for next()
             this.error = err
         }
+
+        if (!this.isStarted) {
+            this.debug('not started', this.error)
+            await this._cleanup()
+        }
     })
 
     cancel = pOnce(async (error?: Error) => {
@@ -289,11 +297,15 @@ export default class PushQueue<T> {
 
     _cleanup = pOnce(async () => {
         this.debug('cleanup')
+
+        if (this.signal) {
+            this.signal.removeEventListener('abort', this.onAbort)
+        }
+
         // capture error and pending next promises
         const { error, nextQueue } = this
         this.isBufferReadable = false
         this.isBufferWritable = false
-        this.error = undefined
         this.pending = 0
         // empty buffer then reassign
         this.buffer.length = 0
@@ -365,8 +377,13 @@ export default class PushQueue<T> {
         }
 
         return async function* iterate(this: PushQueue<T>) {
+            /* eslint-disable no-await-in-loop */
             while (true) {
-                /* eslint-disable no-await-in-loop */
+                if (this.signal && this.signal.aborted) {
+                    await this.cancel(new AbortError())
+                    return
+                }
+
                 // feed from buffer first
                 const buffer = this.buffer.slice()
                 this.pending += buffer.length
@@ -386,7 +403,6 @@ export default class PushQueue<T> {
                 // handle queued error
                 if (this.error) {
                     const err = this.error
-                    this.error = undefined
                     this.debug('queued error')
                     throw err
                 }
@@ -418,20 +434,21 @@ export default class PushQueue<T> {
                 }
 
                 yield value
-                /* eslint-enable no-await-in-loop */
             }
+            /* eslint-enable no-await-in-loop */
         }.call(this)
     }
 
     async* [Symbol.asyncIterator]() {
+        if (this.error) {
+            throw this.error
+        }
         // NOTE: consider throwing if trying to iterate after finished
         // or maybe returning a new iterator?
+        this.isStarted = true
         try {
             yield* this.iterator
         } finally {
-            if (this.signal) {
-                this.signal.removeEventListener('abort', this.onAbort)
-            }
             await this._cleanup()
         }
     }
