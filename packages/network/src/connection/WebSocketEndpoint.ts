@@ -136,6 +136,9 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
             this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
 
             connection.removeAllListeners()
+            if (connection.getPeerInfo()) {
+                this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
+            }
             this.metrics.record('close', 1)
         })
         connection.on('lowBackPressure', () => {
