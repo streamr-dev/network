@@ -34,9 +34,9 @@ describe('delivery of messages in protocol layer', () => {
 
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
-        const wsEndpoint1 = await startEndpoint('127.0.0.1', 28513, peerInfo1, null)
-        const wsEndpoint2 = await startEndpoint('127.0.0.1', 28514, peerInfo2, null)
-        const wsEndpoint3 = await startEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'), null)
+        const wsEndpoint1 = await startEndpoint('127.0.0.1', 28513, peerInfo1)
+        const wsEndpoint2 = await startEndpoint('127.0.0.1', 28514, peerInfo2)
+        const wsEndpoint3 = await startEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'))
         trackerNode = new TrackerNode(wsEndpoint1)
         trackerNode2 = new TrackerNode(wsEndpoint2)
 

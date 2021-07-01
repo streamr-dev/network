@@ -22,14 +22,13 @@ async function setUpEndpoint(peerId: string, peerType: string, city: string, por
         '127.0.0.1',
         port,
         peerInfo,
-        null,
         undefined,
         metricsContext,
         100
     )
     return wsEndpoint
 }
-
+/*
 describe('WebSocketEndpoint with no connections', () => {
     let wsEndpoint: WebSocketEndpoint
 
@@ -68,12 +67,10 @@ describe('WebSocketEndpoint with no connections', () => {
         expect(wsEndpoint.getRtts()).toEqual({})
     })
 
-    /*
     it('getPeers() is empty', () => {
         expect(wsEndpoint.getPeers()).toEqual(new Map())
     })
-    */
-
+    
     it('getPeerInfos() is empty', () => {
         expect(wsEndpoint.getPeerInfos()).toEqual([])
     })
@@ -84,7 +81,7 @@ describe('WebSocketEndpoint with no connections', () => {
         }).toThrowError('Id otherPeerId not found in peer book')
     })
 })
-
+*/
 describe('WebSocketEndpoint with connections', () => {
     let wsEndpoint: WebSocketEndpoint
     let otherWsEndpoint: WebSocketEndpoint
@@ -105,14 +102,15 @@ describe('WebSocketEndpoint with connections', () => {
             thirdWsEndpoint.stop()
         ])
     })
-
+    /*
     it('isConnected() is not empty', () => {
         expect(wsEndpoint.isConnected('ws://127.0.0.1:30467')).toEqual(true)
         expect(wsEndpoint.isConnected('ws://127.0.0.1:30468')).toEqual(true)
     })
+    */
 
     it('getRtts() is not empty', async () => {
-        await waitForCondition(() => Object.entries(wsEndpoint.getRtts()).length !== 0)
+        await waitForCondition(() => Object.entries(wsEndpoint.getRtts()).length == 2)
         const rtts = wsEndpoint.getRtts()
         expect(Object.keys(rtts)).toEqual(['otherPeerId', 'thirdPeerId'])
         expect(rtts.otherPeerId).toBeGreaterThanOrEqual(0)
@@ -127,7 +125,7 @@ describe('WebSocketEndpoint with connections', () => {
             'ws://127.0.0.1:30468'
         ])
     })
-    */
+    
 
     it('getPeerInfos() is not empty', () => {
         expect(wsEndpoint.getPeerInfos()).toEqual([
@@ -158,5 +156,5 @@ describe('WebSocketEndpoint with connections', () => {
 
     it('resolveAddress throws error', () => {
         expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('ws://127.0.0.1:30467')
-    })
+    })*/
 })

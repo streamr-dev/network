@@ -191,26 +191,12 @@ export class UWsServer extends ConnectionEmitter {
 	private onIncomingConnection(ws: ExtendedUws): void {
 		const { address, peerId, peerType, controlLayerVersions, messageLayerVersions } = ws
 
-		try {
-			if (!address) {
-				throw new Error('address not given')
-			}
+		try {	
 			if (!peerId) {
 				throw new Error('peerId not given')
 			}
-			if (!peerType) {
-				throw new Error('peerType not given')
-			}
-			if (!controlLayerVersions) {
-				throw new Error('controlLayerVersions not given')
-			}
-			if (!messageLayerVersions) {
-				throw new Error('messageLayerVersions not given')
-			}
-			const controlLayerVersionsArray = controlLayerVersions.split(',').map((version) => parseInt(version))
-			const messageLayerVersionsArray = messageLayerVersions.split(',').map((version) => parseInt(version))
-
-			const clientPeerInfo = new PeerInfo(peerId, peerType, controlLayerVersionsArray, messageLayerVersionsArray)
+		
+			const clientPeerInfo = PeerInfo.newNode(peerId)  
 
 			this.logger.trace('<=== %s connecting to me', address)
 

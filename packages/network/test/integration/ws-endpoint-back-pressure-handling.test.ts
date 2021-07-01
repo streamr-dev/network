@@ -7,8 +7,8 @@ describe('WsEndpoint: back pressure handling', () => {
     let ep2: WebSocketEndpoint
 
     beforeEach(async () => {
-        ep1 = await startEndpoint('127.0.0.1', 43974, PeerInfo.newNode('ep1'), null)
-        ep2 = await startEndpoint('127.0.0.1', 43975, PeerInfo.newNode('ep2'), null)
+        ep1 = await startEndpoint('127.0.0.1', 43974, PeerInfo.newNode('ep1'))
+        ep2 = await startEndpoint('127.0.0.1', 43975, PeerInfo.newNode('ep2'))
         await ep1.connect('ws://127.0.0.1:43975')
     })
 

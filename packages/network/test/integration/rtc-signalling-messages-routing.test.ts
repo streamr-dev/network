@@ -25,8 +25,8 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             port: 28660,
             id: 'tracker'
         })
-        const originatorEndpoint = await startEndpoint('127.0.0.1', 28661, PeerInfo.newNode('originator'), null)
-        const targetEndpoint = await startEndpoint('127.0.0.1', 28662, PeerInfo.newNode('target'), null)
+        const originatorEndpoint = await startEndpoint('127.0.0.1', 28661, PeerInfo.newNode('originator'))
+        const targetEndpoint = await startEndpoint('127.0.0.1', 28662, PeerInfo.newNode('target'))
 
         originatorTrackerNode = new TrackerNode(originatorEndpoint)
         targetTrackerNode = new TrackerNode(targetEndpoint)

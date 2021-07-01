@@ -25,10 +25,7 @@ export class WsConnection extends ClientWebSocketConnection {
 
 	private toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
 		return {
-			'streamr-peer-id': peerInfo.peerId,
-			'streamr-peer-type': peerInfo.peerType,
-			'control-layer-versions': peerInfo.controlLayerVersions.join(','),
-			'message-layer-versions': peerInfo.messageLayerVersions.join(',')
+			'streamr-peer-id': peerInfo.peerId
 		}
 	}
 
@@ -76,6 +73,8 @@ export class WsConnection extends ClientWebSocketConnection {
 				
 				this.emitMessage(message.toString())
 			})
+
+			this.ws = ws
 
 		} catch (err) {
 			this.logger.trace('failed to connect to %s, error: %o', this.targetPeerAddress, err)

@@ -13,6 +13,7 @@ export class UWsConnection extends WebSocketConnection {
 
 	private logger: Logger
 	private ws: uWS.WebSocket
+	private readyState: number = 1
 
 	constructor(
 		opts: ConstructorOptions,
@@ -27,13 +28,10 @@ export class UWsConnection extends WebSocketConnection {
 		this.ping()
 	}
 
-	protected doConnect(peerAddress: string): void {
-		//noop, because this is a server socket
-	}
-
 	protected doClose(code: DisconnectionCode, reason: DisconnectionReason): void {
 		try {
 			this.ws.end(code, reason)
+			this.readyState = 3
 		} catch (e) {
 			this.logger.error('failed to terminate ws, reason %s', e)
 		}
@@ -48,7 +46,7 @@ export class UWsConnection extends WebSocketConnection {
 	}
 
 	isOpen(): boolean {
-		if (!this.ws || this.ws.readyState != this.ws.OPEN) {
+		if (!this.ws || this.readyState != 1) {
 			return false
 		} else {
 			return true
@@ -74,6 +72,6 @@ export class UWsConnection extends WebSocketConnection {
 	}
 
 	getReadyState(): number | undefined {
-		return this.ws?.readyState
+		return this.readyState
 	}
 }

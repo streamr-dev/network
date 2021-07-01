@@ -31,7 +31,6 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     private readonly privateKeyFileName: string | undefined
     private readonly certFileName: string | undefined
     private readonly peerInfo: PeerInfo
-    private readonly advertisedWsUrl: string | null
     private readonly connectionFactory: ClientWebSocketConnectionFactory
     private readonly logger: Logger
     private readonly connections: { [peerAddress: string]: WebSocketConnection }
@@ -48,7 +47,6 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
         certFileName: string | undefined,
         connectionFactory: ClientWebSocketConnectionFactory,
         peerInfo: PeerInfo,
-        advertisedWsUrl: string | null,
         metricsContext = new MetricsContext(peerInfo.peerId),
         pingInterval = 5 * 1000
     ) {
@@ -57,14 +55,10 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
         if (!(peerInfo instanceof PeerInfo)) {
             throw new Error('peerInfo not instance of PeerInfo')
         }
-        if (advertisedWsUrl === undefined) {
-            throw new Error('advertisedWsUrl not given')
-        }
-
+        
         this.serverHost = host
         this.serverPort = port
         this.peerInfo = peerInfo
-        this.advertisedWsUrl = advertisedWsUrl
         this.privateKeyFileName = privateKeyFileName
         this.certFileName = certFileName
         this.connectionFactory = connectionFactory
@@ -84,9 +78,9 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
 
         this.uwsServer.on('newConnection', (connection) => {
             // the connection is already open, so no open event handler needed
-            this.connections[connection.getPeerAddress()] = connection
             this.setListenersToConnection(connection)
             this.onNewConnection(connection, false)
+            this.connections[connection.getPeerAddress()] = connection
         })
 
         this.metrics = metricsContext.create('WsEndpoint')
@@ -312,10 +306,7 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     }
 
     getAddress(): string {
-        if (this.advertisedWsUrl) {
-            return this.advertisedWsUrl
-        }
-
+        
         return `ws://${this.serverHost}:${this.serverPort}`
     }
 
@@ -354,7 +345,7 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
         // Handle scenario where two peers have opened a socket to each other at the same time.
         // Second condition is a tiebreaker to avoid both peers of simultaneously disconnecting their socket,
         // thereby leaving no connection behind.
-        if ((this.isConnected(ws.getPeerAddress()) && this.getAddress().localeCompare(ws.getPeerAddress()) === 1)) {
+        if (!out && (this.isConnected(ws.getPeerAddress()) && this.getAddress().localeCompare(ws.getPeerAddress()) === 1)) {
             this.metrics.record('open:duplicateSocket', 1)
             this.logger.trace('dropped new connection with %s because an existing connection already exists', ws.getPeerAddress())
             ws.close(DisconnectionCode.DUPLICATE_SOCKET, DisconnectionReason.DUPLICATE_SOCKET)
@@ -373,12 +364,10 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
 }
 
 
-
 export async function startEndpoint(
     host: string,
     port: number,
     peerInfo: PeerInfo,
-    advertisedWsUrl: string | null,
     connectionFactory?: ClientWebSocketConnectionFactory,
     metricsContext?: MetricsContext,
     pingInterval?: number | undefined,
@@ -390,7 +379,7 @@ export async function startEndpoint(
     if (!factory) {
         factory = WsConnectionFactory
     }
-    const endpoint = new WebSocketEndpoint(host, port, privateKeyFileName, certFileName, factory, peerInfo, advertisedWsUrl, metricsContext, pingInterval)
+    const endpoint = new WebSocketEndpoint(host, port, privateKeyFileName, certFileName, factory, peerInfo, metricsContext, pingInterval)
     await endpoint.start()
     return endpoint
 }

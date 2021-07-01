@@ -13,8 +13,8 @@ describe('check and kill dead connections', () => {
     let node2: WebSocketEndpoint
 
     beforeEach(async () => {
-        node1 = await startEndpoint('127.0.0.1', 43971, PeerInfo.newNode('node1'), null)
-        node2 = await startEndpoint('127.0.0.1', 43972, PeerInfo.newNode('node2'), null)
+        node1 = await startEndpoint('127.0.0.1', 43971, PeerInfo.newNode('node1'))
+        node2 = await startEndpoint('127.0.0.1', 43972, PeerInfo.newNode('node2'))
 
         node1.connect('ws://127.0.0.1:43972')
         await waitForEvent(node1, Event.PEER_CONNECTED)

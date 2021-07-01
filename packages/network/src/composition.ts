@@ -36,7 +36,6 @@ export interface TrackerOptions {
     location?: Location | null
     attachHttpEndpoints?: boolean
     maxNeighborsPerNode?: number
-    advertisedWsUrl?: string | null
     metricsContext?: MetricsContext
     pingInterval?: number
     privateKeyFileName?: string
@@ -50,7 +49,6 @@ export interface NetworkNodeOptions {
     id?: string,
     name?: string,
     location?: Location | null
-    advertisedWsUrl?: string | null
     metricsContext?: MetricsContext
     pingInterval?: number,
     disconnectionWaitTime?: number,
@@ -68,7 +66,6 @@ export function startTracker({
     location,
     attachHttpEndpoints = true,
     maxNeighborsPerNode = 4,
-    advertisedWsUrl = null,
     metricsContext = new MetricsContext(id),
     pingInterval,
     privateKeyFileName,
@@ -79,7 +76,6 @@ export function startTracker({
         host,
         port,
         peerInfo,
-        advertisedWsUrl,
         WsConnectionFactory,
         metricsContext,
         pingInterval,
@@ -122,7 +118,6 @@ function startNode({
     name,
     location,
     trackers,
-    advertisedWsUrl  = null,
     metricsContext = new MetricsContext(id),
     pingInterval,
     disconnectionWaitTime,
@@ -132,7 +127,7 @@ function startNode({
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions, peerInfoFn: PeerInfoFn): Promise<NetworkNode> {
     const peerInfo = peerInfoFn(id, name, undefined, undefined, location)
-    return startEndpoint(host, port, peerInfo, advertisedWsUrl, WsConnectionFactory, metricsContext, pingInterval).then((endpoint) => {
+    return startEndpoint(host, port, peerInfo, WsConnectionFactory, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
         const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
