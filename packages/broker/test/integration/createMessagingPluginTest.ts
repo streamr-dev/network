@@ -15,7 +15,6 @@ interface Ports {
     plugin: number,
     legacyWebsocket: number
     tracker: number
-    network: number
 }
 
 const MOCK_MESSAGE = { 
@@ -65,7 +64,6 @@ export const createMessagingPluginTest = <T>(
             broker = await startBroker({
                 name: 'broker',
                 privateKey: brokerUser.privateKey,
-                networkPort: ports.network,
                 trackerPort: ports.tracker,
                 wsPort: ports.legacyWebsocket,
                 apiAuthentication: {

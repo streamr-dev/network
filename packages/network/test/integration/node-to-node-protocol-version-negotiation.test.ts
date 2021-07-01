@@ -4,12 +4,12 @@ import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/composition'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 
@@ -36,16 +36,16 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
 
         // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = await startEndpoint('127.0.0.1', 28555, peerInfo1, null, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = await startEndpoint('127.0.0.1', 28556, peerInfo2, null, new MetricsContext(peerInfo2.peerId))
-        const wsEp3 = await startEndpoint('127.0.0.1', 28557, peerInfo3, null, new MetricsContext(peerInfo2.peerId))
+        const wsEp1 = new ClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
+        const wsEp2 = new ClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
+        const wsEp3 = new ClientWsEndpoint(peerInfo3, new MetricsContext(peerInfo2.peerId))
         trackerNode1 = new TrackerNode(wsEp1)
         trackerNode2 = new TrackerNode(wsEp2)
         trackerNode3 = new TrackerNode(wsEp3)
 
-        await trackerNode1.connectToTracker(tracker.getAddress())
-        await trackerNode2.connectToTracker(tracker.getAddress())
-        await trackerNode3.connectToTracker(tracker.getAddress())
+        await trackerNode1.connectToTracker(tracker.getUrl())
+        await trackerNode2.connectToTracker(tracker.getUrl())
+        await trackerNode3.connectToTracker(tracker.getUrl())
 
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(

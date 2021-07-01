@@ -5,7 +5,6 @@ import { TrackerNode, Event as TrackerNodeEvent } from '../protocol/TrackerNode'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
 import { Status, StreamIdAndPartition } from '../identifiers'
-import { DisconnectionReason } from '../connection/IWsEndpoint'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { PerStreamMetrics } from './PerStreamMetrics'
@@ -16,6 +15,7 @@ import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
 import { InstructionRetryManager } from "./InstructionRetryManager"
 import { NameDirectory } from '../NameDirectory'
+import { DisconnectionReason } from "../connection/AbstractWsEndpoint"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
@@ -178,8 +178,13 @@ export class Node extends EventEmitter {
 
     onConnectedToTracker(tracker: string): void {
         this.logger.trace('connected to tracker %s', tracker)
-        this.trackerBook[this.trackerNode.resolveAddress(tracker)] = tracker
-        this.prepareAndSendFullStatus(tracker)
+        const serverUrl = this.trackerNode.getServerUrlByTrackerId(tracker)
+        if (serverUrl !== undefined) {
+            this.trackerBook[serverUrl] = tracker
+            this.prepareAndSendFullStatus(tracker)
+        } else {
+            this.logger.warn('onConnectedToTracker: unknown tracker %s', tracker)
+        }
     }
 
     subscribeToStreamIfHaveNotYet(streamId: StreamIdAndPartition, sendStatus = true): void {

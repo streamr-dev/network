@@ -2,7 +2,7 @@ import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import { MetricsContext, startNetworkNode, startTracker } from '../../src/composition'
+import { MetricsContext, createNetworkNode, startTracker } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -19,11 +19,9 @@ describe('latency metrics', () => {
         })
 
         metricsContext = new MetricsContext('node1')
-        node = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 32911,
+        node = createNetworkNode({
             id: 'node1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             metricsContext
         })
 

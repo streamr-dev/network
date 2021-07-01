@@ -6,8 +6,6 @@ import { Wallet } from 'ethers'
 
 const httpPort = 47741
 const wsPort = 47742
-const networkPort1 = 47743
-const networkPort2 = 47744
 const trackerPort = 47745
 
 const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: string, source: string) => {
@@ -85,7 +83,6 @@ describe('per-node metrics', () => {
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort2,
             trackerPort,
             httpPort,
             enableCassandra: true,
@@ -97,7 +94,6 @@ describe('per-node metrics', () => {
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
-            networkPort: networkPort1,
             trackerPort,
             wsPort,
             reporting: {

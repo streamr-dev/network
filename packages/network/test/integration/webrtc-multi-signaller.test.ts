@@ -1,5 +1,4 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -7,6 +6,7 @@ import { waitForEvent } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 
@@ -30,19 +30,19 @@ describe('WebRTC multisignaller test', () => {
             id: 'tracker2'
         })
 
-        const ep1 = await startEndpoint('127.0.0.1', 28717, PeerInfo.newNode('node-1'), null, new MetricsContext(''))
-        const ep2 = await startEndpoint('127.0.0.1', 28718, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
+        const ep1 = new ClientWsEndpoint(PeerInfo.newNode('node-1'), new MetricsContext(''))
+        const ep2 = new ClientWsEndpoint(PeerInfo.newNode('node-2'), new MetricsContext(''))
 
         trackerNode1 = new TrackerNode(ep1)
         trackerNode2 = new TrackerNode(ep2)
 
-        trackerNode1.connectToTracker(tracker1.getAddress())
+        trackerNode1.connectToTracker(tracker1.getUrl())
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker1.getAddress())
+        trackerNode2.connectToTracker(tracker1.getUrl())
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode1.connectToTracker(tracker2.getAddress())
+        trackerNode1.connectToTracker(tracker2.getUrl())
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker2.getAddress())
+        trackerNode2.connectToTracker(tracker2.getUrl())
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
 
         const peerInfo1 = PeerInfo.newNode('node-1')

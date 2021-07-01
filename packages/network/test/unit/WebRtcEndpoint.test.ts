@@ -1,5 +1,4 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -9,6 +8,7 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -28,16 +28,16 @@ describe('WebRtcEndpoint', () => {
                 id: 'tracker'
             })
 
-            const ep1 = await startEndpoint('127.0.0.1', 28801, PeerInfo.newNode('node-1'), null, new MetricsContext(''))
-            const ep2 = await startEndpoint('127.0.0.1', 28802, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
+            const ep1 = await new ClientWsEndpoint(PeerInfo.newNode('node-1'))
+            const ep2 = await new ClientWsEndpoint(PeerInfo.newNode('node-2'))
             trackerNode1 = new TrackerNode(ep1)
             trackerNode2 = new TrackerNode(ep2)
             await Promise.all([
-                trackerNode1.connectToTracker(tracker.getAddress()),
+                trackerNode1.connectToTracker(tracker.getUrl()),
                 waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
             ])
             await Promise.all([
-                trackerNode2.connectToTracker(tracker.getAddress()),
+                trackerNode2.connectToTracker(tracker.getUrl()),
                 waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
             ])
 
