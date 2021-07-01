@@ -4,7 +4,7 @@ import { waitForEvent } from 'streamr-test-utils'
 import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
-import { DisconnectionReason, Event } from "../../src/connection/AbstractWsEndpoint"
+import { Event } from "../../src/connection/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
 const STATE_OPEN = 1
