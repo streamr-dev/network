@@ -7,7 +7,7 @@ import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
-import { ClientWsEndpoint, startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -30,7 +30,7 @@ describe('WebRtcEndpoint', () => {
         })
 
         peerInfo1 = PeerInfo.newNode('node-1')
-        wsClient1 = await startClientWsEndpoint(peerInfo1)
+        wsClient1 = new ClientWsEndpoint(peerInfo1)
         trackerNode1 = new TrackerNode(wsClient1)
         
         await Promise.all([
@@ -47,7 +47,7 @@ describe('WebRtcEndpoint', () => {
         )
 
         peerInfo2 = PeerInfo.newNode('node-2')
-        wsClient2 = await startClientWsEndpoint(peerInfo2)
+        wsClient2 = new ClientWsEndpoint(peerInfo2)
         trackerNode2 = new TrackerNode(wsClient2)
 
         await Promise.all([

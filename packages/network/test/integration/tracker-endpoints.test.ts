@@ -4,7 +4,7 @@ import http from 'http'
 
 import { waitForCondition } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 
 function getHttp(url: string) {
     return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ describe('tracker endpoint', () => {
             id: 'tracker',
             attachHttpEndpoints: true
         })
-        nodeOne = await startNetworkNode({
+        nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [tracker.getAddress()],
             location: {
@@ -54,7 +54,7 @@ describe('tracker endpoint', () => {
                 longitude: null
             }
         })
-        nodeTwo = await startNetworkNode({
+        nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [tracker.getAddress()],
             location: {

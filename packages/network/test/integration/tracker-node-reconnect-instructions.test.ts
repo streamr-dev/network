@@ -3,7 +3,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { StreamIdAndPartition } from "../../src/identifiers"
@@ -24,12 +24,12 @@ describe('Check tracker instructions to node', () => {
             id: 'tracker'
         })
 
-        nodeOne = await startNetworkNode({
+        nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200
         })
-        nodeTwo = await startNetworkNode({
+        nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200

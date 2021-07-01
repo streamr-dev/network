@@ -3,7 +3,7 @@ import { Tracker } from '../../src/logic/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -23,15 +23,15 @@ describe('optimization: do not propagate to sender', () => {
             port: 30410,
             id: 'tracker'
         })
-        n1 = await startNetworkNode({
+        n1 = createNetworkNode({
             id: 'node-1',
             trackers: [tracker.getAddress()]
         })
-        n2 = await startNetworkNode({
+        n2 = createNetworkNode({
             id: 'node-2',
             trackers: [tracker.getAddress()]
         })
-        n3 = await startNetworkNode({
+        n3 = createNetworkNode({
             id: 'node-3',
             trackers: [tracker.getAddress()]
         })

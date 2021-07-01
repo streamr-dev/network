@@ -1,5 +1,5 @@
 import http from 'http'
-import { startTracker, startNetworkNode, Tracker, NetworkNode } from 'streamr-network'
+import { startTracker, createNetworkNode, Tracker, NetworkNode } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
@@ -40,7 +40,7 @@ describe('DataMetadataEndpoints', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        publisherNode = await startNetworkNode({
+        publisherNode = createNetworkNode({
             id: 'publisherNode',
             trackers: [tracker.getAddress()]
         })

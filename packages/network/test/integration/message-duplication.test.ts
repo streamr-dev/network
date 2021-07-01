@@ -3,7 +3,7 @@ import { Tracker } from '../../src/logic/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as NodeEvent } from "../../src/logic/Node"
 
@@ -24,40 +24,40 @@ describe('duplicate message detection and avoidance', () => {
             port: 30350,
             id: 'tracker'
         })
-        contactNode = await startNetworkNode({
+        contactNode = createNetworkNode({
             id: 'node-0',
             trackers: [tracker.getAddress()],
             stunUrls: []
         })
         contactNode.start()
 
-        otherNodes = await Promise.all([
-            startNetworkNode({
+        otherNodes = [
+            createNetworkNode({
                 id: 'node-1',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
-            startNetworkNode({
+            createNetworkNode({
                 id: 'node-2',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
-            startNetworkNode({
+            createNetworkNode({
                 id: 'node-3',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
-            startNetworkNode({
+            createNetworkNode({
                 id: 'node-4',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
-            startNetworkNode({
+            createNetworkNode({
                 id: 'node-5',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
-        ])
+        ]
 
         const allNodesConnnectedToTrackerPromise = Promise.all(otherNodes.map((node) => {
             // @ts-expect-error private field

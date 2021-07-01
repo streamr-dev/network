@@ -2,7 +2,7 @@ import { runAndWaitForEvents, runAndRaceEvents, waitForEvent } from 'streamr-tes
 
 import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 
@@ -22,13 +22,13 @@ describe('Signalling error scenarios', () => {
             id: 'tracker'
         })
 
-        nodeOne = await startNetworkNode({
+        nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 2000,
             newWebrtcConnectionTimeout: 4000
         })
-        nodeTwo = await startNetworkNode({
+        nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 2000,

@@ -4,7 +4,7 @@ const { MessageLayer } = require('streamr-client-protocol')
 
 const { Logger } = require('../dist/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { startNetworkNode } = require('../dist/composition')
+const { createNetworkNode } = require('../dist/composition')
 const { MetricsContext } = require('../dist/helpers/MetricsContext')
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -40,48 +40,41 @@ function generateString(length) {
 }
 
 const metricsContext = new MetricsContext(id)
-startNetworkNode({
+const publisher = createNetworkNode({
     name,
     id,
     trackers: program.opts().trackers,
     metricsContext
 })
-    .then((publisher) => {
-        logger.info('started publisher id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
-            id, name, program.opts().ip, program.opts().trackers.join(', '),
-            program.opts().streamIds, program.opts().intervalInMs, program.opts().metrics)
+logger.info('started publisher id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
+    id, name, program.opts().ip, program.opts().trackers.join(', '),
+    program.opts().streamIds, program.opts().intervalInMs, program.opts().metrics)
 
-        publisher.start()
+publisher.start()
 
-        let lastTimestamp = null
-        let sequenceNumber = 0
+let lastTimestamp = null
+let sequenceNumber = 0
 
-        setInterval(() => {
-            const timestamp = Date.now()
-            const msg = 'Hello world, ' + new Date().toLocaleString()
-            program.opts().streamIds.forEach((streamId) => {
-                const streamMessage = new StreamMessage({
-                    messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, id, messageChainId),
-                    prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
-                    content: {
-                        msg,
-                        noise: generateString(noise)
-                    },
-                })
-                publisher.publish(streamMessage)
-            })
-            sequenceNumber += 1
-            lastTimestamp = timestamp
-        }, program.opts().intervalInMs)
-
-        if (program.opts().metrics) {
-            setInterval(async () => {
-                logger.info(JSON.stringify(await metricsContext.report(true), null, 3))
-            }, 5000)
-        }
-        return true
+setInterval(() => {
+    const timestamp = Date.now()
+    const msg = 'Hello world, ' + new Date().toLocaleString()
+    program.opts().streamIds.forEach((streamId) => {
+        const streamMessage = new StreamMessage({
+            messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, id, messageChainId),
+            prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
+            content: {
+                msg,
+                noise: generateString(noise)
+            },
+        })
+        publisher.publish(streamMessage)
     })
-    .catch((err) => {
-        console.error(err)
-        process.exit(1)
-    })
+    sequenceNumber += 1
+    lastTimestamp = timestamp
+}, program.opts().intervalInMs)
+
+if (program.opts().metrics) {
+    setInterval(async () => {
+        logger.info(JSON.stringify(await metricsContext.report(true), null, 3))
+    }, 5000)
+}

@@ -4,7 +4,7 @@ import assert from 'assert'
 
 import { wait } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 
 function areEqual(a: any, b: any) {
@@ -34,7 +34,7 @@ describe('check network stabilization', () => {
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const node = await startNetworkNode({
+            const node = createNetworkNode({
                 id: `node-${i}`,
                 trackers: [tracker.getAddress()]
             })

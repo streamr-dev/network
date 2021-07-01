@@ -7,7 +7,7 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { startTracker } from '../../src/composition'
-import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 const { RelayMessage, ErrorMessage } = TrackerLayer
 
@@ -25,8 +25,8 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             port: 28660,
             id: 'tracker'
         })
-        const originatorEndpoint = await startClientWsEndpoint(PeerInfo.newNode('originator'))
-        const targetEndpoint = await startClientWsEndpoint(PeerInfo.newNode('target'))
+        const originatorEndpoint = new ClientWsEndpoint(PeerInfo.newNode('originator'))
+        const targetEndpoint = new ClientWsEndpoint(PeerInfo.newNode('target'))
 
         originatorTrackerNode = new TrackerNode(originatorEndpoint)
         targetTrackerNode = new TrackerNode(targetEndpoint)

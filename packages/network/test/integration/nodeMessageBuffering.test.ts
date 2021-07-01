@@ -1,7 +1,7 @@
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import { startNetworkNode, startTracker, Tracker } from '../../src/composition'
+import { createNetworkNode, startTracker, Tracker } from '../../src/composition'
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -23,11 +23,11 @@ describe('message buffering of Node', () => {
             id: 'tracker'
         })
 
-        sourceNode = await startNetworkNode({
+        sourceNode = createNetworkNode({
             id: 'source-node',
             trackers: [tracker.getAddress()]
         })
-        destinationNode = await startNetworkNode({
+        destinationNode = createNetworkNode({
             id: 'destination-node',
             trackers: [tracker.getAddress()]
         })

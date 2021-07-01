@@ -1,4 +1,4 @@
-import { startTracker, startNetworkNode, MetricsContext, NetworkNode } from 'streamr-network'
+import { startTracker, createNetworkNode, MetricsContext, NetworkNode } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import uWS from 'uWebSockets.js'
 import StreamrClient from 'streamr-client'
@@ -30,7 +30,7 @@ describe('ping-pong test between broker and clients', () => {
     })
 
     beforeEach(async () => {
-        networkNode = await startNetworkNode({
+        networkNode = createNetworkNode({
             id: 'networkNode',
             trackers: [tracker.getAddress()]
         })

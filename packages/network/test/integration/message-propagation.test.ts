@@ -4,7 +4,7 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { startTracker, startNetworkNode } from '../../src/composition'
+import { startTracker, createNetworkNode } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -22,33 +22,28 @@ describe('message propagation in network', () => {
             id: 'tracker'
         })
 
-        await Promise.all([
-            startNetworkNode({
-                id: 'node-1',
-                trackers: [tracker.getAddress()],
-                disconnectionWaitTime: 200
-            }),
-            startNetworkNode({
-                id: 'node-2',
-                trackers: [tracker.getAddress()],
-                disconnectionWaitTime: 200
-            }),
-            startNetworkNode({
-                id: 'node-3',
-                trackers: [tracker.getAddress()],
-                disconnectionWaitTime: 200
-            }),
-            startNetworkNode({
-                id: 'node-4',
-                trackers: [tracker.getAddress()],
-                disconnectionWaitTime: 200
-            })
-        ]).then((res) => {
-            [n1, n2, n3, n4] = res
-            return res
-        });
+        n1 = createNetworkNode({
+            id: 'node-1',
+            trackers: [tracker.getAddress()],
+            disconnectionWaitTime: 200
+        })
+        n2 = createNetworkNode({
+            id: 'node-2',
+            trackers: [tracker.getAddress()],
+            disconnectionWaitTime: 200
+        })
+        n3 = createNetworkNode({
+            id: 'node-3',
+            trackers: [tracker.getAddress()],
+            disconnectionWaitTime: 200
+        })
+        n4 = createNetworkNode({
+            id: 'node-4',
+            trackers: [tracker.getAddress()],
+            disconnectionWaitTime: 200
+        })
 
-        [n1, n2, n3, n4].forEach((node) => node.start())
+        ;[n1, n2, n3, n4].forEach((node) => node.start())
     })
 
     afterAll(async () => {

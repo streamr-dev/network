@@ -1,5 +1,5 @@
 import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
-import { startClientWsEndpoint, ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { waitForCondition } from 'streamr-test-utils'
@@ -19,7 +19,7 @@ async function setUpWsClient(peerId: string, peerType: string, city: string): Pr
         messageLayerVersions: null
     })
     const metricsContext = new MetricsContext(peerId)
-    const wsClient = await startClientWsEndpoint(peerInfo, metricsContext)
+    const wsClient = new ClientWsEndpoint(peerInfo, metricsContext)
     return wsClient
 }
 async function setUpWsServer(peerId: string, peerType: string, city: string, port: number): Promise<ServerWsEndpoint> {

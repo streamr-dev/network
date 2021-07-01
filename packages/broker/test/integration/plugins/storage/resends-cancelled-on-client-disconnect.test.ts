@@ -1,4 +1,4 @@
-import { startTracker, startNetworkNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
+import { startTracker, createNetworkNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
 import { waitForEvent } from 'streamr-test-utils'
 import ws from 'uWebSockets.js'
 import StreamrClient, { Stream } from 'streamr-client'
@@ -80,7 +80,7 @@ describe('resend cancellation', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        networkNode = await startNetworkNode({
+        networkNode = createNetworkNode({
             id: 'networkNode',
             trackers: [tracker.getAddress()],
         })

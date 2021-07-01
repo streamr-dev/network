@@ -3,7 +3,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { StreamIdAndPartition } from '../../src/identifiers'
@@ -26,12 +26,12 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
         // @ts-expect-error private method
         tracker.formAndSendInstructions = () => {}
-        node1 = await startNetworkNode({
+        node1 = createNetworkNode({
             id: 'node1',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200
         })
-        node2 = await startNetworkNode({
+        node2 = createNetworkNode({
             id: 'node2',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200

@@ -12,7 +12,7 @@ import { RtcSignaller } from "../../src/logic/RtcSignaller"
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
-import { startClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -34,8 +34,8 @@ describe('delivery of messages in protocol layer', () => {
 
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
-        const wsEndpoint1 = await startClientWsEndpoint(peerInfo1)
-        const wsEndpoint2 = await startClientWsEndpoint(peerInfo2)
+        const wsEndpoint1 = new ClientWsEndpoint(peerInfo1)
+        const wsEndpoint2 = new ClientWsEndpoint(peerInfo2)
         const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'))
         trackerNode = new TrackerNode(wsEndpoint1)
         trackerNode2 = new TrackerNode(wsEndpoint2)

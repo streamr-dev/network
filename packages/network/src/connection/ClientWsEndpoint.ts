@@ -220,12 +220,3 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         })
     }
 }
-
-// made it async to match the startEndpoint method on WsServer
-export async function startClientWsEndpoint(
-    peerInfo: PeerInfo,
-    metricsContext?: MetricsContext,
-    pingInterval?: number | undefined
-): Promise<ClientWsEndpoint> {
-    return new ClientWsEndpoint(peerInfo, metricsContext, pingInterval)
-}

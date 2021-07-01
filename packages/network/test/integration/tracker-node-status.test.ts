@@ -2,7 +2,7 @@ import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
@@ -33,13 +33,13 @@ describe('check status message flow between tracker and two nodes', () => {
             id: TRACKER_ID
         })
 
-        nodeOne = await startNetworkNode({
+        nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [tracker.getAddress()],
             pingInterval: 100
         })
         
-        nodeTwo = await startNetworkNode({
+        nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [tracker.getAddress()],
             location,

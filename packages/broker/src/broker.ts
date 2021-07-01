@@ -1,4 +1,4 @@
-import { startNetworkNode, Protocol, MetricsContext } from 'streamr-network'
+import { createNetworkNode, Protocol, MetricsContext } from 'streamr-network'
 import StreamrClient from 'streamr-client'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
@@ -69,7 +69,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
     // Start network node
-    const networkNode = await startNetworkNode({
+    const networkNode = createNetworkNode({
         id: brokerAddress,
         name: networkNodeName,
         trackers,
