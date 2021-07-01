@@ -250,7 +250,7 @@ export function getPublishTestMessages(client: StreamrClient, defaultOptsOrStrea
         try {
             client.connection.once('done', onDone)
             // async queue to ensure messages set up in order
-            const setupMessage = pLimitFn(async (publishOpts) => {
+            const setupMessage = pLimitFn(async (publishOpts: CreateMessageOpts) => {
                 const message = createMessage(publishOpts)
                 await beforeEach(message)
                 return message

@@ -1,5 +1,6 @@
 import { MessageLayer, Utils } from 'streamr-client-protocol'
 import { Web3Provider } from '@ethersproject/providers'
+import { Bytes } from '@ethersproject/bytes'
 
 import { pLimitFn, sleep } from '../utils'
 import type { EthereumConfig } from '../Config'
@@ -35,7 +36,7 @@ function getSigningFunction({
         const signer = web3Provider.getSigner()
         // sign one at a time & wait a moment before asking for next signature
         // otherwise metamask extension may not show the prompt window
-        return pLimitFn(async (d) => {
+        return pLimitFn(async (d: Bytes | string) => {
             const sig = await signer.signMessage(d)
             await sleep(50)
             return sig
