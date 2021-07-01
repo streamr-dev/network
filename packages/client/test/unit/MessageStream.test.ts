@@ -149,6 +149,45 @@ describe('MessageStream', () => {
         expect(received).toEqual([streamMessage])
     })
 
+    describe('when not started', () => {
+        it('emits end with cancel', async () => {
+            const testMessage = Msg()
+            const s = new MessageStream<typeof testMessage>(context)
+
+            const onEnd = jest.fn()
+            s.on('end', onEnd)
+            await s.cancel()
+
+            expect(onEnd).toHaveBeenCalledTimes(1)
+        })
+
+        it('emits end with return', async () => {
+            const testMessage = Msg()
+            const s = new MessageStream<typeof testMessage>(context)
+
+            const onEnd = jest.fn()
+            s.on('end', onEnd)
+            await s.return()
+
+            expect(onEnd).toHaveBeenCalledTimes(1)
+        })
+
+        it('emits end + error with throw', async () => {
+            const testMessage = Msg()
+            const s = new MessageStream<typeof testMessage>(context)
+
+            const onEnd = jest.fn()
+            const onMessageStreamError = jest.fn()
+            s.on('end', onEnd)
+            s.on('error', onMessageStreamError)
+            const err = new Error(counterId('expected error'))
+            await s.throw(err)
+
+            expect(onEnd).toHaveBeenCalledTimes(1)
+            expect(onMessageStreamError).toHaveBeenCalledTimes(1)
+        })
+    })
+
     it('can collect', async () => {
         const testMessage = Msg()
         const s = new MessageStream<typeof testMessage>(context)
