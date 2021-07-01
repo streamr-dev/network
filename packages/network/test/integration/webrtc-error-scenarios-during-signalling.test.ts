@@ -24,13 +24,13 @@ describe('Signalling error scenarios', () => {
 
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 2000,
             newWebrtcConnectionTimeout: 4000
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 2000,
             newWebrtcConnectionTimeout: 4000
         })

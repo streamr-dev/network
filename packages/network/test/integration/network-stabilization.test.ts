@@ -36,7 +36,7 @@ describe('check network stabilization', () => {
             // eslint-disable-next-line no-await-in-loop
             const node = createNetworkNode({
                 id: `node-${i}`,
-                trackers: [tracker.getAddress()]
+                trackers: [tracker.getUrl()]
             })
             node.subscribe('stream', 0)
             nodes.push(node)

@@ -59,8 +59,8 @@ describe('WsServer&WsClient with no connections', () => {
         await wsEndpoint.stop()
     })
 
-    it('getAddress() gives websocket address', () => {
-        expect(wsEndpoint.getAddress()).toEqual('ws://127.0.0.1:30465')
+    it('getUrl() gives websocket address', () => {
+        expect(wsEndpoint.getUrl()).toEqual('ws://127.0.0.1:30465')
     })
 
     it('getRtts() is empty', () => {
@@ -89,8 +89,8 @@ describe('WsServer&WsClient with connections', () => {
         wsEndpoint = await setUpWsServer('peerId', 'tracker', 'Espoo', 30466)
         otherWsEndpoint = await setUpWsClient('otherPeerId', 'node', 'Helsinki')
         thirdWsEndpoint = await setUpWsClient('thirdPeerId', 'node', 'Helsinki')
-        await otherWsEndpoint.connect(wsEndpoint.getAddress())
-        await thirdWsEndpoint.connect(wsEndpoint.getAddress())
+        await otherWsEndpoint.connect(wsEndpoint.getUrl())
+        await thirdWsEndpoint.connect(wsEndpoint.getUrl())
     })
 
     afterAll(async () => {

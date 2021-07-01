@@ -47,7 +47,7 @@ describe('multi trackers', () => {
             port: 49002,
             id: 'trackerThree'
         })
-        const trackerAddresses = [trackerOne.getAddress(), trackerTwo.getAddress(), trackerThree.getAddress()]
+        const trackerAddresses = [trackerOne.getUrl(), trackerTwo.getUrl(), trackerThree.getUrl()]
         nodeOne = createNetworkNode({
             id: 'nodeOne',
             trackers: trackerAddresses

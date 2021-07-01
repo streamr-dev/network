@@ -26,12 +26,12 @@ describe('Check tracker instructions to node', () => {
 
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
 

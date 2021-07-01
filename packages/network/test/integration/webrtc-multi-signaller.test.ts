@@ -35,13 +35,13 @@ describe('WebRTC multisignaller test', () => {
         trackerNode1 = new TrackerNode(ep1)
         trackerNode2 = new TrackerNode(ep2)
 
-        trackerNode1.connectToTracker(tracker1.getAddress())
+        trackerNode1.connectToTracker(tracker1.getUrl())
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker1.getAddress())
+        trackerNode2.connectToTracker(tracker1.getUrl())
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode1.connectToTracker(tracker2.getAddress())
+        trackerNode1.connectToTracker(tracker2.getUrl())
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker2.getAddress())
+        trackerNode2.connectToTracker(tracker2.getUrl())
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
 
         const peerInfo1 = PeerInfo.newNode('node-1')

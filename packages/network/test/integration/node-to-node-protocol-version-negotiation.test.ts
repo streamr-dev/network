@@ -42,9 +42,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         trackerNode2 = new TrackerNode(wsEp2)
         trackerNode3 = new TrackerNode(wsEp3)
 
-        await trackerNode1.connectToTracker(tracker.getAddress())
-        await trackerNode2.connectToTracker(tracker.getAddress())
-        await trackerNode3.connectToTracker(tracker.getAddress())
+        await trackerNode1.connectToTracker(tracker.getUrl())
+        await trackerNode2.connectToTracker(tracker.getUrl())
+        await trackerNode3.connectToTracker(tracker.getUrl())
 
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(

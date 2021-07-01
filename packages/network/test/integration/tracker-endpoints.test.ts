@@ -46,7 +46,7 @@ describe('tracker endpoint', () => {
         })
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             location: {
                 country: 'CH',
                 city: 'Zug',
@@ -56,7 +56,7 @@ describe('tracker endpoint', () => {
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             location: {
                 country: 'FI',
                 city: 'Helsinki',

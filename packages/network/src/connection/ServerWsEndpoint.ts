@@ -151,7 +151,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
             }
         })
 
-        this.logger.trace('listening on %s', this.getAddress())
+        this.logger.trace('listening on %s', this.getUrl())
     }
 
     async stop(): Promise<void> {
@@ -164,7 +164,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         return new Promise((resolve) => setTimeout(resolve, 100))
     }
 
-    getAddress(): string {
+    getUrl(): string {
         return `ws://${this.serverHost}:${this.serverPort}`
     }
 

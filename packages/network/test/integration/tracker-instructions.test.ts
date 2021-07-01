@@ -28,12 +28,12 @@ describe('check tracker, nodes and statuses from nodes', () => {
         tracker.formAndSendInstructions = () => {}
         node1 = createNetworkNode({
             id: 'node1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
         node2 = createNetworkNode({
             id: 'node2',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
 

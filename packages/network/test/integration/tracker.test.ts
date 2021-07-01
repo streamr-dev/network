@@ -20,11 +20,11 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
         subscriberOne = createNetworkNode({
             id: 'subscriberOne',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         subscriberTwo = createNetworkNode({
             id: 'subscriberTwo',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
 
         subscriberOne.subscribe('stream-1', 0)

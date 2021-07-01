@@ -147,8 +147,8 @@ export class TrackerServer extends EventEmitter {
             .map((peerInfo) => peerInfo.peerId)
     }
 
-    getAddress(): string {
-        return this.endpoint.getAddress()
+    getUrl(): string {
+        return this.endpoint.getUrl()
     }
 
     resolveAddress(peerId: string): string | undefined {

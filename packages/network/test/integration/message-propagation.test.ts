@@ -24,22 +24,22 @@ describe('message propagation in network', () => {
 
         n1 = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
         n2 = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
         n3 = createNetworkNode({
             id: 'node-3',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
         n4 = createNetworkNode({
             id: 'node-4',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
 

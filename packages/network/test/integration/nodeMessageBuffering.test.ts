@@ -25,11 +25,11 @@ describe('message buffering of Node', () => {
 
         sourceNode = createNetworkNode({
             id: 'source-node',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         destinationNode = createNetworkNode({
             id: 'destination-node',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
 
         sourceNode.start()

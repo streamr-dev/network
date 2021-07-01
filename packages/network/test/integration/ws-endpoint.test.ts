@@ -35,7 +35,7 @@ describe('ws-endpoint', () => {
             //const nextEndpoint = i + 1 === 5 ? endpoints[0] : endpoints[i + 1]
 
             // eslint-disable-next-line no-await-in-loop
-            client.connect(endpoints[i].getAddress())
+            client.connect(endpoints[i].getUrl())
             clients.push(client)
         }
 
@@ -60,7 +60,7 @@ describe('ws-endpoint', () => {
         const e1 = waitForEvent(client, Event.PEER_CONNECTED)
         const e2 = waitForEvent(server, Event.PEER_CONNECTED)
 
-        client.connect(server.getAddress())
+        client.connect(server.getUrl())
 
         const clientArguments = await e1
         const serverArguments = await e2

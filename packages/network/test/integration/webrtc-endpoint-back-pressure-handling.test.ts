@@ -32,8 +32,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         const wsEp2 = new ClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
         trackerNode1 = new TrackerNode(wsEp1)
         trackerNode2 = new TrackerNode(wsEp2)
-        await trackerNode1.connectToTracker(tracker.getAddress())
-        await trackerNode2.connectToTracker(tracker.getAddress())
+        await trackerNode1.connectToTracker(tracker.getUrl())
+        await trackerNode2.connectToTracker(tracker.getUrl())
 
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(

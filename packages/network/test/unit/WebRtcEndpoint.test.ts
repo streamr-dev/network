@@ -34,7 +34,7 @@ describe('WebRtcEndpoint', () => {
         trackerNode1 = new TrackerNode(wsClient1)
         
         await Promise.all([
-            trackerNode1.connectToTracker(tracker.getAddress()),
+            trackerNode1.connectToTracker(tracker.getUrl()),
             waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
         ])
        
@@ -51,7 +51,7 @@ describe('WebRtcEndpoint', () => {
         trackerNode2 = new TrackerNode(wsClient2)
 
         await Promise.all([
-            trackerNode2.connectToTracker(tracker.getAddress()),
+            trackerNode2.connectToTracker(tracker.getUrl()),
             waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
         ])
 

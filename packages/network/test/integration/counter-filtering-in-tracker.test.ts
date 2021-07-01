@@ -45,8 +45,8 @@ describe('tracker: counter filtering', () => {
         const wsClient2 = new ClientWsEndpoint(peerInfo2)
 
         trackerNode2 = new TrackerNode(wsClient2)
-        trackerNode1.connectToTracker(tracker.getAddress())
-        trackerNode2.connectToTracker(tracker.getAddress())
+        trackerNode1.connectToTracker(tracker.getUrl())
+        trackerNode2.connectToTracker(tracker.getUrl())
 
         await Promise.all([
             waitForEvent(trackerNode1, TrackerNodeEvent.CONNECTED_TO_TRACKER),

@@ -21,7 +21,7 @@ describe('latency metrics', () => {
         metricsContext = new MetricsContext('node1')
         node = createNetworkNode({
             id: 'node1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             metricsContext
         })
 

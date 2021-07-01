@@ -31,8 +31,8 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
         originatorTrackerNode = new TrackerNode(originatorEndpoint)
         targetTrackerNode = new TrackerNode(targetEndpoint)
 
-        originatorTrackerNode.connectToTracker(tracker.getAddress())
-        targetTrackerNode.connectToTracker(tracker.getAddress())
+        originatorTrackerNode.connectToTracker(tracker.getUrl())
+        targetTrackerNode.connectToTracker(tracker.getUrl())
 
         await Promise.all([
             // @ts-expect-error private method

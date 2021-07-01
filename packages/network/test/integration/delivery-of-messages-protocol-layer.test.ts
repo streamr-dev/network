@@ -66,12 +66,12 @@ describe('delivery of messages in protocol layer', () => {
         trackerServer = new TrackerServer(wsEndpoint3)
 
         // Connect trackerNode <-> trackerServer
-        await trackerNode.connectToTracker(trackerServer.getAddress())
-        await trackerNode2.connectToTracker(trackerServer.getAddress())
+        await trackerNode.connectToTracker(trackerServer.getUrl())
+        await trackerNode2.connectToTracker(trackerServer.getUrl())
 
         // Connect trackerNode <-> Tracker
-        await trackerNode.connectToTracker(tracker.getAddress())
-        await trackerNode2.connectToTracker(tracker.getAddress())
+        await trackerNode.connectToTracker(tracker.getUrl())
+        await trackerNode2.connectToTracker(tracker.getUrl())
 
         // Connect nodeToNode1 <-> nodeToNode2
         nodeToNode1.connectToNode('node2', 'tracker')

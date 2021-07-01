@@ -25,15 +25,15 @@ describe('optimization: do not propagate to sender', () => {
         })
         n1 = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         n2 = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         n3 = createNetworkNode({
             id: 'node-3',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
 
         n1.start()
