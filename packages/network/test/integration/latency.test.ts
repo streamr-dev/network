@@ -3,6 +3,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
 
 import { MetricsContext, startNetworkNode, startTracker } from '../../src/composition'
+import {wait} from "streamr-test-utils"
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -17,7 +18,6 @@ describe('latency metrics', () => {
             port: 32910,
             id: 'tracker'
         })
-
         metricsContext = new MetricsContext('node1')
         node = await startNetworkNode({
             host: '127.0.0.1',
@@ -26,8 +26,6 @@ describe('latency metrics', () => {
             trackers: [tracker.getAddress()],
             metricsContext
         })
-
-        node.start()
     })
 
     afterEach(async () => {

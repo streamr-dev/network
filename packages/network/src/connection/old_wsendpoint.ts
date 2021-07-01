@@ -9,7 +9,6 @@ import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 import { WebSocketConnection } from './WebSocketConnection'
 
-
 export interface WebSocketConnectionFactory {
     createConnection(): WebSocketConnection
 }

@@ -15,7 +15,6 @@ afterEach(()=> {
 
 })
 
-
 describe('test starting startWebSocketServer', () => {
 /*
     test('wss using only port', async () => {
