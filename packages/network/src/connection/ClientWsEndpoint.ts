@@ -50,10 +50,6 @@ class WsConnection implements SharedConnection {
         return this.socket.bufferedAmount
     }
 
-    getRemoteAddress(): string {
-        return "" // TODO: how do we get remote address
-    }
-
     getReadyState(): 0 | 1 | 2 | 3 {
         return this.socket.readyState
     }
