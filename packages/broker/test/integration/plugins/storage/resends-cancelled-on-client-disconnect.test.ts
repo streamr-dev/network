@@ -20,7 +20,6 @@ import { createClient, createTestStream, StorageAssignmentEventManager, STREAMR_
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const trackerPort = 17750
-const networkNodePort = 17752
 const wsPort = 17753
 const mockServerPort = 17754
 const MOCK_DATA_MESSAGE_COUNT = 100
@@ -82,8 +81,6 @@ describe('resend cancellation', () => {
             id: 'tracker'
         })
         networkNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: networkNodePort,
             id: 'networkNode',
             trackers: [tracker.getAddress()],
         })

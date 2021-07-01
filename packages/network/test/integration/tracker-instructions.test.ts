@@ -14,10 +14,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
     const trackerPort = 32900
 
     let node1: NetworkNode
-    const port1 = 33971
-
     let node2: NetworkNode
-    const port2 = 33972
 
     const s1 = new StreamIdAndPartition('stream-1', 0)
 
@@ -30,15 +27,11 @@ describe('check tracker, nodes and statuses from nodes', () => {
         // @ts-expect-error private method
         tracker.formAndSendInstructions = () => {}
         node1 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: port1,
             id: 'node1',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200
         })
         node2 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: port2,
             id: 'node2',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200

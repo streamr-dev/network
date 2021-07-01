@@ -23,7 +23,6 @@ describe('check network stabilization', () => {
     let tracker: Tracker
     let nodes: NetworkNode[]
     const MAX_NODES = 10
-    const startingPort = 39001
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -36,8 +35,6 @@ describe('check network stabilization', () => {
         for (let i = 0; i < MAX_NODES; i++) {
             // eslint-disable-next-line no-await-in-loop
             const node = await startNetworkNode({
-                host: '127.0.0.1',
-                port: startingPort + i,
                 id: `node-${i}`,
                 trackers: [tracker.getAddress()]
             })

@@ -45,8 +45,6 @@ describe('tracker endpoint', () => {
             attachHttpEndpoints: true
         })
         nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 31751,
             id: 'node-1',
             trackers: [tracker.getAddress()],
             location: {
@@ -57,8 +55,6 @@ describe('tracker endpoint', () => {
             }
         })
         nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 31752,
             id: 'node-2',
             trackers: [tracker.getAddress()],
             location: {

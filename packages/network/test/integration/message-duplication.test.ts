@@ -25,8 +25,6 @@ describe('duplicate message detection and avoidance', () => {
             id: 'tracker'
         })
         contactNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30351,
             id: 'node-0',
             trackers: [tracker.getAddress()],
             stunUrls: []
@@ -35,36 +33,26 @@ describe('duplicate message detection and avoidance', () => {
 
         otherNodes = await Promise.all([
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 30352,
                 id: 'node-1',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 30353,
                 id: 'node-2',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 30354,
                 id: 'node-3',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 30355,
                 id: 'node-4',
                 trackers: [tracker.getAddress()],
                 stunUrls: []
             }),
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 30356,
                 id: 'node-5',
                 trackers: [tracker.getAddress()],
                 stunUrls: []

@@ -24,14 +24,10 @@ describe('message buffering of Node', () => {
         })
 
         sourceNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30321,
             id: 'source-node',
             trackers: [tracker.getAddress()]
         })
         destinationNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30322,
             id: 'destination-node',
             trackers: [tracker.getAddress()]
         })

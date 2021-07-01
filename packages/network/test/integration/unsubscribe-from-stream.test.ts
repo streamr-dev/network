@@ -21,15 +21,11 @@ describe('node unsubscribing from a stream', () => {
             id: 'tracker'
         })
         nodeA = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30451,
             id: 'a',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200
         })
         nodeB = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30452,
             id: 'b',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200

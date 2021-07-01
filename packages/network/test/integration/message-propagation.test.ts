@@ -24,29 +24,21 @@ describe('message propagation in network', () => {
 
         await Promise.all([
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 33312,
                 id: 'node-1',
                 trackers: [tracker.getAddress()],
                 disconnectionWaitTime: 200
             }),
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 33313,
                 id: 'node-2',
                 trackers: [tracker.getAddress()],
                 disconnectionWaitTime: 200
             }),
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 33314,
                 id: 'node-3',
                 trackers: [tracker.getAddress()],
                 disconnectionWaitTime: 200
             }),
             startNetworkNode({
-                host: '127.0.0.1',
-                port: 33315,
                 id: 'node-4',
                 trackers: [tracker.getAddress()],
                 disconnectionWaitTime: 200

@@ -11,7 +11,6 @@ import { Wallet } from 'ethers'
 const logger = new Logger(module)
 
 const TRACKER_PORT = 12411
-const NETWORK_PORT = 12412
 const LEGACY_WEBSOCKET_PORT = 12413
 const CLAIM_SERVER_PORT = 12414
 const MOCK_REWARD_CODE = 'mock-reward-code'
@@ -87,7 +86,6 @@ describe('TestnetMinerPlugin', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey: nodePrivateKey,
-            networkPort: NETWORK_PORT,
             trackerPort: TRACKER_PORT,
             wsPort: LEGACY_WEBSOCKET_PORT,
             extraPlugins: {

@@ -25,8 +25,6 @@ function runTracker(): Promise<Tracker> {
  */
 async function runPublisher(): Promise<NetworkNode> {
     const publisherNode: NetworkNode = await startNetworkNode({
-        host: '127.0.0.1',
-        port: 30301,
         id: 'publisherNode',
         trackers: ['ws://127.0.0.1:30300']
     })

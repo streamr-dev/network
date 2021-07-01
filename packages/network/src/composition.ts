@@ -27,29 +27,25 @@ export {
     NameDirectory
 }
 
-export interface TrackerOptions {
-    host: string
-    port: number
+export interface AbstractNodeOptions {
     id?: string
     name?: string
     location?: Location | null
-    attachHttpEndpoints?: boolean
-    maxNeighborsPerNode?: number
     metricsContext?: MetricsContext
     pingInterval?: number
+}
+
+export interface TrackerOptions extends AbstractNodeOptions {
+    host: string
+    port: number
+    attachHttpEndpoints?: boolean
+    maxNeighborsPerNode?: number
     privateKeyFileName?: string
     certFileName?: string
 }
 
-export interface NetworkNodeOptions {
-    host: string,
-    port: number,
+export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: string[],
-    id?: string,
-    name?: string,
-    location?: Location | null
-    metricsContext?: MetricsContext
-    pingInterval?: number,
     disconnectionWaitTime?: number,
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,

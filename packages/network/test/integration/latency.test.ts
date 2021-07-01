@@ -20,8 +20,6 @@ describe('latency metrics', () => {
 
         metricsContext = new MetricsContext('node1')
         node = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 32911,
             id: 'node1',
             trackers: [tracker.getAddress()],
             metricsContext

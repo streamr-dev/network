@@ -24,20 +24,14 @@ describe('optimization: do not propagate to sender', () => {
             id: 'tracker'
         })
         n1 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30411,
             id: 'node-1',
             trackers: [tracker.getAddress()]
         })
         n2 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30412,
             id: 'node-2',
             trackers: [tracker.getAddress()]
         })
         n3 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30413,
             id: 'node-3',
             trackers: [tracker.getAddress()]
         })

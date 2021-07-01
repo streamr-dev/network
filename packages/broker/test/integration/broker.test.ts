@@ -17,9 +17,6 @@ const httpPort = 12341
 const wsPort1 = 12351
 const wsPort2 = 12352
 const wsPort3 = 12353
-const networkPort1 = 12361
-const networkPort2 = 12362
-const networkPort3 = 12363
 const trackerPort = 12370
 
 describe('broker: end-to-end', () => {
@@ -49,7 +46,6 @@ describe('broker: end-to-end', () => {
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort1,
             trackerPort,
             httpPort: httpPort,
             wsPort: wsPort1,
@@ -60,7 +56,6 @@ describe('broker: end-to-end', () => {
         brokerNode1 = await startBroker({
             name: 'brokerNode1',
             privateKey: fastPrivateKey(),
-            networkPort: networkPort2,
             trackerPort,
             wsPort: wsPort2,
             streamrAddress: engineAndEditorAccount.address,
@@ -70,7 +65,6 @@ describe('broker: end-to-end', () => {
         brokerNode2 = await startBroker({
             name: 'brokerNode2',
             privateKey: fastPrivateKey(),
-            networkPort: networkPort3,
             trackerPort,
             wsPort: wsPort3,
             streamrAddress: engineAndEditorAccount.address,

@@ -25,15 +25,11 @@ describe('Check tracker instructions to node', () => {
         })
 
         nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30952,
             id: 'node-1',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200
         })
         nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30953,
             id: 'node-2',
             trackers: [tracker.getAddress()],
             disconnectionWaitTime: 200

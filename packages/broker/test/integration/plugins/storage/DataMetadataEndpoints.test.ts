@@ -8,8 +8,6 @@ import { Broker } from "../../../../src/broker"
 
 const httpPort1 = 12371
 const wsPort1 = 12372
-const networkPort1 = 12373
-const networkPort2 = 12374
 const trackerPort = 12375
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
@@ -43,8 +41,6 @@ describe('DataMetadataEndpoints', () => {
             id: 'tracker'
         })
         publisherNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: networkPort1,
             id: 'publisherNode',
             trackers: [tracker.getAddress()]
         })
@@ -52,7 +48,6 @@ describe('DataMetadataEndpoints', () => {
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort2,
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,

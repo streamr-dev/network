@@ -70,8 +70,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
 
     // Start network node
     const networkNode = await startNetworkNode({
-        host: config.network.hostname,
-        port: config.network.port,
         id: brokerAddress,
         name: networkNodeName,
         trackers,
@@ -170,7 +168,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     )
     await volumeLogger.start()
 
-    logger.info(`Network node '${networkNodeName}' running on ${config.network.hostname}:${config.network.port}`)
+    logger.info(`Network node '${networkNodeName}' running`)
     logger.info(`Ethereum address ${brokerAddress}`)
     logger.info(`Configured with trackers: ${trackers.join(', ')}`)
     logger.info(`Configured with Streamr: ${config.streamrUrl}`)

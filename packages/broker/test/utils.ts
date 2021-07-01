@@ -14,7 +14,6 @@ const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
 export function formConfig({
     name,
-    networkPort,
     trackerPort,
     privateKey,
     httpPort = null,
@@ -69,8 +68,6 @@ export function formConfig({
         ethereumPrivateKey: privateKey,
         network: {
             name,
-            hostname: '127.0.0.1',
-            port: networkPort,
             trackers: [
                 `ws://127.0.0.1:${trackerPort}`
             ],

@@ -13,8 +13,6 @@ program
     .version(CURRENT_VERSION)
     .option('--id <id>', 'Ethereum address / node id', undefined)
     .option('--nodeName <nodeName>', 'Human readble name for node', undefined)
-    .option('--port <port>', 'port', '30302')
-    .option('--ip <ip>', 'ip', '127.0.0.1')
     .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:27777'])
     .option('--streamIds <streamIds>', 'streamId to publish',  (value) => value.split(','), ['stream-0'])
     .option('--metrics <metrics>', 'log metrics', false)
@@ -23,13 +21,13 @@ program
     .description('Run publisher')
     .parse(process.argv)
 
-const id = program.opts().id || `PU${program.opts().port}`
+const id = program.opts().id || 'PU'
 const name = program.opts().nodeName || id
 const logger = new Logger(module)
 
 const noise = parseInt(program.opts().noise, 10)
 
-const messageChainId = `message-chain-id-${program.opts().port}`
+const messageChainId = 'message-chain-id'
 
 function generateString(length) {
     let result = ''
@@ -43,16 +41,14 @@ function generateString(length) {
 
 const metricsContext = new MetricsContext(id)
 startNetworkNode({
-    host: program.opts().ip,
-    port: program.opts().port,
     name,
     id,
     trackers: program.opts().trackers,
     metricsContext
 })
     .then((publisher) => {
-        logger.info('started publisher id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
-            id, name, program.opts().port, program.opts().ip, program.opts().trackers.join(', '),
+        logger.info('started publisher id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
+            id, name, program.opts().ip, program.opts().trackers.join(', '),
             program.opts().streamId, program.opts().intervalInMs, program.opts().metrics)
 
         publisher.start()

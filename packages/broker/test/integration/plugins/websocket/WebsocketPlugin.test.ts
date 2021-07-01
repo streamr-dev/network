@@ -8,7 +8,6 @@ import { createClient, startBroker, fastPrivateKey, createTestStream, createQueu
 const WEBSOCKET_PORT = 12400
 const LEGACY_WEBSOCKET_PORT = 12401
 const TRACKER_PORT = 12402
-const NETWORK_PORT = 12403
 
 const privateKey = fastPrivateKey()
 
@@ -35,7 +34,6 @@ describe('Websocket plugin', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey,
-            networkPort: NETWORK_PORT,
             trackerPort: TRACKER_PORT,
             wsPort: LEGACY_WEBSOCKET_PORT,
             extraPlugins: {

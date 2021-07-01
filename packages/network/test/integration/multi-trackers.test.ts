@@ -49,14 +49,10 @@ describe('multi trackers', () => {
         })
         const trackerAddresses = [trackerOne.getAddress(), trackerTwo.getAddress(), trackerThree.getAddress()]
         nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 49003,
             id: 'nodeOne',
             trackers: trackerAddresses
         })
         nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 49004,
             id: 'nodeTwo',
             trackers: trackerAddresses
         })

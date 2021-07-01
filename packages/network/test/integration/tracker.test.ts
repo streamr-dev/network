@@ -19,14 +19,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
             id: 'tracker'
         })
         subscriberOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 33371,
             id: 'subscriberOne',
             trackers: [tracker.getAddress()]
         })
         subscriberTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 33372,
             id: 'subscriberTwo',
             trackers: [tracker.getAddress()]
         })

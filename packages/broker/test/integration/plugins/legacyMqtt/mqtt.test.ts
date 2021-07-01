@@ -11,9 +11,6 @@ const httpPort3 = 12383
 const wsPort1 = 12391
 const wsPort2 = 12392
 const wsPort3 = 12393
-const networkPort1 = 12401
-const networkPort2 = 12402
-const networkPort3 = 12403
 const trackerPort = 12410
 const mqttPort1 = 12551
 const mqttPort2 = 12552
@@ -45,7 +42,6 @@ describe('mqtt: end-to-end', () => {
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: broker1Key,
-            networkPort: networkPort1,
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
@@ -54,7 +50,6 @@ describe('mqtt: end-to-end', () => {
         broker2 = await startBroker({
             name: 'broker2',
             privateKey: broker2Key,
-            networkPort: networkPort2,
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
@@ -63,7 +58,6 @@ describe('mqtt: end-to-end', () => {
         broker3 = await startBroker({
             name: 'broker3',
             privateKey: broker3Key,
-            networkPort: networkPort3,
             trackerPort,
             httpPort: httpPort3,
             wsPort: wsPort3,
