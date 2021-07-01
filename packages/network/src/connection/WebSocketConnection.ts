@@ -193,7 +193,6 @@ export abstract class WebSocketConnection extends ConnectionEmitter {
 	 * Subclass should call this method when it has received a message.
 	 */
 	protected emitMessage(msg: string): void {
-		this.baseLogger.info(msg)
 		if (msg == 'ping') {
 			this.pong()
 		} else if (msg == 'pong') {

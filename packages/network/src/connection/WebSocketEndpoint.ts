@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import { DisconnectionCode, DisconnectionReason, Event, IWsEndpoint } from './IWsEndpoint'
 import uWS from 'uWebSockets.js'
-import WebSocket from 'ws'
 import { PeerBook } from './PeerBook'
 import { PeerInfo, PeerType } from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
@@ -293,15 +292,12 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     getRtts(): Rtts {
         const rtts: Rtts = {}
         Object.entries(this.connections).forEach(([address, connection]) => {
-            const rtt = connection.getRtt()
-            this.logger.info('single rtt: '+rtt)     
+            const rtt = connection.getRtt()     
             const nodeId = this.peerBook.getPeerId(address)
             if (rtt !== undefined && rtt !== null) {
                 rtts[nodeId] = rtt
             }
         })
-        this.logger.info('connections: ' + JSON.stringify(Object.keys(this.connections)))
-        this.logger.info('rtts: ' + JSON.stringify(rtts))
         return rtts
     }
 

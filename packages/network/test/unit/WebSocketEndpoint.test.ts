@@ -28,7 +28,7 @@ async function setUpEndpoint(peerId: string, peerType: string, city: string, por
     )
     return wsEndpoint
 }
-/*
+
 describe('WebSocketEndpoint with no connections', () => {
     let wsEndpoint: WebSocketEndpoint
 
@@ -81,7 +81,7 @@ describe('WebSocketEndpoint with no connections', () => {
         }).toThrowError('Id otherPeerId not found in peer book')
     })
 })
-*/
+
 describe('WebSocketEndpoint with connections', () => {
     let wsEndpoint: WebSocketEndpoint
     let otherWsEndpoint: WebSocketEndpoint
@@ -102,13 +102,12 @@ describe('WebSocketEndpoint with connections', () => {
             thirdWsEndpoint.stop()
         ])
     })
-    /*
+    
     it('isConnected() is not empty', () => {
         expect(wsEndpoint.isConnected('ws://127.0.0.1:30467')).toEqual(true)
         expect(wsEndpoint.isConnected('ws://127.0.0.1:30468')).toEqual(true)
     })
-    */
-
+    
     it('getRtts() is not empty', async () => {
         await waitForCondition(() => Object.entries(wsEndpoint.getRtts()).length == 2)
         const rtts = wsEndpoint.getRtts()
@@ -117,7 +116,6 @@ describe('WebSocketEndpoint with connections', () => {
         expect(rtts.thirdPeerId).toBeGreaterThanOrEqual(0)
     })
 
-    /*
     it('getPeers() is not empty', () => {
         const peers = wsEndpoint.getPeers()
         expect([...peers.keys()]).toEqual([
@@ -126,7 +124,6 @@ describe('WebSocketEndpoint with connections', () => {
         ])
     })
     
-
     it('getPeerInfos() is not empty', () => {
         expect(wsEndpoint.getPeerInfos()).toEqual([
             PeerInfo.newNode(
@@ -156,5 +153,5 @@ describe('WebSocketEndpoint with connections', () => {
 
     it('resolveAddress throws error', () => {
         expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('ws://127.0.0.1:30467')
-    })*/
+    })
 })
