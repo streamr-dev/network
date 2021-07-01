@@ -4,6 +4,7 @@ import { Rtts } from '../identifiers'
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
     PEER_DISCONNECTED = 'streamr:peer:disconnect',
+    CLOSED_DUPLICATE_SOCKET_TO_PEER = 'streamr:peer:closeduplicate',
     MESSAGE_RECEIVED = 'streamr:message-received',
     HIGH_BACK_PRESSURE = 'streamr:high-back-pressure',
     LOW_BACK_PRESSURE = 'streamr:low-back-pressure'

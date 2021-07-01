@@ -12,7 +12,6 @@ import { ClientWebSocketConnection } from './ClientWebSocketConnection'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { WsConnectionFactory } from './WsConnection'
 
-
 export interface ClientWebSocketConnectionFactory {
     createConnection(opts: ConstructorOptions): ClientWebSocketConnection
 }
@@ -20,8 +19,6 @@ export interface ClientWebSocketConnectionFactory {
 const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 const LOW_BACK_PRESSURE = 1024 * 1024
 const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
-
-
 
 export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     private stopped = false
@@ -123,6 +120,7 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
             if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
                 this.metrics.record('open:duplicateSocket', 1)
                 this.logger.trace('socket %s dropped from other side because existing connection already exists')
+                this.emit(Event.CLOSED_DUPLICATE_SOCKET_TO_PEER, connection.getPeerInfo(), reason)
                 return
             }
 
@@ -136,10 +134,14 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
             }
 
             this.logger.trace('removed %s [%s] from connection list', connection.getPeerInfo(), connection.getPeerAddress())
-            if (connection.getPeerInfo()) {
-                this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
-            }
+            
             connection.removeAllListeners()
+            if (connection.getPeerInfo()) {
+                this.logger.trace('emitting Event.PEER_DISCONNECTED about %s [%s]', connection.getPeerInfo(), connection.getPeerAddress())
+                this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
+            } else {
+                this.logger.trace('removed connection but did not emit Event.PEER_DISCONNECTED because connection.getPeerInfo() was falsy')
+            }
             this.metrics.record('close', 1)
         })
         connection.on('lowBackPressure', () => {
@@ -173,7 +175,7 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
                         this.metrics.record('msgSpeed', 1)
                         this.metrics.record('msgOutSpeed', 1)
                         resolve(ws.getPeerId())
-                    }).catch(err => {
+                    }).catch((err) => {
                         this.metrics.record('sendFailed', 1)
                         ws.close(DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
                         reject(err)
@@ -222,7 +224,6 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     }
 
     connect(peerAddress: string): Promise<string> {
-
         if (this.stopped) {
             return Promise.reject(new Error('WebSocketEndpoint has been stopped'))
         }
@@ -239,7 +240,7 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
             } else if (deferredConnectionAttempt) {
                 return deferredConnectionAttempt.getPromise()
             } else {
-                throw new Error(`unexpected deferedConnectionAttempt == null ${connection.getPeerId()}`)
+                throw new Error(`unexpected deferedConnectionAttempt == null in connection to ${connection.getPeerId()}`)
             }
         }
 
@@ -307,7 +308,6 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
         return `ws://${this.serverHost}:${this.serverPort}`
     }
 
-
     getPeerInfo(): Readonly<PeerInfo> {
         return this.peerInfo
     }
@@ -328,12 +328,11 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
 
     getPeers(): ReadonlyMap<string, WebSocketConnection> {
         const map = new Map()
-        for (let addr in this.connections) {
+        for (const addr in this.connections) {
             map.set(addr, this.connections[addr])
         }
         return map
     }
-
 
     private onNewConnection(
         ws: WebSocketConnection,
@@ -359,7 +358,6 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     }
 
 }
-
 
 export async function startEndpoint(
     host: string,

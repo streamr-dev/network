@@ -1,47 +1,28 @@
 import WebSocket from 'ws'
-
-import uWS from 'uWebSockets.js'
-
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { WebSocketEndpoint } from '../../src/connection/WebSocketEndpoint'
-import { UWsServer } from '../connection/UWsServer'
+import { UWsServer } from '../../src/connection/UWsServer'
+
 const wssPort = 7777
+const WS_BUFFER_SIZE = 4096
 
 beforeEach(()=> {
-
 })
 
 afterEach(()=> {
-
 })
 
-
 describe('test starting startWebSocketServer', () => {
-/*
-    test('wss using only port', async () => {
-        const [wss, listenSocket] = await startWebSocketServer(null, wssPort)
-        expect(wss.constructor.name).toBe('uWS.App')
-        expect(typeof listenSocket).toBe('object')
-        uWS.us_listen_socket_close(listenSocket)
-    })
-
-    test('wss using host and port', async () => {
-        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort)
-        expect(wss.constructor.name).toBe('uWS.App')
-        expect(typeof listenSocket).toBe('object')
-        uWS.us_listen_socket_close(listenSocket)
-    })
-
-    test('wss raises error', () => {
-        return expect(startWebSocketServer(null, null as any))
-            .rejects
-            .toEqual('Text and data can only be passed by String, ArrayBuffer or TypedArray.')
-    })
 
     test('receives unencrypted connections', (done) => {
-        startWebSocketServer('127.0.0.1', wssPort).then(([wss, listenSocket]) => {
-            const peerInfo = PeerInfo.newTracker('id', 'name')
-            const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
+        const uwsServer = new UWsServer(PeerInfo.newTracker('tracker'),
+            `ws://127.0.0.1:${wssPort}`,
+            '127.0.0.1',
+            wssPort,
+            undefined,
+            undefined,
+            WS_BUFFER_SIZE)
+
+        uwsServer.start().then(() => {
             const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
                 undefined, {
                     headers: {
@@ -51,7 +32,7 @@ describe('test starting startWebSocketServer', () => {
                 })
             ws.on('open', async () => {
                 ws.close()
-                await endpoint.stop()
+                await uwsServer.stop()
                 done()
             })
             ws.on('error', (err) => {
@@ -59,18 +40,18 @@ describe('test starting startWebSocketServer', () => {
             })
             return true
         }).catch((err) => done(err))
-
     })
 
     test('receives encrypted connections', (done) => {
-        startWebSocketServer(
-            '127.0.0.1',
-            wssPort,
-            'test/fixtures/key.pem',
-            'test/fixtures/cert.pem'
-        ).then(([wss, listenSocket]) => {
-            const peerInfo = PeerInfo.newTracker('id', 'name')
-            const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, undefined)
+        const uwsServer = new UWsServer(PeerInfo.newTracker('tracker'),
+        `ws://127.0.0.1:${wssPort}`,
+        '127.0.0.1',
+        wssPort,
+        'test/fixtures/key.pem',
+        'test/fixtures/cert.pem',
+        WS_BUFFER_SIZE)
+
+    uwsServer.start().then(() => {
             const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
                 undefined, {
                     rejectUnauthorized: false, // needed to accept self-signed certificate
@@ -81,7 +62,7 @@ describe('test starting startWebSocketServer', () => {
                 })
             ws.on('open', async () => {
                 ws.close()
-                await endpoint.stop()
+                await uwsServer.stop()
                 done()
             })
             ws.on('error', (err) => {
@@ -89,10 +70,11 @@ describe('test starting startWebSocketServer', () => {
             })
             return true
         }).catch((err) => done(err))
-
     })
-*/
+
     /**
+     * (NOTE: the description below may not apply to the current version of the test anymore)
+     * 
      * This test replicates weird behaviour I encountered while working on "NET-56: Make production
      * tracker run under SSL". When messages arrive to (pure) ws client from a SSL-enabled uWS server,
      * they arrive as type Buffer and not String... which is different to when SSL is disabled...

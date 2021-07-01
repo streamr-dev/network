@@ -1,16 +1,16 @@
-import { ConstructorOptions } from './WebSocketConnection';
+import { ConstructorOptions } from './WebSocketConnection'
 import WebSocket from 'ws'
-import { PeerInfo, PeerType } from './PeerInfo';
-import { Logger } from '../helpers/Logger';
-import { NameDirectory } from '../NameDirectory';
-import { DisconnectionCode, DisconnectionReason } from './IWsEndpoint';
-import { ClientWebSocketConnection } from './ClientWebSocketConnection';
-import { ClientWebSocketConnectionFactory } from './WebSocketEndpoint';
+import { PeerInfo, PeerType } from './PeerInfo'
+import { Logger } from '../helpers/Logger'
+import { NameDirectory } from '../NameDirectory'
+import { DisconnectionCode, DisconnectionReason } from './IWsEndpoint'
+import { ClientWebSocketConnection } from './ClientWebSocketConnection'
+import { ClientWebSocketConnectionFactory } from './WebSocketEndpoint'
 
 export const WsConnectionFactory: ClientWebSocketConnectionFactory = Object.freeze({
-	createConnection(opts: ConstructorOptions): ClientWebSocketConnection {
-		return new WsConnection(opts)
-	}
+    createConnection(opts: ConstructorOptions): ClientWebSocketConnection {
+        return new WsConnection(opts)
+    }
 })
 
 export class WsConnection extends ClientWebSocketConnection {
@@ -19,14 +19,14 @@ export class WsConnection extends ClientWebSocketConnection {
 	private ws: WebSocket | null = null
 
 	constructor(opts: ConstructorOptions) {
-		super(opts)
-		this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
+	    super(opts)
+	    this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
 	}
 
 	private toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
-		return {
-			'streamr-peer-id': peerInfo.peerId
-		}
+	    return {
+	        'streamr-peer-id': peerInfo.peerId
+	    }
 	}
 
 	doConnect(): void {
@@ -68,20 +68,20 @@ export class WsConnection extends ClientWebSocketConnection {
 				this.emitMessage(message.toString())
 			})
 
-			this.ws = ws
+	        this.ws = ws
 
-		} catch (err) {
-			this.logger.trace('failed to connect to %s, error: %o', this.targetPeerAddress, err)
-			this.emitError(err)
-		}
+	    } catch (err) {
+	        this.logger.trace('failed to connect to %s, error: %o', this.targetPeerAddress, err)
+	        this.emitError(err)
+	    }
 	}
 
 	protected doClose(code: DisconnectionCode, reason: DisconnectionReason): void {
-		try {
-			this.ws?.close(code, reason)
-		} catch (e) {
-			this.logger.error('failed to close ws, reason: %s', e)
-		}
+	    try {
+	        this.ws?.close(code, reason)
+	    } catch (e) {
+	        this.logger.error('failed to close ws, reason: %s', e)
+	    }
 	}
 
 	protected doSendMessage(message: string): Promise<void> {
@@ -103,17 +103,17 @@ export class WsConnection extends ClientWebSocketConnection {
 	}
 
 	getBufferedAmount(): number {
-		if (this.ws)
-			return this.ws?.bufferedAmount
-		return 0
+	    if (this.ws)
+	        {return this.ws?.bufferedAmount}
+	    return 0
 	}
 
 	isOpen(): boolean {
-		if (!this.ws || this.ws.readyState != this.ws.OPEN) {
-			return false
-		} else {
-			return true
-		}
+	    if (!this.ws || this.ws.readyState != this.ws.OPEN) {
+	        return false
+	    } else {
+	        return true
+	    }
 	}
 
 	getReadyState(): number | undefined {

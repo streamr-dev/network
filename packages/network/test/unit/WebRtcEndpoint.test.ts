@@ -118,6 +118,7 @@ describe('WebRtcEndpoint', () => {
 
         })
 
+        
         it('connection between nodes is established when both nodes invoke non-tracker-instructed connect()', async () => {
             const promise = Promise.all([
                 waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
@@ -442,5 +443,6 @@ describe('WebRtcEndpoint', () => {
                 await endpoint1.send('node-2', payload)
             }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
         })
+        
     })
 })

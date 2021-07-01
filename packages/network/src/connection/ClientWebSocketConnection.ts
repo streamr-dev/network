@@ -1,16 +1,16 @@
-import { ConstructorOptions, WebSocketConnection } from "./WebSocketConnection";
+import { ConstructorOptions, WebSocketConnection } from "./WebSocketConnection"
 import { Logger } from "../helpers/Logger"
-import { NameDirectory } from "../NameDirectory";
+import { NameDirectory } from "../NameDirectory"
 
 export abstract class ClientWebSocketConnection extends WebSocketConnection {
-	//private _logger: Logger
+    //private _logger: Logger
 
-	constructor(opts: ConstructorOptions) {
-		super(opts)
-		//this._logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
-	}
+    constructor(opts: ConstructorOptions) {
+        super(opts)
+        //this._logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
+    }
 	
-	connect(): void {
+    connect(): void {
         if (this.isFinished) {
             throw new Error('Connection already closed.')
         }
