@@ -32,7 +32,7 @@ describe('ping-pong test between broker and clients', () => {
     beforeEach(async () => {
         networkNode = createNetworkNode({
             id: 'networkNode',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         networkNode.start()
         metricsContext = new MetricsContext(null as any)

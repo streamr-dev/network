@@ -42,7 +42,7 @@ describe('DataMetadataEndpoints', () => {
         })
         publisherNode = createNetworkNode({
             id: 'publisherNode',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         publisherNode.start()
         storageNode = await startBroker({
@@ -53,7 +53,7 @@ describe('DataMetadataEndpoints', () => {
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         client1 = createClient(wsPort1)
         assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)

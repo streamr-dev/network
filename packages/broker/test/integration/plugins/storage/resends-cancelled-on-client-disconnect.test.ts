@@ -82,7 +82,7 @@ describe('resend cancellation', () => {
         })
         networkNode = createNetworkNode({
             id: 'networkNode',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
         })
         const storageNodeAddress = Wallet.createRandom().address
         const storageNodeRegistry = StorageNodeRegistry.createInstance(
