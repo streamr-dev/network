@@ -127,6 +127,41 @@ describe('PushQueue', () => {
             expect(q.length).toBe(0)
         })
 
+        it('ends if source ends', async () => {
+            expect.assertions(14)
+            const source = PushQueue.from(generate())
+            const q = PushQueue.from(source)
+            expect(q.length).toBe(0) // can't tell length upfront with async iterable
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === 3) {
+                    source.end()
+                    expect(source.isReadable()).toBe(true)
+                    expect(source.isWritable()).toBe(false)
+                    expect(q.isReadable()).toBe(true)
+                    expect(q.isWritable()).toBe(true)
+                }
+            }
+            expect(source.isReadable()).toBe(false)
+            expect(source.isWritable()).toBe(false)
+            expect(q.isReadable()).toBe(false)
+            expect(q.isWritable()).toBe(false)
+
+            expect(msgs).toEqual(expected.slice(0, 3))
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+            expect(source.length).toBe(0)
+
+            // these should have no effect
+            q.push('c')
+            source.push('c')
+            expect(q.length).toBe(0)
+            expect(source.length).toBe(0)
+        })
+
         it('errors if source errors', async () => {
             expect.assertions(5)
             const err = new Error('expected')
