@@ -2,7 +2,6 @@ import { MessageLayer, ControlLayer, TrackerLayer } from 'streamr-client-protoco
 import { waitForEvent } from 'streamr-test-utils'
 
 import { WebRtcEndpoint } from "../../src/connection/WebRtcEndpoint"
-import { startServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { StreamIdAndPartition } from '../../src/identifiers'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
@@ -13,6 +12,7 @@ import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProto
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
 import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { startServerWsEndpoint } from '../utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 

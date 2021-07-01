@@ -3,7 +3,7 @@ import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
 import { Location } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
-import { startServerWsEndpoint } from './connection/ServerWsEndpoint'
+import { ServerWsEndpoint, startWebSocketServer } from './connection/ServerWsEndpoint'
 import { Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
@@ -53,7 +53,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     stunUrls?: string[]
 }
 
-export function startTracker({
+export const startTracker = async ({
     host,
     port,
     id = uuidv4(),
@@ -65,32 +65,25 @@ export function startTracker({
     pingInterval,
     privateKeyFileName,
     certFileName,
-}: TrackerOptions): Promise<Tracker> {
+}: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
-    return startServerWsEndpoint(
-        host,
-        port,
+    const [wss, listenSocket] = await startWebSocketServer(host, port, privateKeyFileName, certFileName)
+    const endpoint = new ServerWsEndpoint(host, port, wss, listenSocket, peerInfo, metricsContext, pingInterval)
+
+    const tracker = new Tracker({
         peerInfo,
+        protocols: {
+            trackerServer: new TrackerServer(endpoint)
+        },
         metricsContext,
-        pingInterval,
-        privateKeyFileName,
-        certFileName
-    ).then((endpoint) => {
-        const tracker = new Tracker({
-            peerInfo,
-            protocols: {
-                trackerServer: new TrackerServer(endpoint)
-            },
-            metricsContext,
-            maxNeighborsPerNode,
-        })
-
-        if (attachHttpEndpoints) {
-            trackerHttpEndpoints(endpoint.getWss(), tracker, metricsContext)
-        }
-
-        return tracker
+        maxNeighborsPerNode,
     })
+
+    if (attachHttpEndpoints) {
+        trackerHttpEndpoints(wss, tracker, metricsContext)
+    }
+
+    return tracker
 }
 
 export const createNetworkNode = ({

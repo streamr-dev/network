@@ -168,10 +168,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         return `ws://${this.serverHost}:${this.serverPort}`
     }
 
-    getWss(): uWS.TemplatedApp {
-        return this.wss
-    }
-
     getPeerInfos(): PeerInfo[] {
         return Array.from(this.connectionById.values())
             .map((connection) => connection.peerInfo)
@@ -245,19 +241,5 @@ export function startWebSocketServer(
         } else {
             server.listen(port, cb)
         }
-    })
-}
-
-export async function startServerWsEndpoint(
-    host: string,
-    port: number,
-    peerInfo: PeerInfo,
-    metricsContext?: MetricsContext,
-    pingInterval?: number | undefined,
-    privateKeyFileName?: string | undefined,
-    certFileName?: string | undefined,
-): Promise<ServerWsEndpoint> {
-    return startWebSocketServer(host, port, privateKeyFileName, certFileName).then(([wss, listenSocket]) => {
-        return new ServerWsEndpoint(host, port, wss, listenSocket, peerInfo, metricsContext, pingInterval)
     })
 }

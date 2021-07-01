@@ -1,7 +1,8 @@
-import { startServerWsEndpoint, ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
+import { startServerWsEndpoint } from '../utils'
 import { waitForCondition } from 'streamr-test-utils'
 
 async function setUpWsClient(peerId: string, peerType: string, city: string): Promise<ClientWsEndpoint> {
