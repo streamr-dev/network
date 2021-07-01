@@ -1,17 +1,17 @@
 import WebSocket from 'ws'
 import { waitForCondition } from 'streamr-test-utils'
-import { Todo } from '../../../../src/types'
 import { startBroker, getWsUrlWithControlAndMessageLayerVersions } from '../../../utils'
+import { Broker } from '../../../broker'
 
 describe('websocket server', () => {
     let ws: WebSocket
-    let broker: Todo
+    let broker: Broker
 
     afterEach(async () => {
         if (ws) {
             ws.terminate()
         }
-        await broker.close()
+        await broker.stop()
     })
 
     it('receives unencrypted connections', (done) => {

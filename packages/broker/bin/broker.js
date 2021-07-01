@@ -4,7 +4,7 @@ const fs = require('fs')
 const program = require('commander')
 
 const CURRENT_VERSION = require('../package.json').version
-const { startBroker } = require('../dist/src/broker')
+const { createBroker } = require('../dist/src/broker')
 
 program
     .version(CURRENT_VERSION)
@@ -27,9 +27,12 @@ program
             config.network.id = program.opts().networkId
         }
 
-        await startBroker(config, true).catch((err) => {
+        try {
+            const broker = await createBroker(config, true)
+            await broker.start()
+        } catch (err) {
             console.error(err)
             process.exit(1)
-        })
+        }
     })
     .parse(process.argv)

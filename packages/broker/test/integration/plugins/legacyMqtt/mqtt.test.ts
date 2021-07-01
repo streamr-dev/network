@@ -3,6 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../../../../src/types'
+import { Broker } from '../../../broker'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../../../utils'
 
 const httpPort1 = 12381
@@ -21,9 +22,9 @@ const broker3Key = '0xa417da20e3afeb69544585c6b44b95ad4d987f38cf257f4a53eab415cc
 
 describe('mqtt: end-to-end', () => {
     let tracker: Todo
-    let broker1: Todo
-    let broker2: Todo
-    let broker3: Todo
+    let broker1: Broker
+    let broker2: Broker
+    let broker3: Broker
     const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
@@ -93,9 +94,9 @@ describe('mqtt: end-to-end', () => {
         ])
 
         await Promise.all([
-            broker1.close(),
-            broker2.close(),
-            broker3.close(),
+            broker1.stop(),
+            broker2.stop(),
+            broker3.stop(),
         ])
     }, 15000)
 

@@ -2,6 +2,7 @@ import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
+import { Broker } from '../broker'
 import { Todo } from '../types'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
 
@@ -12,7 +13,7 @@ const mqttPort = 17751
 
 describe('local propagation', () => {
     let tracker: Tracker
-    let broker: Todo
+    let broker: Broker
     const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
@@ -58,7 +59,7 @@ describe('local propagation', () => {
             client2.ensureDisconnected(),
             mqttClient2.end(true),
             mqttClient1.end(true),
-            broker.close()
+            broker.stop()
         ])
     })
 

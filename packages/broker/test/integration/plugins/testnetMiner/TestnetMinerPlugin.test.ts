@@ -112,7 +112,7 @@ describe('TestnetMinerPlugin', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            broker?.close(),
+            broker?.stop(),
             tracker?.stop(),
             claimServer?.stop()
         ])

@@ -2,6 +2,7 @@ import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
+import { Broker } from '../broker'
 import { Todo } from '../types'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
 
@@ -15,8 +16,8 @@ const mqttPort2 = 13552
 
 describe('SubscriptionManager', () => {
     let tracker: Todo
-    let broker1: Todo
-    let broker2: Todo
+    let broker1: Broker
+    let broker2: Broker
     const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
@@ -66,8 +67,8 @@ describe('SubscriptionManager', () => {
         await mqttClient2.end(true)
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
-        await broker1.close()
-        await broker2.close()
+        await broker1.stop()
+        await broker2.stop()
         await tracker.stop()
     })
 

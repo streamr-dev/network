@@ -16,7 +16,8 @@ import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
-import { StorageNodeRegistry } from "./StorageNodeRegistry"
+import { StorageNodeRegistry } from './StorageNodeRegistry'
+import { Todo } from './types'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -24,64 +25,55 @@ const logger = new Logger(module)
 export interface Broker {
     getNeighbors: () => readonly string[]
     getStreams: () => readonly string[]
-    close: () => Promise<unknown>
+    start: () => Promise<unknown>
+    stop: () => Promise<unknown>
 }
 
-export const startBroker = async (config: Config): Promise<Broker> => {
-    validateConfig(config, BROKER_CONFIG_SCHEMA)
-
-    logger.info(`Starting broker version ${CURRENT_VERSION}`)
-
-    const networkNodeName = config.network.name
-    const metricsContext = new MetricsContext(networkNodeName)
-
-    // Ethereum wallet retrieval
-    const wallet = new Wallet(config.ethereumPrivateKey)
-    if (!wallet) {
-        throw new Error('Could not resolve Ethereum address from given config.ethereumPrivateKey')
-    }
-    const brokerAddress = wallet.address
-
-    // Form tracker list
-    let trackers: string[]
+const getTrackers = async (config: Config): Promise<string[]> => {
     if ((config.network.trackers as NetworkSmartContract).contractAddress) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
             contractAddress: (config.network.trackers as NetworkSmartContract).contractAddress,
             jsonRpcProvider: (config.network.trackers as NetworkSmartContract).jsonRpcProvider
         })
-        trackers = registry.getAllTrackers().map((record) => record.ws)
+        return registry.getAllTrackers().map((record) => record.ws)
     } else {
-        trackers = config.network.trackers as string[]
+        return config.network.trackers as string[]
     }
+}
 
-    // Form storage node list
-    let storageNodes: StorageNodeRegistryItem[]
+const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[]> => {
     if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
         const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
             contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
             jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
         })
-        storageNodes = registry.getAllStorageNodes()
+        return registry.getAllStorageNodes()
     } else {
-        storageNodes = config.storageNodeConfig.registry as StorageNodeRegistryItem[]
+        return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
     }
+}
 
-    const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
-
-    // Start network node
-    const networkNode = createNetworkNode({
-        id: brokerAddress,
-        name: networkNodeName,
-        trackers,
-        location: config.network.location,
-        metricsContext
+const createStreamMessageValidator = (config: Config): Todo => {
+    // Validator only needs public information, so use unauthenticated client for that
+    const unauthenticatedClient = new StreamrClient({
+        restUrl: config.streamrUrl + '/api/v1',
     })
-    networkNode.start()
+    return new Utils.CachingStreamMessageValidator({
+        getStream: (sId) => unauthenticatedClient.getStreamValidationInfo(sId),
+        isPublisher: (address, sId) => unauthenticatedClient.isStreamPublisher(sId, address),
+        isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
+    })
+}
 
+const createVolumeLogger = (
+    config: Config,
+    metricsContext: MetricsContext,
+    brokerAddress: string,
+    storageNodes: StorageNodeRegistryItem[]
+): VolumeLogger => {
     // Set up reporting to Streamr stream
     let client: StreamrClient | undefined
     let legacyStreamId: string | undefined
-
     if (config.reporting.streamr || (config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.enabled)) {
         const targetStorageNode = config.reporting.perNodeMetrics!.storageNode
         const storageNodeRegistryItem = storageNodes.find((n) => n.address === targetStorageNode)
@@ -105,20 +97,53 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         } else {
             logger.info('StreamrClient reporting disabled')
         }
-    } else {
-        logger.info('StreamrClient and perNodeMetrics disabled')
     }
 
-    // Validator only needs public information, so use unauthenticated client for that
-    const unauthenticatedClient = new StreamrClient({
-        restUrl: config.streamrUrl + '/api/v1',
+    let reportingIntervals
+    let storageNodeAddress
+    if (config.reporting && config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.intervals) {
+        reportingIntervals = config.reporting.perNodeMetrics.intervals
+        storageNodeAddress = config.reporting.perNodeMetrics.storageNode
+    }
+
+    return new VolumeLogger(
+        config.reporting.intervalInSeconds,
+        metricsContext,
+        client,
+        legacyStreamId,
+        brokerAddress,
+        reportingIntervals,
+        storageNodeAddress
+    )
+}
+
+export const createBroker = async (config: Config): Promise<Broker> => {
+    validateConfig(config, BROKER_CONFIG_SCHEMA)
+
+    const networkNodeName = config.network.name
+    const metricsContext = new MetricsContext(networkNodeName)
+
+    // Ethereum wallet retrieval
+    const wallet = new Wallet(config.ethereumPrivateKey)
+    if (!wallet) {
+        throw new Error('Could not resolve Ethereum address from given config.ethereumPrivateKey')
+    }
+    const brokerAddress = wallet.address
+
+    const trackers = await getTrackers(config)
+
+    const storageNodes = await getStorageNodes(config)
+    const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
+
+    const networkNode = createNetworkNode({
+        id: brokerAddress,
+        name: networkNodeName,
+        trackers,
+        location: config.network.location,
+        metricsContext
     })
-    const streamMessageValidator = new Utils.CachingStreamMessageValidator({
-        getStream: (sId) => unauthenticatedClient.getStreamValidationInfo(sId),
-        isPublisher: (address, sId) => unauthenticatedClient.isStreamPublisher(sId, address),
-        isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
-    })
-    const publisher = new Publisher(networkNode, streamMessageValidator, metricsContext)
+
+    const publisher = new Publisher(networkNode, createStreamMessageValidator(config), metricsContext)
     const subscriptionManager = new SubscriptionManager(networkNode)
     const localStreamrClient = createLocalStreamrClient(config)
     const apiAuthenticator = createApiAuthenticator(config)
@@ -138,46 +163,32 @@ export const startBroker = async (config: Config): Promise<Broker> => {
         return createPlugin(name, pluginOptions)
     })
 
-    await Promise.all(plugins.map((plugin) => plugin.start()))
-    const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
+    const volumeLogger = createVolumeLogger(config, metricsContext, brokerAddress, storageNodes)
+
     let httpServer: HttpServer|HttpsServer|undefined
-    if (httpServerRoutes.length > 0) {
-        if (config.httpServer === null) {
-            throw new Error('HTTP server config not defined')
-        }
-        httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
-    }
-
-    let reportingIntervals
-    let storageNodeAddress
-
-    if (config.reporting && config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.intervals) {
-        reportingIntervals = config.reporting.perNodeMetrics.intervals
-        storageNodeAddress = config.reporting.perNodeMetrics.storageNode
-    }
-
-    // Start logging facilities
-    const volumeLogger = new VolumeLogger(
-        config.reporting.intervalInSeconds,
-        metricsContext,
-        client,
-        legacyStreamId,
-        brokerAddress,
-        reportingIntervals,
-        storageNodeAddress
-    )
-    await volumeLogger.start()
-
-    logger.info(`Network node '${networkNodeName}' running`)
-    logger.info(`Ethereum address ${brokerAddress}`)
-    logger.info(`Configured with trackers: ${trackers.join(', ')}`)
-    logger.info(`Configured with Streamr: ${config.streamrUrl}`)
-    logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
     return {
         getNeighbors: () => networkNode.getNeighbors(),
         getStreams: () => networkNode.getStreams(),
-        close: async () => {
+        start: async () => {
+            logger.info(`Starting broker version ${CURRENT_VERSION}`)
+            await networkNode.start()
+            await Promise.all(plugins.map((plugin) => plugin.start()))
+            const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
+            if (httpServerRoutes.length > 0) {
+                if (config.httpServer === null) {
+                    throw new Error('HTTP server config not defined')
+                }
+                httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
+            }
+            await volumeLogger.start()
+            logger.info(`Network node '${networkNodeName}' running`)
+            logger.info(`Ethereum address ${brokerAddress}`)
+            logger.info(`Configured with trackers: ${trackers.join(', ')}`)
+            logger.info(`Configured with Streamr: ${config.streamrUrl}`)
+            logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
+        },
+        stop: async () => {
             if (httpServer !== undefined) {
                 await stopServer(httpServer)
             }
