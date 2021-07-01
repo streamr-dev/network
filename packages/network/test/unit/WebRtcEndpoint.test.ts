@@ -30,7 +30,7 @@ describe('WebRtcEndpoint', () => {
         })
 
         peerInfo1 = PeerInfo.newNode('node-1')
-        wsClient1 = await startClientWsEndpoint(peerInfo1, null)
+        wsClient1 = await startClientWsEndpoint(peerInfo1)
         trackerNode1 = new TrackerNode(wsClient1)
         
         await Promise.all([
@@ -47,7 +47,7 @@ describe('WebRtcEndpoint', () => {
         )
 
         peerInfo2 = PeerInfo.newNode('node-2')
-        wsClient2 = await startClientWsEndpoint(peerInfo2, null)
+        wsClient2 = await startClientWsEndpoint(peerInfo2)
         trackerNode2 = new TrackerNode(wsClient2)
 
         await Promise.all([

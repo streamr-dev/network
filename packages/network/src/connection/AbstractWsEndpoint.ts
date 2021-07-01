@@ -55,21 +55,18 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
     protected metrics: Metrics
 
     protected readonly peerInfo: PeerInfo
-    protected readonly advertisedWsUrl: string | null
     protected readonly logger: Logger
     protected readonly pingPongWs: PingPongWs
     protected readonly connectionById: Map<string, C> = new Map<string, C>()
 
     protected constructor(
         peerInfo: PeerInfo,
-        advertisedWsUrl: string | null,
         metricsContext: MetricsContext = new MetricsContext(peerInfo.peerId),
         pingInterval = 5 * 1000
     ) {
         super()
 
         this.peerInfo = peerInfo
-        this.advertisedWsUrl = advertisedWsUrl
         this.logger = new Logger(module)
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
 

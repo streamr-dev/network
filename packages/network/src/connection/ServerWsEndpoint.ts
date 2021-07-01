@@ -83,11 +83,10 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         wss: uWS.TemplatedApp,
         listenSocket: uWS.us_listen_socket,
         peerInfo: PeerInfo,
-        advertisedWsUrl: string | null,
         metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
-        super(peerInfo, advertisedWsUrl, metricsContext, pingInterval)
+        super(peerInfo, metricsContext, pingInterval)
 
         if (!wss) {
             throw new Error('wss not given')
@@ -166,9 +165,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
     }
 
     getAddress(): string {
-        if (this.advertisedWsUrl) {
-            return this.advertisedWsUrl
-        }
         return `ws://${this.serverHost}:${this.serverPort}`
     }
 
@@ -256,13 +252,12 @@ export async function startServerWsEndpoint(
     host: string,
     port: number,
     peerInfo: PeerInfo,
-    advertisedWsUrl: string | null,
     metricsContext?: MetricsContext,
     pingInterval?: number | undefined,
     privateKeyFileName?: string | undefined,
     certFileName?: string | undefined,
 ): Promise<ServerWsEndpoint> {
     return startWebSocketServer(host, port, privateKeyFileName, certFileName).then(([wss, listenSocket]) => {
-        return new ServerWsEndpoint(host, port, wss, listenSocket, peerInfo, advertisedWsUrl, metricsContext, pingInterval)
+        return new ServerWsEndpoint(host, port, wss, listenSocket, peerInfo, metricsContext, pingInterval)
     })
 }

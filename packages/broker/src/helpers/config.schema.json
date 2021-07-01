@@ -64,7 +64,6 @@
         "name",
         "hostname",
         "port",
-        "advertisedWsUrl",
         "trackers",
         "location"
       ],
@@ -82,13 +81,6 @@
         "port": {
           "$ref": "#/definitions/port",
           "description": "Port to start network node on"
-        },
-        "advertisedWsUrl": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Override WebSocket URL to advertise to tracker and other nodes (useful when behind NAT)"
         },
         "trackers": {
           "oneOf": [

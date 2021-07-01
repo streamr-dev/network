@@ -19,7 +19,7 @@ async function setUpWsClient(peerId: string, peerType: string, city: string): Pr
         messageLayerVersions: null
     })
     const metricsContext = new MetricsContext(peerId)
-    const wsClient = await startClientWsEndpoint(peerInfo, peerId, metricsContext)
+    const wsClient = await startClientWsEndpoint(peerInfo, metricsContext)
     return wsClient
 }
 async function setUpWsServer(peerId: string, peerType: string, city: string, port: number): Promise<ServerWsEndpoint> {
@@ -41,7 +41,6 @@ async function setUpWsServer(peerId: string, peerType: string, city: string, por
         '127.0.0.1',
         port,
         peerInfo,
-        null,
         metricsContext,
         100
     )

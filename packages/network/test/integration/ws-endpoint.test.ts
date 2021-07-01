@@ -14,7 +14,7 @@ describe('ws-endpoint', () => {
     it('create five endpoints and init connection between them, should be able to start and stop successfully', async () => {
         for (let i = 0; i < 5; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const endpoint = await startServerWsEndpoint('127.0.0.1', 30690 + i, PeerInfo.newNode(`endpoint-${i}`), null)
+            const endpoint = await startServerWsEndpoint('127.0.0.1', 30690 + i, PeerInfo.newNode(`endpoint-${i}`))
                 .catch((err) => {
                     throw err
                 })
@@ -27,7 +27,7 @@ describe('ws-endpoint', () => {
         const clients = []
         const promises: Promise<any>[] = []
         for (let i = 0; i < 5; i++) {
-            const client = await startClientWsEndpoint(PeerInfo.newNode(`client-${i}`), null)
+            const client = await startClientWsEndpoint(PeerInfo.newNode(`client-${i}`))
 
             promises.push(waitForEvent(endpoints[i], Event.PEER_CONNECTED))
 
@@ -53,8 +53,8 @@ describe('ws-endpoint', () => {
     })
 
     it('server and client form correct peerInfo on connection', async () => {
-        const client = await startClientWsEndpoint(PeerInfo.newNode('client'), null)
-        const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'), null)
+        const client = await startClientWsEndpoint(PeerInfo.newNode('client'))
+        const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'))
 
         const e1 = waitForEvent(client, Event.PEER_CONNECTED)
         const e2 = waitForEvent(server, Event.PEER_CONNECTED)

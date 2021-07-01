@@ -1,6 +1,5 @@
 import { startNetworkNode, Protocol, MetricsContext } from 'streamr-network'
 import StreamrClient from 'streamr-client'
-import publicIp from 'public-ip'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
 import { Server as HttpServer } from 'http'
@@ -70,16 +69,12 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
     // Start network node
-    const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
-        ? config.network.advertisedWsUrl
-        : await publicIp.v4().then((ip) => `ws://${ip}:${config.network.port}`)
     const networkNode = await startNetworkNode({
         host: config.network.hostname,
         port: config.network.port,
         id: brokerAddress,
         name: networkNodeName,
         trackers,
-        advertisedWsUrl,
         location: config.network.location,
         metricsContext
     })
@@ -180,9 +175,6 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     logger.info(`Configured with trackers: ${trackers.join(', ')}`)
     logger.info(`Configured with Streamr: ${config.streamrUrl}`)
     logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
-    if (advertisedWsUrl) {
-        logger.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
-    }
 
     return {
         getNeighbors: () => networkNode.getNeighbors(),

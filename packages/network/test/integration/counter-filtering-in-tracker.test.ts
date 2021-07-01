@@ -39,10 +39,10 @@ describe('tracker: counter filtering', () => {
         })
         const peerInfo1 = PeerInfo.newNode('trackerNode1')
         const peerInfo2 = PeerInfo.newNode('trackerNode2')
-        const wsClient1 = await startClientWsEndpoint(peerInfo1, null)
+        const wsClient1 = await startClientWsEndpoint(peerInfo1)
         trackerNode1 = new TrackerNode(wsClient1)
 
-        const wsClient2 = await startClientWsEndpoint(peerInfo2, null)
+        const wsClient2 = await startClientWsEndpoint(peerInfo2)
 
         trackerNode2 = new TrackerNode(wsClient2)
         trackerNode1.connectToTracker(tracker.getAddress())

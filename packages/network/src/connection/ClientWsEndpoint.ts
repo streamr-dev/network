@@ -85,11 +85,10 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
 
     constructor(
         peerInfo: PeerInfo,
-        advertisedWsUrl: string | null,
         metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
-        super(peerInfo, advertisedWsUrl, metricsContext, pingInterval)
+        super(peerInfo, metricsContext, pingInterval)
 
         this.connectionsByServerUrl = new Map()
         this.serverUrlByPeerId = new Map()
@@ -225,9 +224,8 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
 // made it async to match the startEndpoint method on WsServer
 export async function startClientWsEndpoint(
     peerInfo: PeerInfo,
-    advertisedWsUrl?: string | null,
     metricsContext?: MetricsContext,
     pingInterval?: number | undefined
 ): Promise<ClientWsEndpoint> {
-    return new ClientWsEndpoint(peerInfo, advertisedWsUrl!, metricsContext, pingInterval)
+    return new ClientWsEndpoint(peerInfo, metricsContext, pingInterval)
 }

@@ -29,8 +29,8 @@ describe('WebRTC multisignaller test', () => {
             id: 'tracker2'
         })
 
-        const ep1 = await startClientWsEndpoint(PeerInfo.newNode('node-1'), null, new MetricsContext(''))
-        const ep2 = await startClientWsEndpoint(PeerInfo.newNode('node-2'), null, new MetricsContext(''))
+        const ep1 = await startClientWsEndpoint(PeerInfo.newNode('node-1'), new MetricsContext(''))
+        const ep2 = await startClientWsEndpoint(PeerInfo.newNode('node-2'), new MetricsContext(''))
 
         trackerNode1 = new TrackerNode(ep1)
         trackerNode2 = new TrackerNode(ep2)

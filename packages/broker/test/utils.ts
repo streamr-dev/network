@@ -71,7 +71,6 @@ export function formConfig({
             name,
             hostname: '127.0.0.1',
             port: networkPort,
-            advertisedWsUrl: null,
             trackers: [
                 `ws://127.0.0.1:${trackerPort}`
             ],

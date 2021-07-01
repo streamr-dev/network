@@ -28,8 +28,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         const peerInfo2 = PeerInfo.newNode('ep2')
 
         // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = await startClientWsEndpoint(peerInfo1, null, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = await startClientWsEndpoint(peerInfo2, null, new MetricsContext(peerInfo2.peerId))
+        const wsEp1 = await startClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
+        const wsEp2 = await startClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
         trackerNode1 = new TrackerNode(wsEp1)
         trackerNode2 = new TrackerNode(wsEp2)
         await trackerNode1.connectToTracker(tracker.getAddress())
