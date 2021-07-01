@@ -54,7 +54,7 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
         if (!(peerInfo instanceof PeerInfo)) {
             throw new Error('peerInfo not instance of PeerInfo')
         }
-        
+
         this.serverHost = host
         this.serverPort = port
         this.peerInfo = peerInfo
@@ -136,8 +136,9 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
             }
 
             this.logger.trace('removed %s [%s] from connection list', connection.getPeerInfo(), connection.getPeerAddress())
-            this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
-
+            if (connection.getPeerInfo()) {
+                this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
+            }
             connection.removeAllListeners()
             this.metrics.record('close', 1)
         })
@@ -292,7 +293,7 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     getRtts(): Rtts {
         const rtts: Rtts = {}
         Object.entries(this.connections).forEach(([address, connection]) => {
-            const rtt = connection.getRtt()     
+            const rtt = connection.getRtt()
             const nodeId = this.peerBook.getPeerId(address)
             if (rtt !== undefined && rtt !== null) {
                 rtts[nodeId] = rtt
@@ -302,7 +303,7 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     }
 
     getAddress(): string {
-        
+
         return `ws://${this.serverHost}:${this.serverPort}`
     }
 
@@ -322,8 +323,8 @@ export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
     }
 
     getWss(): uWS.TemplatedApp {
-		return this.uwsServer?.getWss()!
-	}
+        return this.uwsServer?.getWss()!
+    }
 
     getPeers(): ReadonlyMap<string, WebSocketConnection> {
         const map = new Map()
@@ -371,7 +372,7 @@ export async function startEndpoint(
     certFileName?: string | undefined,
 ): Promise<WebSocketEndpoint> {
 
-    let factory = connectionFactory 
+    let factory = connectionFactory
     if (!factory) {
         factory = WsConnectionFactory
     }

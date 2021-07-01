@@ -39,15 +39,9 @@ export class WsConnection extends ClientWebSocketConnection {
 
 			ws.on('upgrade', (res) => {
 				const peerId = res.headers['streamr-peer-id'] as string
-				const peerType = res.headers['streamr-peer-type'] as PeerType
-				const controlLayerVersions = res.headers['control-layer-versions'] as string
-				const messageLayerVersions = res.headers['message-layer-versions'] as string
 
-				if (peerId && peerType && controlLayerVersions && messageLayerVersions) {
-					const controlLayerVersionsArray = controlLayerVersions.split(',').map((version) => parseInt(version, 10))
-					const messageLayerVersionsArray = messageLayerVersions.split(',').map((version) => parseInt(version, 10))
-
-					serverPeerInfo = new PeerInfo(peerId, peerType, controlLayerVersionsArray, messageLayerVersionsArray)
+				if (peerId) {
+					serverPeerInfo = PeerInfo.newTracker(peerId)
 				} else {
 					this.logger.debug('Invalid message headers received on upgrade: ' + res)
 				}
@@ -70,7 +64,7 @@ export class WsConnection extends ClientWebSocketConnection {
 			ws.on('message', (message: string | Buffer | Buffer[]) => {
 				// TODO check message.type [utf8|binary]
 				// toString() needed for SSL connections as message will be Buffer instead of String
-				
+
 				this.emitMessage(message.toString())
 			})
 
@@ -98,7 +92,7 @@ export class WsConnection extends ClientWebSocketConnection {
 
 				this.ws.send(message, (err) => {
 					if (err) {
-						this.logger.error("error sending ws message "+  err)
+						this.logger.error("error sending ws message " + err)
 						reject(err)
 					} else {
 						resolve()
@@ -122,7 +116,7 @@ export class WsConnection extends ClientWebSocketConnection {
 		}
 	}
 
-	getReadyState(): number | undefined{
+	getReadyState(): number | undefined {
 		return this.ws?.readyState
 	}
 }

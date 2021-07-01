@@ -26,8 +26,6 @@ describe('latency metrics', () => {
             trackers: [tracker.getAddress()],
             metricsContext
         })
-
-        node.start()
     })
 
     afterEach(async () => {
@@ -39,7 +37,7 @@ describe('latency metrics', () => {
         const { metrics } = await metricsContext.report()
         expect(metrics.node.latency).toEqual(0)
     })
-
+    
     it('should send a single message to Node1 and collect latency', (done) => {
         node.addMessageListener(async () => {
             const { metrics } = await metricsContext.report()
@@ -62,7 +60,7 @@ describe('latency metrics', () => {
             },
         }))
     })
-
+    
     it('should send a bunch of messages to Node1 and collect latency',(done) => {
         let receivedMessages = 0
 
