@@ -215,25 +215,34 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
  * ```
  */
 
-export function CacheFn(fn: Parameters<typeof mem>[0], {
+export function CacheFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(fn: (...args: ArgsType) => ReturnType, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     onEviction = () => {},
+    cacheKey = (args: ArgsType) => args[0], // type+provide default so we can infer KeyType
     ...opts
+}: {
+    maxSize?: number
+    maxAge?: number
+    onEviction?: (...args: any[]) => void
+    cacheKey?: (args: ArgsType) => KeyType
 } = {}) {
-    const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
+    const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
         onEviction,
     })
 
     const cachedFn = Object.assign(mem(fn, {
-        maxAge,
         cache,
+        cacheKey,
         ...opts,
     }), {
-        clear: () => mem.clear(cachedFn),
-        clearMatching: (...args: L.Tail<Parameters<typeof clearMatching>>) => clearMatching(cache, ...args),
+        clear: () => {
+            mem.clear(cachedFn as any)
+            cache.clear()
+        },
+        clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
     })
 
     return cachedFn
@@ -372,10 +381,12 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
  * Execute functions in parallel, but ensure they resolve in the order they were executed
  */
 
-export function pOrderedResolve(fn: F.Function) {
+export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
+    fn: (...args: ArgsType) => ReturnType
+) {
     const queue = pLimit(1)
-    return Object.assign(async (...args: Parameters<typeof fn>) => {
-        const d = Defer()
+    return Object.assign(async (...args: ArgsType) => {
+        const d = Defer<ReturnType>()
         const done = queue(() => d)
         // eslint-disable-next-line promise/catch-or-return
         await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
@@ -391,9 +402,12 @@ export function pOrderedResolve(fn: F.Function) {
  * Returns a function that executes with limited concurrency.
  */
 
-export function pLimitFn(fn: F.Function, limit = 1) {
+export function pLimitFn<ArgsType extends unknown[], ReturnType>(
+    fn: (...args: ArgsType) => ReturnType,
+    limit = 1
+) {
     const queue = pLimit(limit)
-    return Object.assign((...args: unknown[]) => queue(() => fn(...args)), {
+    return Object.assign((...args: ArgsType) => queue(() => fn(...args)), {
         clear() {
             queue.clearQueue()
         }
@@ -411,18 +425,18 @@ type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
  * Returns same promise while task is executing.
  */
 
-export function pOne<Args extends any[], R>(
-    fn: (...args: Args) => R
-): (...args: Args) => Promise<Awaited<R>> {
-    let inProgress: Promise<Awaited<R>> | undefined
-    return async (...args: Args): Promise<Awaited<R>> => {
+export function pOne<ArgsType extends unknown[], ReturnType>(
+    fn: (...args: ArgsType) => ReturnType
+): (...args: ArgsType) => Promise<Awaited<ReturnType>> {
+    let inProgress: Promise<Awaited<ReturnType>> | undefined
+    return async (...args: ArgsType): Promise<Awaited<ReturnType>> => {
         if (inProgress) {
             return inProgress
         }
 
         inProgress = (async () => {
             try {
-                return await Promise.resolve(fn(...args)) as Awaited<R>
+                return await Promise.resolve(fn(...args)) as Awaited<ReturnType>
             } finally {
                 inProgress = undefined
             }
@@ -437,22 +451,29 @@ export function pOne<Args extends any[], R>(
  * Returns same promise while task is executing.
  */
 
-export function pOnce<Args extends any[], R>(
-    fn: (...args: Args) => R
-): (...args: Args) => Promise<Awaited<R>> {
-    let inProgress: Promise<void> | undefined
+export function pOnce<ArgsType extends unknown[], ReturnType>(
+    fn: (...args: ArgsType) => ReturnType
+): (...args: ArgsType) => Promise<Awaited<ReturnType>> {
+    // captures function value or error and resolves with those
+    // prevents holding onto in-progress promise forever
     let started = false
-    let value: Awaited<R>
-    let error: Error | undefined
-    return async (...args: Args) => {
+    let inProgress: Promise<void> | undefined // holds inProgress promise
+    let value: Awaited<ReturnType> // result
+    let error: Error | undefined // or error
+    return async function pOnceWrap(...args: ArgsType) {
+        // run once
         if (!started) {
             started = true
+            // note: be sure to execute fn immediately
+            // i.e. don't change this to wait for Promise#then or something
             inProgress = (async () => {
+                // capture value/error
                 try {
-                    value = await Promise.resolve(fn(...args)) as Awaited<R>
+                    value = await Promise.resolve(fn(...args)) as Awaited<ReturnType>
                 } catch (err) {
                     error = err
-                } finally {
+                } finally { // eslint-disable-line promise/always-return
+                    // allow in-progress promise to be garbage-collected
                     inProgress = undefined
                 }
             })()
