@@ -21,7 +21,7 @@ describe('pOrderedResolve', () => {
             }
         })
 
-        const results = []
+        const results: any[] = []
         const fn = async () => {
             count += 1
             const v = await orderedFn(count)
@@ -56,10 +56,10 @@ describe('CacheAsyncFn', () => {
         expect(fn).toHaveBeenCalledTimes(4)
         await cachedFn(2)
         expect(fn).toHaveBeenCalledTimes(5)
-        await cachedFn.clearMatching((v) => v === 1)
+        cachedFn.clearMatching((v) => v === 1)
         await cachedFn(1)
         expect(fn).toHaveBeenCalledTimes(6)
-        await cachedFn.clearMatching((v) => v === 1)
+        cachedFn.clearMatching((v) => v === 1)
         await cachedFn(1)
         expect(fn).toHaveBeenCalledTimes(7)
     })
