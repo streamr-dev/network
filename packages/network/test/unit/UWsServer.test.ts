@@ -44,14 +44,14 @@ describe('test starting startWebSocketServer', () => {
 
     test('receives encrypted connections', (done) => {
         const uwsServer = new UWsServer(PeerInfo.newTracker('tracker'),
-        `ws://127.0.0.1:${wssPort}`,
-        '127.0.0.1',
-        wssPort,
-        'test/fixtures/key.pem',
-        'test/fixtures/cert.pem',
-        WS_BUFFER_SIZE)
+            `ws://127.0.0.1:${wssPort}`,
+            '127.0.0.1',
+            wssPort,
+            'test/fixtures/key.pem',
+            'test/fixtures/cert.pem',
+            WS_BUFFER_SIZE)
 
-    uwsServer.start().then(() => {
+        uwsServer.start().then(() => {
             const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
                 undefined, {
                     rejectUnauthorized: false, // needed to accept self-signed certificate

@@ -8,7 +8,6 @@ import { DeferredConnectionAttempt } from '../DeferredConnectionAttempt'
 
 const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 const LOW_BACK_PRESSURE = 1024 * 1024
-const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
 
 let ID = 0
 
@@ -66,8 +65,7 @@ export abstract class WebSocketConnection extends ConnectionEmitter {
 
 	constructor({ selfAddress, 
 	    selfPeerInfo, 
-	    targetPeerAddress, 
-	    deferredConnectionAttempt,
+	    targetPeerAddress,
 	    maxPingPongAttempts = 5,
 	    pingInterval = 2 * 1000}: ConstructorOptions) {
 	    super()
@@ -168,7 +166,7 @@ export abstract class WebSocketConnection extends ConnectionEmitter {
 	    return this.rtt
 	}
 
-	protected setPeerInfo(info: PeerInfo) {
+	protected setPeerInfo(info: PeerInfo): void {
 	    this.peerInfo = info
 	}
 

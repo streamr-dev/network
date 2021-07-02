@@ -185,7 +185,7 @@ export class UWsServer extends ConnectionEmitter {
 	}
 
 	private onIncomingConnection(ws: ExtendedUws): void {
-	    const { address, peerId, peerType, controlLayerVersions, messageLayerVersions } = ws
+	    const { address, peerId } = ws
 
 	    try {	
 	        if (!peerId) {
@@ -205,7 +205,7 @@ export class UWsServer extends ConnectionEmitter {
 
 	        this.connections.set(ws.address, connection)
 
-	        connection.on('close', (code, reason) => {
+	        connection.on('close', () => {
 	            if (this.connections.get(ws.address)) {
 	                this.connections.delete(ws.address)
 	            }

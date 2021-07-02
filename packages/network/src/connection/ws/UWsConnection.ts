@@ -31,9 +31,9 @@ export class UWsConnection extends WebSocketConnection {
 	protected doClose(code: DisconnectionCode, reason: DisconnectionReason): void {
 	    try {
 	        if (this.readyState !=3 ) {
-				this.ws.end(code, reason)
+	            this.ws.end(code, reason)
 	        	this.readyState = 3
-			}
+	        }
 	    } catch (e) {
 	        this.logger.error('failed to terminate ws, reason %s', e)
 	    }

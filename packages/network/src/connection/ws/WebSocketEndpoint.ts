@@ -16,7 +16,6 @@ export interface ClientWebSocketConnectionFactory {
 }
 
 const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
-const LOW_BACK_PRESSURE = 1024 * 1024
 const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
 
 export class WebSocketEndpoint extends EventEmitter {
@@ -30,10 +29,9 @@ export class WebSocketEndpoint extends EventEmitter {
     private readonly logger: Logger
     private readonly connections: { [peerAddress: string]: WebSocketConnection }
 
-    private readonly peerBook: PeerBook
     private readonly metrics: Metrics
 
-    private uwsServer: UWsServer | null
+    private uwsServer: UWsServer
 
     constructor(
         host: string,
@@ -43,7 +41,6 @@ export class WebSocketEndpoint extends EventEmitter {
         connectionFactory: ClientWebSocketConnectionFactory,
         peerInfo: PeerInfo,
         metricsContext = new MetricsContext(peerInfo.peerId),
-        pingInterval = 5 * 1000
     ) {
         super()
 
@@ -60,8 +57,6 @@ export class WebSocketEndpoint extends EventEmitter {
 
         this.logger = new Logger(module)
         this.connections = {}
-
-        this.peerBook = new PeerBook()
 
         this.uwsServer = new UWsServer(this.peerInfo,
             this.getAddress(),
@@ -174,6 +169,7 @@ export class WebSocketEndpoint extends EventEmitter {
                         this.metrics.record('msgSpeed', 1)
                         this.metrics.record('msgOutSpeed', 1)
                         resolve(ws.getPeerId())
+                        return true
                     }).catch((err) => {
                         this.metrics.record('sendFailed', 1)
                         ws.close(DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
@@ -270,8 +266,6 @@ export class WebSocketEndpoint extends EventEmitter {
         this.stopped = true
         return new Promise<void>((resolve, reject) => {
             try {
-                Object.values(this.connections).forEach((connection) => connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN))
-
                 if (this.uwsServer) {
                     this.logger.trace('shutting down uWS server')
                     this.uwsServer.stop()
@@ -322,7 +316,7 @@ export class WebSocketEndpoint extends EventEmitter {
     }
 
     getWss(): uWS.TemplatedApp {
-        return this.uwsServer?.getWss()!
+        return this.uwsServer.getWss()
     }
 
     getPeers(): ReadonlyMap<string, WebSocketConnection> {
