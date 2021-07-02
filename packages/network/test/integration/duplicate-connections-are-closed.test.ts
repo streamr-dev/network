@@ -1,4 +1,4 @@
-import { runAndRaceEvents, waitForEvent } from 'streamr-test-utils'
+import { runAndRaceEvents } from 'streamr-test-utils'
 import { DisconnectionReason, Event } from '../../src/connection/IWsEndpoint'
 import { startEndpoint, WebSocketEndpoint } from '../../src/connection/WebSocketEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -23,14 +23,13 @@ describe('duplicate connections are closed', () => {
         await runAndRaceEvents([
             () => { wsEndpoint1.connect('ws://127.0.0.1:28502')},
             () => {  wsEndpoint2.connect('ws://127.0.0.1:28501')}], [
-                [wsEndpoint1, Event.CLOSED_DUPLICATE_SOCKET_TO_PEER],
-                [wsEndpoint2, Event.CLOSED_DUPLICATE_SOCKET_TO_PEER]
-            ]).then((res) => {
-                const reason: any = res[1]
-                connectionsClosedReasons.push(reason)
-                return res
-            })
-        
+            [wsEndpoint1, Event.CLOSED_DUPLICATE_SOCKET_TO_PEER],
+            [wsEndpoint2, Event.CLOSED_DUPLICATE_SOCKET_TO_PEER]
+        ]).then((res) => {
+            const reason: any = res[1]
+            connectionsClosedReasons.push(reason)
+            return res
+        })
        
         expect(connectionsClosedReasons).toEqual([DisconnectionReason.DUPLICATE_SOCKET]) // length === 1
 

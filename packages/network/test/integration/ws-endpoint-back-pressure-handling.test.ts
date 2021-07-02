@@ -31,7 +31,6 @@ describe('WsEndpoint: back pressure handling', () => {
         }
     })
 
-    
     it('emits LOW_BACK_PRESSURE after high back pressure', (done) => {
         let hitHighBackPressure = false
         let sendInterval: ReturnType<typeof setInterval> | null = null

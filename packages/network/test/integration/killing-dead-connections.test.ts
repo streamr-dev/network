@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents } from 'streamr-test-utils'
 
 import { Event, DisconnectionReason, DisconnectionCode } from '../../src/connection/IWsEndpoint' 
 import { startEndpoint, WebSocketEndpoint } from '../../src/connection/WebSocketEndpoint'
@@ -36,9 +36,7 @@ describe('check and kill dead connections', () => {
         const connection = node1.getPeers().get('ws://127.0.0.1:43972')
         expect(connection!.getReadyState()).toEqual(STATE_OPEN)
 
-
         node2.on(Event.PEER_DISCONNECTED, (peerInfo) => {
-            console.log('received peer disconnected')
             expect(peerInfo).toEqual(PeerInfo.newNode('node1'))
             done()
         })
@@ -51,7 +49,6 @@ describe('check and kill dead connections', () => {
             connection!.close(DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
         })
        
-       
         // @ts-expect-error private method
         connection.ping()
        
@@ -60,7 +57,7 @@ describe('check and kill dead connections', () => {
         
         // @ts-expect-error private method
         expect(connection.emitClose).toBeCalledWith(
-             DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
+            DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
 
         expect(connection!.getReadyState()).toEqual(STATE_CLOSING)
         

@@ -118,7 +118,6 @@ describe('WebRtcEndpoint', () => {
 
         })
 
-        
         it('connection between nodes is established when both nodes invoke non-tracker-instructed connect()', async () => {
             const promise = Promise.all([
                 waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),

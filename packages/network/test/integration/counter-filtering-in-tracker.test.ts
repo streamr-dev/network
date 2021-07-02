@@ -1,5 +1,5 @@
 import { Status } from '../../src/identifiers'
-import { runAndRaceEvents, runAndWaitForEvents, wait, waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents, wait } from 'streamr-test-utils'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker, Tracker } from '../../src/composition'
@@ -42,8 +42,6 @@ describe('tracker: counter filtering', () => {
         trackerNode1 = new TrackerNode(endpoint1)
         trackerNode2 = new TrackerNode(endpoint2)
 
-
-
         await runAndWaitForEvents([
             () => { trackerNode1.connectToTracker(tracker.getAddress()) },
             () => { trackerNode2.connectToTracker(tracker.getAddress()) }], [
@@ -66,8 +64,6 @@ describe('tracker: counter filtering', () => {
     })
 
     test('handles status messages with counters equal or more to current counter(s)', async () => {
-       
-
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
@@ -80,8 +76,6 @@ describe('tracker: counter filtering', () => {
     })
 
     test('ignores status messages with counters less than current counter(s)', async () => {
-        
-
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
@@ -94,8 +88,6 @@ describe('tracker: counter filtering', () => {
     })
 
     test('partly handles status messages with mixed counters compared to current counters', async () => {
-        
-
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
