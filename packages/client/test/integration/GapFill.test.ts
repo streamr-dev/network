@@ -1,15 +1,15 @@
 import { wait } from 'streamr-test-utils'
 
-import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
-
-import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber, Subscription } from '../../src/subscribe'
 import { MessageRef } from 'streamr-client-protocol/dist/src/protocol/message_layer'
 import { StreamrClientOptions } from '../../src'
 import { StorageNode } from '../../src/stream/StorageNode'
+
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
+import clientOptions from './config'
 
 const MAX_MESSAGES = 10
 
@@ -23,7 +23,7 @@ describeRepeats('GapFill', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

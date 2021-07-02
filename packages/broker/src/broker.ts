@@ -1,4 +1,4 @@
-import { startNetworkNode, Protocol, MetricsContext } from 'streamr-network'
+import { createNetworkNode, Protocol, MetricsContext } from 'streamr-network'
 import StreamrClient from 'streamr-client'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
@@ -69,9 +69,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
     // Start network node
-    const networkNode = await startNetworkNode({
-        host: config.network.hostname,
-        port: config.network.port,
+    const networkNode = createNetworkNode({
         id: brokerAddress,
         name: networkNodeName,
         trackers,
@@ -170,7 +168,7 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     )
     await volumeLogger.start()
 
-    logger.info(`Network node '${networkNodeName}' running on ${config.network.hostname}:${config.network.port}`)
+    logger.info(`Network node '${networkNodeName}' running`)
     logger.info(`Ethereum address ${brokerAddress}`)
     logger.info(`Configured with trackers: ${trackers.join(', ')}`)
     logger.info(`Configured with Streamr: ${config.streamrUrl}`)

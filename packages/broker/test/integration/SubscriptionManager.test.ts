@@ -9,8 +9,6 @@ const httpPort1 = 13381
 const httpPort2 = 13382
 const wsPort1 = 13391
 const wsPort2 = 13392
-const networkPort1 = 13401
-const networkPort2 = 13402
 const trackerPort = 13410
 const mqttPort1 = 13551
 const mqttPort2 = 13552
@@ -37,7 +35,6 @@ describe('SubscriptionManager', () => {
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: '0xd622f9e4dbcd8b98f12604f0af8ac1cbc75004829e505fdd0ed04f456ef52828',
-            networkPort: networkPort1,
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
@@ -46,7 +43,6 @@ describe('SubscriptionManager', () => {
         broker2 = await startBroker({
             name: 'broker2',
             privateKey: '0xbaa8e6137a9474ecb6694ad3e4f1743732e38c36e9bdda628e651d36ed732241',
-            networkPort: networkPort2,
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,

@@ -1,12 +1,12 @@
 import { Status } from '../../src/identifiers'
-import { runAndRaceEvents, runAndWaitForEvents, wait, waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents, wait } from 'streamr-test-utils'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker, Tracker } from '../../src/composition'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { startEndpoint } from '../../src/connection/WebSocketEndpoint'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
 
 const WAIT_TIME = 200
 
@@ -37,12 +37,16 @@ describe('tracker: counter filtering', () => {
             port: 30420,
             id: 'tracker'
         })
-        const endpoint1 = await startEndpoint('127.0.0.1', 30421, PeerInfo.newNode('trackerNode1'))
-        const endpoint2 = await startEndpoint('127.0.0.1', 30422, PeerInfo.newNode('trackerNode2'))
-        trackerNode1 = new TrackerNode(endpoint1)
-        trackerNode2 = new TrackerNode(endpoint2)
+        const peerInfo1 = PeerInfo.newNode('trackerNode1')
+        const peerInfo2 = PeerInfo.newNode('trackerNode2')
+        const wsClient1 = new ClientWsEndpoint(peerInfo1)
+        trackerNode1 = new TrackerNode(wsClient1)
 
+        const wsClient2 = new ClientWsEndpoint(peerInfo2)
 
+        trackerNode2 = new TrackerNode(wsClient2)
+        trackerNode1.connectToTracker(tracker.getUrl())
+        trackerNode2.connectToTracker(tracker.getUrl())
 
         await runAndWaitForEvents([
             () => { trackerNode1.connectToTracker(tracker.getAddress()) },
@@ -66,22 +70,18 @@ describe('tracker: counter filtering', () => {
     })
 
     test('handles status messages with counters equal or more to current counter(s)', async () => {
-       
-
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
 
         trackerNode1.sendStatus('tracker', formStatus(1, 666, [], [], false) as Status)
-        
+
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(2)
     })
 
     test('ignores status messages with counters less than current counter(s)', async () => {
-        
-
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
@@ -94,8 +94,6 @@ describe('tracker: counter filtering', () => {
     })
 
     test('partly handles status messages with mixed counters compared to current counters', async () => {
-        
-
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
@@ -109,19 +107,19 @@ describe('tracker: counter filtering', () => {
 
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
-        
+
         runAndWaitForEvents(
             () => { trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status) },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )
-        
+
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
     })
 
     test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
-        
+
         runAndWaitForEvents(
             () => { trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status) },
             // @ts-expect-error trackerServer is private
