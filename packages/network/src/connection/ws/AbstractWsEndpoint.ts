@@ -26,7 +26,7 @@ export enum DisconnectionReason {
     GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
     DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
     NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
-    DEAD_CONNECTION = 'streamr:endpoint:dead-connection'
+    DEAD_CONNECTION = 'dead connection'
 }
 
 export class UnknownPeerError extends Error {
@@ -54,12 +54,14 @@ export interface SharedConnection {
 }
 
 export abstract class AbstractWsEndpoint<C extends SharedConnection> extends EventEmitter {
-    protected metrics: Metrics
+    private readonly pingPongWs: PingPongWs
+    private readonly connectionById: Map<string, C> = new Map<string, C>()
 
+    protected readonly metrics: Metrics
     protected readonly peerInfo: PeerInfo
     protected readonly logger: Logger
-    protected readonly pingPongWs: PingPongWs
-    protected readonly connectionById: Map<string, C> = new Map<string, C>()
+
+    public static PEER_ID_HEADER = 'streamr-peer-id'
 
     protected constructor(
         peerInfo: PeerInfo,
@@ -119,22 +121,22 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         }
     }
 
-    protected onReceive(connection: SharedConnection, message: string): void {
-        this.logger.trace('<== received from %s message "%s"', connection.peerInfo, message)
-        this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
-    }
-
-    close(recipientId: string, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
-        this.metrics.record('close', 1)
+    close(recipientId: string, code: DisconnectionCode, reason: DisconnectionReason): void {
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
+            this.metrics.record('close', 1)
             try {
                 this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
-                connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, reason)
+                connection.close(code, reason)
             } catch (e) {
                 this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
             }
         }
+    }
+
+    stop(): Promise<void> {
+        this.pingPongWs.stop()
+        return this.doStop()
     }
 
     getRtts(): Rtts {
@@ -143,6 +145,32 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
 
     getPeers(): ReadonlyMap<string, C> {
         return this.connectionById
+    }
+
+    /**
+     * Custom clean up logic of base class
+     */
+    protected abstract doStop(): Promise<void>
+
+    /**
+     * Implementer should invoke this whenever a new connection is formed
+     */
+    protected onNewConnection(connection: C): void {
+        this.connectionById.set(connection.getPeerId(), connection)
+        this.metrics.record('open', 1)
+        this.logger.trace('added %s to connection list', connection.getPeerId())
+        this.emit(Event.PEER_CONNECTED, connection.peerInfo)
+    }
+
+    /**
+     * Implementer should invoke this whenever a message is received.
+     */
+    protected onReceive(connection: SharedConnection, message: string): void {
+        this.metrics.record('inSpeed', message.length)
+        this.metrics.record('msgSpeed', 1)
+        this.metrics.record('msgInSpeed', 1)
+        this.logger.trace('<== received from %s message "%s"', connection.peerInfo, message)
+        this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
     }
 
     /**
@@ -160,13 +188,10 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
     }
 
     /**
-     * Implementer should invoke this whenever a new connection is formed
+     * Implementer should invoke this whenever a pong frame is received
      */
-    protected onNewConnection(connection: C): void {
-        this.connectionById.set(connection.getPeerId(), connection)
-        this.metrics.record('open', 1)
-        this.logger.trace('added %s to connection list', connection.getPeerId())
-        this.emit(Event.PEER_CONNECTED, connection.peerInfo)
+    protected onPong(connection: SharedConnection): void {
+        this.pingPongWs.onPong(connection)
     }
 
     /**

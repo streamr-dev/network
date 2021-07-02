@@ -106,11 +106,11 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
             idleTimeout: 0,
             upgrade: (res, req, context) => {
                 res.writeStatus('101 Switching Protocols')
-                    .writeHeader('streamr-peer-id', this.peerInfo.peerId)
+                    .writeHeader(AbstractWsEndpoint.PEER_ID_HEADER, this.peerInfo.peerId)
 
                 /* This immediately calls open handler, you must not use res after this call */
                 res.upgrade({
-                    peerId: req.getHeader('streamr-peer-id')
+                    peerId: req.getHeader(AbstractWsEndpoint.PEER_ID_HEADER)
                 },
                 /* Spell these correctly */
                 req.getHeader('sec-websocket-key'),
@@ -146,7 +146,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
 
                 if (connection) {
                     this.logger.trace('received from %s "pong" frame', connection.getPeerId())
-                    this.pingPongWs.onPong(connection)
+                    this.onPong(connection)
                 }
             }
         })
@@ -154,8 +154,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         this.logger.trace('listening on %s', this.getUrl())
     }
 
-    async stop(): Promise<void> {
-        this.pingPongWs.stop()
+    protected async doStop(): Promise<void> {
         if (this.listenSocket) {
             this.logger.trace('shutting down uWS server')
             uWS.us_listen_socket_close(this.listenSocket)
@@ -169,12 +168,11 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
     }
 
     getPeerInfos(): PeerInfo[] {
-        return Array.from(this.connectionById.values())
-            .map((connection) => connection.peerInfo)
+        return this.getConnections().map((connection) => connection.peerInfo)
     }
 
     resolveAddress(peerId: string): string | undefined {
-        return this.connectionById.get(peerId)?.getRemoteAddress()
+        return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
     }
 
     private onIncomingConnection(ws: uWS.WebSocket): void {

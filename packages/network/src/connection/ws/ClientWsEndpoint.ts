@@ -3,12 +3,7 @@ import util from 'util'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { Logger } from '../../helpers/Logger'
-import {
-    AbstractWsEndpoint,
-    DisconnectionCode,
-    DisconnectionReason,
-    SharedConnection,
-} from "./AbstractWsEndpoint"
+import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, SharedConnection, } from "./AbstractWsEndpoint"
 
 const staticLogger = new Logger(module)
 
@@ -67,7 +62,7 @@ class WsConnection implements SharedConnection {
 
 function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     return {
-        'streamr-peer-id': peerInfo.peerId
+        [AbstractWsEndpoint.PEER_ID_HEADER]: peerInfo.peerId
     }
 }
 
@@ -94,25 +89,31 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
     }
 
     connect(serverUrl: ServerUrl): Promise<PeerId> {
+        // Check for existing connection and its state
         const existingConnection = this.connectionsByServerUrl.get(serverUrl)
         if (existingConnection !== undefined) {
             if (existingConnection.getReadyState() === WebSocket.OPEN) {
-                this.logger.trace('already connected to %s', serverUrl)
                 return Promise.resolve(existingConnection.getPeerId())
             }
-
-            this.logger.trace('already connected to %s, but readyState is %s, closing connection',
-                serverUrl, existingConnection.getReadyState())
-            this.close(existingConnection.getPeerId())
+            this.logger.trace('supposedly connected to %s but readyState is %s, closing connection',
+                serverUrl,
+                existingConnection.getReadyState()
+            )
+            this.close(
+                existingConnection.getPeerId(),
+                DisconnectionCode.DEAD_CONNECTION,
+                DisconnectionReason.DEAD_CONNECTION
+            )
         }
 
-        if (this.pendingConnections.has(serverUrl)) {
-            this.logger.trace('pending connection to %s', serverUrl)
-            return this.pendingConnections.get(serverUrl)!
+        // Check for pending connection
+        const pendingConnection = this.pendingConnections.get(serverUrl)
+        if (pendingConnection !== undefined) {
+            return pendingConnection
         }
 
-        this.logger.trace('===> connecting to %s', serverUrl)
-
+        // Perform connection
+        this.logger.trace('connecting to %s', serverUrl)
         const p = new Promise<string>((resolve, reject) => {
             try {
                 const ws = new WebSocket(
@@ -125,13 +126,12 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
                 let serverPeerInfo: PeerInfo | undefined
                 let connection: WsConnection | undefined
 
-                ws.on('upgrade', (res) => {
-                    const peerId = res.headers['streamr-peer-id'] as string
-
+                ws.once('upgrade', (res) => {
+                    const peerId = res.headers[AbstractWsEndpoint.PEER_ID_HEADER] as string
                     if (peerId) {
                         serverPeerInfo = PeerInfo.newTracker(peerId)
                     } else {
-                        this.logger.debug('Invalid message headers received on upgrade: ' + res)
+                        this.logger.debug('invalid message headers received on upgrade: ' + res)
                     }
                 })
 
@@ -141,12 +141,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
                         this.metrics.record('open:headersNotReceived', 1)
                         reject(new Error('dropping outgoing connection because connection headers never received'))
                     } else {
-                        connection = new WsConnection(ws, serverPeerInfo)
-                        this.addListeners(ws, connection, serverUrl)
-                        this.connectionsByServerUrl.set(serverUrl, connection)
-                        this.serverUrlByPeerId.set(connection.getPeerId(), serverUrl)
-                        this.onNewConnection(connection)
-                        resolve(connection.getPeerId())
+                        resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
                     }
                 })
 
@@ -169,8 +164,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         return p
     }
 
-    async stop(): Promise<void> {
-        this.pingPongWs.stop()
+    protected async doStop(): Promise<void> {
         this.getConnections().forEach((connection) => {
             connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
         })
@@ -187,32 +181,22 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         this.serverUrlByPeerId.delete(connection.getPeerId())
     }
 
-    private addListeners(
-        ws: WebSocket,
-        connection: WsConnection,
-        serverUrl: ServerUrl
-    ): void {
+    private setUpConnection(ws: WebSocket, serverPeerInfo: PeerInfo, serverUrl: ServerUrl): PeerId {
+        const connection = new WsConnection(ws, serverPeerInfo)
+
         ws.on('message', (message: string | Buffer | Buffer[]) => {
-            // TODO check message.type [utf8|binary]
-            this.metrics.record('inSpeed', message.length)
-            this.metrics.record('msgSpeed', 1)
-            this.metrics.record('msgInSpeed', 1)
-
-            // toString() needed for SSL connections as message will be Buffer instead of String
-            setImmediate(() => this.onReceive(connection, message.toString()))
+            this.onReceive(connection, message.toString())
         })
-
         ws.on('pong', () => {
-            this.logger.trace(`=> got pong event ws ${serverUrl}`)
-            this.pingPongWs.onPong(connection)
+            this.onPong(connection)
         })
-
         ws.once('close', (code: number, reason: string): void => {
-            if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
-                this.metrics.record('open:duplicateSocket', 1)
-            }
-
             this.onClose(connection, code, reason)
         })
+
+        this.connectionsByServerUrl.set(serverUrl, connection)
+        this.serverUrlByPeerId.set(connection.getPeerId(), serverUrl)
+        this.onNewConnection(connection)
+        return connection.getPeerId()
     }
 }
