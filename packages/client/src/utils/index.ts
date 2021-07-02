@@ -13,6 +13,9 @@ import { MaybeAsync } from '../types'
 
 import AggregatedError from './AggregatedError'
 import Scaffold from './Scaffold'
+import { Debugger, Debug } from './log'
+
+const debug = Debug('utils')
 
 export { AggregatedError, Scaffold }
 
@@ -93,8 +96,8 @@ type AnyInstance = {
     }
 }
 
-export function instanceId(instance: AnyInstance) {
-    return counterId(instance.constructor.name)
+export function instanceId(instance: AnyInstance, suffix = '') {
+    return counterId(instance.constructor.name) + suffix
 }
 
 function getVersion() {
@@ -565,6 +568,92 @@ export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): P
         clearTimeout(t)
         p.resolve(undefined)
     })
+}
+
+export class Gate {
+    id
+    debug: Debugger
+    isLocked = false
+    pending?: ReturnType<typeof Defer>
+    lockError?: Error
+
+    constructor() {
+        this.id = instanceId(this)
+        this.debug = debug.extend(this.id)
+        this.debug('create')
+    }
+
+    open() {
+        if (this.isLocked) {
+            // do nothing
+            return
+        }
+
+        if (this.pending) {
+            this.debug('open')
+            this.pending.resolve(true)
+            this.pending = undefined
+        }
+    }
+
+    lock() {
+        if (this.isLocked) {
+            // do nothing
+            return
+        }
+
+        this.isLocked = true
+        if (this.pending) {
+            this.pending.resolve(false)
+        }
+    }
+
+    error(err: Error) {
+        if (this.isLocked) {
+            // do nothing
+            return
+        }
+
+        this.debug('error', err)
+        this.close()
+        this.pending?.reject(err)
+    }
+
+    close() {
+        if (this.isLocked) {
+            // do nothing
+            return
+        }
+
+        if (!this.pending) {
+            this.debug('close')
+            this.pending = Defer<boolean>()
+        }
+    }
+
+    setOpenState(shouldBeOpen: boolean) {
+        if (shouldBeOpen) {
+            this.open()
+        } else {
+            this.close()
+        }
+    }
+
+    isOpen(): boolean {
+        return !this.isLocked && !this.pending
+    }
+
+    async check() {
+        if (this.isLocked) {
+            return false
+        }
+
+        if (this.pending) {
+            return this.pending
+        }
+
+        return true
+    }
 }
 
 /**
