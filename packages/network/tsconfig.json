@@ -10,5 +10,9 @@
   "include": [
     "src/**/*",
     "test/**/*"
+  ],
+  "exclude": [
+    "src/**/BrowserWebRtcConnection.ts",
+    "test/**/BrowserWebRtcConnection.test.ts"
   ]
 }

@@ -37,7 +37,7 @@ export class Logger {
     }
 
     private static createName(module: NodeJS.Module, context?: string) {
-        const parsedPath = path.parse(module.filename)
+        const parsedPath = path.parse("jee.js")//module.filename)
         let fileId = parsedPath.name
         if (fileId === 'index') {
             // file with name "foobar/index.ts" -> "foobar"

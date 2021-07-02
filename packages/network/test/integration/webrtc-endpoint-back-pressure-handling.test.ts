@@ -1,5 +1,4 @@
 import { Event } from '../../src/connection/IWebRtcEndpoint'
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
@@ -9,6 +8,8 @@ import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { wait } from 'streamr-test-utils'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
@@ -41,14 +42,16 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, trackerNode1),
             new MetricsContext('ep1'),
-            new NegotiatedProtocolVersions(peerInfo1)
+            new NegotiatedProtocolVersions(peerInfo1),
+            NodeWebRtcConnectionFactory
         )
         ep2 = new WebRtcEndpoint(
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo2, trackerNode2),
             new MetricsContext('ep'),
-            new NegotiatedProtocolVersions(peerInfo2)
+            new NegotiatedProtocolVersions(peerInfo2),
+            NodeWebRtcConnectionFactory
         )
         await ep1.connect('ep2', 'tracker')
     })
