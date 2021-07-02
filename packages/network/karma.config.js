@@ -1,5 +1,7 @@
 const path = require('path')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
+const { BrowserWindow } = require('electron').remote
+
 require('console-browserify')
 
 module.exports = function (config) {
@@ -8,18 +10,24 @@ module.exports = function (config) {
             'karma-webpack',
             'karma-jasmine',
             'karma-chrome-launcher',
+            'karma-electron'
         ],
         basePath: '',
         frameworks: ['jasmine'],
         files: [
             './karma-setup.js',
             './test/unit/BrowserWebRtcConnection.test.ts',
+            './test/unit/WsEndpoint.test.ts',
+            './test/unit/WebSocketServer.test.ts'
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
             './test/unit/BrowserWebRtcConnection.test.ts': ['webpack'],
+            './test/unit/WsEndpoint.test.ts': ['webpack'],
+            './test/unit/WebSocketServer.test.ts': ['webpack']
+
         },
-        browsers: ['ChromeHeadless'],
+        browsers: ['Electron'],
         client:{
             clearContext: false // leave Jasmine Spec Runner output visible in browser
         },
@@ -50,9 +58,10 @@ module.exports = function (config) {
                     "stream": false,
                     "util": false,
                     "module": false,
+                    "graceful-fs": false,
                     //"NodeJS.Module": require.resolve('node-module-polyfill'),
                     //"module": require.resolve('node-module-polyfill'),
-                    "console-browserify": require.resolve('console-browserify')
+                    "console-browserify": require.resolve('console-browserify'),
                 }
             },
             output: {
@@ -60,7 +69,8 @@ module.exports = function (config) {
                 path: path.resolve(__dirname, 'dist'),
             },
             externals: {
-                'uWebSockets.js': 'commonjs uWebSockets.js',
+                // 'uWebSockets.js': '@electron/remote uWebSockets.js',
+                // 'websocket': '@electron/remote ws',
                 'geoip-lite': 'commonjs geoip-lite',
                 'node-datachannel': 'commonjs node-datachannel'
             },
