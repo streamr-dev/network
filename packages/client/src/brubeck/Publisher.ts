@@ -6,7 +6,7 @@ import { getStreamId, StreamIDish } from '../publish/utils'
 import { FailedToPublishError } from '../publish'
 import { counterId } from '../utils'
 import { Context } from './Context'
-import { CancelableGenerator } from '../utils/iterators'
+import { CancelableGenerator, ICancelable } from '../utils/iterators'
 import { validateOptions } from '../stream/utils'
 
 const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -17,17 +17,12 @@ type PublishMessageOptions<T> = {
     partitionKey?: string | number
 }
 
-type Cancelable = {
-    cancel(err?: Error): Promise<void>
-    isCancelled: () => boolean
-}
-
 export default class BrubeckPublisher implements Context {
     client
     messageCreator
     id
     debug
-    inProgress = new Set<Cancelable>()
+    inProgress = new Set<ICancelable>()
 
     constructor(client: BrubeckClient) {
         this.client = client
