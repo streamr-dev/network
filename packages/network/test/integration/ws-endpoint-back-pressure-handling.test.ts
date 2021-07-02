@@ -1,7 +1,7 @@
-import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { Event } from "../../src/connection/AbstractWsEndpoint"
+import { Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
 describe('WsEndpoint: back pressure handling', () => {

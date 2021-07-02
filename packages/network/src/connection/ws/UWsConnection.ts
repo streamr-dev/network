@@ -1,9 +1,9 @@
 import { ConstructorOptions, WebSocketConnection } from "./WebSocketConnection"
 import uWS from 'uWebSockets.js'
-import { DisconnectionCode, DisconnectionReason } from "./IWsEndpoint"
-import { Logger } from "../helpers/Logger"
-import { NameDirectory } from "../NameDirectory"
-import { PeerInfo } from "./PeerInfo"
+import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
+import { Logger } from "../../helpers/Logger"
+import { NameDirectory } from "../../NameDirectory"
+import { PeerInfo } from "../PeerInfo"
 
 function ab2str(buf: ArrayBuffer | SharedArrayBuffer): string {
     return Buffer.from(buf).toString('utf8')

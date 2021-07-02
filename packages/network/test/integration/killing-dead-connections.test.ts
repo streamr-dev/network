@@ -1,10 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 import { waitForEvent } from 'streamr-test-utils'
 
-import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
-import { Event } from "../../src/connection/AbstractWsEndpoint"
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import { Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
 const STATE_OPEN = 1

@@ -1,6 +1,6 @@
 import { ConstructorOptions, WebSocketConnection } from "./WebSocketConnection"
-import { Logger } from "../helpers/Logger"
-import { NameDirectory } from "../NameDirectory"
+import { Logger } from "../../helpers/Logger"
+import { NameDirectory } from "../../NameDirectory"
 
 export abstract class ClientWebSocketConnection extends WebSocketConnection {
     //private _logger: Logger

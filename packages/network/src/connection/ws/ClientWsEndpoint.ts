@@ -1,8 +1,8 @@
 import WebSocket from 'ws'
 import util from 'util'
-import { PeerInfo } from './PeerInfo'
-import { MetricsContext } from '../helpers/MetricsContext'
-import { Logger } from '../helpers/Logger'
+import { PeerInfo } from '../PeerInfo'
+import { MetricsContext } from '../../helpers/MetricsContext'
+import { Logger } from '../../helpers/Logger'
 import {
     AbstractWsEndpoint,
     DisconnectionCode,

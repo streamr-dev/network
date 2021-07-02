@@ -1,7 +1,7 @@
 import uWS from 'uWebSockets.js'
-import { PeerInfo } from './PeerInfo'
-import { MetricsContext } from '../helpers/MetricsContext'
-import { Logger } from '../helpers/Logger'
+import { PeerInfo } from '../PeerInfo'
+import { MetricsContext } from '../../helpers/MetricsContext'
+import { Logger } from '../../helpers/Logger'
 import {
     AbstractWsEndpoint,
     DisconnectionCode,

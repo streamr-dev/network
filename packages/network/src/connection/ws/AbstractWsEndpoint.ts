@@ -1,8 +1,8 @@
 import { EventEmitter } from "events"
-import { Logger } from "../helpers/Logger"
-import { PeerInfo } from "./PeerInfo"
-import { Metrics, MetricsContext } from "../helpers/MetricsContext"
-import { Rtts } from "../identifiers"
+import { Logger } from "../../helpers/Logger"
+import { PeerInfo } from "../PeerInfo"
+import { Metrics, MetricsContext } from "../../helpers/MetricsContext"
+import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
 
 export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
@@ -19,12 +19,14 @@ export enum Event {
 export enum DisconnectionCode {
     GRACEFUL_SHUTDOWN = 1000,
     MISSING_REQUIRED_PARAMETER = 1002,
+    DEAD_CONNECTION = 1003,
 }
 
 export enum DisconnectionReason {
     GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
     DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
     NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
+    DEAD_CONNECTION = 'streamr:endpoint:dead-connection'
 }
 
 export class UnknownPeerError extends Error {

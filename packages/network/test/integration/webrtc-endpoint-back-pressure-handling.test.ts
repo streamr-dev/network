@@ -4,7 +4,7 @@ import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/composition'
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { wait } from 'streamr-test-utils'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"

@@ -2,7 +2,7 @@ import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerS
 import { RtcIceCandidateMessage, RtcOfferMessage, RtcAnswerMessage, RelayMessage, RtcConnectMessage } from '../identifiers'
 import { RtcSubTypes } from './RtcMessage'
 import { Logger } from "../helpers/Logger"
-import { UnknownPeerError } from "../connection/AbstractWsEndpoint"
+import { UnknownPeerError } from "../connection/ws/AbstractWsEndpoint"
 
 export function attachRtcSignalling(trackerServer: TrackerServer): void {
     if (!(trackerServer instanceof TrackerServer)) {

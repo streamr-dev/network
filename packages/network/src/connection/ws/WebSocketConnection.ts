@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events'
-import { Logger } from '../helpers/Logger'
-import { NameDirectory } from '../NameDirectory'
-import { PeerInfo } from './PeerInfo'
+import { Logger } from '../../helpers/Logger'
+import { NameDirectory } from '../../NameDirectory'
+import { PeerInfo } from '../PeerInfo'
 import StrictEventEmitter from 'strict-event-emitter-types'
-import { DisconnectionCode, DisconnectionReason } from './IWsEndpoint'
-import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
+import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
+import { DeferredConnectionAttempt } from '../DeferredConnectionAttempt'
 
 const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 const LOW_BACK_PRESSURE = 1024 * 1024

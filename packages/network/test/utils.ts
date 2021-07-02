@@ -1,6 +1,6 @@
 import { MetricsContext } from '../src/composition'
 import { PeerInfo } from '../src/connection/PeerInfo'
-import { ServerWsEndpoint, startWebSocketServer } from '../src/connection/ServerWsEndpoint'
+import { ServerWsEndpoint, startWebSocketServer } from '../src/connection/ws/ServerWsEndpoint'
 
 export const startServerWsEndpoint = async (
     host: string,

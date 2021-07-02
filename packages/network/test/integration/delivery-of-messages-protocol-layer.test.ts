@@ -12,7 +12,7 @@ import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer

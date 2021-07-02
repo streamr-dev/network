@@ -1,5 +1,5 @@
-import { Logger } from "../helpers/Logger"
-import { Rtts } from "../identifiers"
+import { Logger } from "../../helpers/Logger"
+import { Rtts } from "../../identifiers"
 import { SharedConnection } from "./AbstractWsEndpoint"
 
 export type GetConnections = () => Array<SharedConnection>

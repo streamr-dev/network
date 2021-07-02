@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { UWsServer } from '../../src/connection/UWsServer'
+import { UWsServer } from '../../src/connection/ws/UWsServer'
 
 const wssPort = 7777
 const WS_BUFFER_SIZE = 4096

@@ -2,11 +2,11 @@ import { Tracker } from '../../src/logic/Tracker'
 import WebSocket from 'ws'
 import { waitForEvent, wait } from 'streamr-test-utils'
 
-import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker } from '../../src/composition'
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
-import { DisconnectionCode, Event } from "../../src/connection/AbstractWsEndpoint"
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
 describe('ws-endpoint', () => {

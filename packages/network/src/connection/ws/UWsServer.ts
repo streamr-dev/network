@@ -1,14 +1,14 @@
 // this class emits new UWsConnections
 
 import EventEmitter from "events"
-import { Logger } from '../helpers/Logger'
+import { Logger } from '../../helpers/Logger'
 import { UWsConnection } from "./UWsConnection"
 import uWS from 'uWebSockets.js'
-import { PeerInfo, PeerType } from "./PeerInfo"
+import { PeerInfo, PeerType } from "../PeerInfo"
 import StrictEventEmitter from 'strict-event-emitter-types'
 import { WebSocketConnection } from "./WebSocketConnection"
-import { DisconnectionCode } from "./IWsEndpoint"
-import { DeferredConnectionAttempt } from "./DeferredConnectionAttempt"
+import { DisconnectionCode } from "./AbstractWsEndpoint"
+import { DeferredConnectionAttempt } from "../DeferredConnectionAttempt"
 
 interface UserData {
 	// upgraded vars

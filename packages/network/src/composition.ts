@@ -3,7 +3,7 @@ import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
 import { Location } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
-import { ServerWsEndpoint, startWebSocketServer } from './connection/ServerWsEndpoint'
+import { ServerWsEndpoint, startWebSocketServer } from './connection/ws/ServerWsEndpoint'
 import { Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
@@ -14,7 +14,7 @@ import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
-import { ClientWsEndpoint } from './connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from './connection/ws/ClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "./connection/NodeWebRtcConnection"
 

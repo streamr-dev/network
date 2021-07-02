@@ -6,7 +6,7 @@ import { startTracker, Tracker } from '../../src/composition'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 
 const WAIT_TIME = 200
 
@@ -49,8 +49,8 @@ describe('tracker: counter filtering', () => {
         trackerNode2.connectToTracker(tracker.getUrl())
 
         await runAndWaitForEvents([
-            () => { trackerNode1.connectToTracker(tracker.getAddress()) },
-            () => { trackerNode2.connectToTracker(tracker.getAddress()) }], [
+            () => { trackerNode1.connectToTracker(tracker.getUrl()) },
+            () => { trackerNode2.connectToTracker(tracker.getUrl()) }], [
             [trackerNode1, TrackerNodeEvent.CONNECTED_TO_TRACKER],
             [trackerNode2, TrackerNodeEvent.CONNECTED_TO_TRACKER]
         ])

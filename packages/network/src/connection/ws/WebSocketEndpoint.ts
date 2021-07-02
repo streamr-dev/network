@@ -1,15 +1,14 @@
 import { EventEmitter } from 'events'
-import { DisconnectionCode, DisconnectionReason, Event, IWsEndpoint } from './IWsEndpoint'
+import { DisconnectionCode, DisconnectionReason, Event } from './AbstractWsEndpoint'
 import uWS from 'uWebSockets.js'
-import { PeerBook } from './PeerBook'
-import { PeerInfo, PeerType } from './PeerInfo'
-import { Metrics, MetricsContext } from '../helpers/MetricsContext'
-import { Logger } from '../helpers/Logger'
-import { Rtts } from '../identifiers'
+import { PeerInfo } from '../PeerInfo'
+import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
+import { Logger } from '../../helpers/Logger'
+import { Rtts } from '../../identifiers'
 import { ConstructorOptions, WebSocketConnection } from './WebSocketConnection'
 import { UWsServer } from './UWsServer'
 import { ClientWebSocketConnection } from './ClientWebSocketConnection'
-import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
+import { DeferredConnectionAttempt } from '../DeferredConnectionAttempt'
 import { WsConnectionFactory } from './WsConnection'
 
 export interface ClientWebSocketConnectionFactory {
@@ -20,7 +19,7 @@ const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 const LOW_BACK_PRESSURE = 1024 * 1024
 const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
 
-export class WebSocketEndpoint extends EventEmitter implements IWsEndpoint {
+export class WebSocketEndpoint extends EventEmitter {
     private stopped = false
     private readonly serverHost: string
     private readonly serverPort: number
