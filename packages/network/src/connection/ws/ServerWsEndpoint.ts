@@ -99,7 +99,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     }
 
     protected doClose(connection: ServerWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
-        this.connectionByUwsSocket.delete(connection.socket)
+        this.connectionByUwsSocket.delete(connection.getSocket())
     }
 
     protected async doStop(): Promise<void> {
