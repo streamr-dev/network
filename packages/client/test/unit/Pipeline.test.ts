@@ -1,8 +1,12 @@
 import IteratorTest, { expected, MAX_ITEMS } from './IteratorTest'
 import { wait } from 'streamr-test-utils'
+import { Debug } from '../utils'
 
-import { Pipeline, PumpBuffer, PushBuffer } from '../../src/utils/Pipeline'
+import { Pipeline } from '../../src/utils/Pipeline'
+import { PushBuffer, PullBuffer } from '../../src/utils/PushBuffer'
 import { iteratorFinally } from '../../src/utils/iterators'
+
+const debug = Debug('Pipeline')
 
 const WAIT = 20
 
@@ -64,14 +68,18 @@ describe('Pipeline', () => {
             const receivedStep2: number[] = []
             const afterStep1 = jest.fn()
             const afterStep2 = jest.fn()
+            debug('init')
             const p = new Pipeline(generate())
                 .pipe(async function* Step1(s) {
                     try {
                         for await (const msg of s) {
                             receivedStep1.push(msg)
+                            debug('1 msg', msg)
                             yield msg * 2
+                            debug('1 msg', msg)
                         }
                     } finally {
+                        debug('1 finally')
                         afterStep1()
                     }
                 })
@@ -79,9 +87,12 @@ describe('Pipeline', () => {
                     try {
                         for await (const msg of s) {
                             receivedStep2.push(msg)
+                            debug('2 msg', msg)
                             yield msg * 10
+                            debug('2 msg', msg)
                         }
                     } finally {
+                        debug('2 finally')
                         // ensure async finally works
                         await wait(WAIT)
                         afterStep2()
@@ -246,13 +257,13 @@ describe('Pipeline', () => {
             expect(received).toEqual(expected)
         })
 
-        it('works with PushBuffer inputs', async () => {
+        it('works with PullBuffer inputs', async () => {
             const onFinallyInnerAfter = jest.fn()
             const onFinallyInner = jest.fn(async () => {
                 await wait(WAIT)
                 onFinallyInnerAfter()
             })
-            const inputStream = PumpBuffer(generate())
+            const inputStream = new PullBuffer(generate())
             const p = new Pipeline(inputStream)
                 .pipe(async function* Step1(s) {
                     yield* s
@@ -272,7 +283,7 @@ describe('Pipeline', () => {
             expect(received).toEqual(expected)
         })
 
-        it('works with PushBufferQueue inputs', async () => {
+        it('works with PushBuffer inputs', async () => {
             const onFinallyInnerAfter = jest.fn()
             const onFinallyInner = jest.fn(async () => {
                 await wait(WAIT)
@@ -287,7 +298,7 @@ describe('Pipeline', () => {
                 inputStream.end()
             })
 
-            const p = new Pipeline(inputStream[Symbol.asyncIterator]())
+            const p = new Pipeline(inputStream)
                 .pipe(async function* Step1(s) {
                     for await (const v of s) {
                         yield v
@@ -318,7 +329,7 @@ describe('Pipeline', () => {
             const receivedStep1: number[] = []
             const receivedStep2: number[] = []
 
-            const firstStream = PumpBuffer(generate())
+            const firstStream = new PullBuffer(generate())
             const p = new Pipeline(firstStream)
                 .pipe(async function* Step2(src) {
                     yield* new Pipeline(src)
@@ -362,7 +373,7 @@ describe('Pipeline', () => {
             const receivedStep2: number[] = []
             const err = new Error('expected err')
 
-            const firstStream = PumpBuffer(generate())
+            const firstStream = new PullBuffer(generate())
             const p = new Pipeline(firstStream)
                 .pipe(async function* Step2(src) {
                     yield* new Pipeline(src)
