@@ -3,22 +3,17 @@ import util from 'util'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { Logger } from '../../helpers/Logger'
-import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, SharedConnection, } from "./AbstractWsEndpoint"
+import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
+import { SharedConnection } from './SharedConnection'
 
 const staticLogger = new Logger(module)
 
-class WsConnection implements SharedConnection {
+class WsConnection extends SharedConnection {
     private readonly socket: WebSocket
-    public readonly peerInfo: PeerInfo
-
-    highBackPressure = false
-    respondedPong = true
-    rtt?: number
-    rttStart?: number
 
     constructor(socket: WebSocket, peerInfo: PeerInfo) {
+        super(peerInfo)
         this.socket = socket
-        this.peerInfo = peerInfo
     }
 
     close(code: DisconnectionCode, reason: DisconnectionReason): void {
@@ -37,10 +32,6 @@ class WsConnection implements SharedConnection {
         }
     }
 
-    getPeerId(): string {
-        return this.peerInfo.peerId
-    }
-
     getBufferedAmount(): number {
         return this.socket.bufferedAmount
     }
@@ -51,7 +42,7 @@ class WsConnection implements SharedConnection {
 
     // TODO: toString() representation for logging
 
-    ping(): void {
+    sendPing(): void {
         this.socket.ping()
     }
 
@@ -188,7 +179,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
             this.onReceive(connection, message.toString())
         })
         ws.on('pong', () => {
-            this.onPong(connection)
+            connection.onPong()
         })
         ws.once('close', (code: number, reason: string): void => {
             this.onClose(connection, code, reason)

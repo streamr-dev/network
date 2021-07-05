@@ -6,23 +6,17 @@ import {
     AbstractWsEndpoint,
     DisconnectionCode,
     DisconnectionReason,
-    HIGH_BACK_PRESSURE, SharedConnection,
 } from "./AbstractWsEndpoint"
+import { HIGH_BACK_PRESSURE, SharedConnection } from './SharedConnection'
 
 const staticLogger = new Logger(module)
 
-class UWSConnection implements SharedConnection {
+class UWSConnection extends SharedConnection {
     readonly socket: uWS.WebSocket
-    readonly peerInfo: PeerInfo
-
-    highBackPressure = false
-    respondedPong = true
-    rtt?: number
-    rttStart?: number
 
     constructor(socket: uWS.WebSocket, peerInfo: PeerInfo) {
+        super(peerInfo)
         this.socket = socket
-        this.peerInfo = peerInfo
     }
 
     close(code: DisconnectionCode, reason: DisconnectionReason): void {
@@ -41,10 +35,6 @@ class UWSConnection implements SharedConnection {
         }
     }
 
-    getPeerId(): string {
-        return this.peerInfo.peerId
-    }
-
     getBufferedAmount(): number {
         return this.socket.getBufferedAmount()
     }
@@ -55,7 +45,7 @@ class UWSConnection implements SharedConnection {
 
     // TODO: toString() representatin for logging
 
-    ping(): void {
+    sendPing(): void {
         this.socket.ping()
     }
 
@@ -130,7 +120,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
             drain: (ws) => {
                 const connection = this.connectionByUwsSocket.get(ws)
                 if (connection) {
-                    this.evaluateBackPressure(connection)
+                    connection.evaluateBackPressure()
                 }
             },
             close: (ws, code, message) => {
@@ -145,8 +135,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
                 const connection = this.connectionByUwsSocket.get(ws)
 
                 if (connection) {
-                    this.logger.trace('received from %s "pong" frame', connection.getPeerId())
-                    this.onPong(connection)
+                    connection.onPong()
                 }
             }
         })
@@ -168,7 +157,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
     }
 
     getPeerInfos(): PeerInfo[] {
-        return this.getConnections().map((connection) => connection.peerInfo)
+        return this.getConnections().map((connection) => connection.getPeerInfo())
     }
 
     resolveAddress(peerId: string): string | undefined {

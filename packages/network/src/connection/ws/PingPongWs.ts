@@ -1,6 +1,6 @@
 import { Logger } from "../../helpers/Logger"
 import { Rtts } from "../../identifiers"
-import { SharedConnection } from "./AbstractWsEndpoint"
+import { SharedConnection } from "./SharedConnection"
 
 export type GetConnections = () => Array<SharedConnection>
 
@@ -15,16 +15,12 @@ export class PingPongWs {
         this.pingInterval = setInterval(() => this.pingConnections(), pingIntervalInMs)
     }
 
-    onPong(connection: SharedConnection): void {
-        connection.respondedPong = true
-        connection.rtt = Date.now() - connection.rttStart!
-    }
-
     getRtts(): Rtts {
         const rtts: Rtts = {}
         this.getConnections().forEach((connection) => {
-            if (connection.rtt !== undefined) {
-                rtts[connection.getPeerId()] = connection.rtt
+            const rtt = connection.getRtt()
+            if (rtt !== undefined) {
+                rtts[connection.getPeerId()] = rtt
             }
         })
         return rtts
@@ -36,20 +32,18 @@ export class PingPongWs {
 
     private pingConnections(): void {
         this.getConnections().forEach((connection) => {
-            try {
-                // didn't get "pong" in pingInterval
-                if (!connection.respondedPong) {
-                    throw new Error('ws is not active')
-                }
-
-                // eslint-disable-next-line no-param-reassign
-                connection.respondedPong = false
-                connection.rttStart = Date.now()
-                connection.ping()
-                logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.rtt)
-            } catch (e) {
-                logger.warn(`failed pinging %s, error %s, terminating connection`, connection.getPeerId(), e)
+            if (!connection.getRespondedPong()) {
+                logger.warn(`terminate connection to %s because didn't receive pong`, connection.getPeerId())
                 connection.terminate()
+            } else {
+                try {
+                    connection.ping()
+                    logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.getRtt())
+                } catch (e) {
+                    logger.warn(`terminating connection because error thrown when attempting to ping %s: %s`,
+                        connection.getPeerId(), e)
+                    connection.terminate()
+                }
             }
         })
     }

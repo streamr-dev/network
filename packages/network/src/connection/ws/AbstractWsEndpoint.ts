@@ -4,9 +4,7 @@ import { PeerInfo } from "../PeerInfo"
 import { Metrics, MetricsContext } from "../../helpers/MetricsContext"
 import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
-
-export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
-export const LOW_BACK_PRESSURE = 1024 * 1024
+import { SharedConnection } from './SharedConnection'
 
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
@@ -37,20 +35,6 @@ export class UnknownPeerError extends Error {
         super(msg)
         Error.captureStackTrace(this, UnknownPeerError)
     }
-}
-
-export interface SharedConnection {
-    respondedPong: boolean
-    rtt?: number
-    rttStart?: number
-    ping: () => void
-    getPeerId: () => string
-    highBackPressure: boolean
-    peerInfo: PeerInfo
-    getBufferedAmount(): number
-    send(message: string): Promise<void>
-    terminate(): void
-    close(code: DisconnectionCode, reason: DisconnectionReason): void
 }
 
 export abstract class AbstractWsEndpoint<C extends SharedConnection> extends EventEmitter {
@@ -101,7 +85,7 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
             try {
-                this.evaluateBackPressure(connection)
+                connection.evaluateBackPressure()
                 await connection.send(message)
             } catch (err) {
                 this.metrics.record('sendFailed', 1)
@@ -156,10 +140,19 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
      * Implementer should invoke this whenever a new connection is formed
      */
     protected onNewConnection(connection: C): void {
+        const peerInfo = connection.getPeerInfo()
+        connection.setBackPressureHandlers(
+            () =>  {
+                this.emitLowBackPressure(peerInfo)
+            },
+            () =>  {
+                this.emitHighBackPressure(peerInfo)
+            }
+        )
         this.connectionById.set(connection.getPeerId(), connection)
         this.metrics.record('open', 1)
         this.logger.trace('added %s to connection list', connection.getPeerId())
-        this.emit(Event.PEER_CONNECTED, connection.peerInfo)
+        this.emit(Event.PEER_CONNECTED, peerInfo)
     }
 
     /**
@@ -169,8 +162,8 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         this.metrics.record('inSpeed', message.length)
         this.metrics.record('msgSpeed', 1)
         this.metrics.record('msgInSpeed', 1)
-        this.logger.trace('<== received from %s message "%s"', connection.peerInfo, message)
-        this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
+        this.logger.trace('<== received from %s message "%s"', connection.getPeerInfo(), message)
+        this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
     }
 
     /**
@@ -184,30 +177,7 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
         this.connectionById.delete(connection.getPeerId())
-        this.emit(Event.PEER_DISCONNECTED, connection.peerInfo, reason)
-    }
-
-    /**
-     * Implementer should invoke this whenever a pong frame is received
-     */
-    protected onPong(connection: SharedConnection): void {
-        this.pingPongWs.onPong(connection)
-    }
-
-    /**
-     * Implementer can invoke this whenever low watermark of buffer hit
-     */
-    protected evaluateBackPressure(connection: SharedConnection): void {
-        const bufferedAmount = connection.getBufferedAmount()
-        if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
-            this.logger.trace('Back pressure HIGH for %s at %d', connection.peerInfo, bufferedAmount)
-            this.emit(Event.HIGH_BACK_PRESSURE, connection.peerInfo)
-            connection.highBackPressure = true
-        } else if (connection.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
-            this.logger.trace('Back pressure LOW for %s at %d', connection.peerInfo, bufferedAmount)
-            this.emit(Event.LOW_BACK_PRESSURE, connection.peerInfo)
-            connection.highBackPressure = false
-        }
+        this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
     }
 
     protected getConnections(): Array<C> {
@@ -216,5 +186,13 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
 
     protected getConnectionByPeerId(peerId: string): C | undefined {
         return this.connectionById.get(peerId)
+    }
+
+    private emitLowBackPressure(peerInfo: PeerInfo): void {
+        this.emit(Event.LOW_BACK_PRESSURE, peerInfo)
+    }
+
+    private emitHighBackPressure(peerInfo: PeerInfo): void {
+        this.emit(Event.LOW_BACK_PRESSURE, peerInfo)
     }
 }
