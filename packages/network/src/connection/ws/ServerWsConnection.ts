@@ -8,7 +8,7 @@ import { ab2str } from './ServerWsEndpoint'
 export const staticLogger = new Logger(module)
 
 export class ServerWsConnection extends WsConnection {
-    readonly socket: uWS.WebSocket
+    private readonly socket: uWS.WebSocket
 
     constructor(socket: uWS.WebSocket, peerInfo: PeerInfo) {
         super(peerInfo)
@@ -23,7 +23,7 @@ export class ServerWsConnection extends WsConnection {
         }
     }
 
-    terminate() {
+    terminate(): void {
         try {
             this.socket.close()
         } catch (e) {

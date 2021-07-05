@@ -1,7 +1,7 @@
 import uWS from 'uWebSockets.js'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import { AbstractWsEndpoint, DisconnectionCode, } from "./AbstractWsEndpoint"
+import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
 import { HIGH_BACK_PRESSURE } from './WsConnection'
 import { staticLogger, ServerWsConnection } from './ServerWsConnection'
 
@@ -14,8 +14,8 @@ export function ab2str(buf: ArrayBuffer | SharedArrayBuffer): string {
 export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     private readonly serverUrl: string
     private readonly wss: uWS.TemplatedApp
+    private readonly connectionByUwsSocket: Map<uWS.WebSocket, ServerWsConnection>
     private listenSocket: uWS.us_listen_socket | null
-    private readonly connectionByUwsSocket: Map<uWS.WebSocket, ServerWsConnection> // uws.websocket => connection, interaction with uws events
 
     constructor(
         host: string,
@@ -74,16 +74,13 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 }
             },
             close: (ws, code, message) => {
-                const reason = ab2str(message)
-
                 const connection = this.connectionByUwsSocket.get(ws)
                 if (connection) {
-                    this.onClose(connection, code, reason)
+                    this.onClose(connection, code, ab2str(message) as DisconnectionReason)
                 }
             },
             pong: (ws) => {
                 const connection = this.connectionByUwsSocket.get(ws)
-
                 if (connection) {
                     connection.onPong()
                 }
@@ -93,6 +90,18 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         this.logger.trace('listening on %s', this.getUrl())
     }
 
+    getUrl(): string {
+        return this.serverUrl
+    }
+
+    resolveAddress(peerId: string): string | undefined {
+        return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
+    }
+
+    protected doClose(connection: ServerWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
+        this.connectionByUwsSocket.delete(connection.socket)
+    }
+
     protected async doStop(): Promise<void> {
         if (this.listenSocket) {
             this.logger.trace('shutting down uWS server')
@@ -100,18 +109,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             this.listenSocket = null
         }
         return new Promise((resolve) => setTimeout(resolve, 100))
-    }
-
-    getUrl(): string {
-        return this.serverUrl
-    }
-
-    getPeerInfos(): PeerInfo[] {
-        return this.getConnections().map((connection) => connection.getPeerInfo())
-    }
-
-    resolveAddress(peerId: string): string | undefined {
-        return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
     }
 
     private onIncomingConnection(ws: uWS.WebSocket): void {
@@ -130,19 +127,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 return
             }
 
-            const uwsConnection = new ServerWsConnection(ws, PeerInfo.newNode(peerId))
-            this.connectionByUwsSocket.set(ws, uwsConnection)
-            this.onNewConnection(uwsConnection)
+            const connection = new ServerWsConnection(ws, PeerInfo.newNode(peerId))
+            this.connectionByUwsSocket.set(ws, connection)
+            this.onNewConnection(connection)
         } catch (e) {
             this.logger.trace('dropped incoming connection because of %s', e)
             this.metrics.record('open:missingParameter', 1)
             ws.end(DisconnectionCode.MISSING_REQUIRED_PARAMETER, e.toString()) // TODO: reason not necessarily missing require parameter
         }
-    }
-
-    protected onClose(connection: ServerWsConnection, code = 0, reason = ''): void {
-        super.onClose(connection, code, reason)
-        this.connectionByUwsSocket.delete(connection.socket)
     }
 }
 

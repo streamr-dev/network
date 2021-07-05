@@ -108,21 +108,20 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<ClientWsConnection> {
         return p
     }
 
-    protected async doStop(): Promise<void> {
-        this.getConnections().forEach((connection) => {
-            connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
-        })
-    }
-
     getServerUrlByPeerId(peerId: PeerId): string | undefined {
         return this.serverUrlByPeerId.get(peerId)
     }
 
-    protected onClose(connection: ClientWsConnection, code = 0, reason = ''): void {
-        super.onClose(connection, code, reason)
+    protected doClose(connection: ClientWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
         const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
         this.connectionsByServerUrl.delete(serverUrl)
         this.serverUrlByPeerId.delete(connection.getPeerId())
+    }
+
+    protected async doStop(): Promise<void> {
+        this.getConnections().forEach((connection) => {
+            connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
+        })
     }
 
     private setUpConnection(ws: WebSocket, serverPeerInfo: PeerInfo, serverUrl: ServerUrl): PeerId {
@@ -135,7 +134,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<ClientWsConnection> {
             connection.onPong()
         })
         ws.once('close', (code: number, reason: string): void => {
-            this.onClose(connection, code, reason)
+            this.onClose(connection, code, reason as DisconnectionReason)
         })
 
         this.connectionsByServerUrl.set(serverUrl, connection)

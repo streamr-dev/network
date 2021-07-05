@@ -58,7 +58,7 @@ export abstract class WsConnection {
             if (this.onLowBackPressure === undefined) {
                 throw new Error('onLowBackPressure listener not set')
             }
-            this?.onLowBackPressure()
+            this.onLowBackPressure()
         }
     }
 

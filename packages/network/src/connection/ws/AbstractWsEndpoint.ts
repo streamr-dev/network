@@ -131,6 +131,15 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
         return this.connectionById
     }
 
+    getPeerInfos(): PeerInfo[] {
+        return this.getConnections().map((connection) => connection.getPeerInfo())
+    }
+
+    /**
+     * Custom close logic of base class
+     */
+    protected abstract doClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void
+
     /**
      * Custom clean up logic of base class
      */
@@ -169,7 +178,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     /**
      * Implementer should invoke this whenever a connection is closed.
      */
-    protected onClose(connection: C, code = 0, reason = ''): void {
+    protected onClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void {
         if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
             this.metrics.record('open:duplicateSocket', 1)
         }
@@ -177,7 +186,11 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
         this.connectionById.delete(connection.getPeerId())
-        this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
+        try {
+            this.doClose(connection, code, reason)
+        } finally {
+            this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
+        }
     }
 
     protected getConnections(): Array<C> {

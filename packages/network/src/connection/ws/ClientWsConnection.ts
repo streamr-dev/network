@@ -23,7 +23,7 @@ export class ClientWsConnection extends WsConnection {
         }
     }
 
-    terminate() {
+    terminate(): void {
         try {
             this.socket.terminate()
         } catch (e) {
