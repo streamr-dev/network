@@ -206,6 +206,6 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     }
 
     private emitHighBackPressure(peerInfo: PeerInfo): void {
-        this.emit(Event.LOW_BACK_PRESSURE, peerInfo)
+        this.emit(Event.HIGH_BACK_PRESSURE, peerInfo)
     }
 }

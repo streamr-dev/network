@@ -15,7 +15,7 @@ describe('WsEndpoint: back pressure handling', () => {
     })
 
     afterEach(async () => {
-        Promise.allSettled([
+        await Promise.allSettled([
             epClient.stop(),
             epServer.stop()
         ])

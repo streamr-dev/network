@@ -15,6 +15,11 @@ export class ServerWsConnection extends WsConnection {
         this.socket = socket
     }
 
+    // Should only be used as key for Map deletion
+    getSocket(): uWS.WebSocket {
+        return this.socket
+    }
+
     close(code: DisconnectionCode, reason: DisconnectionReason): void {
         try {
             this.socket.end(code, reason)
