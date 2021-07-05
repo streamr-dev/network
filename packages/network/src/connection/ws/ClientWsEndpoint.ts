@@ -1,55 +1,8 @@
 import WebSocket from 'ws'
-import util from 'util'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import { Logger } from '../../helpers/Logger'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import { SharedConnection } from './SharedConnection'
-
-const staticLogger = new Logger(module)
-
-class WsConnection extends SharedConnection {
-    private readonly socket: WebSocket
-
-    constructor(socket: WebSocket, peerInfo: PeerInfo) {
-        super(peerInfo)
-        this.socket = socket
-    }
-
-    close(code: DisconnectionCode, reason: DisconnectionReason): void {
-        try {
-            this.socket.close(code, reason)
-        } catch (e) {
-            staticLogger.error('failed to close ws, reason: %s', e)
-        }
-    }
-
-    terminate() {
-        try {
-            this.socket.terminate()
-        } catch (e) {
-            staticLogger.error('failed to terminate ws, reason %s', e)
-        }
-    }
-
-    getBufferedAmount(): number {
-        return this.socket.bufferedAmount
-    }
-
-    getReadyState(): 0 | 1 | 2 | 3 {
-        return this.socket.readyState
-    }
-
-    // TODO: toString() representation for logging
-
-    sendPing(): void {
-        this.socket.ping()
-    }
-
-    async send(message: string): Promise<void> {
-        await util.promisify((cb: any) => this.socket.send(message, cb))()
-    }
-}
+import { ClientWsConnection } from './ClientWsConnection'
 
 function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     return {
@@ -60,8 +13,8 @@ function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
 type PeerId = string
 type ServerUrl = string
 
-export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
-    private readonly connectionsByServerUrl: Map<ServerUrl, WsConnection>
+export class ClientWsEndpoint extends AbstractWsEndpoint<ClientWsConnection> {
+    private readonly connectionsByServerUrl: Map<ServerUrl, ClientWsConnection>
     private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     private readonly pendingConnections: Map<ServerUrl, Promise<string>>
 
@@ -115,7 +68,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
                 )
 
                 let serverPeerInfo: PeerInfo | undefined
-                let connection: WsConnection | undefined
+                let connection: ClientWsConnection | undefined
 
                 ws.once('upgrade', (res) => {
                     const peerId = res.headers[AbstractWsEndpoint.PEER_ID_HEADER] as string
@@ -165,7 +118,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
         return this.serverUrlByPeerId.get(peerId)
     }
 
-    protected onClose(connection: WsConnection, code = 0, reason = ''): void {
+    protected onClose(connection: ClientWsConnection, code = 0, reason = ''): void {
         super.onClose(connection, code, reason)
         const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
         this.connectionsByServerUrl.delete(serverUrl)
@@ -173,7 +126,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<WsConnection> {
     }
 
     private setUpConnection(ws: WebSocket, serverPeerInfo: PeerInfo, serverUrl: ServerUrl): PeerId {
-        const connection = new WsConnection(ws, serverPeerInfo)
+        const connection = new ClientWsConnection(ws, serverPeerInfo)
 
         ws.on('message', (message: string | Buffer | Buffer[]) => {
             this.onReceive(connection, message.toString())

@@ -4,7 +4,7 @@ import { PeerInfo } from "../PeerInfo"
 import { Metrics, MetricsContext } from "../../helpers/MetricsContext"
 import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
-import { SharedConnection } from './SharedConnection'
+import { WsConnection } from './WsConnection'
 
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
@@ -37,7 +37,7 @@ export class UnknownPeerError extends Error {
     }
 }
 
-export abstract class AbstractWsEndpoint<C extends SharedConnection> extends EventEmitter {
+export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEmitter {
     private readonly pingPongWs: PingPongWs
     private readonly connectionById: Map<string, C> = new Map<string, C>()
 
@@ -158,7 +158,7 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
     /**
      * Implementer should invoke this whenever a message is received.
      */
-    protected onReceive(connection: SharedConnection, message: string): void {
+    protected onReceive(connection: WsConnection, message: string): void {
         this.metrics.record('inSpeed', message.length)
         this.metrics.record('msgSpeed', 1)
         this.metrics.record('msgInSpeed', 1)

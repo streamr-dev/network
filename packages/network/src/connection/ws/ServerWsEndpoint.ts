@@ -1,75 +1,26 @@
 import uWS from 'uWebSockets.js'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import { Logger } from '../../helpers/Logger'
-import {
-    AbstractWsEndpoint,
-    DisconnectionCode,
-    DisconnectionReason,
-} from "./AbstractWsEndpoint"
-import { HIGH_BACK_PRESSURE, SharedConnection } from './SharedConnection'
-
-const staticLogger = new Logger(module)
-
-class UWSConnection extends SharedConnection {
-    readonly socket: uWS.WebSocket
-
-    constructor(socket: uWS.WebSocket, peerInfo: PeerInfo) {
-        super(peerInfo)
-        this.socket = socket
-    }
-
-    close(code: DisconnectionCode, reason: DisconnectionReason): void {
-        try {
-            this.socket.end(code, reason)
-        } catch (e) {
-            staticLogger.error('failed to gracefully close ws, reason: %s', e)
-        }
-    }
-
-    terminate() {
-        try {
-            this.socket.close()
-        } catch (e) {
-            staticLogger.error('failed to terminate ws, reason: %s', e)
-        }
-    }
-
-    getBufferedAmount(): number {
-        return this.socket.getBufferedAmount()
-    }
-
-    getRemoteAddress(): string {
-        return ab2str(this.socket.getRemoteAddressAsText())
-    }
-
-    // TODO: toString() representatin for logging
-
-    sendPing(): void {
-        this.socket.ping()
-    }
-
-    async send(message: string): Promise<void> {
-        this.socket.send(message)
-    }
-}
+import { AbstractWsEndpoint, DisconnectionCode, } from "./AbstractWsEndpoint"
+import { HIGH_BACK_PRESSURE } from './WsConnection'
+import { staticLogger, ServerWsConnection } from './ServerWsConnection'
 
 const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
 
-function ab2str (buf: ArrayBuffer | SharedArrayBuffer): string {
+export function ab2str(buf: ArrayBuffer | SharedArrayBuffer): string {
     return Buffer.from(buf).toString('utf8')
 }
 
-export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
-    private readonly serverHost: string
-    private readonly serverPort: number
+export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
+    private readonly serverUrl: string
     private readonly wss: uWS.TemplatedApp
     private listenSocket: uWS.us_listen_socket | null
-    private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
+    private readonly connectionByUwsSocket: Map<uWS.WebSocket, ServerWsConnection> // uws.websocket => connection, interaction with uws events
 
     constructor(
         host: string,
         port: number,
+        sslEnabled: boolean,
         wss: uWS.TemplatedApp,
         listenSocket: uWS.us_listen_socket,
         peerInfo: PeerInfo,
@@ -84,10 +35,9 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
 
         this.connectionByUwsSocket = new Map()
 
+        this.serverUrl = `${sslEnabled ? 'wss' : 'ws'}://${host}:${port}`
         this.wss = wss
         this.listenSocket = listenSocket
-        this.serverHost = host
-        this.serverPort = port
 
         this.wss.ws('/ws', {
             compression: 0,
@@ -153,7 +103,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
     }
 
     getUrl(): string {
-        return `ws://${this.serverHost}:${this.serverPort}`
+        return this.serverUrl
     }
 
     getPeerInfos(): PeerInfo[] {
@@ -180,7 +130,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
                 return
             }
 
-            const uwsConnection = new UWSConnection(ws, PeerInfo.newNode(peerId))
+            const uwsConnection = new ServerWsConnection(ws, PeerInfo.newNode(peerId))
             this.connectionByUwsSocket.set(ws, uwsConnection)
             this.onNewConnection(uwsConnection)
         } catch (e) {
@@ -190,7 +140,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         }
     }
 
-    protected onClose(connection: UWSConnection, code = 0, reason = ''): void {
+    protected onClose(connection: ServerWsConnection, code = 0, reason = ''): void {
         super.onClose(connection, code, reason)
         this.connectionByUwsSocket.delete(connection.socket)
     }

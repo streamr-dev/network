@@ -1,7 +1,6 @@
 import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
-
 import { MetricsContext, createNetworkNode, startTracker } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer

@@ -1,122 +1,86 @@
-import { ConstructorOptions } from './WebSocketConnection'
-import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
+import {
+    DisconnectionCode,
+    DisconnectionReason,
+} from './AbstractWsEndpoint'
 import { Logger } from '../../helpers/Logger'
-import { NameDirectory } from '../../NameDirectory'
-import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
-import { ClientWebSocketConnection } from './ClientWebSocketConnection'
-import { ClientWebSocketConnectionFactory } from './WebSocketEndpoint'
 
-export const WsConnectionFactory: ClientWebSocketConnectionFactory = Object.freeze({
-    createConnection(opts: ConstructorOptions): ClientWebSocketConnection {
-        return new WsConnection(opts)
+export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
+export const LOW_BACK_PRESSURE = 1024 * 1024
+
+export abstract class WsConnection {
+    private readonly peerInfo: PeerInfo
+    private readonly logger: Logger
+    private respondedPong = true
+    private rtt?: number
+    private rttStart?: number
+    private highBackPressure = false
+    private onLowBackPressure?: () => void
+    private onHighBackPressure?: () => void
+
+    protected constructor(peerInfo: PeerInfo) {
+        this.peerInfo = peerInfo
+        this.logger = new Logger(module, peerInfo.peerId)
     }
-})
 
-export class WsConnection extends ClientWebSocketConnection {
+    setBackPressureHandlers(onLowBackPressure: () => void, onHighBackPressure: () => void): void | never {
+        if (this.onLowBackPressure === undefined && this.onHighBackPressure === undefined) {
+            this.onLowBackPressure = onLowBackPressure
+            this.onHighBackPressure = onHighBackPressure
+        } else {
+            throw new Error('invariant: cannot re-set backpressure handlers')
+        }
+    }
 
-	private logger: Logger
-	private ws: WebSocket | null = null
+    ping(): void {
+        this.respondedPong = false
+        this.rttStart = Date.now()
+        this.sendPing()
+    }
 
-	constructor(opts: ConstructorOptions) {
-	    super(opts)
-	    this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
-	}
+    onPong(): void {
+        this.respondedPong = true
+        this.rtt = Date.now() - this.rttStart!
+    }
 
-	private toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
-	    return {
-	        'streamr-peer-id': peerInfo.peerId
-	    }
-	}
+    evaluateBackPressure(): void {
+        const bufferedAmount = this.getBufferedAmount()
+        if (!this.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
+            this.logger.trace('Back pressure HIGH for %s at %d', this.getPeerInfo(), bufferedAmount)
+            this.highBackPressure = true
+            if (this.onHighBackPressure === undefined) {
+                throw new Error('onHighBackPressure listener not set')
+            }
+            this.onHighBackPressure()
+        } else if (this.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
+            this.logger.trace('Back pressure LOW for %s at %d', this.getPeerInfo(), bufferedAmount)
+            this.highBackPressure = false
+            if (this.onLowBackPressure === undefined) {
+                throw new Error('onLowBackPressure listener not set')
+            }
+            this?.onLowBackPressure()
+        }
+    }
 
-	doConnect(): void {
-	    if (this.isFinished) {
-	        throw new Error('Connection already closed.')
-	    }
-	    try {
-	        let serverPeerInfo: PeerInfo
-	        const ws = new WebSocket(`${this.targetPeerAddress}/ws?address=${this.selfAddress}`, { headers: this.toHeaders(this.selfPeerInfo) })
+    getPeerInfo(): PeerInfo {
+        return this.peerInfo
+    }
 
-	        ws.on('upgrade', (res) => {
-	            const peerId = res.headers['streamr-peer-id'] as string
+    getRespondedPong(): boolean {
+        return this.respondedPong
+    }
 
-	            if (peerId) {
-	                serverPeerInfo = PeerInfo.newTracker(peerId)
-	            } else {
-	                this.logger.debug('Invalid message headers received on upgrade: ' + res)
-	            }
-	        })
+    getRtt(): number | undefined {
+        return this.rtt
+    }
 
-	        ws.once('open', () => {
-	            if (!serverPeerInfo) {
-	                this.close(DisconnectionCode.MISSING_REQUIRED_PARAMETER, DisconnectionReason.MISSING_REQUIRED_PARAMETER)
-	            } else {
-	                this.emitOpen(serverPeerInfo)
-	            }
-	        })
+    getPeerId(): string {
+        return this.getPeerInfo().peerId
+    }
 
-	        ws.on('error', (err) => {
-
-	            this.logger.trace('failed to connect to %s, error: %o', this.targetPeerAddress, err)
-	            this.emitError(err)
-	        })
-
-	        ws.on('message', (message: string | Buffer | Buffer[]) => {
-	            // TODO check message.type [utf8|binary]
-	            // toString() needed for SSL connections as message will be Buffer instead of String
-
-	            this.emitMessage(message.toString())
-	        })
-
-	        this.ws = ws
-
-	    } catch (err) {
-	        this.logger.trace('failed to connect to %s, error: %o', this.targetPeerAddress, err)
-	        this.emitError(err)
-	    }
-	}
-
-	protected doClose(code: DisconnectionCode, reason: DisconnectionReason): void {
-	    try {
-	        this.ws?.close(code, reason)
-	    } catch (e) {
-	        this.logger.error('failed to close ws, reason: %s', e)
-	    }
-	}
-
-	protected doSendMessage(message: string): Promise<void> {
-	    return new Promise<void>((resolve, reject) => {
-	        if (!this.ws) {
-	            reject('ws was null')
-	        } else {
-
-	            this.ws.send(message, (err) => {
-	                if (err) {
-	                    this.logger.error("error sending ws message " + err)
-	                    reject(err)
-	                } else {
-	                    resolve()
-	                }
-	            })
-	        }
-	    })
-	}
-
-	getBufferedAmount(): number {
-	    if (this.ws)
-	        {return this.ws?.bufferedAmount}
-	    return 0
-	}
-
-	isOpen(): boolean {
-	    if (!this.ws || this.ws.readyState != this.ws.OPEN) {
-	        return false
-	    } else {
-	        return true
-	    }
-	}
-
-	getReadyState(): number | undefined {
-	    return this.ws?.readyState
-	}
+    abstract sendPing(): void
+    abstract getBufferedAmount(): number
+    abstract send(message: string): Promise<void>
+    abstract terminate(): void
+    abstract close(code: DisconnectionCode, reason: DisconnectionReason): void
 }
