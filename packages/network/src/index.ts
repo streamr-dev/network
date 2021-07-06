@@ -1,3 +1,4 @@
+/*
 import { startNetworkNode } from "./composition"
 
 startNetworkNode({
@@ -6,3 +7,4 @@ startNetworkNode({
     id: 'browser-node',
     trackers: []
 })
+*/

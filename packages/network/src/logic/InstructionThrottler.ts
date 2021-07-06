@@ -77,6 +77,7 @@ export class InstructionThrottler {
     }
 
     isIdle(): boolean {
+        console.info("isIdle() called, returning: "+ !Object.values(this.ongoingPromises).some((p) => p.handling))
         return !Object.values(this.ongoingPromises).some((p) => p.handling)
     }
 

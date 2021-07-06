@@ -77,7 +77,7 @@ describe('WsEndpoint with no connections', () => {
     it('resolveAddress throws error', () => {
         expect(() => {
             wsEndpoint.resolveAddress('otherPeerId')
-        }).toThrowError('Id otherPeerId not found in peer book')
+        }).toThrowError('PeerId otherPeerId not found in peer book')
     })
 })
 

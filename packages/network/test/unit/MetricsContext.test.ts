@@ -4,7 +4,8 @@ describe('metrics', () => {
     let context: MetricsContext
 
     beforeEach(() => {
-        jest.useFakeTimers('modern').setSystemTime(100)
+        jest.useFakeTimers('modern')
+        jest.setSystemTime(100)
         context = new MetricsContext('peerId')
     })
 
