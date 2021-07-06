@@ -21,7 +21,6 @@ describe('websocket server', () => {
         brokerWithoutSSL = await startBroker({
             name: 'broker',
             privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
-            networkPort: 12345,
             trackerPort: 666,
             wsPort: 12346
         })

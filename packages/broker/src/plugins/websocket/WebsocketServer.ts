@@ -13,6 +13,7 @@ import { ApiAuthenticator } from '../../apiAuthenticator'
 import { SslCertificateConfig } from '../../types'
 import { PublishConnection } from './PublishConnection'
 import { SubscribeConnection } from './SubscribeConnection'
+import { PayloadFormat } from '../../helpers/PayloadFormat'
 
 const logger = new Logger(module)
 
@@ -42,7 +43,12 @@ export class WebsocketServer {
         this.streamrClient = streamrClient
     }
 
-    async start(port: number, apiAuthenticator: ApiAuthenticator, sslCertificateConfig?: SslCertificateConfig): Promise<void> {
+    async start(
+        port: number, 
+        payloadFormat: PayloadFormat,
+        apiAuthenticator: ApiAuthenticator, 
+        sslCertificateConfig?: SslCertificateConfig
+    ): Promise<void> {
         this.httpServer = (sslCertificateConfig !== undefined) 
             ? https.createServer({
                 key: fs.readFileSync(sslCertificateConfig.privateKeyFileName),
@@ -73,7 +79,7 @@ export class WebsocketServer {
         })
 
         this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
-            connection.init(ws, this.streamrClient)
+            connection.init(ws, this.streamrClient, payloadFormat)
         })
 
         this.httpServer.listen(port)

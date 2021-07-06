@@ -1,4 +1,4 @@
-import { startTracker, startNetworkNode, MetricsContext, NetworkNode, Tracker } from 'streamr-network'
+import { startTracker, createNetworkNode, MetricsContext, NetworkNode, Tracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import http from 'http'
 import StreamrClient from 'streamr-client'
@@ -10,7 +10,6 @@ import { createClient } from '../../../utils'
 
 const trackerPort = 17370
 const wsPort = 17351
-const networkNodePort = 17361
 
 describe('ping-pong test between broker and clients', () => {
     let tracker: Tracker
@@ -30,11 +29,9 @@ describe('ping-pong test between broker and clients', () => {
     })
 
     beforeEach(async () => {
-        networkNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: networkNodePort,
+        networkNode = createNetworkNode({
             id: 'networkNode',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         networkNode.start()
         metricsContext = new MetricsContext(null as any)

@@ -1,63 +1,49 @@
 /* eslint-disable no-underscore-dangle */
 import { waitForEvent } from 'streamr-test-utils'
 
-import { Event, DisconnectionReason, DisconnectionCode } from '../../src/connection/IWsEndpoint' 
-import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
+import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { Event } from "../../src/connection/AbstractWsEndpoint"
+import { startServerWsEndpoint } from '../utils'
 
 const STATE_OPEN = 1
-const STATE_CLOSING = 2
 
 describe('check and kill dead connections', () => {
-    let node1: WsEndpoint
-    let node2: WsEndpoint
+    let clientEndpoint: ClientWsEndpoint
+    let serverEndpoint: ServerWsEndpoint
 
     beforeEach(async () => {
-        node1 = await startEndpoint('127.0.0.1', 43971, PeerInfo.newNode('node1'), null)
-        node2 = await startEndpoint('127.0.0.1', 43972, PeerInfo.newNode('node2'), null)
-
-        node1.connect('ws://127.0.0.1:43972')
-        await waitForEvent(node1, Event.PEER_CONNECTED)
+        clientEndpoint = new ClientWsEndpoint(PeerInfo.newNode('clientEndpoint'))
+        serverEndpoint = await startServerWsEndpoint('127.0.0.1', 43972, PeerInfo.newTracker('serverEndpoint'))
+        await clientEndpoint.connect('ws://127.0.0.1:43972')
     })
 
     afterEach(async () => {
         Promise.allSettled([
-            node1.stop(),
-            node2.stop()
+            clientEndpoint.stop(),
+            serverEndpoint.stop()
         ])
     })
 
     it('if we find dead connection, we force close it', async () => {
-        expect(node1.getPeers().size).toBe(1)
+        expect(clientEndpoint.getPeers().size).toBe(1)
 
         // get alive connection
-        const connection = node1.getPeers().get('ws://127.0.0.1:43972')
-        expect(connection!.readyState).toEqual(STATE_OPEN)
-
-        // @ts-expect-error private method
-        jest.spyOn(node1, 'onClose').mockImplementation()
+        const connection = clientEndpoint.getPeers().get('serverEndpoint')
+        expect(connection!.getReadyState()).toEqual(STATE_OPEN)
 
         // check connections
         jest.spyOn(connection!, 'ping').mockImplementation(() => {
             throw new Error('mock error message')
         })
-        // @ts-expect-error private method
-        node1.pingConnections()
 
-        expect(connection!.readyState).toEqual(STATE_CLOSING)
+        const event = waitForEvent(clientEndpoint, Event.PEER_DISCONNECTED)
+        // @ts-expect-error private method
+        clientEndpoint.pingPongWs.pingConnections()
+        const [peerInfo, reason] = await event
 
-        // @ts-expect-error private method
-        expect(node1.onClose).toBeCalledTimes(1)
-        // @ts-expect-error private method
-        expect(node1.onClose).toBeCalledWith('ws://127.0.0.1:43972', PeerInfo.newNode('node2'),
-            DisconnectionCode.DEAD_CONNECTION, DisconnectionReason.DEAD_CONNECTION)
-
-        // @ts-expect-error private method
-        node1.onClose.mockRestore()
-        // @ts-expect-error private method
-        node1.pingConnections()
-
-        const [peerInfo] = await waitForEvent(node1, Event.PEER_DISCONNECTED)
-        expect(peerInfo).toEqual(PeerInfo.newNode('node2'))
+        expect(peerInfo).toEqual(PeerInfo.newTracker('serverEndpoint'))
+        expect(reason).toEqual('')
     })
 })

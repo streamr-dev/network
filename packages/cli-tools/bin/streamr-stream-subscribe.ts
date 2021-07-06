@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import { subscribe } from '../src/subscribe'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, createFnParseInt } from './common'
+import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, createFnParseInt, getStreamId } from './common'
 import pkg from '../package.json'
 
 const program = new Command()
@@ -13,8 +13,9 @@ program
 authOptions(program)
 envOptions(program)
     .version(pkg.version)
-    .action((streamId: string, options: any) => {
+    .action((streamIdOrPath: string, options: any) => {
         options.orderMessages = !options.disableOrdering
+        const streamId = getStreamId(streamIdOrPath, options)!
         subscribe(streamId, options.partition, formStreamrOptionsWithEnv(options))
     })
     .parse(process.argv)

@@ -137,7 +137,7 @@ export class Contracts {
     }
 
     // move signatures from sidechain to mainnet
-    async transportSignaturesForMessage(messageHash: string): Promise<ContractReceipt | null> {
+    async transportSignaturesForMessage(messageHash: string, ethersOptions = {}): Promise<ContractReceipt | null> {
         const sidechainAmb = await this.getSidechainAmb()
         const message = await sidechainAmb.message(messageHash)
         const messageId = '0x' + message.substr(2, 64)
@@ -213,7 +213,7 @@ export class Contracts {
 
         const signer = this.ethereum.getSigner()
         log(`Sending message from signer=${await signer.getAddress()}`)
-        const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures)
+        const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures, ethersOptions)
         const trAMB = await txAMB.wait()
         return trAMB
     }

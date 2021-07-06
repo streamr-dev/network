@@ -32,4 +32,12 @@ export class NetworkNode extends Node {
     unsubscribe(streamId: string, streamPartition: number): void {
         this.unsubscribeFromStream(new StreamIdAndPartition(streamId, streamPartition))
     }
+
+    getNeighborsForStream(streamId: string, streamPartition: number): ReadonlyArray<string> {
+        return this.streams.getAllNodesForStream(new StreamIdAndPartition(streamId, streamPartition))
+    }
+
+    getRtt(nodeId: string): number|undefined {
+        return this.nodeToNode.getRtts()[nodeId]
+    }
 }
