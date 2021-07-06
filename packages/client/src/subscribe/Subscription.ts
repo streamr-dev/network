@@ -36,7 +36,7 @@ export default class Subscription extends Emitter {
     /** @internal */
     _onFinally
     /** @internal */
-    pipeline: ReturnType<typeof MessagePipeline>
+    pipeline?: ReturnType<typeof MessagePipeline>
     /** @internal */
     msgStream
     /** @internal */
@@ -69,7 +69,7 @@ export default class Subscription extends Emitter {
             },
         }, this.onPipelineEnd)
 
-        this.msgStream = this.pipeline.msgStream
+        this.msgStream = this.pipeline?.msgStream
     }
 
     emit(event: symbol | string, ...args: any[]) {
@@ -148,7 +148,7 @@ export default class Subscription extends Emitter {
         return msgs
     }
 
-    [Symbol.asyncIterator]() {
+    async* [Symbol.asyncIterator]() {
         // only iterate sub once
         if (this.iterated) {
             throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
@@ -158,11 +158,10 @@ export default class Subscription extends Emitter {
         if (!this.pipeline) {
             // subscription is done
             // eslint-disable-next-line require-yield
-            return (function* Noop() {
-                return undefined
-            }())
+            return
         }
-        return this.pipeline
+
+        yield* this.pipeline
     }
 
     async cancel(...args: Todo[]) {
