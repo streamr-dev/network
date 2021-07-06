@@ -4,7 +4,7 @@ import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
 import { Plugin, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import { Storage, startCassandraStorage } from './Storage'
-import { StorageConfig } from './StorageConfig'
+import { StorageConfig, AssignmentMessage } from './StorageConfig'
 import { StreamPart } from '../../types'
 import { Wallet } from 'ethers'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -28,7 +28,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     private cassandra?: Storage
     private storageConfig?: StorageConfig
     private messageListener?: (msg: Protocol.StreamMessage) => void
-    private assignmentMessageListener?: (msg: Protocol.StreamMessage) => void
+    private assignmentMessageListener?: (msg: Protocol.StreamMessage<AssignmentMessage>) => void
 
     constructor(options: PluginOptions) {
         super(options)

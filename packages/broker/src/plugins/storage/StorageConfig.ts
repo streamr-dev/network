@@ -37,6 +37,14 @@ const getKeysFromStream = (streamId: string, partitions: number) => {
     return keys
 }
 
+export type AssignmentMessage = {
+    stream: {
+        id: string,
+        partitions: number,
+    },
+    event: 'STREAM_ADDED' | 'STREAM_REMOVED',
+}
+
 export class StorageConfig {
 
     static ASSIGNMENT_EVENT_STREAM_ID_SUFFIX = '/storage-node-assignments'
@@ -134,9 +142,9 @@ export class StorageConfig {
         })
     }
 
-    startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: Protocol.StreamMessage) => void {
+    startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: Protocol.StreamMessage<AssignmentMessage>) => void {
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
-        const messageListener = (msg: Protocol.StreamMessage) => {
+        const messageListener = (msg: Protocol.StreamMessage<AssignmentMessage>) => {
             if (msg.messageId.streamId === assignmentStreamId) {
                 const content = msg.getParsedContent() as any
                 const keys = new Set(getKeysFromStream(content.stream.id, content.stream.partitions))
@@ -152,7 +160,7 @@ export class StorageConfig {
         return messageListener
     }
 
-    stopAssignmentEventListener(messageListener: (msg: Protocol.StreamMessage) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
+    stopAssignmentEventListener(messageListener: (msg: Protocol.StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)
