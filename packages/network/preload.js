@@ -1,7 +1,7 @@
 process.once("loaded", () => {
 
 	let WebSocket = require('ws')
-	let uWS = require('@trufflesuite/uws-js-unofficial')
+	let uWS = require('@streamr/uws-js-unofficial')
 
 	window.WebSocket = WebSocket
 	window.uWS = uWS
