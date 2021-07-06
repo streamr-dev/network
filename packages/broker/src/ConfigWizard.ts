@@ -3,191 +3,193 @@ import { Wallet } from 'ethers'
 import { writeFileSync } from 'fs'
 import path from 'path'
 
-export class ConfigWizard {
-    readonly singleLineMenuOptions: any = {
-    }
-    constructor(startMessage: string){
-        this.log(startMessage)
-    }
+import {Config} from './config'
 
-    log(...args: any){
-        console.log(...args)
-    }
+import { Logger } from 'streamr-network'
 
-    async captureMultipleOption(
-        preText: string,
-        items: Array<{[key: string]: string}>
-    ) {
-        const res = await inquirer.prompt([
-            {
-                type: 'checkbox',
-                name:'selectedItems',
-                message: preText,
-                choices: items
-            }
-        ])
+const logger = new Logger(module)
 
-        return res.selectedItems
-    }
-
-    async captureUserOption(
-        preText: string, 
-        items: Array<string>
-    ): Promise<string>{
-        const res = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'optionList',
-                message: preText,
-                choices: items,
-
-            }
-        ])
-
-        return res.optionList   
-    }
-
-    async captureUserInput(
-        preText: string
-    ): Promise<string>{
-        preText += ' > '        
-        const input = await inquirer.prompt([
-            {
-                type:'input',
-                name:'text',
-                message:preText
-            }
-        ])
-
-        return input.text
-    }
+const TODO_VALUES = {
+    number:-1,
+    string: 'empty_str',
 }
 
-export interface PluginTemplateType {
-    port: number
-}
-export interface BrokerConfigTemplate {
-    ethereumPrivateKey: string
-    plugins: {[plugin: string]: PluginTemplateType}
+// the lines with a TODO comment have values similar to the dev configs but need a revision to ensure the values are as they should
+const DefaultConfig: Config = {
+    ethereumPrivateKey: TODO_VALUES.string,//'{ETHEREUM_PRIVATE_KEY}',
+    network: {
+        name: TODO_VALUES.string,
+        hostname: '127.0.0.1', // TODO
+        port: TODO_VALUES.number,
+        advertisedWsUrl: null,
+        trackers: [ // TODO
+            "ws://127.0.0.1:30301",
+            "ws://127.0.0.1:30302",
+            "ws://127.0.0.1:30303"
+        ],
+        location: {
+            latitude: 60.19,
+            longitude: 24.95,
+            country: "Finland",
+            city: "Helsinki"
+        } // TODO
+    },
+    reporting: {
+        intervalInSeconds: 0,
+        streamr: null,
+        perNodeMetrics: null
+    },
+    streamrUrl: 'http://127.0.0.1', // TODO
+    streamrAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c', // TODO
+    storageNodeConfig: {
+        registry: {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F', // TODO
+            jsonRpcProvider: 'http://10.200.10.1:8546' // TODO
+        }
+    },
+    httpServer: {
+        privateKeyFileName: null,
+        certFileName: null,
+        port: TODO_VALUES.number//'{HTTP_SERVER_PORT}',
+    },
+    apiAuthentication: null,
+    plugins: {}
 }
 
-export class BrokerConfigWizard extends ConfigWizard{
-    config: BrokerConfigTemplate
+export class ConfigWizard{
+    config: Config
+    // required to mock results on tests
+    inquirer: inquirer.Inquirer = inquirer
+
+    defaultWebsocketPort = 7171 
+    defaultMqttPort = 7272 
+    defaultHttpPort = 7373
 
     constructor(){
-        console.clear()
-        super('Broker Configuration Wizard started')
-        this.config = {
-            ethereumPrivateKey:'',
-            plugins:{}
-        }
+        this.config = DefaultConfig
     }
 
-    generatePrivateKey(): string{
-        const wallet = Wallet.createRandom()
-        this.config.ethereumPrivateKey = wallet.privateKey
-        return wallet.privateKey
+    async inquirerSinglePrompt(prompt: inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion) {
+        const answers = await this.inquirer.prompt([prompt])
+        return answers[prompt.name!]
     }
 
-    importPrivateKey(privateKey: string){
-        try {
-            const wallet = new Wallet(privateKey)
-            this.config.ethereumPrivateKey = wallet.privateKey
-        } catch (e){
-            throw new Error(`Invalid privateKey provided for import: ${privateKey}`)
-        }
+    async generateOrImportPrivateKey(): Promise<string>{
+        const generateOrImport = await this.inquirerSinglePrompt({
+            type: 'list',
+            name:'generateOrImportEthereumPrivateKey',
+            message: 'Do you want to generate a new Ethereum private key or import an existing one?',
+            choices: ['Generate', 'Import'],
+            filter: (choice: string) => {
+                return choice.toLowerCase()
+            }
+        })
 
-    }
+        if (generateOrImport === 'generate'){
+            this.config.ethereumPrivateKey = Wallet.createRandom().privateKey
+        } else if (generateOrImport === 'import'){
+            const privateKey = await this.inquirerSinglePrompt({
+                type: 'input',
+                name: 'privateKey',
+                message: "'Please provide the private key to import'",
+            })
 
-    storeConfig(destinationFolder = '../configs/'){
-        const filename = `wizard-config.json`
-        const finalPath = path.join(__dirname, destinationFolder, filename)
-        writeFileSync(finalPath, JSON.stringify(this.config))
-        this.log(`Configuration stored in ${finalPath}`)
-        return finalPath
-    }
-
-    async selectPlugins(){
-        const res = await this.captureMultipleOption('Select the plugins to enable', 
-            [
-                {name: 'Websocket'},
-                {name:'MQTT'},
-                {name:'HttpPublish'}
-            ]
-        )
-
-        const defaultWebsocketPort = 7171 
-        const defaultMqttPort = 7272 
-        const defaultHttpPort = 7373
-
-        for (let i = 0; i < res.length; i++){
-            if (res[i] === 'Websocket'){
-                const portString = await this.captureUserInput(`Select a port for the Websocket Plugin [Enter for default: ${defaultWebsocketPort}]`)
-                let port = parseInt(portString)
-                if (portString === '') {
-                    port = defaultWebsocketPort
-                }
-
-                if (!Number.isNaN(port) && Number.isInteger(port) && port > 1023 && port < 49151){
-                    this.config.plugins['websocket'] = { port }
-                }
+            try {
+                const wallet = new Wallet(privateKey)
+                this.config.ethereumPrivateKey = wallet.privateKey
+            } catch (privateKeyError){
+                throw new Error(`Invalid privateKey provided for import: ${privateKey}`)
             }
 
-            if (res[i] === 'MQTT'){
-                const portString = await this.captureUserInput(`Select a port for the MQTT Plugin [Enter for default: ${defaultMqttPort}]`)
-                let port = parseInt(portString)
-                if (portString === '') {
-                    port = defaultMqttPort
-                }
-                if (!Number.isNaN(port) && Number.isInteger(port) && port > 1023 && port < 49151){
-                    this.config.plugins['mqtt'] = { port }
-                }
-
-            }
-
-            if (res[i] === 'HttpPublish'){
-                const portString = await this.captureUserInput(`Select a port for the HttpPublish Plugin [Enter for default: ${defaultHttpPort}]`)
-                let port = parseInt(portString)
-                if (portString === '') {
-                    port = defaultHttpPort
-                }
-
-                if (!Number.isNaN(port) && Number.isInteger(port) && port > 1023 && port < 49151){
-                    this.config.plugins['httpPublish'] = { port }
-                }
-
-            }
-        }
-
-    }
-}
-
-export async function startBrokerConfigWizard (destinationFolder?: string) {
-    try {
-        const wizard = new BrokerConfigWizard()
-        const generateOrImport = await wizard.captureUserOption('Do you want to generate a new Ethereum private key or import an existing one?', ['Generate', 'Import'])
-    
-        if (generateOrImport === 'Generate'){
-            wizard.generatePrivateKey()
-        } else if (generateOrImport === 'Import'){
-            const privateKey = await wizard.captureUserInput('Please provide the private key to import')
-            wizard.importPrivateKey(privateKey)
         } else {
             throw new Error(`Invalid option ${generateOrImport} provided`)
         }
 
-        // enable selected plugins 
-        await wizard.selectPlugins()
-    
-        wizard.storeConfig(destinationFolder)
-        wizard.log('Broker Config Wizard ran succesfully')
-        wizard.log('Generated configuration:', wizard.config)
-    } catch (e){
-        console.error('Error running the Broker Config Wizard')
-        console.error(e)
-    } finally {
-        console.log("\n")
-        process.exit()
+        return this.config.ethereumPrivateKey
     }
-    
+
+    async promptNumberWithDefault(prompt: inquirer.InputQuestion, defaultValue: number){
+        const valueString = await this.inquirerSinglePrompt(prompt)
+        let value = parseInt(valueString)
+        if (valueString === ''){
+            value = defaultValue
+        }
+
+        if (!Number.isNaN(value) && Number.isInteger(value) && value > 1023 && value < 49151){
+            return value
+        } else {
+            return defaultValue
+        }
+    }
+
+    async selectPlugins(): Promise<Array<string>>{
+        const plugins: inquirer.Answers = await this.inquirerSinglePrompt( {
+            type: 'checkbox',
+            name:'selectedItems',
+            message: 'Select the plugins to enable',
+            choices: [
+                {name: 'Websocket'},
+                {name:'MQTT'},
+                {name:'HttpPublish'}
+            ]
+        })
+
+        const selectedPlugins = []
+        for (let i = 0; i < plugins.length; i++){
+            selectedPlugins.push(plugins[i])
+            if (plugins[i] === 'Websocket'){
+                const wsPort = await this.promptNumberWithDefault({
+                    type: 'input',
+                    name: 'wsPort',
+                    message: `Select a port for the Websocket Plugin [Enter for default: ${this.defaultWebsocketPort}]`,
+                }, this.defaultWebsocketPort)
+                this.config.plugins['websocket'] = { port: wsPort }
+            }
+
+            if (plugins[i] === 'MQTT'){
+                const mqttPort = await this.promptNumberWithDefault({
+                    type: 'input',
+                    name: 'mqttPort',
+                    message: `Select a port for the MQTT Plugin [Enter for default: ${this.defaultMqttPort}]`,
+                }, this.defaultMqttPort)
+                this.config.plugins['mqtt'] = { port: mqttPort }
+            }
+
+            if (plugins[i] === 'HttpPublish'){
+                const httpPort = await this.promptNumberWithDefault({
+                    type: 'input',
+                    name: 'httpPort',
+                    message: `Select a port for the HttpPublish Plugin [Enter for default: ${this.defaultHttpPort}]`,
+                }, this.defaultHttpPort)
+                this.config.plugins['httpPublish'] = { port: httpPort }
+            }
+        }
+
+        return selectedPlugins
+
+    }
+
+    async storeConfig(destinationFolder = '../configs/'){
+        const filename = `wizard-config.json`
+        const finalPath = path.join(__dirname, destinationFolder, filename)
+        writeFileSync(finalPath, JSON.stringify(this.config))
+        return finalPath
+    }
+
+    async start(destinationFolder?: string){
+        await this.generateOrImportPrivateKey()
+        await this.selectPlugins()
+        const finalConfigPath = await this.storeConfig(destinationFolder)
+        logger.info('Broker Config Wizard ran succesfully')
+        logger.info('Generated configuration:', this.config)
+        logger.info(`Stored config under ${finalConfigPath}`)
+        logger.info(`You can start the broker now with \n streamr-broker ${finalConfigPath}`)
+        return finalConfigPath
+    }
+
+}
+
+export async function startBrokerConfigWizard (destinationFolder?: string): Promise<string> {
+    const wizard = new ConfigWizard()
+    return wizard.start(destinationFolder)
 }

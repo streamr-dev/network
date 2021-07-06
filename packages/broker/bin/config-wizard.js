@@ -15,3 +15,4 @@ program
 
     })
 startBrokerConfigWizard('../../configs/')
+
