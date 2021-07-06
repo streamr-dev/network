@@ -40,7 +40,6 @@
   "dependencies": {
     "@electron/remote": "^1.2.0",
     "@jest/fake-timers": "^27.0.5",
-    "@trufflesuite/uws-js-unofficial": "^18.14.0-unofficial.7",
     "browserify-fs": "^1.0.0",
     "cancelable-promise": "^3.2.3",
     "commander": "^7.2.0",
@@ -67,6 +66,7 @@
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
+    "@streamr/uws-js-unofficial": "18.14.0-unofficial.5",
     "@types/geoip-lite": "^1.4.1",
     "@types/heap": "^0.2.28",
     "@types/jest": "^26.0.23",

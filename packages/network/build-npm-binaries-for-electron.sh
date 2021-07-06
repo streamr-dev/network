@@ -1,1 +1,1 @@
-./node_modules/.bin/electron-rebuild
+./node_modules/.bin/electron-rebuild -v 13
