@@ -138,7 +138,7 @@ export class StorageConfig {
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         const messageListener = (msg: Protocol.StreamMessage) => {
             if (msg.messageId.streamId === assignmentStreamId) {
-                const content = msg.getParsedContent()
+                const content = msg.getParsedContent() as any
                 const keys = new Set(getKeysFromStream(content.stream.id, content.stream.partitions))
                 if (content.event === 'STREAM_ADDED') {
                     this._addStreams(keys)

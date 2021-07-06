@@ -409,7 +409,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
             Promise.resolve(subTask).then(async (s) => {
                 sub = s
                 sub.on('message', onMessage)
-                for await (const msg of sub) {
+                for await (const msg of sub[Symbol.asyncIterator]()) {
                     sub.emit('message', msg.getParsedContent(), msg)
                 }
                 return sub
@@ -437,7 +437,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         }
 
         Promise.resolve(task).then(async (sub) => {
-            for await (const msg of sub) {
+            for await (const msg of sub[Symbol.asyncIterator]()) {
                 await onMessage(msg.getParsedContent(), msg)
             }
 

@@ -104,6 +104,7 @@ export default class Subscription extends Emitter {
     public async onPipelineEnd(err?: Error) {
         this.debug('onPipelineEnd', err)
         let error = err
+        // @ts-expect-error doesn't want to undefine
         this.pipeline = undefined
         try {
             const onFinally = this._onFinally
@@ -133,7 +134,7 @@ export default class Subscription extends Emitter {
      */
     async collect(n?: number) {
         const msgs = []
-        for await (const msg of this) {
+        for await (const msg of this[Symbol.asyncIterator]()) {
             if (n === 0) {
                 break
             }
@@ -172,9 +173,9 @@ export default class Subscription extends Emitter {
         return this.pipeline?.end(...args)
     }
 
-    isCancelled(...args: Todo[]): boolean {
+    isCancelled(): boolean {
         if (!this.pipeline) { return false }
-        return this.pipeline.isCancelled(...args)
+        return this.pipeline.isCancelled()
     }
 
     async return(...args: Todo[]) {
