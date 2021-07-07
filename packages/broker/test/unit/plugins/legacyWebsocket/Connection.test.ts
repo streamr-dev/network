@@ -216,7 +216,7 @@ describe('Connection', () => {
     describe('event: message', () => {
         it('emitted when receiving valid message', async () => {
             const messageEvent = waitForEvent(connection, 'message')
-            fakeSocket.emit('message', protocolMessage.serialize())
+            fakeDuplexStream.emit('data', protocolMessage.serialize())
             const [receivedMessage] = await messageEvent
             expect(receivedMessage).toEqual(protocolMessage)
         })
@@ -224,14 +224,14 @@ describe('Connection', () => {
         it('not emitted if connection marked as dead', async () => {
             connection.forceClose('test')
             const messageEvent = waitForEvent(connection, 'message', WAIT_TIME_FOR_NO_EVENT)
-            fakeSocket.emit('message', protocolMessage.serialize())
+            fakeDuplexStream.emit('data', protocolMessage.serialize())
             await expect(messageEvent).rejects
                 .toEqual(new Error(`Promise timed out after ${WAIT_TIME_FOR_NO_EVENT} milliseconds`))
         })
 
         it('not emitted if invalid message', async () => {
             const messageEvent = waitForEvent(connection, 'message', WAIT_TIME_FOR_NO_EVENT)
-            fakeSocket.emit('message', 'INVALID_MESSAGE_INCOMING')
+            fakeDuplexStream.emit('data', 'INVALID_MESSAGE_INCOMING')
             await expect(messageEvent).rejects
                 .toEqual(new Error(`Promise timed out after ${WAIT_TIME_FOR_NO_EVENT} milliseconds`))
         })
@@ -283,7 +283,7 @@ describe('Connection', () => {
     })
 
     it('responds with an error if received invalid message from socket', async () => {
-        fakeSocket.emit('message', 'INVALID_MESSAGE_INCOMING')
+        fakeDuplexStream.emit('data', 'INVALID_MESSAGE_INCOMING')
         await waitForCondition(() => fakeDuplexStream.write.mock.calls.length !== 0)
         expect(fakeDuplexStream.write).toHaveBeenCalledTimes(1)
         expect(fakeDuplexStream.write).toHaveBeenCalledWith(new Protocol.ErrorResponse({

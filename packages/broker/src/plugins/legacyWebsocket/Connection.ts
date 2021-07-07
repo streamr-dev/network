@@ -45,7 +45,7 @@ export class Connection extends EventEmitter {
         this.controlLayerVersion = controlLayerVersion
         this.messageLayerVersion = messageLayerVersion
 
-        socket.on('message', async (data: WebSocket.Data) => {
+        duplexStream.on('data', (data: WebSocket.Data) => {
             if (this.dead) {
                 return
             }
