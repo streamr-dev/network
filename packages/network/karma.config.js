@@ -32,20 +32,19 @@ module.exports = function (config) {
           
         files: [
             './karma-setup.js',
-            //'./test/unit/**/!(tracker.instructions*).ts'
             './test/browser/BrowserWebRtcConnection.test.ts',
-            './test/unit/Logger.test.ts',
-            './test/unit/WsEndpoint.test.ts',
-            './test/unit/WebSocketServer.test.ts'
+            // './test/unit/MessageBuffer.test.ts',
+
+            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
         ],
         preprocessors: {
             //'./bundle.js': ['webpack'], 
             './karma-setup.js': ['webpack'],
-            //'./test/**/unit/!(tracker.instructions*).ts': ['webpack']
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
-            './test/unit/Logger.test.ts': ['webpack'],
-            './test/unit/WsEndpoint.test.ts': ['webpack'],
-            './test/unit/WebSocketServer.test.ts': ['webpack']
+            // './test/unit/MessageBuffer.test.ts': ['webpack'],
+
+            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
+        //
         },
         customLaunchers: {
             CustomElectron: {
@@ -77,7 +76,7 @@ module.exports = function (config) {
             clearContext: false, // leave Jasmine Spec Runner output visible in browser
             useIframe: false
         },
-        singleRun: false,
+        singleRun: true,
         webpack: {
             mode: 'development',
             module: {
@@ -85,8 +84,8 @@ module.exports = function (config) {
                     {
                         test: /\.ts?$/,
                         exclude: [
-                                '/node_modules/',
-                            ],
+                            '/node_modules/',
+                        ],
                         use: [{
                             loader: 'ts-loader',
                             options: { configFile: 'tsconfig.webpack.json' }
@@ -97,17 +96,20 @@ module.exports = function (config) {
             plugins: [
                 new NodePolyfillPlugin(),
                 new webpack.ProvidePlugin({
-                       process: 'process/browser',
+                    process: 'process/browser',
                 })
             ],
             resolve: {
                 extensions: ['.tsx', '.ts', '.js'],
                 alias: {
-                    "process": "process/browser"
+                    "process": "process/browser",
+                    [path.resolve(__dirname, "src/logic/LocationManager.ts")]:
+                        path.resolve(__dirname, "test/browser/LocationManager.ts")
                 },
                 fallback: {
                     "fs": require.resolve('browserify-fs'),
                     //"console-browserify": require.resolve('console-browserify'),
+                    "/src/logic/LocationManager.ts": false,
                     "module": false
                 }
             },

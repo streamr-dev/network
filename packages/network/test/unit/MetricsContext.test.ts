@@ -9,6 +9,11 @@ describe('metrics', () => {
         context = new MetricsContext('peerId')
     })
 
+    afterEach(() => {
+        jest.runOnlyPendingTimers()
+        jest.useRealTimers()
+    })
+
     it('empty report', async () => {
         const rep = await context.report(false)
         expect(rep).toEqual({
@@ -179,7 +184,7 @@ describe('metrics', () => {
             },
         })
 
-        jest.advanceTimersByTime(1000 * 2)
+        jest.advanceTimersByTime(100 * 2)
 
         const metricTwo = context.create('metricTwo')
             .addRecordedMetric('a')
