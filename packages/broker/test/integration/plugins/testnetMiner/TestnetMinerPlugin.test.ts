@@ -10,9 +10,9 @@ import { Wallet } from 'ethers'
 
 const logger = new Logger(module)
 
-const TRACKER_PORT = 12411
-const LEGACY_WEBSOCKET_PORT = 12413
-const CLAIM_SERVER_PORT = 12414
+const TRACKER_PORT = 12461
+const LEGACY_WEBSOCKET_PORT = 12462
+const CLAIM_SERVER_PORT = 12463
 const MOCK_REWARD_CODE = 'mock-reward-code'
 
 const nodePrivateKey = fastPrivateKey()

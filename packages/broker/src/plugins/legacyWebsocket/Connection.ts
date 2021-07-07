@@ -1,97 +1,167 @@
 import { EventEmitter } from 'events'
 import { Logger, Protocol } from 'streamr-network'
-import uWS from 'uWebSockets.js'
 import { Stream } from '../../Stream'
+import WebSocket from "ws"
+import stream from "stream"
 
 const logger = new Logger(module)
 
 let nextId = 1
 
-function generateId() {
+function generateId(): string {
     const id = `socketId-${nextId}`
     nextId += 1
     return id
 }
 
+export interface Connection {
+    on(eventName: 'message', handler: (msg: Protocol.ControlMessage) => void): this
+    on(eventName: 'close', handler: () => void): this
+    on(eventName: 'highBackPressure', handler: () => void): this
+    on(eventName: 'lowBackPressure', handler: () => void): this
+}
+
 export class Connection extends EventEmitter {
+    readonly id: string
+    readonly controlLayerVersion: number
+    readonly messageLayerVersion: number
+    private readonly socket: WebSocket
+    private readonly duplexStream: stream.Duplex
+    private readonly streams: Stream[] = []
+    private dead = false
+    private highBackPressure = false
+    private respondedPong = true
 
-    static LOW_BACK_PRESSURE = 1024 * 1024 // 1 megabytes
-    static HIGH_BACK_PRESSURE = 1024 * 1024 * 2 // 2 megabytes
-
-    id: string
-    socket: uWS.WebSocket
-    streams: Stream[] = []
-    dead: boolean
-    controlLayerVersion: number
-    messageLayerVersion: number
-    highBackPressure: boolean
-
-    constructor(socket: uWS.WebSocket, controlLayerVersion: number, messageLayerVersion: number) {
+    constructor(
+        socket: WebSocket,
+        duplexStream: stream.Duplex,
+        controlLayerVersion: number,
+        messageLayerVersion: number
+    ) {
         super()
         this.id = generateId()
         this.socket = socket
-        this.streams = []
-        this.dead = false
+        this.duplexStream = duplexStream
         this.controlLayerVersion = controlLayerVersion
         this.messageLayerVersion = messageLayerVersion
-        this.highBackPressure = false
+
+        duplexStream.on('data', (data: WebSocket.Data) => {
+            if (this.dead) {
+                return
+            }
+            let message: Protocol.ControlMessage | undefined
+            try {
+                message = Protocol.ControlMessage.deserialize(data.toString(), false)
+            } catch (err) {
+                this.send(new Protocol.ControlLayer.ErrorResponse({
+                    requestId: '', // Can't echo the requestId of the request since parsing the request failed
+                    errorMessage: err.message || err,
+                    errorCode: Protocol.ControlLayer.ErrorCode.INVALID_REQUEST,
+                }))
+            }
+            if (message !== undefined) {
+                this.emit('message', message)
+            }
+        })
+        socket.on('pong', () => {
+            logger.trace(`received from ${this.id} "pong" frame`)
+            this.respondedPong = true
+        })
+        socket.on('close', () => {
+            logger.trace('socket "%s" closed connections (was on streams="%o")', this.id, this.getStreamsAsString())
+            this.emit('close')
+        })
+        socket.on('error', (err) => {
+            logger.warn('socket "%s" error %s', this.id, err)
+        })
+
+        duplexStream.on('drain', () => {
+            logger.debug('Back pressure LOW for %s at %d', this.id, this.getBufferedAmount())
+            this.emit('lowBackPressure')
+            this.highBackPressure = false
+        })
     }
 
-    addStream(stream: Stream) {
+    getBufferedAmount(): number {
+        return this.socket.bufferedAmount
+    }
+
+    getStreams(): Stream[] {
+        return this.streams.slice() // return copy
+    }
+
+    isDead(): boolean {
+        return this.dead
+    }
+
+    setRespondedToPongAsFalse(): void {
+        this.respondedPong = false
+    }
+
+    hasRespondedToPong(): boolean {
+        return this.respondedPong
+    }
+
+    addStream(stream: Stream): void {
         this.streams.push(stream)
     }
 
-    removeStream(streamId: string, streamPartition: number) {
+    removeStream(streamId: string, streamPartition: number): void {
         const i = this.streams.findIndex((s: Stream) => s.id === streamId && s.partition === streamPartition)
         if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
 
-    forEachStream(cb: (stream: Stream) => void) {
+    forEachStream(cb: (stream: Stream) => void): void {
         this.getStreams().forEach(cb)
     }
 
-    getStreams() {
-        return this.streams.slice() // return copy
-    }
-
-    streamsAsString() {
+    getStreamsAsString(): string[] {
         return this.streams.map((s: Stream) => s.toString())
     }
 
-    markAsDead() {
-        this.dead = true
+    ping(): void {
+        this.socket.ping()
+        logger.trace(`sent ping to ${this.id}`)
     }
 
-    isDead() {
-        return this.dead
-    }
-
-    evaluateBackPressure() {
-        if (!this.highBackPressure && this.socket.getBufferedAmount() > Connection.HIGH_BACK_PRESSURE) {
-            logger.debug('Back pressure HIGH for %s at %d', this.id, this.socket.getBufferedAmount())
+    send(msg: Protocol.ControlLayer.ControlMessage): void {
+        const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
+        logger.trace('send: %s: %o', this.id, serialized)
+        let shouldContinueWriting = true
+        try {
+            shouldContinueWriting = this.duplexStream.write(serialized)
+        } catch (e) {
+            this.forceClose(`unable to send message: ${e}`)
+        }
+        if (!shouldContinueWriting) {
+            logger.debug('Back pressure HIGH for %s at %d', this.id, this.getBufferedAmount())
             this.emit('highBackPressure')
             this.highBackPressure = true
-        } else if (this.highBackPressure && this.socket.getBufferedAmount() < Connection.LOW_BACK_PRESSURE) {
-            logger.debug('Back pressure LOW for %s at %d', this.id, this.socket.getBufferedAmount())
-            this.emit('lowBackPressure')
-            this.highBackPressure = false
         }
     }
 
-    ping() {
-        this.socket.ping()
+    close(): void {
+        try {
+            this.socket.close()
+        } catch (e) {
+            logger.warn('connection %s threw error on graceful close, reason: %s', this.id, e)
+        } finally {
+            this.dead = true
+            this.emit('close')
+        }
     }
 
-    send(msg: Protocol.ControlLayer.ControlMessage) {
-        const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
-        logger.trace('send: %s: %o', this.id, serialized)
+    forceClose(reason: string): void {
         try {
-            this.socket.send(serialized)
-            this.evaluateBackPressure()
+            this.socket.terminate()
         } catch (e) {
-            this.emit('forceClose', e)
+            // no need to check this error
+        } finally {
+            logger.warn('connection %s was terminated, reason: %s', this.id, reason)
+            this.dead = true
+            this.emit('close')
         }
     }
 }
