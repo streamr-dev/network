@@ -198,7 +198,7 @@ describe('metrics', () => {
                 a: 10,
                 b: 666,
                 c: {
-                    rate: 40,
+                    rate: 100,
                     last: 100,
                     total: 100
                 }
@@ -225,14 +225,14 @@ describe('metrics', () => {
                 a: 15,
                 b: 666,
                 c: {
-                    rate: 41.6,
+                    rate: 308,
                     last: 208,
                     total: 308
                 }
             },
             metricTwo: {
                 a: {
-                    rate: 14,
+                    rate: 49,
                     last: 39,
                     total: 49
                 },
