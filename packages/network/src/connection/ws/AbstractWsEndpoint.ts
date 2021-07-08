@@ -136,12 +136,12 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     }
 
     /**
-     * Custom close logic of base class
+     * Custom close logic of subclass
      */
     protected abstract doClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void
 
     /**
-     * Custom clean up logic of base class
+     * Custom clean up logic of subclass
      */
     protected abstract doStop(): Promise<void>
 
