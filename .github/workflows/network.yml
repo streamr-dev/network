@@ -61,6 +61,9 @@ jobs:
       - run: npm run test-integration
         env:
           CI: true
+      - run: npm run test-browser
+        env:
+          CI: true
 
   publish:
     needs: [test]
