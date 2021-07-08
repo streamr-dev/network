@@ -5,7 +5,7 @@ import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import Connection from '../../../src/Connection'
 import { publishManyGenerator } from './utils'
 
-import config from '../config'
+import clientOptions from '../config'
 import { Stream } from '../../../src/stream'
 
 describeRepeats('StreamrClient', () => {
@@ -23,7 +23,7 @@ describeRepeats('StreamrClient', () => {
 
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

@@ -8,7 +8,7 @@ import { Defer } from '../../../src/utils'
 // import Connection from '../../../src/Connection'
 // import { StorageNode } from '../../../src/stream/StorageNode'
 
-import config from '../config'
+import clientOptions from '../config'
 import { Stream } from '../../../src/stream'
 import Subscription from '../../../src/brubeck/Subscription'
 import Subscriber from '../../../src/brubeck/Subscriber'
@@ -29,7 +29,7 @@ describeRepeats('Subscriber', () => {
 
     const createClient = (opts = {}) => {
         const c = new BrubeckClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
@@ -79,12 +79,6 @@ describeRepeats('Subscriber', () => {
             await client.disconnect()
             client.debug('disconnecting after test <<')
         }
-
-        // const openSockets = Connection.getOpen()
-        // if (openSockets !== 0) {
-            // await Connection.closeOpen()
-            // throw new Error(`sockets not closed: ${openSockets}`)
-        // }
     })
 
     describe('basics', () => {
