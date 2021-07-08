@@ -17,6 +17,7 @@ import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
 import { StorageNodeRegistry } from "./StorageNodeRegistry"
+import { v4 as uuidv4 } from 'uuid'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -69,8 +70,14 @@ export const startBroker = async (config: Config): Promise<Broker> => {
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
     // Start network node
+    let sessionId
+    if (!config.plugins['storage']){
+        sessionId = `${brokerAddress}#${uuidv4()}`
+    }
+
+    // Start network node
     const networkNode = createNetworkNode({
-        id: brokerAddress,
+        id: sessionId || brokerAddress,
         name: networkNodeName,
         trackers,
         location: config.network.location,
