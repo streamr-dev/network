@@ -1,7 +1,8 @@
 import { BrowserWebRtcConnectionFactory } from "../../src/connection/BrowserWebRtcConnection"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import { MessageQueue} from "../../src/connection/MessageQueue"
-import { ConstructorOptions, DeferredConnectionAttempt } from "../../src/connection/WebRtcConnection"
+import { ConstructorOptions } from "../../src/connection/WebRtcConnection"
+import { DeferredConnectionAttempt } from "../../src/connection/DeferredConnectionAttempt"
 
 const connectionOpts1: ConstructorOptions = {
     selfId: 'peer1',
@@ -9,7 +10,7 @@ const connectionOpts1: ConstructorOptions = {
     routerId: 'tracker',
     stunUrls: [],
     messageQueue: new MessageQueue<string>(),
-    deferredConnectionAttempt: new DeferredConnectionAttempt('peer2')
+    deferredConnectionAttempt: new DeferredConnectionAttempt()
 }
 
 const connectionOpts2: ConstructorOptions = {
@@ -18,7 +19,7 @@ const connectionOpts2: ConstructorOptions = {
     routerId: 'tracker',
     stunUrls: [],
     messageQueue: new MessageQueue<string>(),
-    deferredConnectionAttempt: new DeferredConnectionAttempt('peer1')
+    deferredConnectionAttempt: new DeferredConnectionAttempt()
 }
 
 describe('BrowserWebRtcConnection', () => {

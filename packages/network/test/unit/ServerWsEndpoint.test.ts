@@ -3,6 +3,9 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ServerWsEndpoint, startWebSocketServer } from '../../src/connection/ws/ServerWsEndpoint'
 import { waitForEvent } from 'streamr-test-utils'
 
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
+
 const wssPort1 = 7777
 const wssPort2 = 7778
 
@@ -36,6 +39,11 @@ describe('ServerWsEndpoint', () => {
     })
 
     test('receives encrypted connections', async () => {
+        // UwebSockets does not support ssl on Electron
+        if (typeof _streamr_electron_test !== 'undefined') {
+            return
+        }
+
         const [wss, listenSocket] = await startWebSocketServer(
             '127.0.0.1',
             wssPort2,
