@@ -49,7 +49,12 @@ type Options<T> = {
     signature?: string | null
 }
 
-export default class StreamMessage<T = unknown> {
+export type MessageValue = null | string | number | boolean | MessageContent | MessageContent[]
+export type MessageContent = {
+  [key: string]: MessageValue
+} | MessageValue[]
+
+export default class StreamMessage<T extends MessageContent | unknown = unknown> {
     static LATEST_VERSION = LATEST_VERSION
 
     // TODO can we remove these static field and use the enum object directly?
