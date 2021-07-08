@@ -3,6 +3,7 @@ import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator from "./StreamMessageValidator"
 import CachingStreamMessageValidator from "./CachingStreamMessageValidator"
 import SigningUtil from "./SigningUtil"
+export * from "./SPID"
 import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry } from "./TrackerRegistry"
 import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
 
