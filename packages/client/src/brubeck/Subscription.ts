@@ -1,4 +1,4 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import { MessageContent, StreamMessage } from 'streamr-client-protocol'
 import MessageStream from './MessageStream'
 import SubscriptionSession from './SubscriptionSession'
 import { validateOptions } from '../stream/utils'
@@ -9,7 +9,8 @@ export type SubscriptionOptions = {
 }
 
 export type SubscriptionOnMessage<T> = (msg: T, streamMessage: StreamMessage<T>) => void
-export default class Subscription<T> extends MessageStream<T> {
+
+export default class Subscription<T extends MessageContent | unknown> extends MessageStream<T> {
     context: SubscriptionSession<T>
     key: string
     streamId: string
@@ -25,8 +26,8 @@ export default class Subscription<T> extends MessageStream<T> {
     }
 
     onMessage(onMessageFn: SubscriptionOnMessage<T>) {
-        this.on('message', (streamMessage: StreamMessage) => {
-            const msg = streamMessage as StreamMessage<T>
+        this.on('message', (streamMessage) => {
+            const msg = streamMessage
             onMessageFn(msg.getParsedContent(), msg)
         })
     }

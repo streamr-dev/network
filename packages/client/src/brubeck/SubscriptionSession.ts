@@ -1,6 +1,5 @@
 import Emitter from 'events'
-
-import { StreamMessage } from 'streamr-client-protocol'
+import { MessageContent, StreamMessage } from 'streamr-client-protocol'
 
 import { AggregatedError, Scaffold, counterId } from '../utils'
 import { validateOptions } from '../stream/utils'
@@ -40,7 +39,7 @@ export type SubscriptionSessionOptions = ReturnType<typeof validateOptions> & {
  * Adds connection handles as needed.
  */
 
-export default class SubscriptionSession<T> extends Emitter implements Context {
+export default class SubscriptionSession<T extends MessageContent | unknown> extends Emitter implements Context {
     id
     debug
     client: BrubeckClient

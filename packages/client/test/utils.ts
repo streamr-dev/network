@@ -3,7 +3,7 @@ import { writeHeapSnapshot } from 'v8'
 
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { PublishRequest, StreamMessage } from 'streamr-client-protocol'
+import { PublishRequest, StreamMessage, MessageContent } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { pTimeout, counterId, CounterId, AggregatedError, pLimitFn } from '../src/utils'
@@ -86,11 +86,7 @@ export function addAfterFn() {
     }
 }
 
-interface Json {
-  [key: string]: null | string | number | boolean | Json | Json[]
-}
-
-export const Msg = (opts?: Json) => ({
+export const Msg = (opts?: MessageContent) => ({
     value: uid('msg'),
     ...opts,
 })
