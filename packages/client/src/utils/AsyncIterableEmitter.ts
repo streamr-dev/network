@@ -72,6 +72,7 @@ export function asyncIterableWithEvents<T>(asyncIterable: AsyncIterable<T>, emit
 
 /**
  * Start consuming the asyncIterable as soon as an on('message') handler is added to the emitter.
+ * Careful not to iterate twice.
  */
 export function flowOnMessageListener<T>(asyncIterable: AsyncGenerator<T>, emitter: StrictAsyncIterableEmitter<T>) {
     const consume = async () => {

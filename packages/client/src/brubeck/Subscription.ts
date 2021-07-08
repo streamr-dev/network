@@ -15,10 +15,12 @@ export default class Subscription<T extends MessageContent | unknown> extends Me
     key: string
     streamId: string
     streamPartition: number
+    /** prevent buffered data from yielding */
+    isUnsubscribed = false
 
     constructor(subSession: SubscriptionSession<T>) {
+        super(subSession)
         const { key, streamId, streamPartition } = validateOptions(subSession)
-        super(subSession, { idSuffix: key })
         this.context = subSession
         this.key = key
         this.streamId = streamId
@@ -36,7 +38,15 @@ export default class Subscription<T extends MessageContent | unknown> extends Me
         return this.context.count()
     }
 
-    unsubscribe() {
-        return this.cancel()
+    async* iterate() {
+        for await (const msg of super.iterate()) {
+            if (this.isUnsubscribed) { break }
+            yield msg
+        }
+    }
+
+    async unsubscribe() {
+        this.isUnsubscribed = true
+        await this.return()
     }
 }

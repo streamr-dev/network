@@ -1,94 +1,52 @@
-import Emitter, { captureRejectionSymbol } from 'events'
-import StrictEventEmitter from 'strict-event-emitter-types'
+import { captureRejectionSymbol } from 'events'
 
 import { instanceId, pOnce } from '../utils'
-import { Context } from './Context'
-import PushQueue from '../utils/PushQueue'
+import AsyncIterableEmitter, { flowOnMessageListener, asyncIterableWithEvents } from '../utils/AsyncIterableEmitter'
+import { Context, ContextError } from '../utils/Context'
+import { PushBuffer, pull } from '../utils/PushBuffer'
+import { Pipeline, IPipeline, PipelineGeneratorFunction } from '../utils/Pipeline'
 import { StreamMessage } from 'streamr-client-protocol'
 
-export type MessageStreamEventsBase<T> = {
-    end: () => void
-    message: (streamMessage: StreamMessage<T>) => void
-    error: (error: Error) => void
-}
+class MessageStreamError extends ContextError {}
 
-type MessageStreamEvents<T> = MessageStreamEventsBase<T> & {
-    // newListener event type doesn't come out of the box.
-    // Uses MessageStreamEventsBase to get correct event types.
-    newListener<E extends keyof MessageStreamEventsBase<T>> (event: E, ...args: any[]): void
+function isStreamMessage(msg: any): msg is StreamMessage {
+    return msg !== null && typeof msg === 'object' && typeof msg.getParsedContent === 'function'
 }
-
-// have to export this otherwise it complains
-export type StrictMessageStreamEmitter = {
-    new<T>(...args: ConstructorParameters<typeof Emitter>): StrictEventEmitter<Emitter, MessageStreamEvents<T>>
-}
-
-// add strict types
-const MessageStreamEmitter = Emitter as StrictMessageStreamEmitter
 
 /**
  * @category Important
  * Wraps PushQueue
  * Adds events & error handling
  */
-export default class MessageStream<T> extends MessageStreamEmitter<T> implements Context {
-    id: string
+export default class MessageStream<T, InType extends StreamMessage = StreamMessage<T>, OutType extends StreamMessage | unknown = InType>
+    extends AsyncIterableEmitter<OutType>
+    implements IPipeline<InType, OutType> {
+    readonly id: string
     /** @internal */
-    context: Context
+    readonly debug
     /** @internal */
-    buffer: PushQueue<StreamMessage<T>>
+    buffer: PushBuffer<InType>
     /** @internal */
     isIterating = false
-    /** @internal */
-    debug
     isErrored = false
     didStart = false
+    pipeline: Pipeline<InType, OutType>
+    iterator: AsyncGenerator<OutType>
 
-    constructor(context: Context, { idSuffix }: { idSuffix?: string } = {}) {
+    constructor(context: Context, { bufferSize, name = '' }: { bufferSize?: number, name?: string } = {}) {
         super({ captureRejections: true })
-        this.context = context
-        this.id = !idSuffix ? instanceId(this) : `${instanceId(this)}-${idSuffix}`
+        this.id = instanceId(this, name)
         this.debug = context.debug.extend(this.id)
-        this.debug('create')
+        // this.debug('create')
         this[Symbol.asyncIterator] = this[Symbol.asyncIterator].bind(this)
-        this.on('newListener', this.onListener)
-        this.buffer = new PushQueue<StreamMessage<T>>([], { onEnd: this.cleanup })
-    }
-
-    onListener = (event: string | symbol) => {
-        if (event === 'message') {
-            this.off('newListener', this.onListener)
-            this.flow().catch(() => {})
-        }
-    }
-
-    async handleError(err: Error) {
-        if (this.listenerCount('error')) {
-            // emit error instead of throwing if some error listener
-            this.emit('error', err)
-            return
-        }
-        await this.cancel(err)
-        throw err
-    }
-
-    async flow() {
-        try {
-            for await (const msg of this) {
-                try {
-                    this.emit('message', msg)
-                } catch (err) {
-                    await this.handleError(err)
-                }
-            }
-        } catch (err) {
-            await this.cleanup(err)
-        }
+        this.buffer = new PushBuffer<InType>(bufferSize, { name })
+        this.pipeline = new Pipeline<InType, OutType>(this.buffer).pipe(async function* PipelineMessage(src) { yield* src })
+        this.iterator = asyncIterableWithEvents<OutType>(this.iterate(), this)
+        flowOnMessageListener(this, this)
     }
 
     [captureRejectionSymbol] = (error: Error, event: string | symbol) => {
-        this.debug('rejection handling event %s with', event, error)
-        return this.cancel(error)
+        this.debug('!rejection handling event %s with', event, error)
     }
 
     /**
@@ -97,83 +55,80 @@ export default class MessageStream<T> extends MessageStreamEmitter<T> implements
      */
     async collect(n?: number) {
         if (this.isIterating) {
-            throw new Error('Cannot collect if already iterated or onMessage.')
+            throw new MessageStreamError(this, 'Cannot collect if already iterated or onMessage.')
         }
 
         const msgs = []
-        try {
-            for await (const msg of this) {
-                if (n === 0) {
-                    break
-                }
-
-                msgs.push(msg.getParsedContent())
-                if (msgs.length === n) {
-                    break
-                }
+        for await (const msg of this) {
+            if (n === 0) {
+                break
             }
-        } catch (err) {
-            await this.handleError(err)
+
+            // get parsed content if value is StreamMessage
+            if (isStreamMessage(msg)) {
+                msgs.push(msg.getParsedContent())
+            } else {
+                msgs.push(msg)
+            }
+
+            if (msgs.length === n) {
+                break
+            }
         }
         return msgs
     }
 
-    async* [Symbol.asyncIterator]() {
+    async* iterate() {
         this.didStart = true
+        yield* this.pipeline
+    }
+
+    [Symbol.asyncIterator]() {
         if (this.isIterating) {
             throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
         }
-
-        try {
-            // only iterate sub once
-            this.isIterating = true
-
-            for await (const msg of this.buffer) {
-                yield msg
-            }
-        } catch (err) {
-            await this.handleError(err)
-        } finally {
-            await this.cleanup()
-        }
+        // only iterate sub once
+        this.isIterating = true
+        return this.iterator
     }
 
-    private cleanup = pOnce(async (err?: Error) => {
-        try {
-            if (err) {
-                await this.handleError(err)
-            }
-        } finally {
-            this.emit('end')
-            this.removeAllListeners()
-        }
-    })
+    get length() {
+        return Math.max(this.buffer.length, this.pipeline.length)
+    }
 
-    push(message: StreamMessage<T>) {
+    push(message: InType) {
         return this.buffer.push(message)
     }
 
-    from(source: AsyncIterable<StreamMessage<T>>) {
-        return this.buffer.from(source)
+    from(source: AsyncGenerator<InType>) {
+        return pull(source, this.buffer)
     }
 
-    async end(message?: StreamMessage<T> | Error) {
-        return this.buffer?.end(message)
+    end(error?: Error) {
+        return this.buffer.end(error)
     }
 
-    cancel = async (err?: Error) => {
-        return this.buffer?.cancel(err)
+    pipe<NewOutType>(fn: PipelineGeneratorFunction<OutType, NewOutType>) {
+        this.pipeline.pipe(fn)
+        return this as unknown as MessageStream<T, InType, NewOutType>
     }
 
-    isCancelled = (): boolean => {
-        return !!this.buffer?.isCancelled()
+    finally(onFinally: ((err?: Error) => void | Promise<void>)) {
+        this.pipeline.finally(onFinally) // eslint-disable-line promise/catch-or-return
+        return this
     }
 
-    async return() {
-        return this.buffer?.return()
+    next() {
+        return this.iterator.next()
     }
 
-    async throw(error: Error) {
-        return this.buffer?.throw(error)
+    return(v?: OutType) {
+        this.buffer.end() // prevents deadlock
+        return this.iterator.return(v)
+    }
+
+    throw(error: Error) {
+        this.buffer.end() // prevents deadlock
+        return this.iterator.throw(error)
     }
 }

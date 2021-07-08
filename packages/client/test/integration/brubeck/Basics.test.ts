@@ -83,7 +83,9 @@ describeRepeats('StreamrClient', () => {
     beforeEach(async () => {
         client = createClient()
         await client.getSessionToken()
+        client.debug('create stream >>')
         stream = await createStream()
+        client.debug('create stream <<')
         expect(onError).toHaveBeenCalledTimes(0)
     })
 
@@ -104,13 +106,18 @@ describeRepeats('StreamrClient', () => {
 
     describe('Pub/Sub', () => {
         it('can successfully pub/sub 1 message', async () => {
+            client.debug(1)
             const sub = await client.subscribe({
                 streamId: stream.id,
             })
+            client.debug(2)
             const testMsg = Msg()
+            client.debug(3)
             await client.publish(stream.id, testMsg)
+            client.debug(4)
             const received = []
             for await (const msg of sub) {
+                client.debug('msg', msg.getParsedContent())
                 received.push(msg.getParsedContent())
                 if (received.length === 1) {
                     break

@@ -19,10 +19,10 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
     protected readonly readGate: Gate
     protected done = false
     protected error: Error | undefined
-    protected iterator?: AsyncGenerator<T>
+    protected iterator: AsyncGenerator<T>
 
-    constructor(bufferSize = 10) {
-        this.id = instanceId(this)
+    constructor(bufferSize = 10, { name }: Partial<{ name: string }> = {}) {
+        this.id = instanceId(this, name)
         this.bufferSize = bufferSize
         // start both closed
         this.writeGate = new Gate(`${this.id}-write`)
@@ -30,6 +30,7 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
         this.writeGate.close()
         this.readGate.close()
         this.debug = Debug(this.id)
+        this.iterator = this.iterate()
         // this.debug('create', this.bufferSize)
     }
 
@@ -65,20 +66,24 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
 
     throw(err: Error) {
         this.end(err)
-        return this[Symbol.asyncIterator]().throw(err)
+        return this.iterator.throw(err)
     }
 
     return(v?: T) {
         this.end()
-        return this[Symbol.asyncIterator]().return(v)
+        return this.iterator.return(v)
     }
 
     next() {
-        return this[Symbol.asyncIterator]().next()
+        return this.iterator.next()
     }
 
     isFull() {
         return !(this.buffer.length < this.bufferSize)
+    }
+
+    isDone() {
+        return this.done
     }
 
     private async* iterate() {
@@ -91,7 +96,7 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
                 }
 
                 // keep reading off front of buffer until buffer empty
-                while (this.buffer.length) {
+                while (this.buffer.length && !this.done) {
                     const v = this.buffer.shift()!
                     // maybe open write gate
                     this.updateWriteGate()
@@ -115,11 +120,11 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
         }
     }
 
-    [Symbol.asyncIterator]() {
-        if (!this.iterator) {
-            this.iterator = this.iterate()
-        }
+    get length() {
+        return this.buffer.length
+    }
 
+    [Symbol.asyncIterator]() {
         return this.iterator
     }
 }
@@ -153,8 +158,8 @@ export async function pull<T>(src: AsyncGenerator<T>, dest: PushBuffer<T>) {
 
 export class PullBuffer<InType> extends PushBuffer<InType> {
     source: AsyncGenerator<InType>
-    constructor(source: AsyncGenerator<InType>, size = 256) {
-        super(size)
+    constructor(source: AsyncGenerator<InType>, ...args: ConstructorParameters<typeof PushBuffer>) {
+        super(...args)
         this.source = source
         pull(this.source, this)
     }

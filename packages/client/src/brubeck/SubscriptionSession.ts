@@ -1,45 +1,21 @@
-import Emitter from 'events'
 import { MessageContent, StreamMessage } from 'streamr-client-protocol'
 
-import { AggregatedError, Scaffold, counterId } from '../utils'
+import { Scaffold, instanceId } from '../utils'
 import { validateOptions } from '../stream/utils'
 import Subscription from './Subscription'
 import MessageStream from './MessageStream'
-import SubscribePipeline from './SubscribePipeline'
-import { Todo } from '../types'
 import { BrubeckClient } from './BrubeckClient'
+import { PushBuffer } from '../utils/PushBuffer'
 import { Context } from '../utils/Context'
 
-/**
- * Emit event on all supplied emitters.
- * Aggregates errors rather than throwing on first.
- */
-
-function multiEmit(emitters: Todo, ...args: Todo[]) {
-    let error: Todo
-    emitters.forEach((s: Todo) => {
-        try {
-            s.emit(...args)
-        } catch (err) {
-            AggregatedError.from(error, err, `Error emitting event: ${args[0]}`)
-        }
-    })
-
-    if (error) {
-        throw error
-    }
-}
-
-export type SubscriptionSessionOptions = ReturnType<typeof validateOptions> & {
-    id?: string
-}
+export type SubscriptionSessionOptions = ReturnType<typeof validateOptions>
 
 /**
  * Sends Subscribe/Unsubscribe requests as needed.
  * Adds connection handles as needed.
  */
 
-export default class SubscriptionSession<T extends MessageContent | unknown> extends Emitter implements Context {
+export default class SubscriptionSession<T extends MessageContent | unknown> implements Context {
     id
     debug
     client: BrubeckClient
@@ -52,33 +28,34 @@ export default class SubscriptionSession<T extends MessageContent | unknown> ext
     active = false
     stopped = false
     buffer
-    pipeline
+    pipeline: MessageStream<T>
 
     constructor(client: BrubeckClient, options: SubscriptionSessionOptions) {
-        super()
         this.client = client
         this.options = validateOptions(options)
-        this.id = counterId(`SubscriptionSession:${this.options.id || ''}${this.options.key}`)
+        this.id = instanceId(this)
         this.debug = this.client.debug.extend(this.id)
         this.streamId = this.options.streamId
         this.streamPartition = this.options.streamPartition
         this.onMessage = this.onMessage.bind(this)
-        this.buffer = new MessageStream<T>(this)
-        this.pipeline = new MessageStream<T>(this)
-        this.pipeline.from(SubscribePipeline(this.client.client, this.buffer, this.options))
-        this.pipeline.on('error', (error) => this.emit('error', error))
-        this.pipeline.on('end', () => this.emit('end'))
+        this.buffer = new PushBuffer<StreamMessage<T>>()
+        this.pipeline = new MessageStream(this)
+        this.pipeline.from(this.buffer)
+        this.pipeline.on('error', (error: Error) => this.debug('error', error))
+        this.pipeline.once('end', () => {
+            this.removeAll()
+        })
         this.pipeline.on('message', this.onPipelineMessage)
-        this.debug('create')
+        // this.debug('create')
     }
 
-    onPipelineMessage = (msg: StreamMessage) => {
+    onPipelineMessage = (msg: StreamMessage<T>) => {
         this.subscriptions.forEach((sub) => {
-            sub.push(msg as StreamMessage<T>)
+            sub.push(msg)
         })
     }
 
-    private onMessage = (msg: StreamMessage) => {
+    private onMessage = (msg: StreamMessage<T>) => {
         if (!msg || this.stopped || !this.active) {
             return
         }
@@ -88,56 +65,43 @@ export default class SubscriptionSession<T extends MessageContent | unknown> ext
         if (this.options.streamId !== streamId || this.options.streamPartition !== streamPartition) {
             return
         }
-        this.buffer.push(msg as StreamMessage<T>)
+
+        this.buffer.push(msg)
     }
 
-    private async subscribe({ streamId, streamPartition }: { streamId: string, streamPartition: number }) {
+    private async subscribe() {
+        this.debug('subscribe')
         this.active = true
         const node = await this.client.getNode()
         node.addMessageListener(this.onMessage)
-        node.subscribe(streamId, streamPartition)
+        node.subscribe(this.streamId, this.streamPartition)
     }
 
-    private async unsubscribe({ streamId, streamPartition }: { streamId: string, streamPartition: number }) {
+    private async unsubscribe() {
+        this.debug('unsubscribe')
         this.active = false
         const node = await this.client.getNode()
         node.removeMessageListener(this.onMessage)
-        node.unsubscribe(streamId, streamPartition)
+        node.unsubscribe(this.streamId, this.streamPartition)
     }
 
     updateSubscriptions = Scaffold([
         async () => {
-            await this.subscribe(this.options)
+            await this.subscribe()
             return async () => {
-                await this.unsubscribe(this.options)
+                await this.unsubscribe()
             }
         }
-    ], () => !!this.subscriptions.size)
+    ], () => !!this.count())
+
+    async stop() {
+        this.buffer.end()
+        this.pipeline.end()
+        await this.removeAll()
+    }
 
     has(sub: Subscription<T>): boolean {
         return this.subscriptions.has(sub)
-    }
-
-    /**
-     * Emit message on every subscription,
-     * then on self.
-     */
-
-    emit(event: string | symbol, ...args: any[]): boolean {
-        const subs = this.subscriptions
-        if (event === 'error') {
-            this.debug('emit', event, ...args)
-        } else {
-            this.debug('emit', event)
-        }
-
-        try {
-            multiEmit(subs, event, ...args)
-        } catch (error) {
-            return super.emit('error', error)
-        }
-
-        return super.emit(event, ...args)
     }
 
     /**
@@ -161,10 +125,10 @@ export default class SubscriptionSession<T extends MessageContent | unknown> ext
 
         this.pendingRemoval.add(sub)
         this.subscriptions.delete(sub)
-        // sub.emit('unsubscribing')
+        this.debug('remove')
 
         try {
-            await sub.cancel()
+            await sub.unsubscribe()
         } finally {
             try {
                 await this.updateSubscriptions()

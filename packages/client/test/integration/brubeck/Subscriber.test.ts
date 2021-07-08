@@ -90,6 +90,7 @@ describeRepeats('Subscriber', () => {
 
             const received = []
             for await (const m of sub) {
+                sub.debug('msg', m.getParsedContent())
                 received.push(m.getParsedContent())
                 if (received.length === published.length) {
                     break
@@ -162,14 +163,12 @@ describeRepeats('Subscriber', () => {
             const sub = await M.subscribe(stream)
             const c1 = sub.collect()
 
+            sub.debug(1)
             await expect(async () => (
                 sub.collect()
             )).rejects.toThrow('iterate')
-
-            const [, m] = await Promise.all([
-                sub.cancel(),
-                c1,
-            ])
+            await sub.unsubscribe()
+            const m = await c1
 
             expect(m).toEqual([])
 
@@ -180,21 +179,17 @@ describeRepeats('Subscriber', () => {
             it('works when error thrown inline', async () => {
                 const err = new Error('expected')
 
-                const sub = await M.subscribe({
+                const sub = (await M.subscribe({
                     ...stream,
-                    // @ts-expect-error not in type but works
-                    afterSteps: [
-                        async function* ThrowError(s: AsyncIterable<Todo>) {
-                            let count = 0
-                            for await (const msg of s) {
-                                if (count === MAX_ITEMS) {
-                                    throw err
-                                }
-                                count += 1
-                                yield msg
-                            }
+                })).pipe(async function* ThrowError(s) {
+                    let count = 0
+                    for await (const msg of s) {
+                        if (count === MAX_ITEMS) {
+                            throw err
                         }
-                    ]
+                        count += 1
+                        yield msg
+                    }
                 })
 
                 expect(M.count(stream.id)).toBe(1)
@@ -205,11 +200,12 @@ describeRepeats('Subscriber', () => {
 
                 const received: Todo[] = []
                 await expect(async () => {
-                    for await (const m of sub) {
-                        received.push(m.getParsedContent())
+                    for await (const msg of sub) {
+                        received.push(msg.getParsedContent())
                     }
                 }).rejects.toThrow(err)
                 expect(received).toEqual(published.slice(0, MAX_ITEMS))
+                await wait(100)
             })
 
             it('works when multiple steps error', async () => {
@@ -217,30 +213,29 @@ describeRepeats('Subscriber', () => {
 
                 const sub = await M.subscribe({
                     ...stream,
-                    // @ts-expect-error not in type but works
-                    afterSteps: [
-                        async function* ThrowError1(s: AsyncIterable<Todo>) {
-                            let count = 0
-                            for await (const msg of s) {
-                                if (count === MAX_ITEMS) {
-                                    throw err
-                                }
-                                count += 1
-                                yield msg
-                            }
-                        },
-                        async function* ThrowError2(s: AsyncIterable<Todo>) {
-                            let count = 0
-                            for await (const msg of s) {
-                                if (count === MAX_ITEMS) {
-                                    throw err
-                                }
-                                count += 1
-                                yield msg
-                            }
-                        }
-                    ]
                 })
+
+                const v = sub
+                    .pipe(async function* ThrowError1(s) {
+                        let count = 0
+                        for await (const msg of s) {
+                            if (count === MAX_ITEMS) {
+                                throw err
+                            }
+                            count += 1
+                            yield msg
+                        }
+                    })
+                    .pipe(async function* ThrowError2(s) {
+                        let count = 0
+                        for await (const msg of s) {
+                            if (count === MAX_ITEMS) {
+                                throw err
+                            }
+                            count += 1
+                            yield msg
+                        }
+                    })
 
                 expect(M.count(stream.id)).toBe(1)
 
@@ -250,7 +245,7 @@ describeRepeats('Subscriber', () => {
 
                 const received: any[] = []
                 await expect(async () => {
-                    for await (const m of sub) {
+                    for await (const m of v) {
                         received.push(m.getParsedContent())
                     }
                 }).rejects.toThrow(err)
@@ -315,7 +310,7 @@ describeRepeats('Subscriber', () => {
                             // eslint-disable-next-line no-loop-func
                             t = setTimeout(() => {
                                 // give it a moment to incorrectly get messages
-                                sub.cancel()
+                                sub.unsubscribe()
                             }, 100)
                         }
 
@@ -378,7 +373,7 @@ describeRepeats('Subscriber', () => {
                         t = setTimeout(() => {
                             expectedLength = received.length
                             // should not see any more messages after end
-                            sub.cancel()
+                            sub.unsubscribe()
                         })
                     }
                 }
@@ -471,7 +466,7 @@ describeRepeats('Subscriber', () => {
             for await (const m of sub) {
                 received.push(m.getParsedContent())
                 if (received.length === 1) {
-                    await sub.cancel()
+                    await sub.unsubscribe()
                 }
             }
 
@@ -518,7 +513,7 @@ describeRepeats('Subscriber', () => {
                 received.push(m.getParsedContent())
                 if (received.length === MAX_ITEMS) {
                     expect(unsubscribeEvents).toHaveLength(0)
-                    await sub.cancel()
+                    await sub.unsubscribe()
                     expect(unsubscribeEvents).toHaveLength(1)
                     expect(M.count(stream.id)).toBe(0)
                 }
@@ -544,7 +539,7 @@ describeRepeats('Subscriber', () => {
                     expect(unsubscribeEvents).toHaveLength(0)
                     const tasks = [
                         sub.return(),
-                        sub.cancel(),
+                        sub.unsubscribe(),
                     ]
                     await Promise.race(tasks)
                     expect(unsubscribeEvents).toHaveLength(1)
@@ -573,9 +568,9 @@ describeRepeats('Subscriber', () => {
                 if (received.length === MAX_ITEMS) {
                     expect(unsubscribeEvents).toHaveLength(0)
                     const tasks = [
-                        sub.cancel(),
-                        sub.cancel(),
-                        sub.cancel(),
+                        sub.unsubscribe(),
+                        sub.unsubscribe(),
+                        sub.unsubscribe(),
                     ]
                     await Promise.race(tasks)
                     expect(unsubscribeEvents).toHaveLength(1)
@@ -647,7 +642,7 @@ describeRepeats('Subscriber', () => {
         beforeEach(async () => {
             sub1 = await M.subscribe(stream.id)
             sub2 = await M.subscribe(stream.id)
-            published = await publishTestMessages(5)
+            published = await publishTestMessages(5, { delay: 50 })
         })
 
         it('can subscribe to stream multiple times then unsubscribe all mid-stream', async () => {

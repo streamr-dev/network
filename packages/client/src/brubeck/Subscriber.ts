@@ -64,20 +64,13 @@ export default class Subscriber implements Context {
 
     async remove(sub: Subscription<any>): Promise<void> {
         const { key } = sub
-        let cancelTask
-        try {
-            cancelTask = sub.cancel()
-            const subSession = this.subSessions.get(key)
-
-            if (subSession) {
-                await subSession.remove(sub)
-                // remove subSession if no more subscriptions
-                if (!subSession.count()) {
-                    this.subSessions.delete(key)
-                }
+        const subSession = this.subSessions.get(key)
+        if (subSession) {
+            await subSession.remove(sub)
+            // remove subSession if no more subscriptions
+            if (!subSession.count()) {
+                this.subSessions.delete(key)
             }
-        } finally {
-            await cancelTask // only wait for cancel at end
         }
     }
 
