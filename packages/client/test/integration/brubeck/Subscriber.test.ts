@@ -473,13 +473,8 @@ describeRepeats('Subscriber', () => {
             expect(received).toEqual(published.slice(0, 1))
             expect(M.count(stream.id)).toBe(0)
         })
-        /*
-        it('finishes unsubscribe before returning', async () => {
-            const unsubscribeEvents: Todo[] = []
-            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
-                unsubscribeEvents.push(m)
-            })
 
+        it('finishes unsubscribe before returning', async () => {
             const sub = await M.subscribe(stream.id)
 
             const published = await publishTestMessages()
@@ -488,9 +483,7 @@ describeRepeats('Subscriber', () => {
             for await (const m of sub) {
                 received.push(m.getParsedContent())
                 if (received.length === MAX_ITEMS) {
-                    expect(unsubscribeEvents).toHaveLength(0)
                     await sub.return()
-                    expect(unsubscribeEvents).toHaveLength(1)
                     expect(M.count(stream.id)).toBe(0)
                 }
             }
@@ -499,11 +492,6 @@ describeRepeats('Subscriber', () => {
         })
 
         it('finishes unsubscribe before returning from cancel', async () => {
-            const unsubscribeEvents: Todo[] = []
-            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
-                unsubscribeEvents.push(m)
-            })
-
             const sub = await M.subscribe(stream.id)
 
             const published = await publishTestMessages()
@@ -512,9 +500,7 @@ describeRepeats('Subscriber', () => {
             for await (const m of sub) {
                 received.push(m.getParsedContent())
                 if (received.length === MAX_ITEMS) {
-                    expect(unsubscribeEvents).toHaveLength(0)
                     await sub.unsubscribe()
-                    expect(unsubscribeEvents).toHaveLength(1)
                     expect(M.count(stream.id)).toBe(0)
                 }
             }
@@ -522,12 +508,7 @@ describeRepeats('Subscriber', () => {
             expect(received).toEqual(published.slice(0, MAX_ITEMS))
         })
 
-        it('can cancel + return and it will wait for unsubscribe', async () => {
-            const unsubscribeEvents: Todo[] = []
-            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
-                unsubscribeEvents.push(m)
-            })
-
+        it('can unsubscribe + return and it will wait for unsubscribe', async () => {
             const sub = await M.subscribe(stream.id)
 
             const published = await publishTestMessages()
@@ -536,15 +517,10 @@ describeRepeats('Subscriber', () => {
             for await (const m of sub) {
                 received.push(m.getParsedContent())
                 if (received.length === MAX_ITEMS) {
-                    expect(unsubscribeEvents).toHaveLength(0)
-                    const tasks = [
+                    await Promise.all([
                         sub.return(),
                         sub.unsubscribe(),
-                    ]
-                    await Promise.race(tasks)
-                    expect(unsubscribeEvents).toHaveLength(1)
-                    await Promise.all(tasks)
-                    expect(unsubscribeEvents).toHaveLength(1)
+                    ])
                     expect(M.count(stream.id)).toBe(0)
                 }
             }
@@ -553,11 +529,6 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can cancel multiple times and it will wait for unsubscribe', async () => {
-            const unsubscribeEvents: Todo[] = []
-            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
-                unsubscribeEvents.push(m)
-            })
-
             const sub = await M.subscribe(stream.id)
 
             const published = await publishTestMessages()
@@ -566,16 +537,12 @@ describeRepeats('Subscriber', () => {
             for await (const m of sub) {
                 received.push(m.getParsedContent())
                 if (received.length === MAX_ITEMS) {
-                    expect(unsubscribeEvents).toHaveLength(0)
                     const tasks = [
                         sub.unsubscribe(),
                         sub.unsubscribe(),
                         sub.unsubscribe(),
                     ]
-                    await Promise.race(tasks)
-                    expect(unsubscribeEvents).toHaveLength(1)
                     await Promise.all(tasks)
-                    expect(unsubscribeEvents).toHaveLength(1)
                     expect(M.count(stream.id)).toBe(0)
                 }
             }
@@ -584,11 +551,6 @@ describeRepeats('Subscriber', () => {
         })
 
         it('will clean up if iterator returned before start', async () => {
-            const unsubscribeEvents: Todo[] = []
-            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
-                unsubscribeEvents.push(m)
-            })
-
             const sub = await M.subscribe(stream.id)
             expect(M.count(stream.id)).toBe(1)
             await sub.return()
@@ -601,17 +563,11 @@ describeRepeats('Subscriber', () => {
                 received.push(m.getParsedContent())
             }
             expect(received).toHaveLength(0)
-            expect(unsubscribeEvents).toHaveLength(1)
 
             expect(M.count(stream.id)).toBe(0)
         })
 
         it('can subscribe then unsubscribe in parallel', async () => {
-            const unsubscribeEvents: Todo[] = []
-            client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
-                unsubscribeEvents.push(m)
-            })
-
             const [sub] = await Promise.all([
                 M.subscribe(stream.id),
                 M.unsubscribe(stream.id),
@@ -628,10 +584,8 @@ describeRepeats('Subscriber', () => {
 
             // shouldn't get any messages
             expect(received).toHaveLength(0)
-            expect(unsubscribeEvents).toHaveLength(0)
             expect(M.count(stream.id)).toBe(0)
         })
-        */
     })
 
     describe('mid-stream stop methods', () => {

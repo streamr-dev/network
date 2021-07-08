@@ -1,6 +1,6 @@
 import { captureRejectionSymbol } from 'events'
 
-import { instanceId, pOnce } from '../utils'
+import { instanceId } from '../utils'
 import AsyncIterableEmitter, { flowOnMessageListener, asyncIterableWithEvents } from '../utils/AsyncIterableEmitter'
 import { Context, ContextError } from '../utils/Context'
 import { PushBuffer, pull } from '../utils/PushBuffer'
@@ -122,13 +122,19 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         return this.iterator.next()
     }
 
-    return(v?: OutType) {
+    async return(v?: OutType) {
         this.buffer.end() // prevents deadlock
+        if (!this.didStart) {
+            await this.pipeline.return()
+        }
         return this.iterator.return(v)
     }
 
-    throw(error: Error) {
+    async throw(error: Error) {
         this.buffer.end() // prevents deadlock
+        if (!this.didStart) {
+            await this.pipeline.throw(error)
+        }
         return this.iterator.throw(error)
     }
 }

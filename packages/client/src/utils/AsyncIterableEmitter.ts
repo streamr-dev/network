@@ -5,6 +5,7 @@
 
 import Emitter from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
+import { iteratorFinally } from './iterators'
 
 export type AsyncIterableEventsBase<T> = {
     /** Fires once, at end of iteration */
@@ -48,26 +49,28 @@ export default class AsyncIterableEmitter<T> extends AsyncIterableEmitterBase<T>
  * AsyncIterable finally  -> 'end' event
  */
 export function asyncIterableWithEvents<T>(asyncIterable: AsyncIterable<T>, emitter: StrictAsyncIterableEmitter<T>) {
-    return (async function* AsyncIterableWithEventsWrap() {
+    return iteratorFinally((async function* AsyncIterableWithEventsWrap() {
+        for await (const m of asyncIterable) {
+            emitter.emit('message', m)
+            yield m
+        }
+    }()), (err?: Error) => {
         try {
-            for await (const m of asyncIterable) {
-                emitter.emit('message', m)
-                yield m
-            }
-        } catch (err) {
-            if (!emitter.listenerCount('error')) {
-                throw err
-            }
+            if (err) {
+                if (!emitter.listenerCount('error')) {
+                    throw err
+                }
 
-            // emit error instead of throwing if some error listener
-            emitter.emit('error', err)
+                // emit error instead of throwing if some error listener
+                emitter.emit('error', err)
+            }
         } finally {
             emitter.emit('end')
             emitter.removeAllListeners('message')
             emitter.removeAllListeners('error')
             emitter.removeAllListeners('end')
         }
-    }())
+    })
 }
 
 /**
