@@ -48,7 +48,6 @@
     "speedometer": "^1.1.0",
     "streamr-client-protocol": "^8.2.1",
     "strict-event-emitter-types": "^2.0.0",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.14.0",
     "uuid": "^8.3.2",
     "ws": "^7.4.5"
   },
