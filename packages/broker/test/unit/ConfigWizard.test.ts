@@ -1,4 +1,4 @@
-import {unlinkSync, existsSync} from 'fs'
+import { unlinkSync, existsSync } from 'fs'
 import { ConfigWizard, startBrokerConfigWizard } from '../../src/ConfigWizard'
 
 const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
@@ -49,7 +49,7 @@ describe('ConfigWizard', () => {
             })
 
             await wizard.generateOrImportPrivateKey()
-        } catch (e){
+        } catch (e) {
             expect(e.message).toEqual(`Invalid privateKey provided for import: ${privateKey}`)
         }
     })
@@ -76,8 +76,12 @@ describe('ConfigWizard', () => {
     })
 
     it ('should enable every plugin with default values', async () => {
+        // need to mock the default values (?)
         mockPromptMethod(wizard, {
-            selectedItems: ['Websocket', 'MQTT', 'HttpPublish']
+            selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
+            wsPort: wizard.defaultWebsocketPort,
+            mqttPort: wizard.defaultMqttPort,
+            httpPort: wizard.defaultHttpPort
         })
 
         const selected = await wizard.selectPlugins()
@@ -93,6 +97,9 @@ describe('ConfigWizard', () => {
         mockPromptMethod(wizard, {
             generateOrImportEthereumPrivateKey: 'generate',
             selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
+            wsPort: wizard.defaultWebsocketPort,
+            mqttPort: wizard.defaultMqttPort,
+            httpPort: wizard.defaultHttpPort
         })
 
         await wizard.generateOrImportPrivateKey()
@@ -109,7 +116,10 @@ describe('ConfigWizard', () => {
     it ('should test the entire logic of the config wizard', async() => {
         mockPromptMethod(wizard, {
             generateOrImportEthereumPrivateKey: 'generate',
-            selectedItems: [],
+            selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
+            wsPort: wizard.defaultWebsocketPort,
+            mqttPort: wizard.defaultMqttPort,
+            httpPort: wizard.defaultHttpPort
         })
         const finalPath = await startBrokerConfigWizard('../configs')
         expect(existsSync(finalPath)).toEqual(true)
@@ -117,4 +127,5 @@ describe('ConfigWizard', () => {
         unlinkSync(finalPath)
         expect(existsSync(finalPath)).toEqual(false)
     })
+    
 })

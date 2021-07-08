@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 import { writeFileSync } from 'fs'
 import path from 'path'
 
-import {Config} from './config'
+import { Config } from './config'
 
 import { Logger } from 'streamr-network'
 
@@ -65,7 +65,7 @@ export class ConfigWizard{
     defaultMqttPort = 7272 
     defaultHttpPort = 7373
 
-    constructor(){
+    constructor() {
         this.config = DefaultConfig
     }
 
@@ -85,9 +85,9 @@ export class ConfigWizard{
             }
         })
 
-        if (generateOrImport === 'generate'){
+        if (generateOrImport === 'generate') {
             this.config.ethereumPrivateKey = Wallet.createRandom().privateKey
-        } else if (generateOrImport === 'import'){
+        } else if (generateOrImport === 'import') {
             const privateKey = await this.inquirerSinglePrompt({
                 type: 'input',
                 name: 'privateKey',
@@ -97,7 +97,7 @@ export class ConfigWizard{
             try {
                 const wallet = new Wallet(privateKey)
                 this.config.ethereumPrivateKey = wallet.privateKey
-            } catch (privateKeyError){
+            } catch (privateKeyError) {
                 throw new Error(`Invalid privateKey provided for import: ${privateKey}`)
             }
 
@@ -108,18 +108,21 @@ export class ConfigWizard{
         return this.config.ethereumPrivateKey
     }
 
-    async promptNumberWithDefault(prompt: inquirer.InputQuestion, defaultValue: number){
+    async promptNumberWithDefault(prompt: inquirer.InputQuestion, defaultValue: number): Promise<number>{
         const valueString = await this.inquirerSinglePrompt(prompt)
-        let value = parseInt(valueString)
-        if (valueString === ''){
-            value = defaultValue
+        const value = valueString === '' ? defaultValue: parseInt(valueString)
+
+        if (Number.isNaN(value) || !Number.isInteger(value)) {
+            logger.warn(`Non-numeric value [${valueString}] provided`)
+            return await this.promptNumberWithDefault(prompt, defaultValue)
         }
 
-        if (!Number.isNaN(value) && Number.isInteger(value) && value > 1023 && value < 49151){
-            return value
-        } else {
-            return defaultValue
+        if (value < 1024 || value > 49151) {
+            logger.warn(`Out of range port [${value}] provided (valid range 1024-49151)`)
+            return await this.promptNumberWithDefault(prompt, defaultValue)
         }
+
+        return value
     }
 
     async selectPlugins(): Promise<Array<string>>{
@@ -135,9 +138,9 @@ export class ConfigWizard{
         })
 
         const selectedPlugins = []
-        for (let i = 0; i < plugins.length; i++){
+        for (let i = 0; i < plugins.length; i++) {
             selectedPlugins.push(plugins[i])
-            if (plugins[i] === 'Websocket'){
+            if (plugins[i] === 'Websocket') {
                 const wsPort = await this.promptNumberWithDefault({
                     type: 'input',
                     name: 'wsPort',
@@ -146,7 +149,7 @@ export class ConfigWizard{
                 this.config.plugins['websocket'] = { port: wsPort }
             }
 
-            if (plugins[i] === 'MQTT'){
+            if (plugins[i] === 'MQTT') {
                 const mqttPort = await this.promptNumberWithDefault({
                     type: 'input',
                     name: 'mqttPort',
@@ -155,7 +158,7 @@ export class ConfigWizard{
                 this.config.plugins['mqtt'] = { port: mqttPort }
             }
 
-            if (plugins[i] === 'HttpPublish'){
+            if (plugins[i] === 'HttpPublish') {
                 const httpPort = await this.promptNumberWithDefault({
                     type: 'input',
                     name: 'httpPort',
@@ -169,14 +172,14 @@ export class ConfigWizard{
 
     }
 
-    async storeConfig(destinationFolder = '../configs/'){
+    async storeConfig(destinationFolder: string) {
         const filename = `wizard-config.json`
         const finalPath = path.join(__dirname, destinationFolder, filename)
         writeFileSync(finalPath, JSON.stringify(this.config))
         return finalPath
     }
 
-    async start(destinationFolder?: string){
+    async start(destinationFolder: string) {
         await this.generateOrImportPrivateKey()
         await this.selectPlugins()
         const finalConfigPath = await this.storeConfig(destinationFolder)
@@ -189,7 +192,7 @@ export class ConfigWizard{
 
 }
 
-export async function startBrokerConfigWizard (destinationFolder?: string): Promise<string> {
+export async function startBrokerConfigWizard (destinationFolder  = '../configs/'): Promise<string> {
     const wizard = new ConfigWizard()
     return wizard.start(destinationFolder)
 }

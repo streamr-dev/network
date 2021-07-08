@@ -10,9 +10,6 @@ program
     .version(CURRENT_VERSION)
     .name('broker-config-wizard')
     .description('Run the configuration wizard for the broker')
-    .action(async () => {
-        console.log('action reached')
-
-    })
+    
 startBrokerConfigWizard('../../configs/')
 
