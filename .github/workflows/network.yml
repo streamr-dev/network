@@ -54,6 +54,7 @@ jobs:
         run: |
           npm ci
           npx lerna bootstrap --scope streamr-network --include-dependencies
+          sudo apt-get install xvfb
       - run: npm run eslint
       - run: npm run test-unit
         env:
@@ -61,7 +62,7 @@ jobs:
       - run: npm run test-integration
         env:
           CI: true
-      - run: npm run test-browser
+      - run: xvfb-run --auto-servernum npm run test-browser
         env:
           CI: true
 
