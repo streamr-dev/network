@@ -1,7 +1,6 @@
 import pino from 'pino'
 import path from 'path'
 import _ from 'lodash'
-import PinoPretty from 'pino-pretty'
 
 const parseBoolean = (value: string|undefined) => {
     switch (value) {
@@ -23,7 +22,7 @@ export class Logger {
     private readonly logger: pino.Logger
 
     constructor(module: NodeJS.Module, context?: string, destinationStream?: { write(msg: string): void }) {
-        let options: pino.LoggerOptions = {
+        const options: pino.LoggerOptions = {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
             level: process.env.LOG_LEVEL || 'info',
@@ -63,7 +62,7 @@ export class Logger {
             || arg.constructor.name === 'SyntaxError'
             || arg.constructor.name === 'TypeError' 
             || arg.constructor.name === 'URIError'
-            ))
+        ))
         if (errorInstance !== undefined) {
             this.logger.error({ err: errorInstance }, msg, ...args)
         } else {

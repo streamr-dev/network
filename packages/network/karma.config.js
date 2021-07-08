@@ -4,20 +4,16 @@ const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
 require('console-browserify')
 
-console.log(__dirname)
 module.exports = function (config) {
     config.set({
         debugMode: true,
         plugins: [
             'karma-electron',
             'karma-webpack',
-            //'karma-jest',
             'karma-jasmine',
             'karma-spec-reporter'
         ],
         basePath: '.',
-        //frameworks: ['jest'],
-        //reporters: ['jest'],
         frameworks: ['jasmine'],
         reporters: ['spec'],
         
@@ -33,15 +29,12 @@ module.exports = function (config) {
         files: [
             './karma-setup.js',
             './test/browser/BrowserWebRtcConnection.test.ts',
-            // './test/unit/MessageBuffer.test.ts',
 
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
         ],
         preprocessors: {
-            //'./bundle.js': ['webpack'], 
             './karma-setup.js': ['webpack'],
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
-            // './test/unit/MessageBuffer.test.ts': ['webpack'],
 
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
         //
@@ -55,22 +48,11 @@ module.exports = function (config) {
                         // Preferred `preload` mechanism to expose `require`
                         contextIsolation: false,
                         preload: __dirname + '/preload.js'
-
-                        // Alternative non-preload mechanism to expose `require`
-                        /*
-                        nodeIntegration: true,
-                        contextIsolation: false,
-                        */
-
-
-
-                        // nativeWindowOpen is set to `true` by default by `karma-electron` as well, see #50
                     },
                 }
             }
         },
 
-        // Use our custom launcher
         browsers: ['CustomElectron'],
         client: {
             clearContext: false, // leave Jasmine Spec Runner output visible in browser
@@ -108,7 +90,6 @@ module.exports = function (config) {
                 },
                 fallback: {
                     "fs": require.resolve('browserify-fs'),
-                    //"console-browserify": require.resolve('console-browserify'),
                     "/src/logic/LocationManager.ts": false,
                     "module": false
                 }

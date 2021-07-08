@@ -2,7 +2,8 @@ import path from 'path'
 import { Logger } from "../../src/helpers/Logger"
 import Mock = jest.Mock
 
-declare var _streamr_electron_test: any
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
 
 describe(Logger, () => {
     let logger: Logger
@@ -34,12 +35,10 @@ describe(Logger, () => {
         expect(fatalFn).toBeCalledTimes(1)
     })
 
-    /*
     it('delegates call to error to pino.Logger#error', () => {
         logger.error('an error or something %s', 123)
         expect(errorFn).toBeCalledTimes(1)
     })
-    */
 
     it('delegates call to warn to pino.Logger#warn', () => {
         logger.warn('a warning %s!', 123)
@@ -96,7 +95,7 @@ describe(Logger, () => {
         // in our browser tests.
 
         if (typeof _streamr_electron_test !== 'undefined')
-            return 
+        {return} 
 
         let lines: string[]
         const logger = new Logger(module, '', {
