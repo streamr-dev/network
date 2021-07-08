@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
-    "@streamr/uws-js-unofficial": "18.14.0-unofficial.5",
+    "@streamr/uws-js-unofficial": "18.14.0-unofficial.15",
     "@types/geoip-lite": "^1.4.1",
     "@types/heap": "^0.2.28",
     "@types/jest": "^26.0.23",
