@@ -5,7 +5,7 @@ import StreamMessageCreator from '../publish/MessageCreator'
 import { getStreamId, StreamIDish } from '../publish/utils'
 import { FailedToPublishError } from '../publish'
 import { counterId } from '../utils'
-import { Context } from './Context'
+import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
 import { validateOptions } from '../stream/utils'
 

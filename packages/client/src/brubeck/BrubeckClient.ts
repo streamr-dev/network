@@ -1,11 +1,13 @@
+import Debug from 'debug'
 import { NetworkNode, NetworkNodeOptions, createNetworkNode } from 'streamr-network'
+
 import { StreamrClientOptions } from '../Config'
 import { pOnce, uuid, counterId } from '../utils'
+import { Context, ContextError } from '../utils/Context'
 import { StreamrClient } from '../StreamrClient'
+
 import Publisher from './Publisher'
 import Subscriber from './Subscriber'
-import Debug from 'debug'
-import { Context } from './Context'
 import { StreamIDish } from '../publish/utils'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
@@ -20,8 +22,8 @@ export class BrubeckClient implements Context {
     client: StreamrClient
     options: BrubeckClientOptions
     private node?: NetworkNode
-    id
-    debug
+    readonly id
+    readonly debug
 
     constructor(options: BrubeckClientOptions) {
         this.client = new StreamrClient(options)
@@ -68,7 +70,7 @@ export class BrubeckClient implements Context {
 
     async getNode(): Promise<NetworkNode> {
         const node = await this.connect()
-        if (!node) { throw new Error('no node') }
+        if (!node) { throw new ContextError(this, 'no node') }
         return node
     }
 

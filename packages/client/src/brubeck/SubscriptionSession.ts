@@ -9,6 +9,7 @@ import MessageStream from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 import { Todo } from '../types'
 import { BrubeckClient } from './BrubeckClient'
+import { Context } from '../utils/Context'
 
 /**
  * Emit event on all supplied emitters.
@@ -39,7 +40,7 @@ export type SubscriptionSessionOptions = ReturnType<typeof validateOptions> & {
  * Adds connection handles as needed.
  */
 
-export default class SubscriptionSession<T> extends Emitter {
+export default class SubscriptionSession<T> extends Emitter implements Context {
     id
     debug
     client: BrubeckClient

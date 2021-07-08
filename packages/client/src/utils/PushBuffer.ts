@@ -1,12 +1,12 @@
 import { Gate, instanceId } from './index'
 import { Debug } from './log'
-
+import { Context } from './Context'
 /**
  * Implements an async buffer.
  * Push items into buffer, push will async block once buffer is full.
  * and will unblock once buffer has been consumed.
  */
-export class PushBuffer<T> implements AsyncGenerator<T> {
+export class PushBuffer<T> implements AsyncGenerator<T>, Context {
     readonly id
     readonly debug
 

@@ -1,11 +1,11 @@
 import { allSettledValues, instanceId } from '../utils'
 import { inspect } from '../utils/log'
+import { Context } from '../utils/Context'
 import { validateOptions } from '../stream/utils'
 import SubscriptionSession from './SubscriptionSession'
 import { StreamPartDefinition } from '..'
 import { BrubeckClient } from './BrubeckClient'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
-import { Context } from './Context'
 import { Stream } from '../stream'
 
 /**
