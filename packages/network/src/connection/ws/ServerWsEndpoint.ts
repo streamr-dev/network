@@ -1,85 +1,26 @@
 import uWS from 'uWebSockets.js'
-import { PeerInfo } from './PeerInfo'
-import { MetricsContext } from '../helpers/MetricsContext'
-import { Logger } from '../helpers/Logger'
-import {
-    AbstractWsEndpoint,
-    DisconnectionCode,
-    DisconnectionReason,
-    HIGH_BACK_PRESSURE, SharedConnection,
-} from "./AbstractWsEndpoint"
-
-const staticLogger = new Logger(module)
-
-class UWSConnection implements SharedConnection {
-    readonly socket: uWS.WebSocket
-    readonly peerInfo: PeerInfo
-
-    highBackPressure = false
-    respondedPong = true
-    rtt?: number
-    rttStart?: number
-
-    constructor(socket: uWS.WebSocket, peerInfo: PeerInfo) {
-        this.socket = socket
-        this.peerInfo = peerInfo
-    }
-
-    close(code: DisconnectionCode, reason: DisconnectionReason): void {
-        try {
-            this.socket.end(code, reason)
-        } catch (e) {
-            staticLogger.error('failed to gracefully close ws, reason: %s', e)
-        }
-    }
-
-    terminate() {
-        try {
-            this.socket.close()
-        } catch (e) {
-            staticLogger.error('failed to terminate ws, reason: %s', e)
-        }
-    }
-
-    getPeerId(): string {
-        return this.peerInfo.peerId
-    }
-
-    getBufferedAmount(): number {
-        return this.socket.getBufferedAmount()
-    }
-
-    getRemoteAddress(): string {
-        return ab2str(this.socket.getRemoteAddressAsText())
-    }
-
-    // TODO: toString() representatin for logging
-
-    ping(): void {
-        this.socket.ping()
-    }
-
-    async send(message: string): Promise<void> {
-        this.socket.send(message)
-    }
-}
+import { PeerInfo } from '../PeerInfo'
+import { MetricsContext } from '../../helpers/MetricsContext'
+import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
+import { HIGH_BACK_PRESSURE } from './WsConnection'
+import { staticLogger, ServerWsConnection } from './ServerWsConnection'
 
 const WS_BUFFER_SIZE = HIGH_BACK_PRESSURE + 1024 // add 1 MB safety margin
 
-function ab2str (buf: ArrayBuffer | SharedArrayBuffer): string {
+export function ab2str(buf: ArrayBuffer | SharedArrayBuffer): string {
     return Buffer.from(buf).toString('utf8')
 }
 
-export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
-    private readonly serverHost: string
-    private readonly serverPort: number
+export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
+    private readonly serverUrl: string
     private readonly wss: uWS.TemplatedApp
+    private readonly connectionByUwsSocket: Map<uWS.WebSocket, ServerWsConnection>
     private listenSocket: uWS.us_listen_socket | null
-    private readonly connectionByUwsSocket: Map<uWS.WebSocket, UWSConnection> // uws.websocket => connection, interaction with uws events
 
     constructor(
         host: string,
         port: number,
+        sslEnabled: boolean,
         wss: uWS.TemplatedApp,
         listenSocket: uWS.us_listen_socket,
         peerInfo: PeerInfo,
@@ -94,10 +35,9 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
 
         this.connectionByUwsSocket = new Map()
 
+        this.serverUrl = `${sslEnabled ? 'wss' : 'ws'}://${host}:${port}`
         this.wss = wss
         this.listenSocket = listenSocket
-        this.serverHost = host
-        this.serverPort = port
 
         this.wss.ws('/ws', {
             compression: 0,
@@ -106,11 +46,11 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
             idleTimeout: 0,
             upgrade: (res, req, context) => {
                 res.writeStatus('101 Switching Protocols')
-                    .writeHeader('streamr-peer-id', this.peerInfo.peerId)
+                    .writeHeader(AbstractWsEndpoint.PEER_ID_HEADER, this.peerInfo.peerId)
 
                 /* This immediately calls open handler, you must not use res after this call */
                 res.upgrade({
-                    peerId: req.getHeader('streamr-peer-id')
+                    peerId: req.getHeader(AbstractWsEndpoint.PEER_ID_HEADER)
                 },
                 /* Spell these correctly */
                 req.getHeader('sec-websocket-key'),
@@ -130,23 +70,19 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
             drain: (ws) => {
                 const connection = this.connectionByUwsSocket.get(ws)
                 if (connection) {
-                    this.evaluateBackPressure(connection)
+                    connection.evaluateBackPressure()
                 }
             },
             close: (ws, code, message) => {
-                const reason = ab2str(message)
-
                 const connection = this.connectionByUwsSocket.get(ws)
                 if (connection) {
-                    this.onClose(connection, code, reason)
+                    this.onClose(connection, code, ab2str(message) as DisconnectionReason)
                 }
             },
             pong: (ws) => {
                 const connection = this.connectionByUwsSocket.get(ws)
-
                 if (connection) {
-                    this.logger.trace('received from %s "pong" frame', connection.getPeerId())
-                    this.pingPongWs.onPong(connection)
+                    connection.onPong()
                 }
             }
         })
@@ -154,27 +90,25 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
         this.logger.trace('listening on %s', this.getUrl())
     }
 
-    async stop(): Promise<void> {
-        this.pingPongWs.stop()
+    getUrl(): string {
+        return this.serverUrl
+    }
+
+    resolveAddress(peerId: string): string | undefined {
+        return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
+    }
+
+    protected doClose(connection: ServerWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
+        this.connectionByUwsSocket.delete(connection.getSocket())
+    }
+
+    protected async doStop(): Promise<void> {
         if (this.listenSocket) {
             this.logger.trace('shutting down uWS server')
             uWS.us_listen_socket_close(this.listenSocket)
             this.listenSocket = null
         }
         return new Promise((resolve) => setTimeout(resolve, 100))
-    }
-
-    getUrl(): string {
-        return `ws://${this.serverHost}:${this.serverPort}`
-    }
-
-    getPeerInfos(): PeerInfo[] {
-        return Array.from(this.connectionById.values())
-            .map((connection) => connection.peerInfo)
-    }
-
-    resolveAddress(peerId: string): string | undefined {
-        return this.connectionById.get(peerId)?.getRemoteAddress()
     }
 
     private onIncomingConnection(ws: uWS.WebSocket): void {
@@ -193,19 +127,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<UWSConnection> {
                 return
             }
 
-            const uwsConnection = new UWSConnection(ws, PeerInfo.newNode(peerId))
-            this.connectionByUwsSocket.set(ws, uwsConnection)
-            this.onNewConnection(uwsConnection)
+            const connection = new ServerWsConnection(ws, PeerInfo.newNode(peerId))
+            this.connectionByUwsSocket.set(ws, connection)
+            this.onNewConnection(connection)
         } catch (e) {
             this.logger.trace('dropped incoming connection because of %s', e)
             this.metrics.record('open:missingParameter', 1)
             ws.end(DisconnectionCode.MISSING_REQUIRED_PARAMETER, e.toString()) // TODO: reason not necessarily missing require parameter
         }
-    }
-
-    protected onClose(connection: UWSConnection, code = 0, reason = ''): void {
-        super.onClose(connection, code, reason)
-        this.connectionByUwsSocket.delete(connection.socket)
     }
 }
 

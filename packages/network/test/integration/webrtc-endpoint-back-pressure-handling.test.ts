@@ -4,7 +4,7 @@ import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/composition'
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { wait } from 'streamr-test-utils'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
@@ -74,8 +74,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
     }
 
     it('emits HIGH_BACK_PRESSURE on high back pressure', (done) => {
-        ep1.once(Event.HIGH_BACK_PRESSURE, (peerInfo) => {
-            expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
+        ep1.once(Event.HIGH_BACK_PRESSURE, (peerInfo: PeerInfo) => {
+            expect(peerInfo.peerId).toEqual('ep2')
             done()
         })
         inflictHighBackPressure()
@@ -83,8 +83,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
 
     it('emits LOW_BACK_PRESSURE after high back pressure',  (done) => {
         ep1.once(Event.HIGH_BACK_PRESSURE, () => {
-            ep1.once(Event.LOW_BACK_PRESSURE, (peerInfo) => {
-                expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
+            ep1.once(Event.LOW_BACK_PRESSURE, (peerInfo: PeerInfo) => {
+                expect(peerInfo.peerId).toEqual('ep2')
                 done()
             })
         })

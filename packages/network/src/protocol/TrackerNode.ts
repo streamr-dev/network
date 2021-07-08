@@ -7,8 +7,8 @@ import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
-import { ClientWsEndpoint } from "../connection/ClientWsEndpoint"
-import { Event as WsEndpointEvent } from "../connection/AbstractWsEndpoint"
+import { ClientWsEndpoint } from "../connection/ws/ClientWsEndpoint"
+import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
@@ -151,7 +151,7 @@ export class TrackerNode extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                this.logger.warn('invalid message from %s: %s', peerInfo, rawMessage)
+                this.logger.warn('invalid message from %s: "%s"', peerInfo, rawMessage)
             }
         }
     }

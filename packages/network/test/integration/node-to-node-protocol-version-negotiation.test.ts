@@ -9,7 +9,7 @@ import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProto
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 

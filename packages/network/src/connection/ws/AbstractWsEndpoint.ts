@@ -1,12 +1,10 @@
 import { EventEmitter } from "events"
-import { Logger } from "../helpers/Logger"
-import { PeerInfo } from "./PeerInfo"
-import { Metrics, MetricsContext } from "../helpers/MetricsContext"
-import { Rtts } from "../identifiers"
+import { Logger } from "../../helpers/Logger"
+import { PeerInfo } from "../PeerInfo"
+import { Metrics, MetricsContext } from "../../helpers/MetricsContext"
+import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
-
-export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
-export const LOW_BACK_PRESSURE = 1024 * 1024
+import { WsConnection } from './WsConnection'
 
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
@@ -19,12 +17,14 @@ export enum Event {
 export enum DisconnectionCode {
     GRACEFUL_SHUTDOWN = 1000,
     MISSING_REQUIRED_PARAMETER = 1002,
+    DEAD_CONNECTION = 1003,
 }
 
 export enum DisconnectionReason {
     GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
     DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
     NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
+    DEAD_CONNECTION = 'dead connection'
 }
 
 export class UnknownPeerError extends Error {
@@ -37,27 +37,15 @@ export class UnknownPeerError extends Error {
     }
 }
 
-export interface SharedConnection {
-    respondedPong: boolean
-    rtt?: number
-    rttStart?: number
-    ping: () => void
-    getPeerId: () => string
-    highBackPressure: boolean
-    peerInfo: PeerInfo
-    getBufferedAmount(): number
-    send(message: string): Promise<void>
-    terminate(): void
-    close(code: DisconnectionCode, reason: DisconnectionReason): void
-}
+export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEmitter {
+    private readonly pingPongWs: PingPongWs
+    private readonly connectionById: Map<string, C> = new Map<string, C>()
 
-export abstract class AbstractWsEndpoint<C extends SharedConnection> extends EventEmitter {
-    protected metrics: Metrics
-
+    protected readonly metrics: Metrics
     protected readonly peerInfo: PeerInfo
     protected readonly logger: Logger
-    protected readonly pingPongWs: PingPongWs
-    protected readonly connectionById: Map<string, C> = new Map<string, C>()
+
+    public static PEER_ID_HEADER = 'streamr-peer-id'
 
     protected constructor(
         peerInfo: PeerInfo,
@@ -97,7 +85,7 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
             try {
-                this.evaluateBackPressure(connection)
+                connection.evaluateBackPressure()
                 await connection.send(message)
             } catch (err) {
                 this.metrics.record('sendFailed', 1)
@@ -117,22 +105,22 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         }
     }
 
-    protected onReceive(connection: SharedConnection, message: string): void {
-        this.logger.trace('<== received from %s message "%s"', connection.peerInfo, message)
-        this.emit(Event.MESSAGE_RECEIVED, connection.peerInfo, message)
-    }
-
-    close(recipientId: string, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
-        this.metrics.record('close', 1)
+    close(recipientId: string, code: DisconnectionCode, reason: DisconnectionReason): void {
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
+            this.metrics.record('close', 1)
             try {
                 this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
-                connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, reason)
+                connection.close(code, reason)
             } catch (e) {
                 this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
             }
         }
+    }
+
+    stop(): Promise<void> {
+        this.pingPongWs.stop()
+        return this.doStop()
     }
 
     getRtts(): Rtts {
@@ -143,10 +131,54 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         return this.connectionById
     }
 
+    getPeerInfos(): PeerInfo[] {
+        return this.getConnections().map((connection) => connection.getPeerInfo())
+    }
+
+    /**
+     * Custom close logic of subclass
+     */
+    protected abstract doClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void
+
+    /**
+     * Custom clean up logic of subclass
+     */
+    protected abstract doStop(): Promise<void>
+
+    /**
+     * Implementer should invoke this whenever a new connection is formed
+     */
+    protected onNewConnection(connection: C): void {
+        const peerInfo = connection.getPeerInfo()
+        connection.setBackPressureHandlers(
+            () =>  {
+                this.emitLowBackPressure(peerInfo)
+            },
+            () =>  {
+                this.emitHighBackPressure(peerInfo)
+            }
+        )
+        this.connectionById.set(connection.getPeerId(), connection)
+        this.metrics.record('open', 1)
+        this.logger.trace('added %s to connection list', connection.getPeerId())
+        this.emit(Event.PEER_CONNECTED, peerInfo)
+    }
+
+    /**
+     * Implementer should invoke this whenever a message is received.
+     */
+    protected onReceive(connection: WsConnection, message: string): void {
+        this.metrics.record('inSpeed', message.length)
+        this.metrics.record('msgSpeed', 1)
+        this.metrics.record('msgInSpeed', 1)
+        this.logger.trace('<== received from %s message "%s"', connection.getPeerInfo(), message)
+        this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
+    }
+
     /**
      * Implementer should invoke this whenever a connection is closed.
      */
-    protected onClose(connection: C, code = 0, reason = ''): void {
+    protected onClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void {
         if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
             this.metrics.record('open:duplicateSocket', 1)
         }
@@ -154,32 +186,10 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
         this.connectionById.delete(connection.getPeerId())
-        this.emit(Event.PEER_DISCONNECTED, connection.peerInfo, reason)
-    }
-
-    /**
-     * Implementer should invoke this whenever a new connection is formed
-     */
-    protected onNewConnection(connection: C): void {
-        this.connectionById.set(connection.getPeerId(), connection)
-        this.metrics.record('open', 1)
-        this.logger.trace('added %s to connection list', connection.getPeerId())
-        this.emit(Event.PEER_CONNECTED, connection.peerInfo)
-    }
-
-    /**
-     * Implementer can invoke this whenever low watermark of buffer hit
-     */
-    protected evaluateBackPressure(connection: SharedConnection): void {
-        const bufferedAmount = connection.getBufferedAmount()
-        if (!connection.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
-            this.logger.trace('Back pressure HIGH for %s at %d', connection.peerInfo, bufferedAmount)
-            this.emit(Event.HIGH_BACK_PRESSURE, connection.peerInfo)
-            connection.highBackPressure = true
-        } else if (connection.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
-            this.logger.trace('Back pressure LOW for %s at %d', connection.peerInfo, bufferedAmount)
-            this.emit(Event.LOW_BACK_PRESSURE, connection.peerInfo)
-            connection.highBackPressure = false
+        try {
+            this.doClose(connection, code, reason)
+        } finally {
+            this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo(), reason)
         }
     }
 
@@ -189,5 +199,13 @@ export abstract class AbstractWsEndpoint<C extends SharedConnection> extends Eve
 
     protected getConnectionByPeerId(peerId: string): C | undefined {
         return this.connectionById.get(peerId)
+    }
+
+    private emitLowBackPressure(peerInfo: PeerInfo): void {
+        this.emit(Event.LOW_BACK_PRESSURE, peerInfo)
+    }
+
+    private emitHighBackPressure(peerInfo: PeerInfo): void {
+        this.emit(Event.HIGH_BACK_PRESSURE, peerInfo)
     }
 }

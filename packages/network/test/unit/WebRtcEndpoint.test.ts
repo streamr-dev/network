@@ -8,7 +8,7 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -75,8 +75,6 @@ describe('WebRtcEndpoint', () => {
             await runAndWaitForEvents([
                 () => {
                     endpoint1.connect('node-2', 'tracker', true)
-                },
-                () => {
                     endpoint2.connect('node-1', 'tracker', true)
                 }], [
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
@@ -442,5 +440,6 @@ describe('WebRtcEndpoint', () => {
                 await endpoint1.send('node-2', payload)
             }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
         })
+
     })
 })

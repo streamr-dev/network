@@ -2,7 +2,8 @@ import { EventEmitter } from 'events'
 import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
-import { WebRtcConnection, ConstructorOptions, DeferredConnectionAttempt, isOffering } from './WebRtcConnection'
+import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
+import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import {
     AnswerOptions,
@@ -131,7 +132,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             bufferThresholdHigh: this.bufferThresholdHigh,
             bufferThresholdLow: this.bufferThresholdLow,
             messageQueue,
-            deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(targetPeerId),
+            deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(),
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
         }
