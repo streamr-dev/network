@@ -1,53 +1,55 @@
-import { Event } from '../../src/connection/IWsEndpoint'
-import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
+import { Event } from "../../src/connection/ws/AbstractWsEndpoint"
+import { startServerWsEndpoint } from '../utils'
 
 describe('WsEndpoint: back pressure handling', () => {
-    let ep1: WsEndpoint
-    let ep2: WsEndpoint
+    let epClient: ClientWsEndpoint
+    let epServer: ServerWsEndpoint
 
     beforeEach(async () => {
-        ep1 = await startEndpoint('127.0.0.1', 43974, PeerInfo.newNode('ep1'), null)
-        ep2 = await startEndpoint('127.0.0.1', 43975, PeerInfo.newNode('ep2'), null)
-        await ep1.connect('ws://127.0.0.1:43975')
+        epClient = new ClientWsEndpoint(PeerInfo.newNode('epClient'))
+        epServer = await startServerWsEndpoint('127.0.0.1', 43975, PeerInfo.newTracker('epServer'))
+        await epClient.connect('ws://127.0.0.1:43975')
     })
 
     afterEach(async () => {
-        Promise.allSettled([
-            ep1.stop(),
-            ep2.stop()
+        await Promise.allSettled([
+            epClient.stop(),
+            epServer.stop()
         ])
     })
 
     it('emits HIGH_BACK_PRESSURE on high back pressure', (done) => {
         let hitHighBackPressure = false
-        ep1.on(Event.HIGH_BACK_PRESSURE, (peerInfo) => {
+        epClient.on(Event.HIGH_BACK_PRESSURE, (peerInfo: PeerInfo) => {
             hitHighBackPressure = true
-            expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
+            expect(peerInfo).toEqual(PeerInfo.newTracker('epServer'))
             done()
         })
         while (!hitHighBackPressure) {
-            ep1.send('ep2', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
         }
     })
 
     it('emits LOW_BACK_PRESSURE after high back pressure', (done) => {
         let hitHighBackPressure = false
         let sendInterval: ReturnType<typeof setInterval> | null = null
-        ep1.on(Event.HIGH_BACK_PRESSURE, () => {
+        epClient.on(Event.HIGH_BACK_PRESSURE, () => {
             hitHighBackPressure = true
 
             // drain doesn't seem to work, need to send _evaluateBackPressure
-            sendInterval = setInterval(() => ep1.send('ep2', 'aaaa'), 30)
+            sendInterval = setInterval(() => epClient.send('epServer', 'aaaa'), 30)
 
-            ep1.on(Event.LOW_BACK_PRESSURE, (peerInfo) => {
-                expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
+            epClient.on(Event.LOW_BACK_PRESSURE, (peerInfo) => {
+                expect(peerInfo).toEqual(PeerInfo.newTracker('epServer'))
                 clearInterval(sendInterval!)
                 done()
             })
         })
         while (!hitHighBackPressure) {
-            ep1.send('ep2', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
         }
     })
 })

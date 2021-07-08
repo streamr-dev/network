@@ -62,9 +62,6 @@
       "description": "Network node settings",
       "required": [
         "name",
-        "hostname",
-        "port",
-        "advertisedWsUrl",
         "trackers",
         "location"
       ],
@@ -73,22 +70,6 @@
         "name": {
           "type": "string",
           "description": "Human-readable name for network node"
-        },
-        "hostname": {
-          "type": "string",
-          "format": "hostname",
-          "description": "Hostname to start network node on"
-        },
-        "port": {
-          "$ref": "#/definitions/port",
-          "description": "Port to start network node on"
-        },
-        "advertisedWsUrl": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Override WebSocket URL to advertise to tracker and other nodes (useful when behind NAT)"
         },
         "trackers": {
           "oneOf": [

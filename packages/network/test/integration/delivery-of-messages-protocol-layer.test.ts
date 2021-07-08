@@ -1,7 +1,6 @@
 import { MessageLayer, ControlLayer, TrackerLayer } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
-import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { StreamIdAndPartition } from '../../src/identifiers'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
@@ -13,6 +12,8 @@ import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import { startServerWsEndpoint } from '../utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -34,9 +35,9 @@ describe('delivery of messages in protocol layer', () => {
 
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
-        const wsEndpoint1 = await startEndpoint('127.0.0.1', 28513, peerInfo1, null)
-        const wsEndpoint2 = await startEndpoint('127.0.0.1', 28514, peerInfo2, null)
-        const wsEndpoint3 = await startEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'), null)
+        const wsEndpoint1 = new ClientWsEndpoint(peerInfo1)
+        const wsEndpoint2 = new ClientWsEndpoint(peerInfo2)
+        const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'))
         trackerNode = new TrackerNode(wsEndpoint1)
         trackerNode2 = new TrackerNode(wsEndpoint2)
 
@@ -68,12 +69,12 @@ describe('delivery of messages in protocol layer', () => {
         trackerServer = new TrackerServer(wsEndpoint3)
 
         // Connect trackerNode <-> trackerServer
-        await trackerNode.connectToTracker(trackerServer.getAddress())
-        await trackerNode2.connectToTracker(trackerServer.getAddress())
+        await trackerNode.connectToTracker(trackerServer.getUrl())
+        await trackerNode2.connectToTracker(trackerServer.getUrl())
 
         // Connect trackerNode <-> Tracker
-        await trackerNode.connectToTracker(tracker.getAddress())
-        await trackerNode2.connectToTracker(tracker.getAddress())
+        await trackerNode.connectToTracker(tracker.getUrl())
+        await trackerNode2.connectToTracker(tracker.getUrl())
 
         // Connect nodeToNode1 <-> nodeToNode2
         nodeToNode1.connectToNode('node2', 'tracker')

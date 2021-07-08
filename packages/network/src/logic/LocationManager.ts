@@ -25,18 +25,13 @@ export class LocationManager {
         return this.nodeLocations[nodeId]
     }
 
-    updateLocation({ nodeId, location, address }: { nodeId: string, location: Location | null, address: string }): void {
+    updateLocation({ nodeId, location, address }: { nodeId: string, location: Location | null, address?: string }): void {
         if (isValidNodeLocation(location)) {
             this.nodeLocations[nodeId] = location!
         } else if (!isValidNodeLocation(this.nodeLocations[nodeId])) {
             let geoIpRecord: null | Lookup = null
             if (address) {
-                try {
-                    const ip = address.split(':')[1].replace('//', '')
-                    geoIpRecord = lookup(ip)
-                } catch (e) {
-                    this.logger.warn('could not parse IP from address %s', address)
-                }
+                geoIpRecord = lookup(address)
             }
             if (geoIpRecord) {
                 this.nodeLocations[nodeId] = {

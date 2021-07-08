@@ -5,16 +5,9 @@ import { ParsedQs } from 'qs'
 import { parsePositiveInteger, parseQueryParameter } from '../../helpers/parser'
 import { Connection } from './Connection'
 import { closeWithError } from '../../helpers/closeWebsocket'
+import { PayloadFormat } from '../../helpers/PayloadFormat'
 
 const logger = new Logger(module)
-
-const parsePayloadJson = (contentAsString: string) => {
-    try {
-        return JSON.parse(contentAsString)
-    } catch (e) {
-        throw new Error(`Payload is not a JSON string: ${e.message}`)
-    }
-}
 
 export class PublishConnection implements Connection {
 
@@ -34,15 +27,15 @@ export class PublishConnection implements Connection {
         }
     }
     
-    init(ws: WebSocket, streamrClient: StreamrClient) {
-        ws.on('message', (contentPayload: string) => {
+    init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat) {
+        ws.on('message', (payload: string) => {
             try {
-                const content = parsePayloadJson(contentPayload)
-                const partitionKey = this.partitionKey ?? (this.partitionKeyField ? content[this.partitionKeyField] : undefined)
+                const { content, metadata } = payloadFormat.createMessage(payload)
+                const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)
                 streamrClient.publish({
                     id: this.streamId,
                     partition: this.partition
-                }, content, undefined, partitionKey)
+                }, content, metadata.timestamp, partitionKey)
             } catch (err: any) {
                 closeWithError(err, 'Unable to publish', ws, logger)
             }

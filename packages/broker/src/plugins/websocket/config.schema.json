@@ -5,6 +5,7 @@
     "description": "WebSocket plugin configuration",
     "required": [
         "port",
+        "payloadMetadata",
         "sslCertificate"
     ],
     "additionalProperties": false,
@@ -12,6 +13,10 @@
         "port": {
             "type": "integer",
             "description": "Port to start plugin on"
+        },
+        "payloadMetadata": {
+            "type": "boolean",
+            "description": "The format of payloads: payload is wrapped as { content, metadata } or is a plain content JSON"
         },
         "sslCertificate": {
             "description": "Files to use for SSL",

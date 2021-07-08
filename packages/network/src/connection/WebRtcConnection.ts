@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
+import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
@@ -41,41 +42,6 @@ interface Events {
 // to make it safe for consumers to call removeAllListeners
 // i.e. no this.on('event')
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
-
-export class DeferredConnectionAttempt {
-    
-    private eventEmitter: EventEmitter
-    private connectionAttemptPromise: Promise<string>
-
-    constructor(private targetId: string) {
-
-        this.eventEmitter = new EventEmitter()
-        
-        this.connectionAttemptPromise = new Promise((resolve, reject) => {
-            this.eventEmitter.once('resolve', () => {
-                resolve(this.targetId)
-            })
-            this.eventEmitter.once('reject', (reason) => {
-                reject(reason)
-            })
-        })
-
-        // allow promise to reject without outside catch
-        this.connectionAttemptPromise.catch(() => {})
-    }
-
-    getPromise(): Promise<string> {
-        return this.connectionAttemptPromise
-    }
-
-    resolve(): void {
-        this.eventEmitter.emit('resolve')
-    }
-
-    reject(reason: Error | string): void {
-        this.eventEmitter.emit('reject', reason)
-    }
-}
 
 export function isOffering(myId: string, theirId: string): boolean {
     return myId < theirId
@@ -119,11 +85,12 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     private flushRef: NodeJS.Timeout | null
     private flushTimeoutRef: NodeJS.Timeout | null
     private connectionTimeoutRef: NodeJS.Timeout | null
-    private pingTimeoutRef: NodeJS.Timeout | null
     private deferredConnectionAttempt: DeferredConnectionAttempt | null
     private readonly newConnectionTimeout: number
     private paused: boolean
     private isFinished: boolean
+    
+    private pingTimeoutRef: NodeJS.Timeout | null
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
@@ -455,7 +422,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         if (this.deferredConnectionAttempt) {
             const def = this.deferredConnectionAttempt
             this.deferredConnectionAttempt = null
-            def.resolve()
+            def.resolve(this.peerInfo.peerId)
         }
         this.setFlushRef()
         this.emit('open')

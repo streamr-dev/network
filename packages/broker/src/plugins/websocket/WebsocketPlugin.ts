@@ -1,10 +1,12 @@
 import { Plugin, PluginOptions } from '../../Plugin'
 import { SslCertificateConfig } from '../../types'
+import { getPayloadFormat } from '../../helpers/PayloadFormat'
 import { WebsocketServer } from './WebsocketServer'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
 export interface WebsocketPluginConfig {
     port: number
+    payloadMetadata: boolean
     sslCertificate: SslCertificateConfig|null
 }
 
@@ -21,7 +23,12 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
 
     async start() {
         this.server = new WebsocketServer(this.streamrClient!)
-        await this.server.start(this.pluginConfig.port, this.apiAuthenticator, this.pluginConfig.sslCertificate ?? undefined)
+        await this.server.start(
+            this.pluginConfig.port, 
+            getPayloadFormat(this.pluginConfig.payloadMetadata),
+            this.apiAuthenticator, 
+            this.pluginConfig.sslCertificate ?? undefined
+        )
     }
 
     async stop() {
