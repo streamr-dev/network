@@ -49,7 +49,6 @@ module.exports = function (config) {
                         contextIsolation: false,
                         preload: __dirname + '/preload.js'
                     },
-                    show: false
                 }
             }
         },
