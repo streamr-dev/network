@@ -219,7 +219,11 @@ const getTestName = (module: NodeModule) => {
     return (groups !== null) ? groups[1] : module.filename
 }
 
-export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+export const createTestStream = (
+    streamrClient: StreamrClient,
+    module: NodeModule,
+    props?: Partial<StreamProperties>
+): Promise<Stream> => {
     return streamrClient.createStream({
         id: '/test/' + getTestName(module) + '/' + Date.now(),
         ...props
