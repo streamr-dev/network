@@ -1,33 +1,42 @@
 import { instanceId, pOnce } from './index'
+import { Debug } from './log'
 import { iteratorFinally } from './iterators'
 import { PullBuffer } from './PushBuffer'
+import { ContextError, Context } from './Context'
 
-type PipelineGeneratorFunction<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
+export type PipelineGeneratorFunction<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 
-export class Pipeline<InType> implements AsyncGenerator<InType> {
+class PipelineError extends ContextError {}
+
+export class Pipeline<InType, OutType = InType> implements AsyncGenerator<OutType>, Context {
+    readonly debug
     readonly id
     private readonly bufferSize: number
     private readonly source
     private readonly transforms: PipelineGeneratorFunction[] = []
-    private iterator?: AsyncGenerator<InType>
+    private iterator: AsyncGenerator<OutType>
     private finallyFn?: ((err?: Error) => void | Promise<void>)
+    private isIterating = false
 
     constructor(source: AsyncGenerator<InType>, bufferSize = 256) {
         this.bufferSize = bufferSize
         this.source = source
         this.id = instanceId(this)
         this.cleanup = pOnce(this.cleanup.bind(this))
+        this.debug = Debug(this.id)
+        this.iterator = iteratorFinally(this.generatePipeline(), this.cleanup)
+        // this.debug('create')
     }
 
-    pipe<OutType>(this: Pipeline<InType>, fn: PipelineGeneratorFunction<InType, OutType>): Pipeline<OutType> {
-        if (this.iterator) {
-            throw new Error('cannot pipe after already iterating')
+    pipe<NewOutType>(fn: PipelineGeneratorFunction<OutType, NewOutType>): Pipeline<InType, NewOutType> {
+        if (this.isIterating) {
+            throw new PipelineError(this, 'cannot pipe after already iterating')
         }
 
         this.transforms.push(fn)
-        // this allows chaining to be type aware
+        // this allows .pipe chaining to be type aware
         // i.e. new Pipeline(Type1).pipe(Type1 => Type2).pipe(Type2 => Type3)
-        return this as unknown as Pipeline<OutType>
+        return this as Pipeline<InType, unknown> as Pipeline<InType, NewOutType>
     }
 
     finally(onFinally: ((err?: Error) => void | Promise<void>)) {
@@ -36,15 +45,15 @@ export class Pipeline<InType> implements AsyncGenerator<InType> {
     }
 
     throw(err: Error) {
-        return this[Symbol.asyncIterator]().throw(err)
+        return this.iterator.throw(err)
     }
 
-    return(v?: InType) {
-        return this[Symbol.asyncIterator]().return(v)
+    return(v?: OutType) {
+        return this.iterator.return(v)
     }
 
     next() {
-        return this[Symbol.asyncIterator]().next()
+        return this.iterator.next()
     }
 
     private async cleanup(error?: Error) {
@@ -62,8 +71,9 @@ export class Pipeline<InType> implements AsyncGenerator<InType> {
     }
 
     private async* generatePipeline() {
+        this.isIterating = true
         if (!this.transforms.length) {
-            throw new Error('no transforms')
+            throw new PipelineError(this, 'no transforms')
         }
 
         // each pipeline step creates a generator
@@ -73,16 +83,14 @@ export class Pipeline<InType> implements AsyncGenerator<InType> {
         const line = this.transforms.reduce((prev: AsyncGenerator, transform) => {
             return transform(prev)
         }, this.source)
-        yield* new PullBuffer<InType>(line, this.bufferSize)
+        yield* new PullBuffer<OutType>(line, this.bufferSize)
     }
 
     [Symbol.asyncIterator]() {
-        if (this.iterator) {
-            return this.iterator
+        if (this.isIterating) {
+            throw new PipelineError(this, 'cannot iterate, already iterating')
         }
 
-        // wrap pipeline in iteratorFinally to ensure it's cleaned up
-        this.iterator = iteratorFinally(this.generatePipeline(), this.cleanup)
         return this.iterator
     }
 }

@@ -1,12 +1,9 @@
 import IteratorTest, { expected, MAX_ITEMS } from './IteratorTest'
 import { wait } from 'streamr-test-utils'
-import { Debug } from '../utils'
 
 import { Pipeline } from '../../src/utils/Pipeline'
 import { PushBuffer, PullBuffer } from '../../src/utils/PushBuffer'
 import { iteratorFinally } from '../../src/utils/iterators'
-
-const debug = Debug('Pipeline')
 
 const WAIT = 20
 
@@ -21,31 +18,84 @@ async function* generate(items = expected, waitTime = WAIT) {
 }
 
 describe('Pipeline', () => {
-    let onFinally: () => void
-    let onFinallyAfter: () => void
 
-    beforeEach(() => {
-        onFinallyAfter = jest.fn()
-        onFinally = jest.fn(async () => {
-            await wait(WAIT)
-            onFinallyAfter()
-        })
-    })
-
-    afterEach(() => {
-        expect(onFinally).toHaveBeenCalledTimes(1)
-        expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-    })
-
-    IteratorTest('PipelineBuilder', () => {
-        return new Pipeline(generate())
-            .pipe(async function* Step(src) {
-                yield* src
+    it('types pipe & result correctly', async () => {
+        // checking TS types.
+        // The ts-expect-errors are the tests.
+        const p1 = new Pipeline(generate())
+            // @ts-expect-error incorrect type
+            .pipe(async function* Step1(s: AsyncGenerator<string>) {
+                yield* s
             })
-            .finally(onFinally)
-    })
 
+        expect(p1).toBeTruthy() // avoid unused warning
+
+        const p2 = new Pipeline(generate())
+            .pipe(async function* Step1(s: AsyncGenerator<number>) {
+                for await (const msg of s) {
+                    yield String(msg) // change output type
+                }
+            })
+            // @ts-expect-error incorrect type after pipe
+            .pipe(async function* Step2(s: AsyncGenerator<number>) {
+                yield* s
+            })
+
+        expect(p2).toBeTruthy() // avoid unused warning
+
+        const p3 = new Pipeline(generate())
+            .pipe(async function* Step1(s) {
+                for await (const msg of s) {
+                    yield String(msg) // change output type
+                }
+            })
+            .pipe(async function* Step2(s) {
+                yield* s
+            })
+
+        for await (const msg of p3) {
+            // @ts-expect-error incorrect iteration type, should be string
+            const v: number = msg
+            expect(typeof v).toEqual('string')
+        }
+
+        const p4 = new Pipeline(generate())
+            .pipe(async function* Step1(s) {
+                for await (const msg of s) {
+                    yield String(msg) // change output type
+                }
+            })
+
+        for await (const msg of p4) {
+            const v: string = msg
+            expect(typeof v).toEqual('string')
+        }
+    })
     describe('pipeline', () => {
+        let onFinally: () => void
+        let onFinallyAfter: () => void
+
+        beforeEach(() => {
+            onFinallyAfter = jest.fn()
+            onFinally = jest.fn(async () => {
+                await wait(WAIT)
+                onFinallyAfter()
+            })
+        })
+
+        afterEach(() => {
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+        })
+
+        IteratorTest('PipelineBuilder', () => {
+            return new Pipeline(generate())
+                .pipe(async function* Step(src) {
+                    yield* src
+                })
+            .finally(onFinally)
+        })
+
         describe('baseline', () => {
             IteratorTest('pipeline', () => {
                 return new Pipeline(generate())
@@ -68,18 +118,14 @@ describe('Pipeline', () => {
             const receivedStep2: number[] = []
             const afterStep1 = jest.fn()
             const afterStep2 = jest.fn()
-            debug('init')
             const p = new Pipeline(generate())
                 .pipe(async function* Step1(s) {
                     try {
                         for await (const msg of s) {
                             receivedStep1.push(msg)
-                            debug('1 msg', msg)
                             yield msg * 2
-                            debug('1 msg', msg)
                         }
                     } finally {
-                        debug('1 finally')
                         afterStep1()
                     }
                 })
@@ -87,12 +133,9 @@ describe('Pipeline', () => {
                     try {
                         for await (const msg of s) {
                             receivedStep2.push(msg)
-                            debug('2 msg', msg)
                             yield msg * 10
-                            debug('2 msg', msg)
                         }
                     } finally {
-                        debug('2 finally')
                         // ensure async finally works
                         await wait(WAIT)
                         afterStep2()
@@ -138,7 +181,7 @@ describe('Pipeline', () => {
                     try {
                         for await (const msg of s) {
                             receivedStep2.push(msg)
-                            yield msg * 10
+                            yield String(msg * 10) // change type
                         }
                     } finally {
                         // ensure async finally works
@@ -152,7 +195,7 @@ describe('Pipeline', () => {
             for await (const msg of p) {
                 received.push(msg)
             }
-            expect(received).toEqual(expected.slice(0, MAX_ITEMS).map((v) => v * 20))
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS).map((v) => String(v * 20)))
             expect(receivedStep2).toEqual(expected.slice(0, MAX_ITEMS).map((v) => v * 2))
             expect(receivedStep1).toEqual(expected.slice(0, MAX_ITEMS))
             expect(afterStep0).toHaveBeenCalledTimes(1)
