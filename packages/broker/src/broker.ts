@@ -16,8 +16,8 @@ import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
-import { StorageNodeRegistry } from './StorageNodeRegistry'
-import { Todo } from './types'
+import { StorageNodeRegistry } from "./StorageNodeRegistry"
+import { v4 as uuidv4 } from 'uuid'
 const { Utils } = Protocol
 
 const logger = new Logger(module)
@@ -135,8 +135,14 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const storageNodes = await getStorageNodes(config)
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
+    // Start network node
+    let sessionId
+    if (!config.plugins['storage']){
+        sessionId = `${brokerAddress}#${uuidv4()}`
+    }
+
     const networkNode = createNetworkNode({
-        id: brokerAddress,
+        id: sessionId || brokerAddress,
         name: networkNodeName,
         trackers,
         location: config.network.location,
