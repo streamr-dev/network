@@ -13,6 +13,7 @@
   "exports": {
     ".": {
       "browser": "./streamr-client.web.js",
+      "react-native": "./streamr-client.rn.js",
       "default": {
         "import": "./src/index-esm.mjs",
         "require": "./src/index-commonjs.js"
@@ -154,6 +155,7 @@
     "@ethersproject/transactions": "^5.1.1",
     "@ethersproject/wallet": "^5.1.0",
     "@ethersproject/web": "^5.1.0",
+    "@react-native-async-storage/async-storage": "^1.15.5",
     "debug": "^4.3.2",
     "env-paths": "^2.2.1",
     "eventemitter3": "^4.0.7",
