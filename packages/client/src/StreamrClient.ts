@@ -4,9 +4,9 @@
  */
 import EventEmitter from 'eventemitter3'
 import { ControlLayer } from 'streamr-client-protocol'
+import fetch from 'node-fetch'
+import { CacheAsyncFn, counterId, getEndpointUrl, pOne, uuid } from './utils'
 import { Debug, Debugger } from './utils/log'
-
-import { counterId, uuid, CacheAsyncFn, pOne } from './utils'
 import { validateOptions } from './stream/utils'
 import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
 import StreamrEthereum from './Ethereum'
@@ -15,14 +15,16 @@ import Connection, { ConnectionError, ConnectionOptions } from './Connection'
 import Publisher from './publish'
 import { Subscriber, Subscription } from './subscribe'
 import { getUserId } from './user'
-import { Todo, MaybeAsync, EthereumAddress } from './types'
+import { EthereumAddress, MaybeAsync, Todo } from './types'
 import { StreamEndpoints } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
 import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
-import { StreamPartDefinition, GroupKey } from './stream'
+import { GroupKey, StreamPartDefinition } from './stream'
+import { BytesLike } from '@ethersproject/bytes'
+import Contracts from './dataunion/Contracts'
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
 export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
@@ -511,6 +513,41 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
 
     async deployDataUnion(options?: DataUnionDeployOptions) {
         return DataUnion._deploy(options, this) // eslint-disable-line no-underscore-dangle
+    }
+
+    async setBinanceDepositAddress(binanceRecipient: EthereumAddress) {
+        return DataUnion._setBinanceDepositAddress(binanceRecipient, this) // eslint-disable-line no-underscore-dangle
+    }
+
+    async setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike) {
+        return DataUnion._setBinanceDepositAddressFromSignature(from, binanceRecipient, signature, this) // eslint-disable-line no-underscore-dangle
+    }
+
+    // TODO: define returned object's type
+    async setBinanceDepositAddressViaWithdrawServer(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike): Promise<object> {
+        const url = getEndpointUrl(this.options.withdrawServerUrl, 'binanceAdapterSetRecipient')
+        const body = {
+            memberAddress: from,
+            binanceRecipientAddress: binanceRecipient,
+            signature
+        }
+        return fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: { 'Content-Type': 'application/json' }
+        })
+    }
+
+    async getBinanceDepositAddress(userAddress: EthereumAddress) {
+        return DataUnion._getBinanceDepositAddress(userAddress, this) // eslint-disable-line no-underscore-dangle
+    }
+
+    async signSetBinanceRecipient(
+        recipientAddress: EthereumAddress,
+    ): Promise<string> {
+        const to = getAddress(recipientAddress) // throws if bad address
+        const signer = this.ethereum.getSigner()
+        return DataUnion._createSetBinanceRecipientSignature(to, signer, new Contracts(this)) // eslint-disable-line no-underscore-dangle
     }
 
     /** @internal */
