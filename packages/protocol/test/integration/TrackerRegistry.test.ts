@@ -10,7 +10,7 @@ describe('TrackerRegistry', () => {
                 contractAddress: 'address', jsonRpcProvider
             })
         } catch (e) {
-            expect(e.toString()).toContain('Error: network does not support ENS')
+            expect(e.toString()).toContain('Error: resolver or addr is not configured for ENS name')
             done()
         }
     })
