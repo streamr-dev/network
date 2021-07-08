@@ -1,5 +1,5 @@
 import fetch, { Response } from 'node-fetch'
-import Debug from 'debug'
+import { Debug } from '../utils/log'
 
 import { getVersionString } from '../utils'
 import Session from '../Session'
@@ -62,7 +62,7 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
-const debug = Debug('StreamrClient:utils:authfetch') // TODO: could use the debug instance from the client? (e.g. client.debug.extend('authFetch'))
+const debug = Debug('utils:authfetch') // TODO: could use the debug instance from the client? (e.g. client.debug.extend('authFetch'))
 
 let ID = 0
 
@@ -96,7 +96,6 @@ export default async function authFetch<T extends object>(url: string, session?:
         },
     })
     const timeEnd = Date.now()
-    // @ts-expect-error
     debug('%d %s << %d %s %s %s', id, url, response.status, response.statusText, Debug.humanize(timeEnd - timeStart))
 
     const body = await response.text()

@@ -1,20 +1,18 @@
-import { startTracker, startNetworkNode, MetricsContext, NetworkNode } from 'streamr-network'
+import { startTracker, createNetworkNode, MetricsContext, NetworkNode, Tracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
-import uWS from 'uWebSockets.js'
+import http from 'http'
 import StreamrClient from 'streamr-client'
 import { StreamFetcher } from '../../../../src/StreamFetcher'
 import { WebsocketServer } from '../../../../src/plugins/legacyWebsocket/WebsocketServer'
 import { Publisher } from '../../../../src/Publisher'
 import { SubscriptionManager } from '../../../../src/SubscriptionManager'
-import { Todo } from '../../../../src/types'
 import { createClient } from '../../../utils'
 
 const trackerPort = 17370
 const wsPort = 17351
-const networkNodePort = 17361
 
 describe('ping-pong test between broker and clients', () => {
-    let tracker: Todo
+    let tracker: Tracker
     let websocketServer: WebsocketServer
     let networkNode: NetworkNode
     let metricsContext: MetricsContext
@@ -31,17 +29,14 @@ describe('ping-pong test between broker and clients', () => {
     })
 
     beforeEach(async () => {
-        networkNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: networkNodePort,
+        networkNode = createNetworkNode({
             id: 'networkNode',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
         networkNode.start()
         metricsContext = new MetricsContext(null as any)
         websocketServer = new WebsocketServer(
-            uWS.App(),
-            wsPort,
+            http.createServer().listen(wsPort),
             networkNode,
             new StreamFetcher('http://127.0.0.1'),
             new Publisher(networkNode, {}, metricsContext),
@@ -58,13 +53,14 @@ describe('ping-pong test between broker and clients', () => {
         client3 = createClient(wsPort)
 
         await Promise.all([
-            client1.ensureConnected(),
-            client2.ensureConnected(),
-            client3.ensureConnected()
+            client1.connect(),
+            client2.connect(),
+            client3.connect()
         ])
     })
 
     beforeEach(async () => {
+        // @ts-expect-error accessing private
         await waitForCondition(() => websocketServer.connections.size === 3)
     })
 
@@ -83,10 +79,10 @@ describe('ping-pong test between broker and clients', () => {
     it('websocketServer sends pings and receives pongs from clients', async () => {
         let pings = 0
 
+        // @ts-expect-error accessing private
         const connections = [...websocketServer.connections.values()]
         connections.forEach((connection) => {
-            // @ts-expect-error
-            expect(connection.isAlive).toBeUndefined()
+            expect(connection.isDead()).toEqual(false)
         })
 
         // @ts-expect-error
@@ -104,17 +100,16 @@ describe('ping-pong test between broker and clients', () => {
             pings += 1
         })
 
-        // eslint-disable-next-line no-underscore-dangle
-        websocketServer._pingConnections()
+        // @ts-expect-error accessing private method
+        websocketServer.pingConnections()
         await waitForCondition(() => pings === 3)
 
         expect(pings).toEqual(3)
+        // @ts-expect-error accessing private
         expect(websocketServer.connections.size).toEqual(3)
-        // @ts-expect-error
-        await waitForCondition(() => connections.every((connection) => (connection.respondedPong === true)))
+        await waitForCondition(() => connections.every((connection) => connection.hasRespondedToPong()))
         connections.forEach((connection) => {
-            // @ts-expect-error
-            expect(connection.respondedPong).toBeTruthy()
+            expect(connection.hasRespondedToPong()).toEqual(true)
         })
     })
 
@@ -134,25 +129,23 @@ describe('ping-pong test between broker and clients', () => {
             pings += 1
         })
 
-        // eslint-disable-next-line no-underscore-dangle
-        websocketServer._pingConnections()
+        // @ts-expect-error accessing private method
+        websocketServer.pingConnections()
         waitForCondition(() => pings === 2).then(async () => {
+            // @ts-expect-error accessing private
             const connections = [...websocketServer.connections.values()]
             expect(connections.length).toEqual(3)
             await waitForCondition(() => {
-                // @ts-expect-error
-                const respondedPongCount = connections.filter((connection) => (connection.respondedPong === true)).length
-                // @ts-expect-error
+                const respondedPongCount = connections.filter((connection) => connection.hasRespondedToPong()).length
+                // @ts-expect-error client1.connection hack
                 return ((client1.connection.socket.pong.mock.calls.length === 1) && (respondedPongCount === 2))
             })
             connections.forEach((connection, index) => {
                 // first client
                 if (index === 0) {
-                    // @ts-expect-error
-                    expect(connection.respondedPong).toBeFalsy()
+                    expect(connection.hasRespondedToPong()).toEqual(false)
                 } else {
-                    // @ts-expect-error
-                    expect(connection.respondedPong).toBeTruthy()
+                    expect(connection.hasRespondedToPong()).toEqual(true)
                 }
             })
 
@@ -161,8 +154,8 @@ describe('ping-pong test between broker and clients', () => {
                 client1.on('connected', done)
             })
 
-            // eslint-disable-next-line no-underscore-dangle
-            websocketServer._pingConnections()
+            // @ts-expect-error accessing private method
+            websocketServer.pingConnections()
         }).catch((err) => {
             done(err)
         })

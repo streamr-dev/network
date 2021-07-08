@@ -14,7 +14,6 @@ const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
 export function formConfig({
     name,
-    networkPort,
     trackerPort,
     privateKey,
     httpPort = null,
@@ -27,7 +26,7 @@ export function formConfig({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeRegistry = [],
+    storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
     reporting = false
 }: Todo): Config {
@@ -69,9 +68,6 @@ export function formConfig({
         ethereumPrivateKey: privateKey,
         network: {
             name,
-            hostname: '127.0.0.1',
-            port: networkPort,
-            advertisedWsUrl: null,
             trackers: [
                 `ws://127.0.0.1:${trackerPort}`
             ],
@@ -100,7 +96,7 @@ export function formConfig({
         },
         streamrUrl,
         streamrAddress,
-        storageNodeRegistry,
+        storageNodeConfig,
         httpServer: httpPort ? {
             port: httpPort,
             privateKeyFileName: null,
@@ -118,10 +114,6 @@ export function startBroker(...args: Todo[]) {
 
 export function getWsUrl(port: number, ssl = false) {
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws`
-}
-
-export function getWsUrlWithControlAndMessageLayerVersions(port: number, ssl = false, controlLayerVersion = 2, messageLayerVersion = 32) {
-    return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`
 }
 
 // generates a private key
@@ -228,4 +220,17 @@ export const createTestStream = (
         id: '/test/' + getTestName(module) + '/' + Date.now(),
         ...props
     })
+}
+
+export class Queue<T> {
+    items: T[] = []
+
+    push(item: T) {
+        this.items.push(item)
+    }
+
+    async pop(): Promise<T> {
+        await waitForCondition(() => this.items.length > 0)
+        return this.items.shift()!
+    }
 }

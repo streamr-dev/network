@@ -1,14 +1,11 @@
-export interface TrackerRegistry {
-    registryAddress: string
+export interface NetworkSmartContract {
+    contractAddress: string
     jsonRpcProvider: string
 }
 
 export interface NetworkConfig {
     name: string,
-    hostname: string,
-    port: number,
-    advertisedWsUrl: string | null,
-    trackers: string[] | TrackerRegistry,
+    trackers: string[] | NetworkSmartContract,
     location: {
         latitude: number,
         longitude: number,
@@ -26,6 +23,10 @@ export interface HttpServerConfig {
 export interface StorageNodeRegistryItem {
     address: string
     url: string
+}
+
+export interface StorageNodeConfig {
+    registry: StorageNodeRegistryItem[] | NetworkSmartContract
 }
 
 export interface Config {
@@ -51,7 +52,7 @@ export interface Config {
     },
     streamrUrl: string,
     streamrAddress: string,
-    storageNodeRegistry: StorageNodeRegistryItem[]
+    storageNodeConfig: StorageNodeConfig,
     httpServer: HttpServerConfig | null
     plugins: Record<string,any>
     apiAuthentication: {

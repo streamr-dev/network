@@ -2,13 +2,15 @@ import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
 /**
  * This test verifies that tracker receives status messages from nodes with list of inBound and outBound connections
  */
+
+// Seems to only be able to perform one connection on the tracker using the split ws client/server (???)
 describe('check status message flow between tracker and two nodes', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
@@ -30,18 +32,16 @@ describe('check status message flow between tracker and two nodes', () => {
             port: 30750,
             id: TRACKER_ID
         })
-        nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30751,
+
+        nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             pingInterval: 100
         })
-        nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30752,
+        
+        nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             location,
             pingInterval: 100
         })

@@ -1,8 +1,7 @@
-import { inspect } from 'util'
-
 import { MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
 import { pOrderedResolve, CacheAsyncFn } from '../utils'
+import { inspect } from '../utils/log'
 import { validateOptions } from '../stream/utils'
 
 const { StreamMessageValidator, SigningUtil } = Utils

@@ -1,10 +1,15 @@
-import ws from 'uWebSockets.js'
 import { MissingConfigError } from '../../errors/MissingConfigError'
 import { WebsocketServer } from './WebsocketServer'
 import { Plugin, PluginOptions } from '../../Plugin'
-import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { Logger } from "streamr-network"
+import { once } from "events"
+import fs from "fs"
+import http from 'http'
+import https from "https"
+
+const logger = new Logger(module)
 
 export interface WebsocketPluginConfig {
     port: number
@@ -14,46 +19,48 @@ export interface WebsocketPluginConfig {
 }
 
 export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
-
-    private websocketServer: WebsocketServer|undefined
+    private websocketServer: WebsocketServer | undefined
 
     constructor(options: PluginOptions) {
         super(options)
     }
 
-    async start() {
+    async start(): Promise<unknown> {
         if (this.pluginConfig.port === undefined) {
             throw new MissingConfigError('port')
         }
-        let server
+        let httpServer: http.Server | https.Server
         if (this.pluginConfig.privateKeyFileName && this.pluginConfig.certFileName) {
-            server = ws.SSLApp({
-                key_file_name: this.pluginConfig.privateKeyFileName,
-                cert_file_name: this.pluginConfig.certFileName,
-            })
+            const opts = {
+                key: fs.readFileSync(this.pluginConfig.privateKeyFileName),
+                cert: fs.readFileSync(this.pluginConfig.certFileName)
+            }
+            httpServer = https.createServer(opts)
         } else {
-            server = ws.App()
+            httpServer = http.createServer()
         }
-        const storageNodeRegistry = StorageNodeRegistry.createInstance(this.brokerConfig)
         this.websocketServer = new WebsocketServer(
-            server,
-            this.pluginConfig.port,
+            httpServer,
             this.networkNode,
             new StreamFetcher(this.brokerConfig.streamrUrl),
             this.publisher,
             this.metricsContext,
             this.subscriptionManager,
-            storageNodeRegistry,
+            this.storageNodeRegistry,
             this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
         )
+        httpServer.listen(this.pluginConfig.port)
+        await once(httpServer, 'listening')
+        logger.info(`started on port %s`, this.pluginConfig.port)
+        return true
     }
 
-    async stop() {
+    async stop(): Promise<unknown> {
         return this.websocketServer!.close()
     }
 
-    getConfigSchema() {
+    getConfigSchema(): Record<string, unknown> {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

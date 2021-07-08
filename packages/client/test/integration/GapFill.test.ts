@@ -1,15 +1,15 @@
 import { wait } from 'streamr-test-utils'
 
-import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
-
-import config from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber, Subscription } from '../../src/subscribe'
 import { MessageRef } from 'streamr-client-protocol/dist/src/protocol/message_layer'
 import { StreamrClientOptions } from '../../src'
 import { StorageNode } from '../../src/stream/StorageNode'
+
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
+import clientOptions from './config'
 
 const MAX_MESSAGES = 10
 
@@ -23,7 +23,7 @@ describeRepeats('GapFill', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
@@ -340,22 +340,6 @@ describeRepeats('GapFill', () => {
                     })
                 }).rejects.toThrow('storage')
             }, 15000)
-
-            it('rejects resend+subscribe if no storage assigned', async () => {
-                // new stream, assign to storage node not called
-                stream = await createTestStream(client, module, {
-                    requireSignedData: true,
-                })
-
-                await expect(async () => {
-                    await client.subscribe({
-                        stream,
-                        resend: {
-                            last: 100,
-                        }
-                    })
-                }).rejects.toThrow('storage')
-            }, 15000)
         })
     })
 
@@ -525,6 +509,39 @@ describeRepeats('GapFill', () => {
             expect(client.connection.getState()).toBe('connected')
             // shouldn't retry if encountered no storage error
             expect(calledResend).toHaveBeenCalledTimes(0)
+        }, 20000)
+
+        it('subscribe+resend does not crash if no storage assigned', async () => {
+            await setupClient({
+                gapFillTimeout: 200,
+                retryResendAfter: 2000,
+                maxGapRequests: 99 // would time out test if doesn't give up when seeing no storage assigned
+            })
+
+            await client.connect()
+            // new stream, assign to storage node not called
+            stream = await createTestStream(client, module, {
+                requireSignedData: true,
+            })
+
+            const sub = await client.subscribe({
+                stream,
+                resend: { last: 2 }
+            })
+
+            const publishedTask = publishTestMessages(MAX_MESSAGES, {
+                stream,
+            })
+
+            const received: any[] = []
+            for await (const m of sub) {
+                received.push(m.getParsedContent())
+                if (received.length === MAX_MESSAGES) {
+                    break
+                }
+            }
+            const published = await publishedTask
+            expect(received).toEqual(published)
         }, 20000)
 
         it('ignores gaps if orderMessages disabled', async () => {

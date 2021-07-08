@@ -4,14 +4,14 @@ import { ethers } from 'ethers'
 
 import { StreamrClient } from '../../src/StreamrClient'
 
-import config from './config'
+import clientOptions from './config'
 import { fakePrivateKey } from '../utils'
 
 describe('LoginEndpoints', () => {
     let client: StreamrClient
 
     const createClient = (opts = {}) => new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         auth: {
             privateKey: fakePrivateKey()
         },
@@ -105,6 +105,12 @@ describe('LoginEndpoints', () => {
             await client.getUserInfo() // requests the endpoint with sessionToken1, receives 401, fetches a new session token
             const sessionToken2 = client.session.options.sessionToken
             assert.notDeepStrictEqual(sessionToken1, sessionToken2)
+        })
+
+        it('should be able to log in after logging out', async () => {
+            await client.getUserInfo()
+            await client.logout()
+            await client.getUserInfo()
         })
     })
 })

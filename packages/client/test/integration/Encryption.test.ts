@@ -1,15 +1,14 @@
 import { wait } from 'streamr-test-utils'
 import { BroadcastMessage, ControlMessageType, StreamMessage } from 'streamr-client-protocol'
-import { describeRepeats, fakePrivateKey, Msg, getPublishTestMessages, createRelativeTestStreamId } from '../utils'
+import { describeRepeats, fakePrivateKey, Msg, getPublishTestMessages, createRelativeTestStreamId, Debug } from '../utils'
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/stream/encryption/Encryption'
 import { Stream, StreamOperation } from '../../src/stream'
 import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
-import Debug from 'debug'
 
-import config from './config'
+import clientOptions from './config'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -30,7 +29,7 @@ describeRepeats('decryption', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

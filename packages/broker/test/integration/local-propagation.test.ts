@@ -8,7 +8,6 @@ import { startBroker, fastPrivateKey, createClient, createMqttClient, createTest
 const trackerPort = 17711
 const httpPort = 17712
 const wsPort = 17713
-const networkPort = 17701
 const mqttPort = 17751
 
 describe('local propagation', () => {
@@ -32,7 +31,6 @@ describe('local propagation', () => {
         broker = await startBroker({
             name: 'broker1',
             privateKey: '0xfe77283a570fda0e581897b18d65632c438f0d00f9440183119c1b7e4d5275e1',
-            networkPort,
             trackerPort,
             httpPort,
             wsPort,
