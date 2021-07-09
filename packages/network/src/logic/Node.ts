@@ -50,10 +50,10 @@ const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
 export interface Node {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: string) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: string) => void): this
-    on(event: Event.MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage, nodeId: string) => void): this
-    on(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage, nodeId: string) => void): this
-    on(event: Event.MESSAGE_PROPAGATED, listener: (msg: MessageLayer.StreamMessage) => void): this
-    on(event: Event.MESSAGE_PROPAGATION_FAILED, listener: (msg: MessageLayer.StreamMessage, nodeId: string, error: Error) => void): this
+    on<T>(event: Event.MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: string) => void): this
+    on<T>(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: string) => void): this
+    on<T>(event: Event.MESSAGE_PROPAGATED, listener: (msg: MessageLayer.StreamMessage<T>) => void): this
+    on<T>(event: Event.MESSAGE_PROPAGATION_FAILED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: string, error: Error) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: string, streamId: StreamIdAndPartition) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: string, streamId: StreamIdAndPartition) => void): this
 }
