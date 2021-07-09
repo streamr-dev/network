@@ -72,6 +72,7 @@ describe('tracker: counter filtering', () => {
         })
 
         trackerNode1.sendStatus('tracker', formStatus(1, 666, [], [], false) as Status)
+            .catch(() => {})
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(2)
@@ -84,6 +85,7 @@ describe('tracker: counter filtering', () => {
         })
 
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status)
+            .catch(() => {})
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(0)
@@ -96,6 +98,7 @@ describe('tracker: counter filtering', () => {
         })
 
         trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
+            .catch(() => {})
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(1)
