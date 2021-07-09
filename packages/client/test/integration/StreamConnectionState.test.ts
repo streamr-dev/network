@@ -5,7 +5,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 
-import config from './config'
+import clientOptions from './config'
 import { Stream } from '../../src/stream'
 import { Subscriber, Subscription } from '../../src/subscribe'
 import { StreamrClientOptions } from '../../src'
@@ -25,7 +25,7 @@ describeRepeats('Connection State', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },

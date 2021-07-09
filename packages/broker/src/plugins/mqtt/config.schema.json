@@ -4,7 +4,8 @@
     "type": "object",
     "description": "MQTT plugin configuration",
     "required": [
-        "port"
+        "port",
+        "payloadMetadata"
     ],
     "additionalProperties": false,
     "properties": {
@@ -15,6 +16,10 @@
         "streamIdDomain": {
             "type": "string",
             "description": "All topics are mapped to streamIds by prepending the domain to the topic: streamIdDomain + '/' + topic"
+        },
+        "payloadMetadata": {
+            "type": "boolean",
+            "description": "The format of payloads: payload is wrapped as { content, metadata } or is a plain content JSON"
         }
     }
 }

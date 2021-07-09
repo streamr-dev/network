@@ -57,6 +57,13 @@ export type StrictStreamrClientOptions = {
     publishAutoDisconnectDelay: number,
     groupKeys: Todo
     keyExchange: Todo
+
+    binanceRPC: ConnectionInfo & { chainId?: number }
+    // address on sidechain
+    binanceAdapterAddress: EthereumAddress
+    // AMB address on BSC. used to port TXs to BSC
+    binanceSmartChainAMBAddress: EthereumAddress
+    withdrawServerUrl: string
     mainnet?: ConnectionInfo|string
     sidechain: ConnectionInfo & { chainId?: number }
     tokenAddress: EthereumAddress,
@@ -138,8 +145,15 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
         url: 'https://rpc.xdaichain.com/',
         chainId: 100
     },
+    binanceRPC: {
+        url: 'https://bsc-dataseed.binance.org/',
+        chainId: 56
+    },
     tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
     tokenSidechainAddress: '0xE4a2620edE1058D61BEe5F45F6414314fdf10548',
+    binanceAdapterAddress: '0x0c1aF6edA561fbDA48E9A7B1Dd46D216F31A97cC',
+    binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
+    withdrawServerUrl: 'https://streamr.com:3000',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
         payForTransport: true,

@@ -3,7 +3,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
-import { startTracker, startNetworkNode } from '../../src/composition'
+import { startTracker, createNetworkNode } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -21,41 +21,28 @@ describe('message propagation in network', () => {
             id: 'tracker'
         })
 
-        await Promise.all([
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 33312,
-                id: 'node-1',
-                trackers: [tracker.getAddress()],
-                disconnectionWaitTime: 200
-            }),
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 33313,
-                id: 'node-2',
-                trackers: [tracker.getAddress()],
-                disconnectionWaitTime: 200
-            }),
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 33314,
-                id: 'node-3',
-                trackers: [tracker.getAddress()],
-                disconnectionWaitTime: 200
-            }),
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 33315,
-                id: 'node-4',
-                trackers: [tracker.getAddress()],
-                disconnectionWaitTime: 200
-            })
-        ]).then((res) => {
-            [n1, n2, n3, n4] = res
-            return res
-        });
+        n1 = createNetworkNode({
+            id: 'node-1',
+            trackers: [tracker.getUrl()],
+            disconnectionWaitTime: 200
+        })
+        n2 = createNetworkNode({
+            id: 'node-2',
+            trackers: [tracker.getUrl()],
+            disconnectionWaitTime: 200
+        })
+        n3 = createNetworkNode({
+            id: 'node-3',
+            trackers: [tracker.getUrl()],
+            disconnectionWaitTime: 200
+        })
+        n4 = createNetworkNode({
+            id: 'node-4',
+            trackers: [tracker.getUrl()],
+            disconnectionWaitTime: 200
+        })
 
-        [n1, n2, n3, n4].forEach((node) => node.start())
+        ;[n1, n2, n3, n4].forEach((node) => node.start())
     })
 
     afterAll(async () => {

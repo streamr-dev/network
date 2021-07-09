@@ -7,12 +7,12 @@ import { counterId, Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
 import { StorageNode } from '../../src/stream/StorageNode'
 
-import config from './config'
+import clientOptions from './config'
 
 const { ControlMessage } = ControlLayer
 
 const createClient = (opts = {}) => new StreamrClient({
-    ...config.clientOptions,
+    ...clientOptions,
     auth: {
         privateKey: fakePrivateKey()
     },

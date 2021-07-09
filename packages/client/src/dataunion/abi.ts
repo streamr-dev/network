@@ -1,3 +1,101 @@
+// TODO: remove the commented-out ABI portions when merging to main
+export const binanceAdapterABI = [
+    // {
+    //     inputs: [{ type: 'address' }, { type: 'address' }, { type: 'address' }, { type: 'address' }, { type: 'address' }],
+    //     stateMutability: 'nonpayable',
+    //     type: 'constructor'
+    // },
+    // {
+    //     anonymous: false,
+    //     inputs: [{ indexed: true, type: 'address' }, { indexed: true, type: 'address' }],
+    //     name: 'SetBinanceRecipient',
+    //     type: 'event'
+    // },
+    // {
+    //     anonymous: false,
+    //     inputs: [{ indexed: true, type: 'address' }, { indexed: true, type: 'address' }, { indexed: false, type: 'uint256' }, { indexed: false, type: 'uint256' }],
+    //     name: 'WithdrawToBinance',
+    //     type: 'event'
+    // },
+    {
+        inputs: [{ type: 'address' }],
+        name: 'binanceRecipient',
+        outputs: [{ type: 'address' }, { type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    // {
+    //     inputs: [],
+    //     name: 'bscBridge',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'convertToCoin',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'dataCoin',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'datacoinPassed',
+    //     outputs: [{ type: 'uint256' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'honeyswapRouter',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'liquidityToken',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'bytes' }],
+    //     name: 'onTokenTransfer',
+    //     outputs: [{ type: 'bool' }],
+    //     stateMutability: 'nonpayable',
+    //     type: 'function'
+    // },
+    {
+        inputs: [{ type: 'address' }],
+        name: 'setBinanceRecipient',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [{ type: 'address' }, { type: 'address' }, { type: 'bytes' }],
+        name: 'setBinanceRecipientFromSig',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    // {
+    //     inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'bytes' }],
+    //     name: 'getSigner',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // }
+]
+
 export const dataUnionMainnetABI = [{
     name: 'sendTokensToBridge',
     inputs: [],
@@ -57,6 +155,12 @@ export const dataUnionSidechainABI = [{
 }, {
     name: 'withdrawAllToSigned',
     inputs: [{ type: 'address' }, { type: 'address' }, { type: 'bool' }, { type: 'bytes' }],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, {
+    name: 'withdrawToSigned',
+    inputs: [{ type: 'address' }, { type: 'address' }, { type: 'uint256' }, { type: 'bool' }, { type: 'bytes' }],
     outputs: [{ type: 'uint256' }],
     stateMutability: 'nonpayable',
     type: 'function'
@@ -127,10 +231,13 @@ export const dataUnionSidechainABI = [{
     type: 'event'
 }, {
     name: 'transferToMemberInContract',
-    inputs: [
-        { name: 'recipient', type: 'address', internalType: 'address' },
-        { name: 'amount', type: 'uint256', internalType: 'uint256' }
-    ],
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, {
+    name: 'transferWithinContract',
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'
@@ -228,5 +335,19 @@ export const sidechainAmbABI = [{
     inputs: [{ type: 'bytes32' }], // messageHash (TODO: double check)
     outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
+    type: 'function'
+}]
+
+export const erc20AllowanceAbi = [{
+    name: 'allowance',
+    inputs: [{ type: 'address' }, { type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'increaseAllowance',
+    inputs: [{ type: 'address' }, { type: 'uint256' }],
+    outputs: [{ type: 'bool' }],
+    stateMutability: 'nonpayable',
     type: 'function'
 }]

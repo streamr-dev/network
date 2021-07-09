@@ -1,0 +1,33 @@
+{
+    "$id": "config.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "description": "Testnet miner plugin configuration",
+    "required": [
+        "rewardStreamId",
+        "claimServerUrl",
+        "maxClaimDelay"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "rewardStreamId": {
+            "type": "string",
+            "default": "streamr.eth/testnets/brubeck-rewards"
+        },
+        "claimServerUrl": {
+            "type": "string",
+            "default": "https://brubeck-rewards.streamr.network"
+        },
+        "maxClaimDelay": {
+            "type": "number",
+            "description": "Maximum time for delaying the claim in milliseconds"
+        },
+        "stunServerHost": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "default": "TODO: Streamr's STUN server host"
+        }
+    }
+}

@@ -3,9 +3,10 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { StreamIdAndPartition } from "../../src/identifiers"
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions
@@ -23,18 +24,14 @@ describe('Check tracker instructions to node', () => {
             id: 'tracker'
         })
 
-        nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30952,
+        nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
-        nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30953,
+        nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
             disconnectionWaitTime: 200
         })
 
@@ -68,11 +65,12 @@ describe('Check tracker instructions to node', () => {
             waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
             waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
         ])
+        const streamIdAndPartition = new StreamIdAndPartition(streamId, 0)
 
         // @ts-expect-error private field
-        expect(Object.keys(nodeOne.nodeToNode.endpoint.connections).length).toBe(1)
+        expect(nodeOne.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(1)
         // @ts-expect-error private field
-        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections).length).toBe(1)
+        expect(nodeTwo.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(1)
 
         // send empty list
         // @ts-expect-error private field
@@ -86,15 +84,14 @@ describe('Check tracker instructions to node', () => {
                 counter: 3
             }).serialize()
         )
-        await waitForEvent(nodeOne, NodeEvent.NODE_UNSUBSCRIBED)
+        await Promise.all([
+            waitForEvent(nodeOne, NodeEvent.NODE_UNSUBSCRIBED),
+            waitForEvent(nodeTwo, NodeEvent.NODE_DISCONNECTED)
+        ])
 
         // @ts-expect-error private field
-        expect(nodeOne.trackerNode.endpoint.getPeers().size).toBe(1)
-
-        nodeOne.unsubscribe(streamId, 0)
-        await waitForEvent(nodeTwo, NodeEvent.NODE_UNSUBSCRIBED)
-
+        expect(nodeOne.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(0)
         // @ts-expect-error private field
-        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections).length).toBe(1)
+        expect(nodeTwo.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(0)
     })
 })

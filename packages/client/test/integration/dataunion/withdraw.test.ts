@@ -9,23 +9,23 @@ import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import config from '../config'
+import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 import authFetch from '../../../src/rest/authFetch'
-import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
+import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
 import { EthereumAddress } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
-const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
-const adminWalletMainnet = new Wallet(config.clientOptions.auth.privateKey, providerMainnet)
-const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, providerSidechain)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
+const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
+const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
 
-const tokenAdminWallet = new Wallet(config.tokenAdminPrivateKey, providerMainnet)
-const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
+const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
+const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
 
-const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
+const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
 let testWalletId = 1000000 // ensure fixed length as string
 
@@ -39,18 +39,19 @@ async function testWithdraw(
     recipientAddress: EthereumAddress | null, // null means memberWallet.address
     requiresMainnetETH: boolean,
     options: DataUnionWithdrawOptions,
+    expectedWithdrawAmount?: BigNumber,
 ) {
-    log('Connecting to Ethereum networks, config = %o', config)
+    log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
     const network = await providerMainnet.getNetwork()
-    log('Connected to "mainnet" network: %o', network)
+    log('Connected to "mainnet" network: %O', network)
     const network2 = await providerSidechain.getNetwork()
-    log('Connected to sidechain network: %o', network2)
+    log('Connected to sidechain network: %O', network2)
 
     log('Minting 100 tokens to %s', adminWalletMainnet.address)
     const tx1 = await tokenMainnet.mint(adminWalletMainnet.address, parseEther('100'))
     await tx1.wait()
 
-    const adminClient = new StreamrClient(config.clientOptions)
+    const adminClient = new StreamrClient(clientOptions)
 
     const dataUnion = await adminClient.deployDataUnion()
     const secret = await dataUnion.createSecret('test secret')
@@ -71,14 +72,14 @@ async function testWithdraw(
     }
 
     const memberClient = new StreamrClient({
-        ...config.clientOptions,
+        ...clientOptions,
         auth: {
             privateKey: memberWallet.privateKey
         }
     })
 
     // product is needed for join requests to analyze the DU version
-    const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
+    const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
     await authFetch(createProductUrl, adminClient.session, {
         method: 'POST',
         body: JSON.stringify({
@@ -89,7 +90,7 @@ async function testWithdraw(
     })
     const res = await memberClient.getDataUnion(dataUnion.getAddress()).join(secret)
     // await adminClient.addMembers([memberWallet.address], { dataUnion })
-    log('Member joined data union %o', res)
+    log('Member joined data union %O', res)
 
     // eslint-disable-next-line no-underscore-dangle
     const contract = await dataUnion._getContract()
@@ -119,7 +120,7 @@ async function testWithdraw(
     log('Transferred %s tokens, next sending to bridge', formatEther(amount))
     const tx2 = await contract.sendTokensToBridge()
     const tr2 = await tx2.wait()
-    log('sendTokensToBridge returned %o', tr2)
+    log('sendTokensToBridge returned %O', tr2)
 
     log('Waiting for the tokens to appear at sidechain %s', contract.sidechain.address)
     await until(async () => !(await tokenSidechain.balanceOf(contract.sidechain.address)).eq('0'), 300000, 3000)
@@ -129,14 +130,14 @@ async function testWithdraw(
     const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
     const tx3 = await sidechainContract.refreshRevenue()
     const tr3 = await tx3.wait()
-    log('refreshRevenue returned %o', tr3)
-    log('DU sidechain totalEarnings: %o', await contract.sidechain.totalEarnings())
+    log('refreshRevenue returned %O', tr3)
+    log('DU sidechain totalEarnings: %O', await contract.sidechain.totalEarnings())
 
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
 
     const stats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
-    log('Stats: %o', stats)
+    log('Stats: %O', stats)
 
     const getRecipientBalance = async () => (
         options.sendToMainnet
@@ -161,7 +162,7 @@ async function testWithdraw(
         log('Transporting message "%s"', ret)
         ret = await dataUnion.transportMessage(String(ret))
     }
-    log('Tokens withdrawn, return value: %o', ret)
+    log('Tokens withdrawn, return value: %O', ret)
 
     // "skip waiting" or "without checking the recipient account" case
     // we need to wait nevertheless, to be able to assert that balance in fact changed
@@ -179,7 +180,7 @@ async function testWithdraw(
         totalEarnings: BigNumber.from('1000000000000000000'),
         withdrawableEarnings: BigNumber.from('1000000000000000000')
     })
-    expect(balanceIncrease.toString()).toBe(amount.toString())
+    expect(balanceIncrease.toString()).toBe((expectedWithdrawAmount || amount).toString())
 }
 
 log('Starting the simulated bridge-sponsored signature transport process')
@@ -199,17 +200,12 @@ providerSidechain.on({
         return
     }
     const hash = keccak256(message)
-    const adminClient = new StreamrClient(config.clientOptions)
+    const adminClient = new StreamrClient(clientOptions)
     await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash, 100, 120000)
     log('Transported message (hash=%s)', hash)
 })
 
 describe('DataUnion withdraw', () => {
-    afterAll(() => {
-        providerMainnet.removeAllListeners()
-        providerSidechain.removeAllListeners()
-    })
-
     describe.each([
         [false, true, true], // sidechain withdraw
         [true, true, true], // self-service mainnet withdraw
@@ -259,11 +255,23 @@ describe('DataUnion withdraw', () => {
                         .withdrawAllToSigned(memberWallet.address, member2Wallet.address, signature, options)
                 }, member2Wallet.address, false, options)
             }, 3600000)
+
+            it("to anyone a specific amount with member's signature", async () => {
+                testWalletId += 1
+                const withdrawAmount = parseEther('0.5')
+                const member2Wallet = new Wallet(`0x100000000000000000000000000040000000000012300000007${testWalletId}`, providerSidechain)
+                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
+                    const signature = await memberClient.getDataUnion(dataUnionAddress).signWithdrawAmountTo(member2Wallet.address, withdrawAmount)
+                    return adminClient
+                        .getDataUnion(dataUnionAddress)
+                        .withdrawAmountToSigned(memberWallet.address, member2Wallet.address, withdrawAmount, signature, options)
+                }, member2Wallet.address, false, options, withdrawAmount)
+            }, 3600000)
         })
     })
 
     it('Validate address', async () => {
-        const client = createClient(providerSidechain)
+        const client = getRandomClient()
         const dataUnion = client.getDataUnion(createMockAddress())
         return Promise.all([
             expectInvalidAddress(() => dataUnion.getWithdrawableEarnings('invalid-address')),
@@ -271,7 +279,8 @@ describe('DataUnion withdraw', () => {
             expectInvalidAddress(() => dataUnion.signWithdrawAllTo('invalid-address')),
             expectInvalidAddress(() => dataUnion.signWithdrawAmountTo('invalid-address', '123')),
             expectInvalidAddress(() => dataUnion.withdrawAllToMember('invalid-address')),
-            expectInvalidAddress(() => dataUnion.withdrawAllToSigned('invalid-address', 'invalid-address', 'mock-signature'))
+            expectInvalidAddress(() => dataUnion.withdrawAllToSigned('invalid-address', 'invalid-address', 'mock-signature')),
+            expectInvalidAddress(() => dataUnion.withdrawAmountToSigned('invalid-address', 'invalid-address', parseEther('1'), 'mock-signature')),
         ])
     })
 })
