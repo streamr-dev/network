@@ -27,39 +27,51 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         this.httpServer = httpServer
         this.serverUrl = `${sslEnabled ? 'wss' : 'ws'}://${host}:${port}`
 
-        /* TODO:
-            compression: 0,
-            maxPayloadLength: 1024 * 1024,
-            maxBackpressure: WS_BUFFER_SIZE,
-            idleTimeout: 0,
-     */
         this.wss = new WebSocket.Server({
             server: httpServer,
             maxPayload: 1024 * 1024
-        })
-
-        this.wss.on('headers', (headers: string[]) => {
+        }).on('headers', (headers: string[]) => {
             headers.push(`${AbstractWsEndpoint.PEER_ID_HEADER}: ${this.peerInfo.peerId}`)
-        })
-        this.wss.on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
-            const peerId: string | string[] | undefined = request.headers.peerId
+        }).on('error', (err: Error) => {
+            this.logger.error('web socket server (wss) emitted error: %s', err)
+        }).on('listening', () => {
+            this.logger.trace('listening on %s', this.getUrl())
+        }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
+            const peerId: string | string[] | undefined = request.headers[AbstractWsEndpoint.PEER_ID_HEADER]
 
             if (Array.isArray(peerId)) {
                 this.logger.trace(`dropped new connection: ${AbstractWsEndpoint.PEER_ID_HEADER} set multiple times.`)
                 this.metrics.record('open:missingParameter', 1)
-                ws.close(DisconnectionCode.MISSING_REQUIRED_PARAMETER, `${AbstractWsEndpoint.PEER_ID_HEADER} set multiple times.`)
+                ws.close(
+                    DisconnectionCode.MISSING_REQUIRED_PARAMETER,
+                    `header ${AbstractWsEndpoint.PEER_ID_HEADER} set multiple times.`
+                )
             } else if (peerId === undefined) {
                 this.logger.trace(`dropped new connection: ${AbstractWsEndpoint.PEER_ID_HEADER} not set.`)
                 this.metrics.record('open:missingParameter', 1)
-                ws.close(DisconnectionCode.MISSING_REQUIRED_PARAMETER, `${AbstractWsEndpoint.PEER_ID_HEADER} missing`)
+                ws.close(
+                    DisconnectionCode.MISSING_REQUIRED_PARAMETER,
+                    `header ${AbstractWsEndpoint.PEER_ID_HEADER} missing`
+                )
             } else if (this.getConnectionByPeerId(peerId) !== undefined) {
-                // TODO: should this actually close the existing connection and keep the new one? It could be that the node
-                // has re-connected after dropping but the server has yet to detect this.
+                // TODO: should this actually close the existing connection and keep the new one? It could be that the
+                //  node has re-connected after dropping but the server has yet to detect this.
                 this.metrics.record('open:duplicateSocket', 1)
-                ws.close()
+                ws.close(
+                    DisconnectionCode.GRACEFUL_SHUTDOWN,
+                    `already connected to ${peerId}`
+                )
             } else {
-                const connection = new ServerWsConnection(ws, request.socket.remoteAddress!, PeerInfo.newNode(peerId))
-                ws.on('message', (data: WebSocket.Data) => {
+                const duplexStream = WebSocket.createWebSocketStream(ws, {
+                    decodeStrings: false
+                })
+                const connection = new ServerWsConnection(
+                    ws,
+                    duplexStream,
+                    request.socket.remoteAddress,
+                    PeerInfo.newNode(peerId)
+                )
+                duplexStream.on('data', (data: WebSocket.Data) => {
                     this.onReceive(connection, data.toString())
                 })
                 ws.on('pong', () => {
@@ -71,15 +83,11 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 ws.on('error', (err) => {
                     this.logger.warn('socket for "%s" emitted error: %s', this.peerInfo.peerId, err)
                 })
-                // TODO: drain
+                duplexStream.on('drain', () => {
+                    connection.evaluateBackPressure()
+                })
                 this.onNewConnection(connection)
             }
-        })
-        this.wss.on('error', (err: Error) => {
-            this.logger.warn('web socket server (wss) emitted error: %s', err)
-        })
-        this.wss.on('listening', () => {
-            this.logger.trace('listening on %s', this.getUrl())
         })
     }
 
@@ -133,6 +141,6 @@ export async function startHttpServer(
 
     httpServer.listen(port)
     await once(httpServer, 'listening')
-    staticLogger.info(`started on port %s`, port)
+    staticLogger.trace(`started on port %s`, port)
     return httpServer
 }

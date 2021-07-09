@@ -1,4 +1,4 @@
-import { WsConnection } from './WsConnection'
+import { ReadyState, WsConnection } from './WsConnection'
 import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
@@ -35,7 +35,7 @@ export class ClientWsConnection extends WsConnection {
         return this.socket.bufferedAmount
     }
 
-    getReadyState(): 0 | 1 | 2 | 3 {
+    getReadyState(): ReadyState {
         return this.socket.readyState
     }
 
