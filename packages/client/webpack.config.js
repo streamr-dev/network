@@ -157,10 +157,18 @@ module.exports = (env, argv) => {
         name: 'react-native-lib',
         target: 'web',
         output: {
-            libraryTarget: 'umd2',
+            library: {
+                type: 'umd2',
+                name: 'StreamrClient'
+            },
             filename: libraryName + '.rn.js',
-            library: 'StreamrClient',
         },
+        externals: [
+            {
+                'react-native': true,
+                '@react-native-async-storage/async-storage/src/AsyncStorage.native': '@react-native-async-storage/async-storage/src/AsyncStorage.native',
+            }
+        ],
         resolve: {
             modules: [
                 'node_modules', // without this symlinked protocol won't find own dependencies
@@ -176,11 +184,13 @@ module.exports = (env, argv) => {
                 'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
                 'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/src'),
-                // swap out ServerPersistentStore for BrowserPersistentStore
+                // swap out ServerPersistentStore for ReactNativePersistentStore
                 [path.resolve(__dirname, 'src/stream/encryption/ServerPersistentStore')]: (
                     path.resolve(__dirname, 'src/stream/encryption/ReactNativePersistentStore')
                 ),
-            }
+            },
+            conditionNames: ['react-native'],
+            mainFields: ['react-native', 'browser', 'main']
         },
         plugins: [
             new LodashWebpackPlugin(),

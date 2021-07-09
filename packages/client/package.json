@@ -10,6 +10,7 @@
   "types": "./dist/types/src/index.d.ts",
   "main": "./dist/src/index-commonjs.js",
   "browser": "./dist/streamr-client.web.js",
+  "react-native": "./dist/streamr-client.rn.js",
   "exports": {
     ".": {
       "browser": "./streamr-client.web.js",

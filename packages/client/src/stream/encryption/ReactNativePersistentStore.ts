@@ -1,15 +1,14 @@
 import { PersistentStore } from './GroupKeyStore'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-
-const { setItem, getItem, removeItem, clear, getAllKeys } = AsyncStorage
+// @ts-ignore
+import AsyncStorage from '@react-native-async-storage/async-storage/src/AsyncStorage.native'
 
 export default class ReactNativePersistentStore implements PersistentStore<string, string> {
     readonly clientId: string
     readonly streamId: string
 
     constructor({ clientId, streamId }: { clientId: string, streamId: string }) {
-        this.streamId = encodeURIComponent(streamId)
-        this.clientId = encodeURIComponent(clientId)
+        this.streamId = streamId
+        this.clientId = clientId
     }
 
     async has(key: string) {
@@ -19,13 +18,13 @@ export default class ReactNativePersistentStore implements PersistentStore<strin
 
     // eslint-disable-next-line class-methods-use-this
     async get(key: string) {
-        const value = await getItem(key)
+        const value = await AsyncStorage.getItem(key)
         return value || undefined
     }
 
     async set(key: string, value: string) {
         const had = await this.has(key)
-        await setItem(key, value,)
+        await AsyncStorage.setItem(key, value,)
         return had
     }
 
@@ -34,19 +33,19 @@ export default class ReactNativePersistentStore implements PersistentStore<strin
             return false
         }
 
-        await removeItem(key,)
+        await AsyncStorage.removeItem(key,)
         return true
     }
 
     // eslint-disable-next-line class-methods-use-this
     async clear() {
-        await clear()
+        await AsyncStorage.clear()
         return !!await this.size()
     }
 
     // eslint-disable-next-line class-methods-use-this
     async size() {
-        const allKeys = await getAllKeys()
+        const allKeys = await AsyncStorage.getAllKeys()
         return allKeys.length
     }
 
