@@ -42,9 +42,8 @@ export default class Subscriber implements Context {
         const subSession = this.subSessions.get(key) as SubscriptionSession<T> || new SubscriptionSession<T>(this.client, options)
 
         // create subscription
-        const sub = new Subscription<T>(subSession)
-        sub.once('end', () => {
-            this.remove(sub)
+        const sub = new Subscription<T>(subSession).onFinally(() => {
+            return this.remove(sub)
         })
 
         // sub didn't throw, add subsession
@@ -54,6 +53,7 @@ export default class Subscriber implements Context {
         try {
             await subSession.add(sub)
         } catch (err) {
+            this.debug('failed to add', sub.id, err)
             // clean up if fail
             await this.remove(sub)
             throw err
@@ -67,8 +67,9 @@ export default class Subscriber implements Context {
         const subSession = this.subSessions.get(key)
         if (subSession) {
             await subSession.remove(sub)
+            const count = subSession.count()
             // remove subSession if no more subscriptions
-            if (!subSession.count()) {
+            if (!count) {
                 this.subSessions.delete(key)
             }
         }
@@ -124,7 +125,7 @@ export default class Subscriber implements Context {
      * Get subscription session for matching sub options.
      */
 
-    getSubscriptionSession<T>(options: StreamPartDefinition): SubscriptionSession<T> | undefined {
+    getSubscriptionSession<T = unknown>(options: StreamPartDefinition): SubscriptionSession<T> | undefined {
         const { key } = validateOptions(options)
         const subSession = this.subSessions.get(key)
         if (!subSession) {
@@ -132,6 +133,10 @@ export default class Subscriber implements Context {
         }
 
         return subSession as SubscriptionSession<T>
+    }
+
+    countSubscriptionSessions() {
+        return this.subSessions.size
     }
 
     /**

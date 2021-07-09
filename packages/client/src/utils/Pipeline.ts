@@ -6,10 +6,12 @@ import { ContextError, Context } from './Context'
 
 export type PipelineGeneratorFunction<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 
+export type FinallyFn = ((err?: Error) => void | Promise<void>)
+
 class PipelineError extends ContextError {}
 export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineGeneratorFunction<OutType, NewOutType>): IPipeline<InType, NewOutType>
-    finally(onFinally: ((err?: Error) => void | Promise<void>)): IPipeline<InType, OutType>
+    onFinally(onFinally: FinallyFn): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType> & Context
 
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
@@ -19,7 +21,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     readonly source
     private readonly transforms: PipelineGeneratorFunction[] = []
     private iterator: AsyncGenerator<OutType>
-    private finallyFn?: ((err?: Error) => void | Promise<void>)
+    private finallyTasks: FinallyFn[] = []
     private isIterating = false
     private buffer?: PullBuffer<OutType>
 
@@ -44,9 +46,22 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this as Pipeline<InType, unknown> as Pipeline<InType, NewOutType>
     }
 
-    finally(onFinally: ((err?: Error) => void | Promise<void>)) {
-        this.finallyFn = onFinally
+    onFinally(onFinallyFn: FinallyFn) {
+        this.finallyTasks.push(onFinallyFn)
         return this
+    }
+
+    private async runFinally(err?: Error) {
+        let error = err
+        if (!this.finallyTasks.length) { return }
+        await this.finallyTasks.reduce(async (prev, task) => {
+            return prev.then(() => {
+                return task(error)
+            }, (internalErr) => {
+                error = internalErr
+                return task(error)
+            })
+        }, Promise.resolve()) // eslint-disable-line promise/no-promise-in-callback
     }
 
     throw(err: Error) {
@@ -71,9 +86,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 await this.source.return(undefined)
             }
         } finally {
-            if (this.finallyFn) {
-                await this.finallyFn(error)
-            }
+            await this.runFinally(error)
         }
     }
 
@@ -108,6 +121,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
             throw new PipelineError(this, 'cannot iterate, already iterating')
         }
 
-        return this.iterator
+        return this
     }
 }

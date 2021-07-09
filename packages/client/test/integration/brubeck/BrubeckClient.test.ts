@@ -7,9 +7,9 @@ import { wait } from 'streamr-test-utils'
 import { describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId } from '../../utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import { Defer } from '../../../src/utils'
-import { getPublishTestMessages, useTracker } from './utils'
+import { getPublishTestMessages } from './utils'
 
-import config from '../config'
+import clientOptions from '../config'
 import { Stream } from '../../../src/stream'
 // import Subscription from '../../../src/brubeck/Subscription'
 // import { StorageNode } from '../../../src/stream/StorageNode'
@@ -32,7 +32,7 @@ describeRepeats('StreamrClient', () => {
 
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
-            ...config.clientOptions,
+            ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
@@ -42,10 +42,10 @@ describeRepeats('StreamrClient', () => {
             // publishAutoDisconnectDelay: 250,
             maxRetries: 2,
             // network: {
-                // trackers: [
-                    // `ws://127.0.0.1:${trackerPort}`,
-                // ],
-                // ...opts.network,
+            // trackers: [
+            // `ws://127.0.0.1:${trackerPort}`,
+            // ],
+            // ...opts.network,
             // },
             ...opts,
         })

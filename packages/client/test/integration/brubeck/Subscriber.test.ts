@@ -63,7 +63,11 @@ describeRepeats('Subscriber', () => {
     })
 
     afterEach(() => {
+        client.debug('after test')
+        expect(M.count()).toBe(0)
         expect(M.count(stream.id)).toBe(0)
+        expect(M.getSubscriptionSession(stream.id)).toBe(undefined)
+        expect(M.countSubscriptionSessions()).toBe(0)
     })
 
     afterEach(async () => {
@@ -90,7 +94,6 @@ describeRepeats('Subscriber', () => {
 
             const received = []
             for await (const m of sub) {
-                sub.debug('msg', m.getParsedContent())
                 received.push(m.getParsedContent())
                 if (received.length === published.length) {
                     break
@@ -152,18 +155,17 @@ describeRepeats('Subscriber', () => {
         })
 
         // it('errors if not connected', async () => {
-            // await client.disconnect()
-            // await expect(() => (
-                // M.subscribe(stream)
-            // )).rejects.toThrow('connect')
-            // expect(M.count(stream.id)).toBe(0)
+        // await client.disconnect()
+        // await expect(() => (
+        // M.subscribe(stream)
+        // )).rejects.toThrow('connect')
+        // expect(M.count(stream.id)).toBe(0)
         // })
 
         it('errors if iterating twice', async () => {
             const sub = await M.subscribe(stream)
             const c1 = sub.collect()
 
-            sub.debug(1)
             await expect(async () => (
                 sub.collect()
             )).rejects.toThrow('iterate')
@@ -178,7 +180,6 @@ describeRepeats('Subscriber', () => {
         describe('subscription error handling', () => {
             it('works when error thrown inline', async () => {
                 const err = new Error('expected')
-
                 const sub = (await M.subscribe({
                     ...stream,
                 })).pipe(async function* ThrowError(s) {
@@ -356,11 +357,12 @@ describeRepeats('Subscriber', () => {
     })
 
     describe('ending a subscription', () => {
-        it('can kill stream using async end', async () => {
+        it('can kill stream using async unsubscribe', async () => {
             const sub = await M.subscribe(stream.id)
             expect(M.count(stream.id)).toBe(1)
 
             await publishTestMessages()
+            let unsubscribeTask!: Promise<any>
             let t!: ReturnType<typeof setTimeout>
             let expectedLength = -1
             const received = []
@@ -373,15 +375,18 @@ describeRepeats('Subscriber', () => {
                         t = setTimeout(() => {
                             expectedLength = received.length
                             // should not see any more messages after end
-                            sub.unsubscribe()
+                            unsubscribeTask = sub.unsubscribe()
                         })
                     }
                 }
+
+                expect(unsubscribeTask).toBeTruthy()
+                // gets some messages but not all
+                expect(received).toHaveLength(expectedLength)
             } finally {
                 clearTimeout(t)
+                await unsubscribeTask
             }
-            // gets some messages but not all
-            expect(received).toHaveLength(expectedLength)
         })
 
         it('can kill stream with throw', async () => {

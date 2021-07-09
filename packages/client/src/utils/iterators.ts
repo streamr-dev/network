@@ -43,7 +43,7 @@ export function iteratorFinally<T>( // eslint-disable-line no-redeclare
     let onFinallyOnce: OnFinallyFn = (err?: Error) => {
         if (!onFinallyTask) {
             // eslint-disable-next-line promise/no-promise-in-callback
-            onFinallyTask = Promise.resolve().then(async () => onFinally(err)).finally(() => {
+            onFinallyTask = Promise.resolve(onFinally(err)).finally(() => {
                 onFinallyOnce = () => {}
             })
         }

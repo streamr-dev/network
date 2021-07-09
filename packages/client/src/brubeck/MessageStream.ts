@@ -1,10 +1,10 @@
 import { captureRejectionSymbol } from 'events'
 
-import { instanceId } from '../utils'
+import { instanceId, Defer, Deferred, pOnce } from '../utils'
 import AsyncIterableEmitter, { flowOnMessageListener, asyncIterableWithEvents } from '../utils/AsyncIterableEmitter'
 import { Context, ContextError } from '../utils/Context'
 import { PushBuffer, pull } from '../utils/PushBuffer'
-import { Pipeline, IPipeline, PipelineGeneratorFunction } from '../utils/Pipeline'
+import { Pipeline, IPipeline, PipelineGeneratorFunction, FinallyFn } from '../utils/Pipeline'
 import { StreamMessage } from 'streamr-client-protocol'
 
 class MessageStreamError extends ContextError {}
@@ -32,6 +32,9 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
     didStart = false
     pipeline: Pipeline<InType, OutType>
     iterator: AsyncGenerator<OutType>
+    isDone = false
+    private finallyTasks: FinallyFn[] = []
+    private onDone: Deferred<void>
 
     constructor(context: Context, { bufferSize, name = '' }: { bufferSize?: number, name?: string } = {}) {
         super({ captureRejections: true })
@@ -42,7 +45,9 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         this.buffer = new PushBuffer<InType>(bufferSize, { name })
         this.pipeline = new Pipeline<InType, OutType>(this.buffer).pipe(async function* PipelineMessage(src) { yield* src })
         this.iterator = asyncIterableWithEvents<OutType>(this.iterate(), this)
+        this.runFinally = pOnce(this.runFinally.bind(this))
         flowOnMessageListener(this, this)
+        this.onDone = Defer()
     }
 
     [captureRejectionSymbol] = (error: Error, event: string | symbol) => {
@@ -79,17 +84,18 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
     }
 
     async* iterate() {
-        this.didStart = true
         yield* this.pipeline
+        this.isDone = true
     }
 
     [Symbol.asyncIterator]() {
         if (this.isIterating) {
             throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
         }
+
         // only iterate sub once
         this.isIterating = true
-        return this.iterator
+        return this
     }
 
     get length() {
@@ -113,28 +119,68 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         return this as unknown as MessageStream<T, InType, NewOutType>
     }
 
-    finally(onFinally: ((err?: Error) => void | Promise<void>)) {
-        this.pipeline.finally(onFinally) // eslint-disable-line promise/catch-or-return
+    onFinally(onFinallyFn: FinallyFn) {
+        this.finallyTasks.push(onFinallyFn)
         return this
     }
 
+    private async runFinally(err?: Error) {
+        this.debug('runFinally')
+        let error = err
+        try {
+            await this.finallyTasks.reduce(async (prev, task) => {
+                return prev.then(() => task(error), (internalErr) => {
+                    error = internalErr
+                    return task(error)
+                })
+            }, Promise.resolve()) // eslint-disable-line promise/no-promise-in-callback
+        } finally {
+            this.onDone.resolve(undefined)
+        }
+    }
+
     next() {
+        this.didStart = true
         return this.iterator.next()
     }
 
     async return(v?: OutType) {
+        this.debug('return', this.isDone)
+        if (this.isDone) {
+            await this.onDone
+            const result: IteratorResult<OutType> = { done: true, value: v }
+            return result
+        }
+
+        this.isDone = true
         this.buffer.end() // prevents deadlock
         if (!this.didStart) {
             await this.pipeline.return()
         }
-        return this.iterator.return(v)
+
+        try {
+            return await this.iterator.return(v)
+        } finally {
+            await this.runFinally()
+        }
     }
 
     async throw(error: Error) {
+        if (this.isDone) {
+            await this.onDone
+            throw error
+        }
+
+        this.isDone = true
         this.buffer.end() // prevents deadlock
         if (!this.didStart) {
-            await this.pipeline.throw(error)
+            await this.pipeline.return(undefined)
         }
-        return this.iterator.throw(error)
+
+        try {
+            return await this.iterator.throw(error)
+        } finally {
+            await this.runFinally()
+        }
     }
 }

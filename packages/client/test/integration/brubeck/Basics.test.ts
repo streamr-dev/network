@@ -32,10 +32,10 @@ describeRepeats('StreamrClient', () => {
             maxRetries: 2,
             ...opts,
             // network: {
-                // trackers: [
-                    // `ws://127.0.0.1:${trackerPort}`,
-                // ],
-                // ...opts.network,
+            // trackers: [
+            // `ws://127.0.0.1:${trackerPort}`,
+            // ],
+            // ...opts.network,
             // },
         })
         return c

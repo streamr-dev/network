@@ -48,8 +48,8 @@ export default function MessagePipeline<T>(
 
     // re-order messages (ignore gaps)
     // const internalOrderingUtil = OrderMessages(client, {
-        // ...options,
-        // gapFill: false,
+    // ...options,
+    // gapFill: false,
     // })
 
     // collect messages that fail validation/parsing, do not push out of pipeline
@@ -66,7 +66,7 @@ export default function MessagePipeline<T>(
         })
         // order messages (fill gaps)
         // .pipe(async function* ValidateMessages(src: AsyncIterable<StreamMessage>) {
-            // orderingUtil
+    // orderingUtil
         // })
         // validate
         .pipe(async function* ValidateMessages(src) {
@@ -114,19 +114,19 @@ export default function MessagePipeline<T>(
     const messageStream = new MessageStream<T>(context)
     messageStream.from(pipeline)
     return messageStream
-        // .finally(async (err) => {
-        // // decrypt.stop()
-        // // await source.cancel(err)
-        // try {
-            // // if (err) {
-                // // await onError(err)
-            // // }
-        // } finally {
-            // await onFinally(err)
-        // }
+    // .finally(async (err) => {
+    // // decrypt.stop()
+    // // await source.cancel(err)
+    // try {
+    // // if (err) {
+    // // await onError(err)
+    // // }
+    // } finally {
+    // await onFinally(err)
+    // }
     // }
 
     // return Object.assign(p, {
-        // id,
+    // id,
     // })
 }

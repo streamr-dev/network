@@ -276,7 +276,7 @@ class DeferredWrapper<T> {
     }
 }
 
-type Deferred<T> = ReturnType<DeferredWrapper<T>['wrap']>
+export type Deferred<T> = ReturnType<DeferredWrapper<T>['wrap']>
 
 export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop) {
     let resolveFn: PromiseResolve | undefined

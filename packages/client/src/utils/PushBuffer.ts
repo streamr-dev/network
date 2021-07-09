@@ -96,7 +96,7 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
                 }
 
                 // keep reading off front of buffer until buffer empty
-                while (this.buffer.length && !this.done) {
+                while (this.buffer.length) {
                     const v = this.buffer.shift()!
                     // maybe open write gate
                     this.updateWriteGate()
@@ -125,7 +125,7 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
     }
 
     [Symbol.asyncIterator]() {
-        return this.iterator
+        return this
     }
 }
 

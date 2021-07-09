@@ -119,16 +119,18 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
      */
 
     async remove(sub: Subscription<T>): Promise<void> {
+        this.debug('remove')
         if (!sub || this.pendingRemoval.has(sub) || !this.subscriptions.has(sub)) {
             return
         }
 
         this.pendingRemoval.add(sub)
         this.subscriptions.delete(sub)
-        this.debug('remove')
 
         try {
-            await sub.unsubscribe()
+            if (!sub.isUnsubscribed && !sub.isDone) {
+                await sub.unsubscribe()
+            }
         } finally {
             try {
                 await this.updateSubscriptions()
