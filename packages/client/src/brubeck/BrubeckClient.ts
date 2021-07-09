@@ -1,5 +1,5 @@
 import Debug from 'debug'
-import { NetworkNode, NetworkNodeOptions, createNetworkNode } from 'streamr-network'
+import { NetworkNode, NetworkNodeOptions, startNetworkNode } from 'streamr-network'
 
 import { StreamrClientOptions } from '../Config'
 import { pOnce, uuid, counterId } from '../utils'
@@ -35,7 +35,8 @@ export class BrubeckClient implements Context {
     }
 
     connect = pOnce(async () => {
-        const node = createNetworkNode({
+        // @ts-expect-error
+        const node = await startNetworkNode({
             trackers: [
                 'ws://127.0.0.1:30301',
                 'ws://127.0.0.1:30302',
@@ -46,7 +47,6 @@ export class BrubeckClient implements Context {
             id: this.id,
             name: this.id,
         })
-        node.start()
         this.node = node
         return this.node
     })

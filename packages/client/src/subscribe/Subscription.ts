@@ -104,7 +104,6 @@ export default class Subscription extends Emitter {
     public async onPipelineEnd(err?: Error) {
         this.debug('onPipelineEnd', err)
         let error = err
-        // @ts-expect-error doesn't want to undefine
         this.pipeline = undefined
         try {
             const onFinally = this._onFinally

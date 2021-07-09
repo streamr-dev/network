@@ -120,7 +120,6 @@ class StreamrStream {
         return json ? new StreamrStream(this._client, json) : undefined
     }
 
-    /** @internal */
     toObject() {
         const result = {}
         Object.keys(this).forEach((key) => {
