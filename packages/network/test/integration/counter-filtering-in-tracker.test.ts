@@ -57,7 +57,7 @@ describe('tracker: counter filtering', () => {
             [trackerNode1, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED],
             [trackerNode2, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED]
         ])
-    })
+    }, 6000)
 
     afterEach(async () => {
         await trackerNode1.stop()
@@ -76,7 +76,7 @@ describe('tracker: counter filtering', () => {
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(2)
-    })
+    }, 6000)
 
     test('ignores status messages with counters less than current counter(s)', async () => {
         let numOfInstructions = 0
@@ -89,7 +89,7 @@ describe('tracker: counter filtering', () => {
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(0)
-    })
+    }, 6000)
 
     test('partly handles status messages with mixed counters compared to current counters', async () => {
         let numOfInstructions = 0
@@ -102,7 +102,7 @@ describe('tracker: counter filtering', () => {
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(1)
-    })
+    }, 6000)
 
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
@@ -114,7 +114,7 @@ describe('tracker: counter filtering', () => {
         )
 
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
-    })
+    }, 6000)
 
     test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
@@ -125,5 +125,5 @@ describe('tracker: counter filtering', () => {
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
-    })
+    }, 6000)
 })
