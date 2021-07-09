@@ -40,6 +40,7 @@ export class UnknownPeerError extends Error {
 export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEmitter {
     private readonly pingPongWs: PingPongWs
     private readonly connectionById: Map<string, C> = new Map<string, C>()
+    private stopped = false
 
     protected readonly metrics: Metrics
     protected readonly peerInfo: PeerInfo
@@ -82,6 +83,9 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     }
 
     async send(recipientId: string, message: string): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
             try {
@@ -89,7 +93,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
                 await connection.send(message)
             } catch (err) {
                 this.metrics.record('sendFailed', 1)
-                this.logger.warn('sending to %s failed, reason %s', recipientId, err)
+                this.logger.debug('sending to %s failed, reason %s', recipientId, err)
                 connection.terminate()
                 throw err
             }
@@ -119,6 +123,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     }
 
     stop(): Promise<void> {
+        this.stopped = true
         this.pingPongWs.stop()
         return this.doStop()
     }
@@ -149,6 +154,9 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
      * Implementer should invoke this whenever a new connection is formed
      */
     protected onNewConnection(connection: C): void {
+        if (this.stopped) {
+            return
+        }
         const peerInfo = connection.getPeerInfo()
         connection.setBackPressureHandlers(
             () =>  {
@@ -168,6 +176,9 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
      * Implementer should invoke this whenever a message is received.
      */
     protected onReceive(connection: WsConnection, message: string): void {
+        if (this.stopped) {
+            return
+        }
         this.metrics.record('inSpeed', message.length)
         this.metrics.record('msgSpeed', 1)
         this.metrics.record('msgInSpeed', 1)
