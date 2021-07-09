@@ -47,7 +47,8 @@ module.exports = function (config) {
                     webPreferences: {
                         // Preferred `preload` mechanism to expose `require`
                         contextIsolation: false,
-                        preload: __dirname + '/preload.js'
+                        preload: __dirname + '/preload.js',
+                        webSecurity: false,
                     },
                 }
             }
