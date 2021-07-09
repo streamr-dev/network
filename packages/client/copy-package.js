@@ -9,6 +9,7 @@ delete pkg.private
 pkg.types = `./${path.relative('./dist', pkg.types)}`
 pkg.main = `./${path.relative('./dist', pkg.main)}`
 pkg.browser = `./${path.relative('./dist', pkg.browser)}`
+pkg['react-native'] = `./${path.relative('./dist', pkg['react-native'])}`
 pkg.exports['.'].browser = `./${path.relative('./dist', pkg.exports['.'].browser)}`
 pkg.exports['.']['react-native'] = `./${path.relative('./dist', pkg.exports['.']['react-native'])}`
 pkg.exports['.'].default.import = `./${path.relative('./dist', pkg.exports['.'].default.import)}`
