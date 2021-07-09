@@ -1,27 +1,27 @@
-import { Utils, StreamMessage } from 'streamr-client-protocol'
+// import { Utils, StreamMessage } from 'streamr-client-protocol'
 
-import { Pipeline, PushBuffer, PumpBuffer } from '../utils/Pipeline'
-import { validateOptions } from '../stream/utils'
+// import { Pipeline, PushBuffer, PumpBuffer } from '../utils/Pipeline'
+// import { validateOptions } from '../stream/utils'
 
-import resendStream from './resendStream'
+// import resendStream from './resendStream'
 import { BrubeckClient } from './BrubeckClient'
 
-const { OrderingUtil } = Utils
+// const { OrderingUtil } = Utils
 
-let ID = 0
+// let ID = 0
 
 /**
  * Wraps OrderingUtil into a pipeline.
  * Implements gap filling
  */
 
-export default function OrderMessages(client: BrubeckClient, options = {}) {
+export default function OrderMessages(_client: BrubeckClient, _options = {}) {
+    /*
     const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages } = client.options
     const { streamId, streamPartition, gapFill = true } = validateOptions(options)
     let enabled = !!(orderMessages && gapFill && maxGapRequests)
     const debug = client.debug.extend(`OrderMessages::${ID}`)
     ID += 1
-
 
     let done = false
     const resendStreams = new Set() // holds outstanding resends for cleanup
@@ -61,7 +61,7 @@ export default function OrderMessages(client: BrubeckClient, options = {}) {
                 enabled = false // eslint-disable-line require-atomic-updates
                 orderingUtil.disable()
             } else {
-                outStream.push(err)
+                // outStream.push(err)
             }
         } finally {
             resendStreams.delete(resendMessageStream)
@@ -82,7 +82,7 @@ export default function OrderMessages(client: BrubeckClient, options = {}) {
         // gaps have been filled or failed
         // NOTE ordering util cannot have gaps if queue is empty
         if (inputClosed && orderingUtil.isEmpty()) {
-            outStream.end()
+            // outStream.end()
         }
     }
 
@@ -95,29 +95,25 @@ export default function OrderMessages(client: BrubeckClient, options = {}) {
         maybeClose() // probably noop
     })
 
-    return Object.assign(new Pipeline(inBuffer)
-                             // eslint-disable-next-line require-yield
-                         .pipe(async function* WriteToOrderingUtil(src) {
-            for await (const msg of src) {
-                orderingUtil.add(msg)
-                // note no yield
-                // orderingUtil writes to outStream itself
-            }
-            inputClosed = true
-            maybeClose()
-        },
-
-                         )
-        outStream, // consumer gets outStream
-    ], async (err) => {
+    // eslint-disable-next-line require-yield
+    const pipeline = new Pipeline(inBuffer).pipe(async function* WriteToOrderingUtil(src) {
+        for await (const msg of src) {
+            orderingUtil.add(msg)
+            // note no yield
+            // orderingUtil writes to outStream itself
+        }
+        inputClosed = true
+        maybeClose()
+    }).onFinally(async () => {
         done = true
         orderingUtil.clearGaps()
-        resendStreams.forEach((s) => s.cancel())
+        // resendStreams.forEach((s) => s.unsubscribe())
         resendStreams.clear()
-        await outStream.cancel(err)
         orderingUtil.clearGaps()
-    }), {
+    })
+
+    return Object.assign(pipeline, {
         markMessageExplicitly,
     })
+    */
 }
-

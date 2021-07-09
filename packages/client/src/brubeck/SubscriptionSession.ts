@@ -55,7 +55,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         })
     }
 
-    private onMessage = (msg: StreamMessage<T>) => {
+    private onMessage = (msg: StreamMessage) => {
         if (!msg || this.stopped || !this.active) {
             return
         }
@@ -66,7 +66,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
             return
         }
 
-        this.buffer.push(msg)
+        this.buffer.push(msg as StreamMessage<T>)
     }
 
     private async subscribe() {

@@ -1,13 +1,12 @@
 import { StreamMessage } from 'streamr-client-protocol'
 
-import { counterId } from '../utils'
+// import { counterId } from '../utils'
 import { Pipeline } from '../utils/Pipeline'
 import { Context } from '../utils/Context'
 import { validateOptions } from '../stream/utils'
 
 import Validator from '../subscribe/Validator'
 import MessageStream from './MessageStream'
-import OrderMessages from './OrderMessages'
 import Decrypt from '../subscribe/Decrypt'
 import StreamrClient from '..'
 
@@ -24,7 +23,7 @@ export default function MessagePipeline<T>(
     opts: any = {},
 ): MessageStream<T> {
     const options: any = validateOptions(opts)
-    const { key } = options as any
+    // const { key } = options as any
     // const id = counterId('MessagePipeline') + key
 
     /* eslint-disable object-curly-newline */
