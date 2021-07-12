@@ -3,9 +3,15 @@ export interface NetworkSmartContract {
     jsonRpcProvider: string
 }
 
+export interface TrackerRegistryItem {
+    id: string
+    ws: string
+    http: string
+}
+
 export interface NetworkConfig {
     name: string,
-    trackers: string[] | NetworkSmartContract,
+    trackers: TrackerRegistryItem[] | NetworkSmartContract,
     location: {
         latitude: number,
         longitude: number,

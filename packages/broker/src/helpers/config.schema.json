@@ -75,9 +75,25 @@
           "oneOf": [
             {
               "type": "array",
-              "description": "List of tracker WebSocket URLs to connect to",
+              "description": "List of tracker ids and HTTP/WebSocket URLs to connect to",
               "items": {
-                "type": "string"
+                "type": "object",
+                "required": [
+                  "id",
+                  "ws",
+                  "http"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "ws": {
+                    "type": "string"
+                  },
+                  "http": {
+                    "type": "string"
+                  }
+                }
               }
             },
             {

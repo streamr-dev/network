@@ -10,7 +10,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, NetworkSmartContract, StorageNodeRegistryItem } from './config'
+import { Config, NetworkSmartContract, StorageNodeRegistryItem, TrackerRegistryItem } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -29,15 +29,15 @@ export interface Broker {
     stop: () => Promise<unknown>
 }
 
-const getTrackers = async (config: Config): Promise<string[]> => {
+const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
     if ((config.network.trackers as NetworkSmartContract).contractAddress) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
             contractAddress: (config.network.trackers as NetworkSmartContract).contractAddress,
             jsonRpcProvider: (config.network.trackers as NetworkSmartContract).jsonRpcProvider
         })
-        return registry.getAllTrackers().map((record) => record.ws)
+        return registry.getAllTrackers()
     } else {
-        return config.network.trackers as string[]
+        return config.network.trackers as TrackerRegistryItem[]
     }
 }
 
