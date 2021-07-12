@@ -81,7 +81,7 @@ export const createMessagingPluginTest = <T>(
 
         afterAll(async () => {
             await Promise.allSettled([
-                broker.close(),
+                broker.stop(),
                 tracker.stop()
             ])
         })

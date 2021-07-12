@@ -64,8 +64,8 @@ describe('node id', () => {
     afterEach(async () => {
         await Promise.all([
             tracker.stop(),
-            broker1.close(),
-            broker2.close(),
+            broker1.stop(),
+            broker2.stop(),
             client1.disconnect(),
             client2.disconnect()
         ])

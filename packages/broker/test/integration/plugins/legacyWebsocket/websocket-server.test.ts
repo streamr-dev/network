@@ -41,8 +41,8 @@ describe('websocket server', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            brokerWithoutSSL?.close(),
-            brokerWithSSL?.close()
+            brokerWithoutSSL?.stop(),
+            brokerWithSSL?.stop()
         ])
     })
 
