@@ -523,7 +523,6 @@ export class Node extends EventEmitter {
     }
 
     private connectToBootstrapTrackers(): void {
-        console.log(this.trackerRegistry.getAllTrackers())
         this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
             this.trackerNode.connectToTracker(trackerInfo.ws, PeerInfo.newTracker(trackerInfo.id))
                 .catch((err) => {

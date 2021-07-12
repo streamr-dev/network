@@ -2,7 +2,7 @@
 import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/ServerWsEndpoint'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any

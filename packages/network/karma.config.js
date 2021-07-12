@@ -29,14 +29,14 @@ module.exports = function (config) {
         files: [
             './karma-setup.js',
             './test/browser/BrowserWebRtcConnection.test.ts',
-            './test/integration/browser-ws-endpoint.test.ts'
-            // './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
+            './test/integration/browser-ws-endpoint.test.ts',
+            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
-            './test/integration/browser-ws-endpoint.test.ts': ['webpack']
-            // './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
+            './test/integration/browser-ws-endpoint.test.ts': ['webpack'],
+            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
         },
         customLaunchers: {
             CustomElectron: {

@@ -6,7 +6,7 @@ import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker } from '../../src/composition'
 import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
-import { AbstractWsEndpoint, DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
+import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
 describe('ws-endpoint', () => {
@@ -23,7 +23,6 @@ describe('ws-endpoint', () => {
         }
 
         for (let i = 0; i < 5; i++) {
-            console.log(endpoints[i].getPeers())
             expect(endpoints[i].getPeers().size).toBe(0)
         }
         const clients = []
@@ -97,7 +96,7 @@ describe('ws-endpoint', () => {
             const close = await waitForEvent(ws, 'close')
             expect(close).toEqual([
                 DisconnectionCode.MISSING_REQUIRED_PARAMETER,
-                `header ${AbstractWsEndpoint.PEER_ID_HEADER} missing`
+                `Error: peerId not given in header or query parameter`
             ])
         })
     })
