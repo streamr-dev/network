@@ -53,7 +53,7 @@ const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[
     }
 }
 
-const createStreamMessageValidator = (config: Config): Todo => {
+const createStreamMessageValidator = (config: Config): Protocol.StreamMessageValidator => {
     // Validator only needs public information, so use unauthenticated client for that
     const unauthenticatedClient = new StreamrClient({
         restUrl: config.streamrUrl + '/api/v1',
