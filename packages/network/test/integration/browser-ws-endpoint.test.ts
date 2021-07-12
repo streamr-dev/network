@@ -1,6 +1,6 @@
 import { Tracker } from '../../src/logic/Tracker'
 import WebSocket from 'ws'
-import { waitForEvent, wait } from 'streamr-test-utils'
+import {waitForEvent, wait, waitForCondition, runAndWaitForEvents} from 'streamr-test-utils'
 
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -23,27 +23,30 @@ describe('ws-endpoint', () => {
         }
 
         for (let i = 0; i < 5; i++) {
-            expect(endpoints[i].getPeers().size).toBe(0)
+            expect(Object.keys(endpoints[i].getPeers()).length).toBe(0)
         }
         const clients = []
         const promises: Promise<any>[] = []
         for (let i = 0; i < 5; i++) {
             const client = new BrowserClientWsEndpoint(PeerInfo.newNode(`client-${i}`))
 
-            promises.push(waitForEvent(endpoints[i], Event.PEER_CONNECTED))
-
             //const nextEndpoint = i + 1 === 5 ? endpoints[0] : endpoints[i + 1]
 
             // eslint-disable-next-line no-await-in-loop
-            await client.connect(endpoints[i].getUrl(), PeerInfo.newTracker('tracker'))
+
+            await runAndWaitForEvents([
+                () => {
+                    client.connect(endpoints[i].getUrl(), PeerInfo.newTracker('tracker'))
+                }], [
+                [client, Event.PEER_CONNECTED]
+            ])
             clients.push(client)
         }
-
-        await Promise.all(promises)
-        await wait(100)
-
+        await wait(2000)
         for (let i = 0; i < 5; i++) {
-            expect(endpoints[i].getPeers().size).toEqual(1)
+            console.log(clients[i].getPeers())
+            // console.log(endpoints[i].getPeers())
+            // await waitForCondition(() => Object.keys(endpoints[i].getPeers()).length === 1)
         }
 
         for (let i = 0; i < 5; i++) {

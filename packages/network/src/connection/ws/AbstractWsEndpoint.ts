@@ -27,6 +27,7 @@ export enum DisconnectionReason {
     DEAD_CONNECTION = 'dead connection'
 }
 
+
 export class UnknownPeerError extends Error {
     static CODE = 'UnknownPeerError'
     readonly code = UnknownPeerError.CODE
@@ -39,7 +40,7 @@ export class UnknownPeerError extends Error {
 
 export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEmitter {
     private readonly pingPongWs: PingPongWs
-    private readonly connectionById: Map<string, C> = new Map<string, C>()
+    private readonly connectionById: { [key: string]: C }
 
     protected readonly metrics: Metrics
     protected readonly peerInfo: PeerInfo
@@ -57,6 +58,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
         this.peerInfo = peerInfo
         this.logger = new Logger(module)
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
+        this.connectionById = {}
 
         this.metrics = metricsContext.create('WsEndpoint')
             .addRecordedMetric('inSpeed')
@@ -127,7 +129,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
         return this.pingPongWs.getRtts()
     }
 
-    getPeers(): ReadonlyMap<string, C> {
+    getPeers(): { [key: string]: C } {
         return this.connectionById
     }
 
@@ -158,7 +160,8 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
                 this.emitHighBackPressure(peerInfo)
             }
         )
-        this.connectionById.set(connection.getPeerId(), connection)
+        console.log(this.peerInfo.peerId, connection.getPeerId())
+        this.connectionById[connection.getPeerId()] = connection
         this.metrics.record('open', 1)
         this.logger.trace('added %s to connection list', connection.getPeerId())
         this.emit(Event.PEER_CONNECTED, peerInfo)
@@ -167,7 +170,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     /**
      * Implementer should invoke this whenever a message is received.
      */
-    protected onReceive(connection: WsConnection, message: string): void {
+    protected onReceive(connection: C, message: string): void {
         this.metrics.record('inSpeed', message.length)
         this.metrics.record('msgSpeed', 1)
         this.metrics.record('msgInSpeed', 1)
@@ -185,7 +188,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
 
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
-        this.connectionById.delete(connection.getPeerId())
+        delete this.connectionById[connection.getPeerId()]
         try {
             this.doClose(connection, code, reason)
         } finally {
@@ -193,12 +196,12 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
         }
     }
 
-    protected getConnections(): Array<C> {
-        return [...this.connectionById.values()]
+    protected getConnections(): C[] {
+        return Object.values(this.connectionById)
     }
 
     protected getConnectionByPeerId(peerId: string): C | undefined {
-        return this.connectionById.get(peerId)
+        return this.connectionById[peerId]
     }
 
     private emitLowBackPressure(peerInfo: PeerInfo): void {

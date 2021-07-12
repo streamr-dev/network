@@ -45,6 +45,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             maxBackpressure: WS_BUFFER_SIZE,
             idleTimeout: 0,
             upgrade: (res, req, context) => {
+                console.log(req.getParameter(0), req.getParameter(1))
                 res.writeStatus('101 Switching Protocols')
                     .writeHeader(AbstractWsEndpoint.PEER_ID_HEADER, this.peerInfo.peerId)
 
@@ -112,6 +113,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     }
 
     private onIncomingConnection(ws: uWS.WebSocket): void {
+        console.log(ws)
         const { peerId } = ws // monkey-patched in upgrade
 
         try {

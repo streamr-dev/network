@@ -12,11 +12,14 @@ function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
 
 type PeerId = string
 type ServerUrl = string
+type ServerUrlByPeerId = { [key: string]: ServerUrl }
+type ConnectionsByServerUrl = { [key: string]: BrowserClientWsConnection }
+type PendingConnections = { [key: string]: Promise<string> }
 
 export class BrowserClientWsEndpoint extends AbstractWsEndpoint<BrowserClientWsConnection> {
-    private readonly connectionsByServerUrl: Map<ServerUrl, BrowserClientWsConnection>
-    private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
-    private readonly pendingConnections: Map<ServerUrl, Promise<string>>
+    private readonly connectionsByServerUrl: ConnectionsByServerUrl
+    private readonly serverUrlByPeerId: ServerUrlByPeerId
+    private readonly pendingConnections: PendingConnections
     private trackerIdReceivedTimeoutRef: NodeJS.Timeout | null
     constructor(
         peerInfo: PeerInfo,
@@ -25,16 +28,16 @@ export class BrowserClientWsEndpoint extends AbstractWsEndpoint<BrowserClientWsC
     ) {
         super(peerInfo, metricsContext, pingInterval)
 
-        this.connectionsByServerUrl = new Map()
-        this.serverUrlByPeerId = new Map()
-        this.pendingConnections = new Map()
+        this.connectionsByServerUrl = {}
+        this.serverUrlByPeerId = {}
+        this.pendingConnections = {}
         this.trackerIdReceivedTimeoutRef = null
-        this.metrics.addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
+        this.metrics.addQueriedMetric('pendingConnections', () => Object.keys(this.pendingConnections).length)
     }
 
     connect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
         // Check for existing connection and its state
-        const existingConnection = this.connectionsByServerUrl.get(serverUrl)
+        const existingConnection = this.connectionsByServerUrl[serverUrl]
         if (existingConnection !== undefined) {
             if (existingConnection.getReadyState() === w3cwebsocket.OPEN) {
                 return Promise.resolve(existingConnection.getPeerId())
@@ -51,7 +54,7 @@ export class BrowserClientWsEndpoint extends AbstractWsEndpoint<BrowserClientWsC
         }
 
         // Check for pending connection
-        const pendingConnection = this.pendingConnections.get(serverUrl)
+        const pendingConnection = this.pendingConnections[serverUrl]
         if (pendingConnection !== undefined) {
             return pendingConnection
         }
@@ -61,7 +64,7 @@ export class BrowserClientWsEndpoint extends AbstractWsEndpoint<BrowserClientWsC
         const p = new Promise<string>((resolve, reject) => {
             try {
                 const ws = new w3cwebsocket(
-                    `${serverUrl}/ws`,
+                    `${serverUrl}/ws?peerInfo=${this.peerInfo.peerId}`,
                     undefined,
                     undefined,
                     toHeaders(this.peerInfo),
@@ -85,21 +88,22 @@ export class BrowserClientWsEndpoint extends AbstractWsEndpoint<BrowserClientWsC
                 reject(err)
             }
         }).finally(() => {
-            this.pendingConnections.delete(serverUrl)
+            delete this.pendingConnections[serverUrl]
         })
 
-        this.pendingConnections.set(serverUrl, p)
+        this.pendingConnections[serverUrl] = p
         return p
     }
 
     getServerUrlByPeerId(peerId: PeerId): string | undefined {
-        return this.serverUrlByPeerId.get(peerId)
+        return this.serverUrlByPeerId[peerId]
     }
 
     protected doClose(connection: BrowserClientWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
-        const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
-        this.connectionsByServerUrl.delete(serverUrl)
-        this.serverUrlByPeerId.delete(connection.getPeerId())
+        console.log("WHY?", _reason)
+        const serverUrl = this.serverUrlByPeerId[connection.getPeerId()]!
+        delete this.connectionsByServerUrl[serverUrl]
+        delete this.serverUrlByPeerId[connection.getPeerId()]
     }
 
     protected async doStop(): Promise<void> {
@@ -123,12 +127,13 @@ export class BrowserClientWsEndpoint extends AbstractWsEndpoint<BrowserClientWsC
         }
 
         ws.onclose = (event) => {
+            console.log("CLOSED")
             this.onClose(connection, event.code, event.reason as DisconnectionReason)
         }
-
-        this.connectionsByServerUrl.set(serverUrl, connection)
-        this.serverUrlByPeerId.set(connection.getPeerId(), serverUrl)
+        this.connectionsByServerUrl[serverUrl] = connection
+        this.serverUrlByPeerId[connection.getPeerId()] =  serverUrl
         this.onNewConnection(connection)
+        console.log("getPeers", this.getPeers())
         return connection.getPeerId()
     }
 }

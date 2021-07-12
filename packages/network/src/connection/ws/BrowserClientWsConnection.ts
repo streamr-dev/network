@@ -2,7 +2,6 @@ import { WsConnection } from './WsConnection'
 import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
-import util from 'util'
 import { Logger } from '../../helpers/Logger'
 
 const staticLogger = new Logger(module)
