@@ -34,7 +34,7 @@ describe('broker resistance to invalid data', () => {
     })
 
     afterEach(async () => {
-        await broker.close()
+        await broker.stop()
         await tracker.stop()
     })
 

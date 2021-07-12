@@ -5,6 +5,7 @@ import { startTracker, Protocol } from 'streamr-network'
 import { startBroker, createClient, createTestStream } from '../utils'
 import StreamrClient from 'streamr-client'
 import { Todo } from '../types'
+import { Broker } from '../broker'
 
 const { ControlLayer } = Protocol
 const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
@@ -33,7 +34,7 @@ function buildMsg(
 
 describe('broker drops future messages', () => {
     let tracker: Todo
-    let broker: Todo
+    let broker: Broker
     let streamId: string
     let client: StreamrClient
     let token: string
@@ -60,7 +61,7 @@ describe('broker drops future messages', () => {
     })
 
     afterEach(async () => {
-        await broker.close()
+        await broker.stop()
         await tracker.stop()
         await client.ensureDisconnected()
     })
