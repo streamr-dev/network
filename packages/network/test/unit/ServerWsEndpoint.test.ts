@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { ServerWsEndpoint, startWebSocketServer } from '../../src/connection/ws/ServerWsEndpoint'
+import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/ServerWsEndpoint'
 import { waitForEvent } from 'streamr-test-utils'
 
 const wssPort1 = 7777
@@ -14,13 +14,13 @@ describe('ServerWsEndpoint', () => {
     })
 
     test('receives unencrypted connections', async () => {
-        const [wss, listenSocket] = await startWebSocketServer(
+        const httpServer = await startHttpServer(
             '127.0.0.1',
             wssPort1,
             undefined,
             undefined
         )
-        serverWsEndpoint = new ServerWsEndpoint('127.0.0.1', wssPort1, false, wss, listenSocket, PeerInfo.newTracker('tracker'))
+        serverWsEndpoint = new ServerWsEndpoint('127.0.0.1', wssPort1, false, httpServer, PeerInfo.newTracker('tracker'))
 
         const ws = new WebSocket(serverWsEndpoint.getUrl() + '/ws',
             undefined, {
@@ -36,13 +36,13 @@ describe('ServerWsEndpoint', () => {
     })
 
     test('receives encrypted connections', async () => {
-        const [wss, listenSocket] = await startWebSocketServer(
+        const httpsServer = await startHttpServer(
             '127.0.0.1',
             wssPort2,
             'test/fixtures/key.pem',
             'test/fixtures/cert.pem'
         )
-        serverWsEndpoint = new ServerWsEndpoint('127.0.0.1', wssPort2, true, wss, listenSocket, PeerInfo.newTracker('tracker'))
+        serverWsEndpoint = new ServerWsEndpoint('127.0.0.1', wssPort2, true, httpsServer, PeerInfo.newTracker('tracker'))
 
         const ws = new WebSocket(serverWsEndpoint.getUrl() + '/ws',
             undefined, {

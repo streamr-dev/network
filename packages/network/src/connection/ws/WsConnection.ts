@@ -8,6 +8,8 @@ import { Logger } from '../../helpers/Logger'
 export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 export const LOW_BACK_PRESSURE = 1024 * 1024
 
+export type ReadyState = 0 | 1 | 2 | 3
+
 export abstract class WsConnection {
     private readonly peerInfo: PeerInfo
     private readonly logger: Logger
@@ -82,5 +84,6 @@ export abstract class WsConnection {
     abstract getBufferedAmount(): number
     abstract send(message: string): Promise<void>
     abstract terminate(): void
+    abstract getReadyState(): ReadyState
     abstract close(code: DisconnectionCode, reason: DisconnectionReason): void
 }
