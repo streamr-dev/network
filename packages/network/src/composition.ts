@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
-import { Location } from './identifiers'
+import {Location, TrackerInfo} from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { ServerWsEndpoint, startWebSocketServer } from './connection/ws/ServerWsEndpoint'
 import { Tracker } from './logic/Tracker'
@@ -46,7 +46,7 @@ export interface TrackerOptions extends AbstractNodeOptions {
 }
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
-    trackers: string[],
+    trackers: TrackerInfo[],
     disconnectionWaitTime?: number,
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,

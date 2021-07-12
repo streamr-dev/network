@@ -23,17 +23,18 @@ describe('optimization: do not propagate to sender', () => {
             port: 30410,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
         n1 = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
         n2 = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
         n3 = createNetworkNode({
             id: 'node-3',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
 
         n1.start()

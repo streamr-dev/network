@@ -24,9 +24,10 @@ describe('duplicate message detection and avoidance', () => {
             port: 30350,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
         contactNode = createNetworkNode({
             id: 'node-0',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             stunUrls: []
         })
         contactNode.start()
@@ -34,27 +35,27 @@ describe('duplicate message detection and avoidance', () => {
         otherNodes = [
             createNetworkNode({
                 id: 'node-1',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
             createNetworkNode({
                 id: 'node-2',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
             createNetworkNode({
                 id: 'node-3',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
             createNetworkNode({
                 id: 'node-4',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
             createNetworkNode({
                 id: 'node-5',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
         ]

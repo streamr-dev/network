@@ -12,11 +12,11 @@ const STATE_OPEN = 1
 describe('check and kill dead connections', () => {
     let clientEndpoint: ClientWsEndpoint
     let serverEndpoint: ServerWsEndpoint
-
+    const trackerPeerInfo =  PeerInfo.newTracker('serverEndpoint')
     beforeEach(async () => {
         clientEndpoint = new ClientWsEndpoint(PeerInfo.newNode('clientEndpoint'))
-        serverEndpoint = await startServerWsEndpoint('127.0.0.1', 43972, PeerInfo.newTracker('serverEndpoint'))
-        await clientEndpoint.connect('ws://127.0.0.1:43972')
+        serverEndpoint = await startServerWsEndpoint('127.0.0.1', 43972, trackerPeerInfo)
+        await clientEndpoint.connect('ws://127.0.0.1:43972', trackerPeerInfo)
     })
 
     afterEach(async () => {

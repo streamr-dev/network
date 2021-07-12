@@ -34,7 +34,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31])
         const peerInfo2 = new PeerInfo('node-endpoint2', PeerType.Node, [1, 2], [31, 32, 33])
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
-
+        const trackerPeerInfo = PeerInfo.newTracker('tracker')
         // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
         const wsEp1 = new ClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
         const wsEp2 = new ClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
@@ -43,9 +43,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         trackerNode2 = new TrackerNode(wsEp2)
         trackerNode3 = new TrackerNode(wsEp3)
 
-        await trackerNode1.connectToTracker(tracker.getUrl())
-        await trackerNode2.connectToTracker(tracker.getUrl())
-        await trackerNode3.connectToTracker(tracker.getUrl())
+        await trackerNode1.connectToTracker(tracker.getUrl(), trackerPeerInfo)
+        await trackerNode2.connectToTracker(tracker.getUrl(), trackerPeerInfo)
+        await trackerNode3.connectToTracker(tracker.getUrl(), trackerPeerInfo)
 
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(

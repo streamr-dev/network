@@ -7,11 +7,11 @@ import { startServerWsEndpoint } from '../utils'
 describe('WsEndpoint: back pressure handling', () => {
     let epClient: ClientWsEndpoint
     let epServer: ServerWsEndpoint
-
+    const serverPeerInfo = PeerInfo.newTracker('epServer')
     beforeEach(async () => {
         epClient = new ClientWsEndpoint(PeerInfo.newNode('epClient'))
-        epServer = await startServerWsEndpoint('127.0.0.1', 43975, PeerInfo.newTracker('epServer'))
-        await epClient.connect('ws://127.0.0.1:43975')
+        epServer = await startServerWsEndpoint('127.0.0.1', 43975, serverPeerInfo)
+        await epClient.connect('ws://127.0.0.1:43975', serverPeerInfo)
     })
 
     afterEach(async () => {

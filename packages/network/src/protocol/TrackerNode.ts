@@ -156,8 +156,8 @@ export class TrackerNode extends EventEmitter {
         }
     }
 
-    connectToTracker(trackerAddress: string): Promise<string> {
-        return this.endpoint.connect(trackerAddress)
+    connectToTracker(trackerAddress: string, trackerPeerInfo: PeerInfo): Promise<string> {
+        return this.endpoint.connect(trackerAddress, trackerPeerInfo)
     }
 
     onPeerConnected(peerInfo: PeerInfo): void {

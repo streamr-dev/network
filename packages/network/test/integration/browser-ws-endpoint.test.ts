@@ -5,7 +5,7 @@ import { waitForEvent, wait } from 'streamr-test-utils'
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker } from '../../src/composition'
-import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import { BrowserClientWsEndpoint } from '../../src/connection/ws/BrowserClientWsEndpoint'
 import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
@@ -28,14 +28,14 @@ describe('ws-endpoint', () => {
         const clients = []
         const promises: Promise<any>[] = []
         for (let i = 0; i < 5; i++) {
-            const client = new ClientWsEndpoint(PeerInfo.newNode(`client-${i}`))
+            const client = new BrowserClientWsEndpoint(PeerInfo.newNode(`client-${i}`))
 
             promises.push(waitForEvent(endpoints[i], Event.PEER_CONNECTED))
 
             //const nextEndpoint = i + 1 === 5 ? endpoints[0] : endpoints[i + 1]
 
             // eslint-disable-next-line no-await-in-loop
-            client.connect(endpoints[i].getUrl(), PeerInfo.newTracker('tracker'))
+            await client.connect(endpoints[i].getUrl(), PeerInfo.newTracker('tracker'))
             clients.push(client)
         }
 
@@ -52,15 +52,15 @@ describe('ws-endpoint', () => {
             await clients[i].stop()
         }
     })
-    //
+
     // it('server and client form correct peerInfo on connection', async () => {
-    //     const client = new ClientWsEndpoint(PeerInfo.newNode('client'))
+    //     const client = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
     //     const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'))
     //
     //     const e1 = waitForEvent(client, Event.PEER_CONNECTED)
     //     const e2 = waitForEvent(server, Event.PEER_CONNECTED)
     //
-    //     await client.connect(server.getUrl(), PeerInfo.newTracker('tracker'))
+    //     await client.connect(server.getUrl(). PeerInfo.newTracker('server'))
     //
     //     const clientArguments = await e1
     //     const serverArguments = await e2

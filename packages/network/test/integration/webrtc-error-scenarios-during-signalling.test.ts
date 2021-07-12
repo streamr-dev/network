@@ -21,16 +21,17 @@ describe('Signalling error scenarios', () => {
             port: 35115,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 2000,
             newWebrtcConnectionTimeout: 4000
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 2000,
             newWebrtcConnectionTimeout: 4000
         })

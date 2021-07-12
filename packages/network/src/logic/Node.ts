@@ -4,7 +4,7 @@ import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { TrackerNode, Event as TrackerNodeEvent } from '../protocol/TrackerNode'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
-import { Status, StreamIdAndPartition } from '../identifiers'
+import {Status, StreamIdAndPartition, TrackerInfo} from '../identifiers'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { PerStreamMetrics } from './PerStreamMetrics'
@@ -34,7 +34,7 @@ export interface NodeOptions {
         trackerNode: TrackerNode
     }
     peerInfo: PeerInfo
-    trackers: Array<string>
+    trackers: Array<TrackerInfo>
     metricsContext?: MetricsContext
     connectToBootstrapTrackersInterval?: number
     sendStatusToAllTrackersInterval?: number
@@ -76,7 +76,7 @@ export class Node extends EventEmitter {
     protected readonly streams: StreamManager
     private readonly messageBuffer: MessageBuffer<[MessageLayer.StreamMessage, string | null]>
     private readonly seenButNotPropagatedSet: SeenButNotPropagatedSet
-    private readonly trackerRegistry: Utils.TrackerRegistry<string>
+    private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private readonly trackerBook: { [key: string]: string } // address => id
     private readonly instructionThrottler: InstructionThrottler
     private readonly instructionRetryManager: InstructionRetryManager
@@ -119,7 +119,7 @@ export class Node extends EventEmitter {
         })
         this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
 
-        this.trackerRegistry = Utils.createTrackerRegistry(opts.trackers)
+        this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
         this.trackerBook = {}
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
         this.instructionRetryManager = new InstructionRetryManager(
@@ -470,8 +470,8 @@ export class Node extends EventEmitter {
     }
 
     protected getTrackerId(streamId: StreamIdAndPartition): string | null {
-        const address = this.trackerRegistry.getTracker(streamId.id, streamId.partition)
-        return this.trackerBook[address] || null
+        const { ws } = this.trackerRegistry.getTracker(streamId.id, streamId.partition)
+        return this.trackerBook[ws] || null
     }
 
     protected isNodePresent(nodeId: string): boolean {
@@ -523,10 +523,11 @@ export class Node extends EventEmitter {
     }
 
     private connectToBootstrapTrackers(): void {
-        this.trackerRegistry.getAllTrackers().forEach((address) => {
-            this.trackerNode.connectToTracker(address)
+        console.log(this.trackerRegistry.getAllTrackers())
+        this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
+            this.trackerNode.connectToTracker(trackerInfo.ws, PeerInfo.newTracker(trackerInfo.id))
                 .catch((err) => {
-                    this.logger.warn('could not connect to tracker %s, reason: %j', address, err.toString())
+                    this.logger.warn('could not connect to tracker %s, reason: %j', trackerInfo.ws, err.toString())
                 })
         })
     }

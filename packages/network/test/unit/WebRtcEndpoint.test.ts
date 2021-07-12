@@ -27,17 +27,17 @@ describe('WebRtcEndpoint', () => {
                 port: 28800,
                 id: 'tracker'
             })
-
+            const trackerPeerInfo = PeerInfo.newTracker('tracker')
             const ep1 = await new ClientWsEndpoint(PeerInfo.newNode('node-1'))
             const ep2 = await new ClientWsEndpoint(PeerInfo.newNode('node-2'))
             trackerNode1 = new TrackerNode(ep1)
             trackerNode2 = new TrackerNode(ep2)
             await Promise.all([
-                trackerNode1.connectToTracker(tracker.getUrl()),
+                trackerNode1.connectToTracker(tracker.getUrl(), trackerPeerInfo),
                 waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
             ])
             await Promise.all([
-                trackerNode2.connectToTracker(tracker.getUrl()),
+                trackerNode2.connectToTracker(tracker.getUrl(), trackerPeerInfo),
                 waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
             ])
 

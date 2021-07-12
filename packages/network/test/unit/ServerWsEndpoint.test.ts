@@ -2,8 +2,7 @@
 import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ServerWsEndpoint, startWebSocketServer } from '../../src/connection/ws/ServerWsEndpoint'
-import {waitForCondition, waitForEvent} from 'streamr-test-utils'
-import {describeRepeats} from "../../../client/test/utils";
+import { waitForCondition } from 'streamr-test-utils'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
@@ -26,7 +25,6 @@ describe('ServerWsEndpoint', () => {
             undefined
         )
         serverWsEndpoint = new ServerWsEndpoint('127.0.0.1', wssPort1, false, wss, listenSocket, PeerInfo.newTracker('tracker'))
-        console.log("unencrypted", serverWsEndpoint.getUrl())
 
         const webSocketClient = new w3cwebsocket(
             serverWsEndpoint.getUrl() + '/ws',

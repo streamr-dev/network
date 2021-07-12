@@ -23,15 +23,16 @@ describe('Check tracker instructions to node', () => {
             port: 30950,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
 

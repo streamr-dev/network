@@ -25,14 +25,15 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             port: 28660,
             id: 'tracker'
         })
+        const trackerPeerInfo = PeerInfo.newTracker('tracker')
         const originatorEndpoint = new ClientWsEndpoint(PeerInfo.newNode('originator'))
         const targetEndpoint = new ClientWsEndpoint(PeerInfo.newNode('target'))
 
         originatorTrackerNode = new TrackerNode(originatorEndpoint)
         targetTrackerNode = new TrackerNode(targetEndpoint)
 
-        originatorTrackerNode.connectToTracker(tracker.getUrl())
-        targetTrackerNode.connectToTracker(tracker.getUrl())
+        originatorTrackerNode.connectToTracker(tracker.getUrl(), trackerPeerInfo)
+        targetTrackerNode.connectToTracker(tracker.getUrl(), trackerPeerInfo)
 
         await Promise.all([
             // @ts-expect-error private method

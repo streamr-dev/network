@@ -32,16 +32,17 @@ describe('check status message flow between tracker and two nodes', () => {
             port: 30750,
             id: TRACKER_ID
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             pingInterval: 100
         })
         
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             location,
             pingInterval: 100
         })

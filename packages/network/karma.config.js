@@ -29,15 +29,14 @@ module.exports = function (config) {
         files: [
             './karma-setup.js',
             './test/browser/BrowserWebRtcConnection.test.ts',
-
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
+            './test/integration/browser-ws-endpoint.test.ts'
+            // './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
-
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
-        //
+            './test/integration/browser-ws-endpoint.test.ts': ['webpack']
+            // './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
         },
         customLaunchers: {
             CustomElectron: {
@@ -87,7 +86,9 @@ module.exports = function (config) {
                 alias: {
                     "process": "process/browser",
                     [path.resolve(__dirname, "src/logic/LocationManager.ts")]:
-                        path.resolve(__dirname, "test/browser/LocationManager.ts")
+                        path.resolve(__dirname, "test/browser/LocationManager.ts"),
+                    [path.resolve(__dirname, "src/connection/NodeWebRtcConnection.ts")]:
+                        path.resolve(__dirname, "src/connection/BrowserWebRtcConnection.ts"),
                 },
                 fallback: {
                     "fs": require.resolve('browserify-fs'),

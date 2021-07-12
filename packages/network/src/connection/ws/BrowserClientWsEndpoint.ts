@@ -1,8 +1,8 @@
-import WebSocket from 'ws'
+import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import { ClientWsConnection } from './ClientWsConnection'
+import { BrowserClientWsConnection } from './BrowserClientWsConnection'
 
 function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     return {
@@ -13,11 +13,11 @@ function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
 type PeerId = string
 type ServerUrl = string
 
-export class ClientWsEndpoint extends AbstractWsEndpoint<ClientWsConnection> {
-    private readonly connectionsByServerUrl: Map<ServerUrl, ClientWsConnection>
+export class BrowserClientWsEndpoint extends AbstractWsEndpoint<BrowserClientWsConnection> {
+    private readonly connectionsByServerUrl: Map<ServerUrl, BrowserClientWsConnection>
     private readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     private readonly pendingConnections: Map<ServerUrl, Promise<string>>
-
+    private trackerIdReceivedTimeoutRef: NodeJS.Timeout | null
     constructor(
         peerInfo: PeerInfo,
         metricsContext?: MetricsContext,
@@ -28,7 +28,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<ClientWsConnection> {
         this.connectionsByServerUrl = new Map()
         this.serverUrlByPeerId = new Map()
         this.pendingConnections = new Map()
-
+        this.trackerIdReceivedTimeoutRef = null
         this.metrics.addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
     }
 
@@ -36,7 +36,7 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<ClientWsConnection> {
         // Check for existing connection and its state
         const existingConnection = this.connectionsByServerUrl.get(serverUrl)
         if (existingConnection !== undefined) {
-            if (existingConnection.getReadyState() === WebSocket.OPEN) {
+            if (existingConnection.getReadyState() === w3cwebsocket.OPEN) {
                 return Promise.resolve(existingConnection.getPeerId())
             }
             this.logger.trace('supposedly connected to %s but readyState is %s, closing connection',
@@ -60,25 +60,25 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<ClientWsConnection> {
         this.logger.trace('connecting to %s', serverUrl)
         const p = new Promise<string>((resolve, reject) => {
             try {
-                const ws = new WebSocket(
+                const ws = new w3cwebsocket(
                     `${serverUrl}/ws`,
-                    {
-                        headers: toHeaders(this.peerInfo)
-                    }
+                    undefined,
+                    undefined,
+                    toHeaders(this.peerInfo),
                 )
 
-                let connection: ClientWsConnection | undefined
+                let connection: BrowserClientWsConnection | undefined
 
-                ws.once('open', () => {
+                ws.onopen = () => {
                     resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
-                })
+                }
 
-                ws.on('error', (err) => {
+                ws.onerror = (error) => {
                     this.metrics.record('webSocketError', 1)
-                    this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
+                    this.logger.trace('failed to connect to %s, error: %o', serverUrl, error)
                     connection?.terminate()
-                    reject(err)
-                })
+                    reject(error)
+                }
             } catch (err) {
                 this.metrics.record('open:failedException', 1)
                 this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
@@ -96,30 +96,35 @@ export class ClientWsEndpoint extends AbstractWsEndpoint<ClientWsConnection> {
         return this.serverUrlByPeerId.get(peerId)
     }
 
-    protected doClose(connection: ClientWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
+    protected doClose(connection: BrowserClientWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
         const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
         this.connectionsByServerUrl.delete(serverUrl)
         this.serverUrlByPeerId.delete(connection.getPeerId())
     }
 
     protected async doStop(): Promise<void> {
+        if (this.trackerIdReceivedTimeoutRef) {
+            clearTimeout(this.trackerIdReceivedTimeoutRef)
+        }
         this.getConnections().forEach((connection) => {
             connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
         })
     }
 
-    private setUpConnection(ws: WebSocket, serverPeerInfo: PeerInfo, serverUrl: ServerUrl): PeerId {
-        const connection = new ClientWsConnection(ws, serverPeerInfo)
+    private setUpConnection(ws: w3cwebsocket, serverPeerInfo: PeerInfo, serverUrl: ServerUrl): PeerId {
+        const connection = new BrowserClientWsConnection(ws, serverPeerInfo)
+        ws.onmessage = (message) => {
+            const parsedMsg = message.toString()
+            console.log(parsedMsg)
+            if (parsedMsg === 'ping') {
+                console.log('PING RECEIVED')
+            }
+            this.onReceive(connection, parsedMsg)
+        }
 
-        ws.on('message', (message: string | Buffer | Buffer[]) => {
-            this.onReceive(connection, message.toString())
-        })
-        ws.on('pong', () => {
-            connection.onPong()
-        })
-        ws.once('close', (code: number, reason: string): void => {
-            this.onClose(connection, code, reason as DisconnectionReason)
-        })
+        ws.onclose = (event) => {
+            this.onClose(connection, event.code, event.reason as DisconnectionReason)
+        }
 
         this.connectionsByServerUrl.set(serverUrl, connection)
         this.serverUrlByPeerId.set(connection.getPeerId(), serverUrl)
