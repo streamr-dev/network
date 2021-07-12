@@ -29,7 +29,7 @@ describe('WsEndpoint: back pressure handling', () => {
             done()
         })
         while (!hitHighBackPressure) {
-            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff').catch(() => {})
         }
     })
 
@@ -49,7 +49,7 @@ describe('WsEndpoint: back pressure handling', () => {
             })
         })
         while (!hitHighBackPressure) {
-            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff').catch(() => {})
         }
     })
 })

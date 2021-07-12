@@ -101,7 +101,9 @@ module.exports = function (config) {
                 path: path.resolve(__dirname, 'dist'),
             },
             externals: {
-                'uWebSockets.js': 'uWS',
+                'http': 'HTTP',
+                'https': 'HTTPS',
+                'express': 'Express',
                 'ws': 'WebSocket',
                 'geoip-lite': 'commonjs geoip-lite',
                 'node-datachannel': 'commonjs node-datachannel'

@@ -3,7 +3,7 @@ import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
 import {Location, TrackerInfo} from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
-import { ServerWsEndpoint, startWebSocketServer } from './connection/ws/ServerWsEndpoint'
+import { ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
 import { Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
@@ -68,8 +68,8 @@ export const startTracker = async ({
     certFileName,
 }: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
-    const [wss, listenSocket] = await startWebSocketServer(host, port, privateKeyFileName, certFileName)
-    const endpoint = new ServerWsEndpoint(host, port, privateKeyFileName !== undefined, wss, listenSocket, peerInfo, metricsContext, pingInterval)
+    const httpServer = await startHttpServer(host, port, privateKeyFileName, certFileName)
+    const endpoint = new ServerWsEndpoint(host, port, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, pingInterval)
 
     const tracker = new Tracker({
         peerInfo,
@@ -81,7 +81,7 @@ export const startTracker = async ({
     })
 
     if (attachHttpEndpoints) {
-        trackerHttpEndpoints(wss, tracker, metricsContext)
+        trackerHttpEndpoints(httpServer, tracker, metricsContext)
     }
 
     return tracker

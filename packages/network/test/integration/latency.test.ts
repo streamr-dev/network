@@ -27,8 +27,10 @@ describe('latency metrics', () => {
     })
 
     afterEach(async () => {
-        await node.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            node.stop(),
+            tracker.stop()
+        ])
     })
 
     it('should fetch empty metrics', async () => {

@@ -73,6 +73,7 @@ describe('tracker: counter filtering', () => {
         })
 
         trackerNode1.sendStatus('tracker', formStatus(1, 666, [], [], false) as Status)
+            .catch(() => {})
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(2)
@@ -85,6 +86,7 @@ describe('tracker: counter filtering', () => {
         })
 
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status)
+            .catch(() => {})
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(0)
@@ -97,6 +99,7 @@ describe('tracker: counter filtering', () => {
         })
 
         trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
+            .catch(() => {})
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(1)
@@ -105,7 +108,7 @@ describe('tracker: counter filtering', () => {
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
 
-        runAndWaitForEvents(
+        await runAndWaitForEvents(
             () => { trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status) },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
@@ -117,8 +120,10 @@ describe('tracker: counter filtering', () => {
     test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
 
-        runAndWaitForEvents(
-            () => { trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status) },
+        await runAndWaitForEvents(
+            () => {
+                trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
+            },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )

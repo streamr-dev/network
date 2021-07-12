@@ -1,4 +1,4 @@
-import { WsConnection } from './WsConnection'
+import { ReadyState, WsConnection } from './WsConnection'
 import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
@@ -34,8 +34,8 @@ export class BrowserClientWsConnection extends WsConnection {
         return this.socket.bufferedAmount
     }
 
-    getReadyState(): number {
-        return this.socket.readyState
+    getReadyState(): ReadyState {
+        return this.socket.readyState as ReadyState
     }
 
     // TODO: toString() representation for logging

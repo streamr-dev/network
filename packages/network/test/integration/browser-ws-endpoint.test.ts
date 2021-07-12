@@ -56,24 +56,24 @@ describe('ws-endpoint', () => {
         }
     })
 
-    // it('server and client form correct peerInfo on connection', async () => {
-    //     const client = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
-    //     const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'))
-    //
-    //     const e1 = waitForEvent(client, Event.PEER_CONNECTED)
-    //     const e2 = waitForEvent(server, Event.PEER_CONNECTED)
-    //
-    //     await client.connect(server.getUrl(). PeerInfo.newTracker('server'))
-    //
-    //     const clientArguments = await e1
-    //     const serverArguments = await e2
-    //
-    //     expect(clientArguments).toEqual([PeerInfo.newTracker('server')])
-    //     expect(serverArguments).toEqual([PeerInfo.newNode('client')])
-    //
-    //     await client.stop()
-    //     await server.stop()
-    // })
+    it('server and client form correct peerInfo on connection', async () => {
+        const client = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
+        const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'))
+
+        const e1 = waitForEvent(client, Event.PEER_CONNECTED)
+        const e2 = waitForEvent(server, Event.PEER_CONNECTED)
+
+        await client.connect(server.getUrl(), PeerInfo.newTracker('server'))
+
+        const clientArguments = await e1
+        const serverArguments = await e2
+
+        expect(clientArguments).toEqual([PeerInfo.newTracker('server')])
+        expect(serverArguments).toEqual([PeerInfo.newNode('client')])
+
+        await client.stop()
+        await server.stop()
+    })
 
     describe('test direct connections from simple websocket', () => {
         const trackerPort = 38481
@@ -97,7 +97,7 @@ describe('ws-endpoint', () => {
                     headers: {}
                 })
             const close = await waitForEvent(ws, 'close')
-            expect(close).toEqual([DisconnectionCode.MISSING_REQUIRED_PARAMETER, 'Error: peerId not given'])
+            expect(close).toEqual([DisconnectionCode.MISSING_REQUIRED_PARAMETER, 'Error: peerId not given in header or query parameter'])
         })
     })
 })
