@@ -7,8 +7,8 @@ import { StreamIdAndPartition } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
-import { ServerWsEndpoint } from "../connection/ServerWsEndpoint"
-import { Event as WsEndpointEvent } from "../connection/AbstractWsEndpoint"
+import { ServerWsEndpoint } from "../connection/ws/ServerWsEndpoint"
+import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',

@@ -3,7 +3,7 @@ import { DescriptionType } from 'node-datachannel'
 import { waitForCondition, wait } from 'streamr-test-utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { NodeWebRtcConnection } from '../../src/connection/NodeWebRtcConnection'
-import { DeferredConnectionAttempt } from '../../src/connection/WebRtcConnection'
+import { DeferredConnectionAttempt } from '../../src/connection/DeferredConnectionAttempt'
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
  * is "abstracted away" by local functions.
@@ -41,8 +41,8 @@ describe('Connection', () => {
         }
         const messageQueueOne = new MessageQueue<string>()
         const messageQueueTwo = new MessageQueue<string>()
-        const deferredConnectionAttemptOne = new DeferredConnectionAttempt('two')
-        const deferredConnectionAttemptTwo = new DeferredConnectionAttempt('one')
+        const deferredConnectionAttemptOne = new DeferredConnectionAttempt()
+        const deferredConnectionAttemptTwo = new DeferredConnectionAttempt()
         connectionOne = new NodeWebRtcConnection({
             selfId: 'one',
             targetPeerId: 'two',

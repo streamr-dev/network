@@ -1,3 +1,101 @@
+// TODO: remove the commented-out ABI portions when merging to main
+export const binanceAdapterABI = [
+    // {
+    //     inputs: [{ type: 'address' }, { type: 'address' }, { type: 'address' }, { type: 'address' }, { type: 'address' }],
+    //     stateMutability: 'nonpayable',
+    //     type: 'constructor'
+    // },
+    // {
+    //     anonymous: false,
+    //     inputs: [{ indexed: true, type: 'address' }, { indexed: true, type: 'address' }],
+    //     name: 'SetBinanceRecipient',
+    //     type: 'event'
+    // },
+    // {
+    //     anonymous: false,
+    //     inputs: [{ indexed: true, type: 'address' }, { indexed: true, type: 'address' }, { indexed: false, type: 'uint256' }, { indexed: false, type: 'uint256' }],
+    //     name: 'WithdrawToBinance',
+    //     type: 'event'
+    // },
+    {
+        inputs: [{ type: 'address' }],
+        name: 'binanceRecipient',
+        outputs: [{ type: 'address' }, { type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function'
+    },
+    // {
+    //     inputs: [],
+    //     name: 'bscBridge',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'convertToCoin',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'dataCoin',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'datacoinPassed',
+    //     outputs: [{ type: 'uint256' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'honeyswapRouter',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [],
+    //     name: 'liquidityToken',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // },
+    // {
+    //     inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'bytes' }],
+    //     name: 'onTokenTransfer',
+    //     outputs: [{ type: 'bool' }],
+    //     stateMutability: 'nonpayable',
+    //     type: 'function'
+    // },
+    {
+        inputs: [{ type: 'address' }],
+        name: 'setBinanceRecipient',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [{ type: 'address' }, { type: 'address' }, { type: 'bytes' }],
+        name: 'setBinanceRecipientFromSig',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    // {
+    //     inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'bytes' }],
+    //     name: 'getSigner',
+    //     outputs: [{ type: 'address' }],
+    //     stateMutability: 'view',
+    //     type: 'function'
+    // }
+]
+
 export const dataUnionMainnetABI = [{
     name: 'sendTokensToBridge',
     inputs: [],

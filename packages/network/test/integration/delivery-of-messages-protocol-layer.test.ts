@@ -10,10 +10,10 @@ import { RtcSignaller } from "../../src/logic/RtcSignaller"
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
-import { startServerWsEndpoint } from '../utils'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import { startServerWsEndpoint } from '../utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 

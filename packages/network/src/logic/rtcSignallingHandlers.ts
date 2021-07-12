@@ -2,7 +2,7 @@ import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerS
 import { RtcIceCandidateMessage, RtcOfferMessage, RtcAnswerMessage, RelayMessage, RtcConnectMessage } from '../identifiers'
 import { RtcSubTypes } from './RtcMessage'
 import { Logger } from "../helpers/Logger"
-import { UnknownPeerError } from "../connection/AbstractWsEndpoint"
+import { UnknownPeerError } from "../connection/ws/AbstractWsEndpoint"
 
 export function attachRtcSignalling(trackerServer: TrackerServer): void {
     if (!(trackerServer instanceof TrackerServer)) {
@@ -83,7 +83,7 @@ export function attachRtcSignalling(trackerServer: TrackerServer): void {
                 trackerServer.sendUnknownPeerRtcError(originator.peerId, requestId, targetNode)
                     .catch((e) => logger.error('failed to sendUnknownPeerRtcError, reason: %s', e))
             } else {
-                throw err
+                logger.warn('failed to relay message %s to %s, reason: %s', subType, targetNode, err)
             }
         }
     })

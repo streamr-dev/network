@@ -1,7 +1,7 @@
-import { ServerWsEndpoint } from '../../src/connection/ServerWsEndpoint'
-import { ClientWsEndpoint } from '../../src/connection/ClientWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
+import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { Event } from "../../src/connection/AbstractWsEndpoint"
+import { Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
 describe('WsEndpoint: back pressure handling', () => {
@@ -15,7 +15,7 @@ describe('WsEndpoint: back pressure handling', () => {
     })
 
     afterEach(async () => {
-        Promise.allSettled([
+        await Promise.allSettled([
             epClient.stop(),
             epServer.stop()
         ])
@@ -23,13 +23,13 @@ describe('WsEndpoint: back pressure handling', () => {
 
     it('emits HIGH_BACK_PRESSURE on high back pressure', (done) => {
         let hitHighBackPressure = false
-        epClient.on(Event.HIGH_BACK_PRESSURE, (peerInfo) => {
+        epClient.on(Event.HIGH_BACK_PRESSURE, (peerInfo: PeerInfo) => {
             hitHighBackPressure = true
             expect(peerInfo).toEqual(PeerInfo.newTracker('epServer'))
             done()
         })
         while (!hitHighBackPressure) {
-            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff').catch(() => {})
         }
     })
 
@@ -49,7 +49,7 @@ describe('WsEndpoint: back pressure handling', () => {
             })
         })
         while (!hitHighBackPressure) {
-            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff').catch(() => {})
         }
     })
 })

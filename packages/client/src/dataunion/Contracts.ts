@@ -1,12 +1,12 @@
 import { getCreate2Address, isAddress } from '@ethersproject/address'
-import { arrayify, hexZeroPad } from '@ethersproject/bytes'
+import { arrayify, BytesLike, hexZeroPad } from '@ethersproject/bytes'
 import { Contract, ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
-import { verifyMessage } from '@ethersproject/wallet'
+import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { Debug } from '../utils/log'
 import { EthereumAddress, Todo } from '../types'
-import { dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
+import { binanceAdapterABI, dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
 import { until } from '../utils'
 import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
@@ -20,13 +20,15 @@ function validateAddress(name: string, address: EthereumAddress) {
     }
 }
 
-export class Contracts {
+export default class Contracts {
 
     ethereum: StreamrEthereum
     factoryMainnetAddress: EthereumAddress
     factorySidechainAddress: EthereumAddress
     templateMainnetAddress: EthereumAddress
     templateSidechainAddress: EthereumAddress
+    binanceAdapterAddress: EthereumAddress
+    binanceSmartChainAMBAddress: EthereumAddress
     cachedSidechainAmb?: Todo
 
     constructor(client: StreamrClient) {
@@ -35,6 +37,8 @@ export class Contracts {
         this.factorySidechainAddress = client.options.dataUnion.factorySidechainAddress
         this.templateMainnetAddress = client.options.dataUnion.templateMainnetAddress
         this.templateSidechainAddress = client.options.dataUnion.templateSidechainAddress
+        this.binanceAdapterAddress = client.options.binanceAdapterAddress
+        this.binanceSmartChainAMBAddress = client.options.binanceSmartChainAMBAddress
     }
 
     async fetchDataUnionMainnetAddress(
@@ -47,6 +51,7 @@ export class Contracts {
     }
 
     getDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress) {
+        validateAddress("deployer's address", deployerAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
         const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateMainnetAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
         const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
@@ -60,6 +65,7 @@ export class Contracts {
     }
 
     getDataUnionSidechainAddress(mainnetAddress: EthereumAddress) {
+        validateAddress('DU mainnet address', mainnetAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
         const code = `0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateSidechainAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`
         const codeHash = keccak256(code)
@@ -120,6 +126,19 @@ export class Contracts {
         const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, mainnetProvider)
         const mainnetAmbAddress = await factoryMainnet.amb()
         return new Contract(mainnetAmbAddress, mainnetAmbABI, mainnetProvider)
+    }
+
+    async getBinanceAdapter() {
+        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, await this.ethereum.getSidechainSigner())
+    }
+
+    getBinanceAdapterReadOnly() {
+        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, this.ethereum.getSidechainProvider())
+    }
+
+    async getBinanceSmartChainAmb(binanceSenderPrivateKey: BytesLike) {
+        const signer = new Wallet(binanceSenderPrivateKey, this.ethereum.getBinanceProvider())
+        return new Contract(this.binanceSmartChainAMBAddress, mainnetAmbABI, signer)
     }
 
     async requiredSignaturesHaveBeenCollected(messageHash: Todo) {

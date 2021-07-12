@@ -15,7 +15,7 @@ import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
 import { InstructionRetryManager } from "./InstructionRetryManager"
 import { NameDirectory } from '../NameDirectory'
-import { DisconnectionReason } from "../connection/AbstractWsEndpoint"
+import { DisconnectionReason } from "../connection/ws/AbstractWsEndpoint"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',

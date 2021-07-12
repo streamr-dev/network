@@ -369,7 +369,7 @@ export function getRandomClient() {
 }
 
 export const expectInvalidAddress = (operation: () => Promise<any>) => {
-    return expect(() => operation()).rejects.toThrow('invalid address')
+    return expect(() => operation()).rejects.toThrow()
 }
 
 // eslint-disable-next-line no-undef
