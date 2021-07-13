@@ -131,6 +131,9 @@ export class Connection extends EventEmitter {
         logger.trace('send: %s: %o', this.id, serialized)
         let shouldContinueWriting = true
         try {
+            if (this.socket.readyState !== 1) {
+                throw new Error(`cannot send, readyState is ${this.socket.readyState}`)
+            }
             shouldContinueWriting = this.duplexStream.write(serialized)
         } catch (e) {
             this.forceClose(`unable to send message: ${e}`)
