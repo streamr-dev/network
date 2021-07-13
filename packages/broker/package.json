@@ -1,6 +1,6 @@
 {
   "name": "streamr-broker",
-  "version": "24.0.0",
+  "version": "24.0.1",
   "description": "A full-featured broker node implementation for the Streamr Network.",
   "repository": {
     "type": "git",
