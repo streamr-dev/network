@@ -61,10 +61,10 @@ export async function collect(iterator: any, fn: MaybeAsync<(item: any) => void>
     return received
 }
 
-export function getTestSetTimeout(): (...args: Parameters<typeof setTimeout>) => ReturnType<typeof setTimeout> {
+export function getTestSetTimeout() {
     const addAfter = addAfterFn()
-    return (...args: Parameters<typeof setTimeout>) => {
-        const t = setTimeout(...args)
+    return (callback: () => void, ms?: number) => {
+        const t = setTimeout(callback, ms)
         addAfter(() => {
             clearTimeout(t)
         })

@@ -1,54 +1,42 @@
 import Debug from 'debug'
 import { NetworkNode, NetworkNodeOptions, startNetworkNode } from 'streamr-network'
 
-import { StreamrClientOptions } from '../Config'
+import Config, { StrictBrubeckClientOptions, BrubeckClientOptions } from './Config'
 import { pOnce, uuid, counterId } from '../utils'
-import { Context, ContextError } from '../utils/Context'
+import { Context } from '../utils/Context'
 import { StreamrClient } from '../StreamrClient'
 
 import Publisher from './Publisher'
 import Subscriber from './Subscriber'
+import Resends from './Resends'
 import { StreamIDish } from '../publish/utils'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
-type BrubeckClientOptions = StreamrClientOptions & {
-    network?: Partial<NetworkNodeOptions>
-}
-
 export class BrubeckClient implements Context {
     publisher: Publisher
     subscriber: Subscriber
+    resends: Resends
     client: StreamrClient
-    options: BrubeckClientOptions
-    private node?: NetworkNode
+    options: StrictBrubeckClientOptions
     readonly id
     readonly debug
 
     constructor(options: BrubeckClientOptions) {
         this.client = new StreamrClient(options)
-        this.options = options
-        this.id = counterId(`${this.constructor.name}:${uid}${options.id || ''}`)
+        this.options = Config(options)
+        this.id = counterId(`${this.constructor.name}:${uid}${options.id ? `:${options.id}` : ''}`)
         this.debug = Debug(`Streamr::${this.id}`)
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
+        this.resends = new Resends(this)
     }
 
     connect = pOnce(async () => {
-        // @ts-expect-error
-        const node = await startNetworkNode({
-            trackers: [
-                'ws://127.0.0.1:30301',
-                'ws://127.0.0.1:30302',
-                'ws://127.0.0.1:30303'
-            ],
-            disconnectionWaitTime: 200,
-            ...this.options.network,
-            id: this.id,
-            name: this.id,
-        })
-        this.node = node
-        return this.node
+        this.disconnect.reset()
+        this.debug('connect >>')
+        await this.getNode()
+        this.debug('connect <<')
     })
 
     async getUserId() {
@@ -59,20 +47,28 @@ export class BrubeckClient implements Context {
         return this.client.session.getSessionToken()
     }
 
-    async disconnect() {
-        const node = await this.getNode()
+    disconnect = pOnce(async () => {
+        this.debug('disconnect >>')
+        const nodeTask = this.getNode()
+        this.connect.reset()
+        this.getNode.reset() // allow getting new node again
+        const node = await nodeTask
         await Promise.allSettled([
             this.publisher.stop(),
             this.subscriber.stop(),
             node.stop(),
         ])
-    }
+        this.debug('disconnect <<')
+    })
 
-    async getNode(): Promise<NetworkNode> {
-        const node = await this.connect()
-        if (!node) { throw new ContextError(this, 'no node') }
-        return node
-    }
+    getNode = pOnce(() => {
+        return startNetworkNode({
+            disconnectionWaitTime: 200,
+            ...this.options.network,
+            id: counterId(this.id),
+            name: this.id,
+        })
+    })
 
     async publish<T>(
         streamObjectOrId: StreamIDish,

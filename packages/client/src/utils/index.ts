@@ -469,14 +469,15 @@ export function pOne<ArgsType extends unknown[], ReturnType>(
 
 export function pOnce<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType
-): (...args: ArgsType) => Promise<Awaited<ReturnType>> {
+): ((...args: ArgsType) => Promise<Awaited<ReturnType>>) & { reset(): void } {
     // captures function value or error and resolves with those
     // prevents holding onto in-progress promise forever
     let started = false
     let inProgress: Promise<void> | undefined // holds inProgress promise
-    let value: Awaited<ReturnType> // result
+    let value: Awaited<ReturnType> | undefined // result
     let error: Error | undefined // or error
-    return async function pOnceWrap(...args: ArgsType) {
+
+    return Object.assign(async function pOnceWrap(...args: ArgsType) { // eslint-disable-line prefer-arrow-callback
         // run once
         if (!started) {
             started = true
@@ -503,8 +504,15 @@ export function pOnce<ArgsType extends unknown[], ReturnType>(
             throw error
         }
 
-        return value
-    }
+        return value as Awaited<ReturnType>
+    }, {
+        reset() {
+            error = undefined
+            value = undefined
+            started = false
+            inProgress = undefined
+        }
+    })
 }
 
 export class TimeoutError extends Error {

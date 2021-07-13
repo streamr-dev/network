@@ -84,7 +84,7 @@ export type StrictStreamrClientOptions = {
     storageNode: {
         address: EthereumAddress
         url: string
-    }
+    },
     cache: {
         maxSize: number,
         maxAge: number

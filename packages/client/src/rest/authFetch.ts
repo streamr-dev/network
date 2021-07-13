@@ -1,7 +1,7 @@
 import fetch, { Response } from 'node-fetch'
-import { Debug } from '../utils/log'
+import { Debug, Debugger, inspect } from '../utils/log'
 
-import { getVersionString } from '../utils'
+import { getVersionString, counterId } from '../utils'
 import Session from '../Session'
 
 export enum ErrorCode {
@@ -22,7 +22,7 @@ export class AuthFetchError extends Error {
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
         const typePrefix = errorCode ? errorCode + ': ' : ''
         // add leading space if there is a body set
-        const bodyMessage = body ? ` ${(typeof body === 'string' ? body : JSON.stringify(body).slice(0, 1024))}...` : ''
+        const bodyMessage = body ? ` ${inspect(body)}` : ''
         super(typePrefix + message + bodyMessage)
         this.response = response
         this.body = body
@@ -62,15 +62,19 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
-const debug = Debug('utils:authfetch') // TODO: could use the debug instance from the client? (e.g. client.debug.extend('authFetch'))
+export async function authRequest<T extends object>(
+    url: string,
+    session?: Session,
+    opts?: any,
+    requireNewToken = false,
+    debug?: Debugger
+): Promise<Response> {
+    if (!debug) {
+        const id = counterId('authResponse')
+        debug = Debug('utils').extend(id) // eslint-disable-line no-param-reassign
+    }
 
-let ID = 0
-
-/** @internal */
-export default async function authFetch<T extends object>(url: string, session?: Session, opts?: any, requireNewToken = false): Promise<T> {
-    ID += 1
     const timeStart = Date.now()
-    const id = ID
 
     const options = {
         ...opts,
@@ -84,7 +88,7 @@ export default async function authFetch<T extends object>(url: string, session?:
         options.headers['Content-Type'] = 'application/json'
     }
 
-    debug('%d %s >> %o', id, url, opts)
+    debug('%s >> %o', url, opts)
 
     const response: Response = await fetch(url, {
         ...opts,
@@ -96,24 +100,36 @@ export default async function authFetch<T extends object>(url: string, session?:
         },
     })
     const timeEnd = Date.now()
-    debug('%d %s << %d %s %s %s', id, url, response.status, response.statusText, Debug.humanize(timeEnd - timeStart))
-
-    const body = await response.text()
+    debug('%s << %d %s %s %s', url, response.status, response.statusText, Debug.humanize(timeEnd - timeStart))
 
     if (response.ok) {
-        try {
-            return JSON.parse(body || '{}')
-        } catch (e) {
-            debug('%d %s – failed to parse body: %s', id, url, e.stack)
-            throw new AuthFetchError(e.message, response, body)
-        }
-    } else if ([400, 401].includes(response.status) && !requireNewToken) {
+        return response
+    }
+
+    if ([400, 401].includes(response.status) && !requireNewToken) {
         debug('%d %s – revalidating session')
-        return authFetch<T>(url, session, options, true)
-    } else {
-        debug('%d %s – failed', id, url)
-        const errorCode = parseErrorCode(body)
-        const ErrorClass = ERROR_TYPES.get(errorCode)!
-        throw new ErrorClass(`Request ${id} to ${url} returned with error code ${response.status}.`, response, body, errorCode)
+        return authRequest<T>(url, session, options, true)
+    }
+
+    debug('%s – failed', url)
+    const body = await response.text()
+    const errorCode = parseErrorCode(body)
+    const ErrorClass = ERROR_TYPES.get(errorCode)!
+    throw new ErrorClass(`Request ${debug.namespace} to ${url} returned with error code ${response.status}.`, response, body, errorCode)
+
+}
+/** @internal */
+export default async function authFetch<T extends object>(url: string, session?: Session, opts?: any, requireNewToken = false): Promise<T> {
+    const id = counterId('authFetch')
+    const debug = Debug('utils').extend(id)
+
+    const response = await authRequest(url, session, opts, requireNewToken, debug)
+    // can only be ok response
+    const body = await response.text()
+    try {
+        return JSON.parse(body || '{}')
+    } catch (e) {
+        debug('%s – failed to parse body: %s', url, e.stack)
+        throw new AuthFetchError(e.message, response, body)
     }
 }
