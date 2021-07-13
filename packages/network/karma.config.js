@@ -31,6 +31,7 @@ module.exports = function (config) {
             './test/browser/BrowserWebRtcConnection.test.ts',
             // './test/integration/**/'
             './test/integration/browser-ws-endpoint.test.ts',
+            // './test/unit/WebRtcEndpoint.test.ts',
             // './test/integration/network-stabilization.test.ts',
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
         ],
@@ -39,6 +40,7 @@ module.exports = function (config) {
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
             // './test/integration/**/': ['webpack']
             './test/integration/browser-ws-endpoint.test.ts': ['webpack'],
+            // './test/unit/WebRtcEndpoint.test.ts': ['webpack'],
             // './test/integration/network-stabilization.test.ts': ['webpack'],
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
         },

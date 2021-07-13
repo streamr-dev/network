@@ -2,7 +2,7 @@ import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import { BrowserClientWsConnection } from './BrowserClientWsConnection'
+import {BrowserClientWsConnection, BrowserWebSocketConnectionFactory} from './BrowserClientWsConnection'
 import { AbstractClientWsEndpoint, PeerId } from "./AbstractClientWsEndpoint"
 
 export class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserClientWsConnection> {
@@ -59,7 +59,7 @@ export class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserCli
     }
 
     protected doSetUpConnection(ws: w3cwebsocket, serverPeerInfo: PeerInfo): BrowserClientWsConnection {
-        const connection = new BrowserClientWsConnection(ws, serverPeerInfo)
+        const connection = BrowserWebSocketConnectionFactory.createConnection(ws, serverPeerInfo)
         ws.onmessage = (message) => {
             const parsedMsg = message.toString()
             console.log(parsedMsg)

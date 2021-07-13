@@ -3,8 +3,18 @@ import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
 import { Logger } from '../../helpers/Logger'
+import { WebSocketConnectionFactory } from "./AbstractClientWsEndpoint"
 
 const staticLogger = new Logger(module)
+
+export const BrowserWebSocketConnectionFactory: WebSocketConnectionFactory<BrowserClientWsConnection> = Object.freeze({
+    createConnection(socket: w3cwebsocket, peerInfo: PeerInfo): BrowserClientWsConnection {
+        return new BrowserClientWsConnection(socket, peerInfo)
+    },
+    cleanUp(): void {
+
+    }
+})
 
 export class BrowserClientWsConnection extends AbstractWsConnection {
     private readonly socket: w3cwebsocket

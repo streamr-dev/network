@@ -7,7 +7,12 @@ import { w3cwebsocket } from "websocket"
 
 export type PeerId = string
 export type ServerUrl = string
-type SupportedWs = WebSocket | w3cwebsocket
+export type SupportedWs = WebSocket | w3cwebsocket
+
+export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
+    createConnection(socket: SupportedWs, peerInfo: PeerInfo): C
+    cleanUp(): void
+}
 
 export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> extends AbstractWsEndpoint<C> {
     protected readonly connectionsByServerUrl: Map<ServerUrl, C>

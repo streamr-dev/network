@@ -2,8 +2,8 @@ import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import { NodeClientWsConnection } from './NodeClientWsConnection'
-import {AbstractClientWsEndpoint, PeerId, ServerUrl} from "./AbstractClientWsEndpoint";
+import {NodeClientWsConnection, NodeWebSocketConnectionFactory} from './NodeClientWsConnection'
+import {AbstractClientWsEndpoint, PeerId, ServerUrl} from "./AbstractClientWsEndpoint"
 
 function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     return {
@@ -67,7 +67,7 @@ export class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsC
     }
 
     protected doSetUpConnection(ws: WebSocket, serverPeerInfo: PeerInfo): NodeClientWsConnection {
-        const connection = new NodeClientWsConnection(ws, serverPeerInfo)
+        const connection = NodeWebSocketConnectionFactory.createConnection(ws, serverPeerInfo)
 
         ws.on('message', (message: string | Buffer | Buffer[]) => {
             this.onReceive(connection, message.toString())
