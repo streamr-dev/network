@@ -1,8 +1,8 @@
 import { Logger } from "../../helpers/Logger"
 import { Rtts } from "../../identifiers"
-import { WsConnection } from "./WsConnection"
+import { AbstractWsConnection } from "./AbstractWsConnection"
 
-export type GetConnections = () => Array<WsConnection>
+export type GetConnections = () => Array<AbstractWsConnection>
 
 const logger = new Logger(module)
 

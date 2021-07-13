@@ -1,4 +1,4 @@
-import { ReadyState, WsConnection } from './WsConnection'
+import { ReadyState, AbstractWsConnection } from './AbstractWsConnection'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
 import { Logger } from '../../helpers/Logger'
@@ -8,7 +8,7 @@ import stream from 'stream'
 
 export const staticLogger = new Logger(module)
 
-export class ServerWsConnection extends WsConnection {
+export class ServerWsConnection extends AbstractWsConnection {
     private readonly socket: WebSocket
     private readonly duplexStream: stream.Duplex
     private readonly remoteAddress: string | undefined

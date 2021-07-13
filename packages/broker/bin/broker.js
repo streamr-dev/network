@@ -37,7 +37,7 @@ program
                 // TODO remove process.exit(0)
                 // We should not need explicit exit call if all setTimeouts are cleared.
                 // Currently there is only one leaking timeout in PingPongWs (created
-                // by ClientWsEndpoint from the createNetworkNode() call)
+                // by NodeClientWsEndpoint from the createNetworkNode() call)
                 process.exit(0)
             }
         } catch (err) {

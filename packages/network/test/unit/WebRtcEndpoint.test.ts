@@ -8,7 +8,7 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
-import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -28,8 +28,8 @@ describe('WebRtcEndpoint', () => {
                 id: 'tracker'
             })
             const trackerPeerInfo = PeerInfo.newTracker('tracker')
-            const ep1 = await new ClientWsEndpoint(PeerInfo.newNode('node-1'))
-            const ep2 = await new ClientWsEndpoint(PeerInfo.newNode('node-2'))
+            const ep1 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-1'))
+            const ep2 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
             trackerNode1 = new TrackerNode(ep1)
             trackerNode2 = new TrackerNode(ep2)
             await Promise.all([

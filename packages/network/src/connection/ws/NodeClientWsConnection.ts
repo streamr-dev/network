@@ -1,4 +1,4 @@
-import { ReadyState, WsConnection } from './WsConnection'
+import { ReadyState, AbstractWsConnection } from './AbstractWsConnection'
 import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
@@ -7,7 +7,7 @@ import { Logger } from '../../helpers/Logger'
 
 const staticLogger = new Logger(module)
 
-export class ClientWsConnection extends WsConnection {
+export class NodeClientWsConnection extends AbstractWsConnection {
     private readonly socket: WebSocket
 
     constructor(socket: WebSocket, peerInfo: PeerInfo) {

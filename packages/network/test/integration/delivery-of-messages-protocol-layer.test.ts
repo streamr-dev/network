@@ -12,7 +12,7 @@ import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
-import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -36,8 +36,8 @@ describe('delivery of messages in protocol layer', () => {
         const peerInfo2 = PeerInfo.newNode('node2')
         const trackerPeerInfo = PeerInfo.newTracker('tracker')
         const trackerServerPeerInfo = PeerInfo.newTracker('trackerServer')
-        const wsEndpoint1 = new ClientWsEndpoint(peerInfo1)
-        const wsEndpoint2 = new ClientWsEndpoint(peerInfo2)
+        const wsEndpoint1 = new NodeClientWsEndpoint(peerInfo1)
+        const wsEndpoint2 = new NodeClientWsEndpoint(peerInfo2)
         const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'))
         trackerNode = new TrackerNode(wsEndpoint1)
         trackerNode2 = new TrackerNode(wsEndpoint2)

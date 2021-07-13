@@ -4,7 +4,7 @@ import { PeerInfo } from "../PeerInfo"
 import { Metrics, MetricsContext } from "../../helpers/MetricsContext"
 import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
-import { WsConnection } from './WsConnection'
+import { AbstractWsConnection } from './AbstractWsConnection'
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
     PEER_DISCONNECTED = 'streamr:peer:disconnect',
@@ -36,7 +36,7 @@ export class UnknownPeerError extends Error {
     }
 }
 
-export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEmitter {
+export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends EventEmitter {
     private readonly pingPongWs: PingPongWs
     private readonly connectionById: Map<string, C> = new Map<string, C>()
     private stopped = false
@@ -174,7 +174,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     /**
      * Implementer should invoke this whenever a message is received.
      */
-    protected onReceive(connection: WsConnection, message: string): void {
+    protected onReceive(connection: AbstractWsConnection, message: string): void {
         if (this.stopped) {
             return
         }

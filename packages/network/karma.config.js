@@ -29,13 +29,17 @@ module.exports = function (config) {
         files: [
             './karma-setup.js',
             './test/browser/BrowserWebRtcConnection.test.ts',
+            // './test/integration/**/'
             './test/integration/browser-ws-endpoint.test.ts',
+            // './test/integration/network-stabilization.test.ts',
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
+            // './test/integration/**/': ['webpack']
             './test/integration/browser-ws-endpoint.test.ts': ['webpack'],
+            // './test/integration/network-stabilization.test.ts': ['webpack'],
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
         },
         customLaunchers: {
@@ -89,6 +93,10 @@ module.exports = function (config) {
                         path.resolve(__dirname, "test/browser/LocationManager.ts"),
                     [path.resolve(__dirname, "src/connection/NodeWebRtcConnection.ts")]:
                         path.resolve(__dirname, "src/connection/BrowserWebRtcConnection.ts"),
+                    [path.resolve(__dirname, "src/connection/ws/NodeClientWsEndpoint.ts")]:
+                        path.resolve(__dirname, "src/connection/ws/BrowserClientWsEndpoint.ts"),
+                    [path.resolve(__dirname, "src/connection/ws/NodeClientWsConnection.ts")]:
+                        path.resolve(__dirname, "src/connection/ws/BrowserClientWsConnection.ts"),
                 },
                 fallback: {
                     "fs": require.resolve('browserify-fs'),

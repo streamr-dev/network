@@ -7,7 +7,7 @@ import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
-import { ClientWsEndpoint } from "../connection/ws/ClientWsEndpoint"
+import { NodeClientWsEndpoint } from "../connection/ws/NodeClientWsEndpoint"
 import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 
 export enum Event {
@@ -34,11 +34,11 @@ export interface TrackerNode {
 export type UUID = string
 
 export class TrackerNode extends EventEmitter {
-    private readonly endpoint: ClientWsEndpoint
+    private readonly endpoint: NodeClientWsEndpoint
     private readonly logger: Logger
 
     // ServerWsEndpoint
-    constructor(endpoint: ClientWsEndpoint) {
+    constructor(endpoint: NodeClientWsEndpoint) {
         super()
         this.endpoint = endpoint
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))

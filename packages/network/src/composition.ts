@@ -14,7 +14,7 @@ import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
-import { ClientWsEndpoint } from './connection/ws/ClientWsEndpoint'
+import { NodeClientWsEndpoint } from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import { NodeWebRtcConnectionFactory } from "./connection/NodeWebRtcConnection"
 
@@ -101,7 +101,7 @@ export const createNetworkNode = ({
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
-    const endpoint = new ClientWsEndpoint(peerInfo, metricsContext, pingInterval)
+    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, pingInterval)
     const trackerNode = new TrackerNode(endpoint)
 
     const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)

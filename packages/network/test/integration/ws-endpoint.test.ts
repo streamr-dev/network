@@ -5,7 +5,7 @@ import { waitForEvent, wait } from 'streamr-test-utils'
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker } from '../../src/composition'
-import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
 import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
@@ -28,7 +28,7 @@ describe('ws-endpoint', () => {
         const clients = []
         const promises: Promise<any>[] = []
         for (let i = 0; i < 5; i++) {
-            const client = new ClientWsEndpoint(PeerInfo.newNode(`client-${i}`))
+            const client = new NodeClientWsEndpoint(PeerInfo.newNode(`client-${i}`))
 
             promises.push(waitForEvent(endpoints[i], Event.PEER_CONNECTED))
 
@@ -54,7 +54,7 @@ describe('ws-endpoint', () => {
     })
 
     it('server and client form correct peerInfo on connection', async () => {
-        const client = new ClientWsEndpoint(PeerInfo.newNode('client'))
+        const client = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
         const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'))
 
         const e1 = waitForEvent(client, Event.PEER_CONNECTED)
