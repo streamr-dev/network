@@ -1,4 +1,4 @@
-import SPID  from '../../../src/utils/SPID'
+import { SPID } from '../../../src/utils/SPID'
 
 describe('SPID', () => {
     const STREAM_ID = 'test-stream-id'

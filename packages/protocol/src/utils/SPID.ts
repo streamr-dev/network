@@ -19,17 +19,22 @@ export type SPIDObject = {
  */
 export type SPIDObjectPartial = Partial<SPIDObject>
 
+export type SPIDShape = { id: string, partition: number }
+
 /**
  * SPID or String representing a SPID
  * Object cases can be typechecked
  * TODO: SPID string type safety
  */
-export type SPIDLike = SPID | string | SPIDObject | { id: string, partition: number }
+export type SPIDLike = SPID | string | SPIDObject | SPIDShape
 
 /**
  * Flexible input type
  */
-export type SPIDLikePartial = SPIDLike | SPIDObjectPartial | Partial<{ id: string, partition: number }>
+export type SPIDLikePartial = SPIDLike | SPIDObjectPartial | Partial<SPIDShape>
+
+/* Must be options object */
+export type SPIDLikeObject = Exclude<SPIDLike, string>
 
 class SPIDValidationError extends Error {
     data: SPIDLikePartial
@@ -57,7 +62,7 @@ class SPIDValidationError extends Error {
  * ```
  * See tests for more usage examples.
  */
-export default class SPID {
+export class SPID {
     /** stream id */
     public readonly id: string
     /** stream partition */
@@ -137,7 +142,7 @@ export default class SPID {
             // @ts-expect-error object should have one of these, validated anyway
             const streamId = spidLike.streamId || spidLike.id
             // @ts-expect-error object should have one of these, validated anyway
-            const partition = spidLike.streamPartition || spidLike.partition
+            const partition = spidLike.streamPartition != null ? spidLike.streamPartition : spidLike.partition
             // try parse if a value was passed, but fall back to undefined i.e. default
             const streamPartition = partition != null ? Number.parseFloat(partition) : undefined
             return { streamId, streamPartition }
