@@ -14,7 +14,10 @@ describe('ServerWsEndpoint', () => {
     let serverWsEndpoint: ServerWsEndpoint | undefined = undefined
 
     afterEach(async () => {
-        await serverWsEndpoint?.stop()
+        try {
+            await serverWsEndpoint?.stop()
+        } catch (err) {
+        }
     })
 
     test('receives unencrypted connections', async () => {
@@ -27,13 +30,14 @@ describe('ServerWsEndpoint', () => {
         serverWsEndpoint = new ServerWsEndpoint('127.0.0.1', wssPort1, false, httpServer, PeerInfo.newTracker('tracker'))
 
         const webSocketClient = new w3cwebsocket(
-            serverWsEndpoint.getUrl() + '/ws',
-            undefined,
-            undefined,
-            { 'streamr-peer-id': 'peerId' },
+            serverWsEndpoint.getUrl() + '/ws'
         )
-        webSocketClient.onopen = () => {
-            webSocketClient.close()
+        webSocketClient.onmessage = (message) => {
+            const { uuid, peerId } = JSON.parse(message.data.toString())
+            if (uuid && peerId) {
+                webSocketClient.send(JSON.stringify({uuid, peerId: 'peerId'}))
+                webSocketClient.close()
+            }
         }
         webSocketClient.onerror = (error) => { throw error }
         await waitForCondition(() => webSocketClient.readyState === webSocketClient.CLOSED)
@@ -54,11 +58,15 @@ describe('ServerWsEndpoint', () => {
             serverWsEndpoint.getUrl() + '/ws',
             undefined,
             undefined,
-            { 'streamr-peer-id': 'peerId' },
+            undefined,
             { rejectUnauthorized: false }
         )
-        webSocketClient.onopen = () => {
-            webSocketClient.close()
+        webSocketClient.onmessage = (message) => {
+            const { uuid, peerId } = JSON.parse(message.data.toString())
+            if (uuid && peerId) {
+                webSocketClient.send(JSON.stringify({uuid, peerId: 'peerId'}))
+                webSocketClient.close()
+            }
         }
         webSocketClient.onerror = (error) => { throw error }
         await waitForCondition(() => webSocketClient.readyState === webSocketClient.CLOSED)
