@@ -23,7 +23,9 @@ async function fetchStream(url: string, session: Session, opts = {}, abortContro
         ...opts,
     })
 
-    const stream: Transform = response.body.pipe(split2((message: string) => StreamMessage.deserialize(message)))
+    const stream: Transform = response.body.pipe(split2((message: string) => {
+        return StreamMessage.deserialize(message)
+    }))
     stream.once('close', () => {
         abortController.abort()
     })
@@ -67,15 +69,15 @@ export type ResendRangeOptions = {
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
 function isResendLast(options: any): options is ResendLastOptions {
-    return 'last' in options && options.last
+    return options && 'last' in options && options.last != null
 }
 
 function isResendFrom(options: any): options is ResendFromOptions {
-    return 'from' in options && !('to' in options) && options.from
+    return options && 'from' in options && !('to' in options) && options.from != null
 }
 
 function isResendRange(options: any): options is ResendRangeOptions {
-    return 'from' in options && 'to' in options && options.to && options.from
+    return options && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
 export default class Resend implements Context {
@@ -163,7 +165,12 @@ export default class Resend implements Context {
         const messageStream = new MessageStream(this)
         messageStream.from((async function* readStream(this: Resend) {
             const dataStream = await fetchStream(url, this.client.client.session)
-            yield* dataStream
+            try {
+                yield* dataStream
+            } finally {
+                this.debug('destroy')
+                dataStream.destroy()
+            }
         }.bind(this)()))
         return messageStream as MessageStream<unknown> as MessageStream<T>
     }
@@ -213,5 +220,12 @@ export default class Resend implements Context {
             publisherId,
             msgChainId,
         })
+    }
+
+    async stop() {
+        const registryTask = this.getRegistry()
+        this.getRegistry.reset()
+        const registry = await registryTask
+        registry.stop()
     }
 }

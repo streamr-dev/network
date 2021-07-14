@@ -41,12 +41,17 @@ export default class NodeRegistry implements Context {
     }
 
     async getNodes(): Promise<NodeRegistryItem[]> {
-        const result = await this.contract.getNodes()
-        return result.map((node: any) => {
+        const nodes = await this.contract.getNodes()
+        return nodes.map((node: any) => {
             return {
                 address: node.nodeAddress,
                 url: JSON.parse(node.metadata).http,
             }
         })
+    }
+
+    stop() {
+        this.contract.removeAllListeners()
+        this.contract.provider.removeAllListeners()
     }
 }

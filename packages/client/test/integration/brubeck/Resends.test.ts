@@ -186,6 +186,16 @@ describeRepeats('resends', () => {
             await waitForStorage(published[published.length - 1])
         }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
+        it.skip('gives zero results for last 0', async () => {
+            const sub = await subscriber.resend({
+                streamId: stream.id,
+                streamPartition: 0,
+                last: 0,
+            })
+            const receivedMsgs = await sub.collect()
+            expect(receivedMsgs).toHaveLength(0)
+        })
+
         describe('last', () => {
             it('can resend all', async () => {
                 const sub = await subscriber.resend({
