@@ -5,7 +5,7 @@ import { waitForEvent, waitForCondition, runAndWaitForEvents } from 'streamr-tes
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker } from '../../src/composition'
-import { BrowserClientWsEndpoint } from '../../src/connection/ws/BrowserClientWsEndpoint'
+import BrowserClientWsEndpoint from '../../src/connection/ws/BrowserClientWsEndpoint'
 import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 

@@ -3,14 +3,16 @@ import { Logger } from "../helpers/Logger"
 import { NameDirectory } from "../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 
-export const BrowserWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+const BrowserWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new BrowserWebRtcConnection(opts)
     },
     cleanUp(): void {
-        
+
     }
 })
+
+export default BrowserWebRtcConnectionFactory
 
 export class BrowserWebRtcConnection extends WebRtcConnection {
 	private readonly logger: Logger
@@ -186,7 +188,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
 	    dataChannel.onmessage = (msg) => {
 	        this.logger.trace('dc.onmessage')
-	        this.emitMessage(msg.toString())
+	        this.emitMessage(msg.data.toString())
 	    }
 	}
 

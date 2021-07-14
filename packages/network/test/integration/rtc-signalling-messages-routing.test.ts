@@ -7,7 +7,7 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { startTracker } from '../../src/composition'
-import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 const { RelayMessage, ErrorMessage } = TrackerLayer
 

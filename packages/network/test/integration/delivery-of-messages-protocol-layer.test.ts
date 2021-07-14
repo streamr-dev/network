@@ -11,8 +11,8 @@ import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProto
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
-import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
+import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer

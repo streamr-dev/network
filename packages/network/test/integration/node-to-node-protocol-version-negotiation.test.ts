@@ -9,9 +9,9 @@ import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProto
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
-import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
@@ -129,7 +129,10 @@ describe('Node-to-Node protocol version negotiation', () => {
     it('if there are no shared versions the connection is closed', async () => {
         let errors = 0
         try {
-            await ep3.connect('node-endpoint1', 'tracker')
+            await Promise.all([
+                ep3.connect('node-endpoint1', 'tracker'),
+                ep1.connect('node-endpoint3', 'tracker')
+            ])
         } catch (err) {
             errors += 1
         }

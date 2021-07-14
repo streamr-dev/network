@@ -2,10 +2,10 @@ import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import {BrowserClientWsConnection, BrowserWebSocketConnectionFactory} from './BrowserClientWsConnection'
+import { BrowserClientWsConnection, BrowserWebSocketConnectionFactory } from './BrowserClientWsConnection'
 import { AbstractClientWsEndpoint, PeerId } from "./AbstractClientWsEndpoint"
 
-export class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserClientWsConnection> {
+export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserClientWsConnection> {
     constructor(
         peerInfo: PeerInfo,
         metricsContext?: MetricsContext,
@@ -36,6 +36,8 @@ export class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserCli
                 const ws = new w3cwebsocket(
                     `${serverUrl}/ws?peerInfo=${this.peerInfo.peerId}`,
                     undefined,
+                    undefined,
+                    undefined,
                     undefined
                 )
                 let connection: BrowserClientWsConnection | undefined
@@ -61,12 +63,13 @@ export class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserCli
     protected doSetUpConnection(ws: w3cwebsocket, serverPeerInfo: PeerInfo): BrowserClientWsConnection {
         const connection = BrowserWebSocketConnectionFactory.createConnection(ws, serverPeerInfo)
         ws.onmessage = (message) => {
-            const parsedMsg = message.toString()
-            console.log(parsedMsg)
-            if (parsedMsg === 'ping') {
-                console.log('PING RECEIVED')
+            const parsedMsg = message.data.toString()
+            if (parsedMsg === 'pong') {
+                console.log(this.peerInfo.peerId, 'PONG RECEIVED')
+                connection.onPong()
+            } else {
+                this.onReceive(connection, parsedMsg)
             }
-            this.onReceive(connection, parsedMsg)
         }
 
         ws.onclose = (event) => {

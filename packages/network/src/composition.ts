@@ -14,9 +14,9 @@ import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
-import { NodeClientWsEndpoint } from './connection/ws/NodeClientWsEndpoint'
+import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from "./connection/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from "./connection/NodeWebRtcConnection"
 
 export {
     Location,
@@ -118,6 +118,16 @@ export const createNetworkNode = ({
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
     ))
+    // console.log('-------------------------------------------------------------------------------')
+    // console.log('-------------------------------------------------------------------------------')
+    // console.log('-------------------------------------------------------------------------------')
+    // console.log('-------------------------------------------------------------------------------')
+    // console.log('-------------------------------------------------------------------------------')
+    // console.log('-------------------------------------------------------------------------------')
+    // console.log('-------------------------------------------------------------------------------')
+    // console.log('-------------------------------------------------------------------------------')
+    // // @ts-expect-error private
+    // console.log(nodeToNode.endpoint)
     return new NetworkNode({
         peerInfo,
         trackers,

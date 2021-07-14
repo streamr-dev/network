@@ -7,8 +7,8 @@ import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
-import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
+import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker

@@ -1,4 +1,4 @@
-import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import { MessageQueue} from "../../src/connection/MessageQueue"
 import { ConstructorOptions } from "../../src/connection/WebRtcConnection"

@@ -118,12 +118,18 @@ describe('check status message flow between tracker and two nodes', () => {
             let nodeOneStatus: any = null
             let nodeTwoStatus: any = null
 
-            nodeOne.start()
-            nodeTwo.start()
+            await Promise.all([
+                nodeOne.start(),
+                nodeTwo.start()
+            ])
 
             nodeOne.subscribe(streamId, 0)
             nodeTwo.subscribe(streamId, 0)
 
+            // @ts-expect-error private field
+            tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
+                console.log(nodeId)
+            })
             await Promise.all([
                 waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
                 waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED),
@@ -132,17 +138,22 @@ describe('check status message flow between tracker and two nodes', () => {
 
             // @ts-expect-error private field
             tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
+                console.log(nodeId)
                 if (nodeId === 'node-1') {
                     nodeOneStatus = statusMessage.status
                     receivedTotal += 1
+                    console.log('STATUS node-1', receivedTotal)
                 }
 
                 if (nodeId === 'node-2') {
                     nodeTwoStatus = statusMessage.status
                     receivedTotal += 1
+                    console.log('STATUS node-2', receivedTotal)
                 }
 
                 if (receivedTotal === 2) {
+                    console.log(nodeOneStatus.rtts['node-2'])
+                    console.log(nodeTwoStatus.rtts['node-1'])
                     expect(nodeOneStatus.rtts['node-2']).toBeGreaterThanOrEqual(0)
                     expect(nodeTwoStatus.rtts['node-1']).toBeGreaterThanOrEqual(0)
                     resolve(true)

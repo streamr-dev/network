@@ -1,4 +1,4 @@
-import { BrowserWebRtcConnectionFactory } from "../../src/connection/BrowserWebRtcConnection"
+import BrowserWebRtcConnectionFactory from "../../src/connection/BrowserWebRtcConnection"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import { MessageQueue} from "../../src/connection/MessageQueue"
 import { ConstructorOptions } from "../../src/connection/WebRtcConnection"

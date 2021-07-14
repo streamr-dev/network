@@ -38,8 +38,10 @@ export class PingPongWs {
             } else {
                 try {
                     connection.ping()
+                    console.log('ping')
                     logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.getRtt())
                 } catch (e) {
+                    console.log("HERE")
                     logger.warn(`terminating connection because error thrown when attempting to ping %s: %s`,
                         connection.getPeerId(), e)
                     connection.terminate()

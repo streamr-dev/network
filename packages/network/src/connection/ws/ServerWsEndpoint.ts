@@ -8,12 +8,13 @@ import http from 'http'
 import WebSocket from 'ws'
 import { once } from 'events'
 import queryString from 'query-string'
+import {add} from "husky/lib";
 
 export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     private readonly serverUrl: string
     private readonly httpServer: http.Server | https.Server
     private readonly wss: WebSocket.Server
-
+    private readonly remoteAddressPortToPeerId: Map<string, string>
     constructor(
         host: string,
         port: number,
@@ -27,19 +28,20 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 
         this.httpServer = httpServer
         this.serverUrl = `${sslEnabled ? 'wss' : 'ws'}://${host}:${port}`
-
+        this.remoteAddressPortToPeerId = new Map()
         this.wss = this.startWsServer()
     }
 
     startWsServer()  {
-        let peerId = ''
         return new WebSocket.Server({
             server: this.httpServer,
             maxPayload: 1024 * 1024
         }).on('headers', (headers: string[], request) => {
+            const addressPort = `${request.socket.remoteAddress}:${request.socket.remotePort}`
             if (request.url) {
                 const parse = queryString.parse(request.url.replace('/ws', ''))
-                peerId = parse.peerInfo as string
+                const peerId = parse.peerInfo as string
+                this.remoteAddressPortToPeerId.set(addressPort, peerId)
             }
             headers.push(`${AbstractWsEndpoint.PEER_ID_HEADER}: ${this.peerInfo.peerId}`)
 
@@ -48,8 +50,12 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         }).on('listening', () => {
             this.logger.trace('listening on %s', this.getUrl())
         }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
+            let peerId = request.headers[AbstractWsEndpoint.PEER_ID_HEADER] as string
+            const addressPort = `${request.socket.remoteAddress}:${request.socket.remotePort}`
+            if (!peerId && this.remoteAddressPortToPeerId.get(addressPort)) {
+                peerId = this.remoteAddressPortToPeerId.get(addressPort) as string
+            }
 
-            peerId = peerId || request.headers[AbstractWsEndpoint.PEER_ID_HEADER] as string
             if (Array.isArray(peerId)) {
                 this.logger.trace(`dropped new connection: ${AbstractWsEndpoint.PEER_ID_HEADER} set multiple times.`)
                 this.metrics.record('open:missingParameter', 1)
@@ -82,8 +88,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                     request.socket.remoteAddress,
                     PeerInfo.newNode(peerId)
                 )
-                duplexStream.on('data', (data: WebSocket.Data) => {
-                    this.onReceive(connection, data.toString())
+                duplexStream.on('data', async (data: WebSocket.Data) => {
+                    const parsed = data.toString()
+                    if (parsed === 'ping') {
+                        console.log(peerId, 'ping received')
+                        await this.send(peerId, 'pong')
+                    } else {
+                        this.onReceive(connection, data.toString())
+                    }
                 })
                 ws.on('pong', () => {
                     connection.onPong()

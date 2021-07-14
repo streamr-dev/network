@@ -37,9 +37,9 @@ describe('optimization: do not propagate to sender', () => {
             trackers: [trackerInfo]
         })
 
-        n1.start()
-        n2.start()
-        n3.start()
+        await n1.start()
+        await n2.start()
+        await n3.start()
 
         // Become subscribers (one-by-one, for well connected graph)
         n1.subscribe('stream-id', 0)

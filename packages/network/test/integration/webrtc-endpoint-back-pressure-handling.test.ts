@@ -4,12 +4,12 @@ import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/composition'
-import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { wait } from 'streamr-test-utils'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker

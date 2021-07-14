@@ -7,7 +7,7 @@ import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
-import { NodeClientWsEndpoint } from "../connection/ws/NodeClientWsEndpoint"
+import NodeClientWsEndpoint from "../connection/ws/NodeClientWsEndpoint"
 import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 
 export enum Event {
@@ -151,7 +151,7 @@ export class TrackerNode extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                this.logger.warn('invalid message from %s: "%s"', peerInfo, rawMessage)
+                this.logger.warn('TrackerNode invalid message from %s: "%s"', peerInfo, rawMessage)
             }
         }
     }

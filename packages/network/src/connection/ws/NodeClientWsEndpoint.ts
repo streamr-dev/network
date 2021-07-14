@@ -2,8 +2,8 @@ import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import {NodeClientWsConnection, NodeWebSocketConnectionFactory} from './NodeClientWsConnection'
-import {AbstractClientWsEndpoint, PeerId, ServerUrl} from "./AbstractClientWsEndpoint"
+import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
+import { AbstractClientWsEndpoint, PeerId, ServerUrl } from "./AbstractClientWsEndpoint"
 
 function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     return {
@@ -11,7 +11,7 @@ function toHeaders(peerInfo: PeerInfo): { [key: string]: string } {
     }
 }
 
-export class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> {
+export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> {
     constructor(
         peerInfo: PeerInfo,
         metricsContext?: MetricsContext,

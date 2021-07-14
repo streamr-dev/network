@@ -28,21 +28,23 @@ module.exports = function (config) {
           
         files: [
             './karma-setup.js',
-            './test/browser/BrowserWebRtcConnection.test.ts',
-            // './test/integration/**/'
-            './test/integration/browser-ws-endpoint.test.ts',
-            // './test/unit/WebRtcEndpoint.test.ts',
-            // './test/integration/network-stabilization.test.ts',
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
+            // './test/browser/BrowserWebRtcConnection.test.ts',
+            // './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
+            // './test/integration/**/!(NodeWebRtcConnection*).ts/',
+
+            // './test/integration/tracker-node-status.test.ts',
+
+            // './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
-            './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
-            // './test/integration/**/': ['webpack']
-            './test/integration/browser-ws-endpoint.test.ts': ['webpack'],
-            // './test/unit/WebRtcEndpoint.test.ts': ['webpack'],
-            // './test/integration/network-stabilization.test.ts': ['webpack'],
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
+            // './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
+            // './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
+            // './test/integration/**/!(NodeWebRtcConnection*).ts/': ['webpack'],
+
+            // './test/integration/tracker-node-status.test.ts': ['webpack'],
+
+            // './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
         },
         customLaunchers: {
             CustomElectron: {

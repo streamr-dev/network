@@ -6,7 +6,7 @@ import { startTracker, Tracker } from '../../src/composition'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
-import { NodeClientWsEndpoint } from '../../src/connection/ws/NodeClientWsEndpoint'
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 const WAIT_TIME = 200
 
