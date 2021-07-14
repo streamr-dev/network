@@ -1,6 +1,21 @@
 import { Gate, instanceId } from './index'
 import { Debug } from './log'
 import { Context } from './Context'
+
+function isError(err: any): err is Error {
+    if (!err) { return false }
+
+    if (err instanceof Error) { return true }
+
+    return !!(
+        err
+        && err.stack
+        && err.message
+        && typeof err.stack === 'string'
+        && typeof err.message === 'string'
+    )
+}
+
 /**
  * Implements an async buffer.
  * Push items into buffer, push will async block once buffer is full.
@@ -10,7 +25,7 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
     readonly id
     readonly debug
 
-    protected readonly buffer: T[] = []
+    protected readonly buffer: (T | Error)[] = []
     readonly bufferSize: number
 
     /** open when writable */
@@ -47,6 +62,7 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
         this.buffer.push(item)
         this.updateWriteGate()
         this.readGate.open()
+
         return this.writeGate.check()
     }
 
@@ -61,6 +77,20 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
         }
 
         this.readGate.lock()
+        this.writeGate.lock()
+    }
+
+    /**
+     * Prevent further writes.
+     * Allows buffer to flush before ending.
+     */
+    endWrite(err?: Error) {
+        this.done = true
+        if (err && !this.error) {
+            this.error = err
+        }
+
+        this.readGate.open()
         this.writeGate.lock()
     }
 
@@ -88,7 +118,7 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
 
     private async* iterate() {
         try {
-            while (!this.done) {
+            while (this.buffer.length || !this.done) {
                 const ok = await this.readGate.check() // eslint-disable-line no-await-in-loop
                 if (!ok) {
                     // no more reading
@@ -100,6 +130,10 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
                     const v = this.buffer.shift()!
                     // maybe open write gate
                     this.updateWriteGate()
+                    if (isError(v)) {
+                        throw v
+                    }
+
                     yield v
                 }
 
@@ -110,8 +144,10 @@ export class PushBuffer<T> implements AsyncGenerator<T>, Context {
                 }
             }
 
-            if (this.error) {
-                throw this.error
+            const { error } = this
+            if (error) {
+                this.error = undefined
+                throw error
             }
         } finally {
             this.buffer.length = 0
@@ -146,9 +182,9 @@ export async function pull<T>(src: AsyncGenerator<T>, dest: PushBuffer<T>) {
             }
         }
     } catch (err) {
-        dest.end(err)
+        dest.endWrite(err)
     } finally {
-        dest.end()
+        dest.endWrite()
     }
 }
 

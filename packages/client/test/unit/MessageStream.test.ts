@@ -1,14 +1,16 @@
 import { wait } from 'streamr-test-utils'
 import { counterId } from '../../src/utils'
 import { Context } from '../../src/utils/Context'
-import { Debug, Msg } from '../utils'
+import { Debug, Msg, LeaksDetector } from '../utils'
 import MessageStream from '../../src/brubeck/MessageStream'
 import { StreamMessage, MessageID } from 'streamr-client-protocol'
 
 describe('MessageStream', () => {
     let context: Context
+    let leaksDetector: LeaksDetector
 
     beforeEach(async () => {
+        leaksDetector = new LeaksDetector()
         const id = counterId('MessageStreamTest')
         context = {
             id,
@@ -16,16 +18,24 @@ describe('MessageStream', () => {
         }
     })
 
+    afterEach(async () => {
+        await leaksDetector.checkNoLeaks()
+    })
+
     it('works', async () => {
         const s = new MessageStream(context)
+        leaksDetector.add(s.id, s)
         const testMessage = Msg()
+        leaksDetector.add('testMessage', testMessage)
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
         })
+        leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         const received = []
         for await (const msg of s) {
+            leaksDetector.add('receivedMessage', msg)
             received.push(msg)
             break
         }
@@ -35,38 +45,51 @@ describe('MessageStream', () => {
 
     it('handles errors', async () => {
         const testMessage = Msg()
-        const s = new MessageStream<typeof testMessage>(context)
         const err = new Error(counterId('expected error'))
-        s.debug(err)
+        leaksDetector.add('err', err)
+        leaksDetector.add('testMessage', testMessage)
+        const streamMessage = new StreamMessage({
+            messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+            content: testMessage,
+        })
+        leaksDetector.add('streamMessage', streamMessage)
+        const s = new MessageStream<typeof testMessage>(context)
+        leaksDetector.add(s.id, s)
         const received: StreamMessage<typeof testMessage>[] = []
-        await expect(async () => {
-            await s.throw(err)
-        }).rejects.toThrow(err)
+        s.from((async function* g() {
+            yield streamMessage
+
+            throw err
+        }()))
+
         await expect(async () => {
             for await (const msg of s) {
+                leaksDetector.add('receivedMessage', msg)
                 received.push(msg)
-                break
             }
         }).rejects.toThrow(err)
 
-        expect(received).toEqual([])
+        expect(received).toEqual([streamMessage])
     })
 
     it('handles error during iteration', async () => {
         const testMessage = Msg()
+        leaksDetector.add('testMessage', testMessage)
         const s = new MessageStream<typeof testMessage>(context)
+        leaksDetector.add(s.id, s)
         const err = new Error(counterId('expected error'))
-        s.debug(err)
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
         })
         s.push(streamMessage)
+        leaksDetector.add('streamMessage', streamMessage)
         const onEnd = jest.fn()
         s.on('end', onEnd)
         const received: StreamMessage<typeof testMessage>[] = []
         await expect(async () => {
             for await (const msg of s) {
+                leaksDetector.add('receivedMessage', msg)
                 received.push(msg)
                 throw err
             }
@@ -78,7 +101,9 @@ describe('MessageStream', () => {
 
     it('emits errors', async () => {
         const testMessage = Msg()
+        leaksDetector.add('testMessage', testMessage)
         const s = new MessageStream<typeof testMessage>(context)
+        leaksDetector.add(s.id, s)
         const onMessageStreamError = jest.fn()
         s.on('error', onMessageStreamError)
         const err = new Error(counterId('expected error'))
@@ -87,14 +112,18 @@ describe('MessageStream', () => {
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
         })
+        leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         const onEnd = jest.fn()
         s.on('end', onEnd)
         const received: StreamMessage<typeof testMessage>[] = []
         await expect(async () => {
             for await (const msg of s) {
+                leaksDetector.add('receivedMessage', msg)
                 received.push(msg)
-                await s.throw(err)
+                setTimeout(() => {
+                    s.throw(err).catch(() => {})
+                })
             }
         }).rejects.toThrow(err)
         expect(onEnd).toHaveBeenCalledTimes(1)
@@ -103,9 +132,11 @@ describe('MessageStream', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    it('processes buffer before handling errors', async () => {
+    it('processes buffer before handling errors with endWrite', async () => {
         const testMessage = Msg()
+        leaksDetector.add('testMessage', testMessage)
         const s = new MessageStream<typeof testMessage>(context)
+        leaksDetector.add(s.id, s)
         const err = new Error(counterId('expected error'))
 
         const onEnd = jest.fn()
@@ -114,12 +145,14 @@ describe('MessageStream', () => {
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
         })
+        leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
-        s.end(err)
+        s.endWrite(err)
         expect(onEnd).toHaveBeenCalledTimes(0)
         const received: StreamMessage<typeof testMessage>[] = []
         await expect(async () => {
             for await (const msg of s) {
+                leaksDetector.add('receivedMessage', msg)
                 received.push(msg)
             }
         }).rejects.toThrow(err)
@@ -129,13 +162,12 @@ describe('MessageStream', () => {
     })
 
     describe('when not started', () => {
-        it('emits end with cancel', async () => {
+        it('emits end with return', async () => {
             const testMessage = Msg()
             const s = new MessageStream<typeof testMessage>(context)
-
             const onEnd = jest.fn()
             s.on('end', onEnd)
-            await s.cancel()
+            await s.return()
 
             expect(onEnd).toHaveBeenCalledTimes(1)
         })
@@ -160,7 +192,9 @@ describe('MessageStream', () => {
             s.on('end', onEnd)
             s.on('error', onMessageStreamError)
             const err = new Error(counterId('expected error'))
-            await s.throw(err)
+            await expect(async () => {
+                await s.throw(err)
+            }).rejects.toThrow(err)
 
             expect(onEnd).toHaveBeenCalledTimes(1)
             expect(onMessageStreamError).toHaveBeenCalledTimes(1)
@@ -184,7 +218,7 @@ describe('MessageStream', () => {
         expect(received).toEqual([streamMessage.getParsedContent()])
     })
 
-    it('can cancel collect', async () => {
+    it('can cancel collect with return', async () => {
         const testMessage = Msg()
         const s = new MessageStream<typeof testMessage>(context)
 
@@ -197,7 +231,7 @@ describe('MessageStream', () => {
         s.push(streamMessage)
         const collectTask = s.collect()
         await wait(10)
-        await s.cancel()
+        await s.return()
         const received = await collectTask
 
         expect(onEnd).toHaveBeenCalledTimes(1)

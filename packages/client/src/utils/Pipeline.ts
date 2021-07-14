@@ -64,6 +64,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         }, Promise.resolve()) // eslint-disable-line promise/no-promise-in-callback
     }
 
+    endWrite(err?: Error) {
+        return this.buffer?.endWrite(err)
+    }
+
     throw(err: Error) {
         this.buffer?.end()
         return this.iterator.throw(err)
@@ -74,7 +78,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.iterator.return(v)
     }
 
-    next() {
+    async next() {
         return this.iterator.next()
     }
 
@@ -86,6 +90,8 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 await this.source.return(undefined)
             }
         } finally {
+            // @ts-expect-error
+            this.source = undefined
             await this.runFinally(error)
         }
     }
@@ -96,15 +102,15 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
             throw new PipelineError(this, 'no transforms')
         }
 
-        // each pipeline step creates a generator
-        // which is then passed into the next transform
-        // end result is output of last transform's generator
-        // pulled into an async buffer
-        const line = this.transforms.reduce((prev: AsyncGenerator, transform) => {
-            return transform(prev)
-        }, this.source)
-
         try {
+            const line = this.transforms.reduce((prev: AsyncGenerator, transform) => {
+                // each pipeline step creates a generator
+                // which is then passed into the next transform
+                // end result is output of last transform's generator
+                // pulled into an async buffer
+                return transform(prev)
+            }, this.source)
+
             this.buffer = new PullBuffer<OutType>(line, this.bufferSize)
             yield* this.buffer
         } finally {

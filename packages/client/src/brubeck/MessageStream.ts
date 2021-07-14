@@ -83,11 +83,6 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         return msgs
     }
 
-    async* iterate() {
-        yield* this.pipeline
-        this.isDone = true
-    }
-
     [Symbol.asyncIterator]() {
         if (this.isIterating) {
             throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
@@ -110,6 +105,10 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         return pull(source, this.buffer)
     }
 
+    endWrite(error?: Error) {
+        return this.buffer.endWrite(error)
+    }
+
     end(error?: Error) {
         return this.buffer.end(error)
     }
@@ -124,8 +123,11 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         return this
     }
 
+    async* iterate() {
+        yield* this.pipeline
+    }
+
     private async runFinally(err?: Error) {
-        this.debug('runFinally')
         let error = err
         try {
             await this.finallyTasks.reduce(async (prev, task) => {
@@ -139,13 +141,12 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         }
     }
 
-    next() {
+    async next() {
         this.didStart = true
         return this.iterator.next()
     }
 
     async return(v?: OutType) {
-        this.debug('return', this.isDone)
         if (this.isDone) {
             await this.onDone
             const result: IteratorResult<OutType> = { done: true, value: v }
@@ -153,12 +154,13 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         }
 
         this.isDone = true
-        this.buffer.end() // prevents deadlock
-        if (!this.didStart) {
-            await this.pipeline.return()
-        }
+        this.buffer.endWrite()
 
         try {
+            if (!this.didStart) {
+                await this.pipeline.return()
+            }
+
             return await this.iterator.return(v)
         } finally {
             await this.runFinally()
@@ -172,12 +174,13 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         }
 
         this.isDone = true
-        this.buffer.end() // prevents deadlock
-        if (!this.didStart) {
-            await this.pipeline.return(undefined)
-        }
+        this.buffer.endWrite(error)
 
         try {
+            if (!this.didStart) {
+                await this.pipeline.return()
+            }
+
             return await this.iterator.throw(error)
         } finally {
             await this.runFinally()

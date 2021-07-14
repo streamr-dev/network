@@ -1,9 +1,9 @@
 import { wait } from 'streamr-test-utils'
 import { PushBuffer, pull } from '../../src/utils/PushBuffer'
+import { counterId } from '../../src/utils'
+import { LeaksDetector } from '../utils'
 
 import IteratorTest, { expected } from './IteratorTest'
-
-import { counterId } from '../../src/utils'
 
 const WAIT = 20
 
@@ -18,15 +18,29 @@ async function* generate(items = expected, waitTime = WAIT) {
 }
 
 describe('PushBuffer', () => {
+    let leaksDetector: LeaksDetector
+
+    beforeEach(async () => {
+        leaksDetector = new LeaksDetector()
+    })
+
+    afterEach(async () => {
+        await leaksDetector.checkNoLeaks()
+    })
+
     IteratorTest('PushBuffer', () => {
         const pushBuffer = new PushBuffer()
-        pull(generate(), pushBuffer)
+        leaksDetector.add('PushBuffer', pushBuffer)
+        const gen = generate()
+        leaksDetector.add('generator', gen)
+        pull(gen, pushBuffer)
         return pushBuffer
     })
 
     describe('basics', () => {
         it('blocks push when buffer full', async () => {
             const pushBuffer = new PushBuffer(3)
+            leaksDetector.add('PushBuffer', pushBuffer)
             expect(await pushBuffer.push(expected[0])).toBe(true)
             expect(await pushBuffer.push(expected[1])).toBe(true)
             const pushResolved1 = jest.fn((v) => v)
@@ -47,6 +61,7 @@ describe('PushBuffer', () => {
 
         it('push resolves false if ended', async () => {
             const pushBuffer = new PushBuffer(3)
+            leaksDetector.add('PushBuffer', pushBuffer)
             expect(await pushBuffer.push(expected[0])).toBe(true)
             pushBuffer.end()
             expect(await pushBuffer.push(expected[1])).toBe(false)
@@ -55,6 +70,8 @@ describe('PushBuffer', () => {
         it('push resolves false if errored', async () => {
             const err = new Error(counterId('expected error'))
             const pushBuffer = new PushBuffer(3)
+            leaksDetector.add('PushBuffer', pushBuffer)
+            leaksDetector.add('error', err)
             expect(await pushBuffer.push(expected[0])).toBe(true)
             expect(await pushBuffer.push(expected[1])).toBe(true)
             const pushTask = pushBuffer.push(expected[2]) // this should block then resolve false on pushBuffer throw
@@ -122,6 +139,57 @@ describe('PushBuffer', () => {
             expect(await task3).toBe(true)
         })
 
+        it('can push insisde pull', async () => {
+            const items = expected.slice()
+            const pushBuffer = new PushBuffer<number>()
+            await pushBuffer.push(items.shift()!)
+            const received: number[] = []
+            for await (const msg of pushBuffer) {
+                received.push(msg)
+                const nextItem = items.shift()!
+                if (nextItem != null) {
+                    await pushBuffer.push(nextItem)
+                } else {
+                    break
+                }
+            }
+
+            expect(received).toEqual(expected)
+        })
+
+        it('can read after endWrite', async () => {
+            const pushBuffer = new PushBuffer<number>()
+            await pushBuffer.push(expected[0])
+            await pushBuffer.push(expected[1])
+            await pushBuffer.push(expected[2])
+            pushBuffer.endWrite()
+            const received: number[] = []
+            for await (const msg of pushBuffer) {
+                received.push(msg)
+            }
+
+            expect(received).toEqual(expected.slice(0, 3))
+        })
+
+        it('can defer error with endWrite', async () => {
+            const err = new Error(counterId('expected'))
+            const pushBuffer = new PushBuffer<number>()
+            await pushBuffer.push(expected[0])
+            await pushBuffer.push(expected[1])
+            await pushBuffer.push(expected[2])
+            pushBuffer.endWrite(err)
+            const ok = await pushBuffer.push(expected[3])
+            expect(ok).toEqual(false)
+            const received: number[] = []
+            await expect(async () => {
+                for await (const msg of pushBuffer) {
+                    received.push(msg)
+                }
+            }).rejects.toThrow(err)
+
+            expect(received).toEqual(expected.slice(0, 3))
+        })
+
         describe('pull', () => {
             it('pulls until buffer full', async () => {
                 const pushBuffer = new PushBuffer(3)
@@ -161,6 +229,28 @@ describe('PushBuffer', () => {
                 // make sure generator ended
                 expect(onFinally).toHaveBeenCalledTimes(1)
                 expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+            })
+
+            it('defers errors', async () => {
+                const pushBuffer = new PushBuffer<number>()
+                const pushBuffer2 = new PushBuffer<number>(1)
+                const err = new Error(counterId('expected'))
+                async function* generateWithLast() {
+                    yield* generate()
+                    throw err
+                }
+
+                pull(generateWithLast(), pushBuffer)
+                pull(pushBuffer, pushBuffer2)
+                const received: number[] = []
+                await expect(async () => {
+                    for await (const msg of pushBuffer2) {
+                        received.push(msg)
+                        await wait(WAIT * 3)
+                    }
+                }).rejects.toThrow(err)
+
+                expect(received).toEqual(expected)
             })
         })
     })
