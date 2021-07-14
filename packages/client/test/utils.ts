@@ -415,11 +415,11 @@ export class LeaksDetector {
     }
 
     async getLeaks(): Promise<string[]> {
+        await wait(10) // wait a moment for gc to run?
         const results = await Promise.all([...this.leakDetectors.entries()].map(async ([key, d]) => {
             const isLeaking = await d.isLeaking()
             return isLeaking ? key : undefined
         }))
-
         return results.filter((key) => key != null) as string[]
     }
 
