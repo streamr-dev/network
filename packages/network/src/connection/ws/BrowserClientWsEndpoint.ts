@@ -34,7 +34,7 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         return new Promise<string>((resolve, reject) => {
             try {
                 const ws = new w3cwebsocket(
-                    `${serverUrl}/ws?peerInfo=${this.peerInfo.peerId}`,
+                    serverUrl,
                     undefined,
                     undefined,
                     undefined,
@@ -43,7 +43,26 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
                 let connection: BrowserClientWsConnection | undefined
 
                 ws.onopen = () => {
-                    resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
+                    const peerId = serverPeerInfo.peerId
+                    this.handshakeTimeoutRefs[peerId] = setTimeout(() => {
+                        ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from ${peerId}`)
+                        delete this.handshakeTimeoutRefs[peerId]
+                        reject(`Handshake not received from ${peerId}`)
+                    }, this.handshakeTimer)
+                }
+
+                ws.onmessage = (message) => {
+                    try {
+                        const { uuid, peerId } = JSON.parse(message.data.toString())
+                        if (uuid && peerId === serverPeerInfo.peerId) {
+                            ws.send(JSON.stringify({uuid, peerId: this.peerInfo.peerId}))
+                            resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
+                        } else {
+                            this.logger.trace('Expected a handshake message got: ' + message.data.toString())
+                        }
+                    } catch (err) {
+                        this.logger.trace(err)
+                    }
                 }
 
                 ws.onerror = (error) => {
@@ -65,7 +84,6 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         ws.onmessage = (message) => {
             const parsedMsg = message.data.toString()
             if (parsedMsg === 'pong') {
-                console.log(this.peerInfo.peerId, 'PONG RECEIVED')
                 connection.onPong()
             } else {
                 this.onReceive(connection, parsedMsg)

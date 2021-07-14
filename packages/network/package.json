@@ -70,6 +70,7 @@
     "@types/jest": "^26.0.23",
     "@types/lodash": "^4.14.169",
     "@types/lru-cache": "^5.1.0",
+    "@types/node": "^16.3.2",
     "@types/pino": "^6.3.8",
     "@types/uuid": "^8.3.0",
     "@types/websocket": "^1.0.3",

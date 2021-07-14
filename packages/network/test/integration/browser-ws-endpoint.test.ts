@@ -15,7 +15,7 @@ describe('ws-endpoint', () => {
     it('create five endpoints and init connection between them, should be able to start and stop successfully', async () => {
         for (let i = 0; i < 5; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const endpoint = await startServerWsEndpoint('127.0.0.1', 30690 + i, PeerInfo.newNode(`endpoint-${i}`))
+            const endpoint = await startServerWsEndpoint('127.0.0.1', 30740 + i, PeerInfo.newNode(`endpoint-${i}`))
                 .catch((err) => {
                     throw err
                 })
@@ -32,7 +32,7 @@ describe('ws-endpoint', () => {
             // eslint-disable-next-line no-await-in-loop
             await runAndWaitForEvents([
                 () => {
-                    client.connect(endpoints[i].getUrl(), PeerInfo.newTracker('tracker'))
+                    client.connect(endpoints[i].getUrl(), PeerInfo.newTracker(`endpoint-${i}`))
                 }], [
                 [client, Event.PEER_CONNECTED]
             ])
@@ -69,7 +69,7 @@ describe('ws-endpoint', () => {
     })
 
     describe('test direct connections from simple websocket', () => {
-        const trackerPort = 38481
+        const trackerPort = 38482
         let tracker: Tracker
 
         beforeEach(async () => {
@@ -85,12 +85,10 @@ describe('ws-endpoint', () => {
         })
 
         it('tracker checks that peerId is given by incoming connections', async () => {
-            const ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws`,
-                undefined, {
-                    headers: {}
-                })
+            const ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws`)
             const close = await waitForEvent(ws, 'close')
-            expect(close).toEqual([DisconnectionCode.MISSING_REQUIRED_PARAMETER, 'Error: peerId not given in header or query parameter'])
+            expect(close[0]).toEqual(DisconnectionCode.FAILED_HANDSHAKE)
+            expect(close[1]).toContain('Handshake not received from connection behind UUID')
         })
     })
 })

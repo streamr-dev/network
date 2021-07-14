@@ -5,6 +5,7 @@ import { Metrics, MetricsContext } from "../../helpers/MetricsContext"
 import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
 import { AbstractWsConnection } from './AbstractWsConnection'
+
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
     PEER_DISCONNECTED = 'streamr:peer:disconnect',
@@ -15,8 +16,8 @@ export enum Event {
 
 export enum DisconnectionCode {
     GRACEFUL_SHUTDOWN = 1000,
-    MISSING_REQUIRED_PARAMETER = 1002,
-    DEAD_CONNECTION = 1003,
+    FAILED_HANDSHAKE = 1002,
+    DEAD_CONNECTION = 1003
 }
 
 export enum DisconnectionReason {
@@ -41,10 +42,11 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
     private readonly connectionById: Map<string, C> = new Map<string, C>()
     private stopped = false
 
+    protected handshakeTimeoutRefs: { [key: string]: NodeJS.Timeout }
     protected readonly metrics: Metrics
     protected readonly peerInfo: PeerInfo
     protected readonly logger: Logger
-
+    protected readonly handshakeTimer: number
     public static PEER_ID_HEADER = 'streamr-peer-id'
 
     protected constructor(
@@ -57,6 +59,8 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         this.peerInfo = peerInfo
         this.logger = new Logger(module)
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
+        this.handshakeTimeoutRefs = {}
+        this.handshakeTimer = 3000
 
         this.metrics = metricsContext.create('WsEndpoint')
             .addRecordedMetric('inSpeed')
@@ -124,6 +128,10 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
     stop(): Promise<void> {
         this.stopped = true
         this.pingPongWs.stop()
+        Object.values(this.handshakeTimeoutRefs).map((timeout) => {
+            clearTimeout(timeout)
+        })
+        this.handshakeTimeoutRefs = {}
         return this.doStop()
     }
 

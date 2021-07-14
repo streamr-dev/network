@@ -35,7 +35,7 @@ describe('ws-endpoint', () => {
             //const nextEndpoint = i + 1 === 5 ? endpoints[0] : endpoints[i + 1]
 
             // eslint-disable-next-line no-await-in-loop
-            client.connect(endpoints[i].getUrl(), PeerInfo.newTracker('server'))
+            client.connect(endpoints[i].getUrl(), PeerInfo.newTracker(`endpoint-${i}`))
             clients.push(client)
         }
 
@@ -89,15 +89,10 @@ describe('ws-endpoint', () => {
         })
 
         it('tracker checks that peerId is given by incoming connections', async () => {
-            const ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws`,
-                undefined, {
-                    headers: {}
-                })
+            const ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws`)
             const close = await waitForEvent(ws, 'close')
-            expect(close).toEqual([
-                DisconnectionCode.MISSING_REQUIRED_PARAMETER,
-                `Error: peerId not given in header or query parameter`
-            ])
+            expect(close[0]).toEqual(DisconnectionCode.FAILED_HANDSHAKE)
+            expect(close[1]).toContain('Handshake not received from connection behind UUID')
         })
     })
 })

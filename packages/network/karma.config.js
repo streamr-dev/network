@@ -28,9 +28,9 @@ module.exports = function (config) {
           
         files: [
             './karma-setup.js',
-            // './test/browser/BrowserWebRtcConnection.test.ts',
-            // './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
-            // './test/integration/**/!(NodeWebRtcConnection*).ts/',
+            './test/browser/BrowserWebRtcConnection.test.ts',
+            './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
+            './test/integration/**/!(NodeWebRtcConnection*).ts/',
 
             // './test/integration/tracker-node-status.test.ts',
 
@@ -38,9 +38,9 @@ module.exports = function (config) {
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
-            // './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
-            // './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
-            // './test/integration/**/!(NodeWebRtcConnection*).ts/': ['webpack'],
+            './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
+            './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
+            './test/integration/**/!(NodeWebRtcConnection*).ts/': ['webpack'],
 
             // './test/integration/tracker-node-status.test.ts': ['webpack'],
 

@@ -26,14 +26,14 @@ describe('Signalling error scenarios', () => {
         nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
-            disconnectionWaitTime: 2000,
-            newWebrtcConnectionTimeout: 4000
+            disconnectionWaitTime: 4000,
+            newWebrtcConnectionTimeout: 8000
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
-            disconnectionWaitTime: 2000,
-            newWebrtcConnectionTimeout: 4000
+            disconnectionWaitTime: 4000,
+            newWebrtcConnectionTimeout: 8000
         })
 
         nodeOne.start()
@@ -126,8 +126,8 @@ describe('Signalling error scenarios', () => {
             [ nodeOne.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER ],
             // @ts-expect-error private field
             [ nodeTwo.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER ],
-        ])
-    })
+        ], 15000)
+    }, 20000)
 
     it('nodes recover if one signaller connection fails during signalling', async () => {
 
@@ -146,12 +146,12 @@ describe('Signalling error scenarios', () => {
             [nodeOne.trackerNode, TrackerNodeEvent.TRACKER_DISCONNECTED ],
             // @ts-expect-error private field
             [nodeOne.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER],
-            [nodeOne, NodeEvent.NODE_CONNECTED, 10001],
-            [nodeTwo, NodeEvent.NODE_CONNECTED, 9998]
-        ], 9996)
+            [nodeOne, NodeEvent.NODE_CONNECTED, 15000],
+            [nodeTwo, NodeEvent.NODE_CONNECTED, 15000]
+        ], 20000)
         // @ts-expect-error private field
         expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual(['node-2'])
         // @ts-expect-error private field
         expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
-    }, 20000)
+    }, 30000)
 })

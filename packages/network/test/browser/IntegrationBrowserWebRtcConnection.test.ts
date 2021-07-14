@@ -1,10 +1,9 @@
 import { once } from 'events'
-import { DescriptionType } from 'node-datachannel'
 import { waitForCondition, wait } from 'streamr-test-utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
-import BrowserWebRtcConnectionFactory, { BrowserWebRtcConnection } from '../../src/connection/BrowserWebRtcConnection'
+import { BrowserWebRtcConnection } from '../../src/connection/BrowserWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/DeferredConnectionAttempt'
-import {ConstructorOptions} from "../../src/connection/WebRtcConnection";
+import { ConstructorOptions } from "../../src/connection/WebRtcConnection"
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
  * is "abstracted away" by local functions.
