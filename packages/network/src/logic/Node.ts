@@ -526,7 +526,7 @@ export class Node extends EventEmitter {
         this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
             this.trackerNode.connectToTracker(trackerInfo.ws, PeerInfo.newTracker(trackerInfo.id))
                 .catch((err) => {
-                    this.logger.warn('could not connect to tracker %s, reason: %j', trackerInfo.ws, err.toString())
+                    this.logger.warn('could not connect to tracker %s, reason: %j', trackerInfo.ws, err)
                 })
         })
     }
