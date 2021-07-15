@@ -1,14 +1,13 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
 
 // import { counterId } from '../utils'
+import OrderMessages from './OrderMessages'
 import { Pipeline } from '../utils/Pipeline'
-import { Context } from '../utils/Context'
-import { validateOptions } from '../stream/utils'
 
 import Validator from '../subscribe/Validator'
 import MessageStream from './MessageStream'
-import Decrypt from '../subscribe/Decrypt'
-import StreamrClient from '..'
+// import Decrypt from '../subscribe/Decrypt'
+import { BrubeckClient } from './BrubeckClient'
 
 export { SignatureRequiredError } from '../subscribe/Validator'
 
@@ -16,22 +15,19 @@ export { SignatureRequiredError } from '../subscribe/Validator'
  * Subscription message processing pipeline
  */
 
-export default function MessagePipeline<T>(
-    context: Context,
-    client: StreamrClient,
+export default function MessagePipeline<T extends MessageContent | unknown>(
+    client: BrubeckClient,
     source: AsyncGenerator<StreamMessage<T>>,
-    opts: any = {},
+    spid: SPID,
+    options: any = {},
 ): MessageStream<T> {
-    const options: any = validateOptions(opts)
     // const { key } = options as any
     // const id = counterId('MessagePipeline') + key
 
     /* eslint-disable object-curly-newline */
-    const {
-        validate = Validator(client, options),
-        // orderingUtil = OrderMessages(client, options),
-        decrypt = Decrypt(client, options),
-    } = options as any
+    const validate = Validator(client.client, options)
+    const orderingUtil = OrderMessages<T>(client, spid, options)
+    // const decrypt = Decrypt(client.client, options)
     /* eslint-enable object-curly-newline */
 
     const seenErrors = new WeakSet()
@@ -64,9 +60,7 @@ export default function MessagePipeline<T>(
             }
         })
         // order messages (fill gaps)
-        // .pipe(async function* ValidateMessages(src: AsyncIterable<StreamMessage>) {
-    // orderingUtil
-        // })
+        .pipe(orderingUtil)
         // validate
         .pipe(async function* ValidateMessages(src) {
             for await (const streamMessage of src) {
@@ -80,12 +74,14 @@ export default function MessagePipeline<T>(
             }
         })
         // decrypt
+        /*
         .pipe(async function* DecryptMessages(src) {
             yield* decrypt(src, async (err: Error, streamMessage: StreamMessage) => {
                 ignoreMessages.add(streamMessage)
                 await onError(err)
             })
         })
+        */
         // parse content
         .pipe(async function* ParseMessages(src) {
             for await (const streamMessage of src) {
@@ -110,20 +106,20 @@ export default function MessagePipeline<T>(
             }
         })
 
-    const messageStream = new MessageStream<T>(context)
+    const messageStream = new MessageStream<T>(client)
     messageStream.from(pipeline)
     return messageStream
-    // .finally(async (err) => {
-    // // decrypt.stop()
-    // // await source.cancel(err)
-    // try {
-    // // if (err) {
-    // // await onError(err)
-    // // }
-    // } finally {
-    // await onFinally(err)
-    // }
-    // }
+        .onFinally(async () => {
+            // decrypt.stop()
+            // // await source.cancel(err)
+            // try {
+            // // if (err) {
+            // // await onError(err)
+            // // }
+            // } finally {
+            // await onFinally(err)
+            // }
+        })
 
     // return Object.assign(p, {
     // id,

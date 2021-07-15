@@ -1,119 +1,124 @@
-// import { Utils, StreamMessage } from 'streamr-client-protocol'
+import { OrderingUtil, StreamMessage, SPID } from 'streamr-client-protocol'
 
-// import { Pipeline, PushBuffer, PumpBuffer } from '../utils/Pipeline'
-// import { validateOptions } from '../stream/utils'
+import { PushBuffer } from '../utils/PushBuffer'
+import { counterId } from '../utils'
 
-// import resendStream from './resendStream'
 import { BrubeckClient } from './BrubeckClient'
-
-// const { OrderingUtil } = Utils
-
-// let ID = 0
+import MessageStream from './MessageStream'
 
 /**
- * Wraps OrderingUtil into a pipeline.
+ * Wraps OrderingUtil into a PushBuffer.
  * Implements gap filling
  */
 
-export default function OrderMessages(_client: BrubeckClient, _options = {}) {
-    /*
-    const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages } = client.options
-    const { streamId, streamPartition, gapFill = true } = validateOptions(options)
-    let enabled = !!(orderMessages && gapFill && maxGapRequests)
-    const debug = client.debug.extend(`OrderMessages::${ID}`)
-    ID += 1
+export default function OrderMessages<T>(client: BrubeckClient, spid: SPID, options: any = {}) {
+    return async function* OrderMessagesGenerator(src: AsyncGenerator<StreamMessage<T>>) {
+        const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages } = client.options
+        const { gapFill = true } = options
+        const id = counterId('OrderMessages')
+        let enabled = !!(orderMessages && gapFill && maxGapRequests)
+        const debug = client.debug.extend(id)
 
-    let done = false
-    const resendStreams = new Set() // holds outstanding resends for cleanup
-    const inBuffer = new PushBuffer<StreamMessage>()
+        let done = false
+        const resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup
+        const outBuffer = new PushBuffer<StreamMessage<T>>()
 
-    const orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
-        if (!outStream.isWritable() || done) {
-            return
+        const orderingUtil = new OrderingUtil(spid.id, spid.partition, (orderedMessage) => {
+            if (outBuffer.isDone() || done) {
+                return
+            }
+
+            outBuffer.push(orderedMessage as StreamMessage<T>)
+        }, async (from, to, publisherId, msgChainId) => {
+            if (done || !enabled) { return }
+            debug('gap %o', {
+                spid, publisherId, msgChainId, from, to,
+            })
+
+            let resendMessageStream!: MessageStream<T>
+
+            try {
+                resendMessageStream = await client.resends.range(spid, {
+                    fromTimestamp: from.timestamp,
+                    toTimestamp: to.timestamp,
+                    fromSequenceNumber: from.sequenceNumber,
+                    toSequenceNumber: to.sequenceNumber,
+                    publisherId,
+                    msgChainId,
+                })
+                resendMessageStream.onFinally(() => {
+                    resendStreams.delete(resendMessageStream)
+                })
+                resendStreams.add(resendMessageStream)
+                if (done) { return }
+
+                for await (const streamMessage of resendMessageStream) {
+                    if (done) { return }
+                    orderingUtil.add(streamMessage)
+                }
+            } catch (err) {
+                if (done) { return }
+
+                if (err.code === 'NO_STORAGE_NODES') {
+                    // ignore NO_STORAGE_NODES errors
+                    // if stream has no storage we can't do resends
+                    enabled = false // eslint-disable-line require-atomic-updates
+                    orderingUtil.disable()
+                } else {
+                    outBuffer.endWrite(err)
+                }
+            } finally {
+                if (resendMessageStream != null) {
+                    resendStreams.delete(resendMessageStream)
+                }
+            }
+        }, gapFillTimeout, retryResendAfter, enabled ? maxGapRequests : 0)
+
+        let inputClosed = false
+
+        function maybeClose() {
+            // we can close when:
+            // input has closed (i.e. all messages sent)
+            // AND
+            // no gaps are pending
+            // AND
+            // gaps have been filled or failed
+            // NOTE ordering util cannot have gaps if queue is empty
+            if (inputClosed && orderingUtil.isEmpty()) {
+                outBuffer.endWrite()
+            }
         }
-        outStream.push(orderedMessage)
-    }, async (from, to, publisherId, msgChainId) => {
-        if (done || !enabled) { return }
-        debug('gap %o', {
-            streamId, streamPartition, publisherId, msgChainId, from, to,
+
+        orderingUtil.on('drain', () => {
+            maybeClose()
         })
 
-        // eslint-disable-next-line no-use-before-define
-        const resendMessageStream = resendStream(client, {
-            streamId, streamPartition, from, to, publisherId, msgChainId,
+        orderingUtil.on('error', () => {
+            // TODO: handle gapfill errors without closing stream or logging
+            maybeClose() // probably noop
         })
+
+        async function addToOrderingUtil() {
+            try {
+                for await (const msg of src) {
+                    orderingUtil.add(msg)
+                }
+                inputClosed = true
+                maybeClose()
+            } catch (err) {
+                outBuffer.endWrite(err)
+            }
+        }
 
         try {
-            resendStreams.add(resendMessageStream)
-            await resendMessageStream.subscribe()
-            if (done) { return }
-
-            for await (const { streamMessage } of resendMessageStream) {
-                if (done) { return }
-                orderingUtil.add(streamMessage)
-            }
-        } catch (err) {
-            if (done) { return }
-
-            if (err.code === 'NO_STORAGE_NODES') {
-                // ignore NO_STORAGE_NODES errors
-                // if stream has no storage we can't do resends
-                enabled = false // eslint-disable-line require-atomic-updates
-                orderingUtil.disable()
-            } else {
-                // outStream.push(err)
-            }
+            addToOrderingUtil()
+            yield* outBuffer
         } finally {
-            resendStreams.delete(resendMessageStream)
-            await resendMessageStream.cancel()
-        }
-    }, gapFillTimeout, retryResendAfter, enabled ? maxGapRequests : 0)
-
-    const markMessageExplicitly = orderingUtil.markMessageExplicitly.bind(orderingUtil)
-
-    let inputClosed = false
-
-    function maybeClose() {
-        // we can close when:
-        // input has closed (i.e. all messages sent)
-        // AND
-        // no gaps are pending
-        // AND
-        // gaps have been filled or failed
-        // NOTE ordering util cannot have gaps if queue is empty
-        if (inputClosed && orderingUtil.isEmpty()) {
-            // outStream.end()
+            done = true
+            orderingUtil.clearGaps()
+            resendStreams.forEach((s) => s.end())
+            resendStreams.clear()
+            orderingUtil.clearGaps()
         }
     }
-
-    orderingUtil.on('drain', () => {
-        maybeClose()
-    })
-
-    orderingUtil.on('error', () => {
-        // TODO: handle gapfill errors without closing stream or logging
-        maybeClose() // probably noop
-    })
-
-    // eslint-disable-next-line require-yield
-    const pipeline = new Pipeline(inBuffer).pipe(async function* WriteToOrderingUtil(src) {
-        for await (const msg of src) {
-            orderingUtil.add(msg)
-            // note no yield
-            // orderingUtil writes to outStream itself
-        }
-        inputClosed = true
-        maybeClose()
-    }).onFinally(async () => {
-        done = true
-        orderingUtil.clearGaps()
-        // resendStreams.forEach((s) => s.unsubscribe())
-        resendStreams.clear()
-        orderingUtil.clearGaps()
-    })
-
-    return Object.assign(pipeline, {
-        markMessageExplicitly,
-    })
-    */
 }

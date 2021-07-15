@@ -1,4 +1,4 @@
-import { MessageContent, StreamMessage } from 'streamr-client-protocol'
+import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
 
 import { Scaffold, instanceId } from '../utils'
 import { validateOptions } from '../stream/utils'
@@ -7,6 +7,7 @@ import MessageStream from './MessageStream'
 import { BrubeckClient } from './BrubeckClient'
 import { PushBuffer } from '../utils/PushBuffer'
 import { Context } from '../utils/Context'
+import SubscribePipeline from './SubscribePipeline'
 
 export type SubscriptionSessionOptions = ReturnType<typeof validateOptions>
 
@@ -39,8 +40,8 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         this.streamPartition = this.options.streamPartition
         this.onMessage = this.onMessage.bind(this)
         this.buffer = new PushBuffer<StreamMessage<T>>()
-        this.pipeline = new MessageStream(this)
-        this.pipeline.from(this.buffer)
+        const spid = SPID.from({ id: this.streamId, partition: this.streamPartition })
+        this.pipeline = SubscribePipeline<T>(this.client, this.buffer, spid, spid.toObject())
         this.pipeline.on('error', (error: Error) => this.debug('error', error))
         this.pipeline.once('end', () => {
             this.removeAll()
