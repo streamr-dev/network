@@ -3,11 +3,12 @@ import {startTracker, Tracker} from 'streamr-network'
 import { Todo } from '../types'
 import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from '../utils'
 import { Wallet } from 'ethers'
+import { Broker } from '../broker'
 
 const httpPort = 47741
 const wsPort = 47742
 const networkPort = 47743
-const trackerPort = 47745
+const trackerPort = 47744
 
 const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: string, source: string) => {
     const sourceStream = nodeAddress + '/streamr/node/metrics/' + source
@@ -66,7 +67,7 @@ const promisifySubscribe = (
 
 describe('per-node metrics', () => {
     let tracker: Tracker
-    let storageNode: Todo
+    let storageNode: Broker
     let client1: StreamrClient
     let legacyStream: Stream
     let nodeAddress: string
