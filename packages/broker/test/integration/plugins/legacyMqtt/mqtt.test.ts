@@ -38,7 +38,7 @@ describe('mqtt: end-to-end', () => {
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
-            id: 'tracker'
+            id: 'tracker-1'
         })
         broker1 = await startBroker({
             name: 'broker1',
