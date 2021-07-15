@@ -11,7 +11,8 @@
     "reporting",
     "streamrUrl",
     "streamrAddress",
-    "storageNodeConfig"
+    "storageNodeConfig",
+    "apiAuthentication"
   ],
   "additionalProperties": false,
   "properties": {

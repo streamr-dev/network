@@ -1,25 +1,16 @@
-import { Wallet } from 'ethers'
+import { utils, Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import clientOptions from '../config'
+import { clientOptions, getSidechainTestWallet, tokenAdminWalletSidechain } from '../devEnvironment'
 import { DataUnion, JoinRequestState } from '../../../src/dataunion/DataUnion'
 import { createMockAddress, expectInvalidAddress, fakePrivateKey } from '../../utils'
 import authFetch from '../../../src/rest/authFetch'
 import { getEndpointUrl } from '../../../src/utils'
 
-const log = debug('StreamrClient::DataUnion::integration-test-member')
+const { parseEther } = utils
 
-const joinMember = async (memberWallet: Wallet, secret: string|undefined, dataUnionAddress: string) => {
-    const memberClient = new StreamrClient({
-        ...clientOptions,
-        auth: {
-            privateKey: memberWallet.privateKey,
-        }
-    } as any)
-    const du = await memberClient.safeGetDataUnion(dataUnionAddress)
-    return du.join(secret)
-}
+const log = debug('StreamrClient::DataUnion::integration-test-member')
 
 describe('DataUnion member', () => {
 
@@ -27,9 +18,10 @@ describe('DataUnion member', () => {
     let secret: string
 
     beforeAll(async () => {
-        log('ClientOptions: %O', clientOptions)
+        log('clientOptions: %O', clientOptions)
         const adminClient = new StreamrClient(clientOptions as any)
         dataUnion = await adminClient.deployDataUnion()
+
         // product is needed for join requests to analyze the DU version
         const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
         await authFetch(
@@ -45,7 +37,27 @@ describe('DataUnion member', () => {
             }
         )
         secret = await dataUnion.createSecret()
+
+        // TODO: this should be unnecessary after test wallets are properly set up in smart-contracts-init
+        // send some ETH to a test wallet
+        const memberWallet = getSidechainTestWallet(3)
+        const sendTx = await tokenAdminWalletSidechain.sendTransaction({
+            to: memberWallet.address,
+            value: parseEther('1')
+        })
+        await sendTx.wait()
+
     }, 60000)
+
+    async function getMemberDuObject(memberWallet: Wallet): Promise<DataUnion> {
+        const memberClient = new StreamrClient({
+            ...clientOptions,
+            auth: {
+                privateKey: memberWallet.privateKey,
+            }
+        } as any)
+        return memberClient.safeGetDataUnion(dataUnion.getAddress())
+    }
 
     it('random user is not a member', async () => {
         const userAddress = createMockAddress()
@@ -55,31 +67,47 @@ describe('DataUnion member', () => {
 
     it('join with valid secret', async () => {
         const memberWallet = new Wallet(fakePrivateKey())
-        await joinMember(memberWallet, secret, dataUnion.getAddress())
+        const memberDu = await getMemberDuObject(memberWallet)
+        await memberDu.join(secret)
         const isMember = await dataUnion.isMember(memberWallet.address)
         expect(isMember).toBe(true)
     }, 60000)
 
+    it('part after joining', async () => {
+        const memberWallet = getSidechainTestWallet(3)
+        const memberDu = await getMemberDuObject(memberWallet)
+        await memberDu.join(secret)
+
+        const isMemberBefore = await dataUnion.isMember(memberWallet.address)
+        await memberDu.part()
+        const isMemberAfter = await dataUnion.isMember(memberWallet.address)
+
+        expect(isMemberBefore).toBe(true)
+        expect(isMemberAfter).toBe(false)
+    }, 60000)
+
     it('join with invalid secret', async () => {
         const memberWallet = new Wallet(fakePrivateKey())
-        return expect(() => joinMember(memberWallet, 'invalid-secret', dataUnion.getAddress())).rejects.toThrow('Incorrect data union secret')
+        const memberDu = await getMemberDuObject(memberWallet)
+        return expect(() => memberDu.join('invalid-secret')).rejects.toThrow('Incorrect data union secret')
     }, 60000)
 
     it('join without secret', async () => {
         const memberWallet = new Wallet(fakePrivateKey())
-        const response = await joinMember(memberWallet, undefined, dataUnion.getAddress())
+        const memberDu = await getMemberDuObject(memberWallet)
+        const response = await memberDu.join()
         expect(response.id).toBeDefined()
         expect(response.state).toBe(JoinRequestState.PENDING)
     }, 60000)
 
-    it('add', async () => {
+    it('admin add', async () => {
         const userAddress = createMockAddress()
         await dataUnion.addMembers([userAddress])
         const isMember = await dataUnion.isMember(userAddress)
         expect(isMember).toBe(true)
     }, 60000)
 
-    it('remove', async () => {
+    it('admin remove', async () => {
         const userAddress = createMockAddress()
         await dataUnion.addMembers([userAddress])
         await dataUnion.removeMembers([userAddress])
