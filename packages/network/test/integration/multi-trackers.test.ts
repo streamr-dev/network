@@ -31,7 +31,7 @@ describe('multi trackers', () => {
     let nodeOne: NetworkNode
     let nodeTwo: NetworkNode
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         trackerOne = await startTracker({
             host: '127.0.0.1',
             port: 49000,
@@ -82,7 +82,7 @@ describe('multi trackers', () => {
         ])
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await nodeOne.stop()
         await nodeTwo.stop()
 

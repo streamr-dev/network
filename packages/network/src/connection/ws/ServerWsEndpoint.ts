@@ -40,7 +40,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             this.logger.trace('listening on %s', this.getUrl())
         }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
             const handshakeUUID = v4()
+
             ws.send(JSON.stringify({ uuid: handshakeUUID, peerId: this.peerInfo.peerId }))
+
+            this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
+                ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
+                ws.terminate()
+                delete this.handshakeTimeoutRefs[handshakeUUID]
+            }, this.handshakeTimer)
 
             const duplexStream = WebSocket.createWebSocketStream(ws, {
                 decodeStrings: false
@@ -59,12 +66,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                     this.logger.trace(err)
                 }
             })
-
-            this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
-                ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
-                ws.terminate()
-                delete this.handshakeTimeoutRefs[handshakeUUID]
-            }, this.handshakeTimer)
 
             ws.on('error', (err) => {
                 this.logger.warn('socket for "%s" emitted error: %s', this.peerInfo.peerId, err)
