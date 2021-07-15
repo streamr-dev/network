@@ -135,6 +135,7 @@ describeRepeats('StreamrClient', () => {
             await wait(WAIT_TIME)
         }, TIMEOUT)
 
+        // TODO: uses old client
         it.skip('Stream.publish does not error', async () => {
             await stream.publish({
                 test: 'Stream.publish',

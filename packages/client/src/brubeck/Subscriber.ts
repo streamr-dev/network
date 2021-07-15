@@ -1,12 +1,9 @@
 import { allSettledValues, instanceId } from '../utils'
-import { inspect } from '../utils/log'
 import { Context } from '../utils/Context'
-import { validateOptions } from '../stream/utils'
 import SubscriptionSession from './SubscriptionSession'
-import { StreamPartDefinition } from '..'
 import { BrubeckClient } from './BrubeckClient'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
-import { Stream } from '../stream'
+import { SPIDLike, SPID, StreamMatcher, SPIDLikePartial } from 'streamr-client-protocol'
 
 /**
  * Keeps track of subscriptions.
@@ -24,8 +21,17 @@ export default class Subscriber implements Context {
         this.debug = this.client.debug.extend(this.id)
     }
 
-    async subscribe<T>(opts: StreamPartDefinition, onMessage?: SubscriptionOnMessage<T>) {
-        const sub: Subscription<T> = await this.add(opts)
+    async subscribe<T>(opts: SPIDLikePartial | { stream: SPIDLikePartial }, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
+        if (opts && typeof opts === 'object' && 'stream' in opts) {
+            return this.subscribe(opts.stream, onMessage)
+        }
+
+        const spid = SPID.fromDefaults(opts, { partition: 0 })
+        return this.subscribeTo(spid, onMessage)
+    }
+
+    async subscribeTo<T>(spid: SPID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
+        const sub: Subscription<T> = await this.add(spid)
         if (onMessage) {
             sub.onMessage(onMessage)
         }
@@ -33,13 +39,12 @@ export default class Subscriber implements Context {
         return sub
     }
 
-    async add<T>(opts: StreamPartDefinition): Promise<Subscription<T>> {
-        const options = validateOptions(opts)
-        const { key } = options
+    async add<T>(spid: SPID): Promise<Subscription<T>> {
+        const { key } = spid
 
         // get/create subscription session
         // don't add SubscriptionSession to subSessions until after subscription successfully created
-        const subSession = this.subSessions.get(key) as SubscriptionSession<T> || new SubscriptionSession<T>(this.client, options)
+        const subSession = this.subSessions.get(key) as SubscriptionSession<T> || new SubscriptionSession<T>(this.client, spid)
 
         // create subscription
         const sub = new Subscription<T>(subSession).onFinally(() => {
@@ -63,7 +68,8 @@ export default class Subscriber implements Context {
     }
 
     async remove(sub: Subscription<any>): Promise<void> {
-        const { key } = sub
+        if (!sub) { return }
+        const { key } = sub.spid
         const subSession = this.subSessions.get(key)
         if (subSession) {
             await subSession.remove(sub)
@@ -75,15 +81,15 @@ export default class Subscriber implements Context {
         }
     }
 
-    async unsubscribe(opts?: StreamPartDefinition) {
-        return this.removeAll(opts)
+    async unsubscribe(streamMatcher?: StreamMatcher) {
+        return this.removeAll(streamMatcher)
     }
 
     /**
      * Remove all subscriptions, optionally only those matching options.
      */
-    async removeAll(options?: StreamPartDefinition) {
-        const subs = !options ? this.getAllSubscriptions() : this.getSubscriptions(options)
+    async removeAll(streamMatcher?: StreamMatcher) {
+        const subs = !streamMatcher ? this.getAllSubscriptions() : this.getSubscriptions(streamMatcher)
         return allSettledValues(subs.map((sub) => (
             this.remove(sub)
         )))
@@ -105,9 +111,9 @@ export default class Subscriber implements Context {
      * Count all matching subscriptions.
      */
 
-    count(options?: StreamPartDefinition): number {
-        if (options === undefined) { return this.countAll() }
-        return this.getSubscriptions(options).length
+    count(streamMatcher?: StreamMatcher): number {
+        if (streamMatcher === undefined) { return this.countAll() }
+        return this.getSubscriptions(streamMatcher).length
     }
 
     /**
@@ -125,8 +131,8 @@ export default class Subscriber implements Context {
      * Get subscription session for matching sub options.
      */
 
-    getSubscriptionSession<T = unknown>(options: StreamPartDefinition): SubscriptionSession<T> | undefined {
-        const { key } = validateOptions(options)
+    getSubscriptionSession<T = unknown>(spidLike: SPIDLike): SubscriptionSession<T> | undefined {
+        const { key } = SPID.from(spidLike)
         const subSession = this.subSessions.get(key)
         if (!subSession) {
             return undefined
@@ -140,35 +146,16 @@ export default class Subscriber implements Context {
     }
 
     /**
-     * Get subscriptions matching options.
+     * Get subscriptions matching streamId or streamId + streamPartition
      */
 
-    getSubscriptions<T = unknown>(options?: StreamPartDefinition) {
-        if (!options) {
+    getSubscriptions<T = unknown>(streamMatcher?: StreamMatcher) {
+        if (!streamMatcher) {
             return this.getAllSubscriptions()
         }
 
-        let streamId: string
-        let streamPartition: number | undefined
-        if (options instanceof Stream) {
-            streamId = options.id
-        } else if (typeof options === 'string') {
-            streamId = options
-        } else {
-            if (!options.streamId) {
-                throw new Error(`options.streamId required, got ${inspect(options)}`)
-            }
-
-            streamId = options.streamId
-            streamPartition = options.streamPartition != null ? options.streamPartition : undefined
-        }
-
         return [...this.subSessions.values()].filter((subSession) => {
-            if (streamId !== subSession.streamId) { return false } // no matching streamId
-
-            if (streamPartition == null) { return true } // if no partition passed, only need matching streamId
-
-            return streamPartition === subSession.streamPartition // matches both
+            return subSession.spid.matches(streamMatcher)
         }).flatMap((subSession) => ([
             ...subSession.subscriptions
         ])) as Subscription<T>[]

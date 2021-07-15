@@ -25,7 +25,7 @@ export default function MessagePipeline<T extends MessageContent | unknown>(
     // const id = counterId('MessagePipeline') + key
 
     /* eslint-disable object-curly-newline */
-    const validate = Validator(client.client, options)
+    const validate = Validator(client.client, spid)
     const orderingUtil = OrderMessages<T>(client, spid, options)
     // const decrypt = Decrypt(client.client, options)
     /* eslint-enable object-curly-newline */

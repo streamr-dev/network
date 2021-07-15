@@ -1,15 +1,12 @@
 import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
 
 import { Scaffold, instanceId } from '../utils'
-import { validateOptions } from '../stream/utils'
 import Subscription from './Subscription'
 import MessageStream from './MessageStream'
 import { BrubeckClient } from './BrubeckClient'
 import { PushBuffer } from '../utils/PushBuffer'
 import { Context } from '../utils/Context'
 import SubscribePipeline from './SubscribePipeline'
-
-export type SubscriptionSessionOptions = ReturnType<typeof validateOptions>
 
 /**
  * Sends Subscribe/Unsubscribe requests as needed.
@@ -20,9 +17,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     id
     debug
     client: BrubeckClient
-    options: SubscriptionSessionOptions
-    streamId
-    streamPartition
+    spid: SPID
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()
     pendingRemoval: Set<Subscription<T>> = new Set()
@@ -31,17 +26,14 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     buffer
     pipeline: MessageStream<T>
 
-    constructor(client: BrubeckClient, options: SubscriptionSessionOptions) {
+    constructor(client: BrubeckClient, spid: SPID) {
         this.client = client
-        this.options = validateOptions(options)
         this.id = instanceId(this)
         this.debug = this.client.debug.extend(this.id)
-        this.streamId = this.options.streamId
-        this.streamPartition = this.options.streamPartition
+        this.spid = spid
         this.onMessage = this.onMessage.bind(this)
         this.buffer = new PushBuffer<StreamMessage<T>>()
-        const spid = SPID.from({ id: this.streamId, partition: this.streamPartition })
-        this.pipeline = SubscribePipeline<T>(this.client, this.buffer, spid, spid.toObject())
+        this.pipeline = SubscribePipeline<T>(this.client, this.buffer, spid)
         this.pipeline.on('error', (error: Error) => this.debug('error', error))
         this.pipeline.once('end', () => {
             this.removeAll()
@@ -61,9 +53,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
             return
         }
 
-        const streamId = msg.getStreamId()
-        const streamPartition = msg.getStreamPartition()
-        if (this.options.streamId !== streamId || this.options.streamPartition !== streamPartition) {
+        if (!msg.spid.equals(this.spid)) {
             return
         }
 
@@ -75,7 +65,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         this.active = true
         const node = await this.client.getNode()
         node.addMessageListener(this.onMessage)
-        node.subscribe(this.streamId, this.streamPartition)
+        node.subscribe(this.spid.id, this.spid.partition)
     }
 
     private async unsubscribe() {
@@ -83,7 +73,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         this.active = false
         const node = await this.client.getNode()
         node.removeMessageListener(this.onMessage)
-        node.unsubscribe(this.streamId, this.streamPartition)
+        node.subscribe(this.spid.id, this.spid.partition)
     }
 
     updateSubscriptions = Scaffold([
