@@ -29,7 +29,6 @@ module.exports = function (config) {
             './test/integration/**/!(NodeWebRtcConnection*).ts/',
 
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
-            './test/unit/ServerWsEndpoint.test.ts/'
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
@@ -38,7 +37,6 @@ module.exports = function (config) {
             './test/integration/**/!(NodeWebRtcConnection*).ts/': ['webpack'],
 
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
-            './test/unit/ServerWsEndpoint.test.ts/': ['webpack'],
         },
         customLaunchers: {
             CustomElectron: {
