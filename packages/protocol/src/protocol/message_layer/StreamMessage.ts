@@ -2,6 +2,7 @@ import InvalidJsonError from '../../errors/InvalidJsonError'
 import ValidationError from '../../errors/ValidationError'
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import { validateIsNotEmptyString, validateIsString, validateIsType } from '../../utils/validations'
+import { SPID } from '../../utils/SPID'
 
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
@@ -85,6 +86,7 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
     signature: string | null
     parsedContent?: T
     serializedContent: string
+    spid: SPID
 
     constructor({
         messageId,
@@ -136,6 +138,8 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
         validateIsNotEmptyString('content', this.serializedContent)
 
         StreamMessage.validateSequence(this)
+
+        this.spid = SPID.from(this.messageId)
     }
 
     getStreamId(): string {
@@ -144,6 +148,10 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
 
     getStreamPartition(): number {
         return this.messageId.streamPartition
+    }
+
+    getSPID(): SPID {
+        return this.spid
     }
 
     getTimestamp(): number {
