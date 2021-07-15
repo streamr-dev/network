@@ -61,7 +61,11 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 	            try {
 	                if (this.peerConnection) {
 	                    this. makingOffer = true
-	                    await this.peerConnection.setLocalDescription()
+	                    try {
+	                        await this.peerConnection.setLocalDescription()
+	                    } catch (err) {
+	                    	this.logger.warn(err)
+	                    }
 	                    if (this.peerConnection.localDescription) {
 	                        this.emitLocalDescription(this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
 	                    }
@@ -114,11 +118,18 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 	    if (ignoreOffer) {
 	        return
 	    }
+	    try {
+	        await this.peerConnection?.setRemoteDescription({ sdp:description, type: type as RTCSdpType })
+	    } catch (err) {
+	        this.logger.warn(err)
+	    }
 
-	    await this.peerConnection?.setRemoteDescription({ sdp:description, type: type as RTCSdpType })
-		
 	    if (type == "offer" && this.peerConnection) {
-	        await this.peerConnection.setLocalDescription()
+	    	try {
+	            await this.peerConnection.setLocalDescription()
+	        } catch (err) {
+	            this.logger.warn(err)
+	        }
 	        if (this.peerConnection.localDescription)  {
 	            this.emitLocalDescription(this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type )
 	        }
