@@ -4,13 +4,13 @@ import { iteratorFinally } from './iterators'
 import { PullBuffer } from './PushBuffer'
 import { ContextError, Context } from './Context'
 
-export type PipelineGeneratorFunction<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
+export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 
 export type FinallyFn = ((err?: Error) => void | Promise<void>)
 
 class PipelineError extends ContextError {}
 export type IPipeline<InType, OutType = InType> = {
-    pipe<NewOutType>(fn: PipelineGeneratorFunction<OutType, NewOutType>): IPipeline<InType, NewOutType>
+    pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
     onFinally(onFinally: FinallyFn): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType> & Context
 
@@ -19,7 +19,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     readonly id
     private readonly bufferSize: number
     readonly source
-    private readonly transforms: PipelineGeneratorFunction[] = []
+    private readonly transforms: PipelineTransform[] = []
     private iterator: AsyncGenerator<OutType>
     private finallyTasks: FinallyFn[] = []
     private isIterating = false
@@ -35,7 +35,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         // this.debug('create')
     }
 
-    pipe<NewOutType>(fn: PipelineGeneratorFunction<OutType, NewOutType>): Pipeline<InType, NewOutType> {
+    pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): Pipeline<InType, NewOutType> {
         if (this.isIterating) {
             throw new PipelineError(this, 'cannot pipe after already iterating')
         }

@@ -4,7 +4,7 @@ import { instanceId, Defer, Deferred, pOnce } from '../utils'
 import AsyncIterableEmitter, { flowOnMessageListener, asyncIterableWithEvents } from '../utils/AsyncIterableEmitter'
 import { Context, ContextError } from '../utils/Context'
 import { PushBuffer, pull } from '../utils/PushBuffer'
-import { Pipeline, IPipeline, PipelineGeneratorFunction, FinallyFn } from '../utils/Pipeline'
+import { Pipeline, IPipeline, PipelineTransform, FinallyFn } from '../utils/Pipeline'
 import { StreamMessage } from 'streamr-client-protocol'
 
 class MessageStreamError extends ContextError {}
@@ -113,7 +113,7 @@ export default class MessageStream<T, InType extends StreamMessage = StreamMessa
         return this.buffer.end(error)
     }
 
-    pipe<NewOutType>(fn: PipelineGeneratorFunction<OutType, NewOutType>) {
+    pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>) {
         this.pipeline.pipe(fn)
         return this as unknown as MessageStream<T, InType, NewOutType>
     }
