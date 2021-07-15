@@ -36,6 +36,9 @@ export type SPIDLikePartial = SPIDLike | SPIDObjectPartial | Partial<SPIDShape>
 /* Must be options object */
 export type SPIDLikeObject = Exclude<SPIDLike, string>
 
+/* Must be able to parse an ID from this, partition optional */
+export type StreamMatcher = SPID | SPIDLike | { streamId: string } | { id: string }
+
 class SPIDValidationError extends Error {
     data: SPIDLikePartial
     constructor(msg: string, data: SPIDLikePartial) {
@@ -127,10 +130,29 @@ export class SPID {
     }
 
     /**
+     * True iff matches streamId & optionally streamPartition
+     * streamId is required, hence SPIDMatcher.
+     * If streamPartition is missing, just matches on streamId
+     */
+    matches(spidMatcher: StreamMatcher): boolean {
+        if (spidMatcher instanceof SPID) { return this.equals(spidMatcher) }
+
+        const { streamId, streamPartition } = SPID.toSPIDObjectPartial(spidMatcher)
+        if (streamPartition == null) {
+            return this.id === streamId
+        }
+
+        return this.id === streamId && this.partition === streamPartition
+    }
+
+    /**
      * Convert SPIDLikePartial to SPIDObjectPartial
      * i.e. normalizes various input types/shapes to { streamId?, streamPartition? }
      * Note: does not throw on malformed input
      */
+    static toSPIDObjectPartial(spidLike: SPIDLike): SPIDObject; // both fields
+    static toSPIDObjectPartial(spidLike: StreamMatcher): { streamId: string, streamPartition: undefined } | SPIDObject;
+    static toSPIDObjectPartial(spidLike: SPIDLikePartial): SPIDObjectPartial;
     static toSPIDObjectPartial(spidLike: SPIDLikePartial): SPIDObjectPartial {
         // convert from string
         if (typeof spidLike === 'string') {

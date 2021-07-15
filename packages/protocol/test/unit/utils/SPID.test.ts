@@ -231,4 +231,48 @@ describe('SPID', () => {
             expect(spid.equals([1,2])).not.toBeTruthy()
         })
     })
+
+    describe('matches', () => {
+        it('works with spids', () => {
+            const spid1 = new SPID(STREAM_ID, PARTITION)
+            const spid2 = new SPID(STREAM_ID, PARTITION)
+            const spid3 = new SPID(STREAM_ID, PARTITION + 1)
+            const spid4 = new SPID('other id', PARTITION)
+            // same should be equal
+            expect(spid1.matches(spid1)).toBeTruthy()
+            // different ids but same values should be equal
+            expect(spid1.matches(spid2)).toBeTruthy()
+            // different partitions is not equal
+            expect(spid1.matches(spid3)).not.toBeTruthy()
+            // different streamIds is not equal
+            expect(spid1.matches(spid4)).not.toBeTruthy()
+        })
+
+        it('works with spidLike', () => {
+            const spid = new SPID(STREAM_ID, PARTITION)
+            const spidString = spid.toString()
+            expect(spid.matches(spidString)).toBeTruthy()
+            // @ts-expect-error streamId is required
+            expect(spid.matches(`${STREAM_ID}${SPID.SEPARATOR}0`)).not.toBeTruthy()
+            expect(spid.matches('')).not.toBeTruthy()
+            // @ts-expect-error testing bad input
+            expect(spid.matches()).not.toBeTruthy()
+            // @ts-expect-error testing bad input
+            expect(spid.matches([1,2])).not.toBeTruthy()
+            expect(spid.matches({ streamId: STREAM_ID })).toBeTruthy()
+            expect(spid.matches(STREAM_ID)).toBeTruthy()
+            // @ts-expect-error testing bad input, streamId is required
+            expect(spid.matches({ streamPartition: PARTITION })).not.toBeTruthy()
+            // @ts-expect-error testing bad input, streamId is required
+            expect(spid.matches({ partition: PARTITION })).not.toBeTruthy()
+            // @ts-expect-error testing bad input, streamId is required
+            expect(spid.matches(PARTITION)).not.toBeTruthy()
+            const spid2 = new SPID(STREAM_ID, PARTITION + 1)
+            expect(spid2.matches(STREAM_ID)).toBeTruthy()
+            // should also match on partition if supplied
+            expect(spid2.matches(spid.toString())).not.toBeTruthy()
+            expect(spid2.matches(spid)).not.toBeTruthy()
+            expect(spid2.matches(spid.toObject())).not.toBeTruthy()
+        })
+    })
 })
