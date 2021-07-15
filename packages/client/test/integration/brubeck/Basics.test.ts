@@ -117,7 +117,6 @@ describeRepeats('StreamrClient', () => {
             client.debug(4)
             const received = []
             for await (const msg of sub) {
-                client.debug('msg', msg.getParsedContent())
                 received.push(msg.getParsedContent())
                 if (received.length === 1) {
                     break
@@ -130,17 +129,18 @@ describeRepeats('StreamrClient', () => {
             const sub = await client.subscribe({
                 streamId: stream.id,
             })
-            const source = publishManyGenerator(MAX_MESSAGES)
-            const published = await client.publisher.collect(client.publisher.publishFrom(stream, source), MAX_MESSAGES)
+            const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
+            const published = await client.publisher.collect(client.publisher.publishFromMetadata(stream, source), MAX_MESSAGES)
             const received = []
             for await (const msg of sub) {
-                received.push(msg.getParsedContent())
+                received.push(msg)
                 if (received.length === published.length) {
                     break
                 }
             }
 
-            expect(received).toEqual(published.map((s) => s.getParsedContent()))
+            expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
+            expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
         })
     })
 })
