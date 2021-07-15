@@ -1,4 +1,4 @@
-import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
+import StreamrClient, { ResendOptions, Stream, StreamOperation, StreamPartDefinition } from 'streamr-client'
 import {startTracker, Tracker} from 'streamr-network'
 import { Todo } from '../types'
 import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from '../utils'
@@ -6,8 +6,7 @@ import { Wallet } from 'ethers'
 
 const httpPort = 47741
 const wsPort = 47742
-const networkPort1 = 47743
-const networkPort2 = 47744
+const networkPort = 47743
 const trackerPort = 47745
 
 const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: string, source: string) => {
@@ -50,9 +49,23 @@ const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: st
     return Promise.allSettled(promises)
 }
 
+const promisifySubscribe = (
+    client: StreamrClient, 
+    opts: { resend?: ResendOptions | undefined } & ResendOptions & StreamPartDefinition
+): Promise<Todo> => {
+    return new Promise((resolve, reject) => {
+        try {
+            client.subscribe(opts, (res: Todo) => {
+                resolve(res)
+            })
+        } catch (e){
+            reject(e)
+        }
+    })
+}
+
 describe('per-node metrics', () => {
     let tracker: Tracker
-    let broker1: Todo
     let storageNode: Todo
     let client1: StreamrClient
     let legacyStream: Stream
@@ -66,15 +79,16 @@ describe('per-node metrics', () => {
             address: storageNodeAccount.address,
             url: `http://127.0.0.1:${httpPort}`
         }]
-        nodeAddress = tmpAccount.address
+        
+        nodeAddress = storageNodeAccount.address
 
-        client1 = createClient(wsPort, Wallet.createRandom().privateKey, {
+        client1 = createClient(wsPort, tmpAccount.privateKey, {
             storageNode: storageNodeRegistry[0]
         })
         legacyStream = await createTestStream(client1, module)
 
         await legacyStream.grantPermission('stream_get' as StreamOperation, undefined)
-        await legacyStream.grantPermission('stream_publish' as StreamOperation, nodeAddress)
+        await legacyStream.grantPermission('stream_publish' as StreamOperation, storageNodeAccount.address)
 
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -83,23 +97,13 @@ describe('per-node metrics', () => {
         })
 
         storageNode = await startBroker({
-            name: 'storageNode',
+            name: 'storageNode', 
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort2,
-            trackerPort,
-            httpPort,
-            enableCassandra: true,
-            storageNodeConfig: { registry: storageNodeRegistry },
-            storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
-            // therefore StorageAssignmentEventManager test helper cannot be used
-        })
-
-        broker1 = await startBroker({
-            name: 'broker1',
-            privateKey: tmpAccount.privateKey,
-            networkPort: networkPort1,
+            networkPort: networkPort,
             trackerPort,
             wsPort,
+            httpPort,
+            enableCassandra: true,
             reporting: {
                 streamr: {
                     streamId: legacyStream.id
@@ -118,14 +122,16 @@ describe('per-node metrics', () => {
                     storageNode: storageNodeAccount.address
                 }
             },
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeConfig: { registry: storageNodeRegistry },
+            storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
+            // therefore StorageAssignmentEventManager test helper cannot be used
         })
 
-        client2 = createClient(wsPort, tmpAccount.privateKey)
+        client2 = createClient(wsPort, storageNodeAccount.privateKey)
         await Promise.all([
-            fillMetrics(client2, 60, nodeAddress, 'sec'),
-            fillMetrics(client2, 60, nodeAddress, 'min'),
-            fillMetrics(client2, 24, nodeAddress, 'hour'),
+            fillMetrics(client2, 60, storageNodeAccount.address, 'sec'),
+            fillMetrics(client2, 60, storageNodeAccount.address, 'min'),
+            fillMetrics(client2, 24, storageNodeAccount.address, 'hour'),
         ])
 
     }, 35 * 1000)
@@ -133,108 +139,104 @@ describe('per-node metrics', () => {
     afterAll(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            broker1.close(),
             storageNode.close(),
             client1.ensureDisconnected(),
             client2.ensureDisconnected()
         ])
     }, 30 * 1000)
 
-    it('should ensure the legacy metrics endpoint still works properly', (done) => {
-        client1.subscribe({
-            stream: legacyStream.id,
-        }, (res) => {
-            expect(res.peerId).toEqual('broker1')
-            done()
+    it('should ensure the legacy metrics endpoint still works properly', async () => {
+        const res = await promisifySubscribe(client1, {stream: legacyStream.id})
+
+        expect(res.peerId).toEqual('storageNode')
+        expect(res.startTime).toBeGreaterThan(0)
+        expect(res.currentTime).toBeGreaterThan(0)
+        expect(res.metrics).toMatchObject({
+            'WsEndpoint': expect.anything(),
+            'WebRtcEndpoint': expect.anything(),
+            'node': expect.anything(),
+            'broker/publisher': expect.anything(),
+            'broker/ws': expect.anything(),
+            'broker/cassandra': expect.anything(),
+            'broker/http': expect.anything(),
         })
     })
 
-    it('should retrieve the last `sec` metrics', (done) => {
-        client1.subscribe({
-            stream: nodeAddress + '/streamr/node/metrics/sec',
-        }, (res) => {
-            expect(res.peerName).toEqual('broker1')
-            expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.avgLatencyMs).toBeGreaterThanOrEqual(0)
-            expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.connections).toBeGreaterThanOrEqual(0)
-            expect(res.storage.bytesWrittenPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.storage.bytesReadPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.startTime).toBeGreaterThanOrEqual(0)
-            expect(res.currentTime).toBeGreaterThanOrEqual(0)
-            expect(res.timestamp).toBeGreaterThanOrEqual(0)
-
-            done()
-        })
+    it('should retrieve the last `sec` metrics', async () => {
+        const res = await promisifySubscribe(client1, {stream: nodeAddress + '/streamr/node/metrics/sec'})
+        expect(res.peerName).toEqual('storageNode')
+        expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
+        expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
+        expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.avgLatencyMs).toBeGreaterThan(0)
+        expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.connections).toBeGreaterThanOrEqual(0)
+        expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
+        expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
+        expect(res.startTime).toBeGreaterThan(0)
+        expect(res.currentTime).toBeGreaterThan(0)
+        expect(res.timestamp).toBeGreaterThan(0)   
     })
 
-    it('should retrieve the last `min` metrics', (done) => {
-        client1.subscribe({
-            stream: nodeAddress + '/streamr/node/metrics/min',
-        }, (res) => {
-            expect(res.peerName).toEqual('broker1')
-            expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.avgLatencyMs).toBeGreaterThanOrEqual(0)
-            expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.connections).toBeGreaterThanOrEqual(0)
-            expect(res.storage.bytesWrittenPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.storage.bytesReadPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.startTime).toBeGreaterThanOrEqual(0)
-            expect(res.currentTime).toBeGreaterThanOrEqual(0)
-            expect(res.timestamp).toBeGreaterThanOrEqual(0)
-            done()
-        })
+    it('should retrieve the last `min` metrics', async () => {
+        const res = await promisifySubscribe(client1, { stream: nodeAddress + '/streamr/node/metrics/min'})
+
+        expect(res.peerName).toEqual('storageNode')
+        expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
+        expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
+        expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.avgLatencyMs).toBeGreaterThan(0)
+        expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.connections).toBeGreaterThanOrEqual(0)
+        expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
+        expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
+        expect(res.startTime).toBeGreaterThanOrEqual(0)
+        expect(res.currentTime).toBeGreaterThanOrEqual(0)
+        expect(res.timestamp).toBeGreaterThanOrEqual(0)
+            
     })
 
-    it('should retrieve the last `hour` metrics', (done) => {
-        client1.subscribe({
-            stream: nodeAddress + '/streamr/node/metrics/hour',
-        }, (res) => {
-            expect(res.peerName).toEqual('broker1')
-            expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.avgLatencyMs).toBeGreaterThanOrEqual(0)
-            expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.connections).toBeGreaterThanOrEqual(0)
-            expect(res.storage.bytesWrittenPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.storage.bytesReadPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.startTime).toBeGreaterThanOrEqual(0)
-            expect(res.currentTime).toBeGreaterThanOrEqual(0)
-            expect(res.timestamp).toBeGreaterThanOrEqual(0)
-            done()
-        })
+    it('should retrieve the last `hour` metrics', async () => {
+        const res = await promisifySubscribe(client1, { stream: nodeAddress + '/streamr/node/metrics/hour'})
+
+        expect(res.peerName).toEqual('storageNode')
+        expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
+        expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
+        expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.avgLatencyMs).toBeGreaterThan(0)
+        expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.connections).toBeGreaterThanOrEqual(0)
+        expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
+        expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
+        expect(res.startTime).toBeGreaterThanOrEqual(0)
+        expect(res.currentTime).toBeGreaterThanOrEqual(0)
+        expect(res.timestamp).toBeGreaterThanOrEqual(0)
+            
     })
 
-    it('should retrieve the last `day` metrics', (done) => {
-        client1.subscribe({
-            stream: nodeAddress + '/streamr/node/metrics/day',
-        }, (res) => {
-            expect(res.peerName).toEqual('broker1')
-            expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.avgLatencyMs).toBeGreaterThanOrEqual(0)
-            expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.network.connections).toBeGreaterThanOrEqual(0)
-            expect(res.storage.bytesWrittenPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.storage.bytesReadPerSec).toBeGreaterThanOrEqual(0)
-            expect(res.startTime).toBeGreaterThanOrEqual(0)
-            expect(res.currentTime).toBeGreaterThanOrEqual(0)
-            expect(res.timestamp).toBeGreaterThanOrEqual(0)
-            done()
-        })
+    it('should retrieve the last `day` metrics', async () => {
+        const res = await promisifySubscribe(client1, { stream: nodeAddress + '/streamr/node/metrics/day'})
+
+        expect(res.peerName).toEqual('storageNode')
+        expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
+        expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
+        expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.avgLatencyMs).toBeGreaterThan(0)
+        expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
+        expect(res.network.connections).toBeGreaterThanOrEqual(0)
+        expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
+        expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
+        expect(res.startTime).toBeGreaterThanOrEqual(0)
+        expect(res.currentTime).toBeGreaterThanOrEqual(0)
+        expect(res.timestamp).toBeGreaterThanOrEqual(0)
+            
     })
 })

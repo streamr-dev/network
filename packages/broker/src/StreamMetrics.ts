@@ -110,8 +110,9 @@ export class StreamMetrics {
             if (this.stopped) {
                 return
             }
+
             this.report.peerName = metricsReport.peerId
-            this.report.peerId = /*metricsReport.peerName||*/ metricsReport.peerId
+            this.report.peerId = metricsReport.peerId
 
             if (this.interval === 'sec') {
                 if (this.report.timestamp === 0) { // first iteration, assign values
@@ -124,8 +125,11 @@ export class StreamMetrics {
                     this.report.network.bytesToPeersPerSec = (metricsReport.metrics.WebRtcEndpoint.outSpeed as any).rate || 0
                     this.report.network.bytesFromPeersPerSec = (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0
                     this.report.network.connections = metricsReport.metrics.WebRtcEndpoint.connections || 0
-                    this.report.storage.bytesWrittenPerSec = (metricsReport.metrics['broker/cassandra']) ? metricsReport.metrics['broker/cassandra'].writeBytes : 0
-                    this.report.storage.bytesReadPerSec = (metricsReport.metrics['broker/cassandra']) ? metricsReport.metrics['broker/cassandra'].readBytes : 0
+                    // @ts-expect-error
+                    this.report.storage.bytesWrittenPerSec = (metricsReport.metrics['broker/cassandra']) ? metricsReport.metrics['broker/cassandra'].writeBytes.rate / 1000 : 0
+                    // @ts-expect-error
+                    this.report.storage.bytesReadPerSec = (metricsReport.metrics['broker/cassandra']) ? metricsReport.metrics['broker/cassandra'].readBytes.rate / 1000 : 0
+                    
                     this.report.startTime = metricsReport.startTime
                     this.report.currentTime = metricsReport.currentTime
                     this.report.timestamp = metricsReport.currentTime
@@ -138,8 +142,10 @@ export class StreamMetrics {
                     this.report.network.connections = throttledAvg(this.report.network.connections, (metricsReport.metrics.WebRtcEndpoint.connections as any).rate || 0)
 
                     if (metricsReport.metrics['broker/cassandra']) {
-                        this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, (metricsReport.metrics['broker/cassandra']) ? (metricsReport.metrics['broker/cassandra'].writeBytes as any).rate: 0)
-                        this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, (metricsReport.metrics['broker/cassandra']) ? (metricsReport.metrics['broker/cassandra'].readBytes as any).rate : 0)
+                        // @ts-expect-error
+                        this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, (metricsReport.metrics['broker/cassandra']) ? metricsReport.metrics['broker/cassandra'].writeBytes.rate / 1000: 0)
+                        // @ts-expect-error
+                        this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, (metricsReport.metrics['broker/cassandra']) ? metricsReport.metrics['broker/cassandra'].readBytes.rate / 1000 : 0)
                     }
 
                     this.report.currentTime = metricsReport.currentTime
