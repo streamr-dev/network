@@ -1,4 +1,4 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, SPID, StreamMatcher } from 'streamr-client-protocol'
 import mem from 'mem'
 
 import { LimitAsyncFnByKey } from '../utils'
@@ -9,7 +9,6 @@ import { GroupKey } from '../stream'
 import { StreamrClient } from '../StreamrClient'
 import MessageChainer from './MessageChainer'
 import StreamPartitioner from './StreamPartitioner'
-import { StreamIDish, getStreamId, getStreamPartition } from './utils'
 
 export default class StreamMessageCreator {
     computeStreamPartition
@@ -31,9 +30,9 @@ export default class StreamMessageCreator {
 
         // one chainer per streamId + streamPartition + publisherId + msgChainId
         this.getMsgChainer = Object.assign(mem(MessageChainer, {
-            cacheKey: ([{ streamId, streamPartition, publisherId, msgChainId }]) => (
-                // undefined msgChainId is fine
-                [streamId, streamPartition, publisherId, msgChainId].join('|')
+            cacheKey: ([spid, { publisherId, msgChainId }]) => (
+                // empty msgChainId is fine
+                [spid.key, publisherId, msgChainId ?? ''].join('|')
             ),
             ...cacheOptions,
             maxAge: undefined
@@ -52,7 +51,7 @@ export default class StreamMessageCreator {
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create<T>(streamObjectOrId: StreamIDish, {
+    async create<T>(streamObjectOrId: StreamMatcher, {
         content,
         timestamp,
         partitionKey,
@@ -64,7 +63,8 @@ export default class StreamMessageCreator {
         partitionKey?: string | number,
         msgChainId?: string,
     }): Promise<StreamMessage<T>> {
-        const streamId = getStreamId(streamObjectOrId)
+        const spidObject = SPID.toSPIDObjectPartial(streamObjectOrId)
+        const { streamId } = spidObject
         // streamId as queue key
         return this.queue(streamId, async () => {
             // load cached stream + publisher details
@@ -74,15 +74,16 @@ export default class StreamMessageCreator {
             ])
 
             // figure out partition
-            const definedPartition = getStreamPartition(streamObjectOrId)
+            const definedPartition = spidObject.streamPartition
             if ((definedPartition !== undefined) && (partitionKey !== undefined)) {
                 throw new Error('Invalid combination of "partition" and "partitionKey"')
             }
             const streamPartition = definedPartition ?? this.computeStreamPartition(stream.partitions, partitionKey ?? 0)
+            const spid = SPID.from({ streamId, streamPartition })
 
             // chain messages
-            const chainMessage = this.getMsgChainer({
-                streamId, streamPartition, publisherId, msgChainId
+            const chainMessage = this.getMsgChainer(spid, {
+                publisherId, msgChainId
             })
 
             const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()

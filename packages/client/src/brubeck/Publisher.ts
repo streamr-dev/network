@@ -1,8 +1,7 @@
 import { inspect } from '../utils/log'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, SPID, SPIDLikePartial, StreamMatcher } from 'streamr-client-protocol'
 import { BrubeckClient } from './BrubeckClient'
 import StreamMessageCreator from '../publish/MessageCreator'
-import { getStreamId, StreamIDish } from '../publish/utils'
 import { FailedToPublishError } from '../publish'
 import { counterId } from '../utils'
 import { Context } from '../utils/Context'
@@ -31,7 +30,7 @@ export default class BrubeckPublisher implements Context {
         this.debug = this.client.debug.extend(this.id)
     }
 
-    async publishMessage<T>(streamObjectOrId: StreamIDish, {
+    async publishMessage<T>(streamObjectOrId: StreamMatcher, {
         content,
         timestamp = new Date(),
         partitionKey
@@ -48,7 +47,7 @@ export default class BrubeckPublisher implements Context {
     }
 
     async publish<T>(
-        streamObjectOrId: StreamIDish,
+        streamObjectOrId: StreamMatcher,
         content: T,
         timestamp?: string | number | Date,
         partitionKey?: string | number
@@ -61,8 +60,7 @@ export default class BrubeckPublisher implements Context {
                 partitionKey,
             })
         } catch (err) {
-            getStreamId(streamObjectOrId)
-            const streamId = getStreamId(streamObjectOrId)
+            const { streamId } = SPID.toSPIDObjectPartial(streamObjectOrId)
             const error = new FailedToPublishError(
                 streamId,
                 content,
@@ -88,7 +86,7 @@ export default class BrubeckPublisher implements Context {
         return msgs
     }
 
-    async* publishFrom<T>(streamObjectOrId: StreamIDish, seq: AsyncIterable<T>) {
+    async* publishFrom<T>(streamObjectOrId: StreamMatcher, seq: AsyncIterable<T>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -100,7 +98,7 @@ export default class BrubeckPublisher implements Context {
         }
     }
 
-    async* publishFromMetadata<T>(streamObjectOrId: StreamIDish, seq: AsyncIterable<PublishMessageOptions<T>>) {
+    async* publishFromMetadata<T>(streamObjectOrId: StreamMatcher, seq: AsyncIterable<PublishMessageOptions<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -112,19 +110,21 @@ export default class BrubeckPublisher implements Context {
         }
     }
 
-    async waitForStorage(streamMessage: StreamMessage, opts = {}) {
-        /* eslint-disable no-await-in-loop */
-        const {
-            streamId,
-            streamPartition = 0,
-            interval = 500,
-            timeout = 10000,
-            count = 100,
-            messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => msgTarget.signature === msgGot.signature
-        } = validateOptions({
-            ...opts,
-        })
+    async waitForStorage(streamMessage: StreamMessage, {
+        interval = 500,
+        timeout = 10000,
+        count = 100,
+        messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => msgTarget.signature === msgGot.signature
+    }: {
+        interval?: number
+        timeout?: number
+        count?: number
+        messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+    } = {}) {
 
+        const { spid } = streamMessage
+
+        /* eslint-disable no-await-in-loop */
         const start = Date.now()
         let last: any
         // eslint-disable-next-line no-constant-condition
@@ -146,8 +146,8 @@ export default class BrubeckPublisher implements Context {
 
             last = await this.client.client.getStreamLast({
                 // @ts-expect-error
-                streamId,
-                streamPartition,
+                streamId: spid.id,
+                streamPartition: spid.partition,
                 count,
             })
 
