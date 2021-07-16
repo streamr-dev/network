@@ -660,7 +660,7 @@ export class Gate {
     id
     debug: Debugger
     isLocked = false
-    private pending?: Deferred<boolean>
+    private pending?: Deferred<void>
 
     constructor(id?: string) {
         this.id = instanceId(this, id)
@@ -674,11 +674,7 @@ export class Gate {
             return
         }
 
-        if (this.pending) {
-            // this.debug('open')
-            this.pending.resolve(true)
-            this.pending = undefined
-        }
+        this.clearPending()
     }
 
     lock() {
@@ -688,9 +684,7 @@ export class Gate {
         }
 
         this.isLocked = true
-        if (this.pending) {
-            this.pending.resolve(false)
-        }
+        this.clearPending()
     }
 
     error(err: Error) {
@@ -700,8 +694,7 @@ export class Gate {
         }
 
         // this.debug('error', err)
-        this.close()
-        this.pending?.reject(err)
+        this.clearPending(err)
     }
 
     close() {
@@ -712,7 +705,7 @@ export class Gate {
 
         if (!this.pending) {
             // this.debug('close')
-            this.pending = Defer<boolean>()
+            this.pending = Defer<void>()
         }
     }
 
@@ -728,18 +721,26 @@ export class Gate {
         return !this.isLocked && !this.pending
     }
 
+    private clearPending(err?: Error) {
+        const { pending } = this
+        if (!pending) { return }
+        this.pending = undefined
+
+        if (err) {
+            pending.reject(err)
+        } else {
+            pending.resolve(undefined)
+        }
+    }
+
     /**
      * @returns Promise<true> iff opened successfully
      */
     async check(): Promise<boolean> {
-        if (this.isLocked) {
-            return false
-        }
-
         if (this.pending) {
-            return this.pending
+            await this.pending
         }
 
-        return true
+        return !this.isLocked
     }
 }

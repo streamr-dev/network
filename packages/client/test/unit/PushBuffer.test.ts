@@ -75,15 +75,45 @@ describe('PushBuffer', () => {
             expect(await pushBuffer.push(expected[0])).toBe(true)
             expect(await pushBuffer.push(expected[1])).toBe(true)
             const pushTask = pushBuffer.push(expected[2]) // this should block then resolve false on pushBuffer throw
-            // 3 items buffered, last push call pending
+            // 4 items buffered, last push call pending
+            // first next call should succeed
             const nextTask1 = pushBuffer.next()
+            // second next call should succeed
             const nextTask2 = pushBuffer.next()
-            // first two next calls should succeed
+            // from here on all next calls should error
             const throwTask = pushBuffer.throw(err)
             // this next call is after throw, so should fail
             const nextTask3 = pushBuffer.next()
+            await Promise.allSettled([pushTask, throwTask, nextTask1, nextTask2, nextTask3])
             await expect(throwTask).rejects.toThrow(err)
             expect(await pushTask).toBe(false)
+            expect(await nextTask1).toEqual({ value: expected[0], done: false })
+            expect(await nextTask2).toEqual({ value: expected[1], done: false })
+            expect(await nextTask3).toEqual({ value: undefined, done: true })
+        })
+
+        it('push resolves false if errored with delayed push', async () => {
+            const err = new Error(counterId('expected error'))
+            const pushBuffer = new PushBuffer(2)
+            leaksDetector.add('PushBuffer', pushBuffer)
+            leaksDetector.add('error', err)
+            expect(await pushBuffer.push(expected[0])).toBe(true)
+            // 4 items buffered, last push call pending
+            // first next call should succeed
+            const nextTask1 = pushBuffer.next()
+            // second next call should succeed
+            const nextTask2 = pushBuffer.next()
+            expect(await pushBuffer.push(expected[1])).toBe(true)
+            const pushTask1 = pushBuffer.push(expected[1]) // this should resolve true due to outstanding next
+            const pushTask2 = pushBuffer.push(expected[2]) // this should block then resolve false, throw called before next
+            // from here on all next calls should error
+            const throwTask = pushBuffer.throw(err)
+            // this next call is after throw, so should fail
+            const nextTask3 = pushBuffer.next()
+            await Promise.allSettled([pushTask1, pushTask2, throwTask, nextTask1, nextTask2, nextTask3])
+            await expect(throwTask).rejects.toThrow(err)
+            expect(await pushTask1).toBe(true)
+            expect(await pushTask2).toBe(false)
             expect(await nextTask1).toEqual({ value: expected[0], done: false })
             expect(await nextTask2).toEqual({ value: expected[1], done: false })
             expect(await nextTask3).toEqual({ value: undefined, done: true })
@@ -119,7 +149,7 @@ describe('PushBuffer', () => {
             expect(pushResolved3).toHaveBeenCalledTimes(0)
             expect(await pushBuffer.next()).toEqual({ value: expected[2], done: false })
             await wait(0)
-            // all unblock at once, push only resolves once buffer has space
+            // all unblock at once, push resolves when buffer has space
             expect(pushResolved1).toHaveBeenCalledTimes(1)
             expect(pushResolved2).toHaveBeenCalledTimes(1)
             expect(pushResolved3).toHaveBeenCalledTimes(1)
@@ -155,6 +185,71 @@ describe('PushBuffer', () => {
             }
 
             expect(received).toEqual(expected)
+        })
+
+        it('can not read after end', async () => {
+            const pushBuffer = new PushBuffer<number>()
+            await pushBuffer.push(expected[0])
+            await pushBuffer.push(expected[1])
+            await pushBuffer.push(expected[2])
+            pushBuffer.end()
+            const received: number[] = []
+            for await (const msg of pushBuffer) {
+                received.push(msg)
+            }
+
+            expect(received).toEqual([])
+        })
+
+        it('will not read buffered items after end if iterating', async () => {
+            const pushBuffer = new PushBuffer<number>()
+            await pushBuffer.push(expected[0])
+            await pushBuffer.push(expected[1])
+            const received: number[] = []
+            for await (const msg of pushBuffer) {
+                received.push(msg)
+                if (received.length === 1) {
+                    pushBuffer.push(expected[2]) // don't await
+                    pushBuffer.end()
+                }
+            }
+
+            expect(received).toEqual(expected.slice(0, 1))
+        })
+
+        it('ignores push after end', async () => {
+            const pushBuffer = new PushBuffer<number>()
+            await pushBuffer.push(expected[0])
+            await pushBuffer.push(expected[1]) // will be dropped
+            const received: number[] = []
+            for await (const msg of pushBuffer) {
+                received.push(msg)
+                if (received.length === 1) {
+                    pushBuffer.end()
+                    pushBuffer.push(expected[2])
+                }
+            }
+
+            expect(received).toEqual(expected.slice(0, 1))
+        })
+
+        it('can defer error with endWrite', async () => {
+            const err = new Error(counterId('expected'))
+            const pushBuffer = new PushBuffer<number>()
+            await pushBuffer.push(expected[0])
+            await pushBuffer.push(expected[1])
+            await pushBuffer.push(expected[2])
+            pushBuffer.endWrite(err)
+            const ok = await pushBuffer.push(expected[3])
+            expect(ok).toEqual(false)
+            const received: number[] = []
+            await expect(async () => {
+                for await (const msg of pushBuffer) {
+                    received.push(msg)
+                }
+            }).rejects.toThrow(err)
+
+            expect(received).toEqual(expected.slice(0, 3))
         })
 
         it('can read after endWrite', async () => {
