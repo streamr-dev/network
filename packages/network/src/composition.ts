@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
-import {Location, TrackerInfo} from './identifiers'
+import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
 import { Tracker } from './logic/Tracker'
@@ -118,16 +118,7 @@ export const createNetworkNode = ({
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
     ))
-    // console.log('-------------------------------------------------------------------------------')
-    // console.log('-------------------------------------------------------------------------------')
-    // console.log('-------------------------------------------------------------------------------')
-    // console.log('-------------------------------------------------------------------------------')
-    // console.log('-------------------------------------------------------------------------------')
-    // console.log('-------------------------------------------------------------------------------')
-    // console.log('-------------------------------------------------------------------------------')
-    // console.log('-------------------------------------------------------------------------------')
-    // // @ts-expect-error private
-    // console.log(nodeToNode.endpoint)
+
     return new NetworkNode({
         peerInfo,
         trackers,

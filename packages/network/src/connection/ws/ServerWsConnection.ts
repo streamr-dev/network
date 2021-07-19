@@ -54,7 +54,12 @@ export class ServerWsConnection extends AbstractWsConnection {
         if (this.getReadyState() !== 1) {
             throw new Error(`cannot send, readyState is ${readyState}`)
         }
-        await util.promisify((cb: any) => this.duplexStream.write(message, cb))()
+        try {
+            await util.promisify((cb: any) => this.duplexStream.write(message, cb))()
+        } catch (err) {
+            this.logger.error(err)
+            return Promise.reject(err)
+        }
     }
 
     getRemoteAddress(): string | undefined {

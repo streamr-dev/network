@@ -1,4 +1,4 @@
-require('console-browserify')
+const webpackConfig = require('./webpack.config')
 
 module.exports = function (config) {
     config.set({
@@ -59,6 +59,6 @@ module.exports = function (config) {
             useIframe: false
         },
         singleRun: true,
-        webpack: require('./webpack.config.js')
+        webpack: webpackConfig('test')
     })
 }

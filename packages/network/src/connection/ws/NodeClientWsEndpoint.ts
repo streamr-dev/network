@@ -44,6 +44,9 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                         const {uuid, peerId} = JSON.parse(message.toString())
                         if (uuid && peerId === serverPeerInfo.peerId) {
                             ws.send(JSON.stringify({uuid, peerId: this.peerInfo.peerId}))
+                            if (this.handshakeTimeoutRefs[peerId]) {
+                                this.clearHandshake(peerId)
+                            }
                             resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
                         } else {
                             this.logger.trace('Expected a handshake message got: ' + message.toString())
@@ -53,10 +56,16 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                     }
                 })
 
+                ws.on('close', (code: number, reason: string): void => {
+                    this.logger.warn(code.toString(), reason)
+                    ws.terminate()
+                })
+
                 ws.once('open', () => {
                     const peerId = serverPeerInfo.peerId
                     this.handshakeTimeoutRefs[peerId] = setTimeout(() => {
                         ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from ${peerId}`)
+                        this.logger.warn(`Handshake not received from ${peerId}`)
                         delete this.handshakeTimeoutRefs[peerId]
                         reject(`Handshake not received from ${peerId}`)
                     }, this.handshakeTimer)
@@ -64,7 +73,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
 
                 ws.on('error', (err) => {
                     this.metrics.record('webSocketError', 1)
-                    this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
+                    this.logger.warn('failed to connect to %s, error: %o', serverUrl, err)
                     connection?.terminate()
                     reject(err)
                 })
@@ -86,6 +95,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
             connection.onPong()
         })
         ws.once('close', (code: number, reason: string): void => {
+            this.logger.warn(code.toString(), reason)
             this.onClose(connection, code, reason as DisconnectionReason)
         })
 

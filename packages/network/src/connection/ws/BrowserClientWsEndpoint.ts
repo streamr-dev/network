@@ -46,6 +46,7 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
                     const peerId = serverPeerInfo.peerId
                     this.handshakeTimeoutRefs[peerId] = setTimeout(() => {
                         ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from ${peerId}`)
+                        this.logger.warn(`Handshake not received from ${peerId}`)
                         delete this.handshakeTimeoutRefs[peerId]
                         reject(`Handshake not received from ${peerId}`)
                     }, this.handshakeTimer)
@@ -56,6 +57,9 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
                         const { uuid, peerId } = JSON.parse(message.data.toString())
                         if (uuid && peerId === serverPeerInfo.peerId) {
                             ws.send(JSON.stringify({uuid, peerId: this.peerInfo.peerId}))
+                            if (this.handshakeTimeoutRefs[peerId]) {
+                                this.clearHandshake(peerId)
+                            }
                             resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
                         } else {
                             this.logger.trace('Expected a handshake message got: ' + message.data.toString())

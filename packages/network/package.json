@@ -13,10 +13,13 @@
     "tracker": "bin/tracker.js"
   },
   "main": "dist/composition.js",
+  "browser": "./dist/composition.js",
   "types": "dist/composition.d.ts",
   "scripts": {
     "prepare": "tsc -p tsconfig-build.json",
-    "build": "tsc -p tsconfig-build.json",
+    "build": "tsc -p tsconfig-build.json && webpack",
+    "build-browser": "NODE_ENV=development webpack --mode=development --progress",
+    "build-browser-production": "NODE_ENV=production webpack --mode=production --progress",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",
     "pub-1": "node $NODE_DEBUG_OPTION bin/publisher.js --port=30323",
@@ -103,6 +106,7 @@
     "typedoc": "^0.20.36",
     "typescript": "^4.2.4",
     "webpack": "^5.40.0",
+    "webpack-cli": "^4.7.2",
     "websocket": "^1.0.34"
   },
   "optionalDependencies": {

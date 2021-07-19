@@ -1,0 +1,15 @@
+<html>
+<head>
+    <title>Test Network Node in Chrome Browser</title>
+    <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
+    <script src="../../dist/bundle.js"></script>
+    <script>
+        const testNode = createBrowserNode({
+            id: 'node-0',
+            trackers: [ { id: 'tracker', ws: 'ws://127.0.0.1:27777' } ],
+            stunUrls: []
+        })
+        testNode.start()
+    </script>
+</head>
+</html>

@@ -16,8 +16,8 @@ export enum Event {
 
 export enum DisconnectionCode {
     GRACEFUL_SHUTDOWN = 1000,
-    FAILED_HANDSHAKE = 1002,
-    DEAD_CONNECTION = 1003
+    FAILED_HANDSHAKE = 4000,
+    DEAD_CONNECTION = 4001
 }
 
 export enum DisconnectionReason {
@@ -128,8 +128,8 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
     stop(): Promise<void> {
         this.stopped = true
         this.pingPongWs.stop()
-        Object.values(this.handshakeTimeoutRefs).map((timeout) => {
-            clearTimeout(timeout)
+        Object.keys(this.handshakeTimeoutRefs).map((id) => {
+            this.clearHandshake(id)
         })
         this.handshakeTimeoutRefs = {}
         return this.doStop()
@@ -145,6 +145,13 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
 
     getPeerInfos(): PeerInfo[] {
         return this.getConnections().map((connection) => connection.getPeerInfo())
+    }
+
+    clearHandshake(id: string): void {
+        if (this.handshakeTimeoutRefs[id]) {
+            clearTimeout(this.handshakeTimeoutRefs[id])
+            delete this.handshakeTimeoutRefs[id]
+        }
     }
 
     /**
