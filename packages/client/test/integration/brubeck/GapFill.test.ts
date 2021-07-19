@@ -5,12 +5,11 @@ import { BrubeckClientOptions } from '../../../src/brubeck/Config'
 import { Stream } from '../../../src/stream'
 import Subscriber from '../../../src/brubeck/Subscriber'
 import Subscription from '../../../src/brubeck/Subscription'
-import { MessageRef, StreamMessage } from 'streamr-client-protocol'
-// import { BrubeckClientOptions } from '../../src'
+import { StreamMessage } from 'streamr-client-protocol'
 import { StorageNode } from '../../../src/stream/StorageNode'
 
 import { fakePrivateKey, describeRepeats, createTestStream, Msg } from '../../utils'
-import { getPublishTestStreamMessages, getWaitForStorage } from './utils'
+import { getPublishTestStreamMessages } from './utils'
 import clientOptions from '../config'
 
 const MAX_MESSAGES = 10
@@ -120,6 +119,7 @@ describeRepeats('GapFill', () => {
 
         describe('with resend', () => {
             it('can fill single gap', async () => {
+                const calledResend = jest.spyOn(client.resends, 'resendMessages')
                 const sub = await client.subscribe(stream.id)
                 monkeypatchMessageHandler(sub, (_msg, count) => {
                     if (count === 2) { return null }
@@ -140,6 +140,7 @@ describeRepeats('GapFill', () => {
                     }
                 }
                 expect(received).toEqual(published)
+                expect(calledResend).toHaveBeenCalledTimes(1)
             }, 10000)
 
             it('can fill gap of multiple messages', async () => {
@@ -221,8 +222,8 @@ describeRepeats('GapFill', () => {
 
         it('can fill gaps in resends even if gap cannot be filled (ignores missing)', async () => {
             let ts = 0
-            let publishCount = 0
             const node = await client.getNode()
+            let publishCount = 0
             const publish = node.publish.bind(node)
             node.publish = (msg) => {
                 publishCount += 1
@@ -268,6 +269,90 @@ describeRepeats('GapFill', () => {
                 })
             }).rejects.toThrow('storage')
         }, 15000)
+    })
+
+    describe('client settings', () => {
+        it('ignores gaps if orderMessages disabled', async () => {
+            await setupClient({
+                orderMessages: false, // should disable all gapfilling
+                gapFillTimeout: 200,
+                retryResendAfter: 2000,
+                maxGapRequests: 99 // would time out test if doesn't give up
+            })
+
+            const calledResend = jest.spyOn(client.resends, 'range')
+
+            const node = await client.getNode()
+            let publishCount = 0
+            const publish = node.publish.bind(node)
+            node.publish = (msg) => {
+                publishCount += 1
+                if (publishCount === 3) {
+                    return undefined
+                }
+
+                return publish(msg)
+            }
+
+            const sub = await client.subscribe({
+                stream,
+            })
+
+            const publishedTask = publishTestMessages(MAX_MESSAGES)
+
+            const received: any[] = []
+            for await (const m of sub) {
+                received.push(m)
+                if (received.length === MAX_MESSAGES - 1) {
+                    break
+                }
+            }
+            const published = await publishedTask
+            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+            expect(calledResend).toHaveBeenCalledTimes(0)
+        }, 20000)
+
+        it('calls gapfill max maxGapRequests times', async () => {
+            await setupClient({
+                gapFillTimeout: 200,
+                retryResendAfter: 200,
+                maxGapRequests: 3
+            })
+
+            await client.connect()
+
+            const calledResend = jest.spyOn(client.resends, 'range')
+            const node = await client.getNode()
+            let publishCount = 0
+            const publish = node.publish.bind(node)
+            node.publish = (msg) => {
+                publishCount += 1
+                if (publishCount === 3) {
+                    return undefined
+                }
+
+                return publish(msg)
+            }
+
+            const published = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: true,
+            })
+
+            const sub = await client.resend({
+                stream,
+                last: MAX_MESSAGES,
+            })
+
+            const received: any[] = []
+            for await (const m of sub) {
+                received.push(m)
+                if (received.length === MAX_MESSAGES - 1) {
+                    break
+                }
+            }
+            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+            expect(calledResend).toHaveBeenCalledTimes(3)
+        }, 20000)
     })
 })
 
@@ -368,64 +453,6 @@ describeRepeats('GapFill', () => {
             // expect(received).toEqual(published)
         // }, 20000)
 
-        // it('calls gapfill max maxGapRequests times', async () => {
-            // await setupClient({
-                // gapFillTimeout: 200,
-                // retryResendAfter: 200,
-                // maxGapRequests: 3
-            // })
-
-            // await client.connect()
-            // const { parse } = client.connection
-            // const calledResend = jest.fn()
-            // let count = 0
-            // let droppedMsgRef: MessageRef
-            // client.connection.parse = (...args) => {
-                // const msg: any = parse.call(client.connection, ...args)
-                // if (!msg.streamMessage) {
-                    // return msg
-                // }
-
-                // count += 1
-                // if (count === 3) {
-                    // if (!droppedMsgRef) {
-                        // droppedMsgRef = msg.streamMessage.getMessageRef()
-                    // }
-                    // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                    // return null
-                // }
-
-                // if (droppedMsgRef && msg.streamMessage.getMessageRef().compareTo(droppedMsgRef) === 0) {
-                    // // count resends by counting number of times dropped message appears (and is dropped)
-                    // calledResend()
-                    // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                    // return null
-                // }
-
-                // return msg
-            // }
-
-            // const published = await publishTestMessages(MAX_MESSAGES, {
-                // waitForLast: true,
-            // })
-
-            // const sub = await client.resend({
-                // stream,
-                // last: MAX_MESSAGES,
-            // })
-
-            // const received: any[] = []
-            // for await (const m of sub) {
-                // received.push(m.getParsedContent())
-                // if (received.length === MAX_MESSAGES - 1) {
-                    // break
-                // }
-            // }
-            // expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-            // expect(client.connection.getState()).toBe('connected')
-            // expect(calledResend).toHaveBeenCalledTimes(3)
-        // }, 20000)
-
         // it('subscribe does not crash if gaps found but no storage assigned', async () => {
             // await setupClient({
                 // gapFillTimeout: 200,
@@ -521,63 +548,5 @@ describeRepeats('GapFill', () => {
             // expect(received).toEqual(published)
         // }, 20000)
 
-        // it('ignores gaps if orderMessages disabled', async () => {
-            // await setupClient({
-                // orderMessages: false, // should disable all gapfilling
-                // gapFillTimeout: 200,
-                // retryResendAfter: 2000,
-                // maxGapRequests: 99 // would time out test if doesn't give up
-            // })
-
-            // await client.connect()
-            // const { parse } = client.connection
-            // const calledResend = jest.fn()
-            // let count = 0
-            // let droppedMsgRef: MessageRef
-            // client.connection.parse = (...args) => {
-                // const msg: any = parse.call(client.connection, ...args)
-                // if (!msg.streamMessage) {
-                    // return msg
-                // }
-
-                // count += 1
-                // if (count === 3) {
-                    // if (!droppedMsgRef) {
-                        // droppedMsgRef = msg.streamMessage.getMessageRef()
-                    // }
-                    // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                    // return null
-                // }
-
-                // if (droppedMsgRef && msg.streamMessage.getMessageRef().compareTo(droppedMsgRef) === 0) {
-                    // calledResend()
-                    // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                    // return null
-                // }
-
-                // return msg
-            // }
-
-            // const sub = await client.subscribe({
-                // stream,
-            // })
-
-            // const publishedTask = publishTestMessages(MAX_MESSAGES, {
-                // stream,
-            // })
-
-            // const received: any[] = []
-            // for await (const m of sub) {
-                // received.push(m.getParsedContent())
-                // if (received.length === MAX_MESSAGES - 1) {
-                    // break
-                // }
-            // }
-            // const published = await publishedTask
-            // expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-            // expect(client.connection.getState()).toBe('connected')
-            // // should not have got any resend responses
-            // expect(calledResend).toHaveBeenCalledTimes(0)
-        // }, 20000)
     // })
 // })
