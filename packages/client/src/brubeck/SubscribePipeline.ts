@@ -39,10 +39,10 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
     }
 
     // re-order messages (ignore gaps)
-    // const internalOrderingUtil = OrderMessages(client, {
-    // ...options,
-    // gapFill: false,
-    // })
+    const internalOrderingUtil = OrderMessages<T>(client, spid, {
+        ...options,
+        gapFill: false,
+    })
 
     // collect messages that fail validation/parsing, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
@@ -92,7 +92,7 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
             }
         })
         // re-order messages (ignore gaps)
-        // internalOrderingUtil,
+        .pipe(internalOrderingUtil)
         // ignore any failed messages
         .pipe(async function* IgnoreMessages(src) {
             for await (const streamMessage of src) {
@@ -102,8 +102,4 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
                 yield streamMessage
             }
         })
-
-    // return Object.assign(p, {
-    // id,
-    // })
 }
