@@ -1,155 +1,145 @@
-import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js'
+import express from 'express'
+import cors from 'cors'
 import { MetricsContext } from './MetricsContext'
 import { addRttsToNodeConnections, getNodeConnections, getTopology, getStreamSizes } from '../logic/trackerSummaryUtils'
 import { Logger } from './Logger'
 import { Tracker } from '../logic/Tracker'
+import http from 'http'
+import https from 'https'
 
 const staticLogger = new Logger(module)
 
-const writeCorsHeaders = (res: HttpResponse, req: HttpRequest): void => {
-    const origin = req.getHeader('origin')
-    res.writeHeader('Access-Control-Allow-Origin', origin)
-    res.writeHeader('Access-Control-Allow-Credentials', 'true')
-}
-
-const respondWithError = (res: HttpResponse, req: HttpRequest, errorMessage: string): void => {
-    res.writeStatus('422 Unprocessable Entity')
-    writeCorsHeaders(res, req)
-    res.end(JSON.stringify({
+const respondWithError = (res: express.Response, errorMessage: string): void => {
+    res.status(422).json({
         errorMessage
-    }))
+    })
 }
 
-const validateStreamId = (res: HttpResponse, req: HttpRequest): string | null => {
-    const streamId = decodeURIComponent(req.getParameter(0)).trim()
+const validateStreamId = (req: express.Request, res: express.Response): string | null => {
+    const streamId = decodeURIComponent(req.params.streamId).trim()
     if (streamId.length === 0) {
         staticLogger.warn('422 streamId must be a not empty string')
-        respondWithError(res, req, 'streamId cannot be empty')
+        respondWithError(res, 'streamId cannot be empty')
         return null
     }
     return streamId
 }
 
-const validatePartition = (res: HttpResponse, req: HttpRequest): number | null  => {
-    const partition = Number.parseInt(req.getParameter(1), 10)
+const validatePartition = (req: express.Request, res: express.Response): number | null  => {
+    const partition = Number.parseInt(req.params.partition, 10)
     if (!Number.isSafeInteger(partition) || partition < 0) {
         staticLogger.warn(`422 partition must be a positive integer, askedPartition: ${partition}`)
-        respondWithError(res, req, `partition must be a positive integer (was ${partition})`)
+        respondWithError(res, `partition must be a positive integer (was ${partition})`)
         return null
     }
     return partition
 }
 
-const cachedJsonGet = (wss: TemplatedApp, endpoint: string, maxAge: number, jsonFactory: () => any): TemplatedApp => {
+const cachedJsonGet = (
+    app: express.Application,
+    endpoint: string,
+    maxAge: number,
+    jsonFactory: () => any
+): express.Application => {
     let cache: undefined | {
         timestamp: number
         json: any
     }
-    return wss.get(endpoint, (res, req) => {
+    return app.get(endpoint, (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to ' + endpoint)
-        writeCorsHeaders(res, req)
         if ((cache === undefined) || (Date.now() > (cache.timestamp + maxAge))) {
             cache = {
                 json: jsonFactory(),
                 timestamp: Date.now()
             }
         }
-        res.end(JSON.stringify(cache.json))
+        res.json(cache.json)
     })
 }
 
-export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metricsContext: MetricsContext): void {
-    wss.get('/topology/', (res, req) => {
+export function trackerHttpEndpoints(
+    httpServer: http.Server | https.Server,
+    tracker: Tracker,
+    metricsContext: MetricsContext
+): void {
+    const app = express()
+    app.use(cors())
+    httpServer.on('request', app)
+
+    app.get('/topology/', (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology/')
-        writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())))
+        res.json(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts()))
     })
-    wss.get('/topology/:streamId/', (res, req) => {
-        const streamId = validateStreamId(res, req)
+    app.get('/topology/:streamId/', (req: express.Request, res: express.Response) => {
+        const streamId = validateStreamId(req, res)
         if (streamId === null) {
             return
         }
 
         staticLogger.debug(`request to /topology/${streamId}/`)
-        writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, null)))
+        res.json(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, null))
     })
-    wss.get('/topology/:streamId/:partition/', (res, req) => {
-        const streamId = validateStreamId(res, req)
+    app.get('/topology/:streamId/:partition/', (req: express.Request, res: express.Response) => {
+        const streamId = validateStreamId(req, res)
         if (streamId === null) {
             return
         }
 
-        const askedPartition = validatePartition(res, req)
+        const askedPartition = validatePartition(req, res)
         if (askedPartition === null) {
             return
         }
 
         staticLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
-        writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, askedPartition)))
+        res.json(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, askedPartition))
     })
-    cachedJsonGet(wss,'/node-connections/', 15 * 1000, () => {
+    cachedJsonGet(app,'/node-connections/', 15 * 1000, () => {
         const topologyUnion = getNodeConnections(tracker.getNodes(), tracker.getOverlayPerStream())
         return Object.assign({}, ...Object.entries(topologyUnion).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, Array.from(neighbors), tracker.getOverlayConnectionRtts())
         }))
     })
-    wss.get('/location/', (res, req) => {
+    app.get('/location/', (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /location/')
-        writeCorsHeaders(res, req)
-        res.end(JSON.stringify(tracker.getAllNodeLocations()))
+        res.json(tracker.getAllNodeLocations())
     })
-    wss.get('/location/:nodeId/', (res, req) => {
-        const nodeId = req.getParameter(0)
+    app.get('/location/:nodeId/', (req: express.Request, res: express.Response) => {
+        const nodeId = req.params.nodeId
         const location = tracker.getNodeLocation(nodeId)
 
         staticLogger.debug(`request to /location/${nodeId}/`)
-        writeCorsHeaders(res, req)
-        res.end(JSON.stringify(location || {}))
+        res.json(location || {})
     })
-    wss.get('/metrics/', async (res, req) => {
-        /* Can't return or yield from here without responding or attaching an abort handler */
-        res.onAborted(() => {
-            res.aborted = true
-        })
-
+    app.get('/metrics/', async (req: express.Request, res: express.Response) => {
         const metrics = await metricsContext.report()
-
-        if (!res.aborted) {
-            writeCorsHeaders(res, req)
-            staticLogger.debug('request to /metrics/')
-            res.end(JSON.stringify(metrics))
-        }
+        staticLogger.debug('request to /metrics/')
+        res.json(metrics)
     })
-    wss.get('/topology-size/', async (res, req) => {
+    app.get('/topology-size/', async (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology-size/')
-        writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getStreamSizes(tracker.getOverlayPerStream())))
+        res.json(getStreamSizes(tracker.getOverlayPerStream()))
     })
-    wss.get('/topology-size/:streamId/', async (res, req) => {
-        const streamId = validateStreamId(res, req)
+    app.get('/topology-size/:streamId/', async (req: express.Request, res: express.Response) => {
+        const streamId = validateStreamId(req, res)
         if (streamId === null) {
             return
         }
         
         staticLogger.debug(`request to /topology-size/${streamId}/`)
-        writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getStreamSizes(tracker.getOverlayPerStream(), streamId, null)))
+        res.json(getStreamSizes(tracker.getOverlayPerStream(), streamId, null))
     })
-    wss.get('/topology-size/:streamId/:partition/', async (res, req) => {
-        const streamId = validateStreamId(res, req)
+    app.get('/topology-size/:streamId/:partition/', async (req: express.Request, res: express.Response) => {
+        const streamId = validateStreamId(req, res)
         if (streamId === null) {
             return
         }
 
-        const askedPartition = validatePartition(res, req)
+        const askedPartition = validatePartition(req, res)
         if (askedPartition === null) {
             return
         }
 
         staticLogger.debug(`request to /topology-size/${streamId}/${askedPartition}/`)
-        writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getStreamSizes(tracker.getOverlayPerStream(), streamId, askedPartition)))
+        res.json(getStreamSizes(tracker.getOverlayPerStream(), streamId, askedPartition))
     })
 }

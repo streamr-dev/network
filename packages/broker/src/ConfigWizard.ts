@@ -19,9 +19,6 @@ const DefaultConfig: Config = {
     ethereumPrivateKey: TODO_VALUES.string,//'{ETHEREUM_PRIVATE_KEY}',
     network: {
         name: TODO_VALUES.string,
-        hostname: '127.0.0.1', // TODO
-        port: TODO_VALUES.number,
-        advertisedWsUrl: null,
         trackers: [ // TODO
             "ws://127.0.0.1:30301",
             "ws://127.0.0.1:30302",

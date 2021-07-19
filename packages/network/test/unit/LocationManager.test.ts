@@ -17,7 +17,7 @@ describe('LocationManager', () => {
                     latitude: null,
                     longitude: null
                 },
-                address: 'ws://193.166.4.1'
+                address: '193.166.4.1'
             })
             expect(locationManager.getNodeLocation('nodeId')).toEqual({
                 city: 'Helsinki',
@@ -31,7 +31,7 @@ describe('LocationManager', () => {
             locationManager.updateLocation({
                 nodeId: 'nodeId',
                 location: null,
-                address: 'ws://193.166.4.1'
+                address: '193.166.4.1'
             })
             expect(locationManager.getNodeLocation('nodeId')).toEqual({
                 city: '',
@@ -59,8 +59,6 @@ describe('LocationManager', () => {
                 address: 'dsjklgasdjklgjasdklgj'
             })
             expect(locationManager.getNodeLocation('nodeId')).toBeUndefined()
-            // @ts-expect-error private field
-            expect(locationManager.logger.warn).toHaveBeenCalled()
         })
 
         it('passing invalid location to already set location does not overwrite', () => {
@@ -72,12 +70,12 @@ describe('LocationManager', () => {
                     latitude: null,
                     longitude: null
                 },
-                address: 'ws://193.166.4.1'
+                address: '193.166.4.1'
             })
             locationManager.updateLocation({
                 nodeId: 'nodeId',
                 location: null,
-                address: 'ws://193.166.4.1'
+                address: '/193.166.4.1'
             })
             expect(locationManager.getNodeLocation('nodeId')).toEqual({
                 city: 'Helsinki',
@@ -92,12 +90,12 @@ describe('LocationManager', () => {
         locationManager.updateLocation({
             nodeId: 'node-1',
             location: null,
-            address: 'ws://193.166.4.1'
+            address: '193.166.4.1'
         })
         locationManager.updateLocation({
             nodeId: 'node-2',
             location: null,
-            address: 'ws://8.8.8.8'
+            address: '8.8.8.8'
         })
         expect(locationManager.getAllNodeLocations()).toEqual({
             'node-1': {
@@ -119,12 +117,12 @@ describe('LocationManager', () => {
         locationManager.updateLocation({
             nodeId: 'node-1',
             location: null,
-            address: 'ws://193.166.4.1'
+            address: '193.166.4.1'
         })
         locationManager.updateLocation({
             nodeId: 'node-2',
             location: null,
-            address: 'ws://8.8.8.8'
+            address: '8.8.8.8'
         })
         locationManager.removeNode('node-2')
         expect(locationManager.getAllNodeLocations()).toEqual({

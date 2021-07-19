@@ -5,9 +5,6 @@ export interface NetworkSmartContract {
 
 export interface NetworkConfig {
     name: string,
-    hostname: string,
-    port: number,
-    advertisedWsUrl: string | null,
     trackers: string[] | NetworkSmartContract,
     location: {
         latitude: number,

@@ -13,6 +13,7 @@ import {
     STREAMR_DOCKER_DEV_HOST,
     createTestStream
 } from '../../../utils'
+import { Broker } from '../../../broker'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -23,14 +24,12 @@ const STREAMR_URL = `http://${STREAMR_DOCKER_DEV_HOST}`
 const HTTP_PORT = 17770
 const WS_PORT = 17771
 const TRACKER_PORT = 17772
-const STORAGE_NODE_PORT = 17773
-const BROKER_PORT = 17774
 
 describe('StorageConfig', () => {
     let cassandraClient: Client
     let tracker: Todo
-    let storageNode: Todo
-    let broker: Todo
+    let storageNode: Broker
+    let broker: Broker
     let client: StreamrClient
     let stream: Stream
     let assignmentEventManager: StorageAssignmentEventManager
@@ -60,7 +59,6 @@ describe('StorageConfig', () => {
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: STORAGE_NODE_PORT,
             trackerPort: TRACKER_PORT,
             httpPort: HTTP_PORT,
             streamrUrl: STREAMR_URL,
@@ -70,7 +68,6 @@ describe('StorageConfig', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey: brokerAccount.privateKey,
-            networkPort: BROKER_PORT,
             trackerPort: TRACKER_PORT,
             wsPort: WS_PORT,
             streamrUrl: STREAMR_URL,
@@ -83,7 +80,7 @@ describe('StorageConfig', () => {
 
     afterEach(async () => {
         await client.ensureDisconnected()
-        await Promise.allSettled([storageNode.close(), broker.close(), tracker.stop(), assignmentEventManager.close()])
+        await Promise.allSettled([storageNode.stop(), broker.stop(), tracker.stop(), assignmentEventManager.close()])
     })
 
     it('when client publishes a message, it is written to the store', async () => {

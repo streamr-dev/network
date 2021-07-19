@@ -3,6 +3,7 @@ import qs from 'qs'
 import StreamrClient from 'streamr-client'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
+import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 
 const PORT = 12398
 const MOCK_STREAM_ID = '0x1234567890123456789012345678901234567890/mock-path'
@@ -38,7 +39,7 @@ describe('WebsocketServer', () => {
             subscribe: jest.fn().mockResolvedValue(undefined),
         } as Partial<StreamrClient>
         wsServer = new WebsocketServer(streamrClient as StreamrClient)
-        await wsServer.start(PORT, {
+        await wsServer.start(PORT, new PlainPayloadFormat(), {
             isValidAuthentication: (apiKey?: string) => (apiKey === REQUIRED_API_KEY)
         })
     })
@@ -163,7 +164,7 @@ describe('WebsocketServer', () => {
             await waitForEvent(wsClient, 'open')
             const payloadPromise = waitForEvent(wsClient, 'message')
             const onMessageCallback = (streamrClient.subscribe as any).mock.calls[0][1]
-            onMessageCallback(MOCK_MESSAGE)
+            onMessageCallback(MOCK_MESSAGE, {})
             const firstPayload = (await payloadPromise)[0] as string
             expect(JSON.parse(firstPayload)).toEqual(MOCK_MESSAGE)
         })

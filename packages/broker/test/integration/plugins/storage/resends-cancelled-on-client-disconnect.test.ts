@@ -1,9 +1,8 @@
-import { startTracker, startNetworkNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
+import { startTracker, createNetworkNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
 import { waitForEvent } from 'streamr-test-utils'
-import ws from 'uWebSockets.js'
 import StreamrClient, { Stream } from 'streamr-client'
 import express from 'express'
-import { Server } from 'http'
+import http, { Server } from 'http'
 import { once } from 'events'
 import { Wallet } from 'ethers'
 import { wait } from 'streamr-test-utils'
@@ -20,7 +19,6 @@ import { createClient, createTestStream, StorageAssignmentEventManager, STREAMR_
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const trackerPort = 17750
-const networkNodePort = 17752
 const wsPort = 17753
 const mockServerPort = 17754
 const MOCK_DATA_MESSAGE_COUNT = 100
@@ -81,11 +79,9 @@ describe('resend cancellation', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        networkNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: networkNodePort,
+        networkNode = createNetworkNode({
             id: 'networkNode',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getUrl()],
         })
         const storageNodeAddress = Wallet.createRandom().address
         const storageNodeRegistry = StorageNodeRegistry.createInstance(
@@ -96,8 +92,7 @@ describe('resend cancellation', () => {
             }]
         )
         websocketServer = new WebsocketServer(
-            ws.App(),
-            wsPort,
+            http.createServer().listen(wsPort),
             networkNode,
             new StreamFetcher(`http://${STREAMR_DOCKER_DEV_HOST}`),
             new Publisher(networkNode, {

@@ -2,7 +2,7 @@ import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
 import { runAndWaitForEvents, runAndWaitForConditions } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
@@ -18,17 +18,13 @@ describe('check tracker, nodes and statuses from nodes', () => {
             port: 32400,
             id: 'tracker'
         })
-        subscriberOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 33371,
+        subscriberOne = createNetworkNode({
             id: 'subscriberOne',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
-        subscriberTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 33372,
+        subscriberTwo = createNetworkNode({
             id: 'subscriberTwo',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getUrl()]
         })
 
         subscriberOne.subscribe('stream-1', 0)

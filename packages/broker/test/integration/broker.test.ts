@@ -12,21 +12,19 @@ import {
 } from '../utils'
 import { Todo } from '../types'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
+import { Broker } from '../broker'
 
 const httpPort = 12341
 const wsPort1 = 12351
 const wsPort2 = 12352
 const wsPort3 = 12353
-const networkPort1 = 12361
-const networkPort2 = 12362
-const networkPort3 = 12363
 const trackerPort = 12370
 
 describe('broker: end-to-end', () => {
     let tracker: Tracker
-    let storageNode: Todo
-    let brokerNode1: Todo
-    let brokerNode2: Todo
+    let storageNode: Broker
+    let brokerNode1: Broker
+    let brokerNode2: Broker
     let client1: StreamrClient
     let client2: StreamrClient
     let client3: StreamrClient
@@ -49,7 +47,6 @@ describe('broker: end-to-end', () => {
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort1,
             trackerPort,
             httpPort: httpPort,
             wsPort: wsPort1,
@@ -60,7 +57,6 @@ describe('broker: end-to-end', () => {
         brokerNode1 = await startBroker({
             name: 'brokerNode1',
             privateKey: fastPrivateKey(),
-            networkPort: networkPort2,
             trackerPort,
             wsPort: wsPort2,
             streamrAddress: engineAndEditorAccount.address,
@@ -70,7 +66,6 @@ describe('broker: end-to-end', () => {
         brokerNode2 = await startBroker({
             name: 'brokerNode2',
             privateKey: fastPrivateKey(),
-            networkPort: networkPort3,
             trackerPort,
             wsPort: wsPort3,
             streamrAddress: engineAndEditorAccount.address,
@@ -108,9 +103,9 @@ describe('broker: end-to-end', () => {
             client1.ensureDisconnected(),
             client2.ensureDisconnected(),
             client3.ensureDisconnected(),
-            storageNode.close(),
-            brokerNode1.close(),
-            brokerNode2.close(),
+            storageNode.stop(),
+            brokerNode1.stop(),
+            brokerNode2.stop(),
             assignmentEventManager.close(),
         ])
     })

@@ -3,6 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../../../../src/types'
+import { Broker } from '../../../broker'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../../../utils'
 
 const httpPort1 = 12381
@@ -11,9 +12,6 @@ const httpPort3 = 12383
 const wsPort1 = 12391
 const wsPort2 = 12392
 const wsPort3 = 12393
-const networkPort1 = 12401
-const networkPort2 = 12402
-const networkPort3 = 12403
 const trackerPort = 12410
 const mqttPort1 = 12551
 const mqttPort2 = 12552
@@ -24,9 +22,9 @@ const broker3Key = '0xa417da20e3afeb69544585c6b44b95ad4d987f38cf257f4a53eab415cc
 
 describe('mqtt: end-to-end', () => {
     let tracker: Todo
-    let broker1: Todo
-    let broker2: Todo
-    let broker3: Todo
+    let broker1: Broker
+    let broker2: Broker
+    let broker3: Broker
     const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
@@ -45,7 +43,6 @@ describe('mqtt: end-to-end', () => {
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: broker1Key,
-            networkPort: networkPort1,
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
@@ -54,7 +51,6 @@ describe('mqtt: end-to-end', () => {
         broker2 = await startBroker({
             name: 'broker2',
             privateKey: broker2Key,
-            networkPort: networkPort2,
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
@@ -63,7 +59,6 @@ describe('mqtt: end-to-end', () => {
         broker3 = await startBroker({
             name: 'broker3',
             privateKey: broker3Key,
-            networkPort: networkPort3,
             trackerPort,
             httpPort: httpPort3,
             wsPort: wsPort3,
@@ -99,9 +94,9 @@ describe('mqtt: end-to-end', () => {
         ])
 
         await Promise.all([
-            broker1.close(),
-            broker2.close(),
-            broker3.close(),
+            broker1.stop(),
+            broker2.stop(),
+            broker3.stop(),
         ])
     }, 15000)
 

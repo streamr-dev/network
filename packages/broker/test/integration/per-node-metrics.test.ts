@@ -1,13 +1,11 @@
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import {startTracker, Tracker} from 'streamr-network'
-import { Todo } from '../types'
 import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from '../utils'
 import { Wallet } from 'ethers'
+import { Broker } from '../broker'
 
 const httpPort = 47741
 const wsPort = 47742
-const networkPort1 = 47743
-const networkPort2 = 47744
 const trackerPort = 47745
 
 const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: string, source: string) => {
@@ -52,8 +50,8 @@ const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: st
 
 describe('per-node metrics', () => {
     let tracker: Tracker
-    let broker1: Todo
-    let storageNode: Todo
+    let broker1: Broker
+    let storageNode: Broker
     let client1: StreamrClient
     let legacyStream: Stream
     let nodeAddress: string
@@ -85,7 +83,6 @@ describe('per-node metrics', () => {
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort2,
             trackerPort,
             httpPort,
             enableCassandra: true,
@@ -97,7 +94,6 @@ describe('per-node metrics', () => {
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
-            networkPort: networkPort1,
             trackerPort,
             wsPort,
             reporting: {
@@ -133,8 +129,8 @@ describe('per-node metrics', () => {
     afterAll(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            broker1.close(),
-            storageNode.close(),
+            broker1.stop(),
+            storageNode.stop(),
             client1.ensureDisconnected(),
             client2.ensureDisconnected()
         ])

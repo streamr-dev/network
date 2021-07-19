@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events'
 import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
-import nodeDataChannel, { DescriptionType } from 'node-datachannel'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
-import { Connection, ConstructorOptions, DeferredConnectionAttempt, isOffering } from './Connection'
+import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
+import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import {
     AnswerOptions,
@@ -27,12 +27,18 @@ class WebRtcError extends Error {
     }
 }
 
+export interface WebRtcConnectionFactory {
+    createConnection(opts: ConstructorOptions): WebRtcConnection
+    cleanUp(): void
+}
+
 export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly peerInfo: PeerInfo
     private readonly stunUrls: string[]
     private readonly rtcSignaller: RtcSignaller
     private readonly negotiatedProtocolVersions: NegotiatedProtocolVersions
-    private connections: { [key: string]: Connection }
+    private readonly connectionFactory: WebRtcConnectionFactory
+    private connections: { [key: string]: WebRtcConnection }
     private messageQueues: { [key: string]: MessageQueue<string> }
     private readonly newConnectionTimeout: number
     private readonly pingInterval: number
@@ -41,7 +47,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private stopped = false
     private readonly bufferThresholdLow: number
     private readonly bufferThresholdHigh: number
-    private maxMessageSize
+    private readonly maxMessageSize
 
     constructor(
         peerInfo: PeerInfo,
@@ -49,6 +55,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         rtcSignaller: RtcSignaller,
         metricsContext: MetricsContext,
         negotiatedProtocolVersions: NegotiatedProtocolVersions,
+        connectionFactory: WebRtcConnectionFactory,
         newConnectionTimeout = 15000,
         pingInterval = 2 * 1000,
         webrtcDatachannelBufferThresholdLow = 2 ** 15,
@@ -60,6 +67,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.stunUrls = stunUrls
         this.rtcSignaller = rtcSignaller
         this.negotiatedProtocolVersions = negotiatedProtocolVersions
+        this.connectionFactory = connectionFactory
         this.connections = {}
         this.messageQueues = {}
         this.newConnectionTimeout = newConnectionTimeout
@@ -109,7 +117,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 return Object.values(this.connections).reduce((total, c) => total + c.getQueueSize(), 0)
             })
     }
-    
+
     private createConnection(
         targetPeerId: string,
         routerId: string,
@@ -124,12 +132,12 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             bufferThresholdHigh: this.bufferThresholdHigh,
             bufferThresholdLow: this.bufferThresholdLow,
             messageQueue,
-            deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(targetPeerId),
+            deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(),
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
         }
 
-        const connection = new Connection(connectionOptions)
+        const connection = this.connectionFactory.createConnection(connectionOptions)
 
         if (connection.isOffering()) {
             connection.once('localDescription', (type, description) => {            
@@ -181,7 +189,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private onRtcOfferFromSignaller({ routerId, originatorInfo, description, connectionId }: OfferOptions): void {
         const { peerId } = originatorInfo
         
-        let connection: Connection
+        let connection: WebRtcConnection
        
         if (!this.connections[peerId]) {
             connection = this.createConnection(peerId, routerId,null)
@@ -201,7 +209,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
         connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
         connection.setConnectionId(connectionId)
-        connection.setRemoteDescription(description, 'offer' as DescriptionType.Offer)
+        connection.setRemoteDescription(description, 'offer')
     }
 
     private onRtcAnswerFromSignaller({ originatorInfo, description, connectionId }: AnswerOptions): void {
@@ -213,7 +221,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.logger.warn('unexpected rtcAnswer from %s (connectionId mismatch %s !== %s)', peerId, connection.getConnectionId(), connectionId)
         } else {
             connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
-            connection.setRemoteDescription(description, 'answer' as DescriptionType.Answer)
+            connection.setRemoteDescription(description, 'answer')
             this.attemptProtocolVersionValidation(connection)
         }
     }
@@ -254,7 +262,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    private replaceConnection(peerId: string, routerId: string, newConnectionId?: string): Connection {
+    private replaceConnection(peerId: string, routerId: string, newConnectionId?: string): WebRtcConnection {
         // Close old connection
         const conn = this.connections[peerId]
         let deferredConnectionAttempt = null
@@ -349,7 +357,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.metrics.record('msgOutSpeed', 1)
     }
 
-    private attemptProtocolVersionValidation(connection: Connection): void {
+    private attemptProtocolVersionValidation(connection: WebRtcConnection): void {
         try {
             this.negotiatedProtocolVersions.negotiateProtocolVersion(
                 connection.getPeerId(),
@@ -422,6 +430,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.removeAllListeners()
         Object.values(connections).forEach((connection) => connection.close())
         Object.values(messageQueues).forEach((queue) => queue.clear())
-        nodeDataChannel.cleanup()
+        this.connectionFactory.cleanUp()
     }
 }
