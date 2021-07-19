@@ -6,16 +6,16 @@ describe('SPID', () => {
 
     it('can use object destructuring', () => {
         const spid = new SPID(STREAM_ID, PARTITION)
-        const { id, partition, key } = spid
-        expect(id).toBe(STREAM_ID)
-        expect(partition).toBe(PARTITION)
+        const { streamId, streamPartition, key } = spid
+        expect(streamId).toBe(STREAM_ID)
+        expect(streamPartition).toBe(PARTITION)
         expect(key).toBe(spid.toString())
     })
 
     it('does not lowercase streamId', () => {
         const spid = new SPID(STREAM_ID.toUpperCase(), PARTITION)
-        expect(spid.id).toEqual(STREAM_ID.toUpperCase())
-        expect(spid.partition).toBe(PARTITION)
+        expect(spid.streamId).toEqual(STREAM_ID.toUpperCase())
+        expect(spid.streamPartition).toBe(PARTITION)
     })
 
     it('has toString', () => {
@@ -111,8 +111,8 @@ describe('SPID', () => {
             // @ts-expect-error SPID.SEPARATOR is protected
             const str = `${STREAM_ID}${SPID.SEPARATOR}${PARTITION}`
             const spid = SPID.from(str)
-            expect(spid.id).toBe(STREAM_ID)
-            expect(spid.partition).toBe(PARTITION)
+            expect(spid.streamId).toBe(STREAM_ID)
+            expect(spid.streamPartition).toBe(PARTITION)
         })
 
         it('requires partition in string', () => {
@@ -122,63 +122,64 @@ describe('SPID', () => {
         })
         describe('fromDefaults', () => {
             it('can fill defaults', () => {
-                const spid = SPID.fromDefaults(STREAM_ID, { partition: PARTITION })
-                expect(spid.id).toBe(STREAM_ID)
-                expect(spid.partition).toBe(PARTITION)
-                const spid2 = SPID.fromDefaults({ streamId: STREAM_ID }, { partition: PARTITION + 1 })
-                expect(spid2.id).toBe(STREAM_ID)
-                expect(spid2.partition).toBe(PARTITION + 1)
-                const spid3 = SPID.fromDefaults({ partition: PARTITION + 3 }, { id: STREAM_ID })
-                expect(spid3.id).toBe(STREAM_ID)
-                expect(spid3.partition).toBe(PARTITION + 3)
+                const spid = SPID.fromDefaults(STREAM_ID, { streamPartition: PARTITION })
+                expect(spid.streamId).toBe(STREAM_ID)
+                expect(spid.streamPartition).toBe(PARTITION)
+                const spid2 = SPID.fromDefaults({ streamId: STREAM_ID }, { streamPartition: PARTITION + 1 })
+                expect(spid2.streamId).toBe(STREAM_ID)
+                expect(spid2.streamPartition).toBe(PARTITION + 1)
+                const spid3 = SPID.fromDefaults({ streamPartition: PARTITION + 3 }, { streamId: STREAM_ID })
+                expect(spid3.streamId).toBe(STREAM_ID)
+                expect(spid3.streamPartition).toBe(PARTITION + 3)
             })
 
             it('can fill defaults from strings', () => {
                 // @ts-expect-error SPID.SEPARATOR is protected
                 const str = `${STREAM_ID}${SPID.SEPARATOR}${PARTITION}`
                 const spid = SPID.fromDefaults({ streamId: STREAM_ID }, str)
-                expect(spid.id).toBe(STREAM_ID)
-                expect(spid.partition).toBe(PARTITION)
+                expect(spid.streamId).toBe(STREAM_ID)
+                expect(spid.streamPartition).toBe(PARTITION)
                 const spid2 = SPID.fromDefaults(STREAM_ID + '2', str)
-                expect(spid2.id).toBe(STREAM_ID + '2')
-                expect(spid2.partition).toBe(PARTITION)
+                expect(spid2.streamId).toBe(STREAM_ID + '2')
+                expect(spid2.streamPartition).toBe(PARTITION)
                 // this is mainly testing TS, checking that it complains if partial used but no default
                 expect(() =>{
                     // @ts-expect-error TS should complain, should require default if from argument is missing properties
-                    SPID.fromDefaults({ partition: PARTITION })
+                    SPID.fromDefaults({ streamPartition: PARTITION })
                 }).toThrow()
             })
 
             it('still requires proper values if defaults are set', () => {
                 expect(() =>{
-                    SPID.fromDefaults({ id: undefined, partition: PARTITION }, { partition: PARTITION })
+                    // @ts-expect-error streamId required
+                    SPID.fromDefaults({ streamId: undefined, streamPartition: PARTITION }, { streamPartition: PARTITION })
                 }).toThrow()
             })
         })
 
         it('can parse {id, partition} objects', () => {
-            const spid = SPID.from({id: STREAM_ID, partition: PARTITION})
-            expect(spid.id).toBe(STREAM_ID)
-            expect(spid.partition).toBe(PARTITION)
+            const spid = SPID.from({streamId: STREAM_ID, streamPartition: PARTITION})
+            expect(spid.streamId).toBe(STREAM_ID)
+            expect(spid.streamPartition).toBe(PARTITION)
         })
 
         it('require partition in object', () => {
             expect(() => {
                 // @ts-expect-error partition is required
-                SPID.from({ id: STREAM_ID })
+                SPID.from({ streamId: STREAM_ID })
             }).toThrow()
         })
 
         it('can parse {streamId, streamPartition} objects', () => {
             const spid = SPID.from({streamId: STREAM_ID, streamPartition: PARTITION})
-            expect(spid.id).toBe(STREAM_ID)
-            expect(spid.partition).toBe(PARTITION)
+            expect(spid.streamId).toBe(STREAM_ID)
+            expect(spid.streamPartition).toBe(PARTITION)
         })
 
-        it('prioritises {streamId, streamPartition} over {id, partition}', () => {
-            const spid = SPID.from({id: `not${STREAM_ID}`, partition: PARTITION + 1, streamId: STREAM_ID, streamPartition: PARTITION})
-            expect(spid.id).toBe(STREAM_ID)
-            expect(spid.partition).toBe(PARTITION)
+        it('prioritises supplied values over defaults', () => {
+            const spid = SPID.fromDefaults({ streamId: STREAM_ID, streamPartition: PARTITION }, { streamId: `not${STREAM_ID}`, streamPartition: PARTITION + 1 })
+            expect(spid.streamId).toBe(STREAM_ID)
+            expect(spid.streamPartition).toBe(PARTITION)
         })
     })
 
@@ -192,8 +193,8 @@ describe('SPID', () => {
         it('is valid input into from', () => {
             const spid = new SPID(STREAM_ID, PARTITION)
             const spid2 = SPID.from(spid.toString())
-            expect(spid2.id).toBe(STREAM_ID)
-            expect(spid2.partition).toBe(PARTITION)
+            expect(spid2.streamId).toBe(STREAM_ID)
+            expect(spid2.streamPartition).toBe(PARTITION)
         })
 
         it('is the same as key', () => {

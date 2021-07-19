@@ -48,8 +48,8 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getNewGroupKey(), newGroupKey)
             assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.strictEqual(streamMessage.signature, 'signature')
-            assert.strictEqual(streamMessage.getSPID().id, streamMessage.getStreamId())
-            assert.strictEqual(streamMessage.getSPID().partition, streamMessage.getStreamPartition())
+            assert.strictEqual(streamMessage.getSPID().streamId, streamMessage.getStreamId())
+            assert.strictEqual(streamMessage.getSPID().streamPartition, streamMessage.getStreamPartition())
         })
 
         it('create StreamMessage with minimum fields defined', () => {
