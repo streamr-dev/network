@@ -9,7 +9,7 @@ import { MessageRef, StreamMessage } from 'streamr-client-protocol'
 // import { BrubeckClientOptions } from '../../src'
 import { StorageNode } from '../../../src/stream/StorageNode'
 
-import { fakePrivateKey, describeRepeats, createTestStream } from '../../utils'
+import { fakePrivateKey, describeRepeats, createTestStream, Msg } from '../../utils'
 import { getPublishTestStreamMessages, getWaitForStorage } from './utils'
 import clientOptions from '../config'
 
@@ -189,89 +189,90 @@ describeRepeats('GapFill', () => {
                 expect(received).toEqual(published)
             }, 15000)
         })
+
+        it('can fill gaps in resends', async () => {
+            let count = 0
+            const published = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: true,
+            })
+
+            const sub = await client.resend<typeof Msg>({
+                stream,
+                last: MAX_MESSAGES,
+            })
+
+            sub.pipeBefore(async function* DropMessages(src) {
+                for await (const msg of src) {
+                    count += 1
+                    if (count === 3 || count === 4 || count === 7) {
+                        continue
+                    }
+                    yield msg
+                }
+            })
+
+            const received = []
+            for await (const m of sub) {
+                received.push(m)
+                // should not need to explicitly end
+            }
+            expect(received).toEqual(published)
+        }, 60000)
+
+        it('can fill gaps in resends even if gap cannot be filled (ignores missing)', async () => {
+            let ts = 0
+            let publishCount = 0
+            const node = await client.getNode()
+            const publish = node.publish.bind(node)
+            node.publish = (msg) => {
+                publishCount += 1
+                if (publishCount === 3) {
+                    return undefined
+                }
+
+                return publish(msg)
+            }
+
+            const published = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: true,
+                timestamp: () => {
+                    const v = 1000000 + ts
+                    ts += 1
+                    return v
+                }
+            })
+
+            const sub = await client.resend({
+                stream,
+                last: MAX_MESSAGES,
+            })
+
+            const received = []
+            for await (const m of sub) {
+                received.push(m)
+                // should not need to explicitly end
+            }
+            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+        }, 60000)
+
+        it('rejects resend if no storage assigned', async () => {
+            // new stream, assign to storage node not called
+            stream = await createTestStream(client.client, module, {
+                requireSignedData: true,
+            })
+
+            await expect(async () => {
+                await client.resend({
+                    stream,
+                    last: MAX_MESSAGES,
+                })
+            }).rejects.toThrow('storage')
+        }, 15000)
     })
- // it('can fill gaps in resends', async () => {
-                // const { parse } = client.connection
-                // let count = 0
-                // client.connection.parse = (...args) => {
-                    // const msg: any = parse.call(client.connection, ...args)
-                    // if (!msg.streamMessage) {
-                        // return msg
-                    // }
-
-                    // count += 1
-                    // if (count === 3 || count === 4 || count === 7) {
-                        // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                        // return null
-                    // }
-
-                    // return msg
-                // }
-
-                // const published = await publishTestMessages(MAX_MESSAGES, {
-                    // waitForLast: true,
-                // })
-
-                // const sub = await client.resend({
-                    // stream,
-                    // last: MAX_MESSAGES,
-                // })
-                // const received = []
-                // for await (const m of sub) {
-                    // received.push(m.getParsedContent())
-                    // // should not need to explicitly end
-                // }
-                // expect(received).toEqual(published)
-                // expect(client.connection.getState()).toBe('connected')
-            // }, 60000)
-
 })
 
 
            
-            // it('can fill gaps in resends even if gap cannot be filled', async () => {
-                // const { parse } = client.connection
-                // let count = 0
-                // let droppedMsgRef: MessageRef
-                // client.connection.parse = (...args) => {
-                    // const msg: any = parse.call(client.connection, ...args)
-                    // if (!msg.streamMessage) {
-                        // return msg
-                    // }
-
-                    // count += 1
-                    // if (count === 3) {
-                        // if (!droppedMsgRef) {
-                            // droppedMsgRef = msg.streamMessage.getMessageRef()
-                        // }
-                        // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                        // return null
-                    // }
-
-                    // if (droppedMsgRef && msg.streamMessage.getMessageRef().compareTo(droppedMsgRef) === 0) {
-                        // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                        // return null
-                    // }
-
-                    // return msg
-                // }
-
-                // const published = await publishTestMessages(MAX_MESSAGES, {
-                    // waitForLast: true,
-                // })
-
-                // const sub = await client.resend({
-                    // stream,
-                    // last: MAX_MESSAGES,
-                // })
-                // const received = []
-                // for await (const m of sub) {
-                    // received.push(m.getParsedContent())
-                    // // should not need to explicitly end
-                // }
-                // expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-                // expect(client.connection.getState()).toBe('connected')
-            // }, 60000)
 
             // it('can fill gaps between resend and realtime', async () => {
                 // // publish 5 messages into storage

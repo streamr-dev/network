@@ -1,5 +1,5 @@
 import { inspect } from '../utils/log'
-import { StreamMessage, SPID, SID, SIDLike } from 'streamr-client-protocol'
+import { StreamMessage, SPID, SIDLike } from 'streamr-client-protocol'
 import { BrubeckClient } from './BrubeckClient'
 import StreamMessageCreator from '../publish/MessageCreator'
 import { FailedToPublishError } from '../publish'

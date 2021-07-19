@@ -2,6 +2,7 @@ import { BrubeckClient } from './BrubeckClient'
 import { SPID, SID, MessageRef, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import MessageStream from './MessageStream'
+import SubscribePipeline from './SubscribePipeline'
 import { StorageNode } from '../stream/StorageNode'
 import { authRequest } from '../rest/authFetch'
 import { pOnce, instanceId } from '../utils'
@@ -68,15 +69,15 @@ export type ResendRangeOptions = {
 
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
-function isResendLast(options: any): options is ResendLastOptions {
+function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && 'last' in options && options.last != null
 }
 
-function isResendFrom(options: any): options is ResendFromOptions {
+function isResendFrom<T extends ResendFromOptions>(options: any): options is T {
     return options && 'from' in options && !('to' in options) && options.from != null
 }
 
-function isResendRange(options: any): options is ResendRangeOptions {
+function isResendRange<T extends ResendRangeOptions>(options: any): options is T {
     return options && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
@@ -99,33 +100,21 @@ export default class Resend implements Context {
      * Call last/from/range as appropriate based on arguments
      */
 
-    resend<T>(options: SID & (ResendOptions | { resend: ResendOptions })): Promise<MessageStream<T>> {
-        if ('resend' in options && options.resend) {
-            return this.resend({
-                ...options,
-                ...options.resend,
-                resend: undefined,
-            })
-        }
+    resend<T>(options: (SID | { stream: SID }) & (ResendOptions | { resend: ResendOptions })): Promise<MessageStream<T>> {
+        const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptions
+        const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SID
+        const spid = SPID.fromDefaults(spidOptions, { streamPartition: 0 })
+        return this.resendMessages(spid, resendOptions)
+    }
 
+    resendMessages<T>(spid: SPID, options: ResendOptions): Promise<MessageStream<T>> {
         if (isResendLast(options)) {
-            const spid = SPID.fromDefaults(options, { streamPartition: 0 })
             return this.last<T>(spid, {
                 count: options.last,
             })
         }
 
-        if (isResendFrom(options)) {
-            const spid = SPID.fromDefaults(options, { streamPartition: 0 })
-            return this.from<T>(spid, {
-                fromTimestamp: new Date(options.from.timestamp).getTime(),
-                fromSequenceNumber: options.from.sequenceNumber,
-                publisherId: options.publisherId,
-            })
-        }
-
         if (isResendRange(options)) {
-            const spid = SPID.fromDefaults(options, { streamPartition: 0 })
             return this.range<T>(spid, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
@@ -136,7 +125,15 @@ export default class Resend implements Context {
             })
         }
 
-        throw new ContextError(this, `can not resend without valid resend options: ${inspect(options)}`)
+        if (isResendFrom(options)) {
+            return this.from<T>(spid, {
+                fromTimestamp: new Date(options.from.timestamp).getTime(),
+                fromSequenceNumber: options.from.sequenceNumber,
+                publisherId: options.publisherId,
+            })
+        }
+
+        throw new ContextError(this, `can not resend without valid resend options: ${inspect({ spid, options })}`)
     }
 
     private async getStreamNodes(spid: SPID) {
@@ -162,7 +159,7 @@ export default class Resend implements Context {
         // just pick first node
         // TODO: handle multiple nodes
         const url = createUrl(`${nodes[0].url}/api/v1`, endpointSuffix, spid, query)
-        const messageStream = new MessageStream(this)
+        const messageStream = SubscribePipeline<T>(this.client, spid)
         messageStream.pull((async function* readStream(this: Resend) {
             const dataStream = await fetchStream(url, this.client.client.session)
             try {
@@ -172,7 +169,7 @@ export default class Resend implements Context {
                 dataStream.destroy()
             }
         }.bind(this)()))
-        return messageStream as MessageStream<unknown> as MessageStream<T>
+        return messageStream
     }
 
     async last<T>(spid: SPID, { count }: { count: number }): Promise<MessageStream<T>> {

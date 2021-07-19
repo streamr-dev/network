@@ -85,4 +85,8 @@ export class BrubeckClient implements Context {
     async unsubscribe(...args: Parameters<Subscriber['unsubscribe']>) {
         return this.subscriber.unsubscribe(...args)
     }
+
+    async resend<T>(...args: Parameters<Resends['resend']>) {
+        return this.resends.resend<T>(...args)
+    }
 }

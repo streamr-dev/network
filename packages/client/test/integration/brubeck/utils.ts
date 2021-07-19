@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { StreamMessage, StreamMatcher } from 'streamr-client-protocol'
+import { StreamMessage, SID } from 'streamr-client-protocol'
 import { Msg } from '../../utils'
 import { counterId, Scaffold } from '../../../src/utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
@@ -36,14 +36,19 @@ type PublishTestMessageOptions = PublishManyOpts & {
     waitForLastCount?: number
 }
 
-export function getPublishTestStreamMessages(client: BrubeckClient, stream: StreamMatcher, defaultOpts: PublishTestMessageOptions = {}) {
+export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID, defaultOpts: PublishTestMessageOptions = {}) {
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
-        const { waitForLast, waitForLastCount, ...options } = {
+        const {
+            waitForLast,
+            waitForLastCount,
+            ...options
+        } = {
             ...defaultOpts,
             ...opts,
         }
         const source = publishManyGenerator(maxMessages, options)
         const streamMessages = await client.publisher.collect(client.publisher.publishFromMetadata(stream, source), maxMessages)
+        streamMessages.forEach((s) => s.getParsedContent())
         if (!waitForLast) { return streamMessages }
 
         await getWaitForStorage(client, {
@@ -53,7 +58,7 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: Stre
     }
 }
 
-export function getPublishTestMessages(client: BrubeckClient, stream: StreamMatcher, defaultOpts: PublishTestMessageOptions = {}) {
+export function getPublishTestMessages(client: BrubeckClient, stream: SID, defaultOpts: PublishTestMessageOptions = {}) {
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const { waitForLast, waitForLastCount, ...options } = {
             ...defaultOpts,

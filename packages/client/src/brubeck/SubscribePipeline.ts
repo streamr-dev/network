@@ -1,7 +1,7 @@
-import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
+import { MessageContent, SPID } from 'streamr-client-protocol'
 
 import OrderMessages from './OrderMessages'
-import { PushPipeline } from '../utils/Pipeline'
+import MessageStream from './MessageStream'
 
 import Validator from '../subscribe/Validator'
 // import Decrypt from '../subscribe/Decrypt'
@@ -17,7 +17,7 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
     client: BrubeckClient,
     spid: SPID,
     options: any = {},
-): PushPipeline<StreamMessage<T>> {
+): MessageStream<T> {
     // const { key } = options as any
     // const id = counterId('MessagePipeline') + key
 
@@ -49,7 +49,7 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
 
-    return new PushPipeline<StreamMessage<T>>()
+    return new MessageStream<T>(client)
         // take messages
         .pipe(async function* PrintMessages(src) {
             for await (const streamMessage of src) {
