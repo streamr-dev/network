@@ -1,21 +1,12 @@
 import { inspect } from 'util'
-import { Stream, StreamPartDefinition } from '../stream'
+import { SIDLike, SPID } from 'streamr-client-protocol'
 
-export type StreamIDish = Stream | StreamPartDefinition | string
+export type StreamIDish = SIDLike
 
 export function getStreamId(streamObjectOrId: StreamIDish) {
-    if (streamObjectOrId && typeof streamObjectOrId === 'string') {
-        return streamObjectOrId
-    }
-
-    if (typeof streamObjectOrId === 'object') {
-        if ('streamId' in streamObjectOrId && streamObjectOrId.streamId != null) {
-            return streamObjectOrId.streamId
-        }
-
-        if ('id' in streamObjectOrId && streamObjectOrId.id != null) {
-            return streamObjectOrId.id
-        }
+    const { streamId } = SPID.parse(streamObjectOrId)
+    if (streamId != null) {
+        return streamId
     }
 
     throw new Error(`First argument must be a Stream object or the stream id! Was: ${inspect(streamObjectOrId)}`)

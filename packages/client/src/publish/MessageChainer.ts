@@ -24,7 +24,7 @@ export default function MessageChainer(
         const isBackdated = prevMsgRef && prevMsgRef.timestamp > timestamp
         // increment if timestamp the same, otherwise 0
         const nextSequenceNumber = isSameTimestamp ? prevMsgRef!.sequenceNumber + 1 : 0
-        const messageId = new MessageID(spid.id, spid.partition, timestamp, nextSequenceNumber, publisherId, msgChainId)
+        const messageId = new MessageID(spid.streamId, spid.streamPartition, timestamp, nextSequenceNumber, publisherId, msgChainId)
         // update latest timestamp + sequence for this streamId+partition
         // (see note above about clobbering sequencing)
         // don't update latest if timestamp < previous timestamp

@@ -25,6 +25,7 @@ import { Contract } from '@ethersproject/contracts'
 import { GroupKey, StreamPartDefinition } from './stream'
 import { BytesLike } from '@ethersproject/bytes'
 import Contracts from './dataunion/Contracts'
+import { StreamIDish } from './publish/utils'
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
 export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
@@ -343,7 +344,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return this.subscriber.getAll()
     }
 
-    getSubscription(definition: StreamPartDefinition) {
+    getSubscription(definition: StreamIDish) {
         return this.subscriber.get(definition)
     }
 
@@ -362,7 +363,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /**
      * @category Important
      */
-    async publish(streamObjectOrId: StreamPartDefinition, content: object, timestamp?: number|string|Date, partitionKey?: string) {
+    async publish(streamObjectOrId: StreamIDish, content: object, timestamp?: number|string|Date, partitionKey?: string) {
         return this.publisher.publish(streamObjectOrId, content, timestamp, partitionKey)
     }
 

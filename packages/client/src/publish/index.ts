@@ -1,4 +1,4 @@
-import { ControlLayer, PublishRequest, StreamMessage } from 'streamr-client-protocol'
+import { ControlLayer, PublishRequest, StreamMessage, SPID } from 'streamr-client-protocol'
 
 import { uuid, LimitAsyncFnByKey } from '../utils'
 import { inspect } from '../utils/log'
@@ -106,7 +106,7 @@ export default class Publisher {
 
         const asyncDepsTask = Promise.all([ // intentional no await
             // no async before running createStreamMessage
-            this.streamMessageCreator.create(streamObjectOrId, {
+            this.streamMessageCreator.create(SPID.parse(streamObjectOrId), {
                 content,
                 timestamp,
                 partitionKey,

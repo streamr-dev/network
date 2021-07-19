@@ -1,4 +1,4 @@
-import { StreamMessage, SPID, StreamMatcher } from 'streamr-client-protocol'
+import { StreamMessage, SPID, SID } from 'streamr-client-protocol'
 import mem from 'mem'
 
 import { LimitAsyncFnByKey } from '../utils'
@@ -51,7 +51,7 @@ export default class StreamMessageCreator {
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create<T>(streamObjectOrId: StreamMatcher, {
+    async create<T>(streamObjectOrId: SID, {
         content,
         timestamp,
         partitionKey,
@@ -63,7 +63,7 @@ export default class StreamMessageCreator {
         partitionKey?: string | number,
         msgChainId?: string,
     }): Promise<StreamMessage<T>> {
-        const spidObject = SPID.toSPIDObjectPartial(streamObjectOrId)
+        const spidObject = SPID.parse(streamObjectOrId)
         const { streamId } = spidObject
         // streamId as queue key
         return this.queue(streamId, async () => {

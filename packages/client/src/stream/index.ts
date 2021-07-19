@@ -1,5 +1,6 @@
 import fetch from 'node-fetch'
 import { getAddress } from '@ethersproject/address'
+
 import { getEndpointUrl, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
@@ -47,7 +48,7 @@ export enum StreamOperation {
 }
 
 export interface StreamProperties {
-    id?: string
+    id: string
     name?: string
     description?: string
     config?: {
@@ -87,7 +88,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 }
 
 class StreamrStream {
-    // @ts-expect-error
+    streamId: string
     id: string
     // @ts-expect-error
     name: string
@@ -106,6 +107,8 @@ class StreamrStream {
     constructor(client: StreamrClient, props: StreamProperties) {
         this._client = client
         Object.assign(this, props)
+        this.id = props.id
+        this.streamId = this.id
     }
 
     async update() {

@@ -14,7 +14,8 @@ import authFetch, { ErrorCode, NotFoundError } from './authFetch'
 import { EthereumAddress } from '../types'
 import { StreamrClient } from '../StreamrClient'
 // TODO change this import when streamr-client-protocol exports StreamMessage type or the enums types directly
-import { ContentType, EncryptionType, SignatureType, StreamMessageType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
+import { ContentType, EncryptionType, SignatureType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
+import { StreamMessageType, SIDLike } from 'streamr-client-protocol'
 import { StorageNode } from '../stream/StorageNode'
 
 const debug = Debug('StreamEndpoints')
@@ -241,7 +242,7 @@ export class StreamEndpoints {
         return json
     }
 
-    async getStreamLast(streamObjectOrId: Stream|string): Promise<StreamMessageAsObject> {
+    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T): Promise<StreamMessageAsObject> {
         const { streamId, streamPartition = 0, count = 1 } = validateOptions(streamObjectOrId)
         this.client.debug('getStreamLast %o', {
             streamId,
