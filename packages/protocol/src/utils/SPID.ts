@@ -35,7 +35,7 @@ export type SPIDLike = string | SPIDShape
  * Must have something that looks like an id.
  * Partition optional.
  */
-export type SID = SPIDShape | { streamId: string }
+export type SID = { streamId: string, streamPartition?: number }
 
 export type SIDLike = string | SID
 
@@ -150,11 +150,16 @@ export class SPID implements SPIDKeyShape {
      * i.e. normalizes various input types/shapes to { streamId?, streamPartition? }
      * Note: does not throw on malformed input
      */
-    static parse(spidLike: SPIDLike): SPIDShape // both fields
     static parse(spidLike: SPID): SPID
-    static parse(spidLike: SIDLike): Partial<SPIDShape>
+    static parse(spidLike: SPIDShape): SPIDShape
+    static parse(spidLike: SIDLike): SID
+    static parse(spidLike: SPIDLike): SPIDShape // both fields
     static parse(spidLike: Partial<SIDLike>): Partial<SPIDShape>
     static parse(spidLike: SIDLike): Partial<SPIDShape> {
+        if (spidLike instanceof SPID) {
+            return spidLike
+        }
+
         // convert from string
         if (typeof spidLike === 'string') {
             const [streamId, partitionStr] = spidLike.split(this.SEPARATOR)
@@ -162,12 +167,10 @@ export class SPID implements SPIDKeyShape {
             const streamPartition = partitionStr != null ? Number.parseFloat(partitionStr) : undefined
             return { streamId, streamPartition }
         } else if (spidLike && typeof spidLike === 'object') {
-            // @ts-expect-error object should have one of these, validated anyway
-            const streamId = spidLike.streamId || spidLike.id
-            // @ts-expect-error object should have one of these, validated anyway
-            const partition = spidLike.streamPartition != null ? spidLike.streamPartition : spidLike.partition
+            const streamId = spidLike.streamId
+            const partition = spidLike.streamPartition ?? undefined
             // try parse if a value was passed, but fall back to undefined i.e. default
-            const streamPartition = partition != null ? Number.parseFloat(partition) : undefined
+            const streamPartition = typeof partition === 'string' ? Number.parseFloat(partition) : partition
             return { streamId, streamPartition }
         } else {
             return { streamId: undefined, streamPartition: undefined }

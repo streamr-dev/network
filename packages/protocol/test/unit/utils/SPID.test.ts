@@ -101,6 +101,39 @@ describe('SPID', () => {
         }
     })
 
+    describe('parse', () => {
+        it('returns self if already a spid', () => {
+            const spid = new SPID(STREAM_ID, PARTITION)
+            expect(SPID.parse(spid)).toBe(spid)
+        })
+
+        it('streamId is not optional in return type when supplied', () => {
+            const parsed = SPID.parse({ streamId: STREAM_ID })
+            expect(parsed).toEqual({ streamId: STREAM_ID, streamPartition: undefined })
+            const id: string = parsed.streamId // ensure streamId type is not typed optional
+            expect(id).toBe(STREAM_ID)
+        })
+
+        it('streamId & streamPartition are not optional in return type when supplied', () => {
+            const parsed = SPID.parse({ streamId: STREAM_ID, streamPartition: PARTITION })
+            expect(parsed).toEqual({ streamId: STREAM_ID, streamPartition: PARTITION })
+            const id: string = parsed.streamId // ensure streamId type is not typed optional
+            const partition: number = parsed.streamPartition // ensure streamPartition type is not typed optional
+            expect(id).toBe(STREAM_ID)
+            expect(partition).toBe(PARTITION)
+        })
+
+        it('streamPartition should be optional for string inputs', () => {
+            const parsed = SPID.parse(STREAM_ID)
+            expect(parsed).toEqual({ streamId: STREAM_ID, streamPartition: undefined })
+            const id: string = parsed.streamId // ensure streamId type is not typed optional
+            // @ts-expect-error streamPartition should be optional
+            const partition: number = parsed.streamPartition
+            expect(id).toBe(STREAM_ID)
+            expect(partition).toBe(undefined)
+        })
+    })
+
     describe('from', () => {
         it('returns self if already a spid', () => {
             const spid = new SPID(STREAM_ID, PARTITION)
@@ -120,9 +153,23 @@ describe('SPID', () => {
                 SPID.from(STREAM_ID)
             }).toThrow()
         })
+
         describe('fromDefaults', () => {
             it('can fill defaults', () => {
                 const spid = SPID.fromDefaults(STREAM_ID, { streamPartition: PARTITION })
+                expect(spid.streamId).toBe(STREAM_ID)
+                expect(spid.streamPartition).toBe(PARTITION)
+                const spid2 = SPID.fromDefaults({ streamId: STREAM_ID }, { streamPartition: PARTITION + 1 })
+                expect(spid2.streamId).toBe(STREAM_ID)
+                expect(spid2.streamPartition).toBe(PARTITION + 1)
+                const spid3 = SPID.fromDefaults({ streamPartition: PARTITION + 3 }, { streamId: STREAM_ID })
+                expect(spid3.streamId).toBe(STREAM_ID)
+                expect(spid3.streamPartition).toBe(PARTITION + 3)
+            })
+
+            it('can take a SID with streamPartition in defaults', () => {
+                const sid = { streamId: STREAM_ID }
+                const spid = SPID.fromDefaults(sid, { streamPartition: PARTITION })
                 expect(spid.streamId).toBe(STREAM_ID)
                 expect(spid.streamPartition).toBe(PARTITION)
                 const spid2 = SPID.fromDefaults({ streamId: STREAM_ID }, { streamPartition: PARTITION + 1 })
@@ -177,7 +224,10 @@ describe('SPID', () => {
         })
 
         it('prioritises supplied values over defaults', () => {
-            const spid = SPID.fromDefaults({ streamId: STREAM_ID, streamPartition: PARTITION }, { streamId: `not${STREAM_ID}`, streamPartition: PARTITION + 1 })
+            const spid = SPID.fromDefaults({
+                streamId: STREAM_ID,
+                streamPartition: PARTITION
+            }, { streamId: `not${STREAM_ID}`, streamPartition: PARTITION + 1 })
             expect(spid.streamId).toBe(STREAM_ID)
             expect(spid.streamPartition).toBe(PARTITION)
         })
