@@ -356,197 +356,194 @@ describeRepeats('GapFill', () => {
     })
 })
 
+// it('can fill gaps between resend and realtime', async () => {
+// // publish 5 messages into storage
+// const published = await publishTestMessages(5, {
+// waitForLast: true,
+// waitForLastCount: 5,
+// })
 
-           
+// // then simultaneously subscribe with resend & start publishing realtime messages
+// const [sub, publishedLater] = await Promise.all([
+// client.subscribe({
+// stream,
+// resend: {
+// last: 5
+// }
+// }),
+// publishTestMessages(5)
+// ])
 
-            // it('can fill gaps between resend and realtime', async () => {
-                // // publish 5 messages into storage
-                // const published = await publishTestMessages(5, {
-                    // waitForLast: true,
-                    // waitForLastCount: 5,
-                // })
+// const received = []
+// for await (const m of sub) {
+// received.push(m.getParsedContent())
+// if (received.length === (published.length + publishedLater.length)) {
+// break
+// }
+// }
 
-                // // then simultaneously subscribe with resend & start publishing realtime messages
-                // const [sub, publishedLater] = await Promise.all([
-                    // client.subscribe({
-                        // stream,
-                        // resend: {
-                            // last: 5
-                        // }
-                    // }),
-                    // publishTestMessages(5)
-                // ])
+// expect(received).toEqual([...published, ...publishedLater])
+// await sub.unsubscribe()
+// }, 15000)
 
-                // const received = []
-                // for await (const m of sub) {
-                    // received.push(m.getParsedContent())
-                    // if (received.length === (published.length + publishedLater.length)) {
-                        // break
-                    // }
-                // }
+// it('rejects resend if no storage assigned', async () => {
+// // new stream, assign to storage node not called
+// stream = await createTestStream(client, module, {
+// requireSignedData: true,
+// })
 
-                // expect(received).toEqual([...published, ...publishedLater])
-                // await sub.unsubscribe()
-            // }, 15000)
+// await expect(async () => {
+// await client.resend({
+// stream,
+// last: MAX_MESSAGES,
+// })
+// }).rejects.toThrow('storage')
+// }, 15000)
+// })
+// })
 
-            // it('rejects resend if no storage assigned', async () => {
-                // // new stream, assign to storage node not called
-                // stream = await createTestStream(client, module, {
-                    // requireSignedData: true,
-                // })
+// describe('client settings', () => {
+// it('can gapfill subscribe', async () => {
+// await setupClient({
+// gapFillTimeout: 200,
+// retryResendAfter: 200,
+// })
+// await client.connect()
+// const { parse } = client.connection
+// let count = 0
+// let droppedMsgRef: MessageRef
+// client.connection.parse = (...args) => {
+// const msg: any = parse.call(client.connection, ...args)
+// if (!msg.streamMessage) {
+// return msg
+// }
 
-                // await expect(async () => {
-                    // await client.resend({
-                        // stream,
-                        // last: MAX_MESSAGES,
-                    // })
-                // }).rejects.toThrow('storage')
-            // }, 15000)
-        // })
-    // })
+// count += 1
+// if (count === 3) {
+// if (!droppedMsgRef) {
+// droppedMsgRef = msg.streamMessage.getMessageRef()
+// }
+// client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
+// return null
+// }
+// // allow resend request response through
 
-    // describe('client settings', () => {
-        // it('can gapfill subscribe', async () => {
-            // await setupClient({
-                // gapFillTimeout: 200,
-                // retryResendAfter: 200,
-            // })
-            // await client.connect()
-            // const { parse } = client.connection
-            // let count = 0
-            // let droppedMsgRef: MessageRef
-            // client.connection.parse = (...args) => {
-                // const msg: any = parse.call(client.connection, ...args)
-                // if (!msg.streamMessage) {
-                    // return msg
-                // }
+// return msg
+// }
 
-                // count += 1
-                // if (count === 3) {
-                    // if (!droppedMsgRef) {
-                        // droppedMsgRef = msg.streamMessage.getMessageRef()
-                    // }
-                    // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                    // return null
-                // }
-                // // allow resend request response through
+// const sub = await client.subscribe({
+// stream,
+// })
 
-                // return msg
-            // }
+// const publishedTask = publishTestMessages(MAX_MESSAGES, {
+// stream,
+// })
 
-            // const sub = await client.subscribe({
-                // stream,
-            // })
+// const received: any[] = []
+// for await (const m of sub) {
+// received.push(m.getParsedContent())
+// if (received.length === MAX_MESSAGES) {
+// break
+// }
+// }
+// const published = await publishedTask
+// expect(received).toEqual(published)
+// }, 20000)
 
-            // const publishedTask = publishTestMessages(MAX_MESSAGES, {
-                // stream,
-            // })
+// it('subscribe does not crash if gaps found but no storage assigned', async () => {
+// await setupClient({
+// gapFillTimeout: 200,
+// retryResendAfter: 2000,
+// maxGapRequests: 99 // would time out test if doesn't give up when seeing no storage assigned
+// })
 
-            // const received: any[] = []
-            // for await (const m of sub) {
-                // received.push(m.getParsedContent())
-                // if (received.length === MAX_MESSAGES) {
-                    // break
-                // }
-            // }
-            // const published = await publishedTask
-            // expect(received).toEqual(published)
-        // }, 20000)
+// await client.connect()
+// const { parse } = client.connection
+// // new stream, assign to storage node not called
+// stream = await createTestStream(client, module, {
+// requireSignedData: true,
+// })
+// const calledResend = jest.fn()
+// let count = 0
+// let droppedMsgRef: MessageRef
+// client.connection.parse = (...args) => {
+// const msg: any = parse.call(client.connection, ...args)
+// if (!msg.streamMessage) {
+// return msg
+// }
 
-        // it('subscribe does not crash if gaps found but no storage assigned', async () => {
-            // await setupClient({
-                // gapFillTimeout: 200,
-                // retryResendAfter: 2000,
-                // maxGapRequests: 99 // would time out test if doesn't give up when seeing no storage assigned
-            // })
+// count += 1
+// if (count === 3) {
+// if (!droppedMsgRef) {
+// droppedMsgRef = msg.streamMessage.getMessageRef()
+// }
+// client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
+// return null
+// }
 
-            // await client.connect()
-            // const { parse } = client.connection
-            // // new stream, assign to storage node not called
-            // stream = await createTestStream(client, module, {
-                // requireSignedData: true,
-            // })
-            // const calledResend = jest.fn()
-            // let count = 0
-            // let droppedMsgRef: MessageRef
-            // client.connection.parse = (...args) => {
-                // const msg: any = parse.call(client.connection, ...args)
-                // if (!msg.streamMessage) {
-                    // return msg
-                // }
+// if (droppedMsgRef && msg.streamMessage.getMessageRef().compareTo(droppedMsgRef) === 0) {
+// calledResend()
+// client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
+// return null
+// }
 
-                // count += 1
-                // if (count === 3) {
-                    // if (!droppedMsgRef) {
-                        // droppedMsgRef = msg.streamMessage.getMessageRef()
-                    // }
-                    // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                    // return null
-                // }
+// return msg
+// }
 
-                // if (droppedMsgRef && msg.streamMessage.getMessageRef().compareTo(droppedMsgRef) === 0) {
-                    // calledResend()
-                    // client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-                    // return null
-                // }
+// const sub = await client.subscribe({
+// stream,
+// })
 
-                // return msg
-            // }
+// const publishedTask = publishTestMessages(MAX_MESSAGES, {
+// stream,
+// })
 
-            // const sub = await client.subscribe({
-                // stream,
-            // })
+// const received: any[] = []
+// for await (const m of sub) {
+// received.push(m.getParsedContent())
+// if (received.length === MAX_MESSAGES - 1) {
+// break
+// }
+// }
+// const published = await publishedTask
+// expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+// expect(client.connection.getState()).toBe('connected')
+// // shouldn't retry if encountered no storage error
+// expect(calledResend).toHaveBeenCalledTimes(0)
+// }, 20000)
 
-            // const publishedTask = publishTestMessages(MAX_MESSAGES, {
-                // stream,
-            // })
+// it('subscribe+resend does not crash if no storage assigned', async () => {
+// await setupClient({
+// gapFillTimeout: 200,
+// retryResendAfter: 2000,
+// maxGapRequests: 99 // would time out test if doesn't give up when seeing no storage assigned
+// })
 
-            // const received: any[] = []
-            // for await (const m of sub) {
-                // received.push(m.getParsedContent())
-                // if (received.length === MAX_MESSAGES - 1) {
-                    // break
-                // }
-            // }
-            // const published = await publishedTask
-            // expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-            // expect(client.connection.getState()).toBe('connected')
-            // // shouldn't retry if encountered no storage error
-            // expect(calledResend).toHaveBeenCalledTimes(0)
-        // }, 20000)
+// await client.connect()
+// // new stream, assign to storage node not called
+// stream = await createTestStream(client, module, {
+// requireSignedData: true,
+// })
 
-        // it('subscribe+resend does not crash if no storage assigned', async () => {
-            // await setupClient({
-                // gapFillTimeout: 200,
-                // retryResendAfter: 2000,
-                // maxGapRequests: 99 // would time out test if doesn't give up when seeing no storage assigned
-            // })
+// const sub = await client.subscribe({
+// stream,
+// resend: { last: 2 }
+// })
 
-            // await client.connect()
-            // // new stream, assign to storage node not called
-            // stream = await createTestStream(client, module, {
-                // requireSignedData: true,
-            // })
+// const publishedTask = publishTestMessages(MAX_MESSAGES, {
+// stream,
+// })
 
-            // const sub = await client.subscribe({
-                // stream,
-                // resend: { last: 2 }
-            // })
+// const received: any[] = []
+// for await (const m of sub) {
+// received.push(m.getParsedContent())
+// if (received.length === MAX_MESSAGES) {
+// break
+// }
+// }
+// const published = await publishedTask
+// expect(received).toEqual(published)
+// }, 20000)
 
-            // const publishedTask = publishTestMessages(MAX_MESSAGES, {
-                // stream,
-            // })
-
-            // const received: any[] = []
-            // for await (const m of sub) {
-                // received.push(m.getParsedContent())
-                // if (received.length === MAX_MESSAGES) {
-                    // break
-                // }
-            // }
-            // const published = await publishedTask
-            // expect(received).toEqual(published)
-        // }, 20000)
-
-    // })
+// })
 // })
