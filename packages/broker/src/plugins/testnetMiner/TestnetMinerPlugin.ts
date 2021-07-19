@@ -39,7 +39,6 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     latestLatency?: number
     latencyPoller?: { stop: () => void }
     natType?: string
-    nodeAddress: string
     metrics: Metrics
 
     constructor(options: PluginOptions) {
@@ -47,7 +46,6 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         if (this.streamrClient === undefined) {
             throw new Error('StreamrClient is not available')
         }
-        this.nodeAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
         this.metrics = this.metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
     }
 
@@ -84,7 +82,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     private async claimRewardCode(rewardCode: string, peers: Peer[], delay: number): Promise<void> {
         const body = {
             rewardCode,
-            nodeAddress: this.nodeAddress,
+            nodeAddress: this.nodeId,
             clientServerLatency: this.latestLatency,
             waitTime: delay,
             natType: this.natType,
