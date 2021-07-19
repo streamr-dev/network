@@ -57,7 +57,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                 })
 
                 ws.on('close', (code: number, reason: string): void => {
-                    this.logger.warn(code.toString(), reason)
+                    this.logger.trace(code.toString(), reason)
                     ws.terminate()
                 })
 
@@ -95,7 +95,6 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
             connection.onPong()
         })
         ws.once('close', (code: number, reason: string): void => {
-            this.logger.warn(code.toString(), reason)
             this.onClose(connection, code, reason as DisconnectionReason)
         })
 

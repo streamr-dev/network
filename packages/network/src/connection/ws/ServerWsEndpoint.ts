@@ -92,7 +92,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             connection.evaluateBackPressure()
         })
         duplexStream.on('error', (error) => {
-            this.logger.warn(error.stack as string)
+            this.logger.error('Duplex stream error: ' + error.stack as string)
         })
         ws.on('pong', () => {
             connection.onPong()

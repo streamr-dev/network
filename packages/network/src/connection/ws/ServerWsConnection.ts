@@ -57,7 +57,6 @@ export class ServerWsConnection extends AbstractWsConnection {
         try {
             await util.promisify((cb: any) => this.duplexStream.write(message, cb))()
         } catch (err) {
-            this.logger.error(err)
             return Promise.reject(err)
         }
     }

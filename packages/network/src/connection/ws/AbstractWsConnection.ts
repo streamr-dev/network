@@ -12,7 +12,7 @@ export type ReadyState = 0 | 1 | 2 | 3
 
 export abstract class AbstractWsConnection {
     private readonly peerInfo: PeerInfo
-    protected readonly logger: Logger
+    private readonly logger: Logger
     private respondedPong = true
     private rtt?: number
     private rttStart?: number

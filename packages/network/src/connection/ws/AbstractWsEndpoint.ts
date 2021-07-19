@@ -47,7 +47,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
     protected readonly peerInfo: PeerInfo
     protected readonly logger: Logger
     protected readonly handshakeTimer: number
-    public static PEER_ID_HEADER = 'streamr-peer-id'
 
     protected constructor(
         peerInfo: PeerInfo,
