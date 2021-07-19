@@ -29,7 +29,7 @@ const trackerInfos = program.opts().trackers.map((ws, i) => {
         ws
     }
 })
-console.log(trackerInfos)
+
 const subscriber = createNetworkNode({
     name,
     id,

@@ -21,7 +21,7 @@ program
 const id = program.opts().id || `TR${program.opts().port}`
 const name = program.opts().trackerName || id
 const logger = new Logger(module)
-console.log(id)
+
 async function main() {
     const metricsContext = new MetricsContext(id)
     try {

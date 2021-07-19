@@ -45,6 +45,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 
             this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
                 ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
+                this.logger.warn(`Handshake not received from connection behind UUID ${handshakeUUID}`)
                 ws.terminate()
                 delete this.handshakeTimeoutRefs[handshakeUUID]
             }, this.handshakeTimer)
@@ -57,7 +58,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 try {
                     const { uuid, peerId } = JSON.parse(data.toString())
                     if (uuid === handshakeUUID && peerId) {
-                        clearTimeout(this.handshakeTimeoutRefs[handshakeUUID])
+                        this.clearHandshake(uuid)
                         this.acceptConnection(ws, duplexStream, peerId, request.socket.remoteAddress as string)
                     } else {
                         this.logger.trace('Expected a handshake message got: ' + data.toString())

@@ -2,7 +2,7 @@ import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import { AbstractWsConnection } from "./AbstractWsConnection"
+import {AbstractWsConnection, ReadyState} from "./AbstractWsConnection"
 import { w3cwebsocket } from "websocket"
 
 export type PeerId = string
@@ -53,7 +53,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         // Check for existing connection and its state
         const existingConnection = this.connectionsByServerUrl.get(serverUrl)
         if (existingConnection !== undefined) {
-            if (existingConnection.getReadyState() === WebSocket.OPEN) {
+            if (existingConnection.getReadyState() === 1 as ReadyState) {
                 return Promise.resolve(existingConnection.getPeerId())
             }
             this.logger.trace('supposedly connected to %s but readyState is %s, closing connection',

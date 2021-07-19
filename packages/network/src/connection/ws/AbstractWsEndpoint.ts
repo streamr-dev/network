@@ -206,7 +206,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
             this.metrics.record('open:duplicateSocket', 1)
         }
-
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
         this.connectionById.delete(connection.getPeerId())

@@ -4,12 +4,22 @@
     <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
     <script src="../../dist/bundle.js"></script>
     <script>
-        const testNode = createBrowserNode({
-            id: 'node-0',
-            trackers: [ { id: 'tracker', ws: 'ws://127.0.0.1:27777' } ],
-            stunUrls: []
-        })
-        testNode.start()
+
+        const startNode = async (streamId) => {
+            const testNode = createBrowserNode({
+                id: 'node-0',
+                trackers: [ { id: 'tracker', ws: 'ws://127.0.0.1:27777' } ],
+                stunUrls: []
+            })
+            await testNode.start(streamId)
+            testNode.subscribe(streamId, 0)
+            testNode.addMessageListener((message) => {
+                console.log(message)
+            })
+        }
+
+        startNode('stream-0')
+
     </script>
 </head>
 </html>
