@@ -9,6 +9,7 @@ export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerato
 export type FinallyFn = ((err?: Error) => void | Promise<void>)
 
 class PipelineError extends ContextError {}
+class PushPipelineError extends ContextError {}
 
 /**
  * Pipeline public interface
@@ -19,14 +20,14 @@ export type IPipeline<InType, OutType = InType> = {
 } & AsyncGenerator<OutType> & Context
 
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
-    readonly debug
-    readonly id
+    debug
+    id
     readonly source: AsyncGenerator<InType>
-    private readonly transforms: PipelineTransform[] = []
-    private readonly transformsBefore: PipelineTransform[] = []
-    private iterator: AsyncGenerator<OutType>
-    private finallyTasks: FinallyFn[] = []
-    private isIterating = false
+    protected readonly transforms: PipelineTransform[] = []
+    protected readonly transformsBefore: PipelineTransform[] = []
+    protected iterator: AsyncGenerator<OutType>
+    protected finallyTasks: FinallyFn[] = []
+    protected isIterating = false
 
     constructor(source: AsyncGenerator<InType>) {
         this.source = source
@@ -107,7 +108,8 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         const transforms = [...this.transformsBefore, ...this.transforms]
 
         if (!transforms.length) {
-            throw new PipelineError(this, 'no transforms')
+            yield* this.source
+            return
         }
 
         yield* transforms.reduce((prev: AsyncGenerator, transform) => {
@@ -157,7 +159,31 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
 
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): PushPipeline<InType, NewOutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.pipe(fn) as PushPipeline<InType, NewOutType>
+        super.pipe(fn)
+        return this as PushPipeline<InType, unknown> as PushPipeline<InType, NewOutType>
+    }
+
+    /**
+     * Collect n/all messages into an array.
+     */
+    async collect(n?: number) {
+        if (this.isIterating) {
+            throw new PushPipelineError(this, 'Cannot collect if already iterating.')
+        }
+
+        const msgs = []
+        for await (const msg of this) {
+            if (n === 0) {
+                break
+            }
+
+            msgs.push(msg)
+
+            if (msgs.length === n) {
+                break
+            }
+        }
+        return msgs
     }
 
     pull(source: AsyncGenerator<InType>) {

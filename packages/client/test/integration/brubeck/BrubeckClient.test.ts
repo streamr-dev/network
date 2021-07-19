@@ -218,7 +218,7 @@ describeRepeats('StreamrClient', () => {
             })
 
             const published = await publishTestMessages(MAX_MESSAGES)
-            await expect(async () => sub.collect(1)).rejects.toThrow('iterate')
+            await expect(async () => sub.collect(1)).rejects.toThrow('collect')
             await done
             expect(onMessageMsgs).toEqual(published)
         })
@@ -255,7 +255,7 @@ describeRepeats('StreamrClient', () => {
             const sub = await client.subscribe(stream.id)
             await client.publish(stream.id, publishedMessage)
             const messages = await sub.collect(1)
-            expect(messages).toEqual([publishedMessage])
+            expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
         })
         /*
         it('decodes resent messages correctly', async () => {

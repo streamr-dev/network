@@ -3,7 +3,7 @@ import { Context } from '../utils/Context'
 import SubscriptionSession from './SubscriptionSession'
 import { BrubeckClient } from './BrubeckClient'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
-import { SPIDLike, SPID, StreamMatcher, SPIDLikePartial } from 'streamr-client-protocol'
+import { SPIDLike, SPID, SIDLike } from 'streamr-client-protocol'
 
 /**
  * Keeps track of subscriptions.
@@ -21,12 +21,12 @@ export default class Subscriber implements Context {
         this.debug = this.client.debug.extend(this.id)
     }
 
-    async subscribe<T>(opts: SPIDLikePartial | { stream: SPIDLikePartial }, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
+    async subscribe<T>(opts: SIDLike | { stream: SIDLike }, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
         if (opts && typeof opts === 'object' && 'stream' in opts) {
             return this.subscribe(opts.stream, onMessage)
         }
 
-        const spid = SPID.fromDefaults(opts, { partition: 0 })
+        const spid = SPID.fromDefaults(opts, { streamPartition: 0 })
         return this.subscribeTo(spid, onMessage)
     }
 
@@ -81,14 +81,14 @@ export default class Subscriber implements Context {
         }
     }
 
-    async unsubscribe(streamMatcher?: StreamMatcher) {
+    async unsubscribe(streamMatcher?: SIDLike) {
         return this.removeAll(streamMatcher)
     }
 
     /**
      * Remove all subscriptions, optionally only those matching options.
      */
-    async removeAll(streamMatcher?: StreamMatcher) {
+    async removeAll(streamMatcher?: SIDLike) {
         const subs = !streamMatcher ? this.getAllSubscriptions() : this.getSubscriptions(streamMatcher)
         return allSettledValues(subs.map((sub) => (
             this.remove(sub)
@@ -111,7 +111,7 @@ export default class Subscriber implements Context {
      * Count all matching subscriptions.
      */
 
-    count(streamMatcher?: StreamMatcher): number {
+    count(streamMatcher?: SIDLike): number {
         if (streamMatcher === undefined) { return this.countAll() }
         return this.getSubscriptions(streamMatcher).length
     }
@@ -149,7 +149,7 @@ export default class Subscriber implements Context {
      * Get subscriptions matching streamId or streamId + streamPartition
      */
 
-    getSubscriptions<T = unknown>(streamMatcher?: StreamMatcher) {
+    getSubscriptions<T = unknown>(streamMatcher?: SIDLike) {
         if (!streamMatcher) {
             return this.getAllSubscriptions()
         }
@@ -165,4 +165,3 @@ export default class Subscriber implements Context {
         return this.removeAll()
     }
 }
-

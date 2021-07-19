@@ -16,10 +16,12 @@ import clientOptions from '../config'
 const MAX_MESSAGES = 10
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
-    const { onPipelineMessage } = sub.context
+    // @ts-expect-error onMessageInput is private
+    const { onMessageInput } = sub.context
     let count = 0
+    // @ts-expect-error onMessageInput is private
     // eslint-disable-next-line no-param-reassign
-    sub.context.onPipelineMessage = (msg: StreamMessage<T>) => {
+    sub.context.onMessageInput = (msg: StreamMessage<T>) => {
         const result = fn(msg, count)
         count += 1
         if (result === null) {
@@ -27,7 +29,7 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
             return undefined
         }
 
-        return onPipelineMessage.call(sub.context, msg)
+        return onMessageInput.call(sub.context, msg)
     }
 }
 
@@ -188,10 +190,7 @@ describeRepeats('GapFill', () => {
             }, 15000)
         })
     })
-})
-
-
-            // it('can fill gaps in resends', async () => {
+ // it('can fill gaps in resends', async () => {
                 // const { parse } = client.connection
                 // let count = 0
                 // client.connection.parse = (...args) => {
@@ -226,6 +225,10 @@ describeRepeats('GapFill', () => {
                 // expect(client.connection.getState()).toBe('connected')
             // }, 60000)
 
+})
+
+
+           
             // it('can fill gaps in resends even if gap cannot be filled', async () => {
                 // const { parse } = client.connection
                 // let count = 0

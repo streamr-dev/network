@@ -1,6 +1,6 @@
 import Debug from 'debug'
-import { NetworkNode, NetworkNodeOptions, startNetworkNode } from 'streamr-network'
-
+import { startNetworkNode } from 'streamr-network'
+import { SIDLike } from 'streamr-client-protocol'
 import Config, { StrictBrubeckClientOptions, BrubeckClientOptions } from './Config'
 import { pOnce, uuid, counterId } from '../utils'
 import { Context } from '../utils/Context'
@@ -9,7 +9,6 @@ import { StreamrClient } from '../StreamrClient'
 import Publisher from './Publisher'
 import Subscriber from './Subscriber'
 import Resends from './Resends'
-import { StreamIDish } from '../publish/utils'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -71,7 +70,7 @@ export class BrubeckClient implements Context {
     })
 
     async publish<T>(
-        streamObjectOrId: StreamIDish,
+        streamObjectOrId: SIDLike,
         content: T,
         timestamp?: string | number | Date,
         partitionKey?: string | number

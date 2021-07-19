@@ -1,5 +1,5 @@
 import { BrubeckClient } from './BrubeckClient'
-import { SPID, SPIDLikeObject, MessageRef, StreamMessage } from 'streamr-client-protocol'
+import { SPID, SID, MessageRef, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import MessageStream from './MessageStream'
 import { StorageNode } from '../stream/StorageNode'
@@ -42,7 +42,7 @@ const createUrl = (baseUrl: string, endpointSuffix: string, spid: SPID, query: Q
 
     const queryString = new URLSearchParams(Object.entries(queryMap).filter(([_key, value]) => value != null)).toString()
 
-    return `${baseUrl}/streams/${encodeURIComponent(spid.id)}/data/partitions/${spid.partition}/${endpointSuffix}?${queryString}`
+    return `${baseUrl}/streams/${encodeURIComponent(spid.streamId)}/data/partitions/${spid.streamPartition}/${endpointSuffix}?${queryString}`
 }
 
 export type ResendRef = MessageRef | {
@@ -99,7 +99,7 @@ export default class Resend implements Context {
      * Call last/from/range as appropriate based on arguments
      */
 
-    resend<T>(options: SPIDLikeObject & (ResendOptions | { resend: ResendOptions })): Promise<MessageStream<T>> {
+    resend<T>(options: SID & (ResendOptions | { resend: ResendOptions })): Promise<MessageStream<T>> {
         if ('resend' in options && options.resend) {
             return this.resend({
                 ...options,
@@ -109,14 +109,14 @@ export default class Resend implements Context {
         }
 
         if (isResendLast(options)) {
-            const spid = SPID.from(options)
+            const spid = SPID.fromDefaults(options, { streamPartition: 0 })
             return this.last<T>(spid, {
                 count: options.last,
             })
         }
 
         if (isResendFrom(options)) {
-            const spid = SPID.from(options)
+            const spid = SPID.fromDefaults(options, { streamPartition: 0 })
             return this.from<T>(spid, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
@@ -125,7 +125,7 @@ export default class Resend implements Context {
         }
 
         if (isResendRange(options)) {
-            const spid = SPID.from(options)
+            const spid = SPID.fromDefaults(options, { streamPartition: 0 })
             return this.range<T>(spid, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
@@ -142,7 +142,7 @@ export default class Resend implements Context {
     private async getStreamNodes(spid: SPID) {
         // this method should probably live somewhere else
         // like in the node registry or stream class
-        const stream = await this.client.client.getStream(spid.id)
+        const stream = await this.client.client.getStream(spid.streamId)
         const storageNodes: StorageNode[] = await stream.getStorageNodes()
 
         const storageNodeAddresses = new Set(storageNodes.map((n) => n.getAddress()))
@@ -163,7 +163,7 @@ export default class Resend implements Context {
         // TODO: handle multiple nodes
         const url = createUrl(`${nodes[0].url}/api/v1`, endpointSuffix, spid, query)
         const messageStream = new MessageStream(this)
-        messageStream.from((async function* readStream(this: Resend) {
+        messageStream.pull((async function* readStream(this: Resend) {
             const dataStream = await fetchStream(url, this.client.client.session)
             try {
                 yield* dataStream

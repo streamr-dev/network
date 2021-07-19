@@ -23,7 +23,7 @@ export default function OrderMessages<T>(client: BrubeckClient, spid: SPID, opti
         const resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup
         const outBuffer = new PushBuffer<StreamMessage<T>>()
 
-        const orderingUtil = new OrderingUtil(spid.id, spid.partition, (orderedMessage) => {
+        const orderingUtil = new OrderingUtil(spid.streamId, spid.streamPartition, (orderedMessage) => {
             if (outBuffer.isDone() || done) {
                 return
             }

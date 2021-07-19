@@ -2,11 +2,10 @@ import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
 
 import { Scaffold, instanceId } from '../utils'
 import Subscription from './Subscription'
-import MessageStream from './MessageStream'
 import { BrubeckClient } from './BrubeckClient'
-import { PushBuffer } from '../utils/PushBuffer'
 import { Context } from '../utils/Context'
 import SubscribePipeline from './SubscribePipeline'
+import { flow } from '../utils/PushBuffer'
 
 /**
  * Sends Subscribe/Unsubscribe requests as needed.
@@ -23,32 +22,37 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     pendingRemoval: Set<Subscription<T>> = new Set()
     active = false
     stopped = false
-    buffer
-    pipeline: MessageStream<T>
+    pipeline
 
     constructor(client: BrubeckClient, spid: SPID) {
         this.client = client
         this.id = instanceId(this)
         this.debug = this.client.debug.extend(this.id)
         this.spid = spid
-        this.onMessage = this.onMessage.bind(this)
-        this.buffer = new PushBuffer<StreamMessage<T>>()
-        this.pipeline = SubscribePipeline<T>(this.client, this.buffer, spid)
-        this.pipeline.on('error', (error: Error) => this.debug('error', error))
-        this.pipeline.once('end', () => {
-            this.removeAll()
+        const { subscriptions } = this
+        this.pipeline = SubscribePipeline<T>(this.client, spid)
+            .pipe(async function* DistributeMessage(src) {
+                for await (const msg of src) {
+                    subscriptions.forEach((sub) => {
+                        sub.push(msg)
+                    })
+
+                    yield msg
+                }
+            })
+            .onFinally(() => (
+                this.removeAll()
+            ))
+
+        // eslint-disable-next-line promise/catch-or-return
+        flow(this.pipeline).catch((err) => {
+            this.debug('error', err)
+        }).finally(() => {
+            this.debug('end')
         })
-        this.pipeline.on('message', this.onPipelineMessage)
-        // this.debug('create')
     }
 
-    onPipelineMessage = (msg: StreamMessage<T>) => {
-        this.subscriptions.forEach((sub) => {
-            sub.push(msg)
-        })
-    }
-
-    private onMessage = (msg: StreamMessage) => {
+    private onMessageInput = async (msg: StreamMessage) => {
         if (!msg || this.stopped || !this.active) {
             return
         }
@@ -57,23 +61,25 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
             return
         }
 
-        this.buffer.push(msg as StreamMessage<T>)
+        this.pipeline.push(msg as StreamMessage<T>)
     }
 
     private async subscribe() {
         this.debug('subscribe')
         this.active = true
         const node = await this.client.getNode()
-        node.addMessageListener(this.onMessage)
-        node.subscribe(this.spid.id, this.spid.partition)
+        node.addMessageListener(this.onMessageInput)
+        const { streamId, streamPartition } = this.spid
+        node.subscribe(streamId, streamPartition)
     }
 
     private async unsubscribe() {
         this.debug('unsubscribe')
         this.active = false
         const node = await this.client.getNode()
-        node.removeMessageListener(this.onMessage)
-        node.subscribe(this.spid.id, this.spid.partition)
+        node.removeMessageListener(this.onMessageInput)
+        const { streamId, streamPartition } = this.spid
+        node.subscribe(streamId, streamPartition)
     }
 
     updateSubscriptions = Scaffold([
@@ -86,7 +92,6 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     ], () => !!this.count())
 
     async stop() {
-        this.buffer.end()
         this.pipeline.end()
         await this.removeAll()
     }
@@ -119,7 +124,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         this.subscriptions.delete(sub)
 
         try {
-            if (!sub.isUnsubscribed && !sub.isDone) {
+            if (!sub.isUnsubscribed && !sub.isDone()) {
                 await sub.unsubscribe()
             }
         } finally {

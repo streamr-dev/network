@@ -27,6 +27,7 @@ export type IPushBuffer<InType, OutType = InType> = {
     length: number
     isFull(): boolean
     isDone(): boolean
+    collect(n?: number): Promise<OutType[]>
 } & Context & AsyncGenerator<OutType>
 
 /**
@@ -35,6 +36,9 @@ export type IPushBuffer<InType, OutType = InType> = {
  * and will unblock once buffer has been consumed.
  */
 export class PushBuffer<T> implements IPushBuffer<T> {
+    ['constructor']: typeof PushBuffer
+
+    static Error = PushBufferError
     readonly id
     readonly debug
 
@@ -85,7 +89,7 @@ export class PushBuffer<T> implements IPushBuffer<T> {
      */
     async collect(n?: number) {
         if (this.isIterating) {
-            throw new PushBufferError(this, 'Cannot collect if already iterating.')
+            throw new this.constructor.Error(this, 'Cannot collect if already iterating.')
         }
 
         const msgs = []
@@ -217,7 +221,7 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 
     [Symbol.asyncIterator]() {
         if (this.isIterating) {
-            throw new PushBufferError(this, 'already iterating')
+            throw new this.constructor.Error(this, 'already iterating')
         }
 
         return this
@@ -245,6 +249,24 @@ export async function pull<InType, OutType = InType>(src: AsyncGenerator<InType>
     } finally {
         dest.endWrite()
     }
+}
+
+export function flow<T>(asyncIterable: AsyncIterable<T>) {
+    const consume = async () => {
+        for await (const _ of asyncIterable) {
+            // do nothing, just consume iterator
+        }
+    }
+
+    // start consuming
+    // note this function returns a promise but we want to prevent
+    // unhandled rejections so can't use async keyword as this introduces
+    // a new promise we can't attach a catch handler to.
+    // anything awaiting this promise will still get the rejection
+    // it just won't trigger unhandledrejection
+    const task = consume()
+    task.catch(() => {}) // prevent unhandled
+    return task
 }
 
 /**

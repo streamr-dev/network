@@ -1,12 +1,11 @@
 import { inspect } from '../utils/log'
-import { StreamMessage, SPID, SPIDLikePartial, StreamMatcher } from 'streamr-client-protocol'
+import { StreamMessage, SPID, SID, SIDLike } from 'streamr-client-protocol'
 import { BrubeckClient } from './BrubeckClient'
 import StreamMessageCreator from '../publish/MessageCreator'
 import { FailedToPublishError } from '../publish'
 import { counterId } from '../utils'
 import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
-import { validateOptions } from '../stream/utils'
 
 const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -30,12 +29,13 @@ export default class BrubeckPublisher implements Context {
         this.debug = this.client.debug.extend(this.id)
     }
 
-    async publishMessage<T>(streamObjectOrId: StreamMatcher, {
+    async publishMessage<T>(streamObjectOrId: SIDLike, {
         content,
         timestamp = new Date(),
         partitionKey
     }: PublishMessageOptions<T>): Promise<StreamMessage<T>> {
-        const streamMessage = await this.messageCreator.create<T>(streamObjectOrId, {
+        const sid = SPID.parse(streamObjectOrId)
+        const streamMessage = await this.messageCreator.create<T>(sid, {
             content,
             timestamp,
             partitionKey,
@@ -47,7 +47,7 @@ export default class BrubeckPublisher implements Context {
     }
 
     async publish<T>(
-        streamObjectOrId: StreamMatcher,
+        streamObjectOrId: SIDLike,
         content: T,
         timestamp?: string | number | Date,
         partitionKey?: string | number
@@ -60,7 +60,7 @@ export default class BrubeckPublisher implements Context {
                 partitionKey,
             })
         } catch (err) {
-            const { streamId } = SPID.toSPIDObjectPartial(streamObjectOrId)
+            const { streamId } = SPID.parse(streamObjectOrId)
             const error = new FailedToPublishError(
                 streamId,
                 content,
@@ -86,7 +86,7 @@ export default class BrubeckPublisher implements Context {
         return msgs
     }
 
-    async* publishFrom<T>(streamObjectOrId: StreamMatcher, seq: AsyncIterable<T>) {
+    async* publishFrom<T>(streamObjectOrId: SIDLike, seq: AsyncIterable<T>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -98,7 +98,7 @@ export default class BrubeckPublisher implements Context {
         }
     }
 
-    async* publishFromMetadata<T>(streamObjectOrId: StreamMatcher, seq: AsyncIterable<PublishMessageOptions<T>>) {
+    async* publishFromMetadata<T>(streamObjectOrId: SIDLike, seq: AsyncIterable<PublishMessageOptions<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -145,9 +145,8 @@ export default class BrubeckPublisher implements Context {
             }
 
             last = await this.client.client.getStreamLast({
-                // @ts-expect-error
-                streamId: spid.id,
-                streamPartition: spid.partition,
+                streamId: spid.streamId,
+                streamPartition: spid.streamPartition,
                 count,
             })
 

@@ -106,15 +106,11 @@ describeRepeats('StreamrClient', () => {
 
     describe('Pub/Sub', () => {
         it('can successfully pub/sub 1 message', async () => {
-            client.debug(1)
             const sub = await client.subscribe({
                 streamId: stream.id,
             })
-            client.debug(2)
             const testMsg = Msg()
-            client.debug(3)
             await client.publish(stream.id, testMsg)
-            client.debug(4)
             const received = []
             for await (const msg of sub) {
                 received.push(msg.getParsedContent())

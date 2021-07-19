@@ -206,7 +206,7 @@ describeRepeats('resends', () => {
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(published.length)
-                expect(receivedMsgs).toEqual(published.map((m) => m.getParsedContent()))
+                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
             })
 
             it('can resend subset', async () => {
@@ -218,7 +218,7 @@ describeRepeats('resends', () => {
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(2)
-                expect(receivedMsgs).toEqual(published.slice(-2).map((m) => m.getParsedContent()))
+                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.slice(-2).map((s) => s.toObject()))
             })
         })
 
