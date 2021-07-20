@@ -24,7 +24,7 @@ const fallbacks = (env) => {
         "/src/logic/LocationManager.ts": false,
         "module": false,
     }
-    if (env !== 'test') {
+    if (env === 'production') {
         return Object.assign(fallbacks, {
             'http': false,
             'https': false,
@@ -58,6 +58,9 @@ const aliases = (env) => {
 }
 
 module.exports = (env, _argv) => {
+    if (!env) {
+        env = 'production'
+    }
     const commonConfig = {
         mode: 'development',
         entry: './src/composition.ts',
