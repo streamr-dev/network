@@ -19,9 +19,11 @@ const DefaultConfig: Config = {
     generateSessionId: false,
     network: {
         name: 'miner-node',
-        trackers: [
-            "ws://95.216.64.56:30300"
-        ],
+        trackers: [{
+            ws: "ws://95.216.64.56:30300",
+            http: "http://95.216.64.56:30300",
+            id: "0x49D45c17bCA1Caf692001D21c38aDECCB4c08504"
+        }],
         location: null
     },
     reporting: {
