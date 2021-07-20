@@ -12,15 +12,6 @@ module.exports = function (config) {
         basePath: '.',
         frameworks: ['jasmine'],
         reporters: ['spec'],
-        
-        //jest: {
-        //    snapshotPath: '__snapshots__',
-        //    testMatch: [
-        //      '**/test/**/*.[jt]s?(x)',
-        //      '**/?(*.)+(spec|test).[jt]s?(x)',
-        //    ],
-        //    testPathIgnorePatterns: ['**/node_modules/**'],
-        //  },
           
         files: [
             './karma-setup.js',
@@ -42,9 +33,7 @@ module.exports = function (config) {
             CustomElectron: {
                 base: 'Electron',
                 browserWindowOptions: {
-                    // DEV: More preferentially, should link your own `webPreferences` from your Electron app instead
                     webPreferences: {
-                        // Preferred `preload` mechanism to expose `require`
                         contextIsolation: false,
                         preload: __dirname + '/preload.js',
                         webSecurity: false,
