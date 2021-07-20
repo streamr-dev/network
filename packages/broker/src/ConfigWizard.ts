@@ -16,6 +16,7 @@ const DEFAULT_LEGACY_WS_PORT = 7173
 
 const DefaultConfig: Config = {
     ethereumPrivateKey: '',
+    generateSessionId: false,
     network: {
         name: 'miner-node',
         trackers: [
@@ -26,14 +27,25 @@ const DefaultConfig: Config = {
     reporting: {
         intervalInSeconds: 0,
         streamr: null,
-        perNodeMetrics: null
+        perNodeMetrics: {
+            enabled: true,
+            wsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
+            httpUrl: "https://streamr.network/api/v1",
+            storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
+            intervals: {
+                "sec": 1000,
+                "min": 60000,
+                "hour": 3600000,
+                "day": 86400000
+            }
+        }
     },
     streamrUrl: 'https://streamr.network',
     streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     storageNodeConfig: {
         registry: [{
             address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-            url: "http://95.216.64.56:8001"
+            url: "http://88.99.104.143:8001"
         }]
     },
     httpServer: {
@@ -140,7 +152,11 @@ export class ConfigWizard{
                     name: 'wsPort',
                     message: `Select a port for the Websocket Plugin [Enter for default: ${DEFAULT_WS_PORT}]`,
                 }, DEFAULT_WS_PORT)
-                this.config.plugins['websocket'] = { port: wsPort }
+                this.config.plugins['websocket'] = {
+                    port: wsPort,
+                    payloadMetadata: false,
+                    sslCertificate: null
+                }
             }
 
             if (plugins[i] === 'MQTT') {
@@ -149,7 +165,10 @@ export class ConfigWizard{
                     name: 'mqttPort',
                     message: `Select a port for the MQTT Plugin [Enter for default: ${DEFAULT_MQTT_PORT}]`,
                 }, DEFAULT_MQTT_PORT)
-                this.config.plugins['mqtt'] = { port: mqttPort }
+                this.config.plugins['mqtt'] = {
+                    port: mqttPort,
+                    payloadMetadata: false
+                }
             }
 
             if (plugins[i] === 'HttpPublish') {

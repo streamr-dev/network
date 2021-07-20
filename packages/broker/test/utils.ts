@@ -17,6 +17,7 @@ export function formConfig({
     trackerPort,
     privateKey,
     trackerId = 'tracker-1',
+    generateSessionId = false,
     httpPort = null,
     wsPort = null,
     legacyMqttPort = null,
@@ -67,6 +68,7 @@ export function formConfig({
 
     return {
         ethereumPrivateKey: privateKey,
+        generateSessionId,
         network: {
             name,
             trackers: [

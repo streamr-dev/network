@@ -69,9 +69,18 @@ describe('ConfigWizard', () => {
         const selected = await wizard.selectPlugins()
         expect(selected).toEqual(['Websocket', 'MQTT', 'HttpPublish'])
         expect(wizard.config.plugins).toEqual({
-            legacyWebsocket: { port: 7173 },
-            websocket: { port: wsPort},
-            mqtt: { port: mqttPort},
+            legacyWebsocket: {
+                port: 7173
+            },
+            websocket: {
+                port: wsPort,
+                payloadMetadata: false,
+                sslCertificate: null
+            },
+            mqtt: {
+                port: mqttPort,
+                payloadMetadata: false
+            },
             legacyPublishHttp: {},
             testnetMiner: {
                 claimServerUrl: 'http://88.99.104.143:3011',

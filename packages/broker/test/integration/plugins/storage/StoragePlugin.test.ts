@@ -40,7 +40,8 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
         brokerConfig,
-        storageNodeRegistry: StorageNodeRegistry.createInstance(brokerConfig, [])
+        storageNodeRegistry: StorageNodeRegistry.createInstance(brokerConfig, []),
+        nodeId: 'nodeId'
     })
 }
 
