@@ -49,8 +49,7 @@ describe('StreamMessageValidator', () => {
 
     /* eslint-disable */
     const sign = async (msgToSign: StreamMessage, privateKey: string) => {
-        msgToSign.signatureType = StreamMessage.SIGNATURE_TYPES.ETH
-        msgToSign.signature = await SigningUtil.sign(msgToSign.getPayloadToSign(), privateKey)
+        msgToSign.signature = await SigningUtil.sign(msgToSign.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey)
     }
     /* eslint-enable */
 
