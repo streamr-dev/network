@@ -16,6 +16,7 @@ const DEFAULT_LEGACY_WS_PORT = 7173
 
 const DefaultConfig: Config = {
     ethereumPrivateKey: '',
+    generateSessionId: false,
     network: {
         name: 'miner-node',
         trackers: [

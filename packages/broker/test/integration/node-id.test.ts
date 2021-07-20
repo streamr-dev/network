@@ -8,7 +8,7 @@ const trackerPort = 12740
 const broker1WsPort = 12474
 const broker2WsPort = 12477
 
-describe('node id', () => {
+describe('node id: with generateSessionId enabled', () => {
     let sharedWallet: Wallet
     let tracker: Tracker
     let broker1: Broker
@@ -27,6 +27,7 @@ describe('node id', () => {
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: sharedWallet.privateKey,
+            generateSessionId: true,
             networkPort: 12471,
             trackerPort,
             httpPort: 12473,
@@ -35,6 +36,7 @@ describe('node id', () => {
         broker2 = await startBroker({
             name: 'broker2',
             privateKey: sharedWallet.privateKey,
+            generateSessionId: true,
             networkPort: 12475,
             trackerPort,
             httpPort: 12476,

@@ -31,6 +31,7 @@ export interface StorageNodeConfig {
 
 export interface Config {
     ethereumPrivateKey: string
+    generateSessionId: boolean
     network: NetworkConfig,
     reporting: {
         intervalInSeconds: number,

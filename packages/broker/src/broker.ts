@@ -137,7 +137,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     // Start network node
     let sessionId
-    if (!config.plugins['storage']){
+    if (config.generateSessionId && !config.plugins['storage']) { // Exception: storage node needs consistent id
         sessionId = `${brokerAddress}#${uuidv4()}`
     }
     const nodeId = sessionId || brokerAddress
@@ -190,7 +190,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
             await volumeLogger.start()
-            logger.info(`Network node '${networkNodeName}' running`)
+            logger.info(`Network node '${networkNodeName}' (id=${nodeId}) running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             logger.info(`Configured with trackers: ${trackers.join(', ')}`)
             logger.info(`Configured with Streamr: ${config.streamrUrl}`)
