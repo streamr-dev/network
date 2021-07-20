@@ -34,7 +34,7 @@ const DefaultConfig: Config = {
     storageNodeConfig: {
         registry: [{
             address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-            url: "http://95.216.64.56:8001"
+            url: "http://88.99.104.143:8001"
         }]
     },
     httpServer: {
