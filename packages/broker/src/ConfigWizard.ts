@@ -9,58 +9,55 @@ import { Logger } from 'streamr-network'
 
 const logger = new Logger(module)
 
-const TODO_VALUES = {
-    number:-1,
-    string: 'empty_str',
-}
+const DEFAULT_WS_PORT = 7170
+const DEFAULT_MQTT_PORT = 7171
+const DEFAULT_HTTP_PORT = 7172
+const DEFAULT_LEGACY_WS_PORT = 7173
 
-// the lines with a TODO comment have values similar to the dev configs but need a revision to ensure the values are as they should
 const DefaultConfig: Config = {
-    ethereumPrivateKey: TODO_VALUES.string,//'{ETHEREUM_PRIVATE_KEY}',
+    ethereumPrivateKey: '',
     network: {
-        name: TODO_VALUES.string,
-        trackers: [ // TODO
-            "ws://127.0.0.1:30301",
-            "ws://127.0.0.1:30302",
-            "ws://127.0.0.1:30303"
+        name: 'miner-node',
+        trackers: [
+            "ws://95.216.64.56:30300"
         ],
-        location: {
-            latitude: 60.19,
-            longitude: 24.95,
-            country: "Finland",
-            city: "Helsinki"
-        } // TODO
+        location: null
     },
     reporting: {
         intervalInSeconds: 0,
         streamr: null,
         perNodeMetrics: null
     },
-    streamrUrl: 'http://127.0.0.1', // TODO
-    streamrAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c', // TODO
+    streamrUrl: 'https://streamr.network',
+    streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     storageNodeConfig: {
-        registry: {
-            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F', // TODO
-            jsonRpcProvider: 'http://10.200.10.1:8546' // TODO
-        }
+        registry: [{
+            address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
+            url: "http://95.216.64.56:8001"
+        }]
     },
     httpServer: {
+        port: DEFAULT_HTTP_PORT,
         privateKeyFileName: null,
-        certFileName: null,
-        port: TODO_VALUES.number//'{HTTP_SERVER_PORT}',
+        certFileName: null
     },
     apiAuthentication: null,
-    plugins: {}
+    plugins: {
+        legacyWebsocket: {
+            port: DEFAULT_LEGACY_WS_PORT
+        },
+        testnetMiner: {
+            rewardStreamId: "dO1PMm-FThqeWk-SE3zOYg",
+            claimServerUrl: "http://88.99.104.143:3011",
+            maxClaimDelay: 5000
+        }
+    }
 }
 
 export class ConfigWizard{
     config: Config
     // required to mock results on tests
     inquirer: inquirer.Inquirer = inquirer
-
-    defaultWebsocketPort = 7171 
-    defaultMqttPort = 7272 
-    defaultHttpPort = 7373
 
     constructor() {
         this.config = DefaultConfig
@@ -141,8 +138,8 @@ export class ConfigWizard{
                 const wsPort = await this.promptNumberWithDefault({
                     type: 'input',
                     name: 'wsPort',
-                    message: `Select a port for the Websocket Plugin [Enter for default: ${this.defaultWebsocketPort}]`,
-                }, this.defaultWebsocketPort)
+                    message: `Select a port for the Websocket Plugin [Enter for default: ${DEFAULT_WS_PORT}]`,
+                }, DEFAULT_WS_PORT)
                 this.config.plugins['websocket'] = { port: wsPort }
             }
 
@@ -150,18 +147,13 @@ export class ConfigWizard{
                 const mqttPort = await this.promptNumberWithDefault({
                     type: 'input',
                     name: 'mqttPort',
-                    message: `Select a port for the MQTT Plugin [Enter for default: ${this.defaultMqttPort}]`,
-                }, this.defaultMqttPort)
+                    message: `Select a port for the MQTT Plugin [Enter for default: ${DEFAULT_MQTT_PORT}]`,
+                }, DEFAULT_MQTT_PORT)
                 this.config.plugins['mqtt'] = { port: mqttPort }
             }
 
             if (plugins[i] === 'HttpPublish') {
-                const httpPort = await this.promptNumberWithDefault({
-                    type: 'input',
-                    name: 'httpPort',
-                    message: `Select a port for the HttpPublish Plugin [Enter for default: ${this.defaultHttpPort}]`,
-                }, this.defaultHttpPort)
-                this.config.plugins['httpPublish'] = { port: httpPort }
+                this.config.plugins['legacyPublishHttp'] = {}
             }
         }
 
@@ -172,7 +164,7 @@ export class ConfigWizard{
     async storeConfig(destinationFolder: string) {
         const filename = `wizard-config.json`
         const finalPath = path.join(__dirname, destinationFolder, filename)
-        writeFileSync(finalPath, JSON.stringify(this.config))
+        writeFileSync(finalPath, JSON.stringify(this.config, null, 2))
         return finalPath
     }
 
