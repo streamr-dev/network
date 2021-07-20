@@ -14,7 +14,6 @@ import Session from './Session'
 import Connection, { ConnectionError, ConnectionOptions } from './Connection'
 import Publisher from './publish'
 import { Subscriber, Subscription } from './subscribe'
-import { getUserId } from './user'
 import { EthereumAddress, MaybeAsync, Todo } from './types'
 import { StreamEndpoints } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
@@ -367,10 +366,6 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return this.publisher.publish(streamObjectOrId, content, timestamp, partitionKey)
     }
 
-    async getUserId() {
-        return getUserId(this)
-    }
-
     async setNextGroupKey(streamId: string, newKey: GroupKey): Promise<void> {
         return this.publisher.setNextGroupKey(streamId, newKey)
     }
@@ -462,7 +457,17 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return this.ethereum.getAddress()
     }
 
+    /**
+     * @deprecated use getAddress()
+     */
     async getPublisherId(): Promise<EthereumAddress> {
+        return this.getAddress()
+    }
+
+    /**
+     * @deprecated use getAddress()
+     */
+    async getUserId(): Promise<EthereumAddress> {
         return this.getAddress()
     }
 

@@ -70,7 +70,7 @@ export default class StreamMessageCreator {
             // load cached stream + publisher details
             const [stream, publisherId] = await Promise.all([
                 this.client.cached.getStream(streamId),
-                this.client.cached.getUserId(this.client),
+                this.client.cached.getAddress(),
             ])
 
             // figure out partition

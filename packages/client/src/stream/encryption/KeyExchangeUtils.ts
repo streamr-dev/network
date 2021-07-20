@@ -65,7 +65,7 @@ export async function subscribeToKeyExchangeStream<T>(
 
     await client.session.getSessionToken() // trigger auth errors if any
     // subscribing to own keyexchange stream
-    const publisherId = await client.getUserId()
+    const publisherId = await client.cached.getAddress()
     const streamId = getKeyExchangeStreamId(publisherId)
     const sub = await client.subscribe(streamId, onKeyExchangeMessage)
     sub.on('error', () => {}) // errors should not shut down subscription
