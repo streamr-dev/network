@@ -27,7 +27,18 @@ const DefaultConfig: Config = {
     reporting: {
         intervalInSeconds: 0,
         streamr: null,
-        perNodeMetrics: null
+        perNodeMetrics: {
+            enabled: true,
+            wsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
+            httpUrl: "https://streamr.network/api/v1",
+            storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
+            intervals: {
+                "sec": 1000,
+                "min": 60000,
+                "hour": 3600000,
+                "day": 86400000
+            }
+        }
     },
     streamrUrl: 'https://streamr.network',
     streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
