@@ -7,13 +7,12 @@ import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { ExternalProvider } from '@ethersproject/providers'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getVersionString } from './utils'
-import { ConnectionInfo } from '@ethersproject/web'
 import { EthereumAddress, Todo } from './types'
-import { BytesLike } from '@ethersproject/bytes'
 import { isAddress } from '@ethersproject/address'
 import has from 'lodash/has'
 import get from 'lodash/get'
 import { StorageNode } from './stream/StorageNode'
+import { AuthOptions, EthereumOptions } from './Ethereum'
 
 export type EthereumConfig = ExternalProvider
 
@@ -27,13 +26,7 @@ export type StrictStreamrClientOptions = {
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
-    auth: {
-        privateKey?: BytesLike
-        ethereum?: EthereumConfig
-        apiKey?: string
-        username?: string
-        password?: string
-    }
+    auth: AuthOptions
     /** Websocket server to connect to */
     url: string
     /** Core HTTP API calls go here */
@@ -57,17 +50,6 @@ export type StrictStreamrClientOptions = {
     publishAutoDisconnectDelay: number,
     groupKeys: Todo
     keyExchange: Todo
-
-    binanceRPC: ConnectionInfo & { chainId?: number }
-    // address on sidechain
-    binanceAdapterAddress: EthereumAddress
-    // AMB address on BSC. used to port TXs to BSC
-    binanceSmartChainAMBAddress: EthereumAddress
-    withdrawServerUrl: string
-    mainnet?: ConnectionInfo|string
-    sidechain: ConnectionInfo & { chainId?: number }
-    tokenAddress: EthereumAddress,
-    tokenSidechainAddress: EthereumAddress,
     dataUnion: {
         /**
          * Threshold value set in AMB configs, smallest token amount to pass over the bridge if
@@ -89,7 +71,7 @@ export type StrictStreamrClientOptions = {
         maxSize: number,
         maxAge: number
     }
-}
+} & EthereumOptions
 
 export type StreamrClientOptions = Partial<Omit<StrictStreamrClientOptions, 'dataUnion'> & {
     dataUnion: Partial<StrictStreamrClientOptions['dataUnion']>

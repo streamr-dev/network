@@ -1,10 +1,54 @@
 import { Wallet } from '@ethersproject/wallet'
-import { getDefaultProvider, JsonRpcProvider, Provider, Web3Provider } from '@ethersproject/providers'
+import { ExternalProvider, getDefaultProvider, JsonRpcProvider, Provider, Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
+import { ConnectionInfo } from '@ethersproject/web'
+import { EthereumAddress } from './types'
+import { BytesLike } from '@ethersproject/bytes'
 
-import type { StreamrClient } from './StreamrClient'
+export type EthereumConfig = ExternalProvider
+
+// Auth Options
+
+export type ProviderAuthOptions = {
+    ethereum: EthereumConfig
+}
+
+export type PrivateKeyAuthOptions = {
+    privateKey: BytesLike
+}
+
+// Deprecated Auth Options
+export type APIKeyAuthOptions = {
+    apiKey: string
+}
+
+export type UsernamePasswordAuthOptions = {
+    username: string
+    password: string
+}
+
+export type UnauthenticatedAuthOptions = {}
+
+export type DeprecatedAuthOptions = APIKeyAuthOptions | UsernamePasswordAuthOptions
+
+export type AuthOptions = ProviderAuthOptions | PrivateKeyAuthOptions | DeprecatedAuthOptions | UnauthenticatedAuthOptions
+
+// Ethereum Options
+
+export type EthereumOptions = {
+    binanceRPC: ConnectionInfo & { chainId?: number }
+    // address on sidechain
+    binanceAdapterAddress: EthereumAddress
+    // AMB address on BSC. used to port TXs to BSC
+    binanceSmartChainAMBAddress: EthereumAddress
+    withdrawServerUrl: string
+    mainnet?: ConnectionInfo|string
+    sidechain: ConnectionInfo & { chainId?: number }
+    tokenAddress: EthereumAddress,
+    tokenSidechainAddress: EthereumAddress,
+}
 
 export default class StreamrEthereum {
     static generateEthereumAccount() {
@@ -18,20 +62,20 @@ export default class StreamrEthereum {
     _getAddress?: () => Promise<string>
     _getSigner?: () => Signer
     _getSidechainSigner?: () => Promise<Signer>
-    client
+    authOptions
+    ethereumOptions
 
-    constructor(client: StreamrClient) {
-        this.client = client
-        const { options } = client
-        const { auth } = options
-        if (auth.privateKey) {
-            const key = auth.privateKey
+    constructor(authOptions: AuthOptions, ethereumOptions: EthereumOptions) {
+        this.authOptions = authOptions
+        this.ethereumOptions = ethereumOptions
+        if ('privateKey' in authOptions) {
+            const key = authOptions.privateKey
             const address = getAddress(computeAddress(key))
             this._getAddress = async () => address
             this._getSigner = () => new Wallet(key, this.getMainnetProvider())
             this._getSidechainSigner = async () => new Wallet(key, this.getSidechainProvider())
-        } else if ('ethereum' in auth && auth.ethereum) {
-            const ethereumConfig = auth.ethereum!
+        } else if ('ethereum' in authOptions && authOptions.ethereum) {
+            const ethereumConfig = authOptions.ethereum!
             this._getAddress = async () => {
                 try {
                     if (!(ethereumConfig && 'request' in ethereumConfig && typeof ethereumConfig.request === 'function')) {
@@ -50,15 +94,15 @@ export default class StreamrEthereum {
                 return metamaskSigner
             }
             this._getSidechainSigner = async () => {
-                if (!options.sidechain || !options.sidechain.chainId) {
+                if (!ethereumOptions.sidechain || !ethereumOptions.sidechain.chainId) {
                     throw new Error('Streamr sidechain not configured (with chainId) in the StreamrClient options!')
                 }
 
                 const metamaskProvider = new Web3Provider(ethereumConfig)
                 const { chainId } = await metamaskProvider.getNetwork()
-                if (chainId !== options.sidechain.chainId) {
+                if (chainId !== ethereumOptions.sidechain.chainId) {
                     throw new Error(
-                        `Please connect Metamask to Ethereum blockchain with chainId ${options.sidechain.chainId}: current chainId is ${chainId}`
+                        `Please connect Metamask to Ethereum blockchain with chainId ${ethereumOptions.sidechain.chainId}: current chainId is ${chainId}`
                     )
                 }
                 const metamaskSigner = metamaskProvider.getSigner()
@@ -106,27 +150,27 @@ export default class StreamrEthereum {
 
     /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
     getMainnetProvider(): Provider {
-        if (!this.client.options.mainnet) {
+        if (!this.ethereumOptions.mainnet) {
             return getDefaultProvider()
         }
 
-        return new JsonRpcProvider(this.client.options.mainnet)
+        return new JsonRpcProvider(this.ethereumOptions.mainnet)
     }
 
     /** @returns Ethers.js Provider, a connection to Binance Smart Chain */
-    getBinanceProvider() : Provider {
-        if (!this.client.options.binanceRPC) {
-            throw new Error('StreamrClient has no binance configuration.')
+    getBinanceProvider(): Provider {
+        if (!this.ethereumOptions.binanceRPC) {
+            throw new Error('StreamrCliEthereumOptionsent has no binance configuration.')
         }
-        return new JsonRpcProvider(this.client.options.binanceRPC)
+        return new JsonRpcProvider(this.ethereumOptions.binanceRPC)
     }
 
     /** @returns Ethers.js Provider, a connection to the Streamr EVM sidechain */
     getSidechainProvider(): Provider {
-        if (!this.client.options.sidechain) {
-            throw new Error('StreamrClient has no sidechain configuration.')
+        if (!this.ethereumOptions.sidechain) {
+            throw new Error('EthereumOptions has no sidechain configuration.')
         }
 
-        return new JsonRpcProvider(this.client.options.sidechain)
+        return new JsonRpcProvider(this.ethereumOptions.sidechain)
     }
 }

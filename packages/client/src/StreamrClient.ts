@@ -224,7 +224,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
             .on('done', this.onConnectionDone)
             .on('error', this.onConnectionError)
 
-        this.ethereum = new StreamrEthereum(this)
+        this.ethereum = new StreamrEthereum(this.options.auth, this.options)
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
 
