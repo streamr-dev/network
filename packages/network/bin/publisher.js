@@ -65,14 +65,15 @@ let sequenceNumber = 0
 
 setInterval(() => {
     const timestamp = Date.now()
-    const msg = 'Hello world, ' + new Date().toLocaleString()
+    const msg = 'Hello world from ReactJS, ' + new Date().toLocaleString()
     program.opts().streamIds.forEach((streamId) => {
         const streamMessage = new StreamMessage({
             messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, id, messageChainId),
             prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
             content: {
                 msg,
-                noise: generateString(noise)
+                noise: generateString(noise),
+                sequenceNumber
             },
         })
         publisher.publish(streamMessage)

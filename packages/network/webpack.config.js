@@ -60,7 +60,7 @@ const aliases = (env) => {
 module.exports = (env, _argv) => {
     const commonConfig = {
         mode: 'development',
-        entry: './src/browser.ts',
+        entry: './src/composition.ts',
         module: {
             rules: [
                 {
@@ -85,13 +85,13 @@ module.exports = (env, _argv) => {
             fallback: fallbacks(env)
         },
         output: {
-            filename: 'bundle.js',
+            filename: 'browser-node-bundle.js',
             path: path.resolve(__dirname, 'dist'),
-            library: 'createBrowserNode',
-            libraryExport: 'default'
+            library: 'StreamrNetwork',
+            libraryTarget: 'umd2',
+            umdNamedDefine: true,
         },
         externals: externals(env)
     }
-    console.log(commonConfig)
     return commonConfig
 }

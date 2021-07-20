@@ -13,7 +13,7 @@
     "tracker": "bin/tracker.js"
   },
   "main": "dist/composition.js",
-  "browser": "./dist/composition.js",
+  "browser": "dist/browser-node-bundle.js",
   "types": "dist/composition.d.ts",
   "scripts": {
     "prepare": "tsc -p tsconfig-build.json",
