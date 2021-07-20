@@ -1,9 +1,9 @@
-import {IMessageEvent, w3cwebsocket} from 'websocket'
+import { IMessageEvent, w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { BrowserClientWsConnection, BrowserWebSocketConnectionFactory } from './BrowserClientWsConnection'
-import {AbstractClientWsEndpoint, HandshakeValues, PeerId} from "./AbstractClientWsEndpoint"
+import { AbstractClientWsEndpoint, HandshakeValues, PeerId } from "./AbstractClientWsEndpoint"
 
 export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserClientWsConnection> {
     constructor(
