@@ -8,6 +8,7 @@
   },
   "bin": {
     "broker": "bin/broker.js",
+    "broker-wizard": "bin/config-wizard.js",
     "tracker": "bin/tracker.js",
     "delete-expired-data": "bin/delete-expired-data.js"
   },
@@ -29,6 +30,7 @@
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.11",
     "@types/heap": "^0.2.28",
+    "@types/inquirer": "^7.3.2",
     "@types/memoizee": "^0.4.5",
     "@types/merge2": "^1.3.0",
     "@types/node-fetch": "^2.5.10",
@@ -38,6 +40,7 @@
     "@types/split2": "^2.1.6",
     "@types/stream-to-array": "^2.3.0",
     "@types/supertest": "^2.0.11",
+    "@types/terminal-kit": "^1.28.2",
     "@types/uuid": "^8.3.0",
     "@types/ws": "^7.4.4",
     "abort-controller": "^3.0.0",
@@ -51,6 +54,7 @@
     "ethers": "^5.1.4",
     "express": "^4.17.1",
     "heap": "^0.2.6",
+    "inquirer": "^8.1.1",
     "memoizee": "^0.4.15",
     "merge2": "^1.4.1",
     "mqtt-connection": "^4.1.0",
@@ -64,6 +68,7 @@
     "streamr-client": "^5.4.4",
     "streamr-network": "^26.0.1",
     "streamr-test-utils": "^2.0.0",
+    "terminal-kit": "^2.1.5",
     "utf8-binary-cutter": "^0.9.2",
     "uuid": "^8.3.2",
     "ws": "^7.4.5"

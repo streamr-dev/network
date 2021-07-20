@@ -140,9 +140,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     if (!config.plugins['storage']){
         sessionId = `${brokerAddress}#${uuidv4()}`
     }
+    const nodeId = sessionId || brokerAddress
 
     const networkNode = createNetworkNode({
-        id: sessionId || brokerAddress,
+        id: nodeId,
         name: networkNodeName,
         trackers,
         location: config.network.location,
@@ -164,7 +165,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             apiAuthenticator,
             metricsContext,
             brokerConfig: config,
-            storageNodeRegistry
+            storageNodeRegistry,
+            nodeId
         }
         return createPlugin(name, pluginOptions)
     })
