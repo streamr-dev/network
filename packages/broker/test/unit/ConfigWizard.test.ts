@@ -69,27 +69,15 @@ describe('ConfigWizard', () => {
         const selected = await wizard.selectPlugins()
         expect(selected).toEqual(['Websocket', 'MQTT', 'HttpPublish'])
         expect(wizard.config.plugins).toEqual({
+            legacyWebsocket: { port: 7173 },
             websocket: { port: wsPort},
             mqtt: { port: mqttPort},
-            httpPublish: { port: httpPort},
-        })
-    })
-
-    it ('should enable every plugin with default values', async () => {
-        // need to mock the default values (?)
-        mockPromptMethod(wizard, {
-            selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
-            wsPort: wizard.defaultWebsocketPort,
-            mqttPort: wizard.defaultMqttPort,
-            httpPort: wizard.defaultHttpPort
-        })
-
-        const selected = await wizard.selectPlugins()
-        expect(selected).toEqual(['Websocket', 'MQTT', 'HttpPublish'])
-        expect(wizard.config.plugins).toEqual({
-            websocket: { port: wizard.defaultWebsocketPort },
-            mqtt: { port: wizard.defaultMqttPort },
-            httpPublish: { port: wizard.defaultHttpPort }
+            legacyPublishHttp: {},
+            testnetMiner: {
+                claimServerUrl: 'http://88.99.104.143:3011',
+                maxClaimDelay: 5000,
+                rewardStreamId: 'dO1PMm-FThqeWk-SE3zOYg'
+            }
         })
     })
 
@@ -97,9 +85,9 @@ describe('ConfigWizard', () => {
         mockPromptMethod(wizard, {
             generateOrImportEthereumPrivateKey: 'generate',
             selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
-            wsPort: wizard.defaultWebsocketPort,
-            mqttPort: wizard.defaultMqttPort,
-            httpPort: wizard.defaultHttpPort
+            wsPort: 7170,
+            mqttPort: 7171,
+            httpPort: 7172
         })
 
         await wizard.generateOrImportPrivateKey()
@@ -117,9 +105,9 @@ describe('ConfigWizard', () => {
         mockPromptMethod(wizard, {
             generateOrImportEthereumPrivateKey: 'generate',
             selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
-            wsPort: wizard.defaultWebsocketPort,
-            mqttPort: wizard.defaultMqttPort,
-            httpPort: wizard.defaultHttpPort
+            wsPort: 7170,
+            mqttPort: 7171,
+            httpPort: 7172
         })
         const finalPath = await startBrokerConfigWizard('../configs')
         expect(existsSync(finalPath)).toEqual(true)
