@@ -82,7 +82,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
     private connectionId = 'none'
     private peerInfo: PeerInfo
-    private flushRef: NodeJS.Timeout | null
+    private flushRef: NodeJS.Immediate | null
     private flushTimeoutRef: NodeJS.Timeout | null
     private connectionTimeoutRef: NodeJS.Timeout | null
     private deferredConnectionAttempt: DeferredConnectionAttempt | null
@@ -189,7 +189,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
 
         if (this.flushRef) {
-            clearTimeout(this.flushRef)
+            clearImmediate(this.flushRef)
         }
         if (this.flushTimeoutRef) {
             clearTimeout(this.flushTimeoutRef)
@@ -306,10 +306,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
     private setFlushRef(): void {
         if (this.flushRef === null) {
-            this.flushRef = setTimeout(() => {
+            this.flushRef = setImmediate(() => {
                 this.flushRef = null
                 this.attemptToFlushMessages()
-            }, 0)
+            })
         }
     }
    

@@ -18,6 +18,8 @@ import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import NodeWebRtcConnectionFactory from "./connection/NodeWebRtcConnection"
 
+require('setimmediate')
+
 export {
     Location,
     MetricsContext,

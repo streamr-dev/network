@@ -3,11 +3,12 @@ import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import {AbstractWsConnection, ReadyState} from "./AbstractWsConnection"
-import { w3cwebsocket } from "websocket"
+import {IMessageEvent, w3cwebsocket} from "websocket"
 
 export type PeerId = string
 export type ServerUrl = string
 export type SupportedWs = WebSocket | w3cwebsocket
+export type HandshakeValues = { uuid: string, peerId: string }
 
 export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
     createConnection(socket: SupportedWs, peerInfo: PeerInfo): C
@@ -87,6 +88,48 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
      * Custom connect logic of subclass
      */
     protected abstract doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId>
+
+    /**
+     * Init client-side handshake timeout
+     */
+    protected handshakeInit(ws: SupportedWs, serverPeerInfo: PeerInfo, reject: (reason?: any) => void
+    ): void {
+        const peerId = serverPeerInfo.peerId
+        this.handshakeTimeoutRefs[peerId] = setTimeout(() => {
+            ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from ${peerId}`)
+            this.logger.warn(`Handshake not received from ${peerId}`)
+            delete this.handshakeTimeoutRefs[peerId]
+            reject(`Handshake not received from ${peerId}`)
+        }, this.handshakeTimer)
+    }
+
+    /**
+     * Initial handshake message listener
+     */
+    protected handshakeListener(
+        ws: SupportedWs,
+        serverPeerInfo: PeerInfo,
+        serverUrl: string,
+        message: IMessageEvent | string | Buffer | Buffer[],
+        resolve: (value: string | PromiseLike<string>) => void
+    ): void {
+        try {
+            const { uuid, peerId } = this.doHandshakeParse(message)
+            if (uuid && peerId === serverPeerInfo.peerId) {
+                this.clearHandshake(peerId)
+                this.doHandshakeResponse(uuid, peerId, ws)
+                resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
+            } else {
+                this.logger.trace('Expected a handshake message got: ' + message)
+            }
+        } catch (err) {
+            this.logger.trace(err)
+        }
+    }
+
+    protected abstract doHandshakeResponse(uuid: string, peerId: string, ws: SupportedWs): void
+
+    protected abstract doHandshakeParse(message: string | Buffer | Buffer[] | IMessageEvent): HandshakeValues
 
     /**
      * Finalise WS connection e.g. add final event listeners

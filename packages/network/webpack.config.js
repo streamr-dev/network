@@ -1,11 +1,12 @@
 const path = require('path')
 const webpack = require('webpack')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
+require("setimmediate")
 
 const externals = (env) => {
     const externals = {
         'geoip-lite': 'commonjs geoip-lite',
-        'node-datachannel': 'commonjs node-datachannel'
+        'node-datachannel': 'commonjs node-datachannel',
     }
     if (env === 'test') {
         return Object.assign(externals, {
@@ -21,6 +22,7 @@ const externals = (env) => {
 const fallbacks = (env) => {
     const fallbacks = {
         "fs": require.resolve('browserify-fs'),
+        "setImmediate": require.resolve('setimmediate'),
         "/src/logic/LocationManager.ts": false,
         "module": false,
     }
@@ -63,7 +65,7 @@ module.exports = (env, _argv) => {
     }
     const commonConfig = {
         mode: 'development',
-        entry: './src/composition.ts',
+        entry: './src/browser.ts',
         module: {
             rules: [
                 {

@@ -3,7 +3,7 @@ import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
-import { AbstractClientWsEndpoint, PeerId, ServerUrl } from "./AbstractClientWsEndpoint"
+import { AbstractClientWsEndpoint, HandshakeValues, PeerId, ServerUrl } from "./AbstractClientWsEndpoint"
 
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> {
     constructor(
@@ -39,36 +39,19 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
 
                 let connection: NodeClientWsConnection | undefined
 
-                ws.on('message', (message: string | Buffer | Buffer[]) => {
-                    try {
-                        const {uuid, peerId} = JSON.parse(message.toString())
-                        if (uuid && peerId === serverPeerInfo.peerId) {
-                            ws.send(JSON.stringify({uuid, peerId: this.peerInfo.peerId}))
-                            if (this.handshakeTimeoutRefs[peerId]) {
-                                this.clearHandshake(peerId)
-                            }
-                            resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
-                        } else {
-                            this.logger.trace('Expected a handshake message got: ' + message.toString())
-                        }
-                    } catch (err) {
-                        this.logger.trace(err)
-                    }
-                })
+                ws.once('open', () => this.handshakeInit(ws, serverPeerInfo, reject))
+
+                ws.on('message', (message: string | Buffer | Buffer[]) => this.handshakeListener(
+                    ws,
+                    serverPeerInfo,
+                    serverUrl,
+                    message,
+                    resolve
+                ))
 
                 ws.on('close', (code: number, reason: string): void => {
                     this.logger.trace(code.toString(), reason)
                     ws.terminate()
-                })
-
-                ws.once('open', () => {
-                    const peerId = serverPeerInfo.peerId
-                    this.handshakeTimeoutRefs[peerId] = setTimeout(() => {
-                        ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from ${peerId}`)
-                        this.logger.warn(`Handshake not received from ${peerId}`)
-                        delete this.handshakeTimeoutRefs[peerId]
-                        reject(`Handshake not received from ${peerId}`)
-                    }, this.handshakeTimer)
                 })
 
                 ws.on('error', (err) => {
@@ -99,5 +82,17 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         })
 
         return connection
+    }
+
+    protected doHandshakeResponse(uuid: string, peerId: string, ws: WebSocket): void {
+        ws.send(JSON.stringify({ uuid, peerId: this.peerInfo.peerId }))
+    }
+
+    protected doHandshakeParse(message: string | Buffer | Buffer[]): HandshakeValues {
+        const { uuid, peerId } = JSON.parse(message.toString())
+        return {
+            uuid,
+            peerId
+        }
     }
 }
