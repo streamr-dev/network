@@ -140,7 +140,11 @@ export class ConfigWizard{
                     name: 'wsPort',
                     message: `Select a port for the Websocket Plugin [Enter for default: ${DEFAULT_WS_PORT}]`,
                 }, DEFAULT_WS_PORT)
-                this.config.plugins['websocket'] = { port: wsPort }
+                this.config.plugins['websocket'] = {
+                    port: wsPort,
+                    payloadMetadata: false,
+                    sslCertificate: null
+                }
             }
 
             if (plugins[i] === 'MQTT') {
@@ -149,7 +153,10 @@ export class ConfigWizard{
                     name: 'mqttPort',
                     message: `Select a port for the MQTT Plugin [Enter for default: ${DEFAULT_MQTT_PORT}]`,
                 }, DEFAULT_MQTT_PORT)
-                this.config.plugins['mqtt'] = { port: mqttPort }
+                this.config.plugins['mqtt'] = {
+                    port: mqttPort,
+                    payloadMetadata: false
+                }
             }
 
             if (plugins[i] === 'HttpPublish') {
