@@ -111,7 +111,7 @@ export class Storage extends EventEmitter {
             prepare: true, fetchSize: 1
         }
 
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream(streamId, partition, 0)
 
         const makeLastQuery = async (bucketIds: BucketId[]) => {
             try {
@@ -245,7 +245,7 @@ export class Storage extends EventEmitter {
     }
 
     private fetchFromTimestamp(streamId: string, partition: number, fromTimestamp: number) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream(streamId, partition, fromTimestamp)
 
         const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
@@ -285,7 +285,7 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number | null,
         publisherId?: string | null
     ) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream(streamId, partition, fromTimestamp)
 
         const query1 = [
             'SELECT payload FROM stream_data',
@@ -333,7 +333,7 @@ export class Storage extends EventEmitter {
     }
 
     private fetchBetweenTimestamps(streamId: string, partition: number, fromTimestamp: number, toTimestamp: number) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream(streamId, partition, fromTimestamp)
 
         const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
@@ -376,7 +376,7 @@ export class Storage extends EventEmitter {
         publisherId?: string|null,
         msgChainId?: string|null
     ) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream(streamId, partition, fromTimestamp)
 
         const query1 = [
             'SELECT payload FROM stream_data',
@@ -442,21 +442,45 @@ export class Storage extends EventEmitter {
         }) as Readable
     }
 
-    private parseRow(row: Todo) {
+    private async parseRow(streamId:string, partition: number, bucketIds: number | string[], row: Todo) {
+        if (!row.payload){
+            if (typeof bucketIds === 'number'){
+                bucketIds = [bucketIds.toString()]
+            }
+            const params = [streamId, partition]
+            logger.warn('parseRow' + params.toString())
+
+            const query = 'SELECT * FROM stream_data WHERE '
+                + 'stream_id = ? AND partition = ? '
+                + 'LIMIT 9999'
+            const resultSet = await this.cassandraClient.execute(query, params, {
+                prepare: true,
+                fetchSize: 0 // disable paging
+            })
+            resultSet.rows.reverse().forEach((r: Todo) => {
+                console.log('Row!!', r)
+            })
+
+
+
+            logger.warn(`Message with null payload on row ${JSON.stringify(row)} found on streamId ${streamId} under partition ${partition}`)
+            row.payload = '{"version":30}'
+        }
+
         const streamMessage = Protocol.StreamMessage.deserialize(row.payload.toString())
         this.emit('read', streamMessage)
         return streamMessage
     }
 
-    private createResultStream() {
+    private createResultStream(streamId: string, partition:number, bucketIds: number | string[]) {
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         let last = Date.now()
         return new Transform({
             highWaterMark: 1024, // buffer up to 1024 messages
             objectMode: true,
-            transform(row: Todo, _: Todo, done: Todo) {
+            async transform(row: Todo, _: Todo, done: Todo){
                 const now = Date.now()
-                this.push(self.parseRow(row))
+                this.push(await self.parseRow(streamId, partition, bucketIds, row))
                 // To avoid blocking main thread for too long, after every 100ms
                 // pause & resume the cassandraStream to give other events in the event
                 // queue a chance to be handled.
