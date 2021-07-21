@@ -2,8 +2,8 @@ import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import {AbstractWsConnection, ReadyState} from "./AbstractWsConnection"
-import {IMessageEvent, w3cwebsocket} from "websocket"
+import { AbstractWsConnection, ReadyState } from "./AbstractWsConnection"
+import { IMessageEvent, w3cwebsocket } from "websocket"
 
 export type PeerId = string
 export type ServerUrl = string
@@ -127,8 +127,31 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         }
     }
 
+    protected onHandshakeError(serverUrl: string, error: Error, reject: (reason?: any) => void): void {
+        this.metrics.record('webSocketError', 1)
+        this.logger.trace('failed to connect to %s, error: %o', serverUrl, error)
+        reject(error)
+    }
+
+    protected onHandshakeClosed(serverUrl: string, code: number, reason: string, reject: (reason?: any) => void): void {
+        this.logger.trace(`Connection to ${serverUrl} closed during handshake with code: ${code}, reason ${reason}`)
+        reject(reason)
+    }
+
+    protected ongoingConnectionError(serverPeerId: string, error: Error, connection: AbstractWsConnection): void {
+        this.metrics.record('webSocketError', 1)
+        this.logger.trace('Connection to %s failed, error: %o', serverPeerId, error)
+        connection.terminate()
+    }
+
+    /**
+     * Send a handshake response back to the server
+     */
     protected abstract doHandshakeResponse(uuid: string, peerId: string, ws: SupportedWs): void
 
+    /**
+     * Parse handshake message
+     */
     protected abstract doHandshakeParse(message: string | Buffer | Buffer[] | IMessageEvent): HandshakeValues
 
     /**

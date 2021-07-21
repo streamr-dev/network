@@ -37,29 +37,22 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                     `${serverUrl}/ws`
                 )
 
-                let connection: NodeClientWsConnection | undefined
+                ws.once('open', () => {
+                    this.handshakeInit(ws, serverPeerInfo, reject)
+                })
 
-                ws.once('open', () => this.handshakeInit(ws, serverPeerInfo, reject))
-
-                ws.on('message', (message: string | Buffer | Buffer[]) => this.handshakeListener(
-                    ws,
-                    serverPeerInfo,
-                    serverUrl,
-                    message,
-                    resolve
-                ))
+                ws.on('message', (message: string | Buffer | Buffer[]) => {
+                    this.handshakeListener(ws, serverPeerInfo, serverUrl, message, resolve)
+                })
 
                 ws.on('close', (code: number, reason: string): void => {
-                    this.logger.trace(code.toString(), reason)
-                    ws.terminate()
+                    this.onHandshakeClosed(serverUrl, code, reason, reject)
                 })
 
                 ws.on('error', (err) => {
-                    this.metrics.record('webSocketError', 1)
-                    this.logger.warn('failed to connect to %s, error: %o', serverUrl, err)
-                    connection?.terminate()
-                    reject(err)
+                    this.onHandshakeError(serverUrl, err, reject)
                 })
+
             } catch (err) {
                 this.metrics.record('open:failedException', 1)
                 this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
@@ -79,6 +72,10 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         })
         ws.once('close', (code: number, reason: string): void => {
             this.onClose(connection, code, reason as DisconnectionReason)
+        })
+
+        ws.on('error', (err) => {
+            this.ongoingConnectionError(serverPeerInfo.peerId, err, connection)
         })
 
         return connection

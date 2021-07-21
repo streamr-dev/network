@@ -41,7 +41,8 @@ export class PingPongWs {
                     logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.getRtt())
                 } catch (e) {
                     logger.warn(`terminating connection because error thrown when attempting to ping %s: %s`,
-                        connection.getPeerId(), e)
+                        connection.getPeerId(), e
+                    )
                     connection.terminate()
                 }
             }

@@ -51,12 +51,10 @@ export class BrowserClientWsConnection extends AbstractWsConnection {
     // TODO: toString() representation for logging
 
     sendPing(): void {
-        // this.socket.ping()
         this.socket.send('ping')
     }
 
     async send(message: string): Promise<void> {
         this.socket.send(message)
-        // await util.promisify((cb: any) => this.socket.send(message))()
     }
 }

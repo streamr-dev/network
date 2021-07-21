@@ -40,24 +40,23 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
                     undefined,
                     undefined
                 )
-                let connection: BrowserClientWsConnection | undefined
 
-                ws.onopen = () => this.handshakeInit(ws, serverPeerInfo, reject)
+                ws.onopen = () => {
+                    this.handshakeInit(ws, serverPeerInfo, reject)
+                }
 
-                ws.onmessage = (message: IMessageEvent) => this.handshakeListener(
-                    ws,
-                    serverPeerInfo,
-                    serverUrl,
-                    message,
-                    resolve
-                )
+                ws.onmessage = (message: IMessageEvent) => {
+                    this.handshakeListener(ws, serverPeerInfo, serverUrl, message, resolve)
+                }
 
                 ws.onerror = (error) => {
-                    this.metrics.record('webSocketError', 1)
-                    this.logger.trace('failed to connect to %s, error: %o', serverUrl, error)
-                    connection?.terminate()
-                    reject(error)
+                    this.onHandshakeError(serverUrl, error, reject)
                 }
+
+                ws.onclose = (event) => {
+                    this.onHandshakeClosed(serverUrl, event.code, event.reason, reject)
+                }
+
             } catch (err) {
                 this.metrics.record('open:failedException', 1)
                 this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
@@ -68,6 +67,7 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
 
     protected doSetUpConnection(ws: w3cwebsocket, serverPeerInfo: PeerInfo): BrowserClientWsConnection {
         const connection = BrowserWebSocketConnectionFactory.createConnection(ws, serverPeerInfo)
+
         ws.onmessage = (message) => {
             const parsedMsg = message.data.toString()
             if (parsedMsg === 'pong') {
@@ -80,6 +80,11 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         ws.onclose = (event) => {
             this.onClose(connection, event.code, event.reason as DisconnectionReason)
         }
+
+        ws.onerror = (error) => {
+            this.ongoingConnectionError(serverPeerInfo.peerId, error, connection)
+        }
+
         return connection
     }
 

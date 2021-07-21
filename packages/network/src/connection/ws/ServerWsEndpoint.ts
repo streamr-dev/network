@@ -81,6 +81,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             remoteAddress,
             PeerInfo.newNode(peerId)
         )
+
         duplexStream.on('data', async (data: WebSocket.Data) => {
             const parsed = data.toString()
             if (parsed === 'ping') {
@@ -89,18 +90,23 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 this.onReceive(connection, data.toString())
             }
         })
+
         duplexStream.on('drain', () => {
             connection.evaluateBackPressure()
         })
+
         duplexStream.on('error', (error) => {
             this.logger.error('Duplex stream error: ' + error.stack as string)
         })
+
         ws.on('pong', () => {
             connection.onPong()
         })
+
         ws.on('close', (code: number, reason: string) => {
             this.onClose(connection, code, reason as DisconnectionReason)
         })
+
         this.onNewConnection(connection)
     }
 

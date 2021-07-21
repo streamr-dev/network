@@ -49,7 +49,6 @@ export class ServerWsConnection extends AbstractWsConnection {
     }
 
     async send(message: string): Promise<void> {
-        // Error handling is needed here because otherwise this.duplexStream itself will throw an unhandled error
         const readyState = this.getReadyState()
         if (this.getReadyState() !== 1) {
             throw new Error(`cannot send, readyState is ${readyState}`)
