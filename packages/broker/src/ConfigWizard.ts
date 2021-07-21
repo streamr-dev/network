@@ -20,8 +20,8 @@ const DefaultConfig: Config = {
     network: {
         name: 'miner-node',
         trackers: [{
-            ws: "ws://95.216.64.56:30300",
-            http: "http://95.216.64.56:30300",
+            ws: "wss://testnet1.streamr.network:30300",
+            http: "https://testnet1.streamr.network:30300",
             id: "0x49D45c17bCA1Caf692001D21c38aDECCB4c08504"
         }],
         location: null
@@ -47,7 +47,7 @@ const DefaultConfig: Config = {
     storageNodeConfig: {
         registry: [{
             address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-            url: "http://88.99.104.143:8001"
+            url: "https://testnet2.streamr.network:8001"
         }]
     },
     httpServer: {
@@ -61,8 +61,8 @@ const DefaultConfig: Config = {
             port: DEFAULT_LEGACY_WS_PORT
         },
         testnetMiner: {
-            rewardStreamId: "dO1PMm-FThqeWk-SE3zOYg",
-            claimServerUrl: "http://88.99.104.143:3011",
+            rewardStreamId: "streamr.eth/brubeck-testnet/rewards",
+            claimServerUrl: "http://testnet2.streamr.network:3011",
             maxClaimDelay: 5000
         }
     }
