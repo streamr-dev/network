@@ -1,7 +1,6 @@
 const path = require('path')
 const webpack = require('webpack')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
-require("setimmediate")
 
 const externals = (env) => {
     const externals = {
@@ -21,10 +20,9 @@ const externals = (env) => {
 
 const fallbacks = (env) => {
     const fallbacks = {
-        "fs": require.resolve('browserify-fs'),
-        "setImmediate": require.resolve('setimmediate'),
-        "/src/logic/LocationManager.ts": false,
-        "module": false,
+        'fs': require.resolve('browserify-fs'),
+        '/src/logic/LocationManager.ts': false,
+        'module': false,
     }
     if (env === 'production') {
         return Object.assign(fallbacks, {
@@ -40,31 +38,35 @@ const fallbacks = (env) => {
 
 const aliases = (env) => {
     const aliases = {
-        "process": "process/browser",
-        [path.resolve(__dirname, "src/logic/LocationManager.ts")]:
-            path.resolve(__dirname, "test/browser/LocationManager.ts"),
-        [path.resolve(__dirname, "src/connection/NodeWebRtcConnection.ts")]:
-            path.resolve(__dirname, "src/connection/BrowserWebRtcConnection.ts"),
-        [path.resolve(__dirname, "src/connection/ws/NodeClientWsEndpoint.ts")]:
-            path.resolve(__dirname, "src/connection/ws/BrowserClientWsEndpoint.ts"),
-        [path.resolve(__dirname, "src/connection/ws/NodeClientWsConnection.ts")]:
-            path.resolve(__dirname, "src/connection/ws/BrowserClientWsConnection.ts"),
+        'process': 'process/browser',
+        [path.resolve(__dirname, 'src/logic/LocationManager.ts')]:
+            path.resolve(__dirname, 'test/browser/LocationManager.ts'),
+        [path.resolve(__dirname, 'src/connection/NodeWebRtcConnection.ts')]:
+            path.resolve(__dirname, 'src/connection/BrowserWebRtcConnection.ts'),
+        [path.resolve(__dirname, 'src/connection/ws/NodeClientWsEndpoint.ts')]:
+            path.resolve(__dirname, 'src/connection/ws/BrowserClientWsEndpoint.ts'),
+        [path.resolve(__dirname, 'src/connection/ws/NodeClientWsConnection.ts')]:
+            path.resolve(__dirname, 'src/connection/ws/BrowserClientWsConnection.ts'),
     }
     if (env !== 'test') {
         return Object.assign(aliases, {
-            [path.resolve(__dirname, "src/helpers/trackerHttpEndpoints.ts")]:
+            [path.resolve(__dirname, 'src/helpers/trackerHttpEndpoints.ts')]:
                 false
         })
     }
     return aliases
 }
 
-module.exports = (env, _argv) => {
-    if (!env) {
-        env = 'production'
+module.exports = (env, argv) => {
+    let environment = 'development'
+
+    if (env === 'test' || argv.mode === 'test' || process.env.node_env === 'test') {
+        environment = 'test'
     }
-    const commonConfig = {
-        mode: 'development',
+    const isProduction = environment === 'production'
+
+    const config = {
+        mode: isProduction ? 'production' : 'development',
         entry: './src/browser.ts',
         module: {
             rules: [
@@ -73,7 +75,7 @@ module.exports = (env, _argv) => {
                     exclude: /(node_modules|streamr-client-protocol)/,
                     use: [{
                         loader: 'ts-loader',
-                        options: {configFile: 'tsconfig.webpack.json'}
+                        options: { configFile: 'tsconfig.webpack.json' }
                     }]
                 },
             ],
@@ -86,17 +88,17 @@ module.exports = (env, _argv) => {
         ],
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
-            alias: aliases(env),
-            fallback: fallbacks(env)
+            alias: aliases(environment),
+            fallback: fallbacks(environment)
         },
         output: {
-            filename: 'browser-node-bundle.js',
+            filename: 'streamr-network-bundle.js',
             path: path.resolve(__dirname, 'dist'),
             library: 'StreamrNetwork',
             libraryTarget: 'umd2',
             umdNamedDefine: true,
         },
-        externals: externals(env)
+        externals: externals(environment)
     }
-    return commonConfig
+    return config
 }

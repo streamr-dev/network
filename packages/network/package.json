@@ -13,13 +13,11 @@
     "tracker": "bin/tracker.js"
   },
   "main": "dist/composition.js",
-  "browser": "dist/browser-node-bundle.js",
+  "browser": "dist/streamr-network-bundle.js",
   "types": "dist/composition.d.ts",
   "scripts": {
     "prepare": "tsc -p tsconfig-build.json",
     "build": "tsc -p tsconfig-build.json && webpack",
-    "build-browser": "NODE_ENV=development webpack --mode=development --progress",
-    "build-browser-production": "NODE_ENV=production webpack --mode=production --progress",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",
     "pub-1": "node $NODE_DEBUG_OPTION bin/publisher.js --port=30323",
