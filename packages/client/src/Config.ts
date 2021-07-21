@@ -3,8 +3,7 @@
  */
 
 import qs from 'qs'
-import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { ExternalProvider } from '@ethersproject/providers'
+import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getVersionString } from './utils'
 import { EthereumAddress, Todo } from './types'
@@ -12,73 +11,86 @@ import { isAddress } from '@ethersproject/address'
 import has from 'lodash/has'
 import get from 'lodash/get'
 import { StorageNode } from './stream/StorageNode'
-import { AuthOptions, EthereumOptions } from './Ethereum'
+import { AuthConfig, EthereumConfig } from './Ethereum'
 
-export type EthereumConfig = ExternalProvider
+export type CacheConfig = {
+    maxSize: number,
+    maxAge: number
+}
+
+export type PublishConfig = {
+    maxPublishQueueSize: number
+    publishWithSignature: Todo
+    publisherStoreKeyHistory: boolean
+    publishAutoDisconnectDelay: number,
+}
+
+export type SubscribeConfig = {
+    /** Attempt to order messages */
+    orderMessages: boolean
+    maxGapRequests: number
+    maxRetries: number
+    verifySignatures: Todo
+    retryResendAfter: number
+    gapFillTimeout: number
+}
+
+export type ConnectionConfig = {
+    /** Websocket server to connect to */
+    url: string
+    /** Core HTTP API calls go here */
+    restUrl: string
+    /** Automatically connect on first subscribe */
+    autoConnect: boolean
+    /**  Automatically disconnect on last unsubscribe */
+    autoDisconnect: boolean
+}
+
+export type DataUnionConfig = {
+    /**
+     * Threshold value set in AMB configs, smallest token amount to pass over the bridge if
+     * someone else pays for the gas when transporting the withdraw tx to mainnet;
+     * otherwise the client does the transport as self-service and pays the mainnet gas costs
+     */
+    minimumWithdrawTokenWei: BigNumber|number|string
+    payForTransport: boolean
+    factoryMainnetAddress: EthereumAddress
+    factorySidechainAddress: EthereumAddress
+    templateMainnetAddress: EthereumAddress
+    templateSidechainAddress: EthereumAddress
+}
 
 /**
  * @category Important
  */
-export type StrictStreamrClientOptions = {
+export type StrictStreamrClientConfig = {
   /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
     id?: string,
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
-    auth: AuthOptions
-    /** Websocket server to connect to */
-    url: string
-    /** Core HTTP API calls go here */
-    restUrl: string
+    auth: AuthConfig
     /** joinPartAgent when using EE for join part handling */
     streamrNodeAddress: EthereumAddress
-    /** Automatically connect on first subscribe */
-    autoConnect: boolean
-    /**  Automatically disconnect on last unsubscribe */
-    autoDisconnect: boolean
-    /** Attempt to order messages */
-    orderMessages: boolean
-    retryResendAfter: number
-    gapFillTimeout: number
-    maxGapRequests: number
-    maxRetries: number
-    maxPublishQueueSize: number
-    publishWithSignature: Todo
-    verifySignatures: Todo
-    publisherStoreKeyHistory: boolean
-    publishAutoDisconnectDelay: number,
     groupKeys: Todo
     keyExchange: Todo
-    dataUnion: {
-        /**
-         * Threshold value set in AMB configs, smallest token amount to pass over the bridge if
-         * someone else pays for the gas when transporting the withdraw tx to mainnet;
-         * otherwise the client does the transport as self-service and pays the mainnet gas costs
-         */
-        minimumWithdrawTokenWei: BigNumber|number|string
-        payForTransport: boolean
-        factoryMainnetAddress: EthereumAddress
-        factorySidechainAddress: EthereumAddress
-        templateMainnetAddress: EthereumAddress
-        templateSidechainAddress: EthereumAddress
-    },
+    dataUnion: DataUnionConfig
     storageNode: {
         address: EthereumAddress
         url: string
     },
-    cache: {
-        maxSize: number,
-        maxAge: number
-    }
-} & EthereumOptions
+    cache: CacheConfig,
+} & (
+    EthereumConfig
+    & ConnectionConfig
+    & PublishConfig
+    & SubscribeConfig
+)
 
-export type StreamrClientOptions = Partial<Omit<StrictStreamrClientOptions, 'dataUnion'> & {
-    dataUnion: Partial<StrictStreamrClientOptions['dataUnion']>
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataUnion'> & {
+    dataUnion: Partial<StrictStreamrClientConfig['dataUnion']>
 }>
-
-const { ControlMessage } = ControlLayer
-const { StreamMessage } = MessageLayer
 
 const validateOverridedEthereumAddresses = (opts: any, propertyPaths: string[]) => {
     for (const propertyPath of propertyPaths) {
@@ -94,7 +106,7 @@ const validateOverridedEthereumAddresses = (opts: any, propertyPaths: string[]) 
 /**
  * @category Important
  */
-export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
+export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 
     // Streamr Core options
@@ -155,9 +167,9 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
 }
 
 /** @internal */
-export default function ClientConfig(opts: StreamrClientOptions = {}) {
+export default function ClientConfig(opts: StreamrClientConfig = {}) {
 
-    // validate all Ethereum addresses which are required in StrictStreamrClientOptions: if user
+    // validate all Ethereum addresses which are required in StrictStreamrClientConfig: if user
     // overrides a setting, which has a default value, it must be a non-null valid Ethereum address
     // TODO could also validate
     // - other optional Ethereum address (if there will be some)
@@ -173,7 +185,7 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
         'storageNode.address'
     ])
 
-    const options: StrictStreamrClientOptions = {
+    const options: StrictStreamrClientConfig = {
         ...STREAM_CLIENT_DEFAULTS,
         ...opts,
         dataUnion: {

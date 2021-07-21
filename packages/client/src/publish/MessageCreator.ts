@@ -1,16 +1,38 @@
-import { StreamMessage, SPID, SID } from 'streamr-client-protocol'
+import { StreamMessage, SPID, SID, MessageContent, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
 import mem from 'mem'
 
 import { LimitAsyncFnByKey } from '../utils'
 
-import Signer, { AuthOption } from './Signer'
+import Signer from './Signer'
 import Encrypt from './Encrypt'
 import { GroupKey } from '../stream'
-import { StreamrClient } from '../StreamrClient'
 import MessageChainer from './MessageChainer'
 import StreamPartitioner from './StreamPartitioner'
+import { StreamrClientAuthenticated } from '../StreamrClient'
 
-export default class StreamMessageCreator {
+export type MessageCreateOptions<T extends MessageContent> = {
+    content: T
+    timestamp: string | number | Date
+    partitionKey?: string | number
+    msgChainId?: string
+}
+
+export interface IMessageCreator {
+    create: <T extends MessageContent>(sid: SID, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
+    stop: () => Promise<void> | void
+}
+
+export class StreamMessageCreatorAnonymous implements IMessageCreator {
+    // eslint-disable-next-line class-methods-use-this
+    async create<T extends MessageContent>(_sid: SID, _options: MessageCreateOptions<T>): Promise<StreamMessage<T>> {
+        throw new Error('Anonymous user can not publish.')
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    stop() {}
+}
+
+export default class StreamMessageCreator implements IMessageCreator {
     computeStreamPartition
     encrypt
     queue: ReturnType<typeof LimitAsyncFnByKey>
@@ -22,7 +44,7 @@ export default class StreamMessageCreator {
      * Get function for creating stream messages.
      */
 
-    constructor(client: StreamrClient) {
+    constructor(client: StreamrClientAuthenticated) {
         const cacheOptions = client.options.cache
         this.client = client
         this.computeStreamPartition = StreamPartitioner(cacheOptions)
@@ -43,26 +65,18 @@ export default class StreamMessageCreator {
         })
 
         // message signer
-        this.signStreamMessage = Signer({
-            ...client.options.auth,
-        } as AuthOption, client.options.publishWithSignature)
-
+        this.signStreamMessage = Signer(client.options.auth)
         // per-stream queue so messages processed in-order
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create<T>(streamObjectOrId: SID, {
+    async create<T extends MessageContent>(streamObjectOrId: SID, {
         content,
         timestamp,
         partitionKey,
         msgChainId,
         ...opts
-    }: {
-        content: any,
-        timestamp: string | number | Date,
-        partitionKey?: string | number,
-        msgChainId?: string,
-    }): Promise<StreamMessage<T>> {
+    }: MessageCreateOptions<T>): Promise<StreamMessageSigned<T> | StreamMessageEncrypted<T>> {
         const spidObject = SPID.parse(streamObjectOrId)
         const { streamId } = spidObject
         // streamId as queue key
@@ -89,8 +103,9 @@ export default class StreamMessageCreator {
             const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
             const [messageId, prevMsgRef] = chainMessage(timestampAsNumber)
 
-            const streamMessage = (content && typeof content.toStreamMessage === 'function')
-                ? content.toStreamMessage(messageId, prevMsgRef)
+            const streamMessage: StreamMessage<T> = (content && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
+                // @ts-expect-error TODO: typing for stream message containers
+                ? ((content.toStreamMessage(messageId, prevMsgRef)) as StreamMessage<T>)
                 : new StreamMessage({
                     messageId,
                     prevMsgRef,
@@ -98,9 +113,13 @@ export default class StreamMessageCreator {
                     ...opts
                 })
 
-            await this.encrypt(streamMessage, stream)
-            // sign, noop if not needed
-            await this.signStreamMessage(streamMessage)
+            if (StreamMessage.isUnencrypted(streamMessage)) {
+                await this.encrypt(streamMessage, stream)
+            }
+
+            if (StreamMessage.isUnsigned(streamMessage)) {
+                await this.signStreamMessage(streamMessage)
+            }
 
             return streamMessage
         })

@@ -1,13 +1,13 @@
 import crypto from 'crypto'
 
 import { CacheFn } from '../utils'
-import type { StreamrClientOptions } from '../Config'
+import type { CacheConfig } from '../Config'
 
 function hash(stringToHash: string) {
     return crypto.createHash('md5').update(stringToHash).digest()
 }
 
-export default function StreamPartitioner(cacheOptions: StreamrClientOptions['cache']) {
+export default function StreamPartitioner(cacheOptions: CacheConfig) {
     const cachedHash = CacheFn(hash, cacheOptions)
     function computeStreamPartition(partitionCount: number, partitionKey: string | number) {
         if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {

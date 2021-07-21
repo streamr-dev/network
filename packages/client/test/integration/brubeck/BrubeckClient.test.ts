@@ -122,7 +122,7 @@ describeRepeats('StreamrClient', () => {
     })
 
     it('is stream publisher', async () => {
-        const publisherId = await client.getUserId()
+        const publisherId = await client.getAddress()
         const res = await client.client.isStreamPublisher(stream.id, publisherId)
         expect(res).toBe(true)
     })

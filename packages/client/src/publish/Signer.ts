@@ -1,37 +1,21 @@
-import { MessageLayer, Utils } from 'streamr-client-protocol'
+import { StreamMessageUnsigned, StreamMessageSigned, SignatureType, SigningUtil } from 'streamr-client-protocol'
 import { Web3Provider } from '@ethersproject/providers'
 import { Bytes } from '@ethersproject/bytes'
 
 import { pLimitFn, sleep } from '../utils'
-import type { EthereumConfig } from '../Config'
+import type { AuthenticatedConfig } from '../Ethereum'
 
-const { StreamMessage } = MessageLayer
-const { SigningUtil } = Utils
-const { SIGNATURE_TYPES } = StreamMessage
-
-export type AuthOption = {
-    ethereum?: never
-    privateKey: string | Uint8Array
-} | {
-    privateKey?: never
-    ethereum: EthereumConfig
-} | {
-    ethereum?: never
-    privateKey?: never
-}
-
-function getSigningFunction({
-    privateKey,
-    ethereum,
-}: AuthOption) {
-    if (privateKey) {
+function getSigningFunction(options: AuthenticatedConfig) {
+    if ('privateKey' in options && options.privateKey) {
+        const { privateKey } = options
         const key = (typeof privateKey === 'string' && privateKey.startsWith('0x'))
             ? privateKey.slice(2) // strip leading 0x
             : privateKey
         return async (d: string) => SigningUtil.sign(d, key.toString())
     }
 
-    if (ethereum) {
+    if ('ethereum' in options && options.ethereum) {
+        const { ethereum } = options
         const web3Provider = new Web3Provider(ethereum)
         const signer = web3Provider.getSigner()
         // sign one at a time & wait a moment before asking for next signature
@@ -46,28 +30,13 @@ function getSigningFunction({
     throw new Error('Need either "privateKey" or "ethereum".')
 }
 
-export default function Signer(options: AuthOption, publishWithSignature = 'auto') {
-    const { privateKey, ethereum } = options
-    const noSignStreamMessage = (streamMessage: MessageLayer.StreamMessage) => streamMessage
+export default function Signer(authOptions: AuthenticatedConfig) {
+    const sign = getSigningFunction(authOptions)
 
-    if (publishWithSignature === 'never') {
-        return noSignStreamMessage
-    }
-
-    if (publishWithSignature === 'auto' && !privateKey && !ethereum) {
-        return noSignStreamMessage
-    }
-
-    if (publishWithSignature !== 'auto' && publishWithSignature !== 'always') {
-        throw new Error(`Unknown parameter value: ${publishWithSignature}`)
-    }
-
-    const sign = getSigningFunction(options)
-
-    async function signStreamMessage(
-        streamMessage: MessageLayer.StreamMessage,
-        signatureType: MessageLayer.StreamMessage['signatureType'] = SIGNATURE_TYPES.ETH
-    ) {
+    async function signStreamMessage<T>(
+        streamMessage: StreamMessageUnsigned<T>,
+        signatureType: SignatureType = SignatureType.ETH
+    ): Promise<StreamMessageSigned<T>> {
         if (!streamMessage) {
             throw new Error('streamMessage required as part of the data to sign.')
         }
@@ -76,17 +45,16 @@ export default function Signer(options: AuthOption, publishWithSignature = 'auto
             throw new Error('Timestamp is required as part of the data to sign.')
         }
 
-        if (signatureType !== SIGNATURE_TYPES.ETH_LEGACY && signatureType !== SIGNATURE_TYPES.ETH) {
+        if (signatureType !== SignatureType.ETH_LEGACY && signatureType !== SignatureType.ETH) {
             throw new Error(`Unrecognized signature type: ${signatureType}`)
         }
 
-        // set signature so getting of payload works correctly
-        // (publisherId should already be set)
-        streamMessage.signatureType = signatureType // eslint-disable-line no-param-reassign
-        const signature = await sign(streamMessage.getPayloadToSign())
-        return Object.assign(streamMessage, {
-            signature,
+        const signedMessage: StreamMessageSigned<T> = Object.assign(streamMessage, {
+            signatureType,
+            signature: await sign(streamMessage.getPayloadToSign(signatureType)),
         })
+
+        return signedMessage
     }
 
     return Object.assign(signStreamMessage, {

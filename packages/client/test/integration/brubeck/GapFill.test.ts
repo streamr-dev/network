@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
-import { BrubeckClientOptions } from '../../../src/brubeck/Config'
+import { BrubeckClientConfig } from '../../../src/brubeck/Config'
 import { Stream } from '../../../src/stream'
 import Subscriber from '../../../src/brubeck/Subscriber'
 import Subscription from '../../../src/brubeck/Subscription'
@@ -15,21 +15,19 @@ import clientOptions from '../config'
 const MAX_MESSAGES = 10
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
-    // @ts-expect-error onMessageInput is private
-    const { onMessageInput } = sub.context
     let count = 0
-    // @ts-expect-error onMessageInput is private
     // eslint-disable-next-line no-param-reassign
-    sub.context.onMessageInput = (msg: StreamMessage<T>) => {
-        const result = fn(msg, count)
-        count += 1
-        if (result === null) {
-            sub.debug('(%o) << Test Dropped Message %s: %o', count, msg)
-            return undefined
+    sub.context.pipeline.pipeBefore(async function* DropMessages(src) {
+        for await (const msg of src) {
+            const result = fn(msg, count)
+            count += 1
+            if (result === null) {
+                sub.debug('(%o) << Test Dropped Message %s: %o', count, msg)
+                continue
+            }
+            yield msg
         }
-
-        return onMessageInput.call(sub.context, msg)
-    }
+    })
 }
 
 describeRepeats('GapFill', () => {
@@ -50,12 +48,14 @@ describeRepeats('GapFill', () => {
             autoDisconnect: false,
             maxRetries: 2,
             maxGapRequests: 10,
+            gapFillTimeout: 500,
+            retryResendAfter: 5000,
             ...opts,
         })
         return c
     }
 
-    async function setupClient(opts: BrubeckClientOptions) {
+    async function setupClient(opts: BrubeckClientConfig) {
         // eslint-disable-next-line require-atomic-updates
         client = createClient(opts)
         subscriber = client.subscriber
@@ -119,7 +119,7 @@ describeRepeats('GapFill', () => {
 
         describe('with resend', () => {
             it('can fill single gap', async () => {
-                const calledResend = jest.spyOn(client.resends, 'resendMessages')
+                const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
                 monkeypatchMessageHandler(sub, (_msg, count) => {
                     if (count === 2) { return null }
@@ -129,7 +129,7 @@ describeRepeats('GapFill', () => {
                 expect(subscriber.count(stream.id)).toBe(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
-                    waitForLast: true,
+                    waitForLast: true
                 })
 
                 const received = []
@@ -140,8 +140,11 @@ describeRepeats('GapFill', () => {
                     }
                 }
                 expect(received).toEqual(published)
-                expect(calledResend).toHaveBeenCalledTimes(1)
-            }, 10000)
+                // might be > 1, depends whether messages in storage by time gap is requested.
+                // message pipeline is processed as soon as messages arrive,
+                // not when sub starts iterating
+                expect(calledResend).toHaveBeenCalled()
+            }, 15000)
 
             it('can fill gap of multiple messages', async () => {
                 const sub = await client.subscribe(stream.id)

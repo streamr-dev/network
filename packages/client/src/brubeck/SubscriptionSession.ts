@@ -29,26 +29,26 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         this.id = instanceId(this)
         this.debug = this.client.debug.extend(this.id)
         this.spid = spid
-        const { subscriptions } = this
         this.pipeline = SubscribePipeline<T>(this.client, spid)
-            .pipe(async function* DistributeMessage(src) {
+            .pipe(async function* DistributeMessage(this: SubscriptionSession<T>, src: AsyncGenerator<StreamMessage<T>>) {
                 for await (const msg of src) {
-                    subscriptions.forEach((sub) => {
+                    this.subscriptions.forEach((sub) => {
                         sub.push(msg)
                     })
-
                     yield msg
                 }
-            })
+            }.bind(this))
             .onFinally(() => (
                 this.removeAll()
             ))
 
         // eslint-disable-next-line promise/catch-or-return
-        flow(this.pipeline).catch((err) => {
-            this.debug('error', err)
-        }).finally(() => {
-            this.debug('end')
+        setImmediate(() => {
+            flow(this.pipeline).catch((err) => {
+                this.debug('error', err)
+            }).finally(() => {
+                this.debug('end')
+            })
         })
     }
 

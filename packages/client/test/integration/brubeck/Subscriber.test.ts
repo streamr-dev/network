@@ -66,7 +66,6 @@ describeRepeats('Subscriber', () => {
         client.debug('after test')
         expect(M.count()).toBe(0)
         expect(M.count(stream.id)).toBe(0)
-        expect(M.getSubscriptionSession(stream.id)).toBe(undefined)
         expect(M.countSubscriptionSessions()).toBe(0)
     })
 
@@ -168,7 +167,7 @@ describeRepeats('Subscriber', () => {
 
             await expect(async () => (
                 sub.collect()
-            )).rejects.toThrow('iterate')
+            )).rejects.toThrow('collect')
             await sub.unsubscribe()
             const m = await c1
 
@@ -608,13 +607,18 @@ describeRepeats('Subscriber', () => {
             let sub1Received: Todo[] = []
             let sub1ReceivedAtUnsubscribe: Todo[] = []
             const gotOne = Defer()
+            let didGetOne = false
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received }) => {
                     sub1Received = received
+                    didGetOne = true
                     gotOne.resolve(undefined)
                 }),
                 collect(sub2, async ({ received }) => {
-                    await gotOne
+                    if (!didGetOne) { // don't delay unsubscribe
+                        await gotOne
+                    }
+
                     if (received.length === MAX_ITEMS) {
                         sub1ReceivedAtUnsubscribe = sub1Received.slice()
                         await M.unsubscribe(stream.id)

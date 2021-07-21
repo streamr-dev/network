@@ -1,13 +1,13 @@
-import Config, { StrictStreamrClientOptions, StreamrClientOptions } from '../Config'
+import Config, { StrictStreamrClientConfig, StreamrClientConfig } from '../Config'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NodeRegistryOptions } from './NodeRegistry'
 
-export type BrubeckClientOptions = StreamrClientOptions & {
+export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Partial<NetworkNodeOptions>
     nodeRegistry?: Partial<NodeRegistryOptions>
 }
 
-export type StrictBrubeckClientOptions = StrictStreamrClientOptions & {
+export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
     network: NetworkNodeOptions
     nodeRegistry: NodeRegistryOptions
 }
@@ -28,7 +28,7 @@ const BRUBECK_CLIENT_DEFAULTS = {
 
 }
 
-export default function BrubeckConfig(config: BrubeckClientOptions): StrictBrubeckClientOptions {
+export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
     return {
         ...BRUBECK_CLIENT_DEFAULTS,
         ...Config(config),

@@ -1,11 +1,25 @@
 import { MessageRef, MessageID, MessageIDStrict, SPID } from 'streamr-client-protocol'
-import { randomString } from '../utils'
+import { CacheConfig } from '../Config'
+import { randomString, CacheFn } from '../utils'
 
-export default function MessageChainer(
-    spid: SPID,
-    { publisherId, msgChainId = randomString(20) }:
-    { publisherId: string, msgChainId?: string }
-) {
+export type MessageChainerOptions = {
+    publisherId: string
+    msgChainId?: string
+}
+
+export function CachedMessageChainer(cacheConfig: CacheConfig) {
+    // one chainer per streamId + streamPartition + publisherId + msgChainId
+    return CacheFn(MessageChainer, {
+        cacheKey: ([spid, { publisherId, msgChainId }]) => (
+            // empty msgChainId is fine
+            [spid.key, publisherId, msgChainId ?? ''].join('|')
+        ),
+        ...cacheConfig,
+        maxAge: Infinity
+    })
+}
+
+export default function MessageChainer(spid: SPID, { publisherId, msgChainId = randomString(20) }: MessageChainerOptions) {
     let prevMsgRef: MessageRef | undefined
 
     /**

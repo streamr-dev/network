@@ -8,8 +8,8 @@ import fetch from 'node-fetch'
 import { CacheAsyncFn, counterId, getEndpointUrl, pOne, uuid } from './utils'
 import { Debug, Debugger } from './utils/log'
 import { validateOptions } from './stream/utils'
-import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
-import StreamrEthereum from './Ethereum'
+import Config, { StreamrClientConfig, StrictStreamrClientConfig } from './Config'
+import StreamrEthereum, {AuthenticatedConfig} from './Ethereum'
 import Session from './Session'
 import Connection, { ConnectionError, ConnectionOptions } from './Connection'
 import Publisher from './publish'
@@ -92,10 +92,9 @@ class StreamrCached {
     client: StreamrClient
     // TODO change all "any" types in this class to valid types when CacheAsyncFn is converted to TypeScript
     getStream: any
-    getUserInfo: any
     isStreamPublisher: any
     isStreamSubscriber: any
-    getUserId: any
+    getAddress: any
 
     constructor(client: StreamrClient) {
         this.client = client
@@ -107,7 +106,7 @@ class StreamrCached {
                 return streamId
             }
         })
-        this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
+        this.getAddress = CacheAsyncFn(client.getAddress.bind(client), cacheOptions)
         this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
             ...cacheOptions,
             cacheKey([maybeStreamId, ethAddress]: any) {
@@ -123,8 +122,6 @@ class StreamrCached {
                 return `${streamId}|${ethAddress}`
             }
         })
-
-        this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
     }
 
     clearStream(streamId?: string) {
@@ -139,13 +136,18 @@ class StreamrCached {
     }
 
     clearUser() {
-        this.getUserInfo.clear()
-        this.getUserId.clear()
+        this.getAddress.clear()
     }
 
     clear() {
         this.clearUser()
         this.clearStream()
+    }
+}
+
+export type StreamrClientAuthenticated = StreamrClient & {
+    options: StrictStreamrClientConfig & {
+        auth: AuthenticatedConfig
     }
 }
 
@@ -176,7 +178,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     id: string
     /** @internal */
     debug: Debugger
-    options: StrictStreamrClientOptions
+    options: StrictStreamrClientConfig
     session: Session
     /** @internal */
     connection: StreamrConnection
@@ -190,7 +192,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     ethereum: StreamrEthereum
 
     // TODO annotate connection parameter as internal parameter if possible?
-    constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
+    constructor(options: StreamrClientConfig = {}, connection?: StreamrConnection) {
         super()
         this.id = counterId(`${this.constructor.name}-${uid}${options.id || ''}`)
         this.debug = Debug(this.id)
@@ -474,7 +476,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /**
      * True if authenticated with private key/ethereum provider
      */
-    canEncrypt() {
+    canEncrypt(): this is StreamrClientAuthenticated {
         return this.ethereum.canEncrypt()
     }
 

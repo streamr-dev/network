@@ -1,7 +1,7 @@
 import Debug from 'debug'
 import { startNetworkNode } from 'streamr-network'
-import { SIDLike } from 'streamr-client-protocol'
-import Config, { StrictBrubeckClientOptions, BrubeckClientOptions } from './Config'
+import { SIDLike, MessageContent } from 'streamr-client-protocol'
+import Config, { StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
 import { pOnce, uuid, counterId } from '../utils'
 import { Context } from '../utils/Context'
 import { StreamrClient } from '../StreamrClient'
@@ -17,11 +17,11 @@ export class BrubeckClient implements Context {
     subscriber: Subscriber
     resends: Resends
     client: StreamrClient
-    options: StrictBrubeckClientOptions
+    options: StrictBrubeckClientConfig
     readonly id
     readonly debug
 
-    constructor(options: BrubeckClientOptions) {
+    constructor(options: BrubeckClientConfig) {
         this.client = new StreamrClient(options)
         this.options = Config(options)
         this.id = counterId(`${this.constructor.name}:${uid}${options.id ? `:${options.id}` : ''}`)
@@ -38,8 +38,8 @@ export class BrubeckClient implements Context {
         this.debug('connect <<')
     })
 
-    async getUserId() {
-        return this.client.getUserId()
+    async getAddress() {
+        return this.client.getAddress()
     }
 
     async getSessionToken() {
@@ -69,7 +69,7 @@ export class BrubeckClient implements Context {
         })
     })
 
-    async publish<T>(
+    async publish<T extends MessageContent>(
         streamObjectOrId: SIDLike,
         content: T,
         timestamp?: string | number | Date,

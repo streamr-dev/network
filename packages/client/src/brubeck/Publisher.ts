@@ -1,7 +1,7 @@
 import { inspect } from '../utils/log'
-import { StreamMessage, SPID, SIDLike } from 'streamr-client-protocol'
+import { StreamMessage, SPID, SIDLike, MessageContent } from 'streamr-client-protocol'
 import { BrubeckClient } from './BrubeckClient'
-import StreamMessageCreator from '../publish/MessageCreator'
+import StreamMessageCreator, { StreamMessageCreatorAnonymous, IMessageCreator } from '../publish/MessageCreator'
 import { FailedToPublishError } from '../publish'
 import { counterId } from '../utils'
 import { Context } from '../utils/Context'
@@ -9,7 +9,7 @@ import { CancelableGenerator, ICancelable } from '../utils/iterators'
 
 const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms))
 
-type PublishMessageOptions<T> = {
+type PublishMessageOptions<T extends MessageContent> = {
     content: T
     timestamp?: string | number | Date
     partitionKey?: string | number
@@ -17,19 +17,19 @@ type PublishMessageOptions<T> = {
 
 export default class BrubeckPublisher implements Context {
     client
-    messageCreator
+    messageCreator: IMessageCreator
     id
     debug
     inProgress = new Set<ICancelable>()
 
     constructor(client: BrubeckClient) {
         this.client = client
-        this.messageCreator = new StreamMessageCreator(this.client.client)
+        this.messageCreator = (!this.client.client.canEncrypt()) ? new StreamMessageCreatorAnonymous() : new StreamMessageCreator(this.client.client)
         this.id = counterId(this.constructor.name)
         this.debug = this.client.debug.extend(this.id)
     }
 
-    async publishMessage<T>(streamObjectOrId: SIDLike, {
+    async publishMessage<T extends MessageContent>(streamObjectOrId: SIDLike, {
         content,
         timestamp = new Date(),
         partitionKey
@@ -46,7 +46,7 @@ export default class BrubeckPublisher implements Context {
         return streamMessage
     }
 
-    async publish<T>(
+    async publish<T extends MessageContent>(
         streamObjectOrId: SIDLike,
         content: T,
         timestamp?: string | number | Date,
@@ -70,7 +70,7 @@ export default class BrubeckPublisher implements Context {
         }
     }
 
-    async collect<T>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
+    async collect<T extends MessageContent>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
             if (n === 0) {
@@ -86,7 +86,7 @@ export default class BrubeckPublisher implements Context {
         return msgs
     }
 
-    async* publishFrom<T>(streamObjectOrId: SIDLike, seq: AsyncIterable<T>) {
+    async* publishFrom<T extends MessageContent>(streamObjectOrId: SIDLike, seq: AsyncIterable<T>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -98,7 +98,7 @@ export default class BrubeckPublisher implements Context {
         }
     }
 
-    async* publishFromMetadata<T>(streamObjectOrId: SIDLike, seq: AsyncIterable<PublishMessageOptions<T>>) {
+    async* publishFromMetadata<T extends MessageContent>(streamObjectOrId: SIDLike, seq: AsyncIterable<PublishMessageOptions<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
