@@ -49,7 +49,7 @@ describeRepeats('GapFill', () => {
             maxRetries: 2,
             maxGapRequests: 10,
             gapFillTimeout: 500,
-            retryResendAfter: 5000,
+            retryResendAfter: 1000,
             ...opts,
         })
         return c
@@ -117,7 +117,7 @@ describeRepeats('GapFill', () => {
             await client.connect()
         })
 
-        describe('with resend', () => {
+        describe('realtime (uses resend)', () => {
             it('can fill single gap', async () => {
                 const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
@@ -128,9 +128,7 @@ describeRepeats('GapFill', () => {
 
                 expect(subscriber.count(stream.id)).toBe(1)
 
-                const published = await publishTestMessages(MAX_MESSAGES, {
-                    waitForLast: true
-                })
+                const published = await publishTestMessages(MAX_MESSAGES)
 
                 const received = []
                 for await (const m of sub) {
@@ -155,9 +153,7 @@ describeRepeats('GapFill', () => {
 
                 expect(subscriber.count(stream.id)).toBe(1)
 
-                const published = await publishTestMessages(MAX_MESSAGES, {
-                    waitForLast: true,
-                })
+                const published = await publishTestMessages(MAX_MESSAGES)
 
                 const received = []
                 for await (const m of sub) {
@@ -179,9 +175,7 @@ describeRepeats('GapFill', () => {
 
                 expect(subscriber.count(stream.id)).toBe(1)
 
-                const published = await publishTestMessages(MAX_MESSAGES, {
-                    waitForLast: true,
-                })
+                const published = await publishTestMessages(MAX_MESSAGES)
 
                 const received = []
                 for await (const m of sub) {
@@ -194,84 +188,86 @@ describeRepeats('GapFill', () => {
             }, 15000)
         })
 
-        it('can fill gaps in resends', async () => {
-            let count = 0
-            const published = await publishTestMessages(MAX_MESSAGES, {
-                waitForLast: true,
-            })
+        describe('resend', () => {
+            it('can fill gaps', async () => {
+                let count = 0
+                const published = await publishTestMessages(MAX_MESSAGES, {
+                    waitForLast: true,
+                })
 
-            const sub = await client.resend<typeof Msg>({
-                stream,
-                last: MAX_MESSAGES,
-            })
-
-            sub.pipeBefore(async function* DropMessages(src) {
-                for await (const msg of src) {
-                    count += 1
-                    if (count === 3 || count === 4 || count === 7) {
-                        continue
-                    }
-                    yield msg
-                }
-            })
-
-            const received = []
-            for await (const m of sub) {
-                received.push(m)
-                // should not need to explicitly end
-            }
-            expect(received).toEqual(published)
-        }, 60000)
-
-        it('can fill gaps in resends even if gap cannot be filled (ignores missing)', async () => {
-            let ts = 0
-            const node = await client.getNode()
-            let publishCount = 0
-            const publish = node.publish.bind(node)
-            node.publish = (msg) => {
-                publishCount += 1
-                if (publishCount === 3) {
-                    return undefined
-                }
-
-                return publish(msg)
-            }
-
-            const published = await publishTestMessages(MAX_MESSAGES, {
-                waitForLast: true,
-                timestamp: () => {
-                    const v = 1000000 + ts
-                    ts += 1
-                    return v
-                }
-            })
-
-            const sub = await client.resend({
-                stream,
-                last: MAX_MESSAGES,
-            })
-
-            const received = []
-            for await (const m of sub) {
-                received.push(m)
-                // should not need to explicitly end
-            }
-            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-        }, 60000)
-
-        it('rejects resend if no storage assigned', async () => {
-            // new stream, assign to storage node not called
-            stream = await createTestStream(client.client, module, {
-                requireSignedData: true,
-            })
-
-            await expect(async () => {
-                await client.resend({
+                const sub = await client.resend<typeof Msg>({
                     stream,
                     last: MAX_MESSAGES,
                 })
-            }).rejects.toThrow('storage')
-        }, 15000)
+
+                sub.pipeBefore(async function* DropMessages(src) {
+                    for await (const msg of src) {
+                        count += 1
+                        if (count === 3 || count === 4 || count === 7) {
+                            continue
+                        }
+                        yield msg
+                    }
+                })
+
+                const received = []
+                for await (const m of sub) {
+                    received.push(m)
+                    // should not need to explicitly end
+                }
+                expect(received).toEqual(published)
+            }, 60000)
+
+            it('can fill gaps in resends even if gap cannot be filled (ignores missing)', async () => {
+                let ts = 0
+                const node = await client.getNode()
+                let publishCount = 0
+                const publish = node.publish.bind(node)
+                node.publish = (msg) => {
+                    publishCount += 1
+                    if (publishCount === 3) {
+                        return undefined
+                    }
+
+                    return publish(msg)
+                }
+
+                const published = await publishTestMessages(MAX_MESSAGES, {
+                    waitForLast: true,
+                    timestamp: () => {
+                        const v = 1000000 + ts
+                        ts += 1
+                        return v
+                    }
+                })
+
+                const sub = await client.resend({
+                    stream,
+                    last: MAX_MESSAGES,
+                })
+
+                const received = []
+                for await (const m of sub) {
+                    received.push(m)
+                    // should not need to explicitly end
+                }
+                expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+            }, 60000)
+
+            it('rejects resend if no storage assigned', async () => {
+                // new stream, assign to storage node not called
+                stream = await createTestStream(client.client, module, {
+                    requireSignedData: true,
+                })
+
+                await expect(async () => {
+                    await client.resend({
+                        stream,
+                        last: MAX_MESSAGES,
+                    })
+                }).rejects.toThrow('storage')
+            }, 15000)
+        })
     })
 
     describe('client settings', () => {
@@ -279,7 +275,7 @@ describeRepeats('GapFill', () => {
             await setupClient({
                 orderMessages: false, // should disable all gapfilling
                 gapFillTimeout: 200,
-                retryResendAfter: 2000,
+                retryResendAfter: 1000,
                 maxGapRequests: 99 // would time out test if doesn't give up
             })
 
