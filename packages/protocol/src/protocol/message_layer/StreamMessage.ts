@@ -394,6 +394,22 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
         }
     }
 
+    static isUnsigned<T>(msg: StreamMessage<T>): msg is StreamMessageUnsigned<T> {
+        return !this.isSigned(msg)
+    }
+
+    static isSigned<T>(msg: StreamMessage<T>): msg is StreamMessageSigned<T> {
+        return !!(msg && msg.signature && msg.signatureType !== SignatureType.NONE)
+    }
+
+    static isEncrypted<T>(msg: StreamMessage<T>): msg is StreamMessageEncrypted<T> {
+        return !!(msg && msg.encryptionType !== EncryptionType.NONE)
+    }
+
+    static isUnencrypted<T>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
+        return !this.isEncrypted(msg)
+    }
+
     toObject() {
         return {
             streamId: this.getStreamId(),
