@@ -7,8 +7,8 @@
     "url": "git+https://github.com/streamr-dev/broker.git"
   },
   "bin": {
-    "broker": "bin/broker.js",
-    "broker-wizard": "bin/config-wizard.js",
+    "streamr-broker": "bin/broker.js",
+    "streamr-broker-init": "bin/config-wizard.js",
     "tracker": "bin/tracker.js",
     "delete-expired-data": "bin/delete-expired-data.js"
   },
