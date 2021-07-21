@@ -4,7 +4,7 @@ import OrderMessages from './OrderMessages'
 import MessageStream from './MessageStream'
 
 import Validator from '../subscribe/Validator'
-// import Decrypt from '../subscribe/Decrypt'
+import Decrypt from './Decrypt'
 import { BrubeckClient } from './BrubeckClient'
 
 export { SignatureRequiredError } from '../subscribe/Validator'
@@ -24,7 +24,7 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
     /* eslint-disable object-curly-newline */
     const validate = Validator(client.client, spid)
     const orderingUtil = OrderMessages<T>(client, spid, options)
-    // const decrypt = Decrypt(client.client, options)
+    const decrypt = Decrypt(client, options)
     /* eslint-enable object-curly-newline */
 
     const seenErrors = new WeakSet()
@@ -71,14 +71,7 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
             }
         })
         // decrypt
-        /*
-        .pipe(async function* DecryptMessages(src) {
-            yield* decrypt(src, async (err: Error, streamMessage: StreamMessage) => {
-                ignoreMessages.add(streamMessage)
-                await onError(err)
-            })
-        })
-        */
+        .pipe(decrypt.decrypt)
         // parse content
         .pipe(async function* ParseMessages(src) {
             for await (const streamMessage of src) {
