@@ -11,5 +11,5 @@ program
     .name('broker-config-wizard')
     .description('Run the configuration wizard for the broker')
     
-startBrokerConfigWizard('../../configs/')
+startBrokerConfigWizard()
 
