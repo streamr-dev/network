@@ -65,7 +65,7 @@ let sequenceNumber = 0
 
 setInterval(() => {
     const timestamp = Date.now()
-    const msg = 'Hello world from ReactJS, ' + new Date().toLocaleString()
+    const msg = 'Hello world, ' + new Date().toLocaleString()
     program.opts().streamIds.forEach((streamId) => {
         const streamMessage = new StreamMessage({
             messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, id, messageChainId),
