@@ -60,6 +60,8 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
             if (message.rewardCode) {
                 this.onRewardCodeReceived(message.rewardCode)
+            } if (message.info) {
+                logger.info(`Info message received: ${message.info}`)
             } else {
                 logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
                 this.dummyMessagesReceived += 1
