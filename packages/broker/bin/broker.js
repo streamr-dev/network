@@ -22,8 +22,8 @@ program
             configFile = path.join(os.homedir(), '/.streamr/broker-config.json')
             if (!fs.existsSync(configFile)) {
                 console.error('Config file not found in the default location ~/.streamr/broker-config.json. You can run "streamr-broker-init" to generate a config file interactively, or specify the config file as argument: "streamr-broker path-to-config/file.json"')
+                process.exit(1)
             }
-            process.exit(1)
         }
         const config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
 

@@ -183,7 +183,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.isFinished = true
 
         if (err) {
-            this.baseLogger.warn('conn.close(): %s', err)
+            this.baseLogger.debug('conn.close(): %s', err)
         } else {
             this.baseLogger.trace('conn.close()')
         }
