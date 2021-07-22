@@ -99,7 +99,7 @@ export class Storage extends EventEmitter {
 
         logger.trace('requestLast %o', { streamId, partition, limit })
 
-        const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data WHERE '
+        const GET_LAST_N_MESSAGES = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? '
             + 'ORDER BY ts DESC, sequence_no DESC '
             + 'LIMIT ?'
@@ -111,7 +111,7 @@ export class Storage extends EventEmitter {
             prepare: true, fetchSize: 1
         }
 
-        const resultStream = this.createResultStream(streamId, partition, 0)
+        const resultStream = this.createResultStream()
 
         const makeLastQuery = async (bucketIds: BucketId[]) => {
             try {
@@ -245,9 +245,9 @@ export class Storage extends EventEmitter {
     }
 
     private fetchFromTimestamp(streamId: string, partition: number, fromTimestamp: number) {
-        const resultStream = this.createResultStream(streamId, partition, fromTimestamp)
+        const resultStream = this.createResultStream()
 
-        const query = 'SELECT payload FROM stream_data WHERE '
+        const query = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
@@ -285,7 +285,7 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number | null,
         publisherId?: string | null
     ) {
-        const resultStream = this.createResultStream(streamId, partition, fromTimestamp)
+        const resultStream = this.createResultStream()
 
         const query1 = [
             'SELECT payload FROM stream_data',
@@ -333,9 +333,9 @@ export class Storage extends EventEmitter {
     }
 
     private fetchBetweenTimestamps(streamId: string, partition: number, fromTimestamp: number, toTimestamp: number) {
-        const resultStream = this.createResultStream(streamId, partition, fromTimestamp)
+        const resultStream = this.createResultStream()
 
-        const query = 'SELECT payload FROM stream_data WHERE '
+        const query = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
@@ -376,7 +376,7 @@ export class Storage extends EventEmitter {
         publisherId?: string|null,
         msgChainId?: string|null
     ) {
-        const resultStream = this.createResultStream(streamId, partition, fromTimestamp)
+        const resultStream = this.createResultStream()
 
         const query1 = [
             'SELECT payload FROM stream_data',
@@ -442,29 +442,31 @@ export class Storage extends EventEmitter {
         }) as Readable
     }
 
-    private async parseRow(streamId:string, partition: number, bucketIds: number | string[], row: Todo) {
+    private async parseRow(row: Todo) {
         if (!row.payload){
-            if (typeof bucketIds === 'number'){
-                bucketIds = [bucketIds.toString()]
-            }
-            const params = [streamId, partition]
-            logger.warn('parseRow' + params.toString())
+            // generate a placeholder message that can pass validation
+            const payload = JSON.stringify(new Protocol.MessageLayer.StreamMessage({
+                messageId: new Protocol.MessageLayer.MessageIDStrict(row.stream_id, 0, Date.now(), 10, 'publisherId', 'msgChainId'),
+                prevMsgRef: new Protocol.MessageLayer.MessageRef(0, 5),
+                content: JSON.stringify(row),
+                messageType: 27,
+                encryptionType: Protocol.MessageLayer.StreamMessage.ENCRYPTION_TYPES.NONE,
+                signatureType: Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
+                signature: 'signature',
+            }))
 
-            const query = 'SELECT * FROM stream_data WHERE '
-                + 'stream_id = ? AND partition = ? '
-                + 'LIMIT 9999'
-            const resultSet = await this.cassandraClient.execute(query, params, {
-                prepare: true,
-                fetchSize: 0 // disable paging
-            })
-            resultSet.rows.reverse().forEach((r: Todo) => {
-                console.log('Row!!', r)
-            })
+            row.payload = JSON.stringify([
+                30,
+                [row.stream_id, 0, Date.now(), 10, 'publisherId', 'msgChainId'],
+                [0, 5],
+                Protocol.MessageLayer.StreamMessage.MESSAGE_TYPES.MESSAGE,
+                JSON.stringify(payload),
+                Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
+                'signature'
+            ])    
 
-
-
-            logger.warn(`Message with null payload on row ${JSON.stringify(row)} found on streamId ${streamId} under partition ${partition}`)
-            row.payload = '{"version":30}'
+            // log everything known about the message
+            logger.error(`Found message with NULL payload on cassandra ${JSON.stringify(row)}`)
         }
 
         const streamMessage = Protocol.StreamMessage.deserialize(row.payload.toString())
@@ -472,7 +474,7 @@ export class Storage extends EventEmitter {
         return streamMessage
     }
 
-    private createResultStream(streamId: string, partition:number, bucketIds: number | string[]) {
+    private createResultStream() {
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         let last = Date.now()
         return new Transform({
@@ -480,7 +482,7 @@ export class Storage extends EventEmitter {
             objectMode: true,
             async transform(row: Todo, _: Todo, done: Todo){
                 const now = Date.now()
-                this.push(await self.parseRow(streamId, partition, bucketIds, row))
+                this.push(await self.parseRow(row))
                 // To avoid blocking main thread for too long, after every 100ms
                 // pause & resume the cassandraStream to give other events in the event
                 // queue a chance to be handled.
@@ -511,7 +513,7 @@ export class Storage extends EventEmitter {
 
         const bucketId = buckets.rows[0].id
 
-        const query = 'SELECT ts FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts ASC LIMIT 1'
+        const query = 'SELECT ts, stream_id, partition, bucket_id FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts ASC LIMIT 1'
 
         const streams = await this.cassandraClient.execute(query, [
             streamId,
