@@ -1,4 +1,6 @@
-import { existsSync, mkdirSync, rmdirSync } from 'fs'
+import { existsSync, rmdirSync, mkdtempSync } from 'fs'
+import os from 'os'
+import path from 'path'
 import { ConfigWizard, startBrokerConfigWizard } from '../../src/ConfigWizard'
 
 const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
@@ -8,16 +10,12 @@ const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
 }
 describe('ConfigWizard', () => {
     let wizard: ConfigWizard
-    const tmpDataDir = '/tmp/streamr-broker-test/'
+    let tmpDataDir: string
     
-    // create a clean dir for the tests on every run
     beforeAll(() => {
-        if (existsSync(tmpDataDir)) {
-            rmdirSync(tmpDataDir, {recursive: true})
-        }
-        mkdirSync(tmpDataDir)
+        tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
     })
-    // cleanup the dir after all the tests
+
     afterAll(() => {
         rmdirSync(tmpDataDir, {recursive: true})
     })
