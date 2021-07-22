@@ -1,4 +1,3 @@
-import { Wallet } from 'ethers'
 import fetchNatType from 'nat-type-identifier'
 import { Logger } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
