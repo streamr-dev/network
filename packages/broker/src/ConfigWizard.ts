@@ -5,17 +5,16 @@ import path from 'path'
 
 import { Config } from './config'
 
-import { Logger } from 'streamr-network'
 import * as os from 'os'
 
 const logger = {
-    info: (...args:any[]) => {
+    info: (...args: any[]) => {
         console.log('\x1b[7m' + ':' + '\x1b[0m', ...args)
     },
-    warn: (...args:any[]) => {
+    warn: (...args: any[]) => {
         console.log('\x1b[33m' + '!' + '\x1b[0m', ...args)
     },
-    error: (...args:any[]) => {
+    error: (...args: any[]) => {
         console.log('\x1b[31m' + '!' + '\x1b[0m', ...args)
     }
 }
@@ -123,7 +122,6 @@ export class ConfigWizard{
         return returnedValue
     }
 
-
     async generateOrImportPrivateKey(): Promise<string>{
         const generateOrImport = await this.inquirerSinglePrompt({
             type: 'list',
@@ -157,7 +155,6 @@ export class ConfigWizard{
 
         return this.config.ethereumPrivateKey
     }
-
     
     async selectPlugins(): Promise<Array<string>>{
         const plugins: inquirer.Answers = await this.inquirerSinglePrompt( {
@@ -232,11 +229,11 @@ export class ConfigWizard{
         }, defaultDestinationFolder)
     }
 
-    async start():Promise<void> {
+    async start(): Promise<void> {
         try {
             await this.generateOrImportPrivateKey()
             await this.selectPlugins()
-            const destinationFolder:string = await this.selectDestinationFolder()
+            const destinationFolder: string = await this.selectDestinationFolder()
             const finalConfigPath = await this.storeConfig(destinationFolder)
             logger.info('Broker Config Wizard ran succesfully')
             logger.info('Generated configuration:', this.config)

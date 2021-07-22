@@ -1,4 +1,4 @@
-import { unlinkSync, existsSync, mkdirSync, rmdirSync } from 'fs'
+import { existsSync, mkdirSync, rmdirSync } from 'fs'
 import { ConfigWizard, startBrokerConfigWizard } from '../../src/ConfigWizard'
 
 const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
