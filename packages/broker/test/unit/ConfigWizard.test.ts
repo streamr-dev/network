@@ -83,9 +83,9 @@ describe('ConfigWizard', () => {
             },
             legacyPublishHttp: {},
             testnetMiner: {
-                claimServerUrl: 'http://88.99.104.143:3011',
+                claimServerUrl: 'http://testnet2.streamr.network:3011',
                 maxClaimDelay: 5000,
-                rewardStreamId: 'dO1PMm-FThqeWk-SE3zOYg'
+                rewardStreamId: 'streamr.eth/brubeck-testnet/rewards'
             }
         })
     })
