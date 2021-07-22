@@ -142,8 +142,4 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     getConfigSchema() {
         return PLUGIN_CONFIG_SCHEMA
     }
-
-    getDummyMessagesReceived(): number {
-        return this.dummyMessagesReceived
-    }
 }
