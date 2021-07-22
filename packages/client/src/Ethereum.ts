@@ -22,6 +22,10 @@ export type PrivateKeyAuthConfig = {
     privateKey: BytesLike
 }
 
+export type SessionTokenAuthConfig = {
+    sessionToken: string
+}
+
 // Deprecated Auth Config
 export type APIKeyAuthConfig = {
     apiKey: string
@@ -32,11 +36,11 @@ export type UsernamePasswordAuthConfig = {
     password: string
 }
 
-export type UnauthenticatedAuthConfig = {}
+export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
 
 export type DeprecatedAuthConfig = XOR<APIKeyAuthConfig, UsernamePasswordAuthConfig>
 
-export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig>
+export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig> & SessionTokenAuthConfig
 export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
 export type AllAuthConfig = XOR<AuthConfig, DeprecatedAuthConfig>
 
