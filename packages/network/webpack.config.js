@@ -2,6 +2,9 @@ const path = require('path')
 const webpack = require('webpack')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
+const pkg = require('./package.json')
+const libraryName = pkg.name
+
 const externals = (env) => {
     const externals = {
         'geoip-lite': 'commonjs geoip-lite',
@@ -68,6 +71,7 @@ module.exports = (env, argv) => {
     const config = {
         mode: isProduction ? 'production' : 'development',
         entry: './src/browser.ts',
+        devtool: "source-map",
         module: {
             rules: [
                 {
@@ -75,9 +79,9 @@ module.exports = (env, argv) => {
                     exclude: /(node_modules|streamr-client-protocol)/,
                     use: [{
                         loader: 'ts-loader',
-                        options: { configFile: 'tsconfig.webpack.json' }
+                        options: { configFile: 'tsconfig.webpack.json' },
                     }]
-                },
+                }
             ],
         },
         plugins: [
@@ -92,7 +96,8 @@ module.exports = (env, argv) => {
             fallback: fallbacks(environment)
         },
         output: {
-            filename: 'streamr-network-bundle.js',
+            filename: `${libraryName}.js`,
+            sourceMapFilename: `${libraryName}.js.map`,
             path: path.resolve(__dirname, 'dist'),
             library: 'StreamrNetwork',
             libraryTarget: 'umd2',
