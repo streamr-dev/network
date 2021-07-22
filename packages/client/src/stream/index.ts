@@ -1,5 +1,6 @@
 import fetch from 'node-fetch'
 import { getAddress } from '@ethersproject/address'
+import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
 
 import { getEndpointUrl, until } from '../utils'
 import authFetch from '../rest/authFetch'
@@ -87,7 +88,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
     }
 }
 
-class StreamrStream {
+class StreamrStream implements StreamMetadata {
     streamId: string
     id: string
     // @ts-expect-error
@@ -96,11 +97,11 @@ class StreamrStream {
     config: {
         fields: Field[];
     } = { fields: [] }
-    partitions?: number
+    partitions!: number
     /** @internal */
     _client: StreamrClient
-    requireEncryptedData?: boolean
-    requireSignedData?: boolean
+    requireEncryptedData!: boolean
+    requireSignedData!: boolean
     storageDays?: number
     inactivityThresholdHours?: number
 
