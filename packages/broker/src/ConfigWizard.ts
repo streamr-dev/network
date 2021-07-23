@@ -1,13 +1,23 @@
 import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
-import { writeFileSync } from 'fs'
+import { writeFileSync, mkdirSync, existsSync } from 'fs'
 import path from 'path'
 
 import { Config } from './config'
 
-import { Logger } from 'streamr-network'
+import * as os from 'os'
 
-const logger = new Logger(module)
+const logger = {
+    info: (...args: any[]) => {
+        console.log('\x1b[7m' + ':' + '\x1b[0m', ...args)
+    },
+    warn: (...args: any[]) => {
+        console.log('\x1b[33m' + '!' + '\x1b[0m', ...args)
+    },
+    error: (...args: any[]) => {
+        console.log('\x1b[31m' + '!' + '\x1b[0m', ...args)
+    }
+}
 
 const DEFAULT_WS_PORT = 7170
 const DEFAULT_MQTT_PORT = 7171
@@ -77,9 +87,41 @@ export class ConfigWizard{
         this.config = DefaultConfig
     }
 
-    async inquirerSinglePrompt(prompt: inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion) {
+    private async inquirerSinglePrompt(prompt: inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion) {
         const answers = await this.inquirer.prompt([prompt])
         return answers[prompt.name!]
+    }
+
+    private async promptNumberWithDefault(prompt: inquirer.InputQuestion, defaultValue: number): Promise<number>{
+        const valueString = await this.inquirerSinglePrompt(prompt)
+        const value = valueString === '' ? defaultValue: parseInt(valueString)
+
+        if (Number.isNaN(value) || !Number.isInteger(value)) {
+            logger.warn(`Non-numeric value [${valueString}] provided`)
+            return await this.promptNumberWithDefault(prompt, defaultValue)
+        }
+
+        if (value < 1024 || value > 49151) {
+            logger.warn(`Out of range port [${value}] provided (valid range 1024-49151)`)
+            return await this.promptNumberWithDefault(prompt, defaultValue)
+        }
+
+        return value
+    }
+
+    private async promptExistingPathWithDefault(prompt: inquirer.InputQuestion, defaultValue: string): Promise<string>{
+        const returnedValue = await this.inquirerSinglePrompt(prompt)
+        // defaultValue always exists at this point
+        if (returnedValue === '') {
+            return defaultValue
+        }
+        
+        if (!existsSync(returnedValue)) {
+            logger.warn(`Path [${returnedValue}] does not exist`)
+            return await this.promptExistingPathWithDefault(prompt, defaultValue)
+        }
+
+        return returnedValue
     }
 
     async generateOrImportPrivateKey(): Promise<string>{
@@ -115,24 +157,7 @@ export class ConfigWizard{
 
         return this.config.ethereumPrivateKey
     }
-
-    async promptNumberWithDefault(prompt: inquirer.InputQuestion, defaultValue: number): Promise<number>{
-        const valueString = await this.inquirerSinglePrompt(prompt)
-        const value = valueString === '' ? defaultValue: parseInt(valueString)
-
-        if (Number.isNaN(value) || !Number.isInteger(value)) {
-            logger.warn(`Non-numeric value [${valueString}] provided`)
-            return await this.promptNumberWithDefault(prompt, defaultValue)
-        }
-
-        if (value < 1024 || value > 49151) {
-            logger.warn(`Out of range port [${value}] provided (valid range 1024-49151)`)
-            return await this.promptNumberWithDefault(prompt, defaultValue)
-        }
-
-        return value
-    }
-
+    
     async selectPlugins(): Promise<Array<string>>{
         const plugins: inquirer.Answers = await this.inquirerSinglePrompt( {
             type: 'checkbox',
@@ -183,26 +208,47 @@ export class ConfigWizard{
     }
 
     async storeConfig(destinationFolder: string) {
-        const filename = `wizard-config.json`
-        const finalPath = path.join(__dirname, destinationFolder, filename)
+        if (!existsSync(destinationFolder)){
+            throw new Error(`Destination folder [${destinationFolder}] does not exist`)
+        }
+        const filename = `broker-config.json`        
+        const finalPath = path.join(destinationFolder, filename)
+        
         writeFileSync(finalPath, JSON.stringify(this.config, null, 2))
         return finalPath
     }
 
-    async start(destinationFolder: string) {
-        await this.generateOrImportPrivateKey()
-        await this.selectPlugins()
-        const finalConfigPath = await this.storeConfig(destinationFolder)
-        logger.info('Broker Config Wizard ran succesfully')
-        logger.info('Generated configuration:', this.config)
-        logger.info(`Stored config under ${finalConfigPath}`)
-        logger.info(`You can start the broker now with \n streamr-broker ${finalConfigPath}`)
-        return finalConfigPath
+    async selectDestinationFolder(): Promise<string> {
+        const defaultDestinationFolder = path.join(os.homedir(), '.streamr')
+        if (!existsSync(defaultDestinationFolder)){
+            mkdirSync(defaultDestinationFolder)
+        }
+
+        return this.promptExistingPathWithDefault({
+            type: 'input',
+            name: 'destinationFolder',
+            message: `Select a path to store the generated config in [Enter for default: ${defaultDestinationFolder}]`,
+        }, defaultDestinationFolder)
+    }
+
+    async start(): Promise<void> {
+        try {
+            await this.generateOrImportPrivateKey()
+            await this.selectPlugins()
+            const destinationFolder: string = await this.selectDestinationFolder()
+            const finalConfigPath = await this.storeConfig(destinationFolder)
+            logger.info('Broker Config Wizard ran succesfully')
+            logger.info('Generated configuration:', this.config)
+            logger.info(`Stored config under ${finalConfigPath}`)
+            logger.info(`You can start the broker now with \n streamr-broker-init ${finalConfigPath}`)
+        } catch (e){
+            logger.error(e)
+        }
     }
 
 }
 
-export async function startBrokerConfigWizard (destinationFolder  = '../configs/'): Promise<string> {
+export async function startBrokerConfigWizard (): Promise<void> {
     const wizard = new ConfigWizard()
-    return wizard.start(destinationFolder)
+    return wizard.start()
 }

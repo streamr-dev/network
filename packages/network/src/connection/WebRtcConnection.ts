@@ -183,7 +183,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.isFinished = true
 
         if (err) {
-            this.baseLogger.warn('conn.close(): %s', err)
+            this.baseLogger.debug('conn.close(): %s', err)
         } else {
             this.baseLogger.trace('conn.close()')
         }
@@ -263,7 +263,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
         if (this.isOpen()) {
             if (this.pingAttempts >= this.maxPingPongAttempts) {
-                this.baseLogger.warn(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
+                this.baseLogger.debug(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
                 this.close(new Error('pong not received'))
             } else {
                 this.rttStart = Date.now()
@@ -272,7 +272,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                         this.doSendMessage('ping')
                     }
                 } catch (e) {
-                    this.baseLogger.warn(`failed to send ping to ${this.peerInfo.peerId} with error: ${e}`)
+                    this.baseLogger.debug(`failed to send ping to ${this.peerInfo.peerId} with error: ${e}`)
                 }
                 this.pingAttempts += 1
             }

@@ -1,4 +1,6 @@
-import { unlinkSync, existsSync } from 'fs'
+import { existsSync, rmdirSync, mkdtempSync } from 'fs'
+import os from 'os'
+import path from 'path'
 import { ConfigWizard, startBrokerConfigWizard } from '../../src/ConfigWizard'
 
 const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
@@ -8,6 +10,15 @@ const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
 }
 describe('ConfigWizard', () => {
     let wizard: ConfigWizard
+    let tmpDataDir: string
+    
+    beforeAll(() => {
+        tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
+    })
+
+    afterAll(() => {
+        rmdirSync(tmpDataDir, {recursive: true})
+    })
 
     beforeEach(async () => {
         wizard = new ConfigWizard()
@@ -83,9 +94,9 @@ describe('ConfigWizard', () => {
             },
             legacyPublishHttp: {},
             testnetMiner: {
-                claimServerUrl: 'http://88.99.104.143:3011',
+                claimServerUrl: 'http://testnet2.streamr.network:3011',
                 maxClaimDelay: 5000,
-                rewardStreamId: 'dO1PMm-FThqeWk-SE3zOYg'
+                rewardStreamId: 'streamr.eth/brubeck-testnet/rewards'
             }
         })
     })
@@ -101,13 +112,16 @@ describe('ConfigWizard', () => {
 
         await wizard.generateOrImportPrivateKey()
         await wizard.selectPlugins()
-
-        const finalPath = await wizard.storeConfig('../configs')
+        const finalPath = await wizard.storeConfig(tmpDataDir)
         expect(existsSync(finalPath)).toEqual(true)
-        //cleanup
-        unlinkSync(finalPath)
-        expect(existsSync(finalPath)).toEqual(false)
+    })
 
+    it ('should return the given destinationFolder when prompted', async() => {
+        mockPromptMethod(wizard, {
+            destinationFolder: tmpDataDir
+        })
+        const selectedFolder = await wizard.selectDestinationFolder()
+        expect(selectedFolder).toEqual(tmpDataDir)
     })
 
     it ('should test the entire logic of the config wizard', async() => {
@@ -116,13 +130,11 @@ describe('ConfigWizard', () => {
             selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
             wsPort: 7170,
             mqttPort: 7171,
-            httpPort: 7172
+            httpPort: 7172,
+            destinationFolder: tmpDataDir
         })
-        const finalPath = await startBrokerConfigWizard('../configs')
-        expect(existsSync(finalPath)).toEqual(true)
-        //cleanup
-        unlinkSync(finalPath)
-        expect(existsSync(finalPath)).toEqual(false)
+        await startBrokerConfigWizard()
+        expect(existsSync(tmpDataDir + '/broker-config.json')).toEqual(true)
     })
     
 })
