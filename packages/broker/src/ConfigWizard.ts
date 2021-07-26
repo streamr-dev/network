@@ -8,14 +8,20 @@ import { Config } from './config'
 import * as os from 'os'
 
 const logger = {
+    log: (...args: any[]) => {
+        console.log('\x1b[7m' + ':' +'\x1b[0m', ...args)
+    },
     info: (...args: any[]) => {
-        console.log('\x1b[7m' + ':' + '\x1b[0m', ...args)
+        console.log('\x1b[47m' +  '\x1b[30m' + ':', ...args, '\x1b[0m')
     },
     warn: (...args: any[]) => {
         console.log('\x1b[33m' + '!' + '\x1b[0m', ...args)
     },
     error: (...args: any[]) => {
         console.log('\x1b[31m' + '!' + '\x1b[0m', ...args)
+    },
+    alert:(...args: any[]) => {
+        console.log('\x1b[43m' + '\x1b[30m' + '!', ...args, '\x1b[0m')
     }
 }
 
@@ -122,7 +128,7 @@ export class ConfigWizard{
         return returnedValue
     }
 
-    async generateOrImportPrivateKey(): Promise<string>{
+    async generateOrImportPrivateKey(): Promise<Wallet>{
         const generateOrImport = await this.inquirerSinglePrompt({
             type: 'list',
             name:'generateOrImportEthereumPrivateKey',
@@ -133,8 +139,12 @@ export class ConfigWizard{
             }
         })
 
+        let wallet: Wallet 
         if (generateOrImport === 'generate') {
-            this.config.ethereumPrivateKey = Wallet.createRandom().privateKey
+            wallet = Wallet.createRandom()
+            this.config.ethereumPrivateKey = wallet.privateKey
+            logger.info('This is your generated private key. Please store it in a secure location')
+            logger.alert(this.config.ethereumPrivateKey)
         } else if (generateOrImport === 'import') {
             const privateKey = await this.inquirerSinglePrompt({
                 type: 'input',
@@ -143,7 +153,7 @@ export class ConfigWizard{
             })
 
             try {
-                const wallet = new Wallet(privateKey)
+                wallet = new Wallet(privateKey)
                 this.config.ethereumPrivateKey = wallet.privateKey
             } catch (privateKeyError) {
                 throw new Error(`Invalid privateKey provided for import: ${privateKey}`)
@@ -153,7 +163,7 @@ export class ConfigWizard{
             throw new Error(`Invalid option ${generateOrImport} provided`)
         }
 
-        return this.config.ethereumPrivateKey
+        return wallet
     }
     
     async selectPlugins(): Promise<Array<string>>{
@@ -205,12 +215,27 @@ export class ConfigWizard{
 
     }
 
-    async storeConfig(destinationFolder: string) {
+    async storeConfig(): Promise<string>{
+        const destinationFolder: string = await this.selectDestinationFolder()
+        // ensure the destination folder exists
         if (!existsSync(destinationFolder)){
             throw new Error(`Destination folder [${destinationFolder}] does not exist`)
         }
         const filename = `broker-config.json`        
         const finalPath = path.join(destinationFolder, filename)
+        // ask the user if they want to overwrite when the file already exists
+        if (existsSync(finalPath)){
+            const overwrite = await this.inquirerSinglePrompt({
+                type: 'confirm',
+                name: 'overwrite',
+                message: `Config file ${finalPath} already exists. Overwrite?`,
+                default: false
+            })
+            
+            if (!overwrite) {
+                return this.storeConfig()
+            }
+        }
         
         writeFileSync(finalPath, JSON.stringify(this.config, null, 2))
         return finalPath
@@ -231,14 +256,15 @@ export class ConfigWizard{
 
     async start(): Promise<void> {
         try {
-            await this.generateOrImportPrivateKey()
+            const wallet = await this.generateOrImportPrivateKey()
+            logger.log(`Ethereum Address: ${wallet.address}`)
+            logger.log(`Ethereum Private Key: ${wallet.privateKey}`)
             await this.selectPlugins()
-            const destinationFolder: string = await this.selectDestinationFolder()
-            const finalConfigPath = await this.storeConfig(destinationFolder)
-            logger.info('Broker Config Wizard ran succesfully')
-            logger.info('Generated configuration:', this.config)
-            logger.info(`Stored config under ${finalConfigPath}`)
-            logger.info(`You can start the broker now with \n streamr-broker-init ${finalConfigPath}`)
+            const finalConfigPath = await this.storeConfig()
+            logger.log('Broker Config Wizard ran succesfully')
+            logger.log(`Stored config under ${finalConfigPath}`)
+            logger.log(`You can start the broker now with`)
+            logger.info(`streamr-broker-init ${finalConfigPath}`)
         } catch (e){
             logger.error(e)
         }
