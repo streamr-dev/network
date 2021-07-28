@@ -19,7 +19,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 	private peerConnection: RTCPeerConnection | null = null
 	private dataChannel: RTCDataChannel | null = null
 	private lastState?: string | undefined = undefined
-    private lastGatheringState: string | undefined = undefined
+	private lastGatheringState: string | undefined = undefined
 	private makingOffer = false
 
 	constructor(opts: ConstructorOptions) {

@@ -33,9 +33,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
     protected doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
         return new Promise<string>((resolve, reject) => {
             try {
-                const ws = new WebSocket(
-                    `${serverUrl}/ws`
-                )
+                const ws = new WebSocket(`${serverUrl}/ws`)
 
                 ws.once('open', () => {
                     this.handshakeInit(ws, serverPeerInfo, reject)

@@ -33,13 +33,7 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
     protected doConnect(serverUrl: string, serverPeerInfo: PeerInfo): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             try {
-                const ws = new w3cwebsocket(
-                    serverUrl,
-                    undefined,
-                    undefined,
-                    undefined,
-                    undefined
-                )
+                const ws = new w3cwebsocket(serverUrl)
 
                 ws.onopen = () => {
                     this.handshakeInit(ws, serverPeerInfo, reject)

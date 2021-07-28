@@ -4,7 +4,7 @@
     "outDir": "dist",
     "rootDirs": ["src", "test"],
     "types": [
-    "jest"
+      "jest"
     ]
   },
   "include": [

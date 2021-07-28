@@ -16,7 +16,7 @@
   "browser": "dist/streamr-network.js",
   "types": "dist/composition.d.ts",
   "scripts": {
-    "prepare": "tsc -p tsconfig-build.json",
+    "prepare": "tsc -p tsconfig-build.json && webpack",
     "build": "tsc -p tsconfig-build.json && webpack",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",

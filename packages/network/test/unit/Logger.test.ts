@@ -94,8 +94,9 @@ describe(Logger, () => {
         // has monkey-patched process.stdout.write." This is the case
         // in our browser tests.
 
-        if (typeof _streamr_electron_test !== 'undefined')
-        {return} 
+        if (typeof _streamr_electron_test !== 'undefined') {
+            return
+        }
 
         let lines: string[]
         const logger = new Logger(module, '', {

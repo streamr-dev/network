@@ -55,7 +55,8 @@ export class Logger {
     }
 
     error(msg: string, ...args: any[]): void {
-        const errorInstance = args.find((arg) => (arg.constructor.name === 'Error' 
+        const errorInstance = args.find((arg) => (arg.constructor.name === 'Error'
+            || arg.constructor.name === 'AggregateError'
             || arg.constructor.name === 'EvalError'
             || arg.constructor.name === 'RangeError' 
             || arg.constructor.name === 'ReferenceError'
