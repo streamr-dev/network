@@ -9,7 +9,7 @@ type IDecrypt<T> = {
     decrypt: PipelineTransform<StreamMessage<T>>
 }
 
-type DecryptWithExchangeOptions<T> = {
+export type DecryptWithExchangeOptions<T> = {
     groupKeys?: any[]
     onError?: (err?: Error, streamMessage?: StreamMessage<T>) => Promise<void> | void
 }

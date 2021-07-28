@@ -1,15 +1,15 @@
 // import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { fakePrivateKey, describeRepeats, collect, createTestStream } from '../../utils'
-import { getPublishTestMessages } from './utils'
+import { fakePrivateKey, describeRepeats, collect } from '../../utils'
+import { getPublishTestMessages, createTestStream } from './utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import { Defer } from '../../../src/utils'
 // import Connection from '../../../src/Connection'
 // import { StorageNode } from '../../../src/stream/StorageNode'
 
 import clientOptions from '../config'
-import { Stream } from '../../../src/stream'
+import { Stream } from '../../../src/brubeck/Stream'
 import Subscription from '../../../src/brubeck/Subscription'
 import Subscriber from '../../../src/brubeck/Subscriber'
 import { Todo } from '../../../src/types'
@@ -27,7 +27,7 @@ describeRepeats('Subscriber', () => {
     let M: Subscriber
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
-    const createClient = (opts = {}) => {
+    const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...clientOptions,
             auth: {
@@ -55,8 +55,8 @@ describeRepeats('Subscriber', () => {
             client.connect(),
             client.getSessionToken(),
         ])
-        stream = await createTestStream(client.client, module)
-        await client.client.disconnect()
+        stream = await createTestStream(client, module)
+        await client.disconnect()
         // await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream)

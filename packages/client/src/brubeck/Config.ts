@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import Config, { StrictStreamrClientConfig, StreamrClientConfig } from '../Config'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NodeRegistryOptions } from './NodeRegistry'
@@ -7,10 +8,31 @@ export type BrubeckClientConfig = StreamrClientConfig & {
     nodeRegistry?: Partial<NodeRegistryOptions>
 }
 
+export {
+    NetworkNodeOptions as NetworkNodeConfig,
+    NodeRegistryOptions as NodeRegistryConfig
+}
+
 export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
     network: NetworkNodeOptions
     nodeRegistry: NodeRegistryOptions
 }
+
+const BrubeckConfigInjection = {
+    Root: Symbol('Config.Root'),
+    Auth: Symbol('Config.Auth'),
+    Ethereum: Symbol('Config.Ethereum'),
+    Network: Symbol('Config.Network'),
+    Connection: Symbol('Config.Connection'),
+    Subscribe: Symbol('Config.Subscribe'),
+    Publish: Symbol('Config.Publish'),
+    Cache: Symbol('Config.Cache'),
+    NodeRegistry: Symbol('Config.NodeRegistry'),
+}
+
+export * from '../Config'
+
+export { BrubeckConfigInjection as Config }
 
 // TODO: Production values
 const BRUBECK_CLIENT_DEFAULTS = {

@@ -2,10 +2,12 @@ import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
 
 import { Scaffold, instanceId } from '../utils'
 import Subscription from './Subscription'
-import { BrubeckClient } from './BrubeckClient'
 import { Context } from '../utils/Context'
 import SubscribePipeline from './SubscribePipeline'
 import { flow } from '../utils/PushBuffer'
+import { DependencyContainer, inject } from 'tsyringe'
+import { BrubeckContainer } from './Container'
+import BrubeckNode from './BrubeckNode'
 
 /**
  * Sends Subscribe/Unsubscribe requests as needed.
@@ -15,7 +17,6 @@ import { flow } from '../utils/PushBuffer'
 export default class SubscriptionSession<T extends MessageContent | unknown> implements Context {
     id
     debug
-    client: BrubeckClient
     spid: SPID
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()
@@ -23,33 +24,37 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     active = false
     stopped = false
     pipeline
+    node
 
-    constructor(client: BrubeckClient, spid: SPID) {
-        this.client = client
+    constructor(context: Context, spid: SPID, @inject(BrubeckContainer) container: DependencyContainer) {
         this.id = instanceId(this)
-        this.debug = this.client.debug.extend(this.id)
+        this.debug = context.debug.extend(this.id)
         this.spid = spid
-        this.pipeline = SubscribePipeline<T>(this.client, spid)
-            .pipe(async function* DistributeMessage(this: SubscriptionSession<T>, src: AsyncGenerator<StreamMessage<T>>) {
-                for await (const msg of src) {
-                    this.subscriptions.forEach((sub) => {
-                        sub.push(msg)
-                    })
-                    yield msg
-                }
-            }.bind(this))
+        this.distributeMessage = this.distributeMessage.bind(this)
+        this.node = container.resolve<BrubeckNode>(BrubeckNode)
+        this.pipeline = SubscribePipeline<T>(this.spid, {}, this, container)
+            .pipe(this.distributeMessage)
             .onFinally(() => (
                 this.removeAll()
             ))
 
-        // eslint-disable-next-line promise/catch-or-return
         setImmediate(() => {
+            // eslint-disable-next-line promise/catch-or-return
             flow(this.pipeline).catch((err) => {
                 this.debug('error', err)
             }).finally(() => {
                 this.debug('end')
             })
         })
+    }
+
+    async* distributeMessage(src: AsyncGenerator<StreamMessage<T>>) {
+        for await (const msg of src) {
+            this.subscriptions.forEach((sub) => {
+                sub.push(msg)
+            })
+            yield msg
+        }
     }
 
     private onMessageInput = async (msg: StreamMessage) => {
@@ -67,7 +72,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     private async subscribe() {
         this.debug('subscribe')
         this.active = true
-        const node = await this.client.getNode()
+        const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
         node.subscribe(streamId, streamPartition)
@@ -76,7 +81,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     private async unsubscribe() {
         this.debug('unsubscribe')
         this.active = false
-        const node = await this.client.getNode()
+        const node = await this.node.getNode()
         node.removeMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
         node.subscribe(streamId, streamPartition)

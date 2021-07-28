@@ -1,39 +1,44 @@
 import { inspect } from '../utils/log'
 import { StreamMessage, SPID, SIDLike, MessageContent } from 'streamr-client-protocol'
-import { BrubeckClient } from './BrubeckClient'
-import StreamMessageCreator, { StreamMessageCreatorAnonymous, IMessageCreator } from '../publish/MessageCreator'
+import StreamMessageCreator from './MessageCreator'
 import { FailedToPublishError } from '../publish'
-import { counterId } from '../utils'
+import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
+import BrubeckNode from './BrubeckNode'
+import { scoped, Lifecycle } from 'tsyringe'
+import { StreamEndpoints } from './StreamEndpoints'
 
 const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms))
 
-type PublishMessageOptions<T extends MessageContent> = {
+export type PublishMetadata<T extends MessageContent> = {
     content: T
     timestamp?: string | number | Date
+    sequenceNumber?: number
     partitionKey?: string | number
 }
 
+@scoped(Lifecycle.ContainerScoped)
 export default class BrubeckPublisher implements Context {
-    client
-    messageCreator: IMessageCreator
     id
     debug
     inProgress = new Set<ICancelable>()
 
-    constructor(client: BrubeckClient) {
-        this.client = client
-        this.messageCreator = (!this.client.client.canEncrypt()) ? new StreamMessageCreatorAnonymous() : new StreamMessageCreator(this.client.client)
-        this.id = counterId(this.constructor.name)
-        this.debug = this.client.debug.extend(this.id)
+    constructor(
+        context: Context,
+        private brubeckNode: BrubeckNode,
+        private messageCreator: StreamMessageCreator,
+        private streamEndpoints: StreamEndpoints
+    ) {
+        this.id = instanceId(this)
+        this.debug = context.debug.extend(this.id)
     }
 
     async publishMessage<T extends MessageContent>(streamObjectOrId: SIDLike, {
         content,
         timestamp = new Date(),
         partitionKey
-    }: PublishMessageOptions<T>): Promise<StreamMessage<T>> {
+    }: PublishMetadata<T>): Promise<StreamMessage<T>> {
         const sid = SPID.parse(streamObjectOrId)
         const streamMessage = await this.messageCreator.create<T>(sid, {
             content,
@@ -41,7 +46,7 @@ export default class BrubeckPublisher implements Context {
             partitionKey,
         })
 
-        const node = await this.client.getNode()
+        const node = await this.brubeckNode.getNode()
         node.publish(streamMessage)
         return streamMessage
     }
@@ -70,7 +75,23 @@ export default class BrubeckPublisher implements Context {
         }
     }
 
-    async collect<T extends MessageContent>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
+    async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number) { // eslint-disable-line class-methods-use-this
+        const msgs = []
+        for await (const msg of target) {
+            if (n === 0) {
+                break
+            }
+
+            msgs.push(msg.getParsedContent())
+            if (msgs.length === n) {
+                break
+            }
+        }
+
+        return msgs
+    }
+
+    async collectMessages<T>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
             if (n === 0) {
@@ -98,7 +119,7 @@ export default class BrubeckPublisher implements Context {
         }
     }
 
-    async* publishFromMetadata<T extends MessageContent>(streamObjectOrId: SIDLike, seq: AsyncIterable<PublishMessageOptions<T>>) {
+    async* publishFromMetadata<T extends MessageContent>(streamObjectOrId: SIDLike, seq: AsyncIterable<PublishMetadata<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -144,11 +165,7 @@ export default class BrubeckPublisher implements Context {
                 throw err
             }
 
-            last = await this.client.client.getStreamLast({
-                streamId: spid.streamId,
-                streamPartition: spid.streamPartition,
-                count,
-            })
+            last = await this.streamEndpoints.getStreamLast(spid, count)
 
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {

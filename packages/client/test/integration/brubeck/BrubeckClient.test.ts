@@ -10,7 +10,7 @@ import { Defer } from '../../../src/utils'
 import { getPublishTestMessages } from './utils'
 
 import clientOptions from '../config'
-import { Stream } from '../../../src/stream'
+import { Stream } from '../../../src/brubeck/Stream'
 // import Subscription from '../../../src/brubeck/Subscription'
 // import { StorageNode } from '../../../src/stream/StorageNode'
 
@@ -82,7 +82,7 @@ describeRepeats('StreamrClient', () => {
 
     const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
         const name = uid('stream')
-        const s = await client.client.createStream({
+        const s = await client.createStream({
             id: createRelativeTestStreamId(module),
             name,
             requireSignedData,
@@ -123,7 +123,7 @@ describeRepeats('StreamrClient', () => {
 
     it('is stream publisher', async () => {
         const publisherId = await client.getAddress()
-        const res = await client.client.isStreamPublisher(stream.id, publisherId)
+        const res = await client.isStreamPublisher(stream.id, publisherId)
         expect(res).toBe(true)
     })
 

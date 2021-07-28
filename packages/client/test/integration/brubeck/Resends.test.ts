@@ -6,15 +6,14 @@ import {
     fakePrivateKey,
     // getTestSetTimeout,
     // addAfterFn,
-    createTestStream
 } from '../../utils'
-import { getPublishTestStreamMessages, getWaitForStorage } from './utils'
+import { getPublishTestStreamMessages, getWaitForStorage, createTestStream } from './utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import Resend from '../../../src/brubeck/Resends'
 // import { Defer } from '../../../src/utils'
 
 import clientOptions from '../config'
-import { Stream } from '../../../src/stream'
+import { Stream } from '../../../src/brubeck/Stream'
 import { StorageNode } from '../../../src/stream/StorageNode'
 
 // const { ControlMessage } = ControlLayer
@@ -36,7 +35,7 @@ describeRepeats('resends', () => {
     // const addAfter = addAfterFn()
     // const testSetTimeout = getTestSetTimeout()
 
-    const createClient = (opts = {}) => {
+    const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...clientOptions,
             auth: {
@@ -63,7 +62,7 @@ describeRepeats('resends', () => {
         ])
         client.debug('connecting before all tests <<')
         client.debug('createStream >>')
-        stream = await createTestStream(client.client, module)
+        stream = await createTestStream(client, module)
         client.debug('createStream <<')
     })
 

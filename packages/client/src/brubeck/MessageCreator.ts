@@ -1,15 +1,16 @@
+import { inject, scoped, Lifecycle } from 'tsyringe'
 import { StreamMessage, SPID, SID, MessageContent, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
-import mem from 'mem'
 
 import { LimitAsyncFnByKey } from '../utils'
 
 import Signer from './Signer'
-import Encrypt from './Encrypt'
-import { GroupKey } from '../stream'
-import MessageChainer from './MessageChainer'
-import StreamPartitioner from './StreamPartitioner'
-import { StreamrClient } from '../StreamrClient'
-import { AuthenticatedConfig } from '../brubeck/Ethereum'
+// import Encrypt from './Encrypt'
+// import { GroupKey } from '../stream'
+import { getCachedMesssageChainer } from './MessageChainer'
+import StreamPartitioner from '../publish/StreamPartitioner'
+import { Config, CacheConfig } from './Config'
+import { BrubeckCached } from './Cached'
+import Ethereum from './Ethereum'
 
 export type MessageCreateOptions<T extends MessageContent> = {
     content: T
@@ -33,40 +34,27 @@ export class StreamMessageCreatorAnonymous implements IMessageCreator {
     stop() {}
 }
 
+@scoped(Lifecycle.ContainerScoped)
 export default class StreamMessageCreator implements IMessageCreator {
     computeStreamPartition
-    encrypt
+    // encrypt
     queue: ReturnType<typeof LimitAsyncFnByKey>
-    getMsgChainer: typeof MessageChainer & { clear: () => void }
-    signStreamMessage
-    client
+    getMsgChainer
 
     /*
      * Get function for creating stream messages.
      */
 
-    constructor(client: StreamrClient) {
-        const cacheOptions = client.options.cache
-        this.client = client
-        this.computeStreamPartition = StreamPartitioner(cacheOptions)
-        this.encrypt = Encrypt(client)
+    constructor(
+        private signer: Signer,
+        private ethereum: Ethereum,
+        private streamEndpoints: BrubeckCached,
+        @inject(Config.Cache) private cacheOptions: CacheConfig,
+    ) {
+        this.computeStreamPartition = StreamPartitioner(this.cacheOptions)
+        this.getMsgChainer = getCachedMesssageChainer(this.cacheOptions)
+        // this.encrypt = Encrypt(client)
 
-        // one chainer per streamId + streamPartition + publisherId + msgChainId
-        this.getMsgChainer = Object.assign(mem(MessageChainer, {
-            cacheKey: ([spid, { publisherId, msgChainId }]) => (
-                // empty msgChainId is fine
-                [spid.key, publisherId, msgChainId ?? ''].join('|')
-            ),
-            ...cacheOptions,
-            maxAge: undefined
-        }), {
-            clear: () => {
-                mem.clear(this.getMsgChainer)
-            }
-        })
-
-        // message signer
-        this.signStreamMessage = Signer(client.options.auth as AuthenticatedConfig)
         // per-stream queue so messages processed in-order
         this.queue = LimitAsyncFnByKey(1)
     }
@@ -84,8 +72,8 @@ export default class StreamMessageCreator implements IMessageCreator {
         return this.queue(streamId, async () => {
             // load cached stream + publisher details
             const [stream, publisherId] = await Promise.all([
-                this.client.cached.getStream(streamId),
-                this.client.cached.getAddress(),
+                this.streamEndpoints.getStream(streamId),
+                this.ethereum.getAddress(),
             ])
 
             // figure out partition
@@ -97,12 +85,12 @@ export default class StreamMessageCreator implements IMessageCreator {
             const spid = SPID.from({ streamId, streamPartition })
 
             // chain messages
-            const chainMessage = this.getMsgChainer(spid, {
+            const chain = this.getMsgChainer(spid, {
                 publisherId, msgChainId
             })
 
             const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-            const [messageId, prevMsgRef] = chainMessage(timestampAsNumber)
+            const [messageId, prevMsgRef] = chain.add(timestampAsNumber)
 
             const streamMessage: StreamMessage<T> = (content && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
                 // @ts-expect-error TODO: typing for stream message containers
@@ -114,18 +102,18 @@ export default class StreamMessageCreator implements IMessageCreator {
                     ...opts
                 })
 
-            if (StreamMessage.isUnencrypted(streamMessage)) {
-                await this.encrypt(streamMessage, stream)
-            }
+            // if (StreamMessage.isUnencrypted(streamMessage)) {
+            // await this.encrypt(streamMessage, stream)
+            // }
 
             if (StreamMessage.isUnsigned(streamMessage)) {
-                await this.signStreamMessage(streamMessage)
+                await this.signer.sign(streamMessage)
             }
 
             return streamMessage
         })
     }
-
+    /*
     setNextGroupKey(maybeStreamId: string, newKey: GroupKey) {
         return this.encrypt.setNextGroupKey(maybeStreamId, newKey)
     }
@@ -141,12 +129,12 @@ export default class StreamMessageCreator implements IMessageCreator {
     startKeyExchange() {
         return this.encrypt.start()
     }
+    */
 
     async stop() {
         this.computeStreamPartition.clear()
         this.queue.clear()
         this.getMsgChainer.clear()
-        await this.encrypt.stop()
+        // await this.encrypt.stop()
     }
 }
-

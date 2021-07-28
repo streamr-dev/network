@@ -3,7 +3,7 @@ import { writeHeapSnapshot } from 'v8'
 
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { PublishRequest, StreamMessage, MessageContent } from 'streamr-client-protocol'
+import { PublishRequest, StreamMessage } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { pTimeout, counterId, CounterId, AggregatedError, pLimitFn } from '../src/utils'
@@ -86,10 +86,12 @@ export function addAfterFn() {
     }
 }
 
-export const Msg = (opts?: MessageContent) => ({
-    value: uid('msg'),
-    ...opts,
-})
+export function Msg<T extends object>(opts?: T) {
+    return {
+        value: uid('msg'),
+        ...opts,
+    }
+}
 
 function defaultMessageMatchFn(msgTarget: PublishRequest, msgGot: StreamMessage) {
     if (msgTarget.streamMessage.signature) {
@@ -138,7 +140,6 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
             }
 
             last = await client.getStreamLast({
-                // @ts-expect-error
                 streamId,
                 streamPartition,
                 count,
@@ -363,6 +364,7 @@ export function getRandomClient() {
     return new StreamrClient({
         ...clientOptions,
         auth: {
+            // @ts-expect-error ?
             privateKey: wallet.privateKey
         }
     })

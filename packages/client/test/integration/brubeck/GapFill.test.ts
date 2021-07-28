@@ -2,14 +2,14 @@ import { wait } from 'streamr-test-utils'
 
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import { BrubeckClientConfig } from '../../../src/brubeck/Config'
-import { Stream } from '../../../src/stream'
+import { Stream } from '../../../src/brubeck/Stream'
 import Subscriber from '../../../src/brubeck/Subscriber'
 import Subscription from '../../../src/brubeck/Subscription'
 import { StreamMessage } from 'streamr-client-protocol'
 import { StorageNode } from '../../../src/stream/StorageNode'
 
-import { fakePrivateKey, describeRepeats, createTestStream, Msg } from '../../utils'
-import { getPublishTestStreamMessages } from './utils'
+import { fakePrivateKey, describeRepeats, Msg } from '../../utils'
+import { getPublishTestStreamMessages, createTestStream } from './utils'
 import clientOptions from '../config'
 
 const MAX_MESSAGES = 10
@@ -38,7 +38,7 @@ describeRepeats('GapFill', () => {
     let stream: Stream
     let subscriber: Subscriber
 
-    const createClient = (opts = {}) => {
+    const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...clientOptions,
             auth: {
@@ -61,7 +61,7 @@ describeRepeats('GapFill', () => {
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         await client.getSessionToken()
-        stream = await createTestStream(client.client, module, {
+        stream = await createTestStream(client, module, {
             requireSignedData: true
         })
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
@@ -256,7 +256,7 @@ describeRepeats('GapFill', () => {
 
             it('rejects resend if no storage assigned', async () => {
                 // new stream, assign to storage node not called
-                stream = await createTestStream(client.client, module, {
+                stream = await createTestStream(client, module, {
                     requireSignedData: true,
                 })
 

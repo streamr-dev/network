@@ -1,17 +1,19 @@
-import { BrubeckClient } from './BrubeckClient'
 import { SPID, SID, MessageRef, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import MessageStream from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 import { StorageNode } from '../stream/StorageNode'
-import { authRequest } from '../rest/authFetch'
-import { pOnce, instanceId } from '../utils'
+import { authRequest } from './authFetch'
+import { instanceId } from '../utils'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 import split2 from 'split2'
-import Session from '../Session'
+import Session from './Session'
 import NodeRegistry from './NodeRegistry'
 import { Transform } from 'stream'
+import { StreamEndpoints } from './StreamEndpoints'
+import { BrubeckContainer } from './Container'
+import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -81,20 +83,21 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
     return options && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
+@scoped(Lifecycle.ContainerScoped)
 export default class Resend implements Context {
-    readonly client
-    readonly id
-    readonly debug
+    id
+    debug
 
-    constructor(client: BrubeckClient) {
-        this.client = client
+    constructor(
+        context: Context,
+        private nodeRegistry: NodeRegistry,
+        @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
+        private session: Session,
+        @inject(BrubeckContainer) private container: DependencyContainer
+    ) {
         this.id = instanceId(this)
-        this.debug = this.client.debug.extend(this.id)
+        this.debug = context.debug.extend(this.id)
     }
-
-    getRegistry = pOnce(async () => {
-        return NodeRegistry.create(this.client.options.nodeRegistry)
-    })
 
     /**
      * Call last/from/range as appropriate based on arguments
@@ -136,16 +139,15 @@ export default class Resend implements Context {
         throw new ContextError(this, `can not resend without valid resend options: ${inspect({ spid, options })}`)
     }
 
-    private async getStreamNodes(spid: SPID) {
+    async getStreamNodes(sid: SID) {
         // this method should probably live somewhere else
         // like in the node registry or stream class
-        const stream = await this.client.client.getStream(spid.streamId)
+        const stream = await this.streamEndpoints.getStream(sid.streamId)
         const storageNodes: StorageNode[] = await stream.getStorageNodes()
 
         const storageNodeAddresses = new Set(storageNodes.map((n) => n.getAddress()))
 
-        const registry = await this.getRegistry()
-        const nodes = await registry.getNodes()
+        const nodes = await this.nodeRegistry.getNodes()
 
         return nodes.filter((node: any) => storageNodeAddresses.has(node.address))
     }
@@ -159,9 +161,9 @@ export default class Resend implements Context {
         // just pick first node
         // TODO: handle multiple nodes
         const url = createUrl(`${nodes[0].url}/api/v1`, endpointSuffix, spid, query)
-        const messageStream = SubscribePipeline<T>(this.client, spid)
+        const messageStream = SubscribePipeline<T>(spid, {}, this.container.resolve<Context>(Context as any), this.container)
         messageStream.pull((async function* readStream(this: Resend) {
-            const dataStream = await fetchStream(url, this.client.client.session)
+            const dataStream = await fetchStream(url, this.session)
             try {
                 yield* dataStream
             } finally {
@@ -220,9 +222,6 @@ export default class Resend implements Context {
     }
 
     async stop() {
-        const registryTask = this.getRegistry()
-        this.getRegistry.reset()
-        const registry = await registryTask
-        registry.stop()
+        await this.nodeRegistry.stop()
     }
 }

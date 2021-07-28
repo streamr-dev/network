@@ -28,6 +28,7 @@ export type PublishConfig = {
 export type SubscribeConfig = {
     /** Attempt to order messages */
     orderMessages: boolean
+    gapFill: boolean
     maxGapRequests: number
     maxRetries: number
     verifySignatures: Todo
@@ -120,6 +121,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     orderMessages: true,
     retryResendAfter: 5000,
     gapFillTimeout: 5000,
+    gapFill: true,
     maxGapRequests: 5,
     maxRetries: 5,
     maxPublishQueueSize: 10000,

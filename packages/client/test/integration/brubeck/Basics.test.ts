@@ -6,7 +6,7 @@ import Connection from '../../../src/Connection'
 import { publishManyGenerator } from './utils'
 
 import clientOptions from '../config'
-import { Stream } from '../../../src/stream'
+import { Stream } from '../../../src/brubeck/Stream'
 
 describeRepeats('StreamrClient', () => {
     const MAX_MESSAGES = 10
@@ -38,6 +38,7 @@ describeRepeats('StreamrClient', () => {
             // ...opts.network,
             // },
         })
+        c.debug('created client')
         return c
     }
 
@@ -70,7 +71,7 @@ describeRepeats('StreamrClient', () => {
 
     const createStream = async ({ ...opts } = {}) => {
         const id = `/${uid('stream')}`
-        const s = await client.client.createStream({
+        const s = await client.createStream({
             id,
             ...opts,
         })
@@ -82,7 +83,9 @@ describeRepeats('StreamrClient', () => {
 
     beforeEach(async () => {
         client = createClient()
-        await client.getSessionToken()
+        client.debug('getSessionToken >>')
+        const t = await client.getSessionToken()
+        client.debug('getSessionToken <<', t)
         client.debug('create stream >>')
         stream = await createStream()
         client.debug('create stream <<')
@@ -126,7 +129,8 @@ describeRepeats('StreamrClient', () => {
                 streamId: stream.id,
             })
             const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
-            const published = await client.publisher.collect(client.publisher.publishFromMetadata(stream, source), MAX_MESSAGES)
+            const publish = client.publisher.publishFromMetadata(stream, source)
+            const published = await client.publisher.collectMessages(publish, MAX_MESSAGES)
             const received = []
             for await (const msg of sub) {
                 received.push(msg)

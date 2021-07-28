@@ -1,24 +1,24 @@
+import { DependencyContainer, inject, scoped, Lifecycle } from 'tsyringe'
 import { allSettledValues, instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import SubscriptionSession from './SubscriptionSession'
-import { BrubeckClient } from './BrubeckClient'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
 import { SPIDLike, SPID, SIDLike } from 'streamr-client-protocol'
+import { BrubeckContainer } from './Container'
 
 /**
  * Keeps track of subscriptions.
  */
 
+@scoped(Lifecycle.ContainerScoped)
 export default class Subscriber implements Context {
-    client: BrubeckClient
     id
     debug
     readonly subSessions: Map<string, SubscriptionSession<unknown>> = new Map()
 
-    constructor(client: BrubeckClient) {
-        this.client = client
+    constructor(context: Context, @inject(BrubeckContainer) private container: DependencyContainer) {
         this.id = instanceId(this)
-        this.debug = this.client.debug.extend(this.id)
+        this.debug = context.debug.extend(this.id)
     }
 
     async subscribe<T>(opts: SIDLike | { stream: SIDLike }, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
@@ -44,7 +44,7 @@ export default class Subscriber implements Context {
 
         // get/create subscription session
         // don't add SubscriptionSession to subSessions until after subscription successfully created
-        const subSession = this.subSessions.get(key) as SubscriptionSession<T> || new SubscriptionSession<T>(this.client, spid)
+        const subSession = this.subSessions.get(key) as SubscriptionSession<T> || new SubscriptionSession<T>(this, spid, this.container)
 
         // create subscription
         const sub = new Subscription<T>(subSession).onFinally(() => {
@@ -161,7 +161,7 @@ export default class Subscriber implements Context {
         ])) as Subscription<T>[]
     }
 
-    stop() {
-        return this.removeAll()
+    async stop() {
+        await this.removeAll()
     }
 }

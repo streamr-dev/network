@@ -1,8 +1,10 @@
 import { Debugger } from './log'
 
-export type Context = {
-    readonly id: string,
-    readonly debug: Debugger,
+export const InjectContext = Symbol('Context')
+
+export abstract class Context {
+    readonly id!: string
+    readonly debug!: Debugger
 }
 
 export class ContextError extends Error {

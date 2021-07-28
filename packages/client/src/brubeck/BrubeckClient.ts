@@ -1,92 +1,163 @@
+import 'reflect-metadata'
+import { container, inject } from 'tsyringe'
 import Debug from 'debug'
-import { startNetworkNode } from 'streamr-network'
-import { SIDLike, MessageContent } from 'streamr-client-protocol'
-import Config, { StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
-import { pOnce, uuid, counterId } from '../utils'
+import { BrubeckContainer } from './Container'
+import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
+import { uuid, counterId } from '../utils'
 import { Context } from '../utils/Context'
-import { StreamrClient } from '../StreamrClient'
 
 import Publisher from './Publisher'
 import Subscriber from './Subscriber'
 import Resends from './Resends'
+import BrubeckNode from './BrubeckNode'
+import Ethereum from './Ethereum'
+import Session from './Session'
+import { StreamEndpoints } from './StreamEndpoints'
+import { LoginEndpoints } from './LoginEndpoints'
+import {BrubeckCached} from './Cached'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
-export class BrubeckClient implements Context {
+/**
+ * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
+ */
+function Plugin(targetInstance: any, srcInstance: any) {
+    const descriptors = Object.entries({
+        ...Object.getOwnPropertyDescriptors(srcInstance.constructor.prototype),
+        ...Object.getOwnPropertyDescriptors(srcInstance)
+    })
+    descriptors.forEach(([name, { value }]) => {
+        if (typeof value !== 'function') { return }
+
+        if (name in targetInstance) {
+            return // do nothing if already has property
+        }
+
+        // eslint-disable-next-line no-param-reassign
+        targetInstance[name] = (...args: any) => {
+            return srcInstance[name].call(srcInstance, ...args)
+        }
+    })
+    return srcInstance
+}
+
+// these are mixed in via Plugin function above
+export interface BrubeckClient extends Ethereum,
+    Omit<StreamEndpoints, 'options'>,
+    Omit<Session, 'options' | 'loginEndpoints'>,
+    Omit<Subscriber, 'client'>,
+    Omit<BrubeckNode, 'options'>,
+    Omit<LoginEndpoints, 'options'>,
+    Omit<Publisher, 'client'>,
+    Omit<Resends, 'options'> {}
+
+class BrubeckClientBase implements Context {
+    id
+    debug
+    options: StrictBrubeckClientConfig
+    loginEndpoints: LoginEndpoints
+    streamEndpoints: StreamEndpoints
+    ethereum: Ethereum
     publisher: Publisher
     subscriber: Subscriber
     resends: Resends
-    client: StreamrClient
-    options: StrictBrubeckClientConfig
-    readonly id
-    readonly debug
+    session: Session
+    node: BrubeckNode
 
+    constructor(
+        context: Context,
+        @inject(Config.Root) options: StrictBrubeckClientConfig,
+        node: BrubeckNode,
+        ethereum: Ethereum,
+        session: Session,
+        loginEndpoints: LoginEndpoints,
+        streamEndpoints: StreamEndpoints,
+        resends: Resends,
+        publisher: Publisher,
+        subscriber: Subscriber,
+    ) { // eslint-disable-line function-paren-newline
+        this.options = options!
+        this.id = context.id
+        this.debug = context.debug
+        this.loginEndpoints = loginEndpoints!
+        this.streamEndpoints = streamEndpoints!
+        this.ethereum = ethereum!
+        this.publisher = publisher!
+        this.subscriber = subscriber!
+        this.resends = resends!
+        this.session = session!
+        this.node = node!
+        Plugin(this, this.loginEndpoints)
+        Plugin(this, this.streamEndpoints)
+        Plugin(this, this.ethereum)
+        Plugin(this, this.publisher)
+        Plugin(this, this.subscriber)
+        Plugin(this, this.resends)
+        Plugin(this, this.session)
+        Plugin(this, this.node)
+    }
+}
+
+export class BrubeckClient extends BrubeckClientBase {
+    container
     constructor(options: BrubeckClientConfig) {
-        this.client = new StreamrClient(options)
-        this.options = Config(options)
-        this.id = counterId(`${this.constructor.name}:${uid}${options.id ? `:${options.id}` : ''}`)
-        this.debug = Debug(`Streamr::${this.id}`)
-        this.publisher = new Publisher(this)
-        this.subscriber = new Subscriber(this)
-        this.resends = new Resends(this)
-    }
+        const c = container.createChildContainer()
+        const config = BrubeckConfig(options)
+        const id = counterId(`BrubeckClient:${uid}${config.id ? `:${config.id}` : ''}`)
+        const debug = Debug(`Streamr::${id}`)
+        debug('create')
 
-    connect = pOnce(async () => {
-        this.disconnect.reset()
-        this.debug('connect >>')
-        await this.getNode()
-        this.debug('connect <<')
-    })
+        const rootContext = {
+            id,
+            debug
+        }
 
-    async getAddress() {
-        return this.client.getAddress()
-    }
-
-    async getSessionToken() {
-        return this.client.session.getSessionToken()
-    }
-
-    disconnect = pOnce(async () => {
-        this.debug('disconnect >>')
-        const nodeTask = this.getNode()
-        this.connect.reset()
-        this.getNode.reset() // allow getting new node again
-        const node = await nodeTask
-        await Promise.allSettled([
-            this.publisher.stop(),
-            this.subscriber.stop(),
-            node.stop(),
-        ])
-        this.debug('disconnect <<')
-    })
-
-    getNode = pOnce(() => {
-        return startNetworkNode({
-            disconnectionWaitTime: 200,
-            ...this.options.network,
-            id: counterId(this.id),
-            name: this.id,
+        c.register(Context as any, {
+            useValue: rootContext
         })
-    })
+        c.register(BrubeckContainer, {
+            useValue: c
+        })
+        c.register(Config.Root, {
+            useValue: config
+        })
+        c.register(Config.Auth, {
+            useValue: config.auth
+        })
+        c.register(Config.Ethereum, {
+            useValue: config
+        })
+        c.register(Config.NodeRegistry, {
+            useValue: config.nodeRegistry
+        })
+        c.register(Config.Network, {
+            useValue: config.network
+        })
+        c.register(Config.Connection, {
+            useValue: config
+        })
+        c.register(Config.Subscribe, {
+            useValue: config
+        })
+        c.register(Config.Publish, {
+            useValue: config
+        })
+        c.register(Config.Cache, {
+            useValue: config.cache
+        })
 
-    async publish<T extends MessageContent>(
-        streamObjectOrId: SIDLike,
-        content: T,
-        timestamp?: string | number | Date,
-        partitionKey?: string | number
-    ) {
-        return this.publisher.publish<T>(streamObjectOrId, content, timestamp, partitionKey)
-    }
-
-    async subscribe<T>(...args: Parameters<Subscriber['subscribe']>) {
-        return this.subscriber.subscribe<T>(...args)
-    }
-
-    async unsubscribe(...args: Parameters<Subscriber['unsubscribe']>) {
-        return this.subscriber.unsubscribe(...args)
-    }
-
-    async resend<T>(...args: Parameters<Resends['resend']>) {
-        return this.resends.resend<T>(...args)
+        super(
+            c.resolve<Context>(Context as any),
+            config,
+            c.resolve<BrubeckNode>(BrubeckNode),
+            c.resolve<Ethereum>(Ethereum),
+            c.resolve<Session>(Session),
+            c.resolve<LoginEndpoints>(LoginEndpoints),
+            c.resolve<StreamEndpoints>(StreamEndpoints),
+            c.resolve<Resends>(Resends),
+            c.resolve<Publisher>(Publisher),
+            c.resolve<Subscriber>(Subscriber),
+        )
+        this.container = c
     }
 }

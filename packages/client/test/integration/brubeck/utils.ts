@@ -3,7 +3,9 @@ import { StreamMessage, SID } from 'streamr-client-protocol'
 import { Msg } from '../../utils'
 import { counterId, Scaffold } from '../../../src/utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
+import { PublishMetadata } from '../../../src/brubeck/Publisher'
 import { startTracker, Tracker } from 'streamr-network'
+import { StreamProperties } from '../../../src/brubeck/Stream'
 
 type PublishManyOpts = Partial<{
     delay: number,
@@ -11,7 +13,10 @@ type PublishManyOpts = Partial<{
     sequenceNumber: number | (() => number)
 }>
 
-export async function* publishManyGenerator(total: number = 5, opts: PublishManyOpts = {}) {
+export async function* publishManyGenerator(
+    total: number = 5,
+    opts: PublishManyOpts = {}
+): AsyncGenerator<PublishMetadata<any>> {
     const { delay = 10, sequenceNumber, timestamp } = opts
     const batchId = counterId('publishMany')
     for (let i = 0; i < total; i++) {
@@ -47,7 +52,8 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID,
             ...opts,
         }
         const source = publishManyGenerator(maxMessages, options)
-        const streamMessages = await client.publisher.collect(client.publisher.publishFromMetadata(stream, source), maxMessages)
+        const publishStream = client.publisher.publishFromMetadata(stream, source)
+        const streamMessages = await client.publisher.collectMessages(publishStream, maxMessages)
         streamMessages.forEach((s) => s.getParsedContent())
         if (!waitForLast) { return streamMessages }
 
@@ -65,7 +71,7 @@ export function getPublishTestMessages(client: BrubeckClient, stream: SID, defau
             ...opts,
         }
         const source = publishManyGenerator(maxMessages, options)
-        const streamMessages = await client.publisher.collect(client.publisher.publishFromMetadata(stream, source), maxMessages)
+        const streamMessages = await client.publisher.collectMessages(client.publisher.publishFromMetadata(stream, source), maxMessages)
         const msgs = streamMessages.map((s) => s.getParsedContent())
 
         if (!waitForLast) { return msgs }
@@ -85,6 +91,26 @@ export function getWaitForStorage(client: BrubeckClient, defaultOpts = {}) {
             ...opts,
         })
     }
+}
+
+// eslint-disable-next-line no-undef
+const getTestName = (module: NodeModule) => {
+    const fileNamePattern = new RegExp('.*/(.*).test\\...')
+    const groups = module.filename.match(fileNamePattern)
+    return (groups !== null) ? groups[1] : module.filename
+}
+
+// eslint-disable-next-line no-undef
+export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) => {
+    return counterId(`/test/${process.pid}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
+}
+
+// eslint-disable-next-line no-undef
+export const createTestStream = (streamrClient: BrubeckClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+    return streamrClient.createStream({
+        id: createRelativeTestStreamId(module),
+        ...props
+    })
 }
 
 function initTracker() {
