@@ -70,14 +70,11 @@ jobs:
     name: Test Exports using Node 14.x
     runs-on: ubuntu-latest
     needs: build
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: "14.x"
       - uses: actions/download-artifact@v2
         with:
           name: client-build
@@ -105,14 +102,11 @@ jobs:
     name: Test Browser Realtime
     runs-on: ubuntu-latest
     needs: build
-    strategy:
-      matrix:
-        node-version: [ 14.x ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: "14.x"
       - uses: actions/download-artifact@v2
         with:
           name: client-build
@@ -147,14 +141,11 @@ jobs:
     name: Test Browser Realtime + Resend
     runs-on: ubuntu-latest
     needs: build
-    strategy:
-      matrix:
-        node-version: [ 14.x ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: "14.x"
       - uses: actions/download-artifact@v2
         with:
           name: client-build
