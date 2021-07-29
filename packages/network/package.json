@@ -17,6 +17,7 @@
   "scripts": {
     "prepare": "tsc -p tsconfig-build.json",
     "build": "tsc -p tsconfig-build.json",
+    "postinstall": "cd node_modules/node-datachannel && npm run install-nice",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",
     "pub-1": "node $NODE_DEBUG_OPTION bin/publisher.js --port=30323",
