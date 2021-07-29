@@ -58,6 +58,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm i -g cmake-js
           npm ci
           npx lerna bootstrap --scope streamr-network --include-dependencies
       - run: npm run eslint
