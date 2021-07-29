@@ -54,7 +54,7 @@ describe('StorageConfig', () => {
         tracker = await startTracker({
             host: NODE_HOST,
             port: TRACKER_PORT,
-            id: 'tracker'
+            id: 'tracker-1'
         })
         storageNode = await startBroker({
             name: 'storageNode',

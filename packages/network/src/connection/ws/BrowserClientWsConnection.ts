@@ -1,16 +1,25 @@
-import { ReadyState, WsConnection } from './WsConnection'
-import WebSocket from 'ws'
+import { ReadyState, AbstractWsConnection } from './AbstractWsConnection'
+import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
-import util from 'util'
 import { Logger } from '../../helpers/Logger'
+import { WebSocketConnectionFactory } from "./AbstractClientWsEndpoint"
 
 const staticLogger = new Logger(module)
 
-export class ClientWsConnection extends WsConnection {
-    private readonly socket: WebSocket
+export const BrowserWebSocketConnectionFactory: WebSocketConnectionFactory<BrowserClientWsConnection> = Object.freeze({
+    createConnection(socket: w3cwebsocket, peerInfo: PeerInfo): BrowserClientWsConnection {
+        return new BrowserClientWsConnection(socket, peerInfo)
+    },
+    cleanUp(): void {
 
-    constructor(socket: WebSocket, peerInfo: PeerInfo) {
+    }
+})
+
+export class BrowserClientWsConnection extends AbstractWsConnection {
+    private readonly socket: w3cwebsocket
+
+    constructor(socket: w3cwebsocket, peerInfo: PeerInfo) {
         super(peerInfo)
         this.socket = socket
     }
@@ -25,7 +34,7 @@ export class ClientWsConnection extends WsConnection {
 
     terminate(): void {
         try {
-            this.socket.terminate()
+            this.socket.close()
         } catch (e) {
             staticLogger.error('failed to terminate ws, reason %s', e)
         }
@@ -36,16 +45,16 @@ export class ClientWsConnection extends WsConnection {
     }
 
     getReadyState(): ReadyState {
-        return this.socket.readyState
+        return this.socket.readyState as ReadyState
     }
 
     // TODO: toString() representation for logging
 
     sendPing(): void {
-        this.socket.ping()
+        this.socket.send('ping')
     }
 
     async send(message: string): Promise<void> {
-        await util.promisify((cb: any) => this.socket.send(message, cb))()
+        this.socket.send(message)
     }
 }

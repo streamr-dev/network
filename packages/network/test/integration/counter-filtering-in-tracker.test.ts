@@ -6,7 +6,7 @@ import { startTracker, Tracker } from '../../src/composition'
 import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
-import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 const WAIT_TIME = 200
 
@@ -39,14 +39,15 @@ describe('tracker: counter filtering', () => {
         })
         const peerInfo1 = PeerInfo.newNode('trackerNode1')
         const peerInfo2 = PeerInfo.newNode('trackerNode2')
-        const wsClient1 = new ClientWsEndpoint(peerInfo1)
-        const wsClient2 = new ClientWsEndpoint(peerInfo2)
+        const trackerPeerInfo = PeerInfo.newTracker('tracker')
+        const wsClient1 = new NodeClientWsEndpoint(peerInfo1)
+        const wsClient2 = new NodeClientWsEndpoint(peerInfo2)
         trackerNode1 = new TrackerNode(wsClient1)
         trackerNode2 = new TrackerNode(wsClient2)
 
         await runAndWaitForEvents([
-            () => { trackerNode1.connectToTracker(tracker.getUrl()) },
-            () => { trackerNode2.connectToTracker(tracker.getUrl()) }], [
+            () => { trackerNode1.connectToTracker(tracker.getUrl(), trackerPeerInfo) },
+            () => { trackerNode2.connectToTracker(tracker.getUrl(), trackerPeerInfo) }], [
             [trackerNode1, TrackerNodeEvent.CONNECTED_TO_TRACKER],
             [trackerNode2, TrackerNodeEvent.CONNECTED_TO_TRACKER]
         ])

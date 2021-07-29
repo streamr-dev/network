@@ -26,7 +26,7 @@ describe('local propagation', () => {
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
-            id: 'tracker'
+            id: 'tracker-1'
         })
 
         broker = await startBroker({

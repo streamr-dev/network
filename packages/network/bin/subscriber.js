@@ -12,6 +12,7 @@ program
     .option('--id <id>', 'Ethereum address / node id', undefined)
     .option('--nodeName <nodeName>', 'Human readble name for node', undefined)
     .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:27777'])
+    .option('--trackerIds <trackersIds>', 'tracker Ids', (value) => value.split(','), ['tracker'])
     .option('--streamIds <streamIds>', 'streamId to publish', (value) => value.split(','), ['stream-0'])
     .option('--metrics <metrics>', 'log metrics', false)
     .description('Run subscriber')
@@ -21,10 +22,18 @@ const id = program.opts().id || 'SU'
 const name = program.opts().nodeName || id
 const logger = new Logger(module)
 const metricsContext = new MetricsContext(id)
+
+const trackerInfos = program.opts().trackers.map((ws, i) => {
+    return {
+        id: program.opts().trackerIds[i],
+        ws
+    }
+})
+
 const subscriber = createNetworkNode({
     name,
     id,
-    trackers: program.opts().trackers,
+    trackers: trackerInfos,
     metricsContext
 })
 logger.info('started subscriber id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, metrics: %s',

@@ -44,9 +44,10 @@ describe('tracker endpoint', () => {
             id: 'tracker',
             attachHttpEndpoints: true
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             location: {
                 country: 'CH',
                 city: 'Zug',
@@ -56,7 +57,7 @@ describe('tracker endpoint', () => {
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             location: {
                 country: 'FI',
                 city: 'Helsinki',
