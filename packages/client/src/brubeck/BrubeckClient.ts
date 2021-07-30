@@ -46,7 +46,7 @@ export interface BrubeckClient extends Ethereum,
     Omit<StreamEndpoints, 'options'>,
     Omit<Session, 'options' | 'loginEndpoints'>,
     Omit<Subscriber, 'client'>,
-    Omit<BrubeckNode, 'options'>,
+    Omit<BrubeckNode, 'options' | 'disconnect'>,
     Omit<LoginEndpoints, 'options'>,
     Omit<Publisher, 'client'>,
     Omit<Resends, 'options'> {}
@@ -95,6 +95,18 @@ class BrubeckClientBase implements Context {
         Plugin(this, this.resends)
         Plugin(this, this.session)
         Plugin(this, this.node)
+    }
+
+    async disconnect() {
+        const tasks = [
+            this.node.disconnect(),
+            this.resends.stop(),
+            this.publisher.stop(),
+            this.subscriber.stop(),
+        ]
+
+        await Promise.allSettled(tasks)
+        await Promise.all(tasks)
     }
 }
 
