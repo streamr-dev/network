@@ -2,14 +2,14 @@ import { MessageRef, MessageID, MessageIDStrict, SPID } from 'streamr-client-pro
 import { CacheConfig } from './Config'
 import { randomString, CacheFn } from '../utils'
 
-export type MessageChainerOptions = {
+export type MessageChainOptions = {
     publisherId: string
     msgChainId?: string
 }
 
 export function getCachedMesssageChain(cacheConfig: CacheConfig) {
     // one chainer per streamId + streamPartition + publisherId + msgChainId
-    return CacheFn((...args: ConstructorParameters<typeof MessageChainer>) => new MessageChainer(...args), {
+    return CacheFn((...args: ConstructorParameters<typeof MessageChain>) => new MessageChain(...args), {
         cacheKey: ([spid, { publisherId, msgChainId }]) => (
             // empty msgChainId is fine
             [spid.key, publisherId, msgChainId ?? ''].join('|')
@@ -19,12 +19,12 @@ export function getCachedMesssageChain(cacheConfig: CacheConfig) {
     })
 }
 
-export default class MessageChainer {
+export default class MessageChain {
     readonly publisherId
     readonly msgChainId
     prevMsgRef?: MessageRef
 
-    constructor(private spid: SPID, { publisherId, msgChainId = randomString(20) }: MessageChainerOptions) {
+    constructor(private spid: SPID, { publisherId, msgChainId = randomString(20) }: MessageChainOptions) {
         this.publisherId = publisherId
         this.msgChainId = msgChainId
     }
@@ -57,5 +57,3 @@ export default class MessageChainer {
         return [messageId, currentPrevMsgRef]
     }
 }
-
-

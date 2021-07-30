@@ -1,5 +1,7 @@
 import 'reflect-metadata'
 import Config, { StrictStreamrClientConfig, StreamrClientConfig } from '../Config'
+import defaultsDeep from 'lodash/defaultsDeep'
+import cloneDeep from 'lodash/cloneDeep'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NodeRegistryOptions } from './NodeRegistry'
 
@@ -47,12 +49,8 @@ const BRUBECK_CLIENT_DEFAULTS = {
             'ws://127.0.0.1:30303'
         ],
     }
-
 }
 
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
-    return {
-        ...BRUBECK_CLIENT_DEFAULTS,
-        ...Config(config),
-    }
+    return cloneDeep(defaultsDeep({}, BRUBECK_CLIENT_DEFAULTS, Config(config)))
 }

@@ -39,6 +39,7 @@ export async function* publishManyGenerator(
 type PublishTestMessageOptions = PublishManyOpts & {
     waitForLast?: boolean
     waitForLastCount?: number
+    retainMessages?: boolean
 }
 
 export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID, defaultOpts: PublishTestMessageOptions = {}) {
@@ -46,6 +47,7 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID,
         const {
             waitForLast,
             waitForLastCount,
+            retainMessages = true,
             ...options
         } = {
             ...defaultOpts,
@@ -53,9 +55,22 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID,
         }
         const source = publishManyGenerator(maxMessages, options)
         const publishStream = client.publisher.publishFromMetadata(stream, source)
-        const streamMessages = await client.publisher.collectMessages(publishStream, maxMessages)
+        const streamMessages = []
+        let count = 0
+        for await (const streamMessage of publishStream) {
+            count += 1
+            if (!retainMessages) {
+                streamMessages.length = 0 // only keep last message
+            }
+            streamMessages.push(streamMessage)
+            if (count === maxMessages) {
+                break
+            }
+        }
         streamMessages.forEach((s) => s.getParsedContent())
-        if (!waitForLast) { return streamMessages }
+        if (!waitForLast) {
+            return streamMessages
+        }
 
         await getWaitForStorage(client, {
             count: waitForLastCount
@@ -65,22 +80,10 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID,
 }
 
 export function getPublishTestMessages(client: BrubeckClient, stream: SID, defaultOpts: PublishTestMessageOptions = {}) {
+    const publishTestStreamMessages = getPublishTestStreamMessages(client, stream, defaultOpts)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
-        const { waitForLast, waitForLastCount, ...options } = {
-            ...defaultOpts,
-            ...opts,
-        }
-        const source = publishManyGenerator(maxMessages, options)
-        const streamMessages = await client.publisher.collectMessages(client.publisher.publishFromMetadata(stream, source), maxMessages)
-        const msgs = streamMessages.map((s) => s.getParsedContent())
-
-        if (!waitForLast) { return msgs }
-
-        await getWaitForStorage(client, {
-            count: waitForLastCount
-        })(streamMessages[streamMessages.length - 1])
-
-        return msgs
+        const streamMessages = await publishTestStreamMessages(maxMessages, opts)
+        return streamMessages.map((s) => s.getParsedContent())
     }
 }
 

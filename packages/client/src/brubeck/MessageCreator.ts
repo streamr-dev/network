@@ -1,32 +1,31 @@
 import { inject, scoped, Lifecycle } from 'tsyringe'
-import { StreamMessage, SPID, SID, MessageContent, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
+import { StreamMessage, SPID, MessageContent, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from '../utils'
 
 import Signer from './Signer'
 // import Encrypt from './Encrypt'
 // import { GroupKey } from '../stream'
-import { getCachedMesssageChainer } from './MessageChainer'
-import StreamPartitioner from '../publish/StreamPartitioner'
+import { getCachedMesssageChain } from './MessageChain'
 import { Config, CacheConfig } from './Config'
-import { BrubeckCached } from './Cached'
 import Ethereum from './Ethereum'
+import StreamPartitioner from './StreamPartitioner'
 
 export type MessageCreateOptions<T extends MessageContent> = {
     content: T
-    timestamp: string | number | Date
-    partitionKey?: string | number
+    timestamp: number,
+    partitionKey: string | number
     msgChainId?: string
 }
 
 export interface IMessageCreator {
-    create: <T extends MessageContent>(sid: SID, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
+    create: <T extends MessageContent>(streamId: string, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
     stop: () => Promise<void> | void
 }
 
 export class StreamMessageCreatorAnonymous implements IMessageCreator {
     // eslint-disable-next-line class-methods-use-this
-    async create<T extends MessageContent>(_sid: SID, _options: MessageCreateOptions<T>): Promise<StreamMessage<T>> {
+    async create<T extends MessageContent>(_streamId: string, _options: MessageCreateOptions<T>): Promise<StreamMessage<T>> {
         throw new Error('Anonymous user can not publish.')
     }
 
@@ -36,10 +35,9 @@ export class StreamMessageCreatorAnonymous implements IMessageCreator {
 
 @scoped(Lifecycle.ContainerScoped)
 export default class StreamMessageCreator implements IMessageCreator {
-    computeStreamPartition
     // encrypt
     queue: ReturnType<typeof LimitAsyncFnByKey>
-    getMsgChainer
+    getMsgChain
 
     /*
      * Get function for creating stream messages.
@@ -48,49 +46,39 @@ export default class StreamMessageCreator implements IMessageCreator {
     constructor(
         private signer: Signer,
         private ethereum: Ethereum,
-        private streamEndpoints: BrubeckCached,
+        private streamPartitioner: StreamPartitioner,
         @inject(Config.Cache) private cacheOptions: CacheConfig,
     ) {
-        this.computeStreamPartition = StreamPartitioner(this.cacheOptions)
-        this.getMsgChainer = getCachedMesssageChainer(this.cacheOptions)
+        this.getMsgChain = getCachedMesssageChain(this.cacheOptions)
         // this.encrypt = Encrypt(client)
 
         // per-stream queue so messages processed in-order
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create<T extends MessageContent>(streamObjectOrId: SID, {
+    async create<T extends MessageContent>(streamId: string, {
         content,
         timestamp,
         partitionKey,
         msgChainId,
         ...opts
     }: MessageCreateOptions<T>): Promise<StreamMessageSigned<T> | StreamMessageEncrypted<T>> {
-        const spidObject = SPID.parse(streamObjectOrId)
-        const { streamId } = spidObject
         // streamId as queue key
         return this.queue(streamId, async () => {
             // load cached stream + publisher details
-            const [stream, publisherId] = await Promise.all([
-                this.streamEndpoints.getStream(streamId),
+            const [streamPartition, publisherId] = await Promise.all([
+                this.streamPartitioner.compute(streamId, partitionKey),
                 this.ethereum.getAddress(),
             ])
 
-            // figure out partition
-            const definedPartition = spidObject.streamPartition
-            if ((definedPartition !== undefined) && (partitionKey !== undefined)) {
-                throw new Error('Invalid combination of "partition" and "partitionKey"')
-            }
-            const streamPartition = definedPartition ?? this.computeStreamPartition(stream.partitions, partitionKey ?? 0)
             const spid = SPID.from({ streamId, streamPartition })
 
             // chain messages
-            const chain = this.getMsgChainer(spid, {
+            const chain = this.getMsgChain(spid, {
                 publisherId, msgChainId
             })
 
-            const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-            const [messageId, prevMsgRef] = chain.add(timestampAsNumber)
+            const [messageId, prevMsgRef] = chain.add(timestamp)
 
             const streamMessage: StreamMessage<T> = (content && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
                 // @ts-expect-error TODO: typing for stream message containers
@@ -132,9 +120,9 @@ export default class StreamMessageCreator implements IMessageCreator {
     */
 
     async stop() {
-        this.computeStreamPartition.clear()
+        this.streamPartitioner.clear()
         this.queue.clear()
-        this.getMsgChainer.clear()
+        this.getMsgChain.clear()
         // await this.encrypt.stop()
     }
 }

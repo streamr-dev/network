@@ -36,14 +36,20 @@ export default class BrubeckPublisher implements Context {
 
     async publishMessage<T extends MessageContent>(streamObjectOrId: SIDLike, {
         content,
-        timestamp = new Date(),
+        timestamp = Date.now(),
         partitionKey
     }: PublishMetadata<T>): Promise<StreamMessage<T>> {
         const sid = SPID.parse(streamObjectOrId)
-        const streamMessage = await this.messageCreator.create<T>(sid, {
+        const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
+
+        // figure out partition
+        if ((sid.streamPartition != null) && (partitionKey != null)) {
+            throw new Error('Invalid combination of "partition" and "partitionKey"')
+        }
+        const streamMessage = await this.messageCreator.create<T>(sid.streamId, {
             content,
-            timestamp,
-            partitionKey,
+            timestamp: timestampAsNumber,
+            partitionKey: sid.streamPartition != null ? sid.streamPartition : partitionKey || 0,
         })
 
         const node = await this.brubeckNode.getNode()
@@ -54,7 +60,7 @@ export default class BrubeckPublisher implements Context {
     async publish<T extends MessageContent>(
         streamObjectOrId: SIDLike,
         content: T,
-        timestamp?: string | number | Date,
+        timestamp: string | number | Date = Date.now(),
         partitionKey?: string | number
     ): Promise<StreamMessage<T>> {
         // wrap publish in error emitter

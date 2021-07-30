@@ -413,7 +413,35 @@ export class LeaksDetector {
     private counter = CounterId(testUtilsCounter(this.constructor.name))
 
     add(name: string, obj: any) {
+        if (!obj || typeof obj !== 'object') { return }
         this.leakDetectors.set(this.counter(name), new LeakDetector(obj))
+    }
+
+    addAll(id: string, obj: object, seen = new Set()) {
+        if (!obj || typeof obj !== 'object') { return }
+
+        if (seen.has(obj)) { return }
+        seen.add(obj)
+        this.add(id, obj)
+        if (Array.isArray(obj)) {
+            obj.forEach((value, key) => {
+                const childId = value.id || `${id}-${key}`
+                this.addAll(childId, value, seen)
+            })
+            return
+        }
+
+        Object.entries(obj).forEach(([key, value]) => {
+            if (!value || typeof value !== 'object') { return }
+
+            // skip tsyringe containers, root parent will never be gc'ed.
+            if (value.constructor && value.constructor.name === 'InternalDependencyContainer' && key === 'parent') {
+                return
+            }
+
+            const childId = value.id || `${id}-${key}`
+            this.addAll(childId, value, seen)
+        })
     }
 
     async getLeaks(): Promise<string[]> {
@@ -429,6 +457,13 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         if (leaks.length) {
             throw new Error(format('Leaking %d of %d items: %o', leaks.length, this.leakDetectors.size, leaks))
+        }
+    }
+
+    async checkNoLeaksFor(id: string) {
+        const leaks = await this.getLeaks()
+        if (leaks.includes(id)) {
+            throw new Error(format('Leaking %d of %d items, including id %s: %o', leaks.length, this.leakDetectors.size, id, leaks))
         }
     }
 
