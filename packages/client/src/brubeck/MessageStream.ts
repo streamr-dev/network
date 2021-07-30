@@ -1,7 +1,7 @@
 import { PushPipeline, PipelineTransform } from '../utils/Pipeline'
 import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
-import { StreamMessage, MessageContent } from 'streamr-client-protocol'
+import { StreamMessage } from 'streamr-client-protocol'
 
 /**
  * @category Important
@@ -11,7 +11,7 @@ import { StreamMessage, MessageContent } from 'streamr-client-protocol'
 export default class MessageStream<
     T,
     InType = StreamMessage<T>,
-    OutType extends StreamMessage | unknown = InType
+    OutType extends StreamMessage<T> | unknown = InType
 > extends PushPipeline<InType, OutType> {
 
     constructor(context: Context, { bufferSize, name = '' }: { bufferSize?: number, name?: string } = {}) {

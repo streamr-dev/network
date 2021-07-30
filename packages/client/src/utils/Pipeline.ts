@@ -124,10 +124,13 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     // AsyncGenerator implementation
 
     async throw(err: Error) {
+        // eslint-disable-next-line promise/no-promise-in-callback
+        await this.source.throw(err).catch(() => {})
         return this.iterator.throw(err)
     }
 
     async return(v?: OutType) {
+        await this.source.return(undefined)
         return this.iterator.return(v)
     }
 
