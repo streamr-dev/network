@@ -9,8 +9,8 @@ import { StreamMessage, MessageContent } from 'streamr-client-protocol'
  * Adds events & error handling
  */
 export default class MessageStream<
-    T extends MessageContent | unknown,
-    InType extends StreamMessage = StreamMessage<T>,
+    T,
+    InType = StreamMessage<T>,
     OutType extends StreamMessage | unknown = InType
 > extends PushPipeline<InType, OutType> {
 
