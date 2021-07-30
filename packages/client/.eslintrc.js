@@ -57,7 +57,10 @@ module.exports = {
             varsIgnorePattern: '^_',
         }],
         'no-redeclare': 'off',
-        '@typescript-eslint/no-redeclare': ['error']
+        '@typescript-eslint/no-redeclare': ['error'],
+        'no-useless-constructor': 'off',
+        '@typescript-eslint/no-useless-constructor': ['error'],
+        'no-empty-function': 'off',
     },
     settings: {
         'import/resolver': {
