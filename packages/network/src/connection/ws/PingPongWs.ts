@@ -1,8 +1,8 @@
 import { Logger } from "../../helpers/Logger"
 import { Rtts } from "../../identifiers"
-import { WsConnection } from "./WsConnection"
+import { AbstractWsConnection } from "./AbstractWsConnection"
 
-export type GetConnections = () => Array<WsConnection>
+export type GetConnections = () => Array<AbstractWsConnection>
 
 const logger = new Logger(module)
 
@@ -41,7 +41,8 @@ export class PingPongWs {
                     logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.getRtt())
                 } catch (e) {
                     logger.warn(`terminating connection because error thrown when attempting to ping %s: %s`,
-                        connection.getPeerId(), e)
+                        connection.getPeerId(), e
+                    )
                     connection.terminate()
                 }
             }

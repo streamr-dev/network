@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
-import { Location } from './identifiers'
+import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
 import { Tracker } from './logic/Tracker'
@@ -14,9 +14,11 @@ import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
-import { ClientWsEndpoint } from './connection/ws/ClientWsEndpoint'
+import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from "./connection/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from "./connection/NodeWebRtcConnection"
+
+require('setimmediate')
 
 export {
     Location,
@@ -46,7 +48,7 @@ export interface TrackerOptions extends AbstractNodeOptions {
 }
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
-    trackers: string[],
+    trackers: TrackerInfo[],
     disconnectionWaitTime?: number,
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,
@@ -101,7 +103,7 @@ export const createNetworkNode = ({
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
-    const endpoint = new ClientWsEndpoint(peerInfo, metricsContext, pingInterval)
+    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, pingInterval)
     const trackerNode = new TrackerNode(endpoint)
 
     const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
@@ -118,6 +120,7 @@ export const createNetworkNode = ({
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
     ))
+
     return new NetworkNode({
         peerInfo,
         trackers,

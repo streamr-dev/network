@@ -14,6 +14,7 @@ program
     .option('--id <id>', 'Ethereum address / node id', undefined)
     .option('--nodeName <nodeName>', 'Human readble name for node', undefined)
     .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:27777'])
+    .option('--trackerIds <trackersIds>', 'tracker Ids', (value) => value.split(','), ['tracker'])
     .option('--streamIds <streamIds>', 'streamId to publish',  (value) => value.split(','), ['stream-0'])
     .option('--metrics <metrics>', 'log metrics', false)
     .option('--intervalInMs <intervalInMs>', 'interval to publish in ms', '2000')
@@ -24,6 +25,13 @@ program
 const id = program.opts().id || 'PU'
 const name = program.opts().nodeName || id
 const logger = new Logger(module)
+
+const trackerInfos = program.opts().trackers.map((ws, i) => {
+    return {
+        id: program.opts().trackerIds[i],
+        ws
+    }
+})
 
 const noise = parseInt(program.opts().noise, 10)
 
@@ -43,7 +51,7 @@ const metricsContext = new MetricsContext(id)
 const publisher = createNetworkNode({
     name,
     id,
-    trackers: program.opts().trackers,
+    trackers: trackerInfos,
     metricsContext
 })
 logger.info('started publisher id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
@@ -64,7 +72,8 @@ setInterval(() => {
             prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
             content: {
                 msg,
-                noise: generateString(noise)
+                noise: generateString(noise),
+                sequenceNumber
             },
         })
         publisher.publish(streamMessage)

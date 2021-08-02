@@ -49,6 +49,7 @@
     "@types/debug": "^4.1.5",
     "debug": "^4.3.2",
     "ethers": "^5.1.4",
+    "events": "^3.3.0",
     "heap": "^0.2.6",
     "promise-memoize": "^1.2.1",
     "secp256k1": "^4.0.2",

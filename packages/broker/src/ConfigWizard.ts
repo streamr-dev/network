@@ -29,9 +29,11 @@ const DefaultConfig: Config = {
     generateSessionId: false,
     network: {
         name: 'miner-node',
-        trackers: [
-            "wss://testnet1.streamr.network:30300"
-        ],
+        trackers: [{
+            ws: "wss://testnet1.streamr.network:30300",
+            http: "https://testnet1.streamr.network:30300",
+            id: "0x49D45c17bCA1Caf692001D21c38aDECCB4c08504"
+        }],
         location: null
     },
     reporting: {

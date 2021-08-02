@@ -1,4 +1,4 @@
-import { ReadyState, WsConnection } from './WsConnection'
+import { ReadyState, AbstractWsConnection } from './AbstractWsConnection'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
 import { Logger } from '../../helpers/Logger'
@@ -8,7 +8,7 @@ import stream from 'stream'
 
 export const staticLogger = new Logger(module)
 
-export class ServerWsConnection extends WsConnection {
+export class ServerWsConnection extends AbstractWsConnection {
     private readonly socket: WebSocket
     private readonly duplexStream: stream.Duplex
     private readonly remoteAddress: string | undefined
@@ -49,12 +49,15 @@ export class ServerWsConnection extends WsConnection {
     }
 
     async send(message: string): Promise<void> {
-        // Error handling is needed here because otherwise this.duplexStream itself will throw an unhandled error
         const readyState = this.getReadyState()
         if (this.getReadyState() !== 1) {
             throw new Error(`cannot send, readyState is ${readyState}`)
         }
-        await util.promisify((cb: any) => this.duplexStream.write(message, cb))()
+        try {
+            await util.promisify((cb: any) => this.duplexStream.write(message, cb))()
+        } catch (err) {
+            return Promise.reject(err)
+        }
     }
 
     getRemoteAddress(): string | undefined {

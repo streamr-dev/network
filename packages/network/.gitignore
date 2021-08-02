@@ -11,3 +11,4 @@ bin/.idea
 
 .DS_Store
 docs
+.vscode

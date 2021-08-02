@@ -11,8 +11,8 @@ import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProto
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
-import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -32,11 +32,12 @@ describe('delivery of messages in protocol layer', () => {
             port: 28515,
             id: 'tracker'
         })
-
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
-        const wsEndpoint1 = new ClientWsEndpoint(peerInfo1)
-        const wsEndpoint2 = new ClientWsEndpoint(peerInfo2)
+        const trackerPeerInfo = PeerInfo.newTracker('tracker')
+        const trackerServerPeerInfo = PeerInfo.newTracker('trackerServer')
+        const wsEndpoint1 = new NodeClientWsEndpoint(peerInfo1)
+        const wsEndpoint2 = new NodeClientWsEndpoint(peerInfo2)
         const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'))
         trackerNode = new TrackerNode(wsEndpoint1)
         trackerNode2 = new TrackerNode(wsEndpoint2)
@@ -69,12 +70,12 @@ describe('delivery of messages in protocol layer', () => {
         trackerServer = new TrackerServer(wsEndpoint3)
 
         // Connect trackerNode <-> trackerServer
-        await trackerNode.connectToTracker(trackerServer.getUrl())
-        await trackerNode2.connectToTracker(trackerServer.getUrl())
+        await trackerNode.connectToTracker(trackerServer.getUrl(), trackerServerPeerInfo)
+        await trackerNode2.connectToTracker(trackerServer.getUrl(), trackerServerPeerInfo)
 
         // Connect trackerNode <-> Tracker
-        await trackerNode.connectToTracker(tracker.getUrl())
-        await trackerNode2.connectToTracker(tracker.getUrl())
+        await trackerNode.connectToTracker(tracker.getUrl(), trackerPeerInfo)
+        await trackerNode2.connectToTracker(tracker.getUrl(), trackerPeerInfo)
 
         // Connect nodeToNode1 <-> nodeToNode2
         nodeToNode1.connectToNode('node2', 'tracker')

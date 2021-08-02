@@ -21,25 +21,26 @@ describe('message propagation in network', () => {
             port: 33300,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         n1 = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
         n2 = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
         n3 = createNetworkNode({
             id: 'node-3',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
         n4 = createNetworkNode({
             id: 'node-4',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
 
