@@ -50,19 +50,38 @@ const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: st
     return Promise.allSettled(promises)
 }
 
-const promisifySubscribe = (
+
+
+const waitForMessage = (
+    stream: string,
     client: StreamrClient, 
-    opts: { resend?: ResendOptions | undefined } & ResendOptions & StreamPartDefinition
 ): Promise<Todo> => {
     return new Promise((resolve, reject) => {
         try {
-            client.subscribe(opts, (res: Todo) => {
+            client.subscribe({stream}, (res: Todo) => {
                 resolve(res)
             })
         } catch (e){
             reject(e)
         }
     })
+}
+
+const expectMetrics = (res:any) => {
+    expect(res.peerName).toEqual('storageNode')
+    expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
+    expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
+    expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+    expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
+    expect(res.network.avgLatencyMs).toBeGreaterThan(0)
+    expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
+    expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
+    expect(res.network.connections).toBeGreaterThanOrEqual(0)
+    expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
+    expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
+    expect(res.startTime).toBeGreaterThan(0)
+    expect(res.currentTime).toBeGreaterThan(0)
+    expect(res.timestamp).toBeGreaterThan(0)   
 }
 
 describe('per-node metrics', () => {
@@ -147,7 +166,7 @@ describe('per-node metrics', () => {
     }, 30 * 1000)
 
     it('should ensure the legacy metrics endpoint still works properly', async () => {
-        const res = await promisifySubscribe(client1, {stream: legacyStream.id})
+        const res = await waitForMessage(legacyStream.id, client1)
 
         expect(res.peerId).toEqual('storageNode')
         expect(res.startTime).toBeGreaterThan(0)
@@ -164,7 +183,9 @@ describe('per-node metrics', () => {
     })
 
     it('should retrieve the last `sec` metrics', async () => {
-        const res = await promisifySubscribe(client1, {stream: nodeAddress + '/streamr/node/metrics/sec'})
+        const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/sec', client1)
+        expectMetrics(res)
+        /*
         expect(res.peerName).toEqual('storageNode')
         expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
         expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
@@ -178,11 +199,11 @@ describe('per-node metrics', () => {
         expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
         expect(res.startTime).toBeGreaterThan(0)
         expect(res.currentTime).toBeGreaterThan(0)
-        expect(res.timestamp).toBeGreaterThan(0)   
+        expect(res.timestamp).toBeGreaterThan(0)   */
     })
 
     it('should retrieve the last `min` metrics', async () => {
-        const res = await promisifySubscribe(client1, { stream: nodeAddress + '/streamr/node/metrics/min'})
+        const res = await waitForMessage( nodeAddress + '/streamr/node/metrics/min', client1)
 
         expect(res.peerName).toEqual('storageNode')
         expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
@@ -202,7 +223,7 @@ describe('per-node metrics', () => {
     })
 
     it('should retrieve the last `hour` metrics', async () => {
-        const res = await promisifySubscribe(client1, { stream: nodeAddress + '/streamr/node/metrics/hour'})
+        const res = await waitForMessage( nodeAddress + '/streamr/node/metrics/hour', client1)
 
         expect(res.peerName).toEqual('storageNode')
         expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
@@ -222,7 +243,7 @@ describe('per-node metrics', () => {
     })
 
     it('should retrieve the last `day` metrics', async () => {
-        const res = await promisifySubscribe(client1, { stream: nodeAddress + '/streamr/node/metrics/day'})
+        const res = await waitForMessage( nodeAddress + '/streamr/node/metrics/day', client1)
 
         expect(res.peerName).toEqual('storageNode')
         expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
