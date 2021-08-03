@@ -1,7 +1,7 @@
 import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
+import { DisconnectionReason } from "./AbstractWsEndpoint"
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
 import { AbstractClientWsEndpoint, HandshakeValues, PeerId, ServerUrl } from "./AbstractClientWsEndpoint"
 
