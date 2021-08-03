@@ -86,9 +86,9 @@ describe('per-node metrics', () => {
     let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
+    let client2: StreamrClient
     let legacyStream: Stream
     let nodeAddress: string
-    let client2: StreamrClient
 
     beforeAll(async () => {
         const tmpAccount = Wallet.createRandom()

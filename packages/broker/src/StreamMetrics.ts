@@ -126,10 +126,15 @@ export class StreamMetrics {
                     this.report.network.bytesFromPeersPerSec = (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0
                     this.report.network.connections = metricsReport.metrics.WebRtcEndpoint.connections || 0
 
-                    const cassandraWrittenBytesPerMs = metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}
-                    this.report.storage.bytesWrittenPerSec = cassandraWrittenBytesPerMs.rate / 1000 || 0
-                    const cassandraReadBytesPerMs = metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}
-                    this.report.storage.bytesReadPerSec = cassandraReadBytesPerMs.rate / 1000 || 0
+                    if (metricsReport.metrics['broker/cassandra'].writtenBytes && (metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}).rate){
+                        const cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}).rate || 0
+                        this.report.storage.bytesWrittenPerSec = cassandraWrittenBytesPerMs / 1000
+                    }
+                    
+                    if (metricsReport.metrics['broker/cassandra'].readBytes && (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}).rate){
+                        const cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}).rate || 0
+                        this.report.storage.bytesWrittenPerSec = cassandraReadBytesPerMs / 1000
+                    }
                     
                     this.report.startTime = metricsReport.startTime
                     this.report.currentTime = metricsReport.currentTime
@@ -142,12 +147,15 @@ export class StreamMetrics {
                     this.report.network.bytesFromPeersPerSec = throttledAvg(this.report.network.bytesFromPeersPerSec, (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0)
                     this.report.network.connections = throttledAvg(this.report.network.connections, (metricsReport.metrics.WebRtcEndpoint.connections as any).rate || 0)
 
-                    const cassandraWrittenBytesPerMs = metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}
-                    const cassandraReadBytesPerMs = metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}
-
-                    this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, cassandraWrittenBytesPerMs.rate / 1000 || 0)
-                    this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, cassandraReadBytesPerMs.rate / 1000 || 0)
-
+                    if (metricsReport.metrics['broker/cassandra'].writtenBytes && (metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}).rate){
+                        const cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}).rate || 0
+                        this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, cassandraWrittenBytesPerMs / 1000)
+                    }
+                    
+                    if (metricsReport.metrics['broker/cassandra'].readBytes && (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}).rate){
+                        const cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}).rate || 0
+                        this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, cassandraReadBytesPerMs / 1000)
+                    }
                     this.report.currentTime = metricsReport.currentTime
                     this.report.timestamp = metricsReport.currentTime
                 }
