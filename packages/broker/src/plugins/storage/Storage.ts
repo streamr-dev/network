@@ -99,6 +99,10 @@ export class Storage extends EventEmitter {
 
         logger.trace('requestLast %o', { streamId, partition, limit })
 
+        // original line and query:
+        // const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data WHERE '
+        // Temporary query until the causing issue for this PR is fixed:
+        // https://github.com/streamr-dev/network-monorepo/pull/128
         const GET_LAST_N_MESSAGES = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? '
             + 'ORDER BY ts DESC, sequence_no DESC '
@@ -247,6 +251,10 @@ export class Storage extends EventEmitter {
     private fetchFromTimestamp(streamId: string, partition: number, fromTimestamp: number) {
         const resultStream = this.createResultStream()
 
+        // original line and query:
+        // const query = 'SELECT payload FROM stream_data WHERE '
+        // Temporary query until the causing issue for this PR is fixed:
+        // https://github.com/streamr-dev/network-monorepo/pull/128
         const query = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
 
@@ -335,6 +343,10 @@ export class Storage extends EventEmitter {
     private fetchBetweenTimestamps(streamId: string, partition: number, fromTimestamp: number, toTimestamp: number) {
         const resultStream = this.createResultStream()
 
+        // original line and query:
+        // const query = 'SELECT payload FROM stream_data WHERE '
+        // Temporary query until the causing issue for this PR is fixed:
+        // https://github.com/streamr-dev/network-monorepo/pull/128
         const query = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
 
@@ -443,21 +455,28 @@ export class Storage extends EventEmitter {
     }
 
     private async parseRow(row: Todo) {
-        if (!row.payload){
+        if (row.payload === null){
             // generate a placeholder message that can pass validation
             const payload = JSON.stringify(new Protocol.MessageLayer.StreamMessage({
-                messageId: new Protocol.MessageLayer.MessageIDStrict(row.stream_id, 0, Date.now(), 10, 'publisherId', 'msgChainId'),
+                messageId: new Protocol.MessageLayer.MessageIDStrict(
+                    row.stream_id, //streamId
+                    row.partition, // streamPartition
+                    Date.now(), // timestamp
+                    0, // sequenceNo, 
+                    'publisherId',  // publisherId
+                    'msgChainId'    // msgChainId
+                ),
                 prevMsgRef: new Protocol.MessageLayer.MessageRef(0, 5),
                 content: JSON.stringify(row),
-                messageType: 27,
+                messageType: Protocol.MessageLayer.StreamMessageType.MESSAGE,
                 encryptionType: Protocol.MessageLayer.StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'signature',
             }))
-
+            // serialize the payload for v30
             row.payload = JSON.stringify([
                 30,
-                [row.stream_id, 0, Date.now(), 10, 'publisherId', 'msgChainId'],
+                [row.stream_id, 0, Date.now(), 0, 'publisherId', 'msgChainId'],
                 [0, 5],
                 Protocol.MessageLayer.StreamMessage.MESSAGE_TYPES.MESSAGE,
                 JSON.stringify(payload),
@@ -512,8 +531,8 @@ export class Storage extends EventEmitter {
         }
 
         const bucketId = buckets.rows[0].id
-
-        const query = 'SELECT ts, stream_id, partition, bucket_id FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts ASC LIMIT 1'
+        
+        const query = 'SELECT ts FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts ASC LIMIT 1'
 
         const streams = await this.cassandraClient.execute(query, [
             streamId,
