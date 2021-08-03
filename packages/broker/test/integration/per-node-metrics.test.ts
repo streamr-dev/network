@@ -67,19 +67,19 @@ const waitForMessage = (
 
 const expectMetrics = (res: Todo) => {
     expect(res.peerName).toEqual('storageNode')
-    expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
-    expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
+    expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
+    expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
     expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
     expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.network.avgLatencyMs).toBeGreaterThan(0)
+    expect(res.network.avgLatencyMs).toBeGreaterThanOrEqual(0)
     expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
     expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
     expect(res.network.connections).toBeGreaterThanOrEqual(0)
-    expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
-    expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
-    expect(res.startTime).toBeGreaterThan(0)
-    expect(res.currentTime).toBeGreaterThan(0)
-    expect(res.timestamp).toBeGreaterThan(0)   
+    expect(res.storage.bytesWrittenPerSec).toBeGreaterThanOrEqual(0)
+    expect(res.storage.bytesReadPerSec).toBeGreaterThanOrEqual(0)
+    expect(res.startTime).toBeGreaterThanOrEqual(0)
+    expect(res.currentTime).toBeGreaterThanOrEqual(0)
+    expect(res.timestamp).toBeGreaterThanOrEqual(0)   
 }
 
 describe('per-node metrics', () => {
