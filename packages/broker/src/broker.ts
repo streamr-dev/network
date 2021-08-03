@@ -54,7 +54,7 @@ const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[
 }
 
 const getStunTurnUrls = (config: Config) => {
-    if (!config.network.stun && config.network.turn) {
+    if (!config.network.stun && !config.network.turn) {
         return undefined
     }
     const urls = []
