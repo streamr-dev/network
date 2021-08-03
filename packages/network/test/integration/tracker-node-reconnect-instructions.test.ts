@@ -1,9 +1,9 @@
 import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
-import { waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { StreamIdAndPartition } from "../../src/identifiers"
@@ -23,27 +23,27 @@ describe('Check tracker instructions to node', () => {
             port: 30950,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
-        nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30952,
+        nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
-        nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30953,
+        nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
 
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
 
-        nodeOne.start()
-        nodeTwo.start()
+        await Promise.all([
+            nodeOne.start(),
+            nodeTwo.start()
+        ])
+        
     })
 
     afterAll(async () => {
@@ -69,28 +69,31 @@ describe('Check tracker instructions to node', () => {
             waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
             waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
         ])
+
         const streamIdAndPartition = new StreamIdAndPartition(streamId, 0)
 
         // @ts-expect-error private field
         expect(nodeOne.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(1)
         // @ts-expect-error private field
         expect(nodeTwo.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(1)
-
-        // send empty list
-        // @ts-expect-error private field
-        await tracker.trackerServer.endpoint.send(
-            'node-1',
-            new TrackerLayer.InstructionMessage({
-                requestId: 'requestId',
-                streamId,
-                streamPartition: 0,
-                nodeIds: [],
-                counter: 3
-            }).serialize()
-        )
-        await Promise.all([
-            waitForEvent(nodeOne, NodeEvent.NODE_UNSUBSCRIBED),
-            waitForEvent(nodeTwo, NodeEvent.NODE_DISCONNECTED)
+        
+        // send empty list and wait for expected events
+        await runAndWaitForEvents([
+            () => {
+                // @ts-expect-error private field
+                tracker.trackerServer.endpoint.send(
+                    'node-1',
+                    new TrackerLayer.InstructionMessage({
+                        requestId: 'requestId',
+                        streamId,
+                        streamPartition: 0,
+                        nodeIds: [],
+                        counter: 3
+                    }).serialize()
+                )
+            }], [
+            [nodeOne, NodeEvent.NODE_UNSUBSCRIBED],
+            [nodeTwo, NodeEvent.NODE_DISCONNECTED]
         ])
 
         // @ts-expect-error private field

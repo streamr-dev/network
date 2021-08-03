@@ -22,7 +22,7 @@ export class Logger {
     private readonly logger: pino.Logger
 
     constructor(module: NodeJS.Module, context?: string, destinationStream?: { write(msg: string): void }) {
-        const options = {
+        const options: pino.LoggerOptions = {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
             level: process.env.LOG_LEVEL || 'info',
@@ -37,7 +37,8 @@ export class Logger {
     }
 
     private static createName(module: NodeJS.Module, context?: string) {
-        const parsedPath = path.parse(module.filename)
+    
+        const parsedPath = path.parse(module.id)
         let fileId = parsedPath.name
         if (fileId === 'index') {
             // file with name "foobar/index.ts" -> "foobar"
@@ -54,7 +55,15 @@ export class Logger {
     }
 
     error(msg: string, ...args: any[]): void {
-        const errorInstance = args.find((arg) => (arg instanceof Error))
+        const errorInstance = args.find((arg) => (arg.constructor.name === 'Error'
+            || arg.constructor.name === 'AggregateError'
+            || arg.constructor.name === 'EvalError'
+            || arg.constructor.name === 'RangeError' 
+            || arg.constructor.name === 'ReferenceError'
+            || arg.constructor.name === 'SyntaxError'
+            || arg.constructor.name === 'TypeError' 
+            || arg.constructor.name === 'URIError'
+        ))
         if (errorInstance !== undefined) {
             this.logger.error({ err: errorInstance }, msg, ...args)
         } else {

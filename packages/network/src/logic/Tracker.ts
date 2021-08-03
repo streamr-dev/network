@@ -125,8 +125,9 @@ export class Tracker extends EventEmitter {
         return this.trackerServer.stop()
     }
 
-    getAddress(): string {
-        return this.trackerServer.getAddress()
+    // Utility method for tests
+    getUrl(): string {
+        return this.trackerServer.getUrl()
     }
 
     private createNewOverlayTopologies(streams: StatusStreams) {

@@ -1,5 +1,5 @@
 import http from 'http'
-import { startTracker, startNetworkNode, Tracker, NetworkNode } from 'streamr-network'
+import { startTracker, createNetworkNode, Tracker, NetworkNode } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
@@ -8,8 +8,6 @@ import { Broker } from "../../../../src/broker"
 
 const httpPort1 = 12371
 const wsPort1 = 12372
-const networkPort1 = 12373
-const networkPort2 = 12374
 const trackerPort = 12375
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
@@ -42,23 +40,21 @@ describe('DataMetadataEndpoints', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        publisherNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: networkPort1,
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        publisherNode = createNetworkNode({
             id: 'publisherNode',
-            trackers: [tracker.getAddress()]
+            trackers: [trackerInfo]
         })
         publisherNode.start()
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort2,
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [tracker.getAddress()]
+            trackers: [trackerInfo]
         })
         client1 = createClient(wsPort1)
         assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
@@ -69,7 +65,7 @@ describe('DataMetadataEndpoints', () => {
         await tracker.stop()
         await client1.ensureDisconnected()
         await publisherNode.stop()
-        await storageNode.close()
+        await storageNode.stop()
         await assignmentEventManager.close()
     })
 

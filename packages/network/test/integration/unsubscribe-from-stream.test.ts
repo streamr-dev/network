@@ -4,7 +4,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
 const { StreamMessage, MessageID } = MessageLayer
@@ -20,18 +20,16 @@ describe('node unsubscribing from a stream', () => {
             port: 30450,
             id: 'tracker'
         })
-        nodeA = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30451,
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+
+        nodeA = createNetworkNode({
             id: 'a',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
-        nodeB = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30452,
+        nodeB = createNetworkNode({
             id: 'b',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
 

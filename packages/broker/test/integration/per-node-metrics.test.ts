@@ -1,9 +1,9 @@
-import StreamrClient, { ResendOptions, Stream, StreamOperation, StreamPartDefinition } from 'streamr-client'
+import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import {startTracker, Tracker} from 'streamr-network'
-import { Todo } from '../types'
 import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from '../utils'
 import { Wallet } from 'ethers'
 import { Broker } from '../broker'
+import { Todo } from '../types'
 
 const httpPort = 47741
 const wsPort = 47742
@@ -50,8 +50,6 @@ const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: st
     return Promise.allSettled(promises)
 }
 
-
-
 const waitForMessage = (
     stream: string,
     client: StreamrClient, 
@@ -67,7 +65,7 @@ const waitForMessage = (
     })
 }
 
-const expectMetrics = (res:any) => {
+const expectMetrics = (res: Todo) => {
     expect(res.peerName).toEqual('storageNode')
     expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
     expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
@@ -113,7 +111,7 @@ describe('per-node metrics', () => {
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
-            id: 'tracker'
+            id: 'tracker-1'
         })
 
         storageNode = await startBroker({
@@ -159,7 +157,7 @@ describe('per-node metrics', () => {
     afterAll(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            storageNode.close(),
+            storageNode.stop(),
             client1.ensureDisconnected(),
             client2.ensureDisconnected()
         ])
@@ -185,80 +183,20 @@ describe('per-node metrics', () => {
     it('should retrieve the last `sec` metrics', async () => {
         const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/sec', client1)
         expectMetrics(res)
-        /*
-        expect(res.peerName).toEqual('storageNode')
-        expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
-        expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
-        expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.avgLatencyMs).toBeGreaterThan(0)
-        expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.connections).toBeGreaterThanOrEqual(0)
-        expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
-        expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
-        expect(res.startTime).toBeGreaterThan(0)
-        expect(res.currentTime).toBeGreaterThan(0)
-        expect(res.timestamp).toBeGreaterThan(0)   */
     })
 
     it('should retrieve the last `min` metrics', async () => {
-        const res = await waitForMessage( nodeAddress + '/streamr/node/metrics/min', client1)
-
-        expect(res.peerName).toEqual('storageNode')
-        expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
-        expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
-        expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.avgLatencyMs).toBeGreaterThan(0)
-        expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.connections).toBeGreaterThanOrEqual(0)
-        expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
-        expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
-        expect(res.startTime).toBeGreaterThanOrEqual(0)
-        expect(res.currentTime).toBeGreaterThanOrEqual(0)
-        expect(res.timestamp).toBeGreaterThanOrEqual(0)
-            
+        const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/min', client1)
+        expectMetrics(res)
     })
 
     it('should retrieve the last `hour` metrics', async () => {
-        const res = await waitForMessage( nodeAddress + '/streamr/node/metrics/hour', client1)
-
-        expect(res.peerName).toEqual('storageNode')
-        expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
-        expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
-        expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.avgLatencyMs).toBeGreaterThan(0)
-        expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.connections).toBeGreaterThanOrEqual(0)
-        expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
-        expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
-        expect(res.startTime).toBeGreaterThanOrEqual(0)
-        expect(res.currentTime).toBeGreaterThanOrEqual(0)
-        expect(res.timestamp).toBeGreaterThanOrEqual(0)
-            
+        const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/hour', client1)
+        expectMetrics(res)
     })
 
     it('should retrieve the last `day` metrics', async () => {
-        const res = await waitForMessage( nodeAddress + '/streamr/node/metrics/day', client1)
-
-        expect(res.peerName).toEqual('storageNode')
-        expect(res.broker.messagesToNetworkPerSec).toBeGreaterThan(0)
-        expect(res.broker.bytesToNetworkPerSec).toBeGreaterThan(0)
-        expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.avgLatencyMs).toBeGreaterThan(0)
-        expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-        expect(res.network.connections).toBeGreaterThanOrEqual(0)
-        expect(res.storage.bytesWrittenPerSec).toBeGreaterThan(0)
-        expect(res.storage.bytesReadPerSec).toBeGreaterThan(0)
-        expect(res.startTime).toBeGreaterThanOrEqual(0)
-        expect(res.currentTime).toBeGreaterThanOrEqual(0)
-        expect(res.timestamp).toBeGreaterThanOrEqual(0)
-            
+        const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/day', client1)
+        expectMetrics(res)
     })
 })

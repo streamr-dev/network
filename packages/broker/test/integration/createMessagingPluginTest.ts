@@ -15,7 +15,6 @@ interface Ports {
     plugin: number,
     legacyWebsocket: number
     tracker: number
-    network: number
 }
 
 const MOCK_MESSAGE = { 
@@ -58,14 +57,13 @@ export const createMessagingPluginTest = <T>(
 
         beforeAll(async () => {
             tracker = await startTracker({
-                id: 'tracker',
+                id: 'tracker-1',
                 host: '127.0.0.1',
                 port: ports.tracker,
             })
             broker = await startBroker({
                 name: 'broker',
                 privateKey: brokerUser.privateKey,
-                networkPort: ports.network,
                 trackerPort: ports.tracker,
                 wsPort: ports.legacyWebsocket,
                 apiAuthentication: {
@@ -83,7 +81,7 @@ export const createMessagingPluginTest = <T>(
 
         afterAll(async () => {
             await Promise.allSettled([
-                broker.close(),
+                broker.stop(),
                 tracker.stop()
             ])
         })

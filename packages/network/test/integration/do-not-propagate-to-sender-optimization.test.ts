@@ -3,7 +3,7 @@ import { Tracker } from '../../src/logic/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -23,28 +23,23 @@ describe('optimization: do not propagate to sender', () => {
             port: 30410,
             id: 'tracker'
         })
-        n1 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30411,
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        n1 = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()]
+            trackers: [trackerInfo]
         })
-        n2 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30412,
+        n2 = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()]
+            trackers: [trackerInfo]
         })
-        n3 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30413,
+        n3 = createNetworkNode({
             id: 'node-3',
-            trackers: [tracker.getAddress()]
+            trackers: [trackerInfo]
         })
 
-        n1.start()
-        n2.start()
-        n3.start()
+        await n1.start()
+        await n2.start()
+        await n3.start()
 
         // Become subscribers (one-by-one, for well connected graph)
         n1.subscribe('stream-id', 0)

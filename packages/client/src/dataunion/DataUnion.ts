@@ -1,8 +1,9 @@
 import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
-import { arrayify, hexZeroPad } from '@ethersproject/bytes'
+import { arrayify, hexZeroPad, BytesLike } from '@ethersproject/bytes'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
+import { AddressZero } from '@ethersproject/constants'
 import type { Overrides as EthersOptions } from '@ethersproject/contracts'
 import type { Signer } from '@ethersproject/abstract-signer'
 
@@ -12,7 +13,7 @@ import { Debug } from '../utils/log'
 import { getEndpointUrl, sleep, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
-import { Contracts } from './Contracts'
+import Contracts from './Contracts'
 import { erc20AllowanceAbi } from './abi'
 
 export interface DataUnionDeployOptions {
@@ -157,6 +158,15 @@ export class DataUnion {
         return response
     }
 
+    /**
+     * Voluntarily leave the Data Union
+     * @returns side-chain transaction receipt
+     */
+    async part(): Promise<ContractReceipt> {
+        const memberAddress = await this.client.getAddress()
+        return this.removeMembers([memberAddress])
+    }
+
     async isMember(memberAddress: EthereumAddress): Promise<boolean> {
         const address = getAddress(memberAddress)
         const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
@@ -275,6 +285,14 @@ export class DataUnion {
         if (memberData[0] === '0') { throw new Error(`${address} is not a member in Data Union (sidechain address ${duSidechain.address})`) }
         const withdrawn = memberData[3]
         return this._createWithdrawSignature(amountTokenWei, to, withdrawn, signer)
+    }
+
+    async signSetBinanceRecipient(
+        recipientAddress: EthereumAddress,
+    ): Promise<string> {
+        const to = getAddress(recipientAddress) // throws if bad address
+        const signer = this.client.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
+        return DataUnion._createSetBinanceRecipientSignature(to, signer, this.getContracts()) // eslint-disable-line no-underscore-dangle
     }
 
     /** @internal */
@@ -409,9 +427,7 @@ export class DataUnion {
     /**
      * Add given Ethereum addresses as data union members
      */
-    async addMembers(
-        memberAddressList: EthereumAddress[],
-    ) {
+    async addMembers(memberAddressList: EthereumAddress[]): Promise<ContractReceipt> {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.addMembers(members)
@@ -422,9 +438,7 @@ export class DataUnion {
     /**
      * Remove given members from data union
      */
-    async removeMembers(
-        memberAddressList: EthereumAddress[],
-    ) {
+    async removeMembers(memberAddressList: EthereumAddress[]): Promise<ContractReceipt> {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.partMembers(members)
@@ -451,6 +465,13 @@ export class DataUnion {
             address,
             options
         )
+    }
+    async withdrawAllToBinance(options?: DataUnionWithdrawOptions) {
+        return this.withdrawAllToMember(this.client.options.binanceAdapterAddress, options)
+    }
+
+    async signWithdrawAllToBinance() {
+        return this.signWithdrawAllTo(this.client.options.binanceAdapterAddress)
     }
 
     /**
@@ -667,19 +688,63 @@ export class DataUnion {
         return new DataUnion(contract.address, contract.sidechain.address, client)
     }
 
+    /** @internal */
+    static async _createSetBinanceRecipientSignature(
+        to: EthereumAddress,
+        signer: Signer,
+        ethereumUtils: Contracts, // TODO: rename Contracts class to EthereumUtils or something "descriptive"/non-confusing like that (see ETH-101)
+    ) {
+        const binanceAdapter: Contract = ethereumUtils.getBinanceAdapterReadOnly()
+        const senderAddress = await signer.getAddress()
+        const currentNonce: BigNumber = (await binanceAdapter.binanceRecipient(senderAddress))[1]
+        const nextNonce = currentNonce.add(1)
+        const message = to
+            + hexZeroPad(nextNonce.toHexString(), 32).slice(2)
+            + binanceAdapter.address.slice(2)
+        const signature = await signer.signMessage(arrayify(message))
+        return signature
+    }
+
+    /** @internal */
+    static async _getBinanceDepositAddress(userAddress: string, client: StreamrClient) {
+        const contracts = new Contracts(client)
+        const adapter = contracts.getBinanceAdapterReadOnly()
+        const recip = (await adapter.binanceRecipient(userAddress))[0]
+        if (recip === AddressZero) {
+            return undefined
+        }
+        return recip
+    }
+
+    /** @internal */
+    static async _setBinanceDepositAddress(binanceRecipient: EthereumAddress, client: StreamrClient) {
+        const contracts = new Contracts(client)
+        const adapter = await contracts.getBinanceAdapter()
+        const tx = await adapter.setBinanceRecipient(binanceRecipient)
+        return tx.wait()
+    }
+
+    /** @internal */
+    static async _setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike, client: StreamrClient) {
+        const contracts = new Contracts(client)
+        const adapter = await contracts.getBinanceAdapter()
+        const tx = await adapter.setBinanceRecipientFromSig(from, binanceRecipient, signature)
+        return tx.wait()
+    }
+
     // Internal functions
 
     /** @internal */
     static _fromContractAddress(contractAddress: string, client: StreamrClient) {
         const contracts = new Contracts(client)
-        const sidechainAddress = contracts.getDataUnionSidechainAddress(getAddress(contractAddress)) // throws if bad address
+        const sidechainAddress = contracts.getDataUnionSidechainAddress(contractAddress) // throws if bad address
         return new DataUnion(contractAddress, sidechainAddress, client)
     }
 
     /** @internal */
     static _fromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}, client: StreamrClient) {
         const contracts = new Contracts(client)
-        const contractAddress = contracts.getDataUnionMainnetAddress(dataUnionName, getAddress(deployerAddress)) // throws if bad address
+        const contractAddress = contracts.getDataUnionMainnetAddress(dataUnionName, deployerAddress) // throws if bad address
         return DataUnion._fromContractAddress(contractAddress, client) // eslint-disable-line no-underscore-dangle
     }
 

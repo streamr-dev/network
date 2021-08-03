@@ -4,8 +4,14 @@ describe('metrics', () => {
     let context: MetricsContext
 
     beforeEach(() => {
-        jest.useFakeTimers('modern').setSystemTime(100)
+        jest.useFakeTimers('modern')
+        jest.setSystemTime(100)
         context = new MetricsContext('peerId')
+    })
+
+    afterEach(() => {
+        jest.runOnlyPendingTimers()
+        jest.useRealTimers()
     })
 
     it('empty report', async () => {
@@ -178,7 +184,7 @@ describe('metrics', () => {
             },
         })
 
-        jest.advanceTimersByTime(1000 * 2)
+        jest.advanceTimersByTime(100 * 2)
 
         const metricTwo = context.create('metricTwo')
             .addRecordedMetric('a')
@@ -192,7 +198,7 @@ describe('metrics', () => {
                 a: 10,
                 b: 666,
                 c: {
-                    rate: 40,
+                    rate: 100,
                     last: 100,
                     total: 100
                 }
@@ -219,14 +225,14 @@ describe('metrics', () => {
                 a: 15,
                 b: 666,
                 c: {
-                    rate: 41.6,
+                    rate: 308,
                     last: 208,
                     total: 308
                 }
             },
             metricTwo: {
                 a: {
-                    rate: 14,
+                    rate: 49,
                     last: 39,
                     total: 49
                 },

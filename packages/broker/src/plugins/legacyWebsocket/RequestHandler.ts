@@ -67,7 +67,7 @@ export class RequestHandler {
     }
 
     handleRequest(connection: Connection, request: Protocol.ControlLayer.ControlMessage): Promise<any> {
-        logger.info(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
+        logger.debug(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
         switch (request.type) {
             case ControlLayer.ControlMessage.TYPES.SubscribeRequest:
                 return this.subscribe(connection, request as SubscribeRequest)
@@ -248,7 +248,7 @@ export class RequestHandler {
             connection.addStream(stream)
             logger.trace(
                 'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
-                connection.id, connection.streamsAsString()
+                connection.id, connection.getStreamsAsString()
             )
             connection.send(new ControlLayer.SubscribeResponse({
                 version: request.version,
@@ -300,7 +300,7 @@ export class RequestHandler {
 
             logger.trace(
                 'handleUnsubscribeRequest: socket "%s" is still subscribed to streams "%o"',
-                connection.id, connection.streamsAsString()
+                connection.id, connection.getStreamsAsString()
             )
 
             // Unsubscribe from stream if no connections left

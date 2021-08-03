@@ -2,15 +2,15 @@ import { AsyncMqttClient } from 'async-mqtt'
 import net from 'net'
 import { startTracker } from 'streamr-network'
 import { Todo } from '../../../../src/types'
+import { Broker } from '../../../broker'
 import { startBroker, createMqttClient } from '../../../utils'
 
 const trackerPort = 12411
-const networkPort = 12412
 const mqttPort = 12413
 
 describe('MQTT error handling', () => {
     let tracker: Todo
-    let broker: Todo
+    let broker: Broker
     let socket: Todo
     let newSocket: Todo
     let mqttClient: AsyncMqttClient
@@ -19,7 +19,6 @@ describe('MQTT error handling', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey: '0x4e850f1940b1901ca926f20e121f40ba6f6730eaae655d827f48eccf01e32f40',
-            networkPort,
             trackerPort,
             legacyMqttPort: mqttPort,
             streamrUrl: broken ? 'http://non-existing-url-666' : undefined
@@ -47,7 +46,7 @@ describe('MQTT error handling', () => {
             mqttClient.end(true)
         }
 
-        await broker.close()
+        await broker.stop()
         await tracker.stop()
     })
 

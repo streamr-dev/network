@@ -4,7 +4,7 @@ import assert from 'assert'
 
 import { wait } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 
 function areEqual(a: any, b: any) {
@@ -23,7 +23,6 @@ describe('check network stabilization', () => {
     let tracker: Tracker
     let nodes: NetworkNode[]
     const MAX_NODES = 10
-    const startingPort = 39001
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -31,15 +30,14 @@ describe('check network stabilization', () => {
             port: 39000,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const node = await startNetworkNode({
-                host: '127.0.0.1',
-                port: startingPort + i,
+            const node = createNetworkNode({
                 id: `node-${i}`,
-                trackers: [tracker.getAddress()]
+                trackers: [trackerInfo]
             })
             node.subscribe('stream', 0)
             nodes.push(node)

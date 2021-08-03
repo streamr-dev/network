@@ -1,13 +1,14 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { waitForEvent } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRTC multisignaller test', () => {
     let tracker1: Tracker
@@ -29,27 +30,39 @@ describe('WebRTC multisignaller test', () => {
             id: 'tracker2'
         })
 
-        const ep1 = await startEndpoint('127.0.0.1', 28717, PeerInfo.newNode('node-1'), null, new MetricsContext(''))
-        const ep2 = await startEndpoint('127.0.0.1', 28718, PeerInfo.newNode('node-2'), null, new MetricsContext(''))
+        const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'), new MetricsContext(''))
+        const ep2 = new NodeClientWsEndpoint(PeerInfo.newNode('node-2'), new MetricsContext(''))
 
         trackerNode1 = new TrackerNode(ep1)
         trackerNode2 = new TrackerNode(ep2)
 
-        trackerNode1.connectToTracker(tracker1.getAddress())
+        trackerNode1.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker('tracker1'))
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker1.getAddress())
+        trackerNode2.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker('tracker1'))
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode1.connectToTracker(tracker2.getAddress())
+        trackerNode1.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker('tracker2'))
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker2.getAddress())
+        trackerNode2.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker('tracker2'))
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
-        endpoint1 = new WebRtcEndpoint(peerInfo1, ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo1, trackerNode1), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo1))
-        endpoint2 = new WebRtcEndpoint(peerInfo2, ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo2, trackerNode2), new MetricsContext(''), new NegotiatedProtocolVersions(peerInfo2))
+        endpoint1 = new WebRtcEndpoint(
+            peerInfo1,
+            ['stun:stun.l.google.com:19302'],
+            new RtcSignaller(peerInfo1, trackerNode1),
+            new MetricsContext(''),
+            new NegotiatedProtocolVersions(peerInfo1),
+            NodeWebRtcConnectionFactory
+        )
+        endpoint2 = new WebRtcEndpoint(
+            peerInfo2,
+            ['stun:stun.l.google.com:19302'],
+            new RtcSignaller(peerInfo2, trackerNode2),
+            new MetricsContext(''),
+            new NegotiatedProtocolVersions(peerInfo2),
+            NodeWebRtcConnectionFactory
+        )
     })
 
     afterEach(async () => {

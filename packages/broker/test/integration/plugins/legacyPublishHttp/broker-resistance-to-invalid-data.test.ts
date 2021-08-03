@@ -4,7 +4,6 @@ import { Broker } from '../../../broker'
 import { startBroker, createClient, createTestStream } from '../../../utils'
 
 const trackerPort = 12420
-const networkPort = 12421
 const httpPort = 12422
 
 describe('broker resistance to invalid data', () => {
@@ -22,7 +21,6 @@ describe('broker resistance to invalid data', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey: '0xbc19ba842352248cb9132cc212f35d2f947dd66a0fda1e19021f9231e069c12d',
-            networkPort,
             trackerPort,
             httpPort
         })
@@ -36,7 +34,7 @@ describe('broker resistance to invalid data', () => {
     })
 
     afterEach(async () => {
-        await broker.close()
+        await broker.stop()
         await tracker.stop()
     })
 

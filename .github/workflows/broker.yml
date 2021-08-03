@@ -83,7 +83,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "core-api cassandra nginx"
+          services-to-start: "core-api cassandra nginx parity-sidechain-node0"
       - run: npm run test-integration
         env:
           CI: true
@@ -124,7 +124,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "broker-node-no-storage-1 parity-node0"
+          services-to-start: "broker-node-no-storage-1 parity-node0 parity-sidechain-node0"
       - run: |
           for (( i=0; i < 5; i=i+1 )); do
               curl -s http://localhost:8791/api/v1/volume;

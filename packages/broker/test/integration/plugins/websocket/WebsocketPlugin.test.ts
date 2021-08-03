@@ -7,7 +7,6 @@ import { Queue } from '../../../utils'
 const WEBSOCKET_PORT = 12400
 const LEGACY_WEBSOCKET_PORT = 12401
 const TRACKER_PORT = 12402
-const NETWORK_PORT = 12403
 
 createMessagingPluginTest('websocket', 
     {
@@ -29,8 +28,7 @@ createMessagingPluginTest('websocket',
     {
         plugin: WEBSOCKET_PORT,
         legacyWebsocket: LEGACY_WEBSOCKET_PORT,
-        tracker: TRACKER_PORT,
-        network: NETWORK_PORT
+        tracker: TRACKER_PORT
     },
     module,
     {

@@ -3,7 +3,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
@@ -31,7 +31,7 @@ describe('multi trackers', () => {
     let nodeOne: NetworkNode
     let nodeTwo: NetworkNode
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         trackerOne = await startTracker({
             host: '127.0.0.1',
             port: 49000,
@@ -47,16 +47,16 @@ describe('multi trackers', () => {
             port: 49002,
             id: 'trackerThree'
         })
-        const trackerAddresses = [trackerOne.getAddress(), trackerTwo.getAddress(), trackerThree.getAddress()]
-        nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 49003,
+        const trackerInfo1 = { id: 'trackerOne', ws: trackerOne.getUrl(), http: trackerOne.getUrl() }
+        const trackerInfo2 = { id: 'trackerTwo', ws: trackerTwo.getUrl(), http: trackerTwo.getUrl() }
+        const trackerInfo3 = { id: 'trackerThree', ws: trackerThree.getUrl(), http: trackerThree.getUrl() }
+
+        const trackerAddresses = [trackerInfo1, trackerInfo2, trackerInfo3]
+        nodeOne = createNetworkNode({
             id: 'nodeOne',
             trackers: trackerAddresses
         })
-        nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 49004,
+        nodeTwo = createNetworkNode({
             id: 'nodeTwo',
             trackers: trackerAddresses
         })
@@ -82,7 +82,7 @@ describe('multi trackers', () => {
         ])
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await nodeOne.stop()
         await nodeTwo.stop()
 
