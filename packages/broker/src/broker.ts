@@ -53,6 +53,22 @@ const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[
     }
 }
 
+const getStunTurnUrls = (config: Config) => {
+    if (!config.network.stun && config.network.turn) {
+        return undefined
+    }
+    const urls = []
+    if (config.network.stun) {
+        urls.push(config.network.stun)
+    }
+    if (config.network.turn) {
+        const parsedUrl = config.network.turn.url.replace('turn:', '')
+        const turn = `turn:${config.network.turn.username}:${config.network.turn.password}@${parsedUrl}`
+        urls.push(turn)
+    }
+    return urls
+}
+
 const createStreamMessageValidator = (config: Config): Protocol.StreamMessageValidator => {
     // Validator only needs public information, so use unauthenticated client for that
     const unauthenticatedClient = new StreamrClient({
@@ -147,7 +163,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         name: networkNodeName,
         trackers,
         location: config.network.location,
-        metricsContext
+        metricsContext,
+        stunUrls: getStunTurnUrls(config)
     })
 
     const publisher = new Publisher(networkNode, createStreamMessageValidator(config), metricsContext)
