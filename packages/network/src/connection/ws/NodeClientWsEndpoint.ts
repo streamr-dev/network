@@ -14,22 +14,6 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         super(peerInfo, metricsContext, pingInterval)
     }
 
-    getServerUrlByPeerId(peerId: PeerId): string | undefined {
-        return this.serverUrlByPeerId.get(peerId)
-    }
-
-    protected doClose(connection: NodeClientWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
-        const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
-        this.connectionsByServerUrl.delete(serverUrl)
-        this.serverUrlByPeerId.delete(connection.getPeerId())
-    }
-
-    protected async doStop(): Promise<void> {
-        this.getConnections().forEach((connection) => {
-            connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
-        })
-    }
-
     protected doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
         return new Promise<string>((resolve, reject) => {
             try {

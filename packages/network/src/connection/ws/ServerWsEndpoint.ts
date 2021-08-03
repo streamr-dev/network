@@ -30,7 +30,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         this.wss = this.startWsServer()
     }
 
-    startWsServer(): WebSocket.Server {
+    private startWsServer(): WebSocket.Server {
         return new WebSocket.Server({
             server: this.httpServer,
             maxPayload: 1024 * 1024
