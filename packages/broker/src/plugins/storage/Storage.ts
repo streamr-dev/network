@@ -465,7 +465,7 @@ export class Storage extends EventEmitter {
     }
 
     private async parseRow(row: Todo, debugInfo: ResendDebugInfo) {
-        if (row.payload === null){
+        if (row.payload === null) {
             logger.error(`Found message with NULL payload on cassandra; debug info: ${JSON.stringify(debugInfo)}`)
             return null
         }
@@ -481,10 +481,10 @@ export class Storage extends EventEmitter {
         return new Transform({
             highWaterMark: 1024, // buffer up to 1024 messages
             objectMode: true,
-            transform(row: Todo, _: Todo, done: Todo){
+            transform(row: Todo, _: Todo, done: Todo) {
                 const now = Date.now()
                 const message = self.parseRow(row, debugInfo)
-                if (message){
+                if (message !== null) {
                     this.push(message)
                 }
                 // To avoid blocking main thread for too long, after every 100ms
@@ -516,7 +516,7 @@ export class Storage extends EventEmitter {
         }
 
         const bucketId = buckets.rows[0].id
-        
+
         const query = 'SELECT ts FROM stream_data WHERE stream_id=? AND partition=? AND bucket_id=? ORDER BY ts ASC LIMIT 1'
 
         const streams = await this.cassandraClient.execute(query, [
@@ -607,7 +607,7 @@ export class Storage extends EventEmitter {
         let { count } = res.rows[0]
 
         // Cassandra's integer has overflown, calculate fetching row by row
-        if (count < 0){
+        if (count < 0) {
             count = 0
 
             const query = 'SELECT size FROM bucket WHERE stream_id=? AND partition=?'
@@ -620,7 +620,7 @@ export class Storage extends EventEmitter {
                 prepare: true
             })
 
-            for (let i = 0; i < res.rows.length; i++){
+            for (let i = 0; i < res.rows.length; i++) {
                 count += res.rows[i].size
             }
         }
