@@ -23,22 +23,23 @@ describe('optimization: do not propagate to sender', () => {
             port: 30410,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
         n1 = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
         n2 = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
         n3 = createNetworkNode({
             id: 'node-3',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
 
-        n1.start()
-        n2.start()
-        n3.start()
+        await n1.start()
+        await n2.start()
+        await n3.start()
 
         // Become subscribers (one-by-one, for well connected graph)
         n1.subscribe('stream-id', 0)

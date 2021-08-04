@@ -1,4 +1,3 @@
-import { Wallet } from 'ethers'
 import fetchNatType from 'nat-type-identifier'
 import { Logger } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
@@ -39,16 +38,16 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     latestLatency?: number
     latencyPoller?: { stop: () => void }
     natType?: string
-    nodeAddress: string
     metrics: Metrics
+    dummyMessagesReceived: number
 
     constructor(options: PluginOptions) {
         super(options)
         if (this.streamrClient === undefined) {
             throw new Error('StreamrClient is not available')
         }
-        this.nodeAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
         this.metrics = this.metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
+        this.dummyMessagesReceived = 0
     }
 
     async start() {
@@ -59,7 +58,14 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             this.natType = await this.getNatType()
         }
         await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
-            this.onRewardCodeReceived(message.rewardCode)
+            if (message.rewardCode) {
+                this.onRewardCodeReceived(message.rewardCode)
+            } if (message.info) {
+                logger.info(message.info)
+            } else {
+                logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
+                this.dummyMessagesReceived += 1
+            }
         })
         logger.info('Testnet miner plugin started')
     }
@@ -84,7 +90,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     private async claimRewardCode(rewardCode: string, peers: Peer[], delay: number): Promise<void> {
         const body = {
             rewardCode,
-            nodeAddress: this.nodeAddress,
+            nodeAddress: this.nodeId,
             clientServerLatency: this.latestLatency,
             waitTime: delay,
             natType: this.natType,

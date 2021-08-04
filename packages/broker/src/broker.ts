@@ -10,7 +10,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, NetworkSmartContract, StorageNodeRegistryItem } from './config'
+import { Config, NetworkSmartContract, StorageNodeRegistryItem, TrackerRegistryItem } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -29,15 +29,15 @@ export interface Broker {
     stop: () => Promise<unknown>
 }
 
-const getTrackers = async (config: Config): Promise<string[]> => {
+const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
     if ((config.network.trackers as NetworkSmartContract).contractAddress) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
             contractAddress: (config.network.trackers as NetworkSmartContract).contractAddress,
             jsonRpcProvider: (config.network.trackers as NetworkSmartContract).jsonRpcProvider
         })
-        return registry.getAllTrackers().map((record) => record.ws)
+        return registry.getAllTrackers()
     } else {
-        return config.network.trackers as string[]
+        return config.network.trackers as TrackerRegistryItem[]
     }
 }
 
@@ -137,12 +137,13 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     // Start network node
     let sessionId
-    if (!config.plugins['storage']){
+    if (config.generateSessionId && !config.plugins['storage']) { // Exception: storage node needs consistent id
         sessionId = `${brokerAddress}#${uuidv4()}`
     }
+    const nodeId = sessionId || brokerAddress
 
     const networkNode = createNetworkNode({
-        id: sessionId || brokerAddress,
+        id: nodeId,
         name: networkNodeName,
         trackers,
         location: config.network.location,
@@ -164,7 +165,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             apiAuthenticator,
             metricsContext,
             brokerConfig: config,
-            storageNodeRegistry
+            storageNodeRegistry,
+            nodeId
         }
         return createPlugin(name, pluginOptions)
     })
@@ -188,7 +190,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
             await volumeLogger.start()
-            logger.info(`Network node '${networkNodeName}' running`)
+            logger.info(`Network node '${networkNodeName}' (id=${nodeId}) running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             logger.info(`Configured with trackers: ${trackers.join(', ')}`)
             logger.info(`Configured with Streamr: ${config.streamrUrl}`)

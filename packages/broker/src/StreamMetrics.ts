@@ -254,7 +254,7 @@ export class StreamMetrics {
 
     private async publishReport(): Promise<unknown> {
         if (!this.stopped && this.targetStreamId) {
-            logger.info(`publishing report for ${this.report.peerId} to stream ${this.targetStreamId}`)
+            logger.debug(`publishing report for ${this.report.peerId} to stream ${this.targetStreamId}`)
             return this.client.publish(this.targetStreamId, this.report)
         }
         return false

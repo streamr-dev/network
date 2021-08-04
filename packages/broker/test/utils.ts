@@ -16,6 +16,8 @@ export function formConfig({
     name,
     trackerPort,
     privateKey,
+    trackerId = 'tracker-1',
+    generateSessionId = false,
     httpPort = null,
     wsPort = null,
     legacyMqttPort = null,
@@ -66,10 +68,15 @@ export function formConfig({
 
     return {
         ethereumPrivateKey: privateKey,
+        generateSessionId,
         network: {
             name,
             trackers: [
-                `ws://127.0.0.1:${trackerPort}`
+                {
+                    id: trackerId,
+                    ws: `ws://127.0.0.1:${trackerPort}`,
+                    http: `http://127.0.0.1:${trackerPort}`
+                }
             ],
             location: {
                 latitude: 60.19,

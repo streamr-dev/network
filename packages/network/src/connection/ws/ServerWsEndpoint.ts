@@ -7,12 +7,13 @@ import https from 'https'
 import http from 'http'
 import WebSocket from 'ws'
 import { once } from 'events'
+import { v4 } from 'uuid'
+import { Duplex } from "stream"
 
 export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     private readonly serverUrl: string
     private readonly httpServer: http.Server | https.Server
     private readonly wss: WebSocket.Server
-
     constructor(
         host: string,
         port: number,
@@ -26,69 +27,87 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 
         this.httpServer = httpServer
         this.serverUrl = `${sslEnabled ? 'wss' : 'ws'}://${host}:${port}`
+        this.wss = this.startWsServer()
+    }
 
-        this.wss = new WebSocket.Server({
-            server: httpServer,
+    startWsServer(): WebSocket.Server {
+        return new WebSocket.Server({
+            server: this.httpServer,
             maxPayload: 1024 * 1024
-        }).on('headers', (headers: string[]) => {
-            headers.push(`${AbstractWsEndpoint.PEER_ID_HEADER}: ${this.peerInfo.peerId}`)
         }).on('error', (err: Error) => {
             this.logger.error('web socket server (wss) emitted error: %s', err)
         }).on('listening', () => {
             this.logger.trace('listening on %s', this.getUrl())
         }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
-            const peerId: string | string[] | undefined = request.headers[AbstractWsEndpoint.PEER_ID_HEADER]
+            const handshakeUUID = v4()
 
-            if (Array.isArray(peerId)) {
-                this.logger.trace(`dropped new connection: ${AbstractWsEndpoint.PEER_ID_HEADER} set multiple times.`)
-                this.metrics.record('open:missingParameter', 1)
-                ws.close(
-                    DisconnectionCode.MISSING_REQUIRED_PARAMETER,
-                    `header ${AbstractWsEndpoint.PEER_ID_HEADER} set multiple times.`
-                )
-            } else if (peerId === undefined) {
-                this.logger.trace(`dropped new connection: ${AbstractWsEndpoint.PEER_ID_HEADER} not set.`)
-                this.metrics.record('open:missingParameter', 1)
-                ws.close(
-                    DisconnectionCode.MISSING_REQUIRED_PARAMETER,
-                    `header ${AbstractWsEndpoint.PEER_ID_HEADER} missing`
-                )
-            } else if (this.getConnectionByPeerId(peerId) !== undefined) {
-                // TODO: should this actually close the existing connection and keep the new one? It could be that the
-                //  node has re-connected after dropping but the server has yet to detect this.
-                this.metrics.record('open:duplicateSocket', 1)
-                ws.close(
-                    DisconnectionCode.GRACEFUL_SHUTDOWN,
-                    `already connected to ${peerId}`
-                )
+            ws.send(JSON.stringify({ uuid: handshakeUUID, peerId: this.peerInfo.peerId }))
+
+            this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
+                ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
+                this.logger.warn(`Handshake not received from connection behind UUID ${handshakeUUID}`)
+                ws.terminate()
+                delete this.handshakeTimeoutRefs[handshakeUUID]
+            }, this.handshakeTimer)
+
+            const duplexStream = WebSocket.createWebSocketStream(ws, {
+                decodeStrings: false
+            })
+
+            duplexStream.on('data', async (data: WebSocket.Data) => {
+                try {
+                    const { uuid, peerId } = JSON.parse(data.toString())
+                    if (uuid === handshakeUUID && peerId) {
+                        this.clearHandshake(uuid)
+                        this.acceptConnection(ws, duplexStream, peerId, request.socket.remoteAddress as string)
+                    } else {
+                        this.logger.trace('Expected a handshake message got: ' + data.toString())
+                    }
+                } catch (err) {
+                    this.logger.trace(err)
+                }
+            })
+
+            ws.on('error', (err) => {
+                this.logger.warn('socket for "%s" emitted error: %s', this.peerInfo.peerId, err)
+            })
+        })
+    }
+
+    acceptConnection(ws: WebSocket, duplexStream: Duplex, peerId: string, remoteAddress: string): void {
+        const connection = new ServerWsConnection(
+            ws,
+            duplexStream,
+            remoteAddress,
+            PeerInfo.newNode(peerId)
+        )
+
+        duplexStream.on('data', async (data: WebSocket.Data) => {
+            const parsed = data.toString()
+            if (parsed === 'ping') {
+                await this.send(peerId, 'pong')
             } else {
-                const duplexStream = WebSocket.createWebSocketStream(ws, {
-                    decodeStrings: false
-                })
-                const connection = new ServerWsConnection(
-                    ws,
-                    duplexStream,
-                    request.socket.remoteAddress,
-                    PeerInfo.newNode(peerId)
-                )
-                duplexStream.on('data', (data: WebSocket.Data) => {
-                    this.onReceive(connection, data.toString())
-                })
-                ws.on('pong', () => {
-                    connection.onPong()
-                })
-                ws.on('close', (code: number, reason: string) => {
-                    this.onClose(connection, code, reason as DisconnectionReason)
-                })
-                ws.on('error', (err) => {
-                    this.logger.warn('socket for "%s" emitted error: %s', this.peerInfo.peerId, err)
-                })
-                duplexStream.on('drain', () => {
-                    connection.evaluateBackPressure()
-                })
-                this.onNewConnection(connection)
+                this.onReceive(connection, data.toString())
             }
         })
+
+        duplexStream.on('drain', () => {
+            connection.evaluateBackPressure()
+        })
+
+        duplexStream.on('error', (error) => {
+            this.logger.error('Duplex stream error: ' + error.stack as string)
+        })
+
+        ws.on('pong', () => {
+            connection.onPong()
+        })
+
+        ws.on('close', (code: number, reason: string) => {
+            this.onClose(connection, code, reason as DisconnectionReason)
+        })
+
+        this.onNewConnection(connection)
     }
 
     getUrl(): string {
