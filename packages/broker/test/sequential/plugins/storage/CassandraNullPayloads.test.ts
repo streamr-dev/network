@@ -38,14 +38,9 @@ const insertNullData = async (
 }
 
 describe('CassandraNullPayloads', () => {  
-        let streamrClient: StreamrClient
+    let streamrClient: StreamrClient
     let cassandraClient: Client
     let storage: Storage
-
-    // Despite the unit having a single test this tango with
-    // `beforeAll/afterAll`and `beforeEach/afterEacg` is needed,
-    // otherwise the closing of `storage` and `cassandraClient`
-    // interfere with each other
 
     beforeAll(() => {
         cassandraClient = new Client({
