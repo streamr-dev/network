@@ -1,4 +1,5 @@
-import { Gate, instanceId } from './index'
+import { instanceId } from './index'
+import Gate from './Gate'
 import { Debug } from './log'
 import { Context, ContextError } from './Context'
 
