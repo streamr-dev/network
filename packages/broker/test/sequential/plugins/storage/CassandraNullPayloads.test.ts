@@ -42,13 +42,26 @@ describe('CassandraNullPayloads', () => {
     let cassandraClient: Client
     let storage: Storage
 
-    beforeEach(async () => {
+    // Despite the unit having a single test this tango with 
+    // `beforeAll/afterAll`and `beforeEach/afterEacg` is needed,
+    // otherwise the closing of `storage` and `cassandraClient` 
+    // interfere with each other
+
+    beforeAll(() => {
         cassandraClient = new Client({
             contactPoints,
             localDataCenter,
             keyspace,
         })
+        
+    })
 
+    afterAll(() => {
+        cassandraClient.shutdown()
+
+    })
+
+    beforeEach(async () => {
         storage = await startCassandraStorage({
             contactPoints,
             localDataCenter,
@@ -59,29 +72,21 @@ describe('CassandraNullPayloads', () => {
                 bucketKeepAliveSeconds: 1
             }
         })
-        
-        const mockUser = createMockUser()
-        streamrClient = createClient(9999, mockUser.privateKey, {
-            orderMessages: false,
-        })
 
     })
 
     afterEach(async () => {
-        await streamrClient.stop()
-        await cassandraClient.shutdown()
 
-        // will prematurely kill the process if the connection is not delayed
-        setTimeout(async () => {
-            await storage.close()
-        }, 500)
+        await storage.close()
 
     })
 
     test('insert a null payload and retreve', async () => {
-        const stream = await createTestStream(streamrClient, module, {
-            storageDays: 10
+        const mockUser = createMockUser()
+        streamrClient = createClient(9999, mockUser.privateKey, {
+            orderMessages: false,
         })
+        const stream = await createTestStream(streamrClient, module)
         const streamId = stream.id
 
         const bucketId = await insertBucket(cassandraClient, streamId, Date.now())
@@ -89,6 +94,7 @@ describe('CassandraNullPayloads', () => {
         await insertNullData(cassandraClient, streamId, bucketId, Date.now())
 
         await storage.requestLast(streamId, 0, 1)
-        
+        await streamrClient.stop()
+
     })
 })

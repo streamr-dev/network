@@ -29,6 +29,15 @@ export type MessageFilter = (streamMessage: Protocol.StreamMessage) => boolean
 
 const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => bucket.getId())
 
+interface NET329DebugInfo {
+    streamId: string, 
+    limit?: number,
+    partition?: number,
+    fromTimestamp?: number,
+    fromSequenceNo?: number | null, 
+    publisherId?: string | null,
+}
+
 export class Storage extends EventEmitter {
 
     opts: Todo
@@ -99,11 +108,7 @@ export class Storage extends EventEmitter {
 
         logger.trace('requestLast %o', { streamId, partition, limit })
 
-        // original line and query:
-        // const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data WHERE '
-        // Temporary query until the causing issue for this PR is fixed:
-        // https://github.com/streamr-dev/network-monorepo/pull/128
-        const GET_LAST_N_MESSAGES = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
+        const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? '
             + 'ORDER BY ts DESC, sequence_no DESC '
             + 'LIMIT ?'
@@ -115,7 +120,7 @@ export class Storage extends EventEmitter {
             prepare: true, fetchSize: 1
         }
 
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId, partition, limit})
 
         const makeLastQuery = async (bucketIds: BucketId[]) => {
             try {
@@ -249,13 +254,9 @@ export class Storage extends EventEmitter {
     }
 
     private fetchFromTimestamp(streamId: string, partition: number, fromTimestamp: number) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId, partition, fromTimestamp})
 
-        // original line and query:
-        // const query = 'SELECT payload FROM stream_data WHERE '
-        // Temporary query until the causing issue for this PR is fixed:
-        // https://github.com/streamr-dev/network-monorepo/pull/128
-        const query = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
+        const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
@@ -293,7 +294,7 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number | null,
         publisherId?: string | null
     ) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId, partition, fromTimestamp, fromSequenceNo, publisherId})
 
         const query1 = [
             'SELECT payload FROM stream_data',
@@ -341,13 +342,9 @@ export class Storage extends EventEmitter {
     }
 
     private fetchBetweenTimestamps(streamId: string, partition: number, fromTimestamp: number, toTimestamp: number) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId})
 
-        // original line and query:
-        // const query = 'SELECT payload FROM stream_data WHERE '
-        // Temporary query until the causing issue for this PR is fixed:
-        // https://github.com/streamr-dev/network-monorepo/pull/128
-        const query = 'SELECT payload, stream_id, partition, bucket_id FROM stream_data WHERE '
+        const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
@@ -388,7 +385,7 @@ export class Storage extends EventEmitter {
         publisherId?: string|null,
         msgChainId?: string|null
     ) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId})
 
         const query1 = [
             'SELECT payload FROM stream_data',
@@ -454,38 +451,10 @@ export class Storage extends EventEmitter {
         }) as Readable
     }
 
-    private async parseRow(row: Todo) {
+    private async parseRow(row: Todo, debugInfo: NET329DebugInfo) {
         if (row.payload === null){
-            // generate a placeholder message that can pass validation
-            const payload = JSON.stringify(new Protocol.MessageLayer.StreamMessage({
-                messageId: new Protocol.MessageLayer.MessageIDStrict(
-                    row.stream_id, //streamId
-                    row.partition, // streamPartition
-                    Date.now(), // timestamp
-                    0, // sequenceNo, 
-                    'publisherId',  // publisherId
-                    'msgChainId'    // msgChainId
-                ),
-                prevMsgRef: new Protocol.MessageLayer.MessageRef(0, 5),
-                content: JSON.stringify(row),
-                messageType: Protocol.MessageLayer.StreamMessageType.MESSAGE,
-                encryptionType: Protocol.MessageLayer.StreamMessage.ENCRYPTION_TYPES.NONE,
-                signatureType: Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
-                signature: 'signature',
-            }))
-            // serialize the payload for v30
-            row.payload = JSON.stringify([
-                30,
-                [row.stream_id, 0, Date.now(), 0, 'publisherId', 'msgChainId'],
-                [0, 5],
-                Protocol.MessageLayer.StreamMessage.MESSAGE_TYPES.MESSAGE,
-                JSON.stringify(payload),
-                Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
-                'signature'
-            ])    
-
-            // log everything known about the message
-            logger.error(`Found message with NULL payload on cassandra ${JSON.stringify(row)}`)
+            logger.error(`Found message with NULL payload on cassandra; debug info: ${JSON.stringify(debugInfo)}`)
+            return null
         }
 
         const streamMessage = Protocol.StreamMessage.deserialize(row.payload.toString())
@@ -493,15 +462,18 @@ export class Storage extends EventEmitter {
         return streamMessage
     }
 
-    private createResultStream() {
+    private createResultStream(debugInfo: NET329DebugInfo) {
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         let last = Date.now()
         return new Transform({
             highWaterMark: 1024, // buffer up to 1024 messages
             objectMode: true,
-            async transform(row: Todo, _: Todo, done: Todo){
+            transform(row: Todo, _: Todo, done: Todo){
                 const now = Date.now()
-                this.push(await self.parseRow(row))
+                const message = self.parseRow(row, debugInfo)
+                if (message){
+                    this.push(message)
+                }
                 // To avoid blocking main thread for too long, after every 100ms
                 // pause & resume the cassandraStream to give other events in the event
                 // queue a chance to be handled.
