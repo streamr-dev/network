@@ -126,17 +126,17 @@ export class StreamMetrics {
                     this.report.network.bytesFromPeersPerSec = (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0
                     this.report.network.connections = metricsReport.metrics.WebRtcEndpoint.connections || 0
 
-                    if (metricsReport.metrics['broker/cassandra'].writeBytes){                        
+                    if (metricsReport.metrics['broker/cassandra'].writeBytes) {                        
                         let cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writeBytes as {rate: number}).rate ||  0
-                        if (typeof metricsReport.metrics['broker/cassandra'].writeBytes === 'number'){
+                        if (typeof metricsReport.metrics['broker/cassandra'].writeBytes === 'number') {
                             cassandraWrittenBytesPerMs = metricsReport.metrics['broker/cassandra'].writeBytes
                         }
                         this.report.storage.bytesWrittenPerSec = cassandraWrittenBytesPerMs
                     }
                     
-                    if (metricsReport.metrics['broker/cassandra'].readBytes){
+                    if (metricsReport.metrics['broker/cassandra'].readBytes) {
                         let cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number}).rate || 0
-                        if (typeof metricsReport.metrics['broker/cassandra'].readBytes === 'number'){
+                        if (typeof metricsReport.metrics['broker/cassandra'].readBytes === 'number') {
                             cassandraReadBytesPerMs = metricsReport.metrics['broker/cassandra'].readBytes
                         }
                         this.report.storage.bytesReadPerSec = cassandraReadBytesPerMs
@@ -153,17 +153,17 @@ export class StreamMetrics {
                     this.report.network.bytesFromPeersPerSec = throttledAvg(this.report.network.bytesFromPeersPerSec, (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0)
                     this.report.network.connections = throttledAvg(this.report.network.connections, (metricsReport.metrics.WebRtcEndpoint.connections as any).rate || 0)
 
-                    if (metricsReport.metrics['broker/cassandra'].writeBytes){
+                    if (metricsReport.metrics['broker/cassandra'].writeBytes) {
                         let cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writeBytes as {rate: number}).rate ||  0
-                        if (typeof metricsReport.metrics['broker/cassandra'].writeBytes === 'number'){
+                        if (typeof metricsReport.metrics['broker/cassandra'].writeBytes === 'number') {
                             cassandraWrittenBytesPerMs = metricsReport.metrics['broker/cassandra'].writeBytes
                         }
                         this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, cassandraWrittenBytesPerMs)
                     }
                     
-                    if (metricsReport.metrics['broker/cassandra'].readBytes){
+                    if (metricsReport.metrics['broker/cassandra'].readBytes) {
                         let cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number}).rate || 0
-                        if (typeof metricsReport.metrics['broker/cassandra'].readBytes === 'number'){
+                        if (typeof metricsReport.metrics['broker/cassandra'].readBytes === 'number') {
                             cassandraReadBytesPerMs = metricsReport.metrics['broker/cassandra'].readBytes
                         }
                         this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, cassandraReadBytesPerMs)
@@ -175,11 +175,11 @@ export class StreamMetrics {
 
                 await this.publishReport()
             } else {
-                if (!this.sourceStreamId){
+                if (!this.sourceStreamId) {
                     throw new Error(`Cannot report ${this.interval} without [sourceStreamId]`)
                 }
 
-                if (!this.targetStreamId){
+                if (!this.targetStreamId) {
                     throw new Error(`Cannot report ${this.interval} without [targetStreamId]`)
                 }
                 const now = Date.now()
@@ -245,7 +245,7 @@ export class StreamMetrics {
 
     stop(): void {
         this.stopped = true
-        if (this.metricsReportTimeout){
+        if (this.metricsReportTimeout) {
             clearTimeout(this.metricsReportTimeout)
         }
         logger.info(`Stopped StreamMetrics for ${this.interval}`)

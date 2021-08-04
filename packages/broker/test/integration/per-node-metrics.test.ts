@@ -58,13 +58,13 @@ const waitForMessage = (
             client.subscribe({stream}, (res: any) => {
                 resolve(res)
             })
-        } catch (e){
+        } catch (e) {
             reject(e)
         }
     })
 }
 
-const expectValidMetricsFormat = (res: any) => {
+const expectValidMetricsFormat = (res: Record<string, unknown>) => {
     expect(res).toMatchObject({
         peerName: expect.any(String),
         startTime : expect.any(Number),
