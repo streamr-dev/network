@@ -14,6 +14,11 @@ const noopConsume = async (src: AsyncGenerator) => {
     }
 }
 
+/**
+ * Similar to Array#forEach or Stream.PassThrough.
+ * Allows inspection of a pipeline without mutating it.
+ * Note: Pipeline will block until forEach call resolves.
+ */
 export async function* forEach<InType>(
     src: AsyncGenerator<InType>,
     fn: GeneratorForEach<InType>
@@ -26,6 +31,9 @@ export async function* forEach<InType>(
     }
 }
 
+/**
+ * Similar to Array#map or Stream.Transform.
+ */
 export async function* map<InType, OutType>(
     src: AsyncGenerator<InType>,
     fn: GeneratorMap<InType, OutType>
@@ -37,6 +45,9 @@ export async function* map<InType, OutType>(
     }
 }
 
+/**
+ * Similar to Array#filter
+ */
 export async function* filter<InType>(
     src: AsyncGenerator<InType>,
     fn: GeneratorFilter<InType>
@@ -52,6 +63,13 @@ export async function* filter<InType>(
         }
     }
 }
+/**
+ * Similar to Array#reduce, but more different than the other methods here.
+ * This is perhaps more like an Array#map but it also passes the previous return value.
+ * Still yields for each item, but passes previous return value to next iteration.
+ * initialValue is passed as the previous value on first iteration.
+ * Unlike Array#reduce, initialValue is required.
+ */
 export async function* reduce<InType, OutType>(
     src: AsyncGenerator<InType>,
     fn: GeneratorReduce<InType, OutType>,
@@ -64,8 +82,13 @@ export async function* reduce<InType, OutType>(
     })
 }
 
+/**
+ * Consume generator and collect results into an array.
+ * Can take an optional number of items to consume.
+ */
 export async function collect<InType>(
     src: AsyncGenerator<InType>,
+    /** number of items to consume before ending, consumes all if undefined */
     n?: number,
 ): Promise<InType[]> {
     const results: InType[] = []
@@ -79,6 +102,10 @@ export async function collect<InType>(
     return results
 }
 
+/**
+ * Start consuming generator.
+ * Takes optional forEach function.
+ */
 export async function consume<InType>(
     src: AsyncGenerator<InType>,
     fn: GeneratorForEach<InType> = (v) => v,

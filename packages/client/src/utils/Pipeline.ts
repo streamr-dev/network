@@ -1,9 +1,10 @@
 import { instanceId, pOnce } from './index'
 import { Debug } from './log'
 import { iteratorFinally } from './iterators'
-import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull } from './PushBuffer'
+import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions } from './PushBuffer'
 import { ContextError, Context } from './Context'
 import * as G from './GeneratorUtils'
+import Signal from './Signal'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 export type FinallyFn = ((err?: Error) => void | Promise<void>)
@@ -16,6 +17,7 @@ class PipelineError extends ContextError {}
 export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): IPipeline<InType, NewOutType>
+    filter(fn: G.GeneratorFilter<OutType>): IPipeline<InType, OutType>
     pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
     onFinally(onFinally: FinallyFn): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType> & Context
@@ -27,8 +29,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     protected readonly transforms: PipelineTransform[] = []
     protected readonly transformsBefore: PipelineTransform[] = []
     protected iterator: AsyncGenerator<OutType>
-    protected finallyTasks: FinallyFn[] = []
-    protected isIterating: string | false = false
+    protected isIterating = false
 
     constructor(source: AsyncGenerator<InType>) {
         this.source = source
@@ -68,25 +69,15 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     /**
-     * Append a function to run when pipeline ends.
+     * Triggers once when pipeline ends.
+     * Usage: `pipeline.onFinally(callback)`
      */
-    onFinally(onFinallyFn: FinallyFn) {
-        this.finallyTasks.push(onFinallyFn)
-        return this
-    }
+    onFinally = Signal.once<Error | undefined, this>(this)
 
-    private async runFinally(err?: Error) {
-        let error = err
-        if (!this.finallyTasks.length) { return }
-        await this.finallyTasks.reduce(async (prev, task) => {
-            return prev.then(() => {
-                return task(error)
-            }, (internalErr) => {
-                error = internalErr
-                return task(error)
-            })
-        }, Promise.resolve()) // eslint-disable-line promise/no-promise-in-callback
-    }
+    /**
+     * Triggers once when pipeline is about to end.
+     */
+    onBeforeFinally = Signal.once(this)
 
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>) {
         return this.pipe((src) => G.map(src, fn))
@@ -112,7 +103,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.pipeBefore((src) => G.filter(src, fn))
     }
 
-    consume(fn: G.GeneratorForEach<OutType>) {
+    consume(fn?: G.GeneratorForEach<OutType>) {
         return G.consume(this, fn)
     }
 
@@ -128,13 +119,13 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 await this.source.return(undefined)
             }
         } finally {
-            await this.runFinally(error)
+            await this.onBeforeFinally.trigger()
+            await this.onFinally.trigger(error)
         }
     }
 
     private async* iterate() {
-        console.trace()
-        this.isIterating = String(new Error().stack).split('\n').slice(3).join('\n\n') || ''
+        this.isIterating = true
         if (!this.source) {
             throw new PipelineError(this, 'no source')
         }
@@ -150,7 +141,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
             // each pipeline step creates a generator
             // which is then passed into the next transform
             // end result is output of last transform's generator
-            // pulled into an async buffer
             return transform(prev)
         }, this.source)
     }
@@ -158,18 +148,43 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     // AsyncGenerator implementation
 
     async throw(err: Error) {
+        await this.onBeforeFinally.trigger()
         // eslint-disable-next-line promise/no-promise-in-callback
         await this.source.throw(err).catch(() => {})
         return this.iterator.throw(err)
     }
 
     async return(v?: OutType) {
+        await this.onBeforeFinally.trigger()
         await this.source.return(undefined)
         return this.iterator.return(v)
     }
 
     async next() {
         return this.iterator.next()
+    }
+
+    /**
+     * Create a new Pipeline forked from this pipeline.
+     * Pushes results into fork.
+     * Note: Does not start consuming this pipeline.
+     */
+    fork<U extends Pipeline<OutType>>(bufferSize?: number, options?: PushBufferOptions) {
+        const Self = this.constructor as unknown as new (source: AsyncGenerator<OutType>) => U
+        const buffer = new PushBuffer<OutType>(bufferSize, options)
+        this.forEach(async (value) => {
+            await buffer.push(value)
+        })
+
+        this.onBeforeFinally(() => {
+            // if buffer is full, it will block on the push call above. we need
+            // to signal writes have ended on the buffer to unblock push call.
+            // can't wait for onFinally to close writes as it requires pipeline
+            // to end and pipeline can't end until push call is unblocked.
+            // onBeforeFinally fires as soon as we know the pipeline is ending
+            buffer.endWrite()
+        })
+        return new Self(buffer)
     }
 
     [Symbol.asyncIterator]() {

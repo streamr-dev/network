@@ -21,6 +21,10 @@ function isError(err: any): err is Error {
     )
 }
 
+export type PushBufferOptions = {
+    name?: string
+}
+
 export type IPushBuffer<InType, OutType = InType> = {
     push(item: InType): Promise<boolean>
     end(error?: Error): void
@@ -55,7 +59,7 @@ export class PushBuffer<T> implements IPushBuffer<T> {
     protected iterator: AsyncGenerator<T>
     protected isIterating = false
 
-    constructor(bufferSize = DEFAULT_BUFFER_SIZE, { name }: Partial<{ name: string }> = {}) {
+    constructor(bufferSize = DEFAULT_BUFFER_SIZE, { name }: PushBufferOptions = {}) {
         this.id = instanceId(this, name)
         this.bufferSize = bufferSize
         // start both closed

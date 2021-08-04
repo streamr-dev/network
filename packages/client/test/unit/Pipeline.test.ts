@@ -17,6 +17,17 @@ async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
 }
 
+function getMockCalls(obj: Record<string, jest.MockedFunction<any>>) {
+    return () => {
+        return Object.entries(obj).reduce((o, v) => {
+            const [key, value] = v
+            return Object.assign(o, {
+                [key]: value.mock.calls.length,
+            })
+        }, {})
+    }
+}
+
 describe('Pipeline', () => {
 
     it('types pipe & result correctly', async () => {
@@ -131,8 +142,8 @@ describe('Pipeline', () => {
     })
 
     describe('with finally handling', () => {
-        let onFinally: () => void
-        let onFinallyAfter: () => void
+        let onFinally = jest.fn()
+        let onFinallyAfter = jest.fn()
 
         beforeEach(() => {
             onFinallyAfter = jest.fn()
@@ -681,6 +692,90 @@ describe('Pipeline', () => {
                         const results = await p.collect()
                         expect(results[results.length - 1]).toEqual(expected.reduce((w, v) => w + v, 0))
                     })
+                })
+            })
+
+            describe.only('fork', () => {
+                it('works', async () => {
+                    const root = new Pipeline(generate())
+                        .onFinally(onFinally)
+                    const onFinallyEven = jest.fn()
+                    const onFinallyOdd = jest.fn()
+
+                    const odd = root.fork(undefined, { name: 'odd' })
+                        .filter((value) => {
+                            return value % 2
+                        })
+                        .onFinally(onFinallyOdd)
+
+                    const even = root.fork(undefined, { name: 'even' })
+                        .filter((value) => {
+                            return !(value % 2)
+                        })
+                        .onFinally(onFinallyEven)
+
+                    const getOnFinallyCalls = getMockCalls({
+                        onFinally,
+                        onFinallyEven,
+                        onFinallyOdd,
+                    })
+
+                    // starting collection of fork
+                    const oddResultsTask = odd.collect()
+                    expect(getOnFinallyCalls()).toEqual({ onFinally: 0, onFinallyEven: 0, onFinallyOdd: 0 })
+                    await wait(1000)
+                    // fork shouldn't have collected until root iterated
+                    expect(getOnFinallyCalls()).toEqual({ onFinally: 0, onFinallyEven: 0, onFinallyOdd: 0 })
+                    // this will resolve fork's collect
+                    const results = await root.collect()
+                    expect(results).toEqual(expected)
+                    // note even fork collect not started, so onFinallyEven shouldn't have called
+                    expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 0, onFinallyOdd: 1 })
+                    expect(await oddResultsTask).toEqual(expected.filter((v) => v % 2))
+                    expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 0, onFinallyOdd: 1 })
+                    // even shouldn't have started until we called collect on it
+                    expect(await even.collect()).toEqual(expected.filter((v) => !(v % 2)))
+                    expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 1, onFinallyOdd: 1 })
+                })
+
+                it('pushes as fast as fork can consume', async () => {
+                    const onMessage = jest.fn()
+                    const root = new Pipeline(generate())
+                        .forEach(onMessage)
+                        .onFinally(onFinally)
+                    const onFinallyChild = jest.fn()
+                    const child = root.fork(1)
+                        .onFinally(onFinallyChild)
+
+                    const collectTask = root.collect()
+                    expect(onMessage).toHaveBeenCalledTimes(0)
+                    await wait(WAIT * 3)
+                    expect(onMessage).toHaveBeenCalledTimes(1)
+                    const childResults = []
+                    childResults.push((await child.next()).value)
+                    await wait(WAIT * 3)
+                    expect(onMessage).toHaveBeenCalledTimes(2)
+                    childResults.push((await child.next()).value)
+                    await wait(WAIT * 3)
+                    expect(onMessage).toHaveBeenCalledTimes(3)
+                    await root.return()
+                    await wait(WAIT * 3)
+                    expect(onMessage).toHaveBeenCalledTimes(3)
+                    const results = await collectTask
+                    expect(onFinally).toHaveBeenCalledTimes(1)
+                    expect(onFinallyChild).toHaveBeenCalledTimes(0)
+                    expect(results).toEqual(expected.slice(0, 3))
+
+                    // eslint-disable-next-line no-constant-condition
+                    while (true) {
+                        // eslint-disable-next-line no-await-in-loop
+                        const { done, value } = await child.next()
+                        if (done) { break }
+                        childResults.push(value)
+                    }
+
+                    expect(childResults).toEqual(results)
+                    expect(onFinallyChild).toHaveBeenCalledTimes(1)
                 })
             })
         })
