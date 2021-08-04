@@ -58,6 +58,8 @@ module.exports = {
         }],
         'no-redeclare': 'off',
         '@typescript-eslint/no-redeclare': ['error'],
+        'no-dupe-class-members': 'off',
+        '@typescript-eslint/no-dupe-class-members': ['error'],
         'no-useless-constructor': 'off',
         '@typescript-eslint/no-useless-constructor': ['error'],
         'no-empty-function': 'off',
