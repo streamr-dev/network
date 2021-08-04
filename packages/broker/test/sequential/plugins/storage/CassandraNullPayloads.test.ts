@@ -1,7 +1,7 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
+import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from "../../../utils"
-
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 
 const { TimeUuid } = cassandraTypes
@@ -74,11 +74,12 @@ describe('CassandraNullPayloads', () => {
     test('insert a null payload and retreve', async () => {
         const streamrClient = createClient(DUMMY_WS_PORT)
         const stream = await createTestStream(streamrClient, module)
+        await streamrClient.stop()
         const streamId = stream.id
         const bucketId = await insertBucket(cassandraClient, streamId)
         await insertNullData(cassandraClient, streamId, bucketId)
 
-        await storage.requestLast(streamId, 0, 1)
-        await streamrClient.stop()
+        const streamingResults = storage.requestLast(streamId, 0, 1)
+        await toArray(streamingResults)
     })
 })
