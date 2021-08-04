@@ -3,7 +3,6 @@ import {startTracker, Tracker} from 'streamr-network'
 import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from '../utils'
 import { Wallet } from 'ethers'
 import { Broker } from '../broker'
-import { Todo } from '../types'
 
 const httpPort = 47741
 const wsPort = 47742
@@ -53,10 +52,10 @@ const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: st
 const waitForMessage = (
     stream: string,
     client: StreamrClient, 
-): Promise<Todo> => {
+): Promise<any> => {
     return new Promise((resolve, reject) => {
         try {
-            client.subscribe({stream}, (res: Todo) => {
+            client.subscribe({stream}, (res: any) => {
                 resolve(res)
             })
         } catch (e){
@@ -65,21 +64,29 @@ const waitForMessage = (
     })
 }
 
-const expectMetrics = (res: Todo) => {
-    expect(res.peerName).toEqual('storageNode')
-    expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.broker.messagesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.broker.bytesFromNetworkPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.network.avgLatencyMs).toBeGreaterThanOrEqual(0)
-    expect(res.network.bytesToPeersPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.network.bytesFromPeersPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.network.connections).toBeGreaterThanOrEqual(0)
-    expect(res.storage.bytesWrittenPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.storage.bytesReadPerSec).toBeGreaterThanOrEqual(0)
-    expect(res.startTime).toBeGreaterThanOrEqual(0)
-    expect(res.currentTime).toBeGreaterThanOrEqual(0)
-    expect(res.timestamp).toBeGreaterThanOrEqual(0)   
+const expectValidMetricsFormat = (res: any) => {
+    expect(res).toMatchObject({
+        peerName: expect.any(String),
+        startTime : expect.any(Number),
+        currentTime : expect.any(Number),
+        timestamp : expect.any(Number),
+        broker: {
+            messagesToNetworkPerSec: expect.any(Number),
+            bytesToNetworkPerSec: expect.any(Number),
+            messagesFromNetworkPerSec: expect.any(Number),
+            bytesFromNetworkPerSec: expect.any(Number),
+        },
+        network: {
+            avgLatencyMs: expect.any(Number),
+            bytesToPeersPerSec: expect.any(Number),
+            bytesFromPeersPerSec: expect.any(Number),
+            connections: expect.any(Number),
+        },
+        storage: {
+            bytesWrittenPerSec: expect.any(Number),
+            bytesReadPerSec: expect.any(Number)
+        }
+    })
 }
 
 describe('per-node metrics', () => {
@@ -182,21 +189,21 @@ describe('per-node metrics', () => {
 
     it('should retrieve the last `sec` metrics', async () => {
         const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/sec', client1)
-        expectMetrics(res)
+        expectValidMetricsFormat(res)
     })
 
     it('should retrieve the last `min` metrics', async () => {
         const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/min', client1)
-        expectMetrics(res)
+        expectValidMetricsFormat(res)
     })
 
     it('should retrieve the last `hour` metrics', async () => {
         const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/hour', client1)
-        expectMetrics(res)
+        expectValidMetricsFormat(res)
     })
 
     it('should retrieve the last `day` metrics', async () => {
         const res = await waitForMessage(nodeAddress + '/streamr/node/metrics/day', client1)
-        expectMetrics(res)
+        expectValidMetricsFormat(res)
     })
 })

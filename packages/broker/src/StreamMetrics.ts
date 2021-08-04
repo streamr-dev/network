@@ -126,14 +126,20 @@ export class StreamMetrics {
                     this.report.network.bytesFromPeersPerSec = (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0
                     this.report.network.connections = metricsReport.metrics.WebRtcEndpoint.connections || 0
 
-                    if (metricsReport.metrics['broker/cassandra'].writtenBytes && (metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}).rate){
-                        const cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}).rate || 0
-                        this.report.storage.bytesWrittenPerSec = cassandraWrittenBytesPerMs / 1000
+                    if (metricsReport.metrics['broker/cassandra'].writeBytes){                        
+                        let cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writeBytes as {rate: number}).rate ||  0
+                        if (typeof metricsReport.metrics['broker/cassandra'].writeBytes === 'number'){
+                            cassandraWrittenBytesPerMs = metricsReport.metrics['broker/cassandra'].writeBytes
+                        }
+                        this.report.storage.bytesWrittenPerSec = cassandraWrittenBytesPerMs
                     }
                     
-                    if (metricsReport.metrics['broker/cassandra'].readBytes && (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}).rate){
-                        const cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}).rate || 0
-                        this.report.storage.bytesWrittenPerSec = cassandraReadBytesPerMs / 1000
+                    if (metricsReport.metrics['broker/cassandra'].readBytes){
+                        let cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number}).rate || 0
+                        if (typeof metricsReport.metrics['broker/cassandra'].readBytes === 'number'){
+                            cassandraReadBytesPerMs = metricsReport.metrics['broker/cassandra'].readBytes
+                        }
+                        this.report.storage.bytesReadPerSec = cassandraReadBytesPerMs
                     }
                     
                     this.report.startTime = metricsReport.startTime
@@ -147,15 +153,22 @@ export class StreamMetrics {
                     this.report.network.bytesFromPeersPerSec = throttledAvg(this.report.network.bytesFromPeersPerSec, (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0)
                     this.report.network.connections = throttledAvg(this.report.network.connections, (metricsReport.metrics.WebRtcEndpoint.connections as any).rate || 0)
 
-                    if (metricsReport.metrics['broker/cassandra'].writtenBytes && (metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}).rate){
-                        const cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writtenBytes as {rate: number,total: number, last: number}).rate || 0
-                        this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, cassandraWrittenBytesPerMs / 1000)
+                    if (metricsReport.metrics['broker/cassandra'].writeBytes){
+                        let cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writeBytes as {rate: number}).rate ||  0
+                        if (typeof metricsReport.metrics['broker/cassandra'].writeBytes === 'number'){
+                            cassandraWrittenBytesPerMs = metricsReport.metrics['broker/cassandra'].writeBytes
+                        }
+                        this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, cassandraWrittenBytesPerMs)
                     }
                     
-                    if (metricsReport.metrics['broker/cassandra'].readBytes && (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}).rate){
-                        const cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number,total: number, last: number}).rate || 0
-                        this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, cassandraReadBytesPerMs / 1000)
+                    if (metricsReport.metrics['broker/cassandra'].readBytes){
+                        let cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number}).rate || 0
+                        if (typeof metricsReport.metrics['broker/cassandra'].readBytes === 'number'){
+                            cassandraReadBytesPerMs = metricsReport.metrics['broker/cassandra'].readBytes
+                        }
+                        this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, cassandraReadBytesPerMs)
                     }
+
                     this.report.currentTime = metricsReport.currentTime
                     this.report.timestamp = metricsReport.currentTime
                 }
