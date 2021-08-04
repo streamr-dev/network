@@ -3,19 +3,20 @@ import { Debug } from './log'
 import { iteratorFinally } from './iterators'
 import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull } from './PushBuffer'
 import { ContextError, Context } from './Context'
+import * as G from './GeneratorUtils'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
-
 export type FinallyFn = ((err?: Error) => void | Promise<void>)
 
 class PipelineError extends ContextError {}
-class PushPipelineError extends ContextError {}
 
 /**
  * Pipeline public interface
  */
 export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
+    map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): IPipeline<InType, NewOutType>
+    pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
     onFinally(onFinally: FinallyFn): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType> & Context
 
@@ -27,7 +28,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     protected readonly transformsBefore: PipelineTransform[] = []
     protected iterator: AsyncGenerator<OutType>
     protected finallyTasks: FinallyFn[] = []
-    protected isIterating = false
+    protected isIterating: string | false = false
 
     constructor(source: AsyncGenerator<InType>) {
         this.source = source
@@ -44,7 +45,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): Pipeline<InType, NewOutType> {
         if (this.isIterating) {
-            throw new PipelineError(this, 'cannot pipe after already iterating')
+            throw new PipelineError(this, `cannot pipe after already iterating: ${this.isIterating}`)
         }
 
         this.transforms.push(fn)
@@ -59,7 +60,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     pipeBefore(fn: PipelineTransform<InType, InType>): Pipeline<InType, OutType> {
         if (this.isIterating) {
-            throw new PipelineError(this, 'cannot pipe after already iterating')
+            throw new PipelineError(this, `cannot pipe after already iterating: ${this.isIterating}`)
         }
 
         this.transformsBefore.push(fn)
@@ -87,6 +88,38 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         }, Promise.resolve()) // eslint-disable-line promise/no-promise-in-callback
     }
 
+    map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>) {
+        return this.pipe((src) => G.map(src, fn))
+    }
+
+    forEach(fn: G.GeneratorForEach<OutType>) {
+        return this.pipe((src) => G.forEach(src, fn))
+    }
+
+    filter(fn: G.GeneratorFilter<OutType>) {
+        return this.pipe((src) => G.filter(src, fn))
+    }
+
+    reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType) {
+        return this.pipe((src) => G.reduce(src, fn, initialValue))
+    }
+
+    forEachBefore(fn: G.GeneratorForEach<InType>) {
+        return this.pipeBefore((src) => G.forEach(src, fn))
+    }
+
+    filterBefore(fn: G.GeneratorFilter<InType>) {
+        return this.pipeBefore((src) => G.filter(src, fn))
+    }
+
+    consume(fn: G.GeneratorForEach<OutType>) {
+        return G.consume(this, fn)
+    }
+
+    collect(n?: number) {
+        return G.collect(this, n)
+    }
+
     private async cleanup(error?: Error) {
         try {
             if (error) {
@@ -100,7 +133,8 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     private async* iterate() {
-        this.isIterating = true
+        console.trace()
+        this.isIterating = String(new Error().stack).split('\n').slice(3).join('\n\n') || ''
         if (!this.source) {
             throw new PipelineError(this, 'no source')
         }
@@ -166,27 +200,29 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         return this as PushPipeline<InType, unknown> as PushPipeline<InType, NewOutType>
     }
 
-    /**
-     * Collect n/all messages into an array.
-     */
-    async collect(n?: number) {
-        if (this.isIterating) {
-            throw new PushPipelineError(this, 'Cannot collect if already iterating.')
-        }
+    map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): PushPipeline<InType, NewOutType> {
+        // this method override just fixes the output type to be PushPipeline rather than Pipeline
+        return super.map(fn) as PushPipeline<InType, NewOutType>
+    }
 
-        const msgs = []
-        for await (const msg of this) {
-            if (n === 0) {
-                break
-            }
+    filterBefore(fn: G.GeneratorFilter<InType>): PushPipeline<InType, OutType> {
+        // this method override just fixes the output type to be PushPipeline rather than Pipeline
+        return super.filterBefore(fn) as PushPipeline<InType, OutType>
+    }
 
-            msgs.push(msg)
+    filter(fn: G.GeneratorFilter<OutType>): PushPipeline<InType, OutType> {
+        // this method override just fixes the output type to be PushPipeline rather than Pipeline
+        return super.filter(fn) as PushPipeline<InType, OutType>
+    }
 
-            if (msgs.length === n) {
-                break
-            }
-        }
-        return msgs
+    forEach(fn: G.GeneratorForEach<OutType>): PushPipeline<InType, OutType> {
+        // this method override just fixes the output type to be PushPipeline rather than Pipeline
+        return super.forEach(fn) as PushPipeline<InType, OutType>
+    }
+
+    forEachBefore(fn: G.GeneratorForEach<InType>): PushPipeline<InType, OutType> {
+        // this method override just fixes the output type to be PushPipeline rather than Pipeline
+        return super.forEachBefore(fn) as PushPipeline<InType, OutType>
     }
 
     pull(source: AsyncGenerator<InType>) {

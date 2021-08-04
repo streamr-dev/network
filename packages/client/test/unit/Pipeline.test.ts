@@ -577,6 +577,112 @@ describe('Pipeline', () => {
                 expect(receivedStep1).toEqual(received)
                 expect(receivedStep2).toEqual(received)
             })
+
+            describe('Array-like methods', () => {
+                describe('map', () => {
+                    it('works', async () => {
+                        let count = 0
+                        const p = new Pipeline(generate())
+                            .map((value, index) => {
+                                expect(index).toEqual(count)
+                                count += 1
+                                return value * 10
+                            })
+                            .onFinally(onFinally)
+                        const result = await p.collect()
+                        expect(result).toEqual(expected.map((v) => v * 10))
+                    })
+
+                    it('works async', async () => {
+                        let count = 0
+                        const p = new Pipeline(generate())
+                            .map(async (value, index) => {
+                                await wait(Math.random() * WAIT)
+                                expect(index).toEqual(count)
+                                count += 1
+                                return value * 10
+                            })
+                            .onFinally(onFinally)
+                        const result = await p.collect()
+                        expect(onFinally).toHaveBeenCalledTimes(1)
+                        expect(result).toEqual(expected.map((v) => v * 10))
+                    })
+                })
+
+                describe('forEach', () => {
+                    it('works', async () => {
+                        const items: number[] = []
+                        let count = 0
+                        const p = new Pipeline(generate())
+                            .forEach((value, index) => {
+                                expect(index).toEqual(count)
+                                items.push(value)
+                                count += 1
+                            })
+                            .onFinally(onFinally)
+                        const result = await p.collect()
+                        expect(result).toEqual(expected)
+                        expect(items).toEqual(expected)
+                    })
+
+                    it('works async', async () => {
+                        const items: number[] = []
+                        let count = 0
+                        const p = new Pipeline(generate())
+                            .forEach(async (value, index) => {
+                                await wait(Math.random() * WAIT)
+                                expect(index).toEqual(count)
+                                items.push(value)
+                                count += 1
+                            })
+                            .onFinally(onFinally)
+                        const result = await p.collect()
+                        expect(result).toEqual(expected)
+                        expect(items).toEqual(expected)
+                    })
+                })
+
+                describe('filter', () => {
+                    it('works', async () => {
+                        let count = 0
+                        const p = new Pipeline(generate())
+                            .filter((value, index) => {
+                                expect(index).toEqual(count)
+                                count += 1
+                                return value % 2
+                            })
+                            .onFinally(onFinally)
+                        const result = await p.collect()
+                        expect(result).toEqual(expected.filter((v) => v % 2))
+                    })
+
+                    it('works async', async () => {
+                        let count = 0
+                        const p = new Pipeline(generate())
+                            .filter(async (value, index) => {
+                                await wait(Math.random() * WAIT)
+                                expect(index).toEqual(count)
+                                count += 1
+                                return value % 2
+                            })
+                            .onFinally(onFinally)
+                        const result = await p.collect()
+                        expect(result).toEqual(expected.filter((v) => v % 2))
+                    })
+                })
+
+                describe('reduce', () => {
+                    it('works', async () => {
+                        const p = new Pipeline(generate())
+                            .reduce((prev, value) => {
+                                return prev + value
+                            }, 0)
+                            .onFinally(onFinally)
+                        const results = await p.collect()
+                        expect(results[results.length - 1]).toEqual(expected.reduce((w, v) => w + v, 0))
+                    })
+                })
+            })
         })
 
         describe('PushPipeline', () => {
