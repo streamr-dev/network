@@ -29,7 +29,8 @@ export type MessageFilter = (streamMessage: Protocol.StreamMessage) => boolean
 
 const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => bucket.getId())
 
-interface NET329DebugInfo {
+// NET-329
+interface ResendDebugInfo {
     streamId: string, 
     partition?: number,
     limit?: number,
@@ -463,7 +464,7 @@ export class Storage extends EventEmitter {
         }) as Readable
     }
 
-    private async parseRow(row: Todo, debugInfo: NET329DebugInfo) {
+    private async parseRow(row: Todo, debugInfo: ResendDebugInfo) {
         if (row.payload === null){
             logger.error(`Found message with NULL payload on cassandra; debug info: ${JSON.stringify(debugInfo)}`)
             return null
@@ -474,7 +475,7 @@ export class Storage extends EventEmitter {
         return streamMessage
     }
 
-    private createResultStream(debugInfo: NET329DebugInfo) {
+    private createResultStream(debugInfo: ResendDebugInfo) {
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         let last = Date.now()
         return new Transform({
