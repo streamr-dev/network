@@ -31,11 +31,14 @@ const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => buck
 
 interface NET329DebugInfo {
     streamId: string, 
-    limit?: number,
     partition?: number,
+    limit?: number,
     fromTimestamp?: number,
+    toTimestamp?: number,
     fromSequenceNo?: number | null, 
+    toSequenceNo?: number | null,
     publisherId?: string | null,
+    msgChainId?: string | null
 }
 
 export class Storage extends EventEmitter {
@@ -342,7 +345,7 @@ export class Storage extends EventEmitter {
     }
 
     private fetchBetweenTimestamps(streamId: string, partition: number, fromTimestamp: number, toTimestamp: number) {
-        const resultStream = this.createResultStream({streamId})
+        const resultStream = this.createResultStream({streamId, partition, fromTimestamp, toTimestamp})
 
         const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
@@ -385,7 +388,16 @@ export class Storage extends EventEmitter {
         publisherId?: string|null,
         msgChainId?: string|null
     ) {
-        const resultStream = this.createResultStream({streamId})
+        const resultStream = this.createResultStream({
+            streamId,
+            partition,
+            fromTimestamp,
+            fromSequenceNo,
+            toTimestamp,
+            toSequenceNo,
+            publisherId,
+            msgChainId,
+        })
 
         const query1 = [
             'SELECT payload FROM stream_data',
