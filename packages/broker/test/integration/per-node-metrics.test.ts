@@ -124,7 +124,6 @@ describe('per-node metrics', () => {
         storageNode = await startBroker({
             name: 'storageNode', 
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort,
             trackerPort,
             wsPort,
             httpPort,
