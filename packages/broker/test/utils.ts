@@ -83,7 +83,9 @@ export function formConfig({
                 longitude: 24.95,
                 country: 'Finland',
                 city: 'Helsinki'
-            }
+            },
+            stun: null,
+            turn : null
         },
         reporting: reporting || {
             streamr: null,
