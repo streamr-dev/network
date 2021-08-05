@@ -45,17 +45,17 @@ describe('TrackerRegistry', () => {
 
             expect(trackerRegistry.getAllTrackers()).toStrictEqual([
                 {
-                    id: '0xb9e7cEBF7b03AE26458E32a059488386b05798e8',
+                    id: '0xDE11165537ef6C01260ee89A850a281525A5b63F',
                     http: 'http://10.200.10.1:30301',
                     ws: 'ws://10.200.10.1:30301'
                 },
                 {
-                    id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
+                    id: '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c',
                     http: 'http://10.200.10.1:30302',
                     ws: 'ws://10.200.10.1:30302'
                 },
                 {
-                    id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
+                    id: '0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75',
                     http: 'http://10.200.10.1:30303',
                     ws: 'ws://10.200.10.1:30303'
                 }
@@ -105,17 +105,17 @@ describe('TrackerRegistry', () => {
 
             // 1->1, 2->2, 3->3 coincidence
             expect(trackerRegistry.getTracker('stream-1')).toEqual({
-                id: '0xb9e7cEBF7b03AE26458E32a059488386b05798e8',
+                id: '0xDE11165537ef6C01260ee89A850a281525A5b63F',
                 http: 'http://10.200.10.1:30301',
                 ws: 'ws://10.200.10.1:30301'
             })
             expect(trackerRegistry.getTracker('stream-2')).toEqual({
-                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
+                id: '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c',
                 http: 'http://10.200.10.1:30302',
                 ws: 'ws://10.200.10.1:30302'
             })
             expect(trackerRegistry.getTracker('stream-3')).toEqual({
-                id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
+                id: '0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75',
                 http: 'http://10.200.10.1:30303',
                 ws: 'ws://10.200.10.1:30303'
             })
