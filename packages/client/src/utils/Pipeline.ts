@@ -14,10 +14,17 @@ class PipelineError extends ContextError {}
 /**
  * Pipeline public interface
  */
+
 export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): IPipeline<InType, NewOutType>
     filter(fn: G.GeneratorFilter<OutType>): IPipeline<InType, OutType>
+    forEach(fn: G.GeneratorForEach<OutType>): IPipeline<InType, OutType>
+    forEachBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
+    filterBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
+    collect(n?: number): Promise<OutType[]>
+    consume(): Promise<void>
+    fork(bufferSize?: number, options?: PushBufferOptions): IPipeline<OutType>
     pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
     onFinally(onFinally: FinallyFn): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType> & Context
@@ -104,6 +111,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     consume(fn?: G.GeneratorForEach<OutType>) {
+        this.debug('consume')
         return G.consume(this, fn)
     }
 
@@ -169,9 +177,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      * Pushes results into fork.
      * Note: Does not start consuming this pipeline.
      */
-    fork<U extends Pipeline<OutType>>(bufferSize?: number, options?: PushBufferOptions) {
-        const Self = this.constructor as unknown as new (source: AsyncGenerator<OutType>) => U
+    fork(bufferSize?: number, options?: PushBufferOptions) {
         const buffer = new PushBuffer<OutType>(bufferSize, options)
+        // will need to override method in subclasses
+        const childPipeline = new Pipeline(buffer)
         this.forEach(async (value) => {
             await buffer.push(value)
         })
@@ -184,7 +193,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
             // onBeforeFinally fires as soon as we know the pipeline is ending
             buffer.endWrite()
         })
-        return new Self(buffer)
+        return childPipeline
     }
 
     [Symbol.asyncIterator]() {
@@ -203,8 +212,9 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
 export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, OutType> implements IPushBuffer<InType, OutType> {
     readonly source: PushBuffer<InType>
-    constructor(bufferSize = DEFAULT_BUFFER_SIZE) {
-        const inputBuffer = new PushBuffer<InType>(bufferSize)
+
+    constructor(bufferSize = DEFAULT_BUFFER_SIZE, options?: PushBufferOptions) {
+        const inputBuffer = new PushBuffer<InType>(bufferSize, options)
         super(inputBuffer)
         this.source = inputBuffer
     }
@@ -213,6 +223,22 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         super.pipe(fn)
         return this as PushPipeline<InType, unknown> as PushPipeline<InType, NewOutType>
+    }
+
+    fork(bufferSize?: number, options?: PushBufferOptions): PushPipeline<OutType> {
+        // can't use super.fork as constructor arguments differ
+        // plus TS makes working with this.constructor a PITA
+        const childPipeline = new PushPipeline<OutType>(bufferSize, options)
+
+        this.forEach(async (value) => {
+            await childPipeline.push(value)
+        })
+
+        this.onBeforeFinally(() => {
+            childPipeline.endWrite()
+        })
+
+        return childPipeline
     }
 
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): PushPipeline<InType, NewOutType> {

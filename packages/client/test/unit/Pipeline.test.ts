@@ -695,7 +695,7 @@ describe('Pipeline', () => {
                 })
             })
 
-            describe.only('fork', () => {
+            describe('fork', () => {
                 it('works', async () => {
                     const root = new Pipeline(generate())
                         .onFinally(onFinally)
@@ -788,6 +788,50 @@ describe('Pipeline', () => {
 
                 pipeline.pull(generate())
                 return pipeline
+            })
+
+            it('can fork', async () => {
+                const root = new PushPipeline<number>()
+                    .onFinally(onFinally)
+
+                root.pull(generate())
+                const onFinallyEven = jest.fn()
+                const onFinallyOdd = jest.fn()
+
+                const odd = root.fork(undefined, { name: 'odd' })
+                    .filter((value) => {
+                        return value % 2
+                    })
+                    .onFinally(onFinallyOdd)
+
+                const even = root.fork(undefined, { name: 'even' })
+                    .filter((value) => {
+                        return !(value % 2)
+                    })
+                    .onFinally(onFinallyEven)
+
+                const getOnFinallyCalls = getMockCalls({
+                    onFinally,
+                    onFinallyEven,
+                    onFinallyOdd,
+                })
+
+                // starting collection of fork
+                const oddResultsTask = odd.collect()
+                expect(getOnFinallyCalls()).toEqual({ onFinally: 0, onFinallyEven: 0, onFinallyOdd: 0 })
+                await wait(1000)
+                // fork shouldn't have collected until root iterated
+                expect(getOnFinallyCalls()).toEqual({ onFinally: 0, onFinallyEven: 0, onFinallyOdd: 0 })
+                // this will resolve fork's collect
+                const results = await root.collect()
+                expect(results).toEqual(expected)
+                // note even fork collect not started, so onFinallyEven shouldn't have called
+                expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 0, onFinallyOdd: 1 })
+                expect(await oddResultsTask).toEqual(expected.filter((v) => v % 2))
+                expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 0, onFinallyOdd: 1 })
+                // even shouldn't have started until we called collect on it
+                expect(await even.collect()).toEqual(expected.filter((v) => !(v % 2)))
+                expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 1, onFinallyOdd: 1 })
             })
         })
     })
