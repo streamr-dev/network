@@ -1,3 +1,4 @@
+// Add important parts of Jest to the Karma/Jasmine browser-test runtime's global scope
 // the jest.fn() API
 import * as jestMock from 'jest-mock'
 import { ModernFakeTimers } from '@jest/fake-timers'

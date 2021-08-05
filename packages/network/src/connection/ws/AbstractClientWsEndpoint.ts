@@ -159,7 +159,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
      */
     protected abstract doSetUpConnection(ws: SupportedWs, serverPeerInfo: PeerInfo): C
 
-    protected setUpConnection(ws: SupportedWs, serverPeerInfo: PeerInfo, serverUrl: ServerUrl): PeerId {
+    private setUpConnection(ws: SupportedWs, serverPeerInfo: PeerInfo, serverUrl: ServerUrl): PeerId {
         const connection = this.doSetUpConnection(ws, serverPeerInfo)
 
         this.connectionsByServerUrl.set(serverUrl, connection)

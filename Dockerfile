@@ -25,7 +25,6 @@ EXPOSE 9000
 
 ENV LOG_LEVEL=info
 ENV CONFIG_FILE configs/docker-1.env.json
-ENV STREAMR_URL http://10.200.10.1
 
 RUN ln -s packages/broker/tracker.js tracker.js
-CMD node packages/broker/bin/broker.js packages/broker/${CONFIG_FILE} --streamrUrl=${STREAMR_URL}
+CMD node packages/broker/bin/broker.js packages/broker/${CONFIG_FILE}

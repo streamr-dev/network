@@ -47,7 +47,7 @@ async function catchKeyExchangeError(client: StreamrClient, streamMessage: Strea
     }
 }
 
-async function PublisherKeyExhangeSubscription(client: StreamrClient, getGroupKeyStore: (streamId: string) => Promise<GroupKeyStore>) {
+async function PublisherKeyExchangeSubscription(client: StreamrClient, getGroupKeyStore: (streamId: string) => Promise<GroupKeyStore>) {
     async function onKeyExchangeMessage(_parsedContent: any, streamMessage: StreamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
             if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
@@ -114,11 +114,11 @@ async function PublisherKeyExhangeSubscription(client: StreamrClient, getGroupKe
     return sub
 }
 
-type KeyExhangeOptions = {
+type KeyExchangeOptions = {
     groupKeys?: Record<string, GroupKeysSerialized>
 }
 
-export class PublisherKeyExhange {
+export class PublisherKeyExchange {
     enabled = true
     client
     initialGroupKeys
@@ -126,7 +126,7 @@ export class PublisherKeyExhange {
     sub?: Subscription
     private getSubTask?: Promise<Subscription | undefined>
 
-    constructor(client: StreamrClient, { groupKeys = {} }: KeyExhangeOptions = {}) {
+    constructor(client: StreamrClient, { groupKeys = {} }: KeyExchangeOptions = {}) {
         this.client = client
         this.initialGroupKeys = groupKeys
         this.cleanupFns = []
@@ -156,7 +156,7 @@ export class PublisherKeyExhange {
 
         if (this.getSubTask) { return this.getSubTask }
 
-        this.getSubTask = PublisherKeyExhangeSubscription(this.client, this.getGroupKeyStore).finally(() => {
+        this.getSubTask = PublisherKeyExchangeSubscription(this.client, this.getGroupKeyStore).finally(() => {
             this.getSubTask = undefined
         }).then(async (sub) => {
             if (!this.enabled && sub) {

@@ -14,7 +14,7 @@ import {
     subscribeToKeyExchangeStream,
     parseGroupKeys,
     getKeyExchangeStreamId,
-    KeyExhangeOptions,
+    KeyExchangeOptions,
 } from './KeyExchangeUtils'
 
 type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
@@ -62,7 +62,7 @@ async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encry
     return Promise.all(tasks)
 }
 
-async function SubscriberKeyExhangeSubscription(
+async function SubscriberKeyExchangeSubscription(
     client: StreamrClient,
     getGroupKeyStore: (streamId: string) => Promise<GroupKeyStore>,
     encryptionUtil: EncryptionUtil
@@ -100,7 +100,7 @@ export class SubscriberKeyExchange {
     encryptionUtil
     enabled = true
 
-    constructor(client: StreamrClient, { groupKeys = {} }: KeyExhangeOptions = {}) {
+    constructor(client: StreamrClient, { groupKeys = {} }: KeyExchangeOptions = {}) {
         this.client = client
         this.initialGroupKeys = groupKeys
         this.getGroupKeyStore = pMemoize(this.getGroupKeyStore.bind(this), {
@@ -113,7 +113,7 @@ export class SubscriberKeyExchange {
     }
 
     async getSubscription() {
-        return SubscriberKeyExhangeSubscription(this.client, this.getGroupKeyStore, this.encryptionUtil)
+        return SubscriberKeyExchangeSubscription(this.client, this.getGroupKeyStore, this.encryptionUtil)
     }
 
     async requestKeys({ streamId, publisherId, groupKeyIds }: {

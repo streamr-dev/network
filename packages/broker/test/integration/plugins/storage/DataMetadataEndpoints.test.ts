@@ -40,7 +40,7 @@ describe('DataMetadataEndpoints', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: '' }
         publisherNode = createNetworkNode({
             id: 'publisherNode',
             trackers: [trackerInfo]

@@ -1,9 +1,9 @@
 import { IMessageEvent, w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
+import { DisconnectionReason } from "./AbstractWsEndpoint"
 import { BrowserClientWsConnection, BrowserWebSocketConnectionFactory } from './BrowserClientWsConnection'
-import { AbstractClientWsEndpoint, HandshakeValues, PeerId } from "./AbstractClientWsEndpoint"
+import { AbstractClientWsEndpoint, HandshakeValues } from "./AbstractClientWsEndpoint"
 
 export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserClientWsConnection> {
     constructor(
@@ -12,22 +12,6 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         pingInterval?: number
     ) {
         super(peerInfo, metricsContext, pingInterval)
-    }
-
-    getServerUrlByPeerId(peerId: PeerId): string | undefined {
-        return this.serverUrlByPeerId.get(peerId)
-    }
-
-    protected doClose(connection: BrowserClientWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
-        const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
-        this.connectionsByServerUrl.delete(serverUrl)
-        this.serverUrlByPeerId.delete(connection.getPeerId())
-    }
-
-    protected async doStop(): Promise<void> {
-        this.getConnections().forEach((connection) => {
-            connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
-        })
     }
 
     protected doConnect(serverUrl: string, serverPeerInfo: PeerInfo): Promise<string> {

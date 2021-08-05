@@ -9,9 +9,17 @@ export interface TrackerRegistryItem {
     http: string
 }
 
+export interface TurnConfig {
+    url: string,
+    username: string,
+    password: string
+}
+
 export interface NetworkConfig {
     name: string,
     trackers: TrackerRegistryItem[] | NetworkSmartContract,
+    stun: string | null,
+    turn: TurnConfig | null
     location: {
         latitude: number,
         longitude: number,
