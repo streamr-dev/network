@@ -1,7 +1,7 @@
 import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
+import { DisconnectionReason } from "./AbstractWsEndpoint"
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
 import { AbstractClientWsEndpoint, HandshakeValues, PeerId, ServerUrl } from "./AbstractClientWsEndpoint"
 
@@ -12,22 +12,6 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         pingInterval?: number
     ) {
         super(peerInfo, metricsContext, pingInterval)
-    }
-
-    getServerUrlByPeerId(peerId: PeerId): string | undefined {
-        return this.serverUrlByPeerId.get(peerId)
-    }
-
-    protected doClose(connection: NodeClientWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {
-        const serverUrl = this.serverUrlByPeerId.get(connection.getPeerId())!
-        this.connectionsByServerUrl.delete(serverUrl)
-        this.serverUrlByPeerId.delete(connection.getPeerId())
-    }
-
-    protected async doStop(): Promise<void> {
-        this.getConnections().forEach((connection) => {
-            connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
-        })
     }
 
     protected doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {

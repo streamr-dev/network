@@ -1,6 +1,5 @@
-import { TrackerLayer } from 'streamr-client-protocol'
+import { TrackerLayer, SmartContractRecord } from 'streamr-client-protocol'
 import { RtcSubTypes } from './logic/RtcMessage'
-import { SmartContractRecord } from "streamr-client-protocol/dist/src/utils/TrackerRegistry"
 
 /**
  * Uniquely identifies a stream
