@@ -1,6 +1,6 @@
 import { instanceId } from './index'
 import Gate from './Gate'
-import { Debug } from './log'
+import { Debug, inspect } from './log'
 import { Context, ContextError } from './Context'
 
 export class PushBufferError extends ContextError {}
@@ -54,20 +54,25 @@ export class PushBuffer<T> implements IPushBuffer<T> {
     protected readonly writeGate: Gate
     /** open when readable */
     protected readonly readGate: Gate
-    protected done = false
+
     protected error: Error | undefined
     protected iterator: AsyncGenerator<T>
     protected isIterating = false
 
     constructor(bufferSize = DEFAULT_BUFFER_SIZE, { name }: PushBufferOptions = {}) {
         this.id = instanceId(this, name)
+        this.debug = Debug(this.id)
+
+        if (!(bufferSize > 0 && Number.isSafeInteger(bufferSize))) {
+            throw new PushBufferError(this, `bufferSize must be a safe positive integer, got: ${inspect(bufferSize)}`)
+        }
+
         this.bufferSize = bufferSize
         // start both closed
         this.writeGate = new Gate(`${this.id}-write`)
         this.readGate = new Gate(`${this.id}-read`)
         this.writeGate.close()
         this.readGate.close()
-        this.debug = Debug(this.id)
         this.iterator = this.iterate()
         // this.debug('create', this.bufferSize)
     }
@@ -78,15 +83,14 @@ export class PushBuffer<T> implements IPushBuffer<T> {
      * @returns Promise<true> if item was pushed, Promise<false> if done or became done before writeGate opened.
      */
     async push(item: T) {
-        if (this.isDone() || this.writeGate.isLocked) {
+        if (!this.isWritable()) {
             return false
         }
 
         this.buffer.push(item)
         this.updateWriteGate()
         this.readGate.open()
-        const ok = await this.writeGate.check()
-        return ok
+        return this.writeGate.check()
     }
 
     /**
@@ -124,8 +128,15 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         if (err) {
             this.error = err
         }
-        this.readGate.lock()
+        this.lock()
+    }
+
+    /**
+     * Prevent further reads or writes.
+     */
+    lock() {
         this.writeGate.lock()
+        this.readGate.lock()
     }
 
     /**
@@ -152,9 +163,16 @@ export class PushBuffer<T> implements IPushBuffer<T> {
     /**
      * True if buffer has closed reads and writes.
      */
-
     isDone() {
         return this.writeGate.isLocked && this.readGate.isLocked
+    }
+
+    /**
+     * Can't write if write gate locked.
+     * No point writing if read gate is locked.
+     */
+    isWritable() {
+        return !this.writeGate.isLocked && !this.readGate.isLocked
     }
 
     private async* iterate() {
@@ -199,8 +217,7 @@ export class PushBuffer<T> implements IPushBuffer<T> {
             }
         } finally {
             this.buffer.length = 0
-            this.writeGate.lock()
-            this.readGate.lock()
+            this.lock()
         }
     }
 

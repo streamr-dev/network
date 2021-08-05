@@ -169,7 +169,25 @@ describe('PushBuffer', () => {
             expect(await task3).toBe(true)
         })
 
-        it('can push insisde pull', async () => {
+        it('errors on bad buffer size', async () => {
+            expect(() => {
+                new PushBuffer(0) // eslint-disable-line no-new
+            }).toThrow('bufferSize')
+            expect(() => {
+                new PushBuffer(-1) // eslint-disable-line no-new
+            }).toThrow('bufferSize')
+            expect(() => {
+                new PushBuffer(Number.MAX_SAFE_INTEGER + 10) // eslint-disable-line no-new
+            }).toThrow('bufferSize')
+            expect(() => {
+                new PushBuffer(1.5) // eslint-disable-line no-new
+            }).toThrow('bufferSize')
+            expect(() => {
+                new PushBuffer(0.5) // eslint-disable-line no-new
+            }).toThrow('bufferSize')
+        })
+
+        it('can push inside pull', async () => {
             const items = expected.slice()
             const pushBuffer = new PushBuffer<number>()
             await pushBuffer.push(items.shift()!)
