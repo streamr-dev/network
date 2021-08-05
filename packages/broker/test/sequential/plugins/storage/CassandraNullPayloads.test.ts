@@ -3,6 +3,8 @@ import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
+import { Protocol } from 'streamr-network'
+const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
 
 const { TimeUuid } = cassandraTypes
 
@@ -38,6 +40,49 @@ const insertNullData = async (
     })
 }
 
+function buildMsg({
+    streamId,
+    streamPartition,
+    timestamp,
+    sequenceNumber,
+    publisherId = 'publisher',
+    msgChainId = '1',
+    content = {}
+}: {
+    streamId: string
+    streamPartition: number
+    timestamp: number
+    sequenceNumber: number
+    publisherId?: string
+    msgChainId?: string
+    content?: any
+}) {
+    return new StreamMessage({
+        messageId: new MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+        content: JSON.stringify(content)
+    })
+}
+
+async function storeMockMessages({
+    streamId,
+    streamPartition,
+    count,
+    storage
+}: {
+    streamId: string
+    streamPartition: number
+    count: number
+    storage: Storage
+}) {
+    const storePromises = []
+    for (let i = 0; i < count; i++) {
+        const timestamp = Math.floor((i / (count - 1)) * (1E10))
+        const msg = buildMsg({ streamId, streamPartition, timestamp, sequenceNumber: 0, publisherId: 'publisher1' })
+        storePromises.push(storage.store(msg))
+    }
+    return Promise.all(storePromises)
+}
+
 describe('CassandraNullPayloads', () => {  
     let cassandraClient: Client
     let storage: Storage
@@ -71,15 +116,19 @@ describe('CassandraNullPayloads', () => {
         await storage.close()
     })
 
-    test('insert a null payload and retreve', async () => {
+    test('insert a null payload and retreve n-1 messages (null not included in return set)', async () => {
         const streamrClient = createClient(DUMMY_WS_PORT)
         const stream = await createTestStream(streamrClient, module)
-        await streamrClient.stop()
+        await streamrClient.disconnect()
         const streamId = stream.id
-        const bucketId = await insertBucket(cassandraClient, streamId)
-        await insertNullData(cassandraClient, streamId, bucketId)
 
-        const streamingResults = storage.requestLast(streamId, 0, 1)
-        await toArray(streamingResults)
+        const bucketId = await insertBucket(cassandraClient, streamId)
+
+        await insertNullData(cassandraClient, streamId, bucketId)
+        await storeMockMessages({ streamId, streamPartition: 0, count: 9, storage })
+
+        const streamingResults = storage.requestLast(streamId, 0, 10)
+        const messages = await toArray(streamingResults)
+        expect(messages.length).toEqual(9)
     })
 })

@@ -464,7 +464,7 @@ export class Storage extends EventEmitter {
         }) as Readable
     }
 
-    private async parseRow(row: Todo, debugInfo: ResendDebugInfo) {
+    private parseRow(row: Todo, debugInfo: ResendDebugInfo): Protocol.StreamMessage | null {
         if (row.payload === null) {
             logger.error(`Found message with NULL payload on cassandra; debug info: ${JSON.stringify(debugInfo)}`)
             return null
