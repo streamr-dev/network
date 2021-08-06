@@ -33,6 +33,9 @@ export default class Signal<T> {
             signal.listen(cb)
             return returnValue
         }, {
+            get triggerCount() {
+                return signal.triggerCount
+            },
             trigger: signal.trigger.bind(signal),
             unlisten: signal.unlisten.bind(signal),
             listen: signal.listen.bind(signal),
@@ -53,6 +56,7 @@ export default class Signal<T> {
     listeners: SignalListener<T | undefined>[] = []
     isEnded = false
     lastValue: T | undefined
+    triggerCount = 0
 
     constructor(private once = false) {
         if (once) {
@@ -110,6 +114,8 @@ export default class Signal<T> {
         if (this.isEnded) {
             return
         }
+
+        this.triggerCount += 1
 
         this.lastValue = value
         const tasks = this.listeners.slice()

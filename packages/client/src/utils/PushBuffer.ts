@@ -2,6 +2,7 @@ import { instanceId } from './index'
 import Gate from './Gate'
 import { Debug, inspect } from './log'
 import { Context, ContextError } from './Context'
+import * as G from './GeneratorUtils'
 
 export class PushBufferError extends ContextError {}
 
@@ -93,6 +94,30 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         return this.writeGate.check()
     }
 
+    map<NewOutType>(fn: G.GeneratorMap<T, NewOutType>) {
+        const p = new PushBuffer<NewOutType>(this.bufferSize)
+        pull(G.map(this, fn), p)
+        return p
+    }
+
+    forEach(fn: G.GeneratorForEach<T>) {
+        const p = new PushBuffer(this.bufferSize)
+        pull(G.forEach(this, fn), p)
+        return p
+    }
+
+    filter(fn: G.GeneratorFilter<T>) {
+        const p = new PushBuffer(this.bufferSize)
+        pull(G.filter(this, fn), p)
+        return p
+    }
+
+    reduce<NewOutType>(fn: G.GeneratorReduce<T, NewOutType>, initialValue: NewOutType) {
+        const p = new PushBuffer(this.bufferSize)
+        pull(G.reduce(this, fn, initialValue), p)
+        return p
+    }
+
     /**
      * Collect n/all messages into an array.
      */
@@ -100,20 +125,7 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         if (this.isIterating) {
             throw new this.constructor.Error(this, 'Cannot collect if already iterating.')
         }
-
-        const msgs = []
-        for await (const msg of this) {
-            if (n === 0) {
-                break
-            }
-
-            msgs.push(msg)
-
-            if (msgs.length === n) {
-                break
-            }
-        }
-        return msgs
+        return G.collect(this, n)
     }
 
     private updateWriteGate() {
@@ -301,5 +313,21 @@ export class PullBuffer<InType> extends PushBuffer<InType> {
         super(...args)
         this.source = source
         pull(this.source, this)
+    }
+
+    map<NewOutType>(fn: G.GeneratorMap<InType, NewOutType>) {
+        return new PullBuffer<NewOutType>(G.map(this, fn), this.bufferSize)
+    }
+
+    forEach(fn: G.GeneratorForEach<InType>) {
+        return new PullBuffer(G.forEach(this, fn), this.bufferSize)
+    }
+
+    filter(fn: G.GeneratorFilter<InType>) {
+        return new PullBuffer(G.filter(this, fn), this.bufferSize)
+    }
+
+    reduce<NewOutType>(fn: G.GeneratorReduce<InType, NewOutType>, initialValue: NewOutType) {
+        return new PullBuffer(G.reduce(this, fn, initialValue), this.bufferSize)
     }
 }
