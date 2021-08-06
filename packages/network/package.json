@@ -47,7 +47,7 @@
     "heap": "^0.2.6",
     "lodash": "^4.17.21",
     "lru-cache": "^6.0.0",
-    "node-datachannel": "^0.1.4",
+    "node-datachannel": "^0.1.5",
     "pino": "^6.11.3",
     "setimmediate": "^1.0.5",
     "speedometer": "^1.1.0",

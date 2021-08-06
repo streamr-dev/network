@@ -83,7 +83,7 @@ describe('delivery of messages in protocol layer', () => {
             waitForEvent(nodeToNode2, NodeToNodeEvent.NODE_CONNECTED),
             waitForEvent(nodeToNode1, NodeToNodeEvent.NODE_CONNECTED)
         ])
-    }, 30000)
+    }, 60000)
 
     afterAll(() => {
         return Promise.all([
