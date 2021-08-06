@@ -152,6 +152,40 @@
               }
             }
           ]
+        },
+        "stun": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Address of a STUN server for NAT traversal with ICE, port included"
+        },
+        "turn": {
+          "description": "Address of a TURN server if direct connections cannot be established between hosts behind NATs, port included",
+          "oneOf": [
+            {
+              "type": "null",
+              "description": "TURN-server undefined"
+            }, {
+              "type": "object",
+              "required": [
+                "url",
+                "username",
+                "password"
+              ],
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
         }
       }
     },
