@@ -127,10 +127,10 @@ export class StreamMetrics {
                     this.report.network.connections = metricsReport.metrics.WebRtcEndpoint.connections || 0
 
                     if (metricsReport.metrics['broker/cassandra']) {                        
-                        const cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writeBytes as {rate: number}).rate ||  0
-                        this.report.storage.bytesWrittenPerSec = cassandraWrittenBytesPerMs
-                        const cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number}).rate || 0
-                        this.report.storage.bytesReadPerSec = cassandraReadBytesPerMs
+                        const bytesWrittenPerSec = (metricsReport.metrics['broker/cassandra'].writeBytes as {rate: number}).rate ||  0
+                        this.report.storage.bytesWrittenPerSec = bytesWrittenPerSec
+                        const bytesReadPerSec = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number}).rate || 0
+                        this.report.storage.bytesReadPerSec = bytesReadPerSec
                     }
                     
                     this.report.startTime = metricsReport.startTime
@@ -145,10 +145,10 @@ export class StreamMetrics {
                     this.report.network.connections = throttledAvg(this.report.network.connections, (metricsReport.metrics.WebRtcEndpoint.connections as any).rate || 0)
 
                     if (metricsReport.metrics['broker/cassandra']){
-                        const cassandraWrittenBytesPerMs = (metricsReport.metrics['broker/cassandra'].writeBytes as {rate: number}).rate ||  0
-                        this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, cassandraWrittenBytesPerMs)
-                        const cassandraReadBytesPerMs = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number}).rate || 0
-                        this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, cassandraReadBytesPerMs)
+                        const bytesWrittenPerSec = (metricsReport.metrics['broker/cassandra'].writeBytes as {rate: number}).rate ||  0
+                        this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, bytesWrittenPerSec)
+                        const bytesReadPerSec = (metricsReport.metrics['broker/cassandra'].readBytes as {rate: number}).rate || 0
+                        this.report.storage.bytesReadPerSec = throttledAvg(this.report.storage.bytesReadPerSec, bytesReadPerSec)
                     }
 
                     this.report.currentTime = metricsReport.currentTime
