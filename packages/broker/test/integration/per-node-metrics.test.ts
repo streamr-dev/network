@@ -6,7 +6,7 @@ import { Broker } from '../broker'
 
 const httpPort = 47741
 const wsPort = 47742
-const trackerPort = 47744
+const trackerPort = 47745
 
 const fillMetrics = async (client: StreamrClient, count: number, nodeAddress: string, source: string) => {
     const sourceStream = nodeAddress + '/streamr/node/metrics/' + source
