@@ -9,7 +9,6 @@
     "ethereumPrivateKey",
     "generateSessionId",
     "network",
-    "reporting",
     "streamrUrl",
     "streamrAddress",
     "storageNodeConfig",
@@ -186,90 +185,6 @@
               }
             }
           ]
-        }
-      }
-    },
-    "reporting": {
-      "type": "object",
-      "description": "Configuration for reporting, metrics gathering, error gathering etc.",
-      "required": [
-        "intervalInSeconds",
-        "streamr",
-        "perNodeMetrics"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "intervalInSeconds": {
-          "type": "integer",
-          "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
-          "minimum": 0
-        },
-        "streamr": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Report metrics to Streamr stream",
-            "required": [
-              "streamId"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "streamId": {
-                "type": "string",
-                "description": "Stream identifier"
-              }
-            }
-        },
-        "perNodeMetrics" : {
-          "type": [
-            "object",
-            "null"
-          ],
-          "description": "Specific configuration for the metrics on each node",
-          "required": [
-            "enabled",
-            "wsUrl",
-            "httpUrl",
-            "intervals",
-            "storageNode"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "enabled" : {
-              "type" : "boolean"
-            },
-            "wsUrl" : {
-              "type" : [
-                "string",
-                "null"
-              ]
-            },
-            "httpUrl": {
-              "type" : [
-                "string",
-                "null"
-              ]
-            },
-            "intervals": {
-              "type":[
-                "object",
-                "null"
-              ],
-              "required": [
-                "sec",
-                "min",
-                "hour",
-                "day"
-              ]
-            },
-            "storageNode":{
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          }
         }
       }
     },

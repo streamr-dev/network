@@ -77,4 +77,8 @@ export abstract class Plugin<T> {
     getConfigSchema(): Schema|undefined {
         return undefined
     }
+
+    protected isHttpServerEnabled(): boolean {
+        return this.brokerConfig.httpServer !== null
+    }
 }

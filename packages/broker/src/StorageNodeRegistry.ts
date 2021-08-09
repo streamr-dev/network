@@ -4,9 +4,10 @@ import { StorageNodeRegistryItem, Config } from './config'
 import { Logger } from 'streamr-network'
 
 export class StorageNodeRegistry {
-    urlByAddress: Record<string,string> = {}
+    urlByAddress: Record<string,string>
     streamrUrl: string
     logger: Logger
+
     constructor(urlByAddress: Record<string,string>, streamrUrl: string) {
         this.urlByAddress = urlByAddress
         this.streamrUrl = streamrUrl
@@ -46,6 +47,13 @@ export class StorageNodeRegistry {
         } else {
             return Promise.reject(new GenericError(`No storage nodes: ${streamId}`, 'NO_STORAGE_NODES'))
         }
+    }
+
+    getStorageNodes(): StorageNodeRegistryItem[] {
+        return Object.entries(this.urlByAddress).map(([address, url]) => ({
+            address,
+            url
+        }))
     }
 
     private async getStorageNodeAddresses(streamId: string): Promise<string[]> {

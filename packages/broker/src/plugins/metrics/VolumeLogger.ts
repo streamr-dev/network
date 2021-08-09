@@ -1,10 +1,9 @@
-import { MetricsContext } from 'streamr-network'
+import { MetricsContext, Logger } from 'streamr-network'
 import io from '@pm2/io'
 import Gauge from '@pm2/io/build/main/utils/metrics/gauge'
 import { StreamrClient } from "streamr-client"
-import { Logger } from 'streamr-network'
 import { startMetrics, StreamMetrics } from './StreamMetrics'
-import { Config } from './config'
+import { MetricsPluginConfig } from './MetricsPlugin'
 
 const logger = new Logger(module)
 
@@ -12,7 +11,7 @@ function formatNumber(n: number) {
     return n < 10 ? n.toFixed(1) : Math.round(n)
 }
 
-type PerStreamReportingIntervals = NonNullable<Config['reporting']['perNodeMetrics']>['intervals']
+type PerStreamReportingIntervals = NonNullable<MetricsPluginConfig['perNodeMetrics']>['intervals']
 
 export class VolumeLogger {
     metricsContext: MetricsContext

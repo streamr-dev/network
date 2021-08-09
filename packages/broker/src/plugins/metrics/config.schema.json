@@ -1,0 +1,70 @@
+{
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Metrics plugin configuration",
+  "required": [
+    "consoleLogIntervalInSeconds",
+    "legacyMetricsStreamId",
+    "perNodeMetrics"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "consoleLogIntervalInSeconds": {
+      "type": "integer",
+      "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
+      "minimum": 0
+    },
+    "legacyMetricsStreamId": {
+      "type": [
+        "null",
+        "string"
+      ],
+      "description": "Stream ID for reporting legacy metrics, leave as null to disable."
+    },
+    "clientWsUrl": {
+      "type": "string",
+      "description": "WebSocket URL to configure metrics reporting StreamrClient with"
+    },
+    "clientHttpUrl": {
+      "type": "string",
+      "description": "Core API URL to configure metrics reporting StreamrClient with"
+    },
+    "perNodeMetrics" : {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Specific configuration for the metrics on each node",
+      "required": [
+        "enabled",
+        "intervals",
+        "storageNode"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "enabled" : {
+          "type" : "boolean"
+        },
+        "intervals": {
+          "type":[
+            "object",
+            "null"
+          ],
+          "required": [
+            "sec",
+            "min",
+            "hour",
+            "day"
+          ]
+        },
+        "storageNode":{
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
