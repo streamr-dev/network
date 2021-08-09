@@ -390,7 +390,7 @@ describeRepeats('Connection', () => {
             s.on('done', onDone)
             await expect(async () => {
                 await s.connect()
-            }).rejects.toThrow('badurl')
+            }).rejects.toThrow('Invalid URL')
             expect(onConnected).toHaveBeenCalledTimes(0)
             expect(onDone).toHaveBeenCalledTimes(1)
         })
@@ -788,7 +788,7 @@ describeRepeats('Connection', () => {
             s.socket?.close()
             await expect(async () => (
                 s.nextConnection()
-            )).rejects.toThrow('badurl')
+            )).rejects.toThrow('Invalid URL')
             expect(onConnected).toHaveBeenCalledTimes(1)
             expect(s.getState()).toBe('disconnected')
             await wait(0)
@@ -860,7 +860,7 @@ describeRepeats('Connection', () => {
             s.options.url = 'badurl'
             await expect(async () => (
                 s.connect()
-            )).rejects.toThrow('badurl')
+            )).rejects.toThrow('Invalid URL')
             expect(onDone).toHaveBeenCalledTimes(1)
             await s.disconnect() // shouldn't throw
             expect(onDone).toHaveBeenCalledTimes(1)
@@ -980,7 +980,7 @@ describeRepeats('Connection', () => {
             s.socket?.close()
             await expect(async () => {
                 await s.send('test')
-            }).rejects.toThrow('badurl')
+            }).rejects.toThrow('Invalid URL')
         })
 
         it('fails send if intentionally disconnected', async () => {

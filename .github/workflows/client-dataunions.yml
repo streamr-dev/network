@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [14.x, 16.x]
         test-name: [
             "test-integration-dataunions",
         ]

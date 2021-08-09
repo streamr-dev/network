@@ -1,4 +1,4 @@
-FROM node:14-buster as build
+FROM node:16-buster as build
 WORKDIR /usr/src/monorepo
 COPY . .
 RUN npm set unsafe-perm true
@@ -7,7 +7,7 @@ RUN npm run bootstrap-pkg streamr-broker
 RUN npx lerna exec -- npm prune --production # image contains all packages, remove devDeps to keep image size down
 RUN npx lerna link # restore inter-package symlinks removed by npm prune
 
-FROM node:14-buster-slim
+FROM node:16-buster-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
@@ -25,7 +25,6 @@ EXPOSE 9000
 
 ENV LOG_LEVEL=info
 ENV CONFIG_FILE configs/docker-1.env.json
-ENV STREAMR_URL http://10.200.10.1
 
 RUN ln -s packages/broker/tracker.js tracker.js
-CMD node packages/broker/bin/broker.js packages/broker/${CONFIG_FILE} --streamrUrl=${STREAMR_URL}
+CMD node packages/broker/bin/broker.js packages/broker/${CONFIG_FILE}
