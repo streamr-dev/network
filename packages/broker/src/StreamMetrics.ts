@@ -95,7 +95,6 @@ export class StreamMetrics {
                 bytesWrittenPerSec: 0,
                 bytesReadPerSec: 0,
             },
-
             startTime: 0,
             currentTime: 0,
             timestamp: 0
