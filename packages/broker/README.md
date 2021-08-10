@@ -9,6 +9,7 @@ The broker node extends the minimal network node provided by the
 
 ## Table of Contents
 - [Install](#install)
+- [Configure](#configure)
 - [Run](#run)
 - [Develop](#develop)
 - [Release](#release)
@@ -22,6 +23,10 @@ To install streamr-broker:
 ```bash
 npm install streamr-broker --global
 ```
+
+## Configure
+
+To enable the features you want, configure some [plugins](plugins.md).
 
 ## Run
 It is convenient to run a broker node as part of the full Streamr stack. Check out
