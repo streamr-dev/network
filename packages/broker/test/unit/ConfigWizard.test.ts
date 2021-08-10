@@ -12,7 +12,6 @@ const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
 describe('ConfigWizard', () => {
     let wizard: ConfigWizard
     let tmpDataDir: string
-    
     beforeAll(() => {
         tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
     })
@@ -104,7 +103,7 @@ describe('ConfigWizard', () => {
             }
         })
     })
-    
+
     it ('should store the generated config', async () => {
         mockPromptMethod(wizard, {
             generateOrImportEthereumPrivateKey: 'generate',
@@ -138,7 +137,7 @@ describe('ConfigWizard', () => {
         const finalPath = await wizard.storeConfig()
         expect(existsSync(finalPath)).toEqual(true)
     })
-    
+
     it ('should return the given destinationFolder when prompted', async() => {
         mockPromptMethod(wizard, {
             destinationFolder: tmpDataDir,
@@ -161,5 +160,4 @@ describe('ConfigWizard', () => {
         await startBrokerConfigWizard()
         expect(existsSync(tmpDataDir + '/broker-config.json')).toEqual(true)
     })
-    
 })

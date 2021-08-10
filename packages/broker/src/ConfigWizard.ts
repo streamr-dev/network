@@ -1,8 +1,10 @@
 import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
-import { Config } from './config'
+import { writeFileSync, mkdirSync, existsSync } from 'fs'
 import path from 'path'
-import { writeFileSync, existsSync } from 'fs'
+
+import { Config } from './config'
+
 import * as os from 'os'
 
 const logger = {
@@ -28,7 +30,7 @@ const DEFAULT_MQTT_PORT = 7171
 const DEFAULT_HTTP_PORT = 7172
 const DEFAULT_LEGACY_WS_PORT = 7173
 
-export const DefaultConfig: Config = {
+const DefaultConfig: Config = {
     ethereumPrivateKey: '',
     generateSessionId: false,
     network: {
@@ -80,193 +82,197 @@ export const DefaultConfig: Config = {
     }
 }
 
+export class ConfigWizard{
+    config: Config
+    // required to mock results on tests
+    inquirer: inquirer.Inquirer = inquirer
 
-export const generateOrImportEthereumPrivateKey = {
-    type: 'list',
-    name:'generateOrImportEthereumPrivateKey',
-    message: 'Do you want to generate a new Ethereum private key or import an existing one?',
-    choices: ['Generate', 'Import'],
-    default: (answers:inquirer.Answers) => {
-        const wallet = Wallet.createRandom()
-        answers.config.ethereumPrivateKey = wallet.privateKey
+    constructor() {
+        this.config = DefaultConfig
     }
-}
 
-export const importPrivateKey = {
-    type: 'input',
-    name:'importPrivateKey',
-    message: 'Please provide the private key to import',
-    when: (answers: inquirer.Answers) => {
-        return answers.generateOrImportEthereumPrivateKey === 'Import'
-    },
-    validate: (input:string, answers: inquirer.Answers):string | boolean | Promise<string | boolean> => {
-        try {
-            const wallet = new Wallet(input) 
-            answers.config.ethereumPrivateKey = wallet.privateKey
-            return true
-        } catch (privateKeyError) {
-            return `Invalid privateKey provided for import: ${input}`
-        }
-
+    private async inquirerSinglePrompt(prompt: inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion) {
+        const answers = await this.inquirer.prompt([prompt])
+        return answers[prompt.name!]
     }
-}
 
-export const selectedPlugins = {
-    type: 'checkbox',
-    name:'selectedPlugins',
-    message: 'Select the plugins to enable',
-    choices: [
-        'Websocket',
-        'MQTT',
-        'HttpPublish'
-    ]             
-}
+    private async promptNumberWithDefault(prompt: inquirer.InputQuestion, defaultValue: number): Promise<number>{
+        const valueString = await this.inquirerSinglePrompt(prompt)
+        const value = valueString === '' ? defaultValue: parseInt(valueString)
 
-export const wsPort = {
-    type: 'input',
-    name: 'wsPort',
-    message: `Select a port for the Websocket Plugin [Enter for default: ${DEFAULT_WS_PORT}]`,
-    when: (answers: inquirer.Answers) => {
-        return answers.selectedPlugins.includes('Websocket')
-    },
-    validate: (input:string, answers: inquirer.Answers):string | boolean | Promise<string | boolean> => {
-        const portNumber = parseInt(input || answers.wsPort)
-        if (Number.isNaN(portNumber) || !Number.isInteger(portNumber)) {
-            return `Non-numeric value ${portNumber} provided`
+        if (Number.isNaN(value) || !Number.isInteger(value)) {
+            logger.warn(`Non-numeric value [${valueString}] provided`)
+            return await this.promptNumberWithDefault(prompt, defaultValue)
         }
 
-        if (portNumber < 1024 || portNumber > 49151) {
-            return `Out of range port ${portNumber} provided (valid range 1024-49151)`
+        if (value < 1024 || value > 49151) {
+            logger.warn(`Out of range port [${value}] provided (valid range 1024-49151)`)
+            return await this.promptNumberWithDefault(prompt, defaultValue)
         }
 
-        answers.config.plugins['websocket'] = {
-            port: portNumber
-        }
-        return true 
-    },
-    default: DEFAULT_WS_PORT
-}
+        return value
+    }
 
-export const mqttPort = {
-    type: 'input',
-    name: 'mqttPort',
-    message: `Select a port for the MQTT Plugin [Enter for default: ${DEFAULT_MQTT_PORT}]`,
-    when: (answers: inquirer.Answers) => {
-        return answers.selectedPlugins.includes('MQTT')
-    },
-    validate: (input:string, answers: inquirer.Answers):string | boolean | Promise<string | boolean> => {
-        const portNumber = parseInt(input || answers.mqttPort)
-        if (Number.isNaN(portNumber) || !Number.isInteger(portNumber)) {
-            return `Non-numeric value ${portNumber} provided`
+    private async promptExistingPathWithDefault(prompt: inquirer.InputQuestion, defaultValue: string): Promise<string>{
+        const returnedValue = await this.inquirerSinglePrompt(prompt)
+        // defaultValue always exists at this point
+        if (returnedValue === '') {
+            return defaultValue
+        }
+        
+        if (!existsSync(returnedValue)) {
+            logger.warn(`Path [${returnedValue}] does not exist`)
+            return await this.promptExistingPathWithDefault(prompt, defaultValue)
         }
 
-        if (portNumber < 1024 || portNumber > 49151) {
-            return `Out of range port ${portNumber} provided (valid range 1024-49151)`
-        }
+        return returnedValue
+    }
 
-        answers.config.plugins['mqtt'] = {
-            port: portNumber,
-            payloadMetadata: false,
-            sslCertificate: null
-        }
-        return true 
-    },
-    default: DEFAULT_MQTT_PORT
-}
-
-export const httpPort = {
-    type: 'input',
-    name: 'httpPort',
-    message: `Select a port for the HttpPublish Plugin [Enter for default: ${DEFAULT_HTTP_PORT}]`,
-    when: (answers: inquirer.Answers) => {
-        return answers.selectedPlugins.includes('HttpPublish')
-    },
-    validate: (input:string, answers: inquirer.Answers):string | boolean | Promise<string | boolean> => {
-        const portNumber = parseInt(input || answers.httpPort)
-        if (Number.isNaN(portNumber) || !Number.isInteger(portNumber)) {
-            return `Non-numeric value ${portNumber} provided`
-        }
-
-        if (portNumber < 1024 || portNumber > 49151) {
-            return `Out of range port ${portNumber} provided (valid range 1024-49151)`
-        }
-
-        answers.config.plugins['legacyPublishHttp'] = {
-            port: portNumber
-        }
-        return true 
-    },
-    default:  DEFAULT_HTTP_PORT
-}
-
-
-async function selectValidDestinationPath (config:Config): Promise<string | undefined> {
-    const storageAnswers = await inquirer.prompt([
-        {
-            type: 'input',
-            name: 'destinationFolderPath',
-            message: `Select a path to store the generated config in `,
-            default: path.join(os.homedir(), '.streamr/broker-config.json'),
-            validate: async (input:string, answers: inquirer.Answers):Promise<string | boolean> => {
-                answers.clearPath = !existsSync(input || answers.destinationFolderPath)
-                return true
+    async generateOrImportPrivateKey(): Promise<Wallet>{
+        const generateOrImport = await this.inquirerSinglePrompt({
+            type: 'list',
+            name:'generateOrImportEthereumPrivateKey',
+            message: 'Do you want to generate a new Ethereum private key or import an existing one?',
+            choices: ['Generate', 'Import'],
+            filter: (choice: string) => {
+                return choice.toLowerCase()
             }
-            
-        }
-    ])
+        })
 
-    if (!storageAnswers.clearPath) {
-        const confirmOverwrite = await inquirer.prompt([
-            {
-                type: 'confirm',
-                name: 'confirm',
-                message: `The selected destination ${storageAnswers.destinationFolderPath} already exists, do you want to overwrite it?`,
-                default: false,
-            }
-        ])
+        let wallet: Wallet 
+        if (generateOrImport === 'generate') {
+            wallet = Wallet.createRandom()
+            this.config.ethereumPrivateKey = wallet.privateKey
+            logger.info('This is your generated private key. Please store it in a secure location')
+            logger.alert(this.config.ethereumPrivateKey)
+        } else if (generateOrImport === 'import') {
+            const privateKey = await this.inquirerSinglePrompt({
+                type: 'input',
+                name: 'privateKey',
+                message: "'Please provide the private key to import'",
+            })
 
-        if (confirmOverwrite.confirm) {
             try {
-                writeFileSync(storageAnswers.destinationFolderPath, JSON.stringify(config, null, 2))
-                return storageAnswers.destinationFolderPath
-            } catch (e) {
-                logger.error(e)
-                return e.message
+                wallet = new Wallet(privateKey)
+                this.config.ethereumPrivateKey = wallet.privateKey
+            } catch (privateKeyError) {
+                throw new Error(`Invalid privateKey provided for import: ${privateKey}`)
             }
+
         } else {
-            return selectValidDestinationPath(config)
+            throw new Error(`Invalid option ${generateOrImport} provided`)
+        }
+
+        return wallet
+    }
+    
+    async selectPlugins(): Promise<Array<string>>{
+        const plugins: inquirer.Answers = await this.inquirerSinglePrompt( {
+            type: 'checkbox',
+            name:'selectedItems',
+            message: 'Select the plugins to enable',
+            choices: [
+                {name: 'Websocket'},
+                {name:'MQTT'},
+                {name:'HttpPublish'}
+            ]
+        })
+
+        const selectedPlugins = []
+        for (let i = 0; i < plugins.length; i++) {
+            selectedPlugins.push(plugins[i])
+            if (plugins[i] === 'Websocket') {
+                const wsPort = await this.promptNumberWithDefault({
+                    type: 'input',
+                    name: 'wsPort',
+                    message: `Select a port for the Websocket Plugin [Enter for default: ${DEFAULT_WS_PORT}]`,
+                }, DEFAULT_WS_PORT)
+                this.config.plugins['websocket'] = {
+                    port: wsPort,
+                    payloadMetadata: false,
+                    sslCertificate: null
+                }
+            }
+
+            if (plugins[i] === 'MQTT') {
+                const mqttPort = await this.promptNumberWithDefault({
+                    type: 'input',
+                    name: 'mqttPort',
+                    message: `Select a port for the MQTT Plugin [Enter for default: ${DEFAULT_MQTT_PORT}]`,
+                }, DEFAULT_MQTT_PORT)
+                this.config.plugins['mqtt'] = {
+                    port: mqttPort,
+                    payloadMetadata: false
+                }
+            }
+
+            if (plugins[i] === 'HttpPublish') {
+                this.config.plugins['legacyPublishHttp'] = {}
+            }
+        }
+
+        return selectedPlugins
+
+    }
+
+    async storeConfig(): Promise<string>{
+        const destinationFolder: string = await this.selectDestinationFolder()
+        // ensure the destination folder exists
+        if (!existsSync(destinationFolder)){
+            throw new Error(`Destination folder [${destinationFolder}] does not exist`)
+        }
+        const filename = `broker-config.json`        
+        const finalPath = path.join(destinationFolder, filename)
+        // ask the user if they want to overwrite when the file already exists
+        if (existsSync(finalPath)){
+            const overwrite = await this.inquirerSinglePrompt({
+                type: 'confirm',
+                name: 'overwrite',
+                message: `Config file ${finalPath} already exists. Overwrite?`,
+                default: false
+            })
+            
+            if (!overwrite) {
+                return this.storeConfig()
+            }
+        }
+        
+        writeFileSync(finalPath, JSON.stringify(this.config, null, 2))
+        return finalPath
+    }
+
+    async selectDestinationFolder(): Promise<string> {
+        const defaultDestinationFolder = path.join(os.homedir(), '.streamr')
+        if (!existsSync(defaultDestinationFolder)){
+            mkdirSync(defaultDestinationFolder)
+        }
+
+        return this.promptExistingPathWithDefault({
+            type: 'input',
+            name: 'destinationFolder',
+            message: `Select a path to store the generated config in [Enter for default: ${defaultDestinationFolder}]`,
+        }, defaultDestinationFolder)
+    }
+
+    async start(): Promise<void> {
+        try {
+            const wallet = await this.generateOrImportPrivateKey()
+            logger.log(`Ethereum Address: ${wallet.address}`)
+            logger.log(`Ethereum Private Key: ${wallet.privateKey}`)
+            await this.selectPlugins()
+            const finalConfigPath = await this.storeConfig()
+            logger.log('Broker Config Wizard ran succesfully')
+            logger.log(`Stored config under ${finalConfigPath}`)
+            logger.log(`You can start the broker now with`)
+            logger.info(`streamr-broker-init ${finalConfigPath}`)
+        } catch (e){
+            logger.error(e)
         }
     }
+
 }
 
-
-async function inquirerPromptWithConfig(): Promise<Config> {
-    const config:Config = DefaultConfig 
-
-    const prompts:Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
-        generateOrImportEthereumPrivateKey,
-        importPrivateKey,
-        selectedPlugins,
-        wsPort,
-        mqttPort,
-        httpPort
-    ]
-    
-    const answers = await inquirer.prompt(prompts, {config})
-    return answers.config
-}
-
-    
-
-export async function startBrokerConfigWizard(): Promise<void> {
-    const config = await inquirerPromptWithConfig()
-    logger.info(`This will be your node's address: ${new Wallet(config.ethereumPrivateKey).address}`)
-    logger.info('This is your node\'s private key. Please store it in a secure location:')
-    logger.alert(config.ethereumPrivateKey)
-    const storePath = await selectValidDestinationPath(config)
-    logger.log(`JSON config: ${JSON.stringify(config)}`)
-    logger.info('Broker Config Wizard ran succesfully')
-    logger.log(`Stored config under ${storePath}`)
-    logger.log(`You can start the broker now with`)
-    logger.info(`streamr-broker-init ${storePath}`)
+export async function startBrokerConfigWizard (): Promise<void> {
+    const wizard = new ConfigWizard()
+    return wizard.start()
 }
