@@ -34,50 +34,36 @@ const insertNullData = async (
         + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
         + 'VALUES (?, 0, ?, ?, 0, ?, ?, ?)'
     await cassandraClient.execute(insert, [
-        streamId, bucketId, new Date(), 'publisherId', 'msgChainId', null
+        streamId, bucketId, new Date(), '', '', null
     ], {
         prepare: true
     })
 }
 
-function buildMsg({
-    streamId,
-    streamPartition,
-    timestamp,
-    sequenceNumber,
-    publisherId = 'publisher',
-    msgChainId = '1',
-    content = {}
-}: {
-    streamId: string
-    streamPartition: number
-    timestamp: number
-    sequenceNumber: number
-    publisherId?: string
-    msgChainId?: string
-    content?: any
-}) {
-    return new StreamMessage({
-        messageId: new MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
-        content: JSON.stringify(content)
-    })
-}
-
 async function storeMockMessages({
     streamId,
-    streamPartition,
     count,
     storage
 }: {
     streamId: string
-    streamPartition: number
     count: number
     storage: Storage
 }) {
     const storePromises = []
     for (let i = 0; i < count; i++) {
         const timestamp = Math.floor((i / (count - 1)) * (1E10))
-        const msg = buildMsg({ streamId, streamPartition, timestamp, sequenceNumber: 0, publisherId: 'publisher1' })
+
+        const msg = new StreamMessage({
+            messageId: new MessageIDStrict(
+                streamId,
+                0, //streamPartition
+                timestamp,
+                0, //sequenceNumber,
+                '', //publisherId,
+                '', //msgChainId,
+            ),
+            content: JSON.stringify({})
+        })
         storePromises.push(storage.store(msg))
     }
     return Promise.all(storePromises)
@@ -117,6 +103,7 @@ describe('CassandraNullPayloads', () => {
     })
 
     test('insert a null payload and retreve n-1 messages (null not included in return set)', async () => {
+        const HEALTHY_MESSAGE_COUNT = 9
         const streamrClient = createClient(DUMMY_WS_PORT)
         const stream = await createTestStream(streamrClient, module)
         await streamrClient.disconnect()
@@ -125,10 +112,10 @@ describe('CassandraNullPayloads', () => {
         const bucketId = await insertBucket(cassandraClient, streamId)
 
         await insertNullData(cassandraClient, streamId, bucketId)
-        await storeMockMessages({ streamId, streamPartition: 0, count: 9, storage })
+        await storeMockMessages({ streamId, count: HEALTHY_MESSAGE_COUNT, storage })
 
-        const streamingResults = storage.requestLast(streamId, 0, 10)
+        const streamingResults = storage.requestLast(streamId, 0, (HEALTHY_MESSAGE_COUNT + 1))
         const messages = await toArray(streamingResults)
-        expect(messages.length).toEqual(9)
+        expect(messages.length).toEqual(HEALTHY_MESSAGE_COUNT)
     })
 })
