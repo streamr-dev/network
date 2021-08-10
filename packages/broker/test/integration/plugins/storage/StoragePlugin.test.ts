@@ -2,7 +2,7 @@ import { MetricsContext } from 'streamr-network'
 import { StoragePlugin } from '../../../../src/plugins/storage/StoragePlugin'
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StreamPart } from '../../../../src/types'
-import { fastPrivateKey, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
 import { StorageNodeRegistry } from "../../../../src/StorageNodeRegistry"
 import { Wallet } from 'ethers'
