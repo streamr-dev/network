@@ -24,7 +24,7 @@ To install streamr-broker:
 npm install streamr-broker --global
 ```
 
-## Plugins
+## Configure
 
 To enable the features you want, configure some [plugins](plugins.md).
 
