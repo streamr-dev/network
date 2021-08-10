@@ -57,7 +57,7 @@
     "ethereumPrivateKey": {
       "type": "string",
       "description": "Ethereum private key to establish broker identity",
-      "pattern": "^0x[a-f0-9]{64}$"
+      "pattern": "^(0x)?[a-f0-9]{64}$"
     },
     "generateSessionId": {
       "type": "boolean",
