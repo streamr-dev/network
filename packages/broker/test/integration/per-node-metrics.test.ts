@@ -161,10 +161,11 @@ describe('per-node metrics', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
+            client1.ensureDisconnected(),
+            client2.ensureDisconnected(),
+
             tracker.stop(),
             storageNode.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected()
         ])
     }, 30 * 1000)
 
