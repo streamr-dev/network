@@ -168,7 +168,7 @@ export class VolumeLogger {
         const report = await this.metricsContext.report(true)
 
         // Report metrics to Streamr stream
-        if (this.client instanceof StreamrClient && this.legacyStreamId !== undefined) {
+        if (this.client instanceof StreamrClient && this.client.isConnected && this.legacyStreamId !== undefined) {
             this.client.publish(this.legacyStreamId, report).catch((e) => {
                 logger.warn(`failed to publish metrics to ${this.legacyStreamId} because ${e}`)
             })
