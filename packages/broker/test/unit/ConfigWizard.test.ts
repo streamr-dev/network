@@ -101,17 +101,17 @@ describe('ConfigWizard', () => {
             metrics: {
                 consoleLogIntervalInSeconds: 0,
                 legacyMetricsStreamId: null,
+                clientHttpUrl: 'https://streamr.network/api/v1',
+                clientWsUrl: 'ws://127.0.0.1:7173/api/v1/ws',
                 perNodeMetrics: {
                     enabled: true,
-                    httpUrl: 'https://streamr.network/api/v1',
                     intervals: {
                         day: 86400000,
                         hour: 3600000,
                         min: 60000,
                         sec: 1000
                     },
-                    storageNode: '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916',
-                    wsUrl: 'ws://127.0.0.1:7173/api/v1/ws'
+                    storageNode: '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
                 }
             }
         })
