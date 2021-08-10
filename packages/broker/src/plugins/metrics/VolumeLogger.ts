@@ -103,7 +103,7 @@ export class VolumeLogger {
         })
     }
 
-    async start() {
+    async start(): Promise<void> {
         if (this.client instanceof StreamrClient) {
             await this.initializePerMetricsStream()
         }
@@ -123,7 +123,7 @@ export class VolumeLogger {
         }
     }
 
-    async initializePerMetricsStream() {
+    private async initializePerMetricsStream(): Promise<void> {
         if (!this.client || !this.brokerAddress || !this.storageNodeAddress) {
             throw new Error('Cannot initialize perStream metrics without valid client, brokerAddress, storageNodeAddress')
         }
@@ -163,7 +163,7 @@ export class VolumeLogger {
         }
     }
 
-    async reportAndReset() {
+    async reportAndReset(): Promise<void> {
         const report = await this.metricsContext.report(true)
 
         // Report metrics to Streamr stream
@@ -289,7 +289,7 @@ export class VolumeLogger {
         }
     }
 
-    close() {
+    stop(): void {
         if (this.perStreamMetrics) {
             this.perStreamMetrics.sec.stop()
             this.perStreamMetrics.min.stop()

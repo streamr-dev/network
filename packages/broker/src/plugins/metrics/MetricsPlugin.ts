@@ -46,7 +46,7 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
     }
 
     async stop(): Promise<unknown> {
-        return this.volumeLogger.close()
+        return this.volumeLogger.stop()
     }
 
     getConfigSchema(): Schema {
