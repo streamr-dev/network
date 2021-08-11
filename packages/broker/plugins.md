@@ -12,9 +12,7 @@ Currently many plugins use `legacyWebsocket` plugin as an internal communication
 
 ```
 plugins: {
-    "legacyWebsocket": {
-        port: 9999 // any available port
-    }
+    "legacyWebsocket": {}
 }
 ```
 
@@ -28,11 +26,7 @@ To enable the plugin, add the plugin definition to the Broker configuration JSON
 
 ```
 plugins: {
-    "websocket": {
-        "port": 7170,  // any available port
-        "payloadMetadata": false,
-        "sslCertificate": null
-    }
+    "websocket": {}
 }
 ```
 
@@ -55,6 +49,18 @@ socket.addEventListener('open', () => {
 ```
 
 ### Advanced usage
+
+#### Port
+
+The default port is `8081`. You can change it by specifying a `port` value:
+
+```
+plugins: {
+    "websocket": {
+        "port": 1234
+    }
+}
+```
 
 #### Explicit metadata
 
@@ -144,10 +150,7 @@ As an alternative to Websockets, it is possible to publish and subscribe to a st
 
 ```
 plugins: {
-    "mqtt": {
-        "port": 7171,  // any available port,
-        "payloadMetadata": false
-    }
+    "mqtt": {}
 }
 ```
 
@@ -171,6 +174,8 @@ await client.publish(streamId, JSON.stringify(msg))
 ```
 
 ### Advanced usage
+
+The default port is `1883`. You can change it with `port` config option. 
 
 Explicit metadata can be provided the same way it is provided to the `websocket` plugin ([see above](#explicit-metadata)).
 
@@ -213,14 +218,18 @@ plugins: {
 }
 ```
 
-The plugin doesn't need any configuration options as it uses the Broker's global `httpServer`.
-
-The `httpServer` is configured in the root level:
+The plugin  uses the Broker's global `httpServer`. It is configured in the root level:
 ```
 "network": ...
 "plugins": ...
+"httpServer": {}
+```
+
+The default httpServer port is `8080`. You can change it with `port` config option:
+
+```
 "httpServer": {
-    "port": 8080
+    "port": 1234
 }
 ```
 
