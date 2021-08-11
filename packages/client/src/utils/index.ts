@@ -443,22 +443,14 @@ type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
 
 export function pOne<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType
-): (...args: ArgsType) => Promise<Awaited<ReturnType>> {
-    let inProgress: Promise<Awaited<ReturnType>> | undefined
-    return async (...args: ArgsType): Promise<Awaited<ReturnType>> => {
-        if (inProgress) {
-            return inProgress
+): (...args: ArgsType) => Promise<ReturnType | Awaited<ReturnType>> {
+    const once = pOnce(fn)
+    return async (...args: ArgsType): Promise<ReturnType | Awaited<ReturnType>> => {
+        try {
+            return await once(...args)
+        } finally {
+            once.reset()
         }
-
-        inProgress = (async () => {
-            try {
-                return await Promise.resolve(fn(...args)) as Awaited<ReturnType>
-            } finally {
-                inProgress = undefined
-            }
-        })()
-
-        return inProgress
     }
 }
 
@@ -468,49 +460,63 @@ export function pOne<ArgsType extends unknown[], ReturnType>(
  */
 
 export function pOnce<ArgsType extends unknown[], ReturnType>(
-    fn: (...args: ArgsType) => ReturnType
-): ((...args: ArgsType) => Promise<Awaited<ReturnType>>) & { reset(): void } {
-    // captures function value or error and resolves with those
-    // prevents holding onto in-progress promise forever
-    let started = false
-    let inProgress: Promise<void> | undefined // holds inProgress promise
-    let value: Awaited<ReturnType> | undefined // result
-    let error: Error | undefined // or error
+    fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>
+): ((...args: ArgsType) => Promise<ReturnType | Awaited<ReturnType>>) & { reset(): void, isStarted: boolean } {
+    type CallStatus = PromiseSettledResult<ReturnType> | { status: 'init' } | { status: 'pending', promise: Promise<ReturnType> }
+    let currentCall: CallStatus = { status: 'init' }
 
     return Object.assign(async function pOnceWrap(...args: ArgsType) { // eslint-disable-line prefer-arrow-callback
-        // run once
-        if (!started) {
-            started = true
-            // note: be sure to execute fn immediately
-            // i.e. don't change this to wait for Promise#then or something
-            inProgress = (async () => {
-                // capture value/error
-                try {
-                    value = await Promise.resolve(fn(...args)) as Awaited<ReturnType>
-                } catch (err) {
-                    error = err
-                } finally { // eslint-disable-line promise/always-return
-                    // allow in-progress promise to be garbage-collected
-                    inProgress = undefined
-                }
-            })()
+        // capture currentCall so can assign to it, even after reset
+        const thisCall = currentCall
+        if (thisCall.status === 'pending') {
+            return thisCall.promise
         }
 
-        if (inProgress) {
-            await inProgress
+        if (thisCall.status === 'fulfilled') {
+            return thisCall.value
         }
 
-        if (error) {
-            throw error
+        if (thisCall.status === 'rejected') {
+            throw thisCall.reason
         }
 
-        return value as Awaited<ReturnType>
+        // status === 'init'
+
+        currentCall = thisCall
+
+        const promise = (async () => {
+            // capture value/error
+            try {
+                const value = await fn(...args)
+                Object.assign(thisCall, {
+                    promise: undefined, // release promise
+                    status: 'fulfilled',
+                    value,
+                })
+                return value
+            } catch (reason) {
+                Object.assign(thisCall, {
+                    promise: undefined, // release promise
+                    status: 'rejected',
+                    reason,
+                })
+
+                throw reason
+            }
+        })()
+
+        Object.assign(thisCall, {
+            status: 'pending',
+            promise,
+        })
+
+        return promise
     }, {
+        get isStarted() {
+            return currentCall.status !== 'init'
+        },
         reset() {
-            error = undefined
-            value = undefined
-            started = false
-            inProgress = undefined
+            currentCall = { status: 'init' }
         }
     })
 }

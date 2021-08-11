@@ -1,6 +1,8 @@
 import { wait } from 'streamr-test-utils'
 
-import { pOrderedResolve, CacheAsyncFn, CacheFn, pOnce, pLimitFn } from '../../src/utils'
+import { pOrderedResolve, CacheAsyncFn, CacheFn, pOnce, pLimitFn, pOne } from '../../src/utils'
+
+const WAIT_TIME = 25
 
 describe('pOrderedResolve', () => {
     it('Execute functions concurrently, resolving in order they were executed', async () => {
@@ -10,7 +12,7 @@ describe('pOrderedResolve', () => {
             try {
                 active += 1
                 if (index === 1) {
-                    await wait(50) // delay first call
+                    await wait(WAIT_TIME) // delay first call
                 } else {
                     expect(active).toBeGreaterThan(1) // ensure concurrent
                     await wait(1)
@@ -190,6 +192,7 @@ describe('cacheFn', () => {
         cachedFn2.clearMatching((_d: string) => true)
     })
 })
+
 describe('pOnce', () => {
     it('works', async () => {
         let count = 0
@@ -206,12 +209,25 @@ describe('pOnce', () => {
         expect(next).toHaveBeenCalledTimes(2)
     })
 
+    it('calls function immediately', async () => {
+        let count = 0
+        const next = jest.fn(async () => {
+            count += 1
+            return count
+        })
+        const wrappedFn = pOnce(next)
+        const task = wrappedFn()
+        expect(await next()).toEqual(2)
+        expect(await task).toEqual(1)
+        expect(next).toHaveBeenCalledTimes(2)
+    })
+
     it('works with concurrent starts', async () => {
         let isInProgress = false
         const next = jest.fn(async () => {
             if (isInProgress) { throw new Error('already in progress') }
             isInProgress = true
-            await wait(100)
+            await wait(WAIT_TIME)
             // eslint-disable-next-line require-atomic-updates
             isInProgress = false
         })
@@ -232,10 +248,36 @@ describe('pOnce', () => {
         expect(next).toHaveBeenCalledTimes(1)
     })
 
+    it('works with reset', async () => {
+        let count = 0
+        const next = jest.fn(async (waitTime = WAIT_TIME) => {
+            count += 1
+            const value = count
+            await wait(waitTime)
+            return value
+        })
+
+        const wrappedFn = pOnce(next)
+        const tasks = [
+            wrappedFn(),
+            wrappedFn(),
+            wrappedFn(),
+        ]
+        expect(await Promise.all(tasks)).toEqual([1, 1, 1])
+        wrappedFn.reset()
+        const task1 = wrappedFn(WAIT_TIME)
+        wrappedFn.reset()
+        const task2 = wrappedFn(WAIT_TIME / 2) // this will resolve before task1
+        const task3 = wrappedFn()
+        expect(await Promise.all([task1, task2, task3])).toEqual([2, 3, 3])
+        expect(await wrappedFn()).toBe(3)
+        expect(next).toHaveBeenCalledTimes(3)
+    })
+
     it('works with error', async () => {
         const err = new Error('expected')
         const next = jest.fn(async () => {
-            await wait(100)
+            await wait(WAIT_TIME)
             throw err
         })
 
@@ -251,6 +293,36 @@ describe('pOnce', () => {
         await expect(async () => {
             await wrappedFn()
         }).rejects.toThrow(err)
+        expect(next).toHaveBeenCalledTimes(1)
+        // reset should work after rejection
+        wrappedFn.reset()
+        await expect(async () => {
+            await wrappedFn()
+        }).rejects.toThrow(err)
+        expect(next).toHaveBeenCalledTimes(2)
+    })
+
+    it('can capture sync errors as async rejections', async () => {
+        const err = new Error('expected')
+        const next = jest.fn(() => {
+            throw err
+        })
+
+        const wrappedFn = pOnce(next)
+        const tasks = [
+            wrappedFn(),
+            wrappedFn(),
+            wrappedFn(),
+        ]
+        await expect(async () => {
+            await Promise.all(tasks)
+        }).rejects.toThrow(err)
+        await expect(async () => {
+            await wrappedFn()
+        }).rejects.toThrow(err)
+        await wrappedFn().catch((error) => {
+            expect(error).toBe(err)
+        })
         expect(next).toHaveBeenCalledTimes(1)
     })
 
@@ -275,5 +347,26 @@ describe('pOnce', () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = await wrappedFn('abc')
         expect(c).toEqual(3)
+    })
+})
+
+describe('pOne', () => {
+    it('works', async () => {
+        let count = 0
+        const next = jest.fn(async () => {
+            count += 1
+            const value = count
+            await wait(WAIT_TIME)
+            return value
+        })
+        const wrappedFn = pOne(next)
+
+        // sequential calls should call next each time
+        expect(await wrappedFn()).toEqual(1)
+        expect(await wrappedFn()).toEqual(2)
+        // parallel calls should be same
+        expect(await Promise.all([wrappedFn(), wrappedFn(), wrappedFn()])).toEqual([3, 3, 3])
+        // can call again immediately after resolved
+        expect(await (wrappedFn().then(() => wrappedFn()))).toEqual(5)
     })
 })
