@@ -5,22 +5,15 @@
   "type": "object",
   "required": [
     "plugins",
-    "httpServer",
     "ethereumPrivateKey",
-    "generateSessionId",
     "network",
-    "reporting",
-    "streamrUrl",
-    "streamrAddress",
-    "storageNodeConfig",
-    "apiAuthentication"
+    "reporting"
   ],
   "additionalProperties": false,
   "properties": {
     "plugins": {
       "type": "object",
       "description": "Pluging configurations",
-      "required": [],
       "additionalProperties": true
     },
     "httpServer": {
@@ -29,28 +22,29 @@
         "null"
       ],
       "description": "HTTP server configuration",
-      "required": [
-        "port"
-      ],
+      "default": null,
       "additionalProperties": false,
       "properties": {
         "port": {
           "$ref": "#/definitions/port",
-          "description": "Port to start HTTP server on"
+          "description": "Port to start HTTP server on",
+          "default": 8080
         },
         "certFileName": {
           "type": [
             "string",
             "null"
           ],
-          "description": "Path of certificate file to use for SSL"
+          "description": "Path of certificate file to use for SSL",
+          "default": null
         },
         "privateKeyFileName": {
           "type": [
             "string",
             "null"
           ],
-          "description": "Path of private key file to use for SSL"
+          "description": "Path of private key file to use for SSL",
+          "default": null
         }
       }
     },
@@ -61,14 +55,14 @@
     },
     "generateSessionId": {
       "type": "boolean",
-      "description": "Whether to generate a session id that gets attached to node id (or not). Disable for consistent node id."
+      "description": "Whether to generate a session id that gets attached to node id (or not). Disable for consistent node id.",
+      "default": true
     },
     "network": {
       "type": "object",
       "description": "Network node settings",
       "required": [
         "name",
-        "trackers",
         "location"
       ],
       "additionalProperties": false,
@@ -78,6 +72,18 @@
           "description": "Human-readable name for network node"
         },
         "trackers": {
+          "default": [
+            {
+              "id": "0x7b9ad7B9E377dFd17fb4fF8F946956BDa1572849",
+              "ws": "wss://corea1.streamr.network:30300",
+              "http": "https://corea1.streamr.network:30300"
+            },
+            {
+              "id": "0xeC3471C25f47FD62D181Af7fd5cB82D4520E26BC",
+              "ws": "wss://corea2.streamr.network:30300",
+              "http": "https://corea2.streamr.network:30300"
+            }
+          ],
           "oneOf": [
             {
               "type": "array",
@@ -110,6 +116,7 @@
         },
         "location": {
           "description": "Location of node",
+          "default": null,
           "oneOf": [
             {
               "type": "null",
@@ -276,16 +283,24 @@
     "streamrUrl": {
       "type": "string",
       "description": "Base URL of Core (E&E) API to use",
+      "default": "https://streamr.network",
       "format": "uri"
     },
     "streamrAddress": {
       "type": "string",
       "description": "Ethereum address Core (E&E)",
+      "default": "0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a",
       "pattern": "^0x[a-fA-F0-9]{40}$"
     },
     "storageNodeConfig": {
       "type": "object",
       "description": "Storage node settings",
+      "default": {
+        "registry": [{
+          "address": "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
+          "url": "https://corea1.streamr.network:8001"
+        }]
+      },
       "required": [
         "registry"
       ],
@@ -314,6 +329,7 @@
         "null"
       ],
       "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
+      "default": null,
       "required": [
         "keys"
       ],
