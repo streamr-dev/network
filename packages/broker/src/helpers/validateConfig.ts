@@ -3,7 +3,9 @@ import addFormats from 'ajv-formats'
 import { Todo } from '../types'
 
 export const validateConfig = (data: unknown, schema: Schema, contextName?: string) => {
-    const ajv = new Ajv()
+    const ajv = new Ajv({
+        useDefaults: true
+    })
     addFormats(ajv)
     if (!ajv.validate(schema, data)) {
         const prefix = (contextName !== undefined) ? (contextName + ': ') : ''
