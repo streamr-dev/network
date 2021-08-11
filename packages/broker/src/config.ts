@@ -68,7 +68,7 @@ export interface Config {
     streamrUrl: string,
     streamrAddress: string,
     storageNodeConfig: StorageNodeConfig,
-    httpServer: HttpServerConfig | null
+    httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: {
         keys: string[]

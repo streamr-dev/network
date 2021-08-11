@@ -18,11 +18,10 @@
     },
     "httpServer": {
       "type": [
-        "object",
-        "null"
+        "object"
       ],
       "description": "HTTP server configuration",
-      "default": null,
+      "default": {},
       "additionalProperties": false,
       "properties": {
         "port": {

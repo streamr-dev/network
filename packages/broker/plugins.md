@@ -218,16 +218,11 @@ plugins: {
 }
 ```
 
-The plugin  uses the Broker's global `httpServer`. It is configured in the root level:
+The default HTTP server port is `8080`. You can change it by specifying a `port` value for the root level `httpServer` option:
+
 ```
 "network": ...
 "plugins": ...
-"httpServer": {}
-```
-
-The default httpServer port is `8080`. You can change it with `port` config option:
-
-```
 "httpServer": {
     "port": 1234
 }

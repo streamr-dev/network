@@ -201,9 +201,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
             if (httpServerRoutes.length > 0) {
-                if (config.httpServer === null) {
-                    throw new Error('HTTP server config not defined')
-                }
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
             await volumeLogger.start()
