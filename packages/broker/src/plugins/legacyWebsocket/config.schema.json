@@ -3,18 +3,17 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "description": "WebSocket plugin configuration",
-    "required": [
-        "port"
-    ],
     "additionalProperties": false,
     "properties": {
         "port": {
             "type": "integer",
-            "description": "Port to start plugin on"
+            "description": "Port to start plugin on",
+            "default": 8082
         },
         "pingInterval": {
             "type": "integer",
             "description": "How often to ping client connections (in milliseconds)",
+            "default": 60000,
             "minimum": 0
         },
         "certFileName": {
@@ -22,14 +21,16 @@
                 "string",
                 "null"
             ],
-            "description": "Path of certificate file to use for SSL"
+            "description": "Path of certificate file to use for SSL",
+            "default": null
         },
         "privateKeyFileName": {
             "type": [
                 "string",
                 "null"
             ],
-            "description": "Path of private key file to use for SSL"
+            "description": "Path of private key file to use for SSL",
+            "default": null
         }
     }
 }
