@@ -237,7 +237,7 @@ If you provide a SSL certificate it will support use SSL/TLS connections:
 }
 ```
 
-The plugin provides a single endpoint: `/streams/:streamId/` with the following optional query parameters:
+The plugin provides a single endpoint: `/streams/:streamId` with the following optional query parameters:
 
 - `timestamp` in ISO-8601 format e.g. 2001-02-03T04:05:06Z, or as a number 1234567890000
 - `partition` (explicit partition number) or `partitionKey` (a string which used to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams)) **TODO**: define which partition is used when neither parameter is given
