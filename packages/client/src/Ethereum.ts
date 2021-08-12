@@ -1,11 +1,14 @@
+import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
 import { ExternalProvider, getDefaultProvider, JsonRpcProvider, Provider, Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import { ConnectionInfo } from '@ethersproject/web'
-import { EthereumAddress } from './types'
 import { BytesLike } from '@ethersproject/bytes'
+
+import { EthereumAddress } from './types'
+import { Config } from './Config'
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
 type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
@@ -46,19 +49,20 @@ export type AllAuthConfig = XOR<AuthConfig, DeprecatedAuthConfig>
 
 // Ethereum Config
 
-export type EthereumConfig = {
-    binanceRPC: ConnectionInfo & { chainId?: number }
+export abstract class EthereumConfig {
+    abstract binanceRPC: ConnectionInfo & { chainId?: number }
     // address on sidechain
-    binanceAdapterAddress: EthereumAddress
+    abstract binanceAdapterAddress: EthereumAddress
     // AMB address on BSC. used to port TXs to BSC
-    binanceSmartChainAMBAddress: EthereumAddress
-    withdrawServerUrl: string
-    mainnet?: ConnectionInfo|string
-    sidechain: ConnectionInfo & { chainId?: number }
-    tokenAddress: EthereumAddress,
-    tokenSidechainAddress: EthereumAddress,
+    abstract binanceSmartChainAMBAddress: EthereumAddress
+    abstract withdrawServerUrl: string
+    abstract mainnet?: ConnectionInfo|string
+    abstract sidechain: ConnectionInfo & { chainId?: number }
+    abstract tokenAddress: EthereumAddress
+    abstract tokenSidechainAddress: EthereumAddress
 }
 
+@scoped(Lifecycle.ContainerScoped)
 export default class StreamrEthereum {
     static generateEthereumAccount() {
         const wallet = Wallet.createRandom()
@@ -71,12 +75,11 @@ export default class StreamrEthereum {
     _getAddress?: () => Promise<string>
     _getSigner?: () => Signer
     _getSidechainSigner?: () => Promise<Signer>
-    authConfig
-    ethereumConfig
 
-    constructor(authConfig: AllAuthConfig, ethereumConfig: EthereumConfig) {
-        this.authConfig = authConfig
-        this.ethereumConfig = ethereumConfig
+    constructor(
+        @inject(Config.Auth) authConfig: AllAuthConfig,
+        @inject(Config.Ethereum) private ethereumConfig: EthereumConfig
+    ) {
         if ('privateKey' in authConfig && authConfig.privateKey) {
             const key = authConfig.privateKey
             const address = getAddress(computeAddress(key))

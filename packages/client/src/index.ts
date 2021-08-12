@@ -5,19 +5,18 @@
  * @module StreamrClient
  */
 
-import { StreamrClient } from './StreamrClient'
+import { BrubeckClient } from './BrubeckClient'
 
-export * from './StreamrClient'
+export * from './BrubeckClient'
 export * from './Config'
-export * from './stream'
-export * from './stream/encryption/Encryption'
-export * from './stream/StreamPart'
-export * from './stream/StorageNode'
-export * from './subscribe'
-export * from './rest/LoginEndpoints'
-export * from './rest/StreamEndpoints'
+export * from './Stream'
+export * from './encryption/Encryption'
+export * from './StorageNode'
+export * from './Subscriber'
+export * from './LoginEndpoints'
+export * from './StreamEndpoints'
 export * from './dataunion/DataUnion'
-export * from './rest/authFetch'
+export * from './authFetch'
 export * from './types'
 
 // TODO should export these to support StreamMessageAsObject:
@@ -30,6 +29,6 @@ export { Contract } from '@ethersproject/contracts'
 export { BytesLike, Bytes } from '@ethersproject/bytes'
 export { ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 
-export default StreamrClient
+export default BrubeckClient
 
 // Note awful export wrappers in index-commonjs.js & index-esm.mjs

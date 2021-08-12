@@ -1,11 +1,12 @@
 import { wait } from 'streamr-test-utils'
+import { startTracker, Tracker } from 'streamr-network'
 import { StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
+
 import { Msg } from '../../utils'
 import { counterId, Scaffold } from '../../../src/utils'
-import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
-import { PublishMetadata } from '../../../src/brubeck/Publisher'
-import { startTracker, Tracker } from 'streamr-network'
-import { StreamProperties } from '../../../src/brubeck/Stream'
+import { BrubeckClient } from '../../../src/BrubeckClient'
+import { PublishMetadata } from '../../../src/Publisher'
+import { StreamProperties } from '../../../src/Stream'
 import { Pipeline } from '../../../src/utils/Pipeline'
 
 type PublishManyOpts = Partial<{

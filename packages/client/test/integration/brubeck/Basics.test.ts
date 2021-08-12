@@ -1,12 +1,11 @@
 import { wait } from 'streamr-test-utils'
 
 import { describeRepeats, uid, fakePrivateKey, Msg } from '../../utils'
-import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
-import Connection from '../../../src/Connection'
+import { BrubeckClient } from '../../../src/BrubeckClient'
 import { publishManyGenerator } from './utils'
 
 import clientOptions from '../config'
-import { Stream } from '../../../src/brubeck/Stream'
+import { Stream } from '../../../src/Stream'
 
 describeRepeats('StreamrClient', () => {
     const MAX_MESSAGES = 10
@@ -59,11 +58,6 @@ describeRepeats('StreamrClient', () => {
         if (client) {
             client.debug('disconnecting after test')
             await client.disconnect()
-        }
-
-        const openSockets = Connection.getOpen()
-        if (openSockets !== 0) {
-            throw new Error(`sockets not closed: ${openSockets}`)
         }
     })
 

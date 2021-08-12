@@ -8,13 +8,13 @@ import {
     // addAfterFn,
 } from '../../utils'
 import { getPublishTestStreamMessages, getWaitForStorage, createTestStream } from './utils'
-import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
-import Resend from '../../../src/brubeck/Resends'
+import { BrubeckClient } from '../../../src/BrubeckClient'
+import Resend from '../../../src/Resends'
 // import { Defer } from '../../../src/utils'
 
 import clientOptions from '../config'
-import { Stream } from '../../../src/brubeck/Stream'
-import { StorageNode } from '../../../src/stream/StorageNode'
+import { Stream } from '../../../src/Stream'
+import { StorageNode } from '../../../src/StorageNode'
 
 // const { ControlMessage } = ControlLayer
 

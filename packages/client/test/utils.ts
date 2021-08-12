@@ -3,16 +3,15 @@ import { writeHeapSnapshot } from 'v8'
 
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { PublishRequest, StreamMessage } from 'streamr-client-protocol'
+import { PublishRequest } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
-import { pTimeout, counterId, CounterId, AggregatedError, pLimitFn } from '../src/utils'
-import { Debug, inspect, format } from '../src/utils/log'
+import { counterId, CounterId, AggregatedError } from '../src/utils'
+import { Debug, format } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
-import { validateOptions } from '../src/stream/utils'
-import type { StreamPartDefinitionOptions, StreamProperties } from '../src/stream'
-import { StreamrClient } from '../src/StreamrClient'
+import { StreamProperties } from '../src/Stream'
 import clientOptions from './integration/config'
+import { BrubeckClient } from '../src/BrubeckClient'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -93,76 +92,6 @@ export function Msg<T extends object>(opts?: T) {
     }
 }
 
-function defaultMessageMatchFn(msgTarget: PublishRequest, msgGot: StreamMessage) {
-    if (msgTarget.streamMessage.signature) {
-        // compare signatures by default
-        return msgTarget.streamMessage.signature === msgGot.signature
-    }
-    return JSON.stringify(msgGot.getParsedContent()) === JSON.stringify(msgTarget.streamMessage.getParsedContent())
-}
-
-export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
-    /* eslint-disable no-await-in-loop */
-    return async (publishRequest: any, opts = {}) => {
-        const {
-            streamId,
-            streamPartition = 0,
-            interval = 500,
-            timeout = 10000,
-            count = 100,
-            messageMatchFn = defaultMessageMatchFn
-        } = validateOptions({
-            ...defaultOpts,
-            ...opts,
-        })
-
-        if (!publishRequest && !publishRequest.streamMessage) {
-            throw new Error(`should check against publish request for comparison, got: ${inspect(publishRequest)}`)
-        }
-
-        const start = Date.now()
-        let last: any
-        // eslint-disable-next-line no-constant-condition
-        let found = false
-        while (!found) {
-            const duration = Date.now() - start
-            if (duration > timeout) {
-                client.debug('waitForStorage timeout %o', {
-                    timeout,
-                    duration
-                }, {
-                    publishRequest,
-                    last: last!.map((l: any) => l.content),
-                })
-                const err: any = new Error(`timed out after ${duration}ms waiting for message: ${inspect(publishRequest)}`)
-                err.publishRequest = publishRequest
-                throw err
-            }
-
-            last = await client.getStreamLast({
-                streamId,
-                streamPartition,
-                count,
-            })
-
-            for (const lastMsg of last) {
-                if (messageMatchFn(publishRequest, lastMsg)) {
-                    found = true
-                    return
-                }
-            }
-
-            client.debug('message not found, retrying... %o', {
-                msg: publishRequest.streamMessage.getParsedContent(),
-                last: last.map(({ content }: any) => content)
-            })
-
-            await wait(interval)
-        }
-    }
-    /* eslint-enable no-await-in-loop */
-}
-
 export type CreateMessageOpts = {
     /** index of message in total */
     index: number,
@@ -191,180 +120,13 @@ export type PublishOpts = {
     batchSize: number
 }
 
-type PublishTestMessagesOpts = StreamPartDefinitionOptions & Partial<PublishOpts>
-
-export function getPublishTestMessages(client: StreamrClient, defaultOptsOrStreamId: string | PublishTestMessagesOpts = {}) {
-    // second argument could also be streamId
-    let defaultOpts: PublishTestMessagesOpts
-    if (typeof defaultOptsOrStreamId === 'string') {
-        // eslint-disable-next-line no-param-reassign
-        defaultOpts = {
-            streamId: defaultOptsOrStreamId as string,
-        }
-    } else {
-        defaultOpts = defaultOptsOrStreamId as PublishTestMessagesOpts
-    }
-
-    const publishTestMessagesRaw = async (n = 4, opts: PublishTestMessagesOpts = {}) => {
-        const id = 'testName' in opts ? opts.testName : uid('test')
-        let msgCount = 0
-        const {
-            streamId,
-            streamPartition = 0,
-            retainMessages = true,
-            delay = 100,
-            timeout = 3500,
-            waitForLast = false, // wait for message to hit storage
-            waitForLastCount,
-            waitForLastTimeout,
-            beforeEach = (m: any) => m,
-            afterEach = () => {},
-            timestamp,
-            partitionKey,
-            batchSize = 1,
-            createMessage = () => {
-                msgCount += 1
-                return {
-                    test: id,
-                    value: `${msgCount} of ${n}`
-                }
-            },
-        } = validateOptions<PublishTestMessagesOpts>({
-            ...defaultOpts,
-            ...opts,
-        })
-
-        let connectionDone = false
-        function checkDone() {
-            if (connectionDone) {
-                throw new Error('Connection done before finished publishing')
-            }
-        }
-        const onDone = () => {
-            connectionDone = true
-        }
-
-        try {
-            client.connection.once('done', onDone)
-            // async queue to ensure messages set up in order
-            const setupMessage = pLimitFn(async (publishOpts: CreateMessageOpts) => {
-                const message = createMessage(publishOpts)
-                await beforeEach(message)
-                return message
-            })
-
-            const publishMessage = async (publishOpts: CreateMessageOpts) => {
-                if (connectionDone) { return }
-                const message = await setupMessage(publishOpts)
-                if (connectionDone) { return }
-                const { index } = publishOpts
-                const request = await pTimeout(client.publish(
-                    { streamId, streamPartition },
-                    message,
-                    typeof timestamp === 'function' ? timestamp() : timestamp,
-                    partitionKey
-                ), timeout, `publish timeout ${streamId}: ${index} ${inspect(message, {
-                    maxStringLength: 256,
-                })}`).catch((err) => {
-                    if (connectionDone && err.message.includes('Needs connection')) {
-                        // ignore connection closed error
-                        return
-                    }
-                    throw err
-                })
-
-                if (!retainMessages) {
-                    // only keep last message (for waitForLast)
-                    published.length = 0
-                }
-
-                published.push([
-                    message,
-                    // @ts-expect-error
-                    request,
-                ])
-
-                if (connectionDone) { return }
-
-                await afterEach(message, request as PublishRequest)
-                checkDone()
-                await wait(delay) // ensure timestamp increments for reliable resend response in test.
-                checkDone()
-            }
-
-            const published: [ message: any, request: PublishRequest ][] = []
-            /* eslint-disable no-await-in-loop, no-loop-func */
-            const batchTasks: Promise<any>[] = []
-            let batches = 1
-            for (let i = 0; i < n; i++) {
-                if (connectionDone) {
-                    await Promise.allSettled(batchTasks)
-                    break
-                }
-
-                if (batchTasks.length < batchSize) {
-                    client.debug('adding to batch', { i, batchTasks: batchTasks.length, batches })
-                    // fill batch
-                    batchTasks.push(publishMessage({
-                        index: i,
-                        batchIndex: batchTasks.length,
-                        batch: batches,
-                        total: n,
-                    }))
-                }
-
-                if (batchTasks.length >= batchSize || i >= n) {
-                    // batch is full, or finished all messages
-                    // wait for tasks
-                    const tasks = batchTasks.slice()
-                    batchTasks.length = 0
-                    batches += 1
-                    client.debug('executing batch', { i, batchTasks: tasks.length, batches })
-                    await Promise.allSettled(tasks)
-                    await Promise.all(tasks)
-                }
-            }
-            /* eslint-enable no-await-in-loop, no-loop-func */
-
-            checkDone()
-
-            if (waitForLast) {
-                const msg = published[published.length - 1][1]
-                await getWaitForStorage(client)(msg, {
-                    streamId,
-                    streamPartition,
-                    timeout: waitForLastTimeout,
-                    count: waitForLastCount,
-                    messageMatchFn(m: any, b: any) {
-                        checkDone()
-                        return m.streamMessage.signature === b.signature
-                    }
-                })
-            }
-
-            return published
-        } finally {
-            client.connection.off('done', onDone)
-        }
-    }
-
-    const publishTestMessages = async (...args: any[]) => {
-        const published = await publishTestMessagesRaw(...args)
-        return published.map(([msg]) => msg)
-    }
-
-    publishTestMessages.raw = publishTestMessagesRaw
-    return publishTestMessages
-}
-
 export const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
 
 export function getRandomClient() {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`)
-    return new StreamrClient({
+    return new BrubeckClient({
         ...clientOptions,
         auth: {
-            // @ts-expect-error ?
             privateKey: wallet.privateKey
         }
     })
@@ -388,7 +150,7 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) 
 }
 
 // eslint-disable-next-line no-undef
-export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+export const createTestStream = (streamrClient: BrubeckClient, module: NodeModule, props?: Partial<StreamProperties>) => {
     return streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props

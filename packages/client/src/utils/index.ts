@@ -181,7 +181,7 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
     cachePromiseRejection?: boolean
     onEviction?: (...args: any[]) => void
     cacheKey?: (args: ArgsType) => KeyType
-} = {}) {
+} = {}): ((...args: ArgsType) => Promise<ReturnType>) & { clear: () => void; clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
     const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,

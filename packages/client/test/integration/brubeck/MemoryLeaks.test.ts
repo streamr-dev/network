@@ -1,8 +1,8 @@
 import { wait } from 'streamr-test-utils'
 import { fakePrivateKey, describeRepeats, snapshot, LeaksDetector } from '../../utils'
 import { getPublishTestMessages } from './utils'
-import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
-import Subscription from '../../../src/brubeck/Subscription'
+import { BrubeckClient } from '../../../src/BrubeckClient'
+import Subscription from '../../../src/Subscription'
 import { counterId, Defer } from '../../../src/utils'
 
 import clientOptions from '../config'
