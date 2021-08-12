@@ -55,6 +55,12 @@ export type MessageContent = {
   [key: string]: MessageValue
 } | MessageValue[]
 
+export type StreamMessageContainer<T = unknown> = {
+    toStreamMessage: (messageId: MessageID, prevMsgRef: MessageRef | null) => StreamMessage<T>
+}
+
+export type PublishContent<T extends MessageContent | unknown = unknown> = MessageContent | StreamMessageContainer<T>
+
 export type StreamMessageUnsigned<T> = StreamMessage<T> & {
     signatureType: SignatureType.NONE
     signature: '' | null
@@ -109,6 +115,25 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
     parsedContent?: T
     serializedContent: string
     spid: SPID
+
+    clone(): StreamMessage<T> {
+        const content = this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE
+            ? this.getParsedContent()
+            : this.getSerializedContent()
+
+        return new StreamMessage({
+            messageId: this.messageId,
+            prevMsgRef: this.prevMsgRef,
+            content,
+            messageType: this.messageType,
+            contentType: this.contentType,
+            encryptionType: this.encryptionType,
+            groupKeyId: this.groupKeyId,
+            newGroupKey: this.newGroupKey,
+            signatureType: this.signatureType,
+            signature: this.signature,
+        })
+    }
 
     constructor({
         messageId,
@@ -408,6 +433,10 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
 
     static isUnencrypted<T>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
         return !this.isEncrypted(msg)
+    }
+
+    static isStreamMessageContainer<T = unknown>(content: any): content is StreamMessageContainer<T> {
+        return content && typeof content === 'object' && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function'
     }
 
     toObject() {
