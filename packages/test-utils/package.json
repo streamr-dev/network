@@ -23,7 +23,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network-monorepo.git",
-    "directory": "packages/streamr-test-utils"
+    "directory": "packages/test-utils"
   },
   "author": "Streamr <contact@streamr.com>",
   "license": "Apache-2.0",
