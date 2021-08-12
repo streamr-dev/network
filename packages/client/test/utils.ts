@@ -19,6 +19,11 @@ export {
     testDebug as Debug
 }
 
+export function mockContext() {
+    const id = counterId('mockContext')
+    return { id, debug: testDebugRoot.extend(id) }
+}
+
 export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
 export function fakePrivateKey() {

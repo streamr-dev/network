@@ -3,7 +3,7 @@ import sinon from 'sinon'
 import express, { Application } from 'express'
 import { wait } from 'streamr-test-utils'
 
-import authFetch from '../../src/rest/authFetch'
+import authFetch from '../../src/authFetch'
 import * as utils from '../../src/utils'
 import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
 
@@ -80,7 +80,7 @@ describeRepeats('utils', () => {
 
                 expect(session.getSessionToken.calledTwice).toBeTruthy()
                 expect(err.toString()).toMatch(
-                    `${baseUrl + testUrl} returned with error code 401. Unauthorized`
+                    '401. \'Unauthorized\'',
                 )
                 expect(err.body).toEqual('Unauthorized')
                 expect(onCaught).toHaveBeenCalledTimes(1)

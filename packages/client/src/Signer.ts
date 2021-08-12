@@ -36,9 +36,9 @@ function getSigningFunction(options: AuthenticatedConfig) {
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Signer {
-    signValue
+    signData
     constructor(@inject(Config.Auth) authOptions: AuthenticatedConfig) {
-        this.signValue = getSigningFunction(authOptions)
+        this.signData = getSigningFunction(authOptions)
     }
 
     async sign<T>(
@@ -59,7 +59,7 @@ export default class Signer {
 
         const signedMessage: StreamMessageSigned<T> = Object.assign(streamMessage, {
             signatureType,
-            signature: await this.signValue(streamMessage.getPayloadToSign(signatureType)),
+            signature: await this.signData(streamMessage.getPayloadToSign(signatureType)),
         })
 
         return signedMessage

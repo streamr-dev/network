@@ -1,7 +1,7 @@
 import set from 'lodash/set'
 import { arrayify, BytesLike } from '@ethersproject/bytes'
 
-import { StreamrClient } from '../../src/StreamrClient'
+import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
 
 describe('Config', () => {
     describe('validate ethereum addresses', () => {
