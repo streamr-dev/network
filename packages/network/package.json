@@ -4,7 +4,8 @@
   "description": "Minimal and extendable implementation of the Streamr Network network node.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streamr-dev/network.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/network"
   },
   "bin": {
     "network": "bin/network.js",

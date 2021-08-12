@@ -5,7 +5,8 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git://github.com/streamr-dev/streamr-client.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/client"
   },
   "types": "./dist/types/src/index.d.ts",
   "main": "./dist/src/index-commonjs.js",

@@ -4,7 +4,8 @@
   "description": "JavaScript classes implementing the Streamr client-to-node protocol",
   "repository": {
     "type": "git",
-    "url": "git://github.com/streamr-dev/streamr-client-protocol-js.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/streamr-client-protocol"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

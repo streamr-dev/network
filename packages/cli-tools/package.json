@@ -13,7 +13,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:streamr-dev/cli-tools.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/cli-tools"
   },
   "keywords": [
     "streamr",
