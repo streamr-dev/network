@@ -6,6 +6,7 @@ import SigningUtil from "./SigningUtil"
 export * from "./SPID"
 import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
 import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
+import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 
 export {
     TimestampUtil,
@@ -19,5 +20,7 @@ export {
     getTrackerRegistryFromContract,
     StorageNodeRegistry,
     createStorageNodeRegistry,
-    getStorageNodeRegistryFromContract
+    getStorageNodeRegistryFromContract,
+    generateMnemonicFromAddress,
+    parseAddressFromNodeId
 }
