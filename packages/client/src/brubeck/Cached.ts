@@ -1,7 +1,7 @@
 import { CacheAsyncFn, instanceId } from '../utils'
 import { CacheConfig, Config } from './Config'
 import { SPID } from 'streamr-client-protocol'
-import { Lifecycle, scoped, inject } from 'tsyringe'
+import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { StreamEndpoints } from './StreamEndpoints'
 import { Context } from '../utils/Context'
 
@@ -15,10 +15,13 @@ export class BrubeckCached implements Context {
     isStreamSubscriber: any
     getAddress: any
 
-    constructor(private context: Context, streamEndpoints: StreamEndpoints, @inject(Config.Cache) private cacheOptions: CacheConfig) {
+    constructor(
+        context: Context,
+        @inject(delay(() => StreamEndpoints)) streamEndpoints: StreamEndpoints,
+        @inject(Config.Cache) cacheOptions: CacheConfig
+    ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        this.debug(cacheOptions)
         this.getStream = CacheAsyncFn(streamEndpoints.getStream.bind(streamEndpoints), {
             ...cacheOptions,
             cacheKey: ([maybeStreamId]: any) => {
@@ -30,7 +33,7 @@ export class BrubeckCached implements Context {
             ...cacheOptions,
             cacheKey([maybeStreamId, ethAddress]: any) {
                 const { streamId } = SPID.parse(maybeStreamId)
-                return `${streamId}|${ethAddress}`
+                return `${streamId}|${ethAddress.toLowerCase()}`
             }
         })
 
@@ -38,7 +41,7 @@ export class BrubeckCached implements Context {
             ...cacheOptions,
             cacheKey([maybeStreamId, ethAddress]: any) {
                 const { streamId } = SPID.parse(maybeStreamId)
-                return `${streamId}|${ethAddress}`
+                return `${streamId}|${ethAddress.toLowerCase()}`
             }
         })
     }

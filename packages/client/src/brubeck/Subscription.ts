@@ -1,7 +1,7 @@
 import { MessageContent, StreamMessage, SPID, SPIDKeyShape } from 'streamr-client-protocol'
 import MessageStream from './MessageStream'
 import SubscriptionSession from './SubscriptionSession'
-import { flow } from '../utils/PushBuffer'
+import Signal from '../utils/Signal'
 
 export type SubscriptionOptions = {
   streamId: string,
@@ -26,16 +26,10 @@ export default class Subscription<T extends MessageContent | unknown> extends Me
         this.streamId = this.spid.streamId
         this.streamPartition = this.spid.streamPartition
         this.key = this.spid.key
+        // this.debug('create', this.key, new Error('Subscription').stack)
     }
 
-    onMessage(onMessageFn: SubscriptionOnMessage<T>): Promise<void> {
-        return flow((async function* onMessageIterator(this: Subscription<T>) {
-            for await (const msg of this) {
-                onMessageFn(msg.getParsedContent(), msg)
-                yield msg
-            }
-        }.call(this)))
-    }
+    onError = Signal.create<Error, this>(this)
 
     count() {
         return this.context.count()

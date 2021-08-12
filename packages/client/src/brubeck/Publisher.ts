@@ -1,60 +1,38 @@
-import { inspect } from '../utils/log'
 import { StreamMessage, SPID, SIDLike, MessageContent } from 'streamr-client-protocol'
-import StreamMessageCreator from './MessageCreator'
-import { FailedToPublishError } from '../publish'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
+
+import { inspect } from '../utils/log'
 import { instanceId } from '../utils'
-import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
-import BrubeckNode from './BrubeckNode'
-import { scoped, Lifecycle } from 'tsyringe'
+import { Context } from '../utils/Context'
+
 import { StreamEndpoints } from './StreamEndpoints'
+import PublishPipeline, { PublishMetadata, FailedToPublishError } from './PublishPipeline'
+import { Stoppable } from '../utils/Stoppable'
+
+export type { PublishMetadata }
 
 const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms))
 
-export type PublishMetadata<T extends MessageContent> = {
-    content: T
-    timestamp?: string | number | Date
-    sequenceNumber?: number
-    partitionKey?: string | number
-}
-
 @scoped(Lifecycle.ContainerScoped)
-export default class BrubeckPublisher implements Context {
+export default class BrubeckPublisher implements Context, Stoppable {
     id
     debug
-    inProgress = new Set<ICancelable>()
+    streamMessageQueue
+    publishQueue
+    isStopped = false
+
+    private inProgress = new Set<ICancelable>()
 
     constructor(
         context: Context,
-        private brubeckNode: BrubeckNode,
-        private messageCreator: StreamMessageCreator,
-        private streamEndpoints: StreamEndpoints
+        private pipeline: PublishPipeline,
+        @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-    }
-
-    async publishMessage<T extends MessageContent>(streamObjectOrId: SIDLike, {
-        content,
-        timestamp = Date.now(),
-        partitionKey
-    }: PublishMetadata<T>): Promise<StreamMessage<T>> {
-        const sid = SPID.parse(streamObjectOrId)
-        const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-
-        // figure out partition
-        if ((sid.streamPartition != null) && (partitionKey != null)) {
-            throw new Error('Invalid combination of "partition" and "partitionKey"')
-        }
-        const streamMessage = await this.messageCreator.create<T>(sid.streamId, {
-            content,
-            timestamp: timestampAsNumber,
-            partitionKey: sid.streamPartition != null ? sid.streamPartition : partitionKey || 0,
-        })
-
-        const node = await this.brubeckNode.getNode()
-        node.publish(streamMessage)
-        return streamMessage
+        this.streamMessageQueue = pipeline.streamMessageQueue
+        this.publishQueue = pipeline.publishQueue
     }
 
     async publish<T extends MessageContent>(
@@ -63,22 +41,27 @@ export default class BrubeckPublisher implements Context {
         timestamp: string | number | Date = Date.now(),
         partitionKey?: string | number
     ): Promise<StreamMessage<T>> {
-        // wrap publish in error emitter
-        try {
-            return await this.publishMessage<T>(streamObjectOrId, {
-                content,
-                timestamp,
-                partitionKey,
-            })
-        } catch (err) {
-            const { streamId } = SPID.parse(streamObjectOrId)
-            const error = new FailedToPublishError(
-                streamId,
-                content,
-                err
-            )
-            throw error
-        }
+        return this.publishMessage<T>(streamObjectOrId, {
+            content,
+            timestamp,
+            partitionKey,
+        })
+    }
+
+    async publishMessage<T extends MessageContent>(streamObjectOrId: SIDLike, {
+        content,
+        timestamp = Date.now(),
+        partitionKey
+    }: PublishMetadata<T>): Promise<StreamMessage<T>> {
+        const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
+        const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
+
+        return this.pipeline.publish({
+            streamId,
+            content,
+            timestamp: timestampAsNumber,
+            partitionKey: partitionKey != null ? partitionKey : streamPartition,
+        })
     }
 
     async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number) { // eslint-disable-line class-methods-use-this
@@ -156,7 +139,7 @@ export default class BrubeckPublisher implements Context {
         let last: any
         // eslint-disable-next-line no-constant-condition
         let found = false
-        while (!found) {
+        while (!found && !this.isStopped) {
             const duration = Date.now() - start
             if (duration > timeout) {
                 this.debug('waitForStorage timeout %o', {
@@ -190,11 +173,16 @@ export default class BrubeckPublisher implements Context {
         /* eslint-enable no-await-in-loop */
     }
 
-    async stop() {
-        await Promise.allSettled([
-            ...[...this.inProgress].map((item) => item.cancel())
-        ])
+    async start() {
+        this.isStopped = false
+        this.pipeline.start()
+    }
 
-        await this.messageCreator.stop()
+    async stop() {
+        this.isStopped = true
+        await Promise.allSettled([
+            this.pipeline.stop(),
+            ...[...this.inProgress].map((item) => item.cancel().catch(() => {}))
+        ])
     }
 }

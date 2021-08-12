@@ -12,6 +12,7 @@ import has from 'lodash/has'
 import get from 'lodash/get'
 import { StorageNode } from './stream/StorageNode'
 import { AuthConfig, EthereumConfig } from './Ethereum'
+import { EncryptionConfig } from './brubeck/encryption/KeyExchangeUtils'
 
 export type CacheConfig = {
     maxSize: number,
@@ -74,7 +75,6 @@ export type StrictStreamrClientConfig = {
     auth: AuthConfig
     /** joinPartAgent when using EE for join part handling */
     streamrNodeAddress: EthereumAddress
-    groupKeys: Todo
     keyExchange: Todo
     dataUnion: DataUnionConfig
     storageNode: {
@@ -87,6 +87,7 @@ export type StrictStreamrClientConfig = {
     & ConnectionConfig
     & PublishConfig
     & SubscribeConfig
+    & EncryptionConfig
 )
 
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataUnion'> & {

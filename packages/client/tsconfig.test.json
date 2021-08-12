@@ -13,7 +13,8 @@
             "DOM"
         ],
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+        "strictBindCallApply": true
     },
     "include": [
         "src/**/*",

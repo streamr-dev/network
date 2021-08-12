@@ -18,6 +18,7 @@ import { injectable } from 'tsyringe'
 export default class OrderMessages<T> implements Context {
     id
     debug
+    isStopped = false
 
     constructor(
         private options: SubscribeConfig,

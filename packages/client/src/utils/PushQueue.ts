@@ -1,4 +1,5 @@
-import { Defer, pTimeout, instanceId, pOnce, Gate } from './index'
+import { Defer, pTimeout, instanceId, pOnce } from './index'
+import Gate from './Gate'
 import { iteratorFinally, MaybeCancelable } from './iterators'
 import { Debug } from './log'
 

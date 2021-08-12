@@ -1,4 +1,4 @@
-import { SPID, SID, MessageRef, StreamMessage } from 'streamr-client-protocol'
+import { SPID, SIDLike, MessageRef, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import MessageStream from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
@@ -103,9 +103,9 @@ export default class Resend implements Context {
      * Call last/from/range as appropriate based on arguments
      */
 
-    resend<T>(options: (SID | { stream: SID }) & (ResendOptions | { resend: ResendOptions })): Promise<MessageStream<T>> {
+    resend<T>(options: (SIDLike | { stream: SIDLike }) & (ResendOptions | { resend: ResendOptions })): Promise<MessageStream<T>> {
         const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptions
-        const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SID
+        const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SIDLike
         const spid = SPID.fromDefaults(spidOptions, { streamPartition: 0 })
         return this.resendMessages(spid, resendOptions)
     }
@@ -139,7 +139,8 @@ export default class Resend implements Context {
         throw new ContextError(this, `can not resend without valid resend options: ${inspect({ spid, options })}`)
     }
 
-    async getStreamNodes(sid: SID) {
+    async getStreamNodes(sidLike: SIDLike) {
+        const sid = SPID.parse(sidLike)
         // this method should probably live somewhere else
         // like in the node registry or stream class
         const stream = await this.streamEndpoints.getStream(sid.streamId)

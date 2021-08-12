@@ -33,7 +33,11 @@ export default class Subscriber implements Context {
     async subscribeTo<T>(spid: SPID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
         const sub: Subscription<T> = await this.add(spid)
         if (onMessage) {
-            sub.onMessage(onMessage)
+            setImmediate(() => {
+                sub.consume(async (streamMessage) => {
+                    await onMessage(streamMessage.getParsedContent(), streamMessage)
+                })
+            })
         }
 
         return sub
@@ -47,7 +51,8 @@ export default class Subscriber implements Context {
         const subSession = this.subSessions.get(key) as SubscriptionSession<T> || new SubscriptionSession<T>(this, spid, this.container)
 
         // create subscription
-        const sub = new Subscription<T>(subSession).onFinally(() => {
+        const sub = new Subscription<T>(subSession)
+        sub.onFinally(() => {
             return this.remove(sub)
         })
 
@@ -77,6 +82,7 @@ export default class Subscriber implements Context {
             // remove subSession if no more subscriptions
             if (!count) {
                 this.subSessions.delete(key)
+                await subSession.stop()
             }
         }
     }

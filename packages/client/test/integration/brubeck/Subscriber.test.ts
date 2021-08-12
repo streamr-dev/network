@@ -57,6 +57,7 @@ describeRepeats('Subscriber', () => {
         ])
         stream = await createTestStream(client, module)
         await client.disconnect()
+        await client.connect()
         // await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream)
@@ -89,7 +90,7 @@ describeRepeats('Subscriber', () => {
             const sub = await M.subscribe(stream)
             expect(M.count(stream.id)).toBe(1)
 
-            const published = await publishTestMessages()
+            const published = await publishTestMessages(NUM_MESSAGES)
 
             const received = []
             for await (const m of sub) {
@@ -99,6 +100,7 @@ describeRepeats('Subscriber', () => {
                 }
             }
             expect(received).toEqual(published)
+            expect(received).toHaveLength(NUM_MESSAGES)
         })
 
         it('works when passing { stream: stream }', async () => {
@@ -167,7 +169,7 @@ describeRepeats('Subscriber', () => {
 
             await expect(async () => (
                 sub.collect()
-            )).rejects.toThrow('collect')
+            )).rejects.toThrow()
             await sub.unsubscribe()
             const m = await c1
 

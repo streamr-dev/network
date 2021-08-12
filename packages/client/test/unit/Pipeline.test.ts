@@ -4,7 +4,6 @@ import { wait } from 'streamr-test-utils'
 import { Pipeline, PushPipeline } from '../../src/utils/Pipeline'
 import { PushBuffer, PullBuffer } from '../../src/utils/PushBuffer'
 import { iteratorFinally } from '../../src/utils/iterators'
-import { Defer } from '../../src/utils'
 
 const WAIT = 20
 
@@ -18,19 +17,7 @@ async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
 }
 
-function getMockCalls(obj: Record<string, jest.MockedFunction<any>>) {
-    return () => {
-        return Object.entries(obj).reduce((o, v) => {
-            const [key, value] = v
-            return Object.assign(o, {
-                [key]: value.mock.calls.length,
-            })
-        }, {})
-    }
-}
-
 describe('Pipeline', () => {
-
     it('types pipe & result correctly', async () => {
         // checking TS types.
         // The ts-expect-errors are the tests.
@@ -696,301 +683,76 @@ describe('Pipeline', () => {
                 })
             })
 
-            describe('buffer', () => {
+            describe('bufferInto', () => {
                 it('works', async () => {
-                    const onGotAllMessages = Defer()
-                    const onMessage = jest.fn(() => {
-                        if (onMessage.mock.calls.length === expected.length) {
-                            onGotAllMessages.resolve(undefined)
-                        }
-                    })
-                    const root = new Pipeline(generate())
-                        .forEach(onMessage)
-                        .onFinally(onFinally)
-                    expect(onMessage).toHaveBeenCalledTimes(0)
-                    expect(onFinally).toHaveBeenCalledTimes(0)
-                    await wait(WAIT * 3)
-                    expect(onMessage).toHaveBeenCalledTimes(0)
-                    expect(onFinally).toHaveBeenCalledTimes(0)
-                    root.buffer()
-                    await onGotAllMessages
-                    expect(onMessage).toHaveBeenCalledTimes(expected.length)
-                    expect(onFinally).toHaveBeenCalledTimes(0)
-                    root.map((v) => v * 10)
-                    expect(await root.collect()).toEqual(expected.map((v) => v * 10))
-                    expect(onMessage).toHaveBeenCalledTimes(expected.length)
-                    expect(onFinally).toHaveBeenCalledTimes(1)
-                })
-                it('works twice', async () => {
-                    const onGotAllMessages = Defer()
-                    const onMessage = jest.fn(() => {
-                        if (onMessage.mock.calls.length === expected.length) {
-                            onGotAllMessages.resolve(undefined)
-                        }
-                    })
-                    const onMessage2 = jest.fn()
-                    const root = new Pipeline(generate())
-                        .forEach(onMessage)
-                        .onFinally(onFinally)
-                    expect(onMessage).toHaveBeenCalledTimes(0)
-                    expect(onFinally).toHaveBeenCalledTimes(0)
-                    await wait(WAIT * 3)
-                    expect(onMessage).toHaveBeenCalledTimes(0)
-                    expect(onFinally).toHaveBeenCalledTimes(0)
-                    root.buffer()
-                        .map((v) => v * 10)
-                        .forEach(onMessage2)
-                        .buffer()
-                    await onGotAllMessages
-                    expect(onMessage).toHaveBeenCalledTimes(expected.length)
-                    expect(onFinally).toHaveBeenCalledTimes(0)
-                    expect(await root.collect()).toEqual(expected.map((v) => v * 10))
-                    expect(onMessage).toHaveBeenCalledTimes(expected.length)
-                    expect(onFinally).toHaveBeenCalledTimes(1)
-                })
-            })
-
-            describe('fork', () => {
-                it('works', async () => {
-                    const root = new Pipeline(generate())
-                        .onFinally(onFinally)
-
-                    const child = root.fork()
-                        .map((v) => v * 10)
-
-                    expect(await root.collect()).toEqual(expected)
-                    expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                })
-
-                it('works after buffer', async () => {
-                    const root = new Pipeline(generate())
-                        .buffer()
-                        .onFinally(onFinally)
-
-                    const child = root.fork()
-                        .map((v) => v * 10)
-                        .buffer()
-
-                    expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                    expect(await root.collect()).toEqual(expected)
-                })
-
-                it('works when child collected before root iterated', async () => {
-                    const root = new Pipeline(generate())
-                        .onFinally(onFinally)
-
-                    const child = root.fork()
-                        .map((v) => v * 10)
-
-                    expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                    expect(await root.collect()).toEqual(expected)
-                })
-
-                it('works when multiple children collected before root iterated', async () => {
-                    const root = new Pipeline(generate())
-                        .onFinally(onFinally)
-
-                    const child1 = root.fork()
-                        .map((v) => v * 10)
-                    const child2 = root.fork()
-                        .map((v) => v * 20)
-
-                    expect(await child2.collect()).toEqual(expected.map((v) => v * 20))
-                    expect(await child1.collect()).toEqual(expected.map((v) => v * 10))
-                    expect(await root.collect()).toEqual(expected)
-                })
-
-                describe('with grandchildren', () => {
-                    let root: Pipeline<number>
-                    let child: Pipeline<number>
-                    let grandchild: Pipeline<number>
-
-                    beforeEach(() => {
-                        root = new Pipeline(generate())
-                            .onFinally(onFinally)
-                        root.debug('root')
-                        child = root.fork()
-                            .map((v) => v * 10)
-                        child.debug('child')
-                        grandchild = child.fork()
-                            .map((v) => v * 2)
-                        grandchild.debug('grandchild')
-                    })
-
-                    it('works with collect: root, child, grandchild', async () => {
-                        expect(await root.collect()).toEqual(expected)
-                        expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                        expect(await grandchild.collect()).toEqual(expected.map((v) => v * 20))
-                    })
-                    it('works with collect: root, grandchild, child', async () => {
-                        expect(await root.collect()).toEqual(expected)
-                        expect(await grandchild.collect()).toEqual(expected.map((v) => v * 20))
-                        expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                    })
-                    it('works with collect: child, grandchild, root', async () => {
-                        expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                        expect(await grandchild.collect()).toEqual(expected.map((v) => v * 20))
-                        expect(await root.collect()).toEqual(expected)
-                    })
-                    it('works with collect: child, root, grandchild, ', async () => {
-                        expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                        expect(await root.collect()).toEqual(expected)
-                        expect(await grandchild.collect()).toEqual(expected.map((v) => v * 20))
-                    })
-                    it('works with collect: grandchild, child, root', async () => {
-                        expect(await grandchild.collect()).toEqual(expected.map((v) => v * 20))
-                        expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                        expect(await root.collect()).toEqual(expected)
-                    })
-                    it('works with collect: grandchild, root, child', async () => {
-                        expect(await grandchild.collect()).toEqual(expected.map((v) => v * 20))
-                        expect(await root.collect()).toEqual(expected)
-                        expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                    })
-
-                    it('can end grandchild early and parents still complete', async () => {
-                        expect(await grandchild.collect(3)).toEqual(expected.slice(0, 3).map((v) => v * 20))
-                        expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                        expect(await root.collect()).toEqual(expected)
-                    })
-
-                    it('can end child early and parents still complete', async () => {
-                        expect(await grandchild.collect()).toEqual(expected.map((v) => v * 20))
-                        expect(await child.collect(3)).toEqual(expected.slice(0, 3).map((v) => v * 10))
-                        expect(await root.collect()).toEqual(expected)
-                    })
-
-                    it('can end root early and children still complete', async () => {
-                        expect(await grandchild.collect()).toEqual(expected.map((v) => v * 20))
-                        expect(await root.collect(3)).toEqual(expected.slice(0, 3))
-                        expect(await child.collect()).toEqual(expected.map((v) => v * 10))
-                    })
-                })
-
-                it('works with multiple children', async () => {
-                    const root = new Pipeline(generate())
-                        .onFinally(onFinally)
-                    const onFinallyEven = jest.fn()
-                    const onFinallyOdd = jest.fn()
-
-                    const odd = root.fork(undefined, { name: 'odd' })
-                        .filter((value) => {
-                            return value % 2
+                    const buffer = new PushBuffer<number>()
+                    const block = new PushBuffer<number>(3)
+                    const results: number[] = []
+                    const generated: number[] = []
+                    const onCollecting = jest.fn()
+                    let partialResults: number[] = []
+                    let consumedForEach: number[] = []
+                    const p = new Pipeline(generate())
+                        .forEach(async (value) => {
+                            generated.push(value)
                         })
-                        .onFinally(onFinallyOdd)
-
-                    const even = root.fork(undefined, { name: 'even' })
-                        .filter((value) => {
-                            return !(value % 2)
+                        .onConsumed(() => {
+                            onCollecting()
+                            consumedForEach = generated.slice()
+                            partialResults = results.slice()
+                            // when generator consumed (i.e. all buffered) unblock
+                            block.collect()
                         })
-                        .onFinally(onFinallyEven)
+                        .bufferInto(buffer)
+                        .onFinally(onFinally)
 
-                    const getOnFinallyCalls = getMockCalls({
-                        onFinally,
-                        onFinallyEven,
-                        onFinallyOdd,
+                    await p.consume(async (value) => {
+                        results.push(value)
+                        await block.push(value)
                     })
-
-                    // starting collection of fork
-                    const oddResultsTask = odd.collect()
-                    expect(getOnFinallyCalls()).toEqual({ onFinally: 0, onFinallyEven: 0, onFinallyOdd: 0 })
-                    await wait(1000)
-                    // fork collected even though root did not iterate
-                    expect(getOnFinallyCalls()).toEqual({ onFinally: 0, onFinallyEven: 0, onFinallyOdd: 1 })
-                    const results = await root.collect()
+                    expect(partialResults).toEqual(expected.slice(0, 3))
+                    expect(consumedForEach).toEqual(expected)
+                    expect(generated).toEqual(expected)
                     expect(results).toEqual(expected)
-                    // note even fork collect not started, so onFinallyEven shouldn't have called
-                    expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 0, onFinallyOdd: 1 })
-                    expect(await oddResultsTask).toEqual(expected.filter((v) => v % 2))
-                    expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 0, onFinallyOdd: 1 })
-                    // even shouldn't have started until we called collect on it
-                    expect(await even.collect()).toEqual(expected.filter((v) => !(v % 2)))
-                    expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 1, onFinallyOdd: 1 })
+                    expect(onCollecting).toHaveBeenCalledTimes(1)
                 })
 
-                it('pushes as fast as fork can consume', async () => {
-                    const onMessage = jest.fn()
-                    const root = new Pipeline(generate())
-                        .forEach(onMessage)
-                        .onFinally(onFinally)
-                    const onFinallyChild = jest.fn()
-                    const child = root.fork(1)
-                        .onFinally(onFinallyChild)
-
-                    const collectTask = root.collect()
-                    expect(onMessage).toHaveBeenCalledTimes(0)
-                    await wait(WAIT * 3)
-                    expect(onMessage).toHaveBeenCalledTimes(1)
-                    const childResults = []
-                    childResults.push((await child.next()).value)
-                    await wait(WAIT * 3)
-                    expect(onMessage).toHaveBeenCalledTimes(2)
-                    childResults.push((await child.next()).value)
-                    await wait(WAIT * 3)
-                    expect(onMessage).toHaveBeenCalledTimes(3)
-                    await root.return()
-                    await wait(WAIT * 3)
-                    expect(onMessage).toHaveBeenCalledTimes(3)
-                    const results = await collectTask
-                    expect(onFinally).toHaveBeenCalledTimes(1)
-                    expect(onFinallyChild).toHaveBeenCalledTimes(0)
-                    expect(results).toEqual(expected.slice(0, 3))
-
-                    // eslint-disable-next-line no-constant-condition
-                    while (true) {
-                        // eslint-disable-next-line no-await-in-loop
-                        const { done, value } = await child.next()
-                        if (done) { break }
-                        childResults.push(value)
-                    }
-
-                    expect(childResults).toEqual(results)
-                    expect(onFinallyChild).toHaveBeenCalledTimes(1)
-                })
-
-                it('should contain values as they were at fork time', async () => {
-                    const root = new Pipeline(generate())
-
-                    const child = root.fork()
-                    // change data after forking
-                    root.map((v) => v * 10).onFinally(onFinally)
-                    expect(await root.collect()).toEqual(expected.map((v) => v * 10))
-                    expect(await child.collect()).toEqual(expected)
-                })
-
-                it('does not require consuming parent before child, with steps after fork', async () => {
-                    const root = new Pipeline(generate())
-
-                    const child = root.fork()
-                    root.map((v) => v * 10).onFinally(onFinally)
-                    const childCollectTask = child.collect()
-                    expect(await root.collect()).toEqual(expected.map((v) => v * 10))
-                    expect(await childCollectTask).toEqual(expected)
-                })
-
-                it('can end fork early and parent still completes', async () => {
-                    const root = new Pipeline(generate())
-
-                    const child = root.fork()
-                    const childCollectTask = child.collect(3)
-                    root.map((v) => v * 10).onFinally(onFinally)
-                    expect(await root.collect()).toEqual(expected.map((v) => v * 10))
-                    expect(await childCollectTask).toEqual(expected.slice(0, 3))
-                })
-
-                it('does not need intermediate forks to consume to start flowing', async () => {
-                    const rootGenerated = jest.fn()
-                    const root = new Pipeline(generate())
-                        .forEach(rootGenerated)
+                it('throws errors', async () => {
+                    const buffer = new PushBuffer<number>(3)
+                    const results: number[] = []
+                    const generated: number[] = []
+                    const onCollecting = jest.fn()
+                    const err = new Error('expected')
+                    let partialResults: number[] = []
+                    let partialGenerated: number[] = []
+                    const p = new Pipeline(generate())
+                        .forEach(async (value) => {
+                            generated.push(value)
+                        })
+                        .onConsumed(() => {
+                            // by the time this runs all results will be in
+                            partialResults = results.slice()
+                            onCollecting()
+                            throw err
+                        })
+                        .bufferInto(buffer)
                         .onFinally(onFinally)
 
-                    const child = root.fork()
-                    const grandChild1 = child.fork()
-                    const grandChild2 = child.fork()
-                    expect(await grandChild1.collect()).toEqual(expected)
-                    expect(await grandChild2.collect()).toEqual(expected)
-                    const rootCollectTask = root.collect()
-                    expect(await rootCollectTask).toEqual(expected)
+                    await expect(async () => {
+                        await p.consume(async (value) => {
+                            results.push(value)
+                            if (results.length === 3) {
+                                await wait(1000)
+                                partialGenerated = generated.slice()
+                            }
+                        })
+                    }).rejects.toThrow(err)
+                    expect(results).toEqual(expected)
+                    expect(partialResults).toEqual(expected)
+                    // includes buffered items
+                    expect(partialGenerated).toEqual(expected.slice(0, 6))
+                    expect(onCollecting).toHaveBeenCalledTimes(1)
+                    expect(buffer.length).toBe(0)
                 })
             })
         })
@@ -1003,65 +765,6 @@ describe('Pipeline', () => {
 
                 pipeline.pull(generate())
                 return pipeline
-            })
-
-            it('can fork', async () => {
-                const root = new PushPipeline<number>()
-                    .onFinally(onFinally)
-
-                root.pull(generate())
-                const onFinallyEven = jest.fn()
-                const onFinallyOdd = jest.fn()
-
-                const odd = root.fork(undefined, { name: 'odd' })
-                    .filter((value) => {
-                        return value % 2
-                    })
-                    .onFinally(onFinallyOdd)
-
-                const even = root.fork(undefined, { name: 'even' })
-                    .filter((value) => {
-                        return !(value % 2)
-                    })
-                    .onFinally(onFinallyEven)
-
-                const getOnFinallyCalls = getMockCalls({
-                    onFinally,
-                    onFinallyEven,
-                    onFinallyOdd,
-                })
-
-                // starting collection of fork
-                const oddResultsTask = odd.collect()
-                expect(getOnFinallyCalls()).toEqual({ onFinally: 0, onFinallyEven: 0, onFinallyOdd: 0 })
-                await wait(500)
-                expect(getOnFinallyCalls()).toEqual({ onFinally: 0, onFinallyEven: 0, onFinallyOdd: 1 })
-                const results = await root.collect()
-                expect(results).toEqual(expected)
-                // note even fork collect not started, so onFinallyEven shouldn't have called
-                expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 0, onFinallyOdd: 1 })
-                expect(await oddResultsTask).toEqual(expected.filter((v) => v % 2))
-                expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 0, onFinallyOdd: 1 })
-                // even shouldn't have started until we called collect on it
-                expect(await even.collect()).toEqual(expected.filter((v) => !(v % 2)))
-                expect(getOnFinallyCalls()).toEqual({ onFinally: 1, onFinallyEven: 1, onFinallyOdd: 1 })
-            })
-
-            it('does not need intermediate forks to consume to start flowing', async () => {
-                const rootGenerated = jest.fn()
-                const root = new PushPipeline()
-                    .forEach(rootGenerated)
-                    .onFinally(onFinally)
-
-                root.pull(generate())
-
-                const child = root.fork()
-                const grandChild1 = child.fork()
-                const grandChild2 = child.fork()
-                expect(await grandChild1.collect()).toEqual(expected)
-                expect(await grandChild2.collect()).toEqual(expected)
-                const rootCollectTask = root.collect()
-                expect(await rootCollectTask).toEqual(expected)
             })
         })
     })

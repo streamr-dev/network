@@ -1,11 +1,12 @@
 import { wait } from 'streamr-test-utils'
-import { StreamMessage, SID } from 'streamr-client-protocol'
+import { StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
 import { Msg } from '../../utils'
 import { counterId, Scaffold } from '../../../src/utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import { PublishMetadata } from '../../../src/brubeck/Publisher'
 import { startTracker, Tracker } from 'streamr-network'
 import { StreamProperties } from '../../../src/brubeck/Stream'
+import { Pipeline } from '../../../src/utils/Pipeline'
 
 type PublishManyOpts = Partial<{
     delay: number,
@@ -42,7 +43,14 @@ type PublishTestMessageOptions = PublishManyOpts & {
     retainMessages?: boolean
 }
 
-export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID, defaultOpts: PublishTestMessageOptions = {}) {
+export function publishTestMessagesGenerator(client: BrubeckClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
+    const sid = SPID.parse(stream)
+    const source = publishManyGenerator(maxMessages, opts)
+    return new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(sid, source))
+}
+
+export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
+    const sid = SPID.parse(stream)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const {
             waitForLast,
@@ -53,8 +61,7 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID,
             ...defaultOpts,
             ...opts,
         }
-        const source = publishManyGenerator(maxMessages, options)
-        const publishStream = client.publisher.publishFromMetadata(stream, source)
+        const publishStream = publishTestMessagesGenerator(client, sid, maxMessages, options)
         const streamMessages = []
         let count = 0
         for await (const streamMessage of publishStream) {
@@ -79,8 +86,9 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SID,
     }
 }
 
-export function getPublishTestMessages(client: BrubeckClient, stream: SID, defaultOpts: PublishTestMessageOptions = {}) {
-    const publishTestStreamMessages = getPublishTestStreamMessages(client, stream, defaultOpts)
+export function getPublishTestMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
+    const sid = SPID.parse(stream)
+    const publishTestStreamMessages = getPublishTestStreamMessages(client, sid, defaultOpts)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const streamMessages = await publishTestStreamMessages(maxMessages, opts)
         return streamMessages.map((s) => s.getParsedContent())

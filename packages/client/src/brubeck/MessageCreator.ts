@@ -3,16 +3,14 @@ import { StreamMessage, SPID, MessageContent, StreamMessageEncrypted, StreamMess
 
 import { LimitAsyncFnByKey } from '../utils'
 
-import Signer from './Signer'
-// import Encrypt from './Encrypt'
-// import { GroupKey } from '../stream'
 import { getCachedMesssageChain } from './MessageChain'
 import { Config, CacheConfig } from './Config'
 import Ethereum from './Ethereum'
 import StreamPartitioner from './StreamPartitioner'
+import { Stoppable } from '../utils/Stoppable'
 
-export type MessageCreateOptions<T extends MessageContent> = {
-    content: T
+export type MessageCreateOptions<T extends MessageContent | unknown = unknown> = {
+    content: T,
     timestamp: number,
     partitionKey: string | number
     msgChainId?: string
@@ -34,7 +32,8 @@ export class StreamMessageCreatorAnonymous implements IMessageCreator {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class StreamMessageCreator implements IMessageCreator {
+export default class StreamMessageCreator implements IMessageCreator, Stoppable {
+    isStopped = false
     // encrypt
     queue: ReturnType<typeof LimitAsyncFnByKey>
     getMsgChain
@@ -44,19 +43,17 @@ export default class StreamMessageCreator implements IMessageCreator {
      */
 
     constructor(
-        private signer: Signer,
-        private ethereum: Ethereum,
         private streamPartitioner: StreamPartitioner,
+        private ethereum: Ethereum,
         @inject(Config.Cache) private cacheOptions: CacheConfig,
     ) {
         this.getMsgChain = getCachedMesssageChain(this.cacheOptions)
-        // this.encrypt = Encrypt(client)
 
         // per-stream queue so messages processed in-order
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create<T extends MessageContent>(streamId: string, {
+    async create<T extends MessageContent | unknown = unknown>(streamId: string, {
         content,
         timestamp,
         partitionKey,
@@ -80,9 +77,10 @@ export default class StreamMessageCreator implements IMessageCreator {
 
             const [messageId, prevMsgRef] = chain.add(timestamp)
 
-            const streamMessage: StreamMessage<T> = (content && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
-                // @ts-expect-error TODO: typing for stream message containers
-                ? ((content.toStreamMessage(messageId, prevMsgRef)) as StreamMessage<T>)
+            const streamMessage: StreamMessage<T> = StreamMessage.isStreamMessageContainer(content)
+                // TODO: typing for stream message containers
+                // e.g. transparent handling for StreamMessage<SomeClass> where SomeClass implements toStreamMessage & {de}serialization methods
+                ? (content.toStreamMessage(messageId, prevMsgRef || null)) as StreamMessage<any>
                 : new StreamMessage({
                     messageId,
                     prevMsgRef,
@@ -90,39 +88,18 @@ export default class StreamMessageCreator implements IMessageCreator {
                     ...opts
                 })
 
-            // if (StreamMessage.isUnencrypted(streamMessage)) {
-            // await this.encrypt(streamMessage, stream)
-            // }
-
-            if (StreamMessage.isUnsigned(streamMessage)) {
-                await this.signer.sign(streamMessage)
-            }
-
             return streamMessage
         })
     }
-    /*
-    setNextGroupKey(maybeStreamId: string, newKey: GroupKey) {
-        return this.encrypt.setNextGroupKey(maybeStreamId, newKey)
-    }
 
-    rotateGroupKey(maybeStreamId: string) {
-        return this.encrypt.rotateGroupKey(maybeStreamId)
+    async start() {
+        this.isStopped = false
     }
-
-    rekey(maybeStreamId: string) {
-        return this.encrypt.rekey(maybeStreamId)
-    }
-
-    startKeyExchange() {
-        return this.encrypt.start()
-    }
-    */
 
     async stop() {
+        this.isStopped = true
         this.streamPartitioner.clear()
         this.queue.clear()
         this.getMsgChain.clear()
-        // await this.encrypt.stop()
     }
 }

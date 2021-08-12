@@ -7,7 +7,7 @@ import { Debug } from '../utils/log'
 import { createStreamId } from '../stream/utils'
 import { Stream, StreamOperation, StreamProperties } from './Stream'
 import { StreamPart } from '../stream/StreamPart'
-import { isKeyExchangeStream } from '../stream/encryption/KeyExchangeUtils'
+import { isKeyExchangeStream } from './encryption/KeyExchangeUtils'
 
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
@@ -102,11 +102,13 @@ export class StreamEndpoints implements Context {
      * @category Important
      */
     async getStream(streamId: string) {
+        const isKeyExchange = isKeyExchangeStream(streamId)
         this.debug('getStream %o', {
             streamId,
+            isKeyExchangeStream: isKeyExchange,
         })
 
-        if (isKeyExchangeStream(streamId)) {
+        if (isKeyExchange) {
             return new Stream({
                 id: streamId,
                 partitions: 1,

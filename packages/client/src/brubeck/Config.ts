@@ -4,6 +4,7 @@ import defaultsDeep from 'lodash/defaultsDeep'
 import cloneDeep from 'lodash/cloneDeep'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NodeRegistryOptions } from './NodeRegistry'
+import { EncryptionConfig } from './encryption/KeyExchangeUtils'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Partial<NetworkNodeOptions>
@@ -30,6 +31,7 @@ const BrubeckConfigInjection = {
     Publish: Symbol('Config.Publish'),
     Cache: Symbol('Config.Cache'),
     NodeRegistry: Symbol('Config.NodeRegistry'),
+    Encryption: Symbol('Config.Encryption'),
 }
 
 export * from '../Config'
@@ -48,7 +50,7 @@ const BRUBECK_CLIENT_DEFAULTS = {
             'ws://127.0.0.1:30302',
             'ws://127.0.0.1:30303'
         ],
-    }
+    },
 }
 
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {

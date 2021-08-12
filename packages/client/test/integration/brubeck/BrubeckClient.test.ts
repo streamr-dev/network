@@ -7,12 +7,13 @@ import { wait } from 'streamr-test-utils'
 import { describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId } from '../../utils'
 import { BrubeckClient } from '../../../src/brubeck/BrubeckClient'
 import { Defer } from '../../../src/utils'
-import { getPublishTestMessages } from './utils'
+import * as G from '../../../src/utils/GeneratorUtils'
+import { getPublishTestMessages, getWaitForStorage, publishManyGenerator } from './utils'
 
 import clientOptions from '../config'
 import { Stream } from '../../../src/brubeck/Stream'
 // import Subscription from '../../../src/brubeck/Subscription'
-// import { StorageNode } from '../../../src/stream/StorageNode'
+import { StorageNode } from '../../../src/stream/StorageNode'
 
 const { StreamMessage } = MessageLayer
 
@@ -135,8 +136,7 @@ describeRepeats('StreamrClient', () => {
             await wait(WAIT_TIME)
         }, TIMEOUT)
 
-        // TODO: uses old client
-        it.skip('Stream.publish does not error', async () => {
+        it('Stream.publish does not error', async () => {
             await stream.publish({
                 test: 'Stream.publish',
             })
@@ -218,7 +218,7 @@ describeRepeats('StreamrClient', () => {
             })
 
             const published = await publishTestMessages(MAX_MESSAGES)
-            await expect(async () => sub.collect(1)).rejects.toThrow('collect')
+            await expect(async () => sub.collect(1)).rejects.toThrow()
             await done
             expect(onMessageMsgs).toEqual(published)
         })
@@ -245,6 +245,86 @@ describeRepeats('StreamrClient', () => {
             await done
             expect(received).toEqual(published)
         })
+
+        it('disconnecting stops publish', async () => {
+            const subscriber = createClient({
+                auth: client.options.auth,
+            })
+            const sub = await subscriber.subscribe({
+                streamId: stream.id,
+            })
+
+            const onMessage = jest.fn()
+            const gotMessages = Defer()
+            const published: any[] = []
+            client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
+                if (!streamMessage.spid.matches(stream.id)) { return }
+                onMessage()
+                published.push(streamMessage.getParsedContent())
+                if (published.length === 3) {
+                    await gotMessages
+                    await client.disconnect()
+                }
+            })
+
+            const received: any[] = []
+            const publishTask = (async () => {
+                for (let i = 0; i < MAX_MESSAGES; i += 1) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await client.publish(stream.id, Msg())
+                }
+            })()
+            publishTask.catch(() => {})
+            for await (const msg of sub) {
+                received.push(msg)
+                if (received.length === 3) {
+                    gotMessages.resolve(undefined)
+                    setTimeout(() => { sub.unsubscribe() }, 500)
+                }
+            }
+            await expect(async () => {
+                await publishTask
+            }).rejects.toThrow('publish')
+            expect(received.map((s) => s.getParsedContent())).toEqual(published.slice(0, 3))
+            expect(onMessage).toHaveBeenCalledTimes(4)
+        })
+
+        it('disconnecting resolves publish promises', async () => {
+            // the subscriber side of this test is partially disabled as we
+            // can't yet reliably publish messages then disconnect and know
+            // that subscriber will actually get something.
+            // Probably needs to wait for propagation.
+            const subscriber = createClient({
+                auth: client.options.auth,
+            })
+
+            const received: any[] = []
+            // const gotMessage = Defer()
+            await subscriber.subscribe({
+                streamId: stream.id,
+            }, (msg) => {
+                received.push(msg)
+                // gotMessage.resolve(undefined)
+            })
+
+            const msgs = await G.collect(publishManyGenerator(MAX_MESSAGES))
+
+            const publishTasks = [
+                client.publishMessage(stream.id, msgs[0]).finally(async () => {
+                    await client.disconnect()
+                }),
+                client.publishMessage(stream.id, msgs[1]),
+                client.publishMessage(stream.id, msgs[2]),
+                client.publishMessage(stream.id, msgs[3]),
+            ]
+            const results = await Promise.allSettled(publishTasks)
+            client.debug('publishTasks', results.map(({ status }) => status))
+            expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected', 'rejected', 'rejected'])
+            await wait(500)
+            client.debug('received', received)
+            // should probably get every publish that was fulfilled, right?
+            // expect(received).toEqual([msgs[0].content])
+        })
     })
 
     describe('utf-8 encoding', () => {
@@ -257,13 +337,14 @@ describeRepeats('StreamrClient', () => {
             const messages = await sub.collect(1)
             expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
         })
-        /*
         it('decodes resent messages correctly', async () => {
+            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
             const publishedMessage = Msg({
                 content: fs.readFileSync(path.join(__dirname, '..', 'utf8Example.txt'), 'utf8')
             })
             const publishReq = await client.publish(stream.id, publishedMessage)
-            await waitForStorage(publishReq)
+
+            await getWaitForStorage(client)(publishReq)
             const sub = await client.resend({
                 stream: stream.id,
                 resend: {
@@ -271,9 +352,8 @@ describeRepeats('StreamrClient', () => {
                 },
             })
             const messages = await sub.collect()
-            expect(messages).toEqual([publishedMessage])
+            expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
         }, 10000)
-        */
     })
 })
 

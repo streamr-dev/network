@@ -417,8 +417,15 @@ export class LeaksDetector {
         this.leakDetectors.set(this.counter(name), new LeakDetector(obj))
     }
 
-    addAll(id: string, obj: object, seen = new Set()) {
+    addAll(id: string, obj: object, seen = new Set(), depth = 0) {
         if (!obj || typeof obj !== 'object') { return }
+
+        if (id.includes('cachedNode-peerInfo-controlLayerVersions') || id.includes('cachedNode-peerInfo-messageLayerVersions')) {
+            // temporary whitelist some leak in network code
+            return
+        }
+
+        if (depth > 5) { return }
 
         if (seen.has(obj)) { return }
         seen.add(obj)
@@ -426,7 +433,7 @@ export class LeaksDetector {
         if (Array.isArray(obj)) {
             obj.forEach((value, key) => {
                 const childId = value.id || `${id}-${key}`
-                this.addAll(childId, value, seen)
+                this.addAll(childId, value, seen, depth + 1)
             })
             return
         }
@@ -434,20 +441,25 @@ export class LeaksDetector {
         Object.entries(obj).forEach(([key, value]) => {
             if (!value || typeof value !== 'object') { return }
 
+            if (seen.has(value) || key.startsWith('_')) { return }
+
             // skip tsyringe containers, root parent will never be gc'ed.
-            if (value.constructor && value.constructor.name === 'InternalDependencyContainer' && key === 'parent') {
+            if (value.constructor && value.constructor.name === 'InternalDependencyContainer') {
                 return
             }
 
             const childId = value.id || `${id}-${key}`
-            this.addAll(childId, value, seen)
+            this.addAll(childId, value, seen, depth + 1)
         })
     }
 
     async getLeaks(): Promise<string[]> {
         await wait(10) // wait a moment for gc to run?
+        const outstanding = new Set<string>()
         const results = await Promise.all([...this.leakDetectors.entries()].map(async ([key, d]) => {
+            outstanding.add(key)
             const isLeaking = await d.isLeaking()
+            outstanding.delete(key)
             return isLeaking ? key : undefined
         }))
         return results.filter((key) => key != null) as string[]

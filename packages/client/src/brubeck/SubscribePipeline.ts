@@ -1,10 +1,11 @@
-import { MessageContent, SPID, StreamMessage } from 'streamr-client-protocol'
+import { MessageContent, SPID } from 'streamr-client-protocol'
 
 import OrderMessages from './OrderMessages'
 import MessageStream from './MessageStream'
 
 import Validator from './Validator'
-// import Decrypt, { DecryptWithExchangeOptions } from './Decrypt'
+import { Decrypt, DecryptWithExchangeOptions } from './Decrypt'
+import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
 import { Context } from '../utils/Context'
 import { Config } from './Config'
 import Resends from './Resends'
@@ -17,9 +18,7 @@ import { BrubeckCached } from './Cached'
 
 export default function SubscribePipeline<T extends MessageContent | unknown>(
     spid: SPID,
-    options: {
-        onError?: (err?: Error, streamMessage?: StreamMessage<T>) => Promise<void> | void
-    },
+    options: DecryptWithExchangeOptions<T>,
     context: Context,
     container: DependencyContainer
 ): MessageStream<T> {
@@ -32,11 +31,16 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
     // const { key } = options as any
     // const id = counterId('MessagePipeline') + key
 
-    // const decrypt = Decrypt(client, options)
     /* eslint-enable object-curly-newline */
 
     const seenErrors = new WeakSet()
-    const onErrorFn = options.onError ? options.onError : (error: Error) => { throw error }
+    const onErrorFn = (error: Error) => {
+        if (options.onError) {
+            return options.onError(error)
+        }
+        throw error
+    }
+
     const onError = async (err: Error) => {
         // don't handle same error multiple times
         if (seenErrors.has(err)) {
@@ -45,6 +49,21 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
         seenErrors.add(err)
         await onErrorFn(err)
     }
+
+    const decrypt = new Decrypt<T>(
+        context,
+        container.resolve(BrubeckCached),
+        container.resolve(SubscriberKeyExchange),
+        {
+            ...options,
+            onError: async (err, streamMessage) => {
+                if (streamMessage) {
+                    ignoreMessages.add(streamMessage)
+                }
+                await onError(err)
+            },
+        }
+    )
 
     // collect messages that fail validation/parsing, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
@@ -73,7 +92,7 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
             }
         })
         // decrypt
-        // .pipe(decrypt.decrypt)
+        .pipe(decrypt.decrypt)
         // parse content
         .pipe(async function* ParseMessages(src) {
             for await (const streamMessage of src) {
@@ -96,5 +115,12 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
                 }
                 yield streamMessage
             }
+        })
+        .onBeforeFinally(async () => {
+            const tasks = [
+                decrypt.stop(),
+                validate.stop(),
+            ]
+            await Promise.allSettled(tasks)
         })
 }

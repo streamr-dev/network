@@ -1,70 +1,47 @@
 import { StreamMessage } from 'streamr-client-protocol'
 
-import EncryptionUtil, { UnableToDecryptError } from '../stream/encryption/Encryption'
-import { SubscriberKeyExchange } from '../stream/encryption/KeyExchangeSubscriber'
-import { BrubeckClient } from './BrubeckClient'
+import EncryptionUtil, { UnableToDecryptError } from './encryption/Encryption'
+import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
+import { BrubeckCached } from './Cached'
 import { PipelineTransform } from '../utils/Pipeline'
+import { Context } from '../utils/Context'
+import { Stoppable } from '../utils/Stoppable'
+import { instanceId } from '../utils'
 
 type IDecrypt<T> = {
     decrypt: PipelineTransform<StreamMessage<T>>
 }
 
 export type DecryptWithExchangeOptions<T> = {
-    groupKeys?: any[]
-    onError?: (err?: Error, streamMessage?: StreamMessage<T>) => Promise<void> | void
+    onError?: (err: Error, streamMessage?: StreamMessage<T>) => Promise<void> | void
 }
 
-export default function Decrypt<T>(client: BrubeckClient, options: DecryptWithExchangeOptions<T> = {}): IDecrypt<T> {
-    if (!client.options.keyExchange) {
-        return new DecryptionDisabled<T>()
-    }
+export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
+    id
+    debug
+    isStopped = false
 
-    return new DecryptWithExchange<T>(client, options)
-}
-
-class DecryptionDisabled<T> implements IDecrypt<T> {
-    constructor() {
+    constructor(
+        context: Context,
+        private streamEndpoints: BrubeckCached,
+        private keyExchange: SubscriberKeyExchange,
+        private options: DecryptWithExchangeOptions<T>,
+    ) {
+        this.id = instanceId(this)
+        this.debug = context.debug.extend(this.id)
         this.decrypt = this.decrypt.bind(this)
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    async* decrypt(src: AsyncGenerator<StreamMessage<T>>) {
-        for await (const streamMessage of src) {
-            if (streamMessage.groupKeyId) {
-                throw new UnableToDecryptError('No keyExchange configured, cannot decrypt any message.', streamMessage)
-            }
-
-            yield streamMessage
-        }
-    }
-}
-
-class DecryptWithExchange<T> implements IDecrypt<T> {
-    keyExchange
-    client
-    onErrorFn
-    constructor(client: BrubeckClient, options: DecryptWithExchangeOptions<T> = {}) {
-        this.client = client
-        this.onErrorFn = options.onError
-        this.keyExchange = new SubscriberKeyExchange(client.client, {
-            ...options,
-            groupKeys: {
-                ...client.options.groupKeys,
-                ...options.groupKeys,
-            }
-        })
-
-        this.decrypt = this.decrypt.bind(this)
-    }
-
-    private async onError(err?: Error, streamMessage?: StreamMessage<T>) {
-        if (this.onErrorFn) {
-            await this.onErrorFn(err, streamMessage)
+    private async onError(err: Error, streamMessage?: StreamMessage<T>) {
+        if (this.options.onError) {
+            await this.options.onError(err, streamMessage)
         }
     }
 
     async* decrypt(src: AsyncGenerator<StreamMessage<T>>) {
         for await (const streamMessage of src) {
+            if (this.isStopped) { return }
+
             if (!streamMessage.groupKeyId) {
                 yield streamMessage
                 continue
@@ -87,19 +64,23 @@ class DecryptWithExchange<T> implements IDecrypt<T> {
                     ].join(' '), streamMessage)
                 }
 
-                await EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
+                EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
                 await this.keyExchange.addNewKey(streamMessage)
             } catch (err) {
+                this.debug('Decrypt Error', err)
                 // clear cached permissions if cannot decrypt, likely permissions need updating
-                this.client.client.cached.clearStream(streamMessage.getStreamId())
+                this.streamEndpoints.clearStream(streamMessage.getStreamId())
                 await this.onError(err, streamMessage)
             } finally {
                 yield streamMessage
             }
         }
     }
+    async start() {
+        this.isStopped = false
+    }
 
     async stop() {
-        return this.keyExchange.stop()
+        this.isStopped = true
     }
 }

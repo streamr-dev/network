@@ -4,7 +4,6 @@ import { LoginEndpoints, TokenObject } from './LoginEndpoints'
 import { AuthConfig } from './Ethereum'
 import { Config } from './Config'
 import { BrubeckContainer } from './Container'
-import { Context } from '../utils/Context'
 
 enum State {
     LOGGING_OUT = 'logging out',
@@ -18,7 +17,10 @@ export default class Session extends EventEmitter {
     state: State
     sessionTokenPromise?: Promise<string|undefined>
 
-    constructor(@inject(BrubeckContainer) private container: DependencyContainer, @inject(Config.Auth) public options: AuthConfig) {
+    constructor(
+        @inject(BrubeckContainer) private container: DependencyContainer,
+        @inject(Config.Auth) public options: AuthConfig
+    ) {
         super()
         this.state = State.LOGGED_OUT
     }

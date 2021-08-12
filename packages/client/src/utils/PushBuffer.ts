@@ -33,6 +33,7 @@ export type IPushBuffer<InType, OutType = InType> = {
     length: number
     isFull(): boolean
     isDone(): boolean
+    clear(): void
     collect(n?: number): Promise<OutType[]>
 } & Context & AsyncGenerator<OutType>
 
@@ -41,12 +42,12 @@ export type IPushBuffer<InType, OutType = InType> = {
  * Push items into buffer, push will async block once buffer is full.
  * and will unblock once buffer has been consumed.
  */
-export class PushBuffer<T> implements IPushBuffer<T> {
+export class PushBuffer<T> implements IPushBuffer<T>, Context {
     ['constructor']: typeof PushBuffer
 
     static Error = PushBufferError
-    readonly id
-    readonly debug
+    id
+    debug
 
     protected readonly buffer: (T | Error)[] = []
     readonly bufferSize: number
@@ -83,7 +84,7 @@ export class PushBuffer<T> implements IPushBuffer<T> {
      * Blocks until writeGate is open again (or locked)
      * @returns Promise<true> if item was pushed, Promise<false> if done or became done before writeGate opened.
      */
-    async push(item: T) {
+    async push(item: T | Error) {
         if (!this.isWritable()) {
             return false
         }
@@ -237,6 +238,11 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         return this.buffer.length
     }
 
+    // clears any pending items in buffer
+    clear() {
+        this.buffer.length = 0
+    }
+
     // AsyncGenerator implementation
 
     async throw(err: Error) {
@@ -251,6 +257,18 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 
     next() {
         return this.iterator.next()
+    }
+
+    async pull(src: AsyncGenerator<T>) {
+        try {
+            for await (const v of src) {
+                const ok = await this.push(v)
+                if (!ok || !this.isWritable()) { break }
+            }
+        } catch (err) {
+            // this.endWrite(err)
+        }
+        this.endWrite()
     }
 
     [Symbol.asyncIterator]() {
@@ -312,7 +330,8 @@ export class PullBuffer<InType> extends PushBuffer<InType> {
     constructor(source: AsyncGenerator<InType>, ...args: ConstructorParameters<typeof PushBuffer>) {
         super(...args)
         this.source = source
-        pull(this.source, this)
+        pull(this.source, this).catch(() => {
+        })
     }
 
     map<NewOutType>(fn: G.GeneratorMap<InType, NewOutType>) {

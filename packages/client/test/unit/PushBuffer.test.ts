@@ -365,6 +365,28 @@ describe('PushBuffer', () => {
 
                 expect(received).toEqual(expected)
             })
+
+            it('can clear buffered items', async () => {
+                const pushBuffer = new PushBuffer<number>()
+                await pushBuffer.push(expected[0])
+                await pushBuffer.push(expected[1])
+                await pushBuffer.push(expected[2])
+                await pushBuffer.push(expected[3])
+                await pushBuffer.push(expected[4])
+                const received: number[] = []
+                for await (const msg of pushBuffer) {
+                    received.push(msg)
+                    if (received.length === 3) {
+                        pushBuffer.clear()
+                        setTimeout(async () => {
+                            await pushBuffer.push(expected[5])
+                            await pushBuffer.return()
+                        })
+                    }
+                }
+
+                expect(received).toEqual([...expected.slice(0, 3), expected[5]])
+            })
         })
     })
 })

@@ -142,5 +142,32 @@ describeRepeats('StreamrClient', () => {
             expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
             expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
         })
+
+        it('can successfully pub/sub multiple streams', async () => {
+            async function testPubSub(testStream: Stream) {
+                const sub = await client.subscribe({
+                    streamId: testStream.id,
+                })
+                const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
+                const publish = client.publisher.publishFromMetadata(testStream, source)
+                const published = await client.publisher.collectMessages(publish, MAX_MESSAGES)
+                const received = []
+                for await (const msg of sub) {
+                    received.push(msg)
+                    if (received.length === published.length) {
+                        break
+                    }
+                }
+                expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
+                expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
+            }
+            const stream2 = await createStream()
+            const tasks = [
+                testPubSub(stream),
+                testPubSub(stream2),
+            ]
+            await Promise.allSettled(tasks)
+            await Promise.all(tasks)
+        })
     })
 })

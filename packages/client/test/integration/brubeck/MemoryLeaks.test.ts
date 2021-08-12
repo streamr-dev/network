@@ -8,7 +8,7 @@ import { counterId, Defer } from '../../../src/utils'
 import clientOptions from '../config'
 
 const MAX_MESSAGES = 5
-
+const TIMEOUT = 30000
 describeRepeats('Leaks', () => {
     let leaksDetector: LeaksDetector
 
@@ -21,8 +21,9 @@ describeRepeats('Leaks', () => {
         if (!leaksDetector) { return }
         const detector = leaksDetector
         await wait(1000)
-        await detector.checkNoLeaks()
-    })
+        await detector.checkNoLeaks() // this is very slow
+        detector.clear()
+    }, TIMEOUT)
 
     describe('BrubeckClient', () => {
         const createClient = (opts: any = {}) => {

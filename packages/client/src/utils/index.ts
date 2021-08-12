@@ -13,9 +13,9 @@ import { MaybeAsync } from '../types'
 
 import AggregatedError from './AggregatedError'
 import Scaffold from './Scaffold'
-import { Debugger, Debug } from './log'
+import { Debug } from './log'
 
-const debug = Debug('utils')
+export const debug = Debug('utils')
 
 export { AggregatedError, Scaffold }
 
@@ -281,7 +281,8 @@ export type Deferred<T> = ReturnType<DeferredWrapper<T>['wrap']>
 export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop) {
     let resolveFn: PromiseResolve | undefined
     let rejectFn: PromiseResolve | undefined
-    const resolve: PromiseReject = (value) => {
+    let isResolved = false
+    const resolve: PromiseResolve = (value) => {
         if (resolveFn) {
             const r = resolveFn
             resolveFn = undefined
@@ -312,6 +313,8 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
                 return resolve(await fn(...args))
             } catch (err) {
                 reject(err)
+            } finally {
+                isResolved = true
             }
             return Promise.resolve()
         }
@@ -341,7 +344,10 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
         reject,
         wrap,
         wrapError,
-        handleErrBack
+        handleErrBack,
+        isResolved() {
+            return isResolved
+        },
     })
 }
 
@@ -461,7 +467,7 @@ export function pOne<ArgsType extends unknown[], ReturnType>(
 
 export function pOnce<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>
-): ((...args: ArgsType) => Promise<ReturnType | Awaited<ReturnType>>) & { reset(): void, isStarted: boolean } {
+): ((...args: ArgsType) => Promise<ReturnType | Awaited<ReturnType>>) & { reset(): void, isStarted(): boolean } {
     type CallStatus = PromiseSettledResult<ReturnType> | { status: 'init' } | { status: 'pending', promise: Promise<ReturnType> }
     let currentCall: CallStatus = { status: 'init' }
 
@@ -504,7 +510,7 @@ export function pOnce<ArgsType extends unknown[], ReturnType>(
                 throw reason
             }
         })()
-
+        promise.catch(() => {}) // prevent unhandled
         Object.assign(thisCall, {
             status: 'pending',
             promise,
@@ -512,7 +518,7 @@ export function pOnce<ArgsType extends unknown[], ReturnType>(
 
         return promise
     }, {
-        get isStarted() {
+        isStarted() {
             return currentCall.status !== 'init'
         },
         reset() {

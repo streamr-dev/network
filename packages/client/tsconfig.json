@@ -4,7 +4,8 @@
         "outDir": "dist",
         "rootDirs": ["src", "test"],
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+        "strictBindCallApply": true
     },
     "include": [
         "src/**/*",

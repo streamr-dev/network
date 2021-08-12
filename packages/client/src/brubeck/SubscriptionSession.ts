@@ -8,13 +8,15 @@ import { flow } from '../utils/PushBuffer'
 import { DependencyContainer, inject } from 'tsyringe'
 import { BrubeckContainer } from './Container'
 import BrubeckNode from './BrubeckNode'
+import { Stoppable } from '../utils/Stoppable'
+import {NetworkNode} from '../../../network/dist/NetworkNode'
 
 /**
  * Sends Subscribe/Unsubscribe requests as needed.
  * Adds connection handles as needed.
  */
 
-export default class SubscriptionSession<T extends MessageContent | unknown> implements Context {
+export default class SubscriptionSession<T extends MessageContent | unknown> implements Context, Stoppable {
     id
     debug
     spid: SPID
@@ -22,7 +24,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     subscriptions: Set<Subscription<T>> = new Set()
     pendingRemoval: Set<Subscription<T>> = new Set()
     active = false
-    stopped = false
+    isStopped = false
     pipeline
     node
 
@@ -32,33 +34,53 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         this.spid = spid
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
-        this.pipeline = SubscribePipeline<T>(this.spid, {}, this, container)
+        this.onError = this.onError.bind(this)
+        this.pipeline = SubscribePipeline<T>(this.spid, {
+            onError: this.onError,
+        }, this, container)
             .pipe(this.distributeMessage)
             .onFinally(() => (
                 this.removeAll()
             ))
 
+        // this.debug('create')
         setImmediate(() => {
             // eslint-disable-next-line promise/catch-or-return
             flow(this.pipeline).catch((err) => {
-                this.debug('error', err)
+                this.debug('flow error', err)
             }).finally(() => {
                 this.debug('end')
             })
         })
     }
 
+    private onError(error: Error) {
+        this.subscriptions.forEach(async (sub) => {
+            try {
+                await sub.onError.trigger(error)
+            } catch (err) {
+                await sub.push(err)
+            }
+        })
+    }
+
     async* distributeMessage(src: AsyncGenerator<StreamMessage<T>>) {
-        for await (const msg of src) {
-            this.subscriptions.forEach((sub) => {
-                sub.push(msg)
-            })
-            yield msg
+        try {
+            for await (const msg of src) {
+                this.subscriptions.forEach((sub) => (
+                    sub.push(msg)
+                ))
+                yield msg
+            }
+        } catch (err) {
+            this.subscriptions.forEach((sub) => (
+                sub.push(err)
+            ))
         }
     }
 
     private onMessageInput = async (msg: StreamMessage) => {
-        if (!msg || this.stopped || !this.active) {
+        if (!msg || this.isStopped || !this.active) {
             return
         }
 
@@ -76,12 +98,12 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         node.addMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
         node.subscribe(streamId, streamPartition)
+        return node
     }
 
-    private async unsubscribe() {
+    private async unsubscribe(node: NetworkNode) {
         this.debug('unsubscribe')
         this.active = false
-        const node = await this.node.getNode()
         node.removeMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
         node.subscribe(streamId, streamPartition)
@@ -89,15 +111,19 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
 
     updateSubscriptions = Scaffold([
         async () => {
-            await this.subscribe()
+            let node: NetworkNode | undefined = await this.subscribe()
             return async () => {
-                await this.unsubscribe()
+                const prevNode = node
+                node = undefined
+                await this.unsubscribe(prevNode!)
             }
         }
-    ], () => !!this.count())
+    ], () => !this.isStopped && !!this.count())
 
     async stop() {
-        this.pipeline.end()
+        this.debug('stop')
+        this.isStopped = true
+        this.pipeline.return()
         await this.removeAll()
     }
 

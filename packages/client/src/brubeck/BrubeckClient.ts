@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { container, inject } from 'tsyringe'
+import { container, DependencyContainer, inject } from 'tsyringe'
 import Debug from 'debug'
 import { BrubeckContainer } from './Container'
 import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
@@ -14,7 +14,7 @@ import Ethereum from './Ethereum'
 import Session from './Session'
 import { StreamEndpoints } from './StreamEndpoints'
 import { LoginEndpoints } from './LoginEndpoints'
-import {BrubeckCached} from './Cached'
+import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -41,19 +41,38 @@ function Plugin(targetInstance: any, srcInstance: any) {
     return srcInstance
 }
 
+// Get property names which have a Function-typed value i.e. a method
+type MethodNames<T> = {
+    // undefined extends T[K] to handle optional properties
+    [K in keyof T]: (
+        (undefined extends T[K] ? never : T[K]) extends Function ? K : never
+    )
+}[keyof T]
+
+// Pick only methods of T
+type Methods<T> = Pick<T, MethodNames<T>>
+
 // these are mixed in via Plugin function above
+// use MethodNames to only grab methods
 export interface BrubeckClient extends Ethereum,
-    Omit<StreamEndpoints, 'options'>,
-    Omit<Session, 'options' | 'loginEndpoints'>,
-    Omit<Subscriber, 'client'>,
-    Omit<BrubeckNode, 'options' | 'disconnect'>,
-    Omit<LoginEndpoints, 'options'>,
-    Omit<Publisher, 'client'>,
-    Omit<Resends, 'options'> {}
+    Methods<StreamEndpoints>,
+    Methods<Subscriber>,
+    // {dis}connect in BrubeckNode are pOnce
+    Methods<Omit<BrubeckNode, 'disconnect' | 'connect'>>,
+    Methods<LoginEndpoints>,
+    Methods<Publisher>,
+    Methods<GroupKeyStoreFactory>,
+    // Omit sessionTokenPromise because TS complains:
+    // Type 'undefined' is not assignable to type 'keyof Session'
+    // MethodNames's [K in keyof T] doesn't work if K is optional?
+    Methods<Omit<Session, 'sessionTokenPromise'>>,
+    Methods<Resends> {
+}
 
 class BrubeckClientBase implements Context {
     id
     debug
+    container: DependencyContainer
     options: StrictBrubeckClientConfig
     loginEndpoints: LoginEndpoints
     streamEndpoints: StreamEndpoints
@@ -63,8 +82,10 @@ class BrubeckClientBase implements Context {
     resends: Resends
     session: Session
     node: BrubeckNode
+    groupKeyStore: GroupKeyStoreFactory
 
     constructor(
+        rootContainer: DependencyContainer,
         context: Context,
         @inject(Config.Root) options: StrictBrubeckClientConfig,
         node: BrubeckNode,
@@ -75,10 +96,12 @@ class BrubeckClientBase implements Context {
         resends: Resends,
         publisher: Publisher,
         subscriber: Subscriber,
+        groupKeyStore: GroupKeyStoreFactory,
     ) { // eslint-disable-line function-paren-newline
         this.options = options!
         this.id = context.id
         this.debug = context.debug
+        this.container = rootContainer
         this.loginEndpoints = loginEndpoints!
         this.streamEndpoints = streamEndpoints!
         this.ethereum = ethereum!
@@ -87,6 +110,7 @@ class BrubeckClientBase implements Context {
         this.resends = resends!
         this.session = session!
         this.node = node!
+        this.groupKeyStore = groupKeyStore
         Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
@@ -95,9 +119,20 @@ class BrubeckClientBase implements Context {
         Plugin(this, this.resends)
         Plugin(this, this.session)
         Plugin(this, this.node)
+        Plugin(this, this.groupKeyStore)
     }
 
-    async disconnect() {
+    async connect(): Promise<void> {
+        const tasks = [
+            this.publisher.start(),
+            this.node.connect(),
+        ]
+
+        await Promise.allSettled(tasks)
+        await Promise.all(tasks)
+    }
+
+    async disconnect(): Promise<void> {
         const tasks = [
             this.node.disconnect(),
             this.resends.stop(),
@@ -154,11 +189,15 @@ export class BrubeckClient extends BrubeckClientBase {
         c.register(Config.Publish, {
             useValue: config
         })
+        c.register(Config.Encryption, {
+            useValue: config
+        })
         c.register(Config.Cache, {
             useValue: config.cache
         })
 
         super(
+            c,
             c.resolve<Context>(Context as any),
             config,
             c.resolve<BrubeckNode>(BrubeckNode),
@@ -169,6 +208,7 @@ export class BrubeckClient extends BrubeckClientBase {
             c.resolve<Resends>(Resends),
             c.resolve<Publisher>(Publisher),
             c.resolve<Subscriber>(Subscriber),
+            c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
         )
         this.container = c
     }

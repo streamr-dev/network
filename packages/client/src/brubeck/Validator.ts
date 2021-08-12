@@ -2,6 +2,7 @@ import { StreamMessage, GroupKeyErrorResponse, StreamMessageValidator, SigningUt
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { pOrderedResolve, CacheAsyncFn } from '../utils'
 import { inspect } from '../utils/log'
+import {Stoppable} from '../utils/Stoppable'
 import { BrubeckCached } from './Cached'
 import { Config, SubscribeConfig } from './Config'
 
@@ -20,7 +21,8 @@ export class SignatureRequiredError extends ValidationError {
  * Handles caching remote calls
  */
 @scoped(Lifecycle.ContainerScoped)
-export default class Validator extends StreamMessageValidator {
+export default class Validator extends StreamMessageValidator implements Stoppable {
+    isStopped = false
     private doValidation: StreamMessageValidator['validate']
     constructor(
         streamEndpoints: BrubeckCached,
@@ -46,6 +48,8 @@ export default class Validator extends StreamMessageValidator {
     }
 
     orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {
+        if (this.isStopped) { return }
+
         const { options } = this
         if (msg.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
             const errMsg = msg as StreamMessage<any>
@@ -79,7 +83,8 @@ export default class Validator extends StreamMessageValidator {
         await this.orderedValidate(msg)
     }
 
-    clear() {
+    stop() {
+        this.isStopped = true
         this.orderedValidate.clear()
     }
 }
