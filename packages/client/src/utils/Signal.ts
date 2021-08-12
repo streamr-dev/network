@@ -36,7 +36,7 @@ export default class Signal<ValueType = void> {
             signal.listen(cb)
             return returnValue
         }, {
-            get triggerCount() {
+            triggerCount() {
                 return signal.triggerCount
             },
             once: signal.once.bind(signal),
@@ -65,8 +65,6 @@ export default class Signal<ValueType = void> {
     constructor(private isOnce = false) {
         if (isOnce) {
             this.trigger = pOnce(this.trigger)
-        } else {
-            this.trigger = pOne(this.trigger)
         }
     }
 
@@ -138,7 +136,10 @@ export default class Signal<ValueType = void> {
     /**
      * Trigger the signal with optional value, like emitter.emit.
      */
-    trigger = async (...args: [ValueType] extends [undefined] ? any[] : [ValueType]): Promise<void> => {
+    trigger = pOne(async (
+        // TS nonsense to allow trigger() when ValueType is undefined/void
+        ...args: [ValueType] extends [undefined] ? any[] : [ValueType]
+    ): Promise<void> => {
         const [value] = args
         if (this.isEnded) {
             return
@@ -169,5 +170,5 @@ export default class Signal<ValueType = void> {
         if (error) {
             throw error
         }
-    }
+    })
 }

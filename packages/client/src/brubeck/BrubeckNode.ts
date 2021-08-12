@@ -49,7 +49,7 @@ export default class BrubeckNode implements Context {
         this.debug('disconnect <<')
     })
 
-    getNode = pOnce(() => {
+    getNode = pOnce(async () => {
         this.callCount += 1
         const { callCount } = this
         this.debug('getNode >>', callCount)

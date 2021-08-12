@@ -84,7 +84,7 @@ export default class PublishPipeline implements Context, Stoppable {
             .forEach(this.consumeQueue.bind(this))
     }
 
-    private filterResolved = ([_streamMessage, defer]: PublishQueueOut) => {
+    private filterResolved = ([_streamMessage, defer]: PublishQueueOut): boolean => {
         return !defer.isResolved()
     }
 
@@ -101,7 +101,7 @@ export default class PublishPipeline implements Context, Stoppable {
         }
     }
 
-    private async encryptMessage([streamMessage, defer]: PublishQueueOut) {
+    private async encryptMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
         const onError = (err: Error) => {
             defer.reject(err)
         }
@@ -111,7 +111,7 @@ export default class PublishPipeline implements Context, Stoppable {
         }
     }
 
-    private async signMessage([streamMessage, defer]: PublishQueueOut) {
+    private async signMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
         if (defer.isResolved()) { return }
         const onError = (err: Error) => {
             defer.reject(err)
@@ -122,7 +122,7 @@ export default class PublishPipeline implements Context, Stoppable {
         }
     }
 
-    private async consumeQueue([streamMessage, defer]: PublishQueueOut) {
+    private async consumeQueue([streamMessage, defer]: PublishQueueOut): Promise<void> {
         if (defer.isResolved()) { return }
 
         try {
@@ -137,7 +137,7 @@ export default class PublishPipeline implements Context, Stoppable {
     /**
      * Starts queue if not already started.
      */
-    private startQueue() {
+    private startQueue(): void {
         if (this.isStarted || this.isStopped) { return }
 
         this.isStarted = true
@@ -147,7 +147,7 @@ export default class PublishPipeline implements Context, Stoppable {
         }).catch(this.debug.bind(this.debug))
     }
 
-    check() {
+    check(): void {
         if (this.isStopped) {
             throw new ContextError(this, 'Pipeline Stopped. Client probably disconnected')
         }
@@ -157,7 +157,7 @@ export default class PublishPipeline implements Context, Stoppable {
      * Put publish metadata into queue to be published.
      * Creates a Defer to be resolved when message gets sent to node.
      */
-    async publish<T>(publishMetadata: PublishMetadataStrict<T>) {
+    async publish<T>(publishMetadata: PublishMetadataStrict<T>): Promise<StreamMessage<T>> {
         this.debug('publish >> %o', publishMetadata)
         this.startQueue()
 
@@ -177,11 +177,11 @@ export default class PublishPipeline implements Context, Stoppable {
         }
     }
 
-    start() {
+    start(): void {
         this.isStopped = false
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.isStopped = true
         const inProgress = new Set(this.inProgress)
         this.inProgress.clear()

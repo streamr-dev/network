@@ -126,7 +126,6 @@ class StreamrStream implements StreamMetadata {
         return json ? new StreamrStream(json, this.container) : undefined
     }
 
-    /** @internal */
     toObject() {
         const result = {}
         Object.keys(this).forEach((key) => {

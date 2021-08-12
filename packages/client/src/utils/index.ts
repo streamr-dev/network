@@ -437,21 +437,15 @@ export function pLimitFn<ArgsType extends unknown[], ReturnType>(
 }
 
 /**
- * Unwrap a Promise type e.g. Awaited<Promise<T>> => T
- * Required as TS doesn't (currently) understand Promise<T> is equivalent to Promise<Promise<T>>
- */
-type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
-
-/**
  * Only allows one outstanding call.
  * Returns same promise while task is executing.
  */
 
 export function pOne<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType
-): (...args: ArgsType) => Promise<ReturnType | Awaited<ReturnType>> {
+): (...args: ArgsType) => Promise<ReturnType> {
     const once = pOnce(fn)
-    return async (...args: ArgsType): Promise<ReturnType | Awaited<ReturnType>> => {
+    return async (...args: ArgsType): Promise<ReturnType> => {
         try {
             return await once(...args)
         } finally {
@@ -467,11 +461,11 @@ export function pOne<ArgsType extends unknown[], ReturnType>(
 
 export function pOnce<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>
-): ((...args: ArgsType) => Promise<ReturnType | Awaited<ReturnType>>) & { reset(): void, isStarted(): boolean } {
+): ((...args: ArgsType) => Promise<ReturnType>) & { reset(): void, isStarted(): boolean } {
     type CallStatus = PromiseSettledResult<ReturnType> | { status: 'init' } | { status: 'pending', promise: Promise<ReturnType> }
     let currentCall: CallStatus = { status: 'init' }
 
-    return Object.assign(async function pOnceWrap(...args: ArgsType) { // eslint-disable-line prefer-arrow-callback
+    return Object.assign(async function pOnceWrap(...args: ArgsType): Promise<ReturnType> { // eslint-disable-line prefer-arrow-callback
         // capture currentCall so can assign to it, even after reset
         const thisCall = currentCall
         if (thisCall.status === 'pending') {
