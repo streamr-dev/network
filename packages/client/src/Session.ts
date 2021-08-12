@@ -5,6 +5,9 @@ import { LoginEndpoints, TokenObject } from './LoginEndpoints'
 import { AuthConfig } from './Ethereum'
 import { Config } from './Config'
 import { BrubeckContainer } from './Container'
+import { Debug } from './utils/log'
+
+const debug = Debug('Session')
 
 enum State {
     LOGGING_OUT = 'logging out',
@@ -24,6 +27,14 @@ export default class Session extends EventEmitter {
     ) {
         super()
         this.state = State.LOGGED_OUT
+        this.options = {
+            ...options,
+        }
+
+        if (!this.options.sessionToken) {
+            this.options.unauthenticated = true
+        }
+        debug('options', this.options)
     }
 
     isUnauthenticated() {
@@ -31,6 +42,7 @@ export default class Session extends EventEmitter {
     }
 
     updateState(newState: State) {
+        debug('updateState %s -> %s', this.state, newState)
         this.state = newState
         this.emit(newState)
     }
@@ -39,12 +51,23 @@ export default class Session extends EventEmitter {
         return this.container.resolve<LoginEndpoints>(LoginEndpoints)
     }
 
+    async sendLogin(): Promise<TokenObject> {
+        const auth = this.options
+        debug('sendLogin()')
+        if (typeof auth.privateKey !== 'undefined' || typeof auth.ethereum !== 'undefined') {
+            debug('sendLogin challenge')
+            return this.loginEndpoints.loginWithChallengeResponse()
+        }
+
+        throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to login.')
+    }
+
     async getSessionToken(requireNewToken = false) {
         if (this.options.sessionToken && !requireNewToken) {
             return this.options.sessionToken
         }
 
-        if (this.options.unauthenticated) {
+        if (!this.options.privateKey && !this.options.ethereum && !this.options.sessionToken) {
             return undefined
         }
 
@@ -55,7 +78,7 @@ export default class Session extends EventEmitter {
                 })
             } else {
                 this.updateState(State.LOGGING_IN)
-                this.sessionTokenPromise = this.loginEndpoints.sendLogin().then((tokenObj: TokenObject) => {
+                this.sessionTokenPromise = this.sendLogin().then((tokenObj: TokenObject) => {
                     this.options.sessionToken = tokenObj.token
                     this.updateState(State.LOGGED_IN)
                     return tokenObj.token

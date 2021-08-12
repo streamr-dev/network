@@ -148,8 +148,8 @@ class BrubeckClientBase implements Context {
 
 export class BrubeckClient extends BrubeckClientBase {
     container
-    constructor(options: BrubeckClientConfig) {
-        const c = container.createChildContainer()
+    constructor(options: BrubeckClientConfig, parentContainer = container) {
+        const c = parentContainer.createChildContainer()
         const config = BrubeckConfig(options)
         const id = counterId(`BrubeckClient:${uid}${config.id ? `:${config.id}` : ''}`)
         const debug = Debug(`Streamr::${id}`)

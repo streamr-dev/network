@@ -52,19 +52,6 @@ export class LoginEndpoints implements Context {
         return this.rest.post<TokenObject>(['login', 'response'], props, { useSession: false })
     }
 
-    async sendLogin(): Promise<TokenObject> {
-        const auth = this.authConfig
-        if (typeof auth.privateKey !== 'undefined' || typeof auth.ethereum !== 'undefined') {
-            return this.loginWithChallengeResponse()
-        }
-
-        if (!auth.sessionToken) {
-            auth.unauthenticated = true
-        }
-
-        throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to login.')
-    }
-
     /** @internal */
     async loginWithChallengeResponse() {
         const address = await this.ethereum.getAddress()

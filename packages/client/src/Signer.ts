@@ -29,7 +29,9 @@ function getSigningFunction(options: AuthenticatedConfig) {
         }, 1)
     }
 
-    throw new Error('Need either "privateKey" or "ethereum".')
+    return async (_d: string) => {
+        throw new Error('Need either "privateKey" or "ethereum".')
+    }
 }
 
 @scoped(Lifecycle.ContainerScoped)
