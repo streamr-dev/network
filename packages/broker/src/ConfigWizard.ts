@@ -80,14 +80,13 @@ export const DefaultConfig: Config = {
     }
 }
 
-
 export const basicPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
     {
         type: 'list',
         name:'generateOrImportEthereumPrivateKey',
         message: 'Do you want to generate a new Ethereum private key or import an existing one?',
         choices: ['Generate', 'Import'],
-        default: (answers:inquirer.Answers) => {
+        default: (answers: inquirer.Answers) => {
             const wallet = Wallet.createRandom()
             answers.ethereumPrivateKey = wallet.privateKey
         }
@@ -99,20 +98,22 @@ export const basicPrompts: Array<inquirer.Question | inquirer.ListQuestion | inq
         when: (answers: inquirer.Answers) => {
             return answers.generateOrImportEthereumPrivateKey === 'Import'
         },
-        validate: (input:string, answers: inquirer.Answers):string | boolean | Promise<string | boolean> => {
+        validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
             try {
                 const wallet = new Wallet(input) 
                 answers.ethereumPrivateKey = wallet.privateKey
                 return true
-            } catch (privateKeyError) {
-                return `Invalid privateKey provided for import: ${input}`
+            } catch (e) {
+                if (e.message.includes('invalid hexlify value')){
+                    return `Invalid privateKey provided for import: ${input}`
+                } else {
+                    return e.message
+                }
             }
     
         }
     }
 ]
-
-
 
 // Plugin config
 const pluginTemplates = [
@@ -138,13 +139,11 @@ const pluginTemplates = [
     },
 ]
 
-
-
 export const pluginSelectorPrompt = {
     type: 'checkbox',
     name:'selectedPlugins',
     message: 'Select the plugins to enable',
-    choices: pluginTemplates.map(plugin => plugin.key)
+    choices: pluginTemplates.map((plugin) => plugin.key)
 }
 
 export const pluginPrompts = pluginTemplates.map((plugin) => {
@@ -155,10 +154,10 @@ export const pluginPrompts = pluginTemplates.map((plugin) => {
         when: (answers: inquirer.Answers) => {
             return answers.selectedPlugins.includes(plugin.key)
         },
-        validate: (input:string, answers: inquirer.Answers):string | boolean | Promise<string | boolean> => {
+        validate: (input: string, answers: inquirer.Answers = {plugins:{}}): string | boolean => {
             const portNumber = parseInt(input || answers[`${plugin.key}-port`])
             if (Number.isNaN(portNumber) || !Number.isInteger(portNumber)) {
-                return `Non-numeric value ${portNumber} provided`
+                return `Non-numeric value ${input} provided`
             }
     
             if (portNumber < 1024 || portNumber > 49151) {
@@ -173,28 +172,27 @@ export const pluginPrompts = pluginTemplates.map((plugin) => {
     }
 })
 
-async function selectValidDestinationPath (config:Config): Promise<string | undefined> {
-    const storageAnswers = await inquirer.prompt([
-        {
-            type: 'input',
-            name: 'destinationFolderPath',
-            message: `Select a path to store the generated config in `,
-            default: path.join(os.homedir(), '.streamr/broker-config.json'),
-            validate: async (input:string, answers: inquirer.Answers):Promise<string | boolean> => {
-                const path = input || answers.destinationFolderPath
-                const dirPath = path.substring(0, path.lastIndexOf('/'))
+export const StorageAnswersPrompt = {
+    type: 'input',
+    name: 'destinationFolderPath',
+    message: `Select a path to store the generated config in `,
+    default: path.join(os.homedir(), '.streamr/broker-config.json'),
+    validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
+        const path = input || answers.destinationFolderPath
+        const dirPath = path.substring(0, path.lastIndexOf('/'))
 
-                answers.clearPath = !existsSync(path)
-                if (answers.clearPath && !existsSync(dirPath)){
-                    mkdirSync(dirPath)
-                }
-                return true
-            }
-            
+        answers.clearPath = !existsSync(path)
+        if (answers.clearPath && !existsSync(dirPath)){
+            mkdirSync(dirPath)
         }
-    ])
+        return true
+    }
+    
+}
 
-
+async function selectValidDestinationPath (config: Config): Promise<string | undefined> {
+    
+    const storageAnswers = await inquirer.prompt([StorageAnswersPrompt])
     if (storageAnswers.clearPath) {
         writeFileSync(storageAnswers.destinationFolderPath, JSON.stringify(config))
         return storageAnswers.destinationFolderPath
@@ -222,7 +220,7 @@ async function selectValidDestinationPath (config:Config): Promise<string | unde
     }
 }
 
-export const getConfigFromAnswers = (answers:any):Config => {
+export const getConfigFromAnswers = (answers: any): Config => {
     const config = DefaultConfig 
     config.ethereumPrivateKey = answers.ethereumPrivateKey
 
@@ -232,12 +230,12 @@ export const getConfigFromAnswers = (answers:any):Config => {
     }
     return config
 }
-    
 
 export async function startBrokerConfigWizard(): Promise<void> {
     const answers = {plugins:{}}
     const prompts = basicPrompts.concat(pluginSelectorPrompt).concat(pluginPrompts)       
     const capturedAnswers = await inquirer.prompt(prompts, answers)
+    console.log('answers', answers, capturedAnswers)
     logger.info(`This will be your node's address: ${new Wallet(capturedAnswers.ethereumPrivateKey).address}`)
     logger.info('This is your node\'s private key. Please store it in a secure location:')
     logger.alert(capturedAnswers.ethereumPrivateKey)
