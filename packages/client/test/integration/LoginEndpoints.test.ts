@@ -64,12 +64,12 @@ describe('LoginEndpoints', () => {
         })
 
         it.skip('should get a session token with combined function', async () => {
-            //const wallet = ethers.Wallet.createRandom()
-            ////const sessionToken = await client.loginWithChallengeResponse((d) => wallet.signMessage(d), wallet.address)
-            //assert(sessionToken)
-            //assert(sessionToken.token)
-            //// @ts-expect-error
-            //assert(sessionToken.expires)
+            // const wallet = ethers.Wallet.createRandom()
+            /// /const sessionToken = await client.loginWithChallengeResponse((d) => wallet.signMessage(d), wallet.address)
+            // assert(sessionToken)
+            // assert(sessionToken.token)
+            /// / @ts-expect-error
+            // assert(sessionToken.expires)
         })
     })
 

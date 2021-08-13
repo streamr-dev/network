@@ -1,13 +1,13 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
+import { describeRepeats, fakePrivateKey, createTestStream } from '../utils'
+import { getPublishTestMessages } from '../integration/brubeck/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
-import Connection from '../../src/Connection'
 
 import config from '../integration/config'
-import { Stream } from '../../src/stream'
-import { StorageNode } from '../../src/stream/StorageNode'
+import { Stream } from '../../src/Stream'
+import { StorageNode } from '../../src/StorageNode'
 
 /* eslint-disable no-await-in-loop */
 
@@ -16,9 +16,9 @@ describeRepeats('StreamrClient resends', () => {
         let expectErrors = 0 // check no errors by default
         let onError = jest.fn()
 
-        const createClient = (opts = {}) => {
+        const createClient = (opts: any = {}) => {
             const c = new StreamrClient({
-                ...config.clientOptions,
+                ...config,
                 auth: {
                     privateKey: fakePrivateKey(),
                 },
@@ -27,8 +27,6 @@ describeRepeats('StreamrClient resends', () => {
                 maxRetries: 2,
                 ...opts,
             })
-            c.onError = jest.fn()
-            c.on('error', onError)
             return c
         }
 
@@ -48,9 +46,6 @@ describeRepeats('StreamrClient resends', () => {
             await wait(0)
             // ensure no unexpected errors
             expect(onError).toHaveBeenCalledTimes(expectErrors)
-            if (client) {
-                expect(client.onError).toHaveBeenCalledTimes(expectErrors)
-            }
         })
 
         afterEach(async () => {
@@ -58,12 +53,6 @@ describeRepeats('StreamrClient resends', () => {
             if (client) {
                 client.debug('disconnecting after test')
                 await client.disconnect()
-            }
-
-            const openSockets = Connection.getOpen()
-            if (openSockets !== 0) {
-                await Connection.closeOpen()
-                throw new Error(`sockets not closed: ${openSockets}`)
             }
         })
 
@@ -75,9 +64,7 @@ describeRepeats('StreamrClient resends', () => {
 
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
-                publishTestMessages = getPublishTestMessages(client, {
-                    stream
-                })
+                publishTestMessages = getPublishTestMessages(client, stream)
             }, 300000)
 
             beforeEach(async () => {

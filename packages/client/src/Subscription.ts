@@ -8,7 +8,7 @@ export type SubscriptionOptions = {
   streamPartition: number
 }
 
-export type SubscriptionOnMessage<T> = (msg: T, streamMessage: StreamMessage<T>) => void
+export type SubscriptionOnMessage<T> = (msg: T, streamMessage: StreamMessage<T>) => void | Promise<void>
 
 export default class Subscription<T extends MessageContent | unknown = unknown> extends MessageStream<T> implements SPIDKeyShape {
     context: SubscriptionSession<T>

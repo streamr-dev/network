@@ -9,6 +9,7 @@ import { Context, ContextError } from './utils/Context'
 import { inspect } from './utils/log'
 
 import MessageStream from './MessageStream'
+import { SubscriptionOnMessage } from './Subscription'
 import SubscribePipeline from './SubscribePipeline'
 import { StorageNode } from './StorageNode'
 import { authRequest } from './authFetch'
@@ -106,11 +107,25 @@ export default class Resend implements Context {
      * Call last/from/range as appropriate based on arguments
      */
 
-    resend<T>(options: (SIDLike | { stream: SIDLike }) & (ResendOptions | { resend: ResendOptions })): Promise<MessageStream<T>> {
+    async resend<T>(
+        options: (SIDLike | { stream: SIDLike }) & (ResendOptions | { resend: ResendOptions }),
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<MessageStream<T>> {
         const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptions
         const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SIDLike
         const spid = SPID.fromDefaults(spidOptions, { streamPartition: 0 })
-        return this.resendMessages(spid, resendOptions)
+
+        const sub = await this.resendMessages<T>(spid, resendOptions)
+
+        if (onMessage) {
+            setImmediate(() => {
+                sub.consume(async (streamMessage) => {
+                    await onMessage(streamMessage.getParsedContent(), streamMessage)
+                })
+            })
+        }
+
+        return sub
     }
 
     resendMessages<T>(spid: SPID, options: ResendOptions): Promise<MessageStream<T>> {

@@ -49,7 +49,7 @@ async function catchKeyExchangeError(keyExchangeStream: KeyExchangeStream, strea
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class PublisherKeyExhange implements Context {
+export class PublisherKeyExchange implements Context {
     enabled = true
     id
     debug

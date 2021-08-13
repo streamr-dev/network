@@ -352,12 +352,12 @@ describeRepeats('PubSub with multiple clients', () => {
             })
 
             /* eslint-disable no-await-in-loop */
-            //const publishers = []
-            //for (let i = 0; i < 3; i++) {
-                //publishers.push(await createPublisher({
-                    //id: `publisher-${i}`,
-                //}))
-            //}
+            // const publishers = []
+            // for (let i = 0; i < 3; i++) {
+            // publishers.push(await createPublisher({
+            // id: `publisher-${i}`,
+            // }))
+            // }
             const publishers = [mainClient]
             /* eslint-enable no-await-in-loop */
             const published: Record<string, any[]> = {}
@@ -367,7 +367,7 @@ describeRepeats('PubSub with multiple clients', () => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
                 const publishTestMessages = getPublishTestMessages(pubClient, stream, {
-                    //delay: 500 + Math.random() * 1500,
+                    // delay: 500 + Math.random() * 1500,
                     waitForLast: true,
                     waitForLastTimeout: 10000,
                     waitForLastCount: MAX_MESSAGES * publishers.length,
@@ -552,7 +552,7 @@ describeRepeats('PubSub with multiple clients', () => {
             })
 
             await publishTestMessages(MAX_MESSAGES, {
-                //delay: 500 + Math.random() * 1500,
+                // delay: 500 + Math.random() * 1500,
                 afterEach(msg) {
                     published[publisherId] = published[publisherId] || []
                     published[publisherId].push(msg)

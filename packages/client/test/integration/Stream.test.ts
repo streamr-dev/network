@@ -1,7 +1,8 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/stream'
-import { fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
-import { StorageNode } from '../../src/stream/StorageNode'
+import { Stream } from '../../src/Stream'
+import { fakePrivateKey, createTestStream } from '../utils'
+import { getPublishTestMessages } from './brubeck/utils'
+import { StorageNode } from '../../src/StorageNode'
 
 import clientOptions from './config'
 
@@ -43,8 +44,7 @@ describe('Stream', () => {
                 array: [1, 2, 3],
                 string: 'test',
             }
-            const publishTestMessages = getPublishTestMessages(client, {
-                streamId: stream.id,
+            const publishTestMessages = getPublishTestMessages(client, stream, {
                 waitForLast: true,
                 createMessage: () => msg,
             })
@@ -89,8 +89,7 @@ describe('Stream', () => {
                 symbol: Symbol('test'),
                 // TODO: bigint: 10n,
             }
-            const publishTestMessages = getPublishTestMessages(client, {
-                streamId: stream.id,
+            const publishTestMessages = getPublishTestMessages(client, stream, {
                 waitForLast: true,
                 createMessage: () => msg,
             })

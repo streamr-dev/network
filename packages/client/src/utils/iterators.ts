@@ -2,10 +2,10 @@ import Emitter from 'events'
 import pMemoize from 'p-memoize'
 import { MaybeAsync } from '../types'
 
-import { Defer, pTimeout, allSettledValues, AggregatedError, instanceId } from './index'
+import { Defer, pTimeout, AggregatedError } from './index'
 import { Debug } from './log'
 
-const debug = Debug('iterators')
+export const debug = Debug('iterators')
 
 export type ICancelable = {
     cancel(err?: Error): Promise<void>

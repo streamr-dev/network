@@ -9,6 +9,7 @@ import { CancelableGenerator, ICancelable } from './utils/iterators'
 import { StreamEndpoints } from './StreamEndpoints'
 import PublishPipeline, { PublishMetadata } from './PublishPipeline'
 import { Stoppable } from './utils/Stoppable'
+import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
 
 export type { PublishMetadata }
 
@@ -27,6 +28,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
     constructor(
         context: Context,
         private pipeline: PublishPipeline,
+        @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
     ) {
         this.id = instanceId(this)
@@ -174,6 +176,14 @@ export default class BrubeckPublisher implements Context, Stoppable {
             await wait(interval)
         }
         /* eslint-enable no-await-in-loop */
+    }
+
+    startKeyExchange() {
+        return this.keyExchange.start()
+    }
+
+    stopKeyExchange() {
+        return this.keyExchange.stop()
     }
 
     async start() {
