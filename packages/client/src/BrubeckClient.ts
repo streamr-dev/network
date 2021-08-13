@@ -14,6 +14,7 @@ import BrubeckNode from './BrubeckNode'
 import Ethereum from './Ethereum'
 import Session from './Session'
 import { StreamEndpoints } from './StreamEndpoints'
+import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 
@@ -77,6 +78,7 @@ class BrubeckClientBase implements Context {
     options: StrictBrubeckClientConfig
     loginEndpoints: LoginEndpoints
     streamEndpoints: StreamEndpoints
+    cached: StreamEndpointsCached
     ethereum: Ethereum
     publisher: Publisher
     subscriber: Subscriber
@@ -94,6 +96,7 @@ class BrubeckClientBase implements Context {
         session: Session,
         loginEndpoints: LoginEndpoints,
         streamEndpoints: StreamEndpoints,
+        cached: StreamEndpointsCached,
         resends: Resends,
         publisher: Publisher,
         subscriber: Subscriber,
@@ -107,6 +110,7 @@ class BrubeckClientBase implements Context {
         this.streamEndpoints = streamEndpoints!
         this.ethereum = ethereum!
         this.publisher = publisher!
+        this.cached = cached
         this.subscriber = subscriber!
         this.resends = resends!
         this.session = session!
@@ -206,6 +210,7 @@ export class BrubeckClient extends BrubeckClientBase {
             c.resolve<Session>(Session),
             c.resolve<LoginEndpoints>(LoginEndpoints),
             c.resolve<StreamEndpoints>(StreamEndpoints),
+            c.resolve<StreamEndpointsCached>(StreamEndpointsCached),
             c.resolve<Resends>(Resends),
             c.resolve<Publisher>(Publisher),
             c.resolve<Subscriber>(Subscriber),

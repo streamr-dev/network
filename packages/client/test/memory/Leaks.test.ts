@@ -3,7 +3,7 @@ import LeakDetector from 'jest-leak-detector'
 
 import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot, LeaksDetector } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import Subscription from '../../src/subscribe/Subscription'
+import Subscription from '../../src/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
 import clientOptions from '../integration/config'
@@ -33,7 +33,6 @@ describeRepeats('Leaks', () => {
                 maxRetries: 2,
                 ...opts,
             })
-            c.onError = jest.fn()
             return c
         }
 
@@ -105,12 +104,9 @@ describeRepeats('Leaks', () => {
                     id: `/${counterId('stream')}`,
                     requireSignedData: true,
                 })
-                await client.cached.getUserInfo()
-                await client.cached.getUserId()
                 const ethAddress = await client.getAddress()
                 await client.cached.isStreamPublisher(stream.id, ethAddress)
                 await client.cached.isStreamSubscriber(stream.id, ethAddress)
-                await client.cached.getUserId()
                 await client.disconnect()
             }, 15000)
 
@@ -121,9 +117,8 @@ describeRepeats('Leaks', () => {
                     id: `/${counterId('stream')}`,
                     requireSignedData: true,
                 })
-                const publishTestMessages = getPublishTestMessages(client, {
+                const publishTestMessages = getPublishTestMessages(client, stream, {
                     retainMessages: false,
-                    stream
                 })
 
                 await publishTestMessages(5)
@@ -142,9 +137,8 @@ describeRepeats('Leaks', () => {
                     let sub: Subscription | undefined = await client.subscribe(stream)
                     if (!sub) { throw new Error('no sub') }
                     const subLeak = new LeakDetector(sub)
-                    const publishTestMessages = getPublishTestMessages(client, {
+                    const publishTestMessages = getPublishTestMessages(client, stream, {
                         retainMessages: false,
-                        stream
                     })
 
                     await publishTestMessages(MAX_MESSAGES)
@@ -170,9 +164,8 @@ describeRepeats('Leaks', () => {
                         })
                         const sub = await client.subscribe(stream)
                         subLeak = new LeakDetector(sub)
-                        const publishTestMessages = getPublishTestMessages(client, {
+                        const publishTestMessages = getPublishTestMessages(client, stream, {
                             retainMessages: false,
-                            stream
                         })
 
                         await publishTestMessages(MAX_MESSAGES)
@@ -207,9 +200,8 @@ describeRepeats('Leaks', () => {
                             requireSignedData: true,
                         })
 
-                        const publishTestMessages = getPublishTestMessages(client, {
+                        const publishTestMessages = getPublishTestMessages(client, stream, {
                             retainMessages: false,
-                            stream
                         })
                         const received: any[] = []
                         const sub = await client.subscribe(stream, (msg, streamMessage) => {
@@ -247,9 +239,8 @@ describeRepeats('Leaks', () => {
                             requireSignedData: true,
                         })
 
-                        const publishTestMessages = getPublishTestMessages(client, {
+                        const publishTestMessages = getPublishTestMessages(client, stream, {
                             retainMessages: false,
-                            stream
                         })
                         const sub1Done = Defer()
                         const received1: any[] = []
