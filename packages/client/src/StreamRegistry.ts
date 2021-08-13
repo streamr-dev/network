@@ -1,5 +1,5 @@
 import StreamrClient from '..'
-import { StreamPermission, Stream, StreamProperties, StreamOperation } from './index'
+import { StreamPermission, Stream, StreamProperties, StreamOperation, Config } from './index'
 
 import { Contract } from '@ethersproject/contracts'
 // import { Wallet } from '@ethersproject/wallet'
@@ -18,6 +18,9 @@ import { NotFoundError } from '../rest/authFetch'
 import { AddressZero } from '@ethersproject/constants'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
+import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
+import { BrubeckContainer } from './Container'
+import Ethereum, { AuthConfig } from './Ethereum'
 
 const { ValidationError } = Errors
 
@@ -56,21 +59,22 @@ export type FilteredStreamListQueryResult = {
 export type SingleStreamQueryResult = {
     stream: StreamPermissionsQueryResult | null
 }
-
+@scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
-    readonly client: StreamrClient
     ethereum: StreamrEthereum
+    config: AuthConfig
     streamRegistryContract?: StreamRegistryContract
     streamRegistryContractReadonly: StreamRegistryContract
     sideChainProvider: Provider
     sideChainSigner?: Signer
 
-    constructor(client: StreamrClient) {
+    constructor(@inject(BrubeckContainer) private container: DependencyContainer,
+    @inject(Config.Auth) private authConfig: AuthConfig) {
         log('creating StreamRegistryOnchain')
-        this.client = client
-        this.ethereum = client.ethereum
+        this.config = authConfig
+        this.ethereum = container.resolve<Ethereum>(Ethereum)
         this.sideChainProvider = this.ethereum.getSidechainProvider()
-        this.streamRegistryContractReadonly = new Contract(this.client.options.streamRegistrySidechainAddress,
+        this.streamRegistryContractReadonly = new Contract(this.config.streamRegistrySidechainAddress,
             StreamRegistryArtifact, this.sideChainProvider) as StreamRegistryContract
     }
 

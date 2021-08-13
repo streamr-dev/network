@@ -12,6 +12,7 @@ import { Rest } from './Rest'
 import Resends from './Resends'
 import Publisher from './Publisher'
 import { BrubeckContainer } from './Container'
+import { BigNumber } from '@ethersproject/bignumber'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -26,28 +27,23 @@ export type StreamPartDefinition = string | StreamPartDefinitionOptions
 
 export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
 
-interface StreamPermisionBase {
-    id: number
-    operation: StreamOperation
+export interface StreamPermission {
+    streamId: string
+    userAddress: string
+    edit: boolean
+    canDelete: boolean
+    publishExpiration: BigNumber
+    subscribeExpiration: BigNumber
+    share: boolean
 }
-
-export interface UserStreamPermission extends StreamPermisionBase {
-    user: string
-}
-
-export interface AnonymousStreamPermisson extends StreamPermisionBase {
-    anonymous: true
-}
-
-export type StreamPermision = UserStreamPermission | AnonymousStreamPermisson
 
 export enum StreamOperation {
-    STREAM_GET = 'stream_get',
-    STREAM_EDIT = 'stream_edit',
-    STREAM_DELETE = 'stream_delete',
-    STREAM_PUBLISH = 'stream_publish',
-    STREAM_SUBSCRIBE = 'stream_subscribe',
-    STREAM_SHARE = 'stream_share'
+    // STREAM_GET = 'stream_get',
+    STREAM_EDIT = 'edit',
+    STREAM_DELETE = 'canDelete',
+    STREAM_PUBLISH = 'publishExpiration',
+    STREAM_SUBSCRIBE = 'subscribeExpiration',
+    STREAM_SHARE = 'share'
 }
 
 export interface StreamProperties {
@@ -144,134 +140,58 @@ class StreamrStream implements StreamMetadata {
     }
 
     async getPermissions() {
-        return this._rest.get<StreamPermision[]>(
-            ['streams', this.id, 'permissions'],
-        )
+        return this.getAllPermissionsForStream(this.id)
     }
 
     async getMyPermissions() {
-        return this._rest.get<StreamPermision[]>(
-            ['streams', this.id, 'permissions', 'me'],
-        )
+        return this._client.getPermissionsForUser(this.id, await this._client.getAddress())
     }
 
-    async hasPermission(operation: StreamOperation, userId: string|undefined) {
+    async hasPermission(operation: StreamOperation, userId: EthereumAddress) {
         // eth addresses may be in checksumcase, but userId from server has no case
 
-        const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
-        const permissions = await this.getPermissions()
+        // const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
+        const permissions = await this._client.getPermissionsForUser(this.id, userId)
 
-        return permissions.find((p: any) => {
-            if (p.operation !== operation) { return false }
-
-            if (userIdCaseInsensitive === undefined) {
-                return !!p.anonymous // match nullish userId against p.anonymous
-            }
-            return p.user && p.user.toLowerCase() === userIdCaseInsensitive // match against userId
-        })
-    }
-
-    async grantPermission(operation: StreamOperation, userId: string|undefined) {
-        const permissionObject: any = {
-            operation,
+        if (operation === StreamOperation.STREAM_PUBLISH || operation === StreamOperation.STREAM_SUBSCRIBE) {
+            return permissions[operation].gt(Date.now())
         }
-
-        const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined
-
-        if (userIdCaseInsensitive !== undefined) {
-            permissionObject.user = userIdCaseInsensitive
-        } else {
-            permissionObject.anonymous = true
-        }
-
-        return this._rest.post<StreamPermision>(
-            ['streams', this.id, 'permissions'],
-            permissionObject
-        )
+        return permissions[operation]
     }
 
-    async revokePermission(permissionId: number) {
-        return this._rest.del<StreamPermision>(
-            ['streams', this.id, 'permissions', String(permissionId)],
-        )
+    async grantPermission(operation: StreamOperation, recipientId: EthereumAddress) {
+        await this._client.grantPermission(this.id, operation, recipientId.toLowerCase())
     }
 
-    async detectFields() {
-        // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend({
-            streamId: this.id,
-            resend: {
-                last: 1,
-            },
-        })
-
-        const receivedMsgs = await sub.collect()
-
-        if (!receivedMsgs.length) { return }
-
-        const [lastMessage] = receivedMsgs
-
-        const fields = Object.entries(lastMessage).map(([name, value]) => {
-            const type = getFieldType(value)
-            return !!type && {
-                name,
-                type,
-            }
-        }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
-
-        // Save field config back to the stream
-        this.config.fields = fields
-        await this.update()
+    async grantPublicPermission(operation: StreamOperation) {
+        await this._client.grantPublicPermission(this.id, operation)
     }
 
-    async addToStorageNode(node: StorageNode|EthereumAddress, {
-        timeout = 30000,
-        pollInterval = 200
-    }: {
-        timeout?: number,
-        pollInterval?: number
-    } = {}) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
-
-        await this._rest.post(
-            ['streams', this.id, 'storageNodes'],
-            { address }
-        )
-        // wait for propagation: the storage node sees the database change in E&E and
-        // is ready to store the any stream data which we publish
-        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, pollInterval, () => (
-            `Propagation timeout when adding stream to a storage node: ${this.id}`
-        ))
+    async revokePermission(operation: StreamOperation, recipientId: EthereumAddress) {
+        await this._client.revokePermission(this.id, operation, recipientId.toLowerCase())
     }
 
-    private async isStreamStoredInStorageNode(streamId: string) {
-        const sid: SID = SPID.parse(streamId)
-        const nodes = await this._resends.getStreamNodes(sid)
-        if (!nodes.length) { return false }
-        const url = `${nodes[0].url}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
-        const response = await fetch(url)
-        if (response.status === 200) {
-            return true
-        }
-        if (response.status === 404) { // eslint-disable-line padding-line-between-statements
-            return false
-        }
-        throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
+    async revokePublicPermission(operation: StreamOperation) {
+        await this._client.revokePublicPermission(this.id, operation)
     }
 
-    async removeFromStorageNode(node: StorageNode|EthereumAddress) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
+    async addToStorageNode(node: StorageNode | EthereumAddress) {
+        // @ts-ignore
+        await this._client.addStreamToStorageNode(this.id, node.address || node)
+    }
 
-        await this._rest.del<{ storageNodeAddress: string}[] >(
-            ['streams', this.id, 'storageNodes', address]
-        )
+    async removeFromStorageNode(node: StorageNode | EthereumAddress) {
+        // @ts-ignore
+        return this._client.removeStreamFromStorageNode(this.id, node.address || node)
+    }
+
+    private async isStreamStoredInStorageNode(node: StorageNode | EthereumAddress) {
+        // @ts-ignore
+        return this._client.isStreamStoredInStorageNode(this.id, node.address || node)
     }
 
     async getStorageNodes() {
-        const json = await this._rest.get<{ storageNodeAddress: string}[] >(
-            ['streams', this.id, 'storageNodes']
-        )
-        return json.map((item: any) => new StorageNode(item.storageNodeAddress))
+        return this._client.getAllStorageNodes()
     }
 
     async publish<T extends MessageContent>(content: T, timestamp?: number|string|Date, partitionKey?: string) {

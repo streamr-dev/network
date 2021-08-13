@@ -29,9 +29,15 @@ module.exports = {
     },
     network: {
         trackers: [
-            { id: 'tracker1', ws: 'ws://127.0.0.1:30301', http: 'http://127.0.0.1:30301' },
-            { id: 'tracker2', ws: 'ws://127.0.0.1:30302', http: 'http://127.0.0.1:30301' },
-            { id: 'tracker3', ws: 'ws://127.0.0.1:30303', http: 'http://127.0.0.1:30301' },
+            { id: 'tracker1',
+                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:30301`,
+                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:30301` },
+            { id: 'tracker2',
+                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:30302`,
+                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:30301` },
+            { id: 'tracker3', 
+                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:30303`,
+                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:30301` },
         ],
     },
     nodeRegistry: {
