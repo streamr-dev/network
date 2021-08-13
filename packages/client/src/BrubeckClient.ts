@@ -214,3 +214,5 @@ export class BrubeckClient extends BrubeckClientBase {
         this.container = c
     }
 }
+
+export { BrubeckClient as StreamrClient }

@@ -124,7 +124,10 @@ export default class BrubeckPublisher implements Context, Stoppable {
         interval = 500,
         timeout = 10000,
         count = 100,
-        messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => msgTarget.signature === msgGot.signature
+        messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
+            this.debug('match', msgTarget.signature, msgGot.signature)
+            return msgTarget.signature === msgGot.signature
+        }
     }: {
         interval?: number
         timeout?: number

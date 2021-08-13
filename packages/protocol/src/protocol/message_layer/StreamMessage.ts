@@ -50,7 +50,7 @@ type StreamMessageOptions<T> = {
     signature?: string | null
 }
 
-export type MessageValue = null | string | number | boolean | MessageContent | MessageContent[]
+export type MessageValue = unknown | null | string | number | boolean | MessageContent | MessageContent[]
 export type MessageContent = {
   [key: string]: MessageValue
 } | MessageValue[]

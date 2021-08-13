@@ -22,6 +22,7 @@ type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
 export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): IPipeline<InType, NewOutType>
+    mapBefore(fn: G.GeneratorMap<InType, InType>): IPipeline<InType, OutType>
     filter(fn: G.GeneratorFilter<OutType>): IPipeline<InType, OutType>
     forEach(fn: G.GeneratorForEach<OutType>): IPipeline<InType, OutType>
     forEachBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
@@ -176,6 +177,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.pipe((src) => G.map(src, fn))
     }
 
+    mapBefore(fn: G.GeneratorMap<InType, InType>) {
+        return this.pipeBefore((src) => G.map(src, fn))
+    }
+
     forEach(fn: G.GeneratorForEach<OutType>) {
         return this.pipe((src) => G.forEach(src, fn))
     }
@@ -301,6 +306,11 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): PushPipeline<InType, NewOutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.map(fn) as PushPipeline<InType, NewOutType>
+    }
+
+    mapBefore(fn: G.GeneratorMap<InType, InType>): PushPipeline<InType, OutType> {
+        // this method override just fixes the output type to be PushPipeline rather than Pipeline
+        return super.mapBefore(fn) as PushPipeline<InType, OutType>
     }
 
     filterBefore(fn: G.GeneratorFilter<InType>): PushPipeline<InType, OutType> {

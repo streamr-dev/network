@@ -4,6 +4,7 @@ import { StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
 
 import { Msg } from '../../utils'
 import { counterId, Scaffold } from '../../../src/utils'
+import Signal from '../../../src/utils/Signal'
 import { BrubeckClient } from '../../../src/BrubeckClient'
 import { PublishMetadata } from '../../../src/Publisher'
 import { StreamProperties } from '../../../src/Stream'
@@ -13,19 +14,20 @@ type PublishManyOpts = Partial<{
     delay: number,
     timestamp: number | (() => number)
     sequenceNumber: number | (() => number)
+    createMessage: (content: any) => any
 }>
 
 export async function* publishManyGenerator(
     total: number = 5,
     opts: PublishManyOpts = {}
 ): AsyncGenerator<PublishMetadata<any>> {
-    const { delay = 10, sequenceNumber, timestamp } = opts
+    const { delay = 10, sequenceNumber, timestamp, createMessage = Msg } = opts
     const batchId = counterId('publishMany')
     for (let i = 0; i < total; i++) {
         yield {
             timestamp: typeof timestamp === 'function' ? timestamp() : timestamp,
             sequenceNumber: typeof sequenceNumber === 'function' ? sequenceNumber() : sequenceNumber,
-            content: Msg({
+            content: createMessage({
                 batchId,
                 value: `${i + 1} of ${total}`
             })
@@ -41,13 +43,25 @@ export async function* publishManyGenerator(
 type PublishTestMessageOptions = PublishManyOpts & {
     waitForLast?: boolean
     waitForLastCount?: number
+    waitForLastTimeout?: number,
     retainMessages?: boolean
+    onSourcePipeline?: Signal<Pipeline<PublishMetadata<any>>>
+    onPublishPipeline?: Signal<Pipeline<StreamMessage>>
+    afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 
 export function publishTestMessagesGenerator(client: BrubeckClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
     const sid = SPID.parse(stream)
-    const source = publishManyGenerator(maxMessages, opts)
-    return new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(sid, source))
+    const source = new Pipeline(publishManyGenerator(maxMessages, opts))
+    if (opts.onSourcePipeline) {
+        opts.onSourcePipeline.trigger(source)
+    }
+    const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(sid, source))
+    if (opts.afterEach) {
+        pipeline.forEach(opts.afterEach)
+    }
+    return pipeline
+
 }
 
 export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
@@ -56,6 +70,7 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDL
         const {
             waitForLast,
             waitForLastCount,
+            waitForLastTimeout,
             retainMessages = true,
             ...options
         } = {
@@ -63,6 +78,9 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDL
             ...opts,
         }
         const publishStream = publishTestMessagesGenerator(client, sid, maxMessages, options)
+        if (opts.onPublishPipeline) {
+            opts.onPublishPipeline.trigger(publishStream)
+        }
         const streamMessages = []
         let count = 0
         for await (const streamMessage of publishStream) {
@@ -81,7 +99,8 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDL
         }
 
         await getWaitForStorage(client, {
-            count: waitForLastCount
+            count: waitForLastCount,
+            timeout: waitForLastTimeout,
         })(streamMessages[streamMessages.length - 1])
         return streamMessages
     }

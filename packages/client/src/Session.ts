@@ -27,10 +27,7 @@ export default class Session extends EventEmitter {
     ) {
         super()
         this.state = State.LOGGED_OUT
-        this.options = {
-            ...options,
-        }
-
+        this.options = options
         if (!this.options.sessionToken) {
             this.options.unauthenticated = true
         }
@@ -38,7 +35,7 @@ export default class Session extends EventEmitter {
     }
 
     isUnauthenticated() {
-        return !!this.options.unauthenticated
+        return !this.options.privateKey && !this.options.ethereum && !this.options.sessionToken
     }
 
     updateState(newState: State) {

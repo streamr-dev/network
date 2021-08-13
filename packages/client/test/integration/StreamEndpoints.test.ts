@@ -1,9 +1,9 @@
 import { ethers, Wallet } from 'ethers'
-import { NotFoundError, ValidationError } from '../../src/rest/authFetch'
-import { Stream, StreamOperation } from '../../src/stream'
-import { StorageNode } from '../../src/stream/StorageNode'
+import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
+import { NotFoundError, ValidationError } from '../../src/authFetch'
+import { Stream, StreamOperation } from '../../src/Stream'
+import { StorageNode } from '../../src/StorageNode'
 
-import { StreamrClient } from '../../src/StreamrClient'
 import { uid, fakeAddress, createTestStream, createRelativeTestStreamId } from '../utils'
 
 import clientOptions from './config'
@@ -176,14 +176,14 @@ function TestStreamEndpoints(getName: () => string) {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
-            const address = await client.getUserId()
-            expect(publishers).toEqual([address])
+            const address = await client.getAddress()
+            expect(publishers).toEqual([address.toLowerCase()])
         })
     })
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
-            const address = await client.getUserId()
+            const address = await client.getAddress()
             const valid = await client.isStreamPublisher(createdStream.id, address)
             expect(valid).toBeTruthy()
         })
@@ -196,14 +196,14 @@ function TestStreamEndpoints(getName: () => string) {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of publishers', async () => {
             const subscribers = await client.getStreamSubscribers(createdStream.id)
-            const address = await client.getUserId()
-            expect(subscribers).toEqual([address])
+            const address = await client.getAddress()
+            expect(subscribers).toEqual([address.toLowerCase()])
         })
     })
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
-            const address = await client.getUserId()
+            const address = await client.getAddress()
             const valid = await client.isStreamSubscriber(createdStream.id, address)
             expect(valid).toBeTruthy()
         })
@@ -269,7 +269,7 @@ function TestStreamEndpoints(getName: () => string) {
             expect(storageNodes[0].getAddress()).toBe(storageNode.getAddress())
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
             expect(storedStreamParts.some(
-                (sp) => (sp.getStreamId() === stream.id) && (sp.getStreamPartition() === 0)
+                (sp) => (sp.streamId === stream.id) && (sp.streamPartition === 0)
             )).toBeTruthy()
         })
 
@@ -282,7 +282,7 @@ function TestStreamEndpoints(getName: () => string) {
             expect(storageNodes).toHaveLength(0)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
             expect(storedStreamParts.some(
-                (sp) => (sp.getStreamId() === stream.id)
+                (sp) => (sp.streamId === stream.id)
             )).toBeFalsy()
         })
     })

@@ -8,7 +8,6 @@ import Session from '../../src/Session'
 import clientOptions from '../integration/config'
 import { Todo } from '../../src/types'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
-import { Config } from '../../src/Config'
 
 describe('Session', () => {
     let session: Session

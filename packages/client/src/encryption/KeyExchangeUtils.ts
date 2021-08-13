@@ -15,6 +15,7 @@ import Ethereum from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 
 import { GroupKey, GroupKeyish } from './Encryption'
+
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
 
 export const { ValidationError } = Errors

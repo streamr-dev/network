@@ -10,7 +10,7 @@ export type SubscriptionOptions = {
 
 export type SubscriptionOnMessage<T> = (msg: T, streamMessage: StreamMessage<T>) => void
 
-export default class Subscription<T extends MessageContent | unknown> extends MessageStream<T> implements SPIDKeyShape {
+export default class Subscription<T extends MessageContent | unknown = unknown> extends MessageStream<T> implements SPIDKeyShape {
     context: SubscriptionSession<T>
     spid: SPID
     /** prevent buffered data from yielding */
@@ -33,6 +33,10 @@ export default class Subscription<T extends MessageContent | unknown> extends Me
 
     count() {
         return this.context.count()
+    }
+
+    cancel() {
+        return this.unsubscribe()
     }
 
     async unsubscribe() {

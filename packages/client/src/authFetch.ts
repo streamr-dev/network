@@ -94,7 +94,7 @@ export async function authRequest<T extends object>(
     const response: Response = await fetchFn(url, {
         ...opts,
         headers: {
-            ...(session && !session.options.unauthenticated ? {
+            ...(session && !session.isUnauthenticated() ? {
                 Authorization: `Bearer ${await session.getSessionToken(requireNewToken)}`,
             } : {}),
             ...options.headers,

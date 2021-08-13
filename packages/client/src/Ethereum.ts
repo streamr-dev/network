@@ -43,7 +43,7 @@ export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
 
 export type DeprecatedAuthConfig = XOR<APIKeyAuthConfig, UsernamePasswordAuthConfig>
 
-export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig> | SessionTokenAuthConfig
+export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig> & Partial<SessionTokenAuthConfig>
 export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
 export type AllAuthConfig = XOR<AuthConfig, DeprecatedAuthConfig>
 

@@ -1,8 +1,8 @@
 import { wait } from 'streamr-test-utils'
 
-import { fakePrivateKey, describeRepeats, getPublishTestMessages, createTestStream } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import Connection from '../../src/Connection'
+import { fakePrivateKey, describeRepeats, createTestStream } from '../utils'
+import { getPublishTestMessages } from './brubeck/utils'
+import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
 
 import clientOptions from './config'
 
@@ -28,7 +28,6 @@ describeRepeats('Validation', () => {
             ...opts,
         })
         c.onError = jest.fn()
-        c.on('error', onError)
         return c
     }
 
@@ -75,12 +74,6 @@ describeRepeats('Validation', () => {
             await client.disconnect()
             client.debug('disconnecting after test <<')
         }
-
-        const openSockets = Connection.getOpen()
-        if (openSockets !== 0) {
-            await Connection.closeOpen()
-            throw new Error(`sockets not closed: ${openSockets}`)
-        }
     })
 
     let subs = []
@@ -89,7 +82,7 @@ describeRepeats('Validation', () => {
         const existingSubs = subs
         subs = []
         await Promise.all(existingSubs.map((sub) => (
-            sub.cancel()
+            sub.return()
         )))
     })
 
@@ -109,24 +102,16 @@ describeRepeats('Validation', () => {
             const onSubError = jest.fn((err) => {
                 errs.push(err)
             })
+            sub.onError(onSubError)
 
-            sub.on('error', onSubError)
-            const { parse } = client.connection
-            let count = 0
             const BAD_INDEX = 2
-            client.connection.parse = (...args) => {
-                const msg = parse.call(client.connection, ...args)
-                if (!msg.streamMessage) {
-                    return msg
+            sub.context.pipeline.forEachBefore((streamMessage, index) => {
+                if (index === BAD_INDEX) {
+                    // eslint-disable-next-line no-param-reassign
+                    streamMessage.signature = 'badsignature'
+                    sub.debug('inserting bad signature', streamMessage)
                 }
-
-                if (count === BAD_INDEX) {
-                    msg.streamMessage.signature = 'badsignature'
-                }
-
-                count += 1
-                return msg
-            }
+            })
 
             const published = await publishTestMessages(MAX_MESSAGES, {
                 timestamp: 111111,
@@ -140,7 +125,7 @@ describeRepeats('Validation', () => {
                     clearTimeout(t)
                     // give it a chance to fail
                     t = setTimeout(() => {
-                        sub.cancel()
+                        sub.return()
                     }, 500)
                 }
 
@@ -160,7 +145,6 @@ describeRepeats('Validation', () => {
             ]
 
             expect(received).toEqual(expectedMessages)
-            expect(client.connection.getState()).toBe('connected')
             expect(onSubError).toHaveBeenCalledTimes(1)
             expect(errs).toHaveLength(1)
             errs.forEach((err) => {
@@ -175,7 +159,6 @@ describeRepeats('Validation', () => {
             await setupClient({
                 gapFillTimeout: 1000,
                 retryResendAfter: 1000,
-                publishWithSignature: 'never',
             })
             await client.connect()
         })
@@ -183,28 +166,25 @@ describeRepeats('Validation', () => {
         it('subscribe fails gracefully when content bad', async () => {
             await client.connect()
             const sub = await client.subscribe(stream.id)
+            const errs = []
             const onSubError = jest.fn((err) => {
-                expect(err).toBeInstanceOf(Error)
-                expect(err.message).toMatch('JSON')
+                errs.push(err)
             })
+            sub.onError(onSubError)
 
-            sub.on('error', onSubError)
-            const { parse } = client.connection
-            let count = 0
             const BAD_INDEX = 2
-            client.connection.parse = (...args) => {
-                const msg = parse.call(client.connection, ...args)
-                if (!msg.streamMessage) {
+            sub.context.pipeline.mapBefore(async (streamMessage, index) => {
+                if (index === BAD_INDEX) {
+                    const msg = streamMessage.clone()
+                    // eslint-disable-next-line no-param-reassign
+                    msg.serializedContent = '{ badcontent'
+                    msg.parsedContent = undefined
+                    msg.signature = undefined
+                    await client.publisher.pipeline.signer.sign(msg)
                     return msg
                 }
-
-                if (count === BAD_INDEX) {
-                    msg.streamMessage.serializedContent = '{ badcontent'
-                }
-
-                count += 1
-                return msg
-            }
+                return streamMessage
+            })
 
             const published = await publishTestMessages(MAX_MESSAGES, {
                 stream,
@@ -223,8 +203,9 @@ describeRepeats('Validation', () => {
                 ...published.slice(0, BAD_INDEX),
                 ...published.slice(BAD_INDEX + 1, MAX_MESSAGES)
             ])
-            expect(client.connection.getState()).toBe('connected')
             expect(onSubError).toHaveBeenCalledTimes(1)
+            expect(() => { throw errs[0] }).toThrow('JSON')
+            expect(errs).toHaveLength(1)
         }, 10000)
     })
 })

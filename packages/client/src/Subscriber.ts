@@ -6,6 +6,8 @@ import Subscription, { SubscriptionOnMessage } from './Subscription'
 import { SPIDLike, SPID, SIDLike } from 'streamr-client-protocol'
 import { BrubeckContainer } from './Container'
 
+export { Subscription, SubscriptionSession }
+
 /**
  * Keeps track of subscriptions.
  */

@@ -57,6 +57,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     }
 
     private onError(error: Error) {
+        this.debug('subsession error', error)
         this.subscriptions.forEach(async (sub) => {
             try {
                 await sub.onError.trigger(error)

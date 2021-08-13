@@ -105,21 +105,21 @@ class StreamrStream implements StreamMetadata {
     requireSignedData!: boolean
     storageDays?: number
     inactivityThresholdHours?: number
-    rest: Rest
-    resends: Resends
-    publisher: Publisher
+    _rest: Rest
+    _resends: Resends
+    _publisher: Publisher
 
     constructor(props: StreamProperties, @inject(BrubeckContainer) private container: DependencyContainer) {
         Object.assign(this, props)
         this.id = props.id
         this.streamId = this.id
-        this.rest = container.resolve<Rest>(Rest)
-        this.resends = container.resolve<Resends>(Resends)
-        this.publisher = container.resolve<Publisher>(Publisher)
+        this._rest = container.resolve<Rest>(Rest)
+        this._resends = container.resolve<Resends>(Resends)
+        this._publisher = container.resolve<Publisher>(Publisher)
     }
 
     async update() {
-        const json = await this.rest.put<StreamProperties>(
+        const json = await this._rest.put<StreamProperties>(
             ['streams', this.id],
             this.toObject(),
         )
@@ -138,19 +138,19 @@ class StreamrStream implements StreamMetadata {
     }
 
     async delete() {
-        await this.rest.del(
+        await this._rest.del(
             ['streams', this.id],
         )
     }
 
     async getPermissions() {
-        return this.rest.get<StreamPermision[]>(
+        return this._rest.get<StreamPermision[]>(
             ['streams', this.id, 'permissions'],
         )
     }
 
     async getMyPermissions() {
-        return this.rest.get<StreamPermision[]>(
+        return this._rest.get<StreamPermision[]>(
             ['streams', this.id, 'permissions', 'me'],
         )
     }
@@ -184,21 +184,21 @@ class StreamrStream implements StreamMetadata {
             permissionObject.anonymous = true
         }
 
-        return this.rest.post<StreamPermision>(
+        return this._rest.post<StreamPermision>(
             ['streams', this.id, 'permissions'],
             permissionObject
         )
     }
 
     async revokePermission(permissionId: number) {
-        return this.rest.del<StreamPermision>(
+        return this._rest.del<StreamPermision>(
             ['streams', this.id, 'permissions', String(permissionId)],
         )
     }
 
     async detectFields() {
         // Get last message of the stream to be used for field detecting
-        const sub = await this.resends.resend({
+        const sub = await this._resends.resend({
             streamId: this.id,
             resend: {
                 last: 1,
@@ -233,7 +233,7 @@ class StreamrStream implements StreamMetadata {
     } = {}) {
         const address = (node instanceof StorageNode) ? node.getAddress() : node
 
-        await this.rest.post(
+        await this._rest.post(
             ['streams', this.id, 'storageNodes'],
             { address }
         )
@@ -246,7 +246,7 @@ class StreamrStream implements StreamMetadata {
 
     private async isStreamStoredInStorageNode(streamId: string) {
         const sid: SID = SPID.parse(streamId)
-        const nodes = await this.resends.getStreamNodes(sid)
+        const nodes = await this._resends.getStreamNodes(sid)
         if (!nodes.length) { return false }
         const url = `${nodes[0].url}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
         const response = await fetch(url)
@@ -262,20 +262,20 @@ class StreamrStream implements StreamMetadata {
     async removeFromStorageNode(node: StorageNode|EthereumAddress) {
         const address = (node instanceof StorageNode) ? node.getAddress() : node
 
-        await this.rest.del<{ storageNodeAddress: string}[] >(
+        await this._rest.del<{ storageNodeAddress: string}[] >(
             ['streams', this.id, 'storageNodes', address]
         )
     }
 
     async getStorageNodes() {
-        const json = await this.rest.get<{ storageNodeAddress: string}[] >(
+        const json = await this._rest.get<{ storageNodeAddress: string}[] >(
             ['streams', this.id, 'storageNodes']
         )
         return json.map((item: any) => new StorageNode(item.storageNodeAddress))
     }
 
     async publish<T extends MessageContent>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
-        return this.publisher.publish(this.id, content, timestamp, partitionKey)
+        return this._publisher.publish(this.id, content, timestamp, partitionKey)
     }
 }
 
