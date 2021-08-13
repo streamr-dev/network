@@ -72,7 +72,7 @@
     "@types/pino-pretty": "^4.7.0",
     "@types/uuid": "^8.3.0",
     "@types/websocket": "^1.0.3",
-    "@types/ws": "^7.4.4",
+    "@types/ws": "^7.4.5",
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
     "browserify-fs": "^1.0.0",

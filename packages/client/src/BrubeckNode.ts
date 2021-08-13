@@ -1,5 +1,5 @@
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { NetworkNodeOptions, startNetworkNode, NetworkNode } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode, NetworkNode } from 'streamr-network'
 import { pOnce, uuid, instanceId, counterId } from './utils'
 import { Context } from './utils/Context'
 import { Config } from './Config'
@@ -55,12 +55,13 @@ export default class BrubeckNode implements Context {
         this.debug('getNode >>', callCount)
         this.enabled = true
         this.disconnect.reset()
-        const node = await startNetworkNode({
+        const node = createNetworkNode({
             disconnectionWaitTime: 200,
             ...this.options,
             id: `${uid}-${counterId(this.id)}`,
             name: this.id,
         })
+        await node.start()
 
         if (this.enabled && this.callCount === callCount) {
             // don't attach if disconnected while in progress
