@@ -26,6 +26,7 @@ describeRepeats('utils', () => {
         beforeEach((done) => {
             session = sinon.stub()
             session.options = {}
+            session.isUnauthenticated = () => false
             expressApp = express()
 
             function handle(req: any, res: any) {
