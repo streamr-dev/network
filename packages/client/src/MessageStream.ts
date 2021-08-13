@@ -8,7 +8,7 @@ import * as G from './utils/GeneratorUtils'
  * @category Important
  */
 export default class MessageStream<
-    T,
+    T = unknown,
     InType = StreamMessage<T>,
     OutType extends StreamMessage<T> | unknown = InType
 > extends PushPipeline<InType, OutType> {
@@ -16,6 +16,18 @@ export default class MessageStream<
         super(bufferSize)
         this.id = instanceId(this, name)
         this.debug = context.debug.extend(this.id)
+    }
+
+    async collectContent() {
+        const messages = await this.collect()
+        return messages.map((m) => {
+            // @ts-expect-error ugh
+            if (m && typeof m === 'object' && typeof m.getParsedContent === 'function') {
+                // @ts-expect-error ugh
+                return m.getParsedContent()
+            }
+            return m
+        })
     }
 
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): MessageStream<T, InType, NewOutType> {

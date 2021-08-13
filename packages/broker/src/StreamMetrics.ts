@@ -278,18 +278,19 @@ export class StreamMetrics {
 
             let timeoutId = startTimeout()
             try {
-                const sub = await this.client.resend(
+                const sub = await this.client.resend<Record<string, unknown>>(
                     {
                         stream,
                         resend: {
                             last
                         }
                     },
-                ).forEach(() => {
+                )
+                sub.forEach(() => {
                     clearTimeout(timeoutId)
                     timeoutId = startTimeout()
-                }).catch(reject)
-                const messages: Array<Record<string, unknown>> = await sub.collect()
+                })
+                const messages: Array<Record<string, unknown>> = await sub.collectContent()
                 resolve(messages)
             } catch (err) {
                 reject(err)

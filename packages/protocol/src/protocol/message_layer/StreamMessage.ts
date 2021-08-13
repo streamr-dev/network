@@ -53,7 +53,7 @@ type StreamMessageOptions<T> = {
 export type MessageValue = unknown | null | string | number | boolean | MessageContent | MessageContent[]
 export type MessageContent = {
   [key: string]: MessageValue
-} | MessageValue[]
+} | MessageValue[] | any // TODO
 
 export type StreamMessageContainer<T = unknown> = {
     toStreamMessage: (messageId: MessageID, prevMsgRef: MessageRef | null) => StreamMessage<T>

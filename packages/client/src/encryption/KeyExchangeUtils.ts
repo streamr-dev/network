@@ -125,7 +125,6 @@ export class KeyExchangeStream implements Context, Stoppable {
 
             if (this.isStopped) { return undefined }
 
-            // @ts-expect-error TODO
             await this.publisher.publish(streamId, request)
 
             return await responseTask
@@ -150,7 +149,6 @@ export class KeyExchangeStream implements Context, Stoppable {
             return msg
         }
 
-        // @ts-expect-error TODO
         return this.publisher.publish(getKeyExchangeStreamId(subscriberId), response)
     }
 }
