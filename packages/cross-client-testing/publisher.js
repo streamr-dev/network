@@ -38,7 +38,6 @@ if (groupKey) {
 }
 
 const client = new StreamrClient(options)
-client.on('error', console.error)
 
 const rotatingPublishFunction = async (msgToPublish, counter) => {
     if (counter % 10 === 0) {

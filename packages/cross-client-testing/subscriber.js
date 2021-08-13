@@ -28,16 +28,17 @@ if (groupKey) {
 
 const client = new StreamrClient(options)
 client.connect().then(() => {
-    const subOptions = {
-        stream: streamId
-    }
-    if (resendOptions) {
-        subOptions.resend = resendOptions
-    }
-    return client.subscribe(subOptions, (_, streamMessage) => {
+    const onMessage = (streamMessage) => {
         // to be logged in test mode
         console.log(`whole message received: ${streamMessage.serialize()}`)
         // to be added by SubscriberJS to the message queue for verification in test mode
         console.log(`Received: ${streamMessage.getPublisherId()}###${streamMessage.getSerializedContent()}`)
-    })
+    }
+
+    const realtimeSub = await client.subscribe({ stream: streamId })
+    if (resendOptions) {
+        const resendSub = await client.resend({ stream: streamId, resend: resendOptions })
+        await resendSub.consume(onMessage)
+    }
+    await realtimeSub.consume(onMessage)
 })
