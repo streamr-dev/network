@@ -30,7 +30,7 @@ export class Bridge implements MqttServerListener {
         const { content, metadata } = message
         this.streamrClient.publish(this.getStreamId(topic), content, metadata.timestamp)
     }
-    
+
     onSubscribed(topic: string): void {
         logger.info('Client subscribed: ' + topic)
         this.streamrClient.subscribe(this.getStreamId(topic), (content: any, metadata: any) => {

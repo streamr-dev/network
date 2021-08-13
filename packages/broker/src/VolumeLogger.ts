@@ -301,7 +301,7 @@ export class VolumeLogger {
         io.destroy()
         clearTimeout(this.timeout!)
         if (this.client) {
-            this.client.ensureDisconnected()
+            this.client.disconnect()
         }
     }
 }

@@ -55,8 +55,8 @@ describe('local propagation', () => {
     afterEach(async () => {
         await Promise.all([
             tracker.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
+            client1.disconnect(),
+            client2.disconnect(),
             mqttClient2.end(true),
             mqttClient1.end(true),
             broker.stop()

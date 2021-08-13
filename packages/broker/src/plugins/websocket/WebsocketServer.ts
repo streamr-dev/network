@@ -30,7 +30,7 @@ const sendHttpError = (status: string, socket: Socket) => {
 interface ConnectionUrl {
     streamId: string
     action: string
-    queryParams: ParsedQs 
+    queryParams: ParsedQs
 }
 
 export class WebsocketServer {

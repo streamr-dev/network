@@ -63,7 +63,7 @@ describe('broker drops future messages', () => {
     afterEach(async () => {
         await broker.stop()
         await tracker.stop()
-        await client.ensureDisconnected()
+        await client.disconnect()
     })
 
     test('pushing message with too future timestamp to HTTP plugin returns 400 error & does not crash broker', async () => {

@@ -131,8 +131,8 @@ describe('per-node metrics', () => {
             tracker.stop(),
             broker1.stop(),
             storageNode.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected()
+            client1.disconnect(),
+            client2.disconnect()
         ])
     }, 30 * 1000)
 

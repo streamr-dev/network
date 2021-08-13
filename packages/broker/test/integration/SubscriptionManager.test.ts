@@ -65,8 +65,8 @@ describe('SubscriptionManager', () => {
     afterEach(async () => {
         await mqttClient1.end(true)
         await mqttClient2.end(true)
-        await client1.ensureDisconnected()
-        await client2.ensureDisconnected()
+        await client1.disconnect()
+        await client2.disconnect()
         await broker1.stop()
         await broker2.stop()
         await tracker.stop()

@@ -265,7 +265,7 @@ export class StreamMetrics {
         last= 1,
         timeout = 10 * 1000
     ): Promise<Array<Record<string, unknown>>> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (this.stopped) {
                 return reject(new StoppedError('StreamMetrics stopped'))
             }
@@ -277,31 +277,25 @@ export class StreamMetrics {
             }
 
             let timeoutId = startTimeout()
-            const messages: Array<Record<string, unknown>> = []
-            return this.client.resend(
-                {
-                    stream,
-                    resend: {
-                        last
-                    }
-                },
-                (message) => {
-                    messages.push(message)
+            try {
+                const sub = await this.client.resend(
+                    {
+                        stream,
+                        resend: {
+                            last
+                        }
+                    },
+                ).forEach(() => {
                     clearTimeout(timeoutId)
                     timeoutId = startTimeout()
-                }
-            )
-                .then((subscription) => {
-                    // @ts-ignore subscription type does not property inherit EventEmitter in client codebase
-                    subscription.once('resent', () => {
-                        resolve(messages)
-                    })
-                    // @ts-ignore subscription type does not property inherit EventEmitter in client codebase
-                    subscription.once('no_resend', () => {
-                        resolve(messages)
-                    })
-                })
-                .catch(reject)
+                }).catch(reject)
+                const messages: Array<Record<string, unknown>> = await sub.collect()
+                resolve(messages)
+            } catch (err) {
+                reject(err)
+            } finally {
+                clearTimeout(timeoutId)
+            }
         })
     }
 

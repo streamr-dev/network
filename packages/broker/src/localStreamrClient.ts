@@ -16,5 +16,5 @@ export const createLocalStreamrClient = (config: Config): StreamrClient|undefine
         url:  `ws://localhost:${wsPort}/api/v1/ws`,
         restUrl: `${config.streamrUrl}/api/v1`,
         autoDisconnect: false
-    })    
+    })
 }

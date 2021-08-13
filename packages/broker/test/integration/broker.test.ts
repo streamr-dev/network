@@ -100,9 +100,9 @@ describe('broker: end-to-end', () => {
     afterAll(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
-            client3.ensureDisconnected(),
+            client1.disconnect(),
+            client2.disconnect(),
+            client3.disconnect(),
             storageNode.stop(),
             brokerNode1.stop(),
             brokerNode2.stop(),

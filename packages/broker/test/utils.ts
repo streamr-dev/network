@@ -204,7 +204,7 @@ export class StorageAssignmentEventManager {
     }
 
     close() {
-        return this.client.ensureDisconnected()
+        return this.client.disconnect()
     }
 }
 
