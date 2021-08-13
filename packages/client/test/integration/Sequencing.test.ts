@@ -1,11 +1,10 @@
-import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { wait, waitForCondition } from 'streamr-test-utils'
 
 import { uid, fakePrivateKey, getWaitForStorage, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import Connection from '../../src/Connection'
 
 import clientOptions from './config'
-import { Stream } from '../../src/stream'
+import { Stream } from '../../src/Stream'
 
 const Msg = (opts?: any) => ({
     value: uid('msg'),
@@ -13,18 +12,16 @@ const Msg = (opts?: any) => ({
 })
 
 function toSeq(requests: any[], ts = Date.now()) {
-    return requests.map((m: any) => {
-        const { prevMsgRef } = m.streamMessage
+    return requests.map((streamMessage) => {
+        const { prevMsgRef } = streamMessage
         return [
-            [m.streamMessage.getTimestamp() - ts, m.streamMessage.getSequenceNumber()],
+            [streamMessage.getTimestamp() - ts, streamMessage.getSequenceNumber()],
             prevMsgRef ? [prevMsgRef.timestamp - ts, prevMsgRef.sequenceNumber] : null
         ]
     })
 }
 
 describe('Sequencing', () => {
-    let expectErrors = 0 // check no errors by default
-    let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
 
@@ -39,14 +36,10 @@ describe('Sequencing', () => {
             maxRetries: 2,
             ...opts,
         })
-        c.onError = jest.fn()
-        c.on('error', onError)
         return c
     }
 
     beforeEach(async () => {
-        expectErrors = 0
-        onError = jest.fn()
         client = createClient()
         await client.connect()
 
@@ -55,24 +48,9 @@ describe('Sequencing', () => {
 
     afterEach(async () => {
         await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
-        if (client) {
-            expect(client.onError).toHaveBeenCalledTimes(expectErrors)
-        }
-    })
-
-    afterEach(async () => {
-        await wait(0)
         if (client) {
             client.debug('disconnecting after test')
             await client.disconnect()
-        }
-
-        const openSockets = Connection.getOpen()
-        if (openSockets !== 0) {
-            await Connection.closeOpen()
-            throw new Error(`sockets not closed: ${openSockets}`)
         }
     })
 
@@ -81,7 +59,7 @@ describe('Sequencing', () => {
         const msgsPublished: any[] = []
         const msgsReceieved: any[] = []
 
-        await client.subscribe(stream.id, (m) => msgsReceieved.push(m))
+        await client.subscribe(stream.id, (m) => { msgsReceieved.push(m) })
 
         const nextMsg = () => {
             const msg = Msg()
@@ -137,7 +115,7 @@ describe('Sequencing', () => {
             return msg
         }
 
-        await client.subscribe(stream.id, (m) => msgsReceieved.push(m))
+        await client.subscribe(stream.id, (m) => { msgsReceieved.push(m) })
         const requests = await Promise.all([
             // first 2 messages at ts + 0
             client.publish(stream, nextMsg(), ts),
@@ -161,12 +139,13 @@ describe('Sequencing', () => {
         expect(msgsReceieved).toEqual(msgsPublished)
     }, 10000)
 
+    // Skipped because backend seems to reject these now
     it.skip('should sequence in order even if publish requests backdated', async () => {
         const ts = Date.now()
         const msgsPublished: any[] = []
         const msgsReceieved: any[] = []
 
-        await client.subscribe(stream.id, (m) => msgsReceieved.push(m))
+        await client.subscribe(stream.id, (m) => { msgsReceieved.push(m) })
 
         const nextMsg = (...args: any[]) => {
             const msg = Msg(...args)
@@ -199,7 +178,6 @@ describe('Sequencing', () => {
             timeout: 6000,
         })
         await waitForStorage(lastRequest)
-        const msgsResent: any[] = []
         const sub = await client.resend({
             stream: stream.id,
             resend: {
@@ -207,8 +185,8 @@ describe('Sequencing', () => {
                     timestamp: 0
                 },
             },
-        }, (m) => msgsResent.push(m))
-        await waitForEvent(sub, 'resent')
+        })
+        const msgsResent = await sub.collectContent()
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear
@@ -269,7 +247,6 @@ describe('Sequencing', () => {
         })
         await waitForStorage(lastRequest)
 
-        const msgsResent: any[] = []
         const sub = await client.resend({
             stream: stream.id,
             resend: {
@@ -277,8 +254,8 @@ describe('Sequencing', () => {
                     timestamp: 0
                 },
             },
-        }, (m) => msgsResent.push(m))
-        await waitForEvent(sub, 'resent')
+        })
+        const msgsResent = await sub.collectContent()
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear

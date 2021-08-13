@@ -54,7 +54,7 @@ const createUrl = (baseUrl: string, endpointSuffix: string, spid: SPID, query: Q
 
 export type ResendRef = MessageRef | {
     timestamp: number | Date | string,
-    sequenceNumber: number,
+    sequenceNumber?: number,
 }
 
 export type ResendLastOptions = {
