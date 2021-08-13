@@ -29,9 +29,9 @@ module.exports = {
     },
     network: {
         trackers: [
-            'ws://127.0.0.1:30301',
-            'ws://127.0.0.1:30302',
-            'ws://127.0.0.1:30303'
+            { id: 'tracker1', ws: 'ws://127.0.0.1:30301' },
+            { id: 'tracker2', ws: 'ws://127.0.0.1:30302' },
+            { id: 'tracker3', ws: 'ws://127.0.0.1:30303' },
         ],
     },
     nodeRegistry: {
