@@ -81,7 +81,7 @@ describe('WebsocketServer', () => {
         })
 
         it('valid partition', async () => {
-            await publish({ streamPartition: 123 })
+            await publish({ partition: 123 })
             expect(streamrClient.publish).toBeCalledWith(
                 {
                     streamId: MOCK_STREAM_ID,
@@ -114,9 +114,9 @@ describe('WebsocketServer', () => {
         })
 
         describe.each([
-            [ { streamPartition: -1 } ],
-            [ { streamPartition: 123, partitionKey: 'mock-key' } ],
-            [ { streamPartition: 123, partitionKeyField: 'foo' } ],
+            [ { partition: -1 } ],
+            [ { partition: 123, partitionKey: 'mock-key' } ],
+            [ { partition: 123, partitionKeyField: 'foo' } ],
             [ { partitionKey: 'mock-key', partitionKeyField: 'foo' } ]
         ])('invalid partition definition', (queryParams: any) => {
             it(qs.stringify(queryParams), async () => {
@@ -153,7 +153,7 @@ describe('WebsocketServer', () => {
             expect(streamrClient.subscribe).toHaveBeenNthCalledWith(2, { streamId: MOCK_STREAM_ID, streamPartition: 2 }, expect.anything())
             expect(streamrClient.subscribe).toHaveBeenNthCalledWith(3, { streamId: MOCK_STREAM_ID, streamPartition: 5 }, expect.anything())
         })
-        
+
         it('invalid partitions', async () => {
             wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM, { partitions: '111,-222,333' })
             await assertConnectionError(400)
