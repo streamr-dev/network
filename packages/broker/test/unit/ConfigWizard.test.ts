@@ -4,13 +4,14 @@ import os from 'os'
 import path from 'path'
 import { startBrokerConfigWizard } from '../../src/ConfigWizard'
 
-/*
+
 const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
     // simulate input for inquirer based on the `name`poperty of evert prompt
     // @ts-expect-error
     wizard.inquirer.prompt = () => Promise.resolve(mockedPromptResult)
 }
-describe('ConfigWizard', () => {
+
+describe('ConfigWizard:process', () => {
     let wizard: ConfigWizard
     let tmpDataDir: string
     beforeAll(() => {
@@ -162,4 +163,3 @@ describe('ConfigWizard', () => {
         expect(existsSync(tmpDataDir + '/broker-config.json')).toEqual(true)
     })
 })
-*/
