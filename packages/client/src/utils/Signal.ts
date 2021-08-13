@@ -40,6 +40,7 @@ export default class Signal<ValueType = void> {
                 return signal.triggerCount
             },
             once: signal.once.bind(signal),
+            wait: signal.wait.bind(signal),
             trigger: signal.trigger,
             unlisten: signal.unlisten.bind(signal),
             listen: signal.listen.bind(signal),
@@ -76,6 +77,15 @@ export default class Signal<ValueType = void> {
         this.lastValue = value
         this.isEnded = true
         this.listeners.length = 0
+    }
+
+    /**
+     * Promise that resolves on next trigger.
+     */
+    wait() {
+        return new Promise((resolve) => {
+            this.once(resolve)
+        })
     }
 
     /**

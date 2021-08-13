@@ -9,7 +9,7 @@ const auth = StreamrClient.generateEthereumAccount()
 const client = new StreamrClient({
     auth,
 })
-console.assert(!!NamedExports.DataUnion, 'NamedExports should have DataUnion')
+console.assert(!!NamedExports.Subscription, 'NamedExports should have Subscription')
 client.connect().then(() => {
     console.info('success')
     return client.disconnect()

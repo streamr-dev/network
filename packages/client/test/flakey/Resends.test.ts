@@ -99,7 +99,7 @@ describeRepeats('StreamrClient resends', () => {
                 await pTimeout(onGotFirstMessage, 5000, 'waiting for first resent message')
                 client.debug('got first message')
                 client.debug('waiting for all messages')
-                await sub.onDone()
+                await sub.onFinally.wait()
                 client.debug('subscription done')
 
                 expect(receivedMessages).toEqual(published)

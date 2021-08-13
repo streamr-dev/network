@@ -72,6 +72,8 @@ export interface BrubeckClient extends Ethereum,
 }
 
 class BrubeckClientBase implements Context {
+    static generateEthereumAccount = Ethereum.generateEthereumAccount.bind(Ethereum)
+
     id
     debug
     container: DependencyContainer

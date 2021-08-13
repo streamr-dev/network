@@ -23,6 +23,7 @@ module.exports = {
     ],
     plugins: [
         'transform-typescript-metadata',
+         ["@babel/plugin-proposal-decorators", { "legacy": true }],
         'lodash',
          'add-module-exports',
         ['@babel/plugin-transform-runtime', {
@@ -32,7 +33,7 @@ module.exports = {
         }],
          "@babel/plugin-transform-modules-commonjs",
         ['@babel/plugin-proposal-class-properties', {
-            loose: false
+            loose: true
         }]
     ]
 }

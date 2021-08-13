@@ -107,8 +107,8 @@ module.exports = (env, argv) => {
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
                 'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/src'),
                 // swap out ServerPersistentStore for BrowserPersistentStore
-                [path.resolve(__dirname, 'src/stream/encryption/ServerPersistentStore')]: (
-                    path.resolve(__dirname, 'src/stream/encryption/BrowserPersistentStore')
+                [path.resolve(__dirname, 'src/encryption/ServerPersistentStore')]: (
+                    path.resolve(__dirname, 'src/encryption/BrowserPersistentStore')
                 ),
             }
         },

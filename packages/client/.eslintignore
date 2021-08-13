@@ -11,4 +11,6 @@ vendor/**
 test/exports/**
 docs/**
 oldsrc/**
-integration/dataunion/**
+test/integration/dataunion/**
+test/integration/dataunion/*
+test/memory/*
