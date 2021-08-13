@@ -82,9 +82,9 @@ describe('mqtt: end-to-end', () => {
         await tracker.stop()
 
         await Promise.all([
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
-            client3.ensureDisconnected(),
+            client1.disconnect(),
+            client2.disconnect(),
+            client3.disconnect(),
         ])
 
         await Promise.all([

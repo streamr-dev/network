@@ -63,7 +63,7 @@ const publishRewardCode = async (rewardStreamId: string) => {
     await client.publish(rewardStreamId, {
         rewardCode: MOCK_REWARD_CODE
     })
-    await client.ensureDisconnected()
+    await client.disconnect()
 }
 
 describe('TestnetMinerPlugin', () => {
