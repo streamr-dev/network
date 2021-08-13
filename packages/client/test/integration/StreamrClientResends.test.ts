@@ -1,4 +1,4 @@
-import { wait, waitForEvent } from 'streamr-test-utils'
+import { wait } from 'streamr-test-utils'
 
 import { describeRepeats, fakePrivateKey, getPublishTestMessages, getPublishTestStreamMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'

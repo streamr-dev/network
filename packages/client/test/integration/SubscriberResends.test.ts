@@ -1,3 +1,4 @@
+/*
 import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
@@ -23,7 +24,7 @@ import { StorageNode } from '../../src/stream/StorageNode'
 
 const { ControlMessage } = ControlLayer
 
-/* eslint-disable no-await-in-loop */
+// eslint-disable no-await-in-loop
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 12000 : 6000
 const MAX_MESSAGES = 5
@@ -495,3 +496,6 @@ describeRepeats('resends', () => {
         })
     })
 })
+*/
+
+it.skip('SubscriberResends is skipped', () => {})

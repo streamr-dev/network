@@ -1,3 +1,4 @@
+/*
 import { wait } from 'streamr-test-utils'
 
 import { fakePrivateKey, describeRepeats, getPublishTestMessages, addAfterFn, createTestStream } from '../utils'
@@ -477,3 +478,6 @@ describeRepeats('Connection State', () => {
         })
     })
 })
+*/
+
+it.skip('StreamConnectionState is skipped', () => {})
