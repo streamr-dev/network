@@ -223,3 +223,5 @@ export class BrubeckClient extends BrubeckClientBase {
 }
 
 export { BrubeckClient as StreamrClient }
+export { ResendOptions } from './Resends'
+export { BrubeckClientConfig as StreamrClientOptions } from './Config'

@@ -6,12 +6,11 @@ export interface EnvironmentOptions {
     dev?: boolean
     stg?: boolean
     wsUrl?: string
-    httpUrl?: string 
+    httpUrl?: string
 }
 
 export interface AuthenticationOptions {
     privateKey?: string
-    apiKey?: string
 }
 
 export function envOptions(program: commander.Command): commander.Command {
@@ -35,7 +34,7 @@ export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: nu
 }
 
 export function formStreamrOptionsWithEnv(
-    { dev, stg, wsUrl, httpUrl, privateKey, apiKey }: EnvironmentOptions & AuthenticationOptions
+    { dev, stg, wsUrl, httpUrl, privateKey }: EnvironmentOptions & AuthenticationOptions
 ): StreamrClientOptions {
     const options: StreamrClientOptions = {}
 
@@ -64,18 +63,9 @@ export function formStreamrOptionsWithEnv(
         options.restUrl = httpUrl
     }
 
-    if (privateKey && apiKey) {
-        console.error('flags --privateKey and --apiKey cannot be used at the same time')
-        process.exit(1)
-    }
-
     if (privateKey) {
         options.auth = {
             privateKey
-        }
-    } else if (apiKey) {
-        options.auth = {
-            apiKey
         }
     }
 
