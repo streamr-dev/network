@@ -17,6 +17,8 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
+import NodeRegistry from './NodeRegistry'
+import { StreamRegistry } from './StreamRegistry'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -88,6 +90,8 @@ class BrubeckClientBase implements Context {
     session: Session
     node: BrubeckNode
     groupKeyStore: GroupKeyStoreFactory
+    streamRegistry: StreamRegistry
+    nodeRegistry: NodeRegistry
 
     constructor(
         rootContainer: DependencyContainer,
@@ -103,6 +107,8 @@ class BrubeckClientBase implements Context {
         publisher: Publisher,
         subscriber: Subscriber,
         groupKeyStore: GroupKeyStoreFactory,
+        streamRegistry: StreamRegistry,
+        nodeRegistry: NodeRegistry
     ) { // eslint-disable-line function-paren-newline
         this.options = options!
         this.id = context.id
@@ -118,6 +124,8 @@ class BrubeckClientBase implements Context {
         this.session = session!
         this.node = node!
         this.groupKeyStore = groupKeyStore
+        this.streamRegistry = streamRegistry
+        this.nodeRegistry = nodeRegistry
         Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
@@ -127,6 +135,8 @@ class BrubeckClientBase implements Context {
         Plugin(this, this.session)
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
+        Plugin(this, this.streamRegistry)
+        Plugin(this, this.nodeRegistry)
     }
 
     async connect(): Promise<void> {
@@ -217,6 +227,8 @@ export class BrubeckClient extends BrubeckClientBase {
             c.resolve<Publisher>(Publisher),
             c.resolve<Subscriber>(Subscriber),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
+            c.resolve<StreamRegistry>(StreamRegistry),
+            c.resolve<NodeRegistry>(NodeRegistry)
         )
         this.container = c
     }
