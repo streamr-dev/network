@@ -15,7 +15,7 @@ export * from './StorageNode'
 export * from './Subscriber'
 export * from './LoginEndpoints'
 export * from './StreamEndpoints'
-export * from './dataunion/DataUnion'
+// export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'
 
