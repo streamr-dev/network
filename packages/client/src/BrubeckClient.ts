@@ -169,38 +169,27 @@ export class BrubeckClient extends BrubeckClientBase {
         c.register(Context as any, {
             useValue: rootContext
         })
+
         c.register(BrubeckContainer, {
             useValue: c
         })
-        c.register(Config.Root, {
-            useValue: config
-        })
-        c.register(Config.Auth, {
-            useValue: config.auth
-        })
-        c.register(Config.Ethereum, {
-            useValue: config
-        })
-        c.register(Config.NodeRegistry, {
-            useValue: config.nodeRegistry
-        })
-        c.register(Config.Network, {
-            useValue: config.network
-        })
-        c.register(Config.Connection, {
-            useValue: config
-        })
-        c.register(Config.Subscribe, {
-            useValue: config
-        })
-        c.register(Config.Publish, {
-            useValue: config
-        })
-        c.register(Config.Encryption, {
-            useValue: config
-        })
-        c.register(Config.Cache, {
-            useValue: config.cache
+
+        // associate values to config tokens
+        const configTokens: [symbol, object][] = [
+            [Config.Root, config],
+            [Config.Auth, config.auth],
+            [Config.Ethereum, config],
+            [Config.NodeRegistry, config.nodeRegistry],
+            [Config.Network, config.network],
+            [Config.Connection, config],
+            [Config.Subscribe, config],
+            [Config.Publish, config],
+            [Config.Encryption, config],
+            [Config.Cache, config.cache],
+        ]
+
+        configTokens.forEach(([token, useValue]) => {
+            c.register(token, { useValue })
         })
 
         super(
