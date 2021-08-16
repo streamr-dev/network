@@ -80,7 +80,7 @@ export const DefaultConfig: Config = {
     }
 }
 
-export const basicPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
+export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
     {
         type: 'list',
         name:'generateOrImportEthereumPrivateKey',
@@ -134,14 +134,14 @@ const pluginTemplates = [
     },
 ]
 
-export const pluginSelectorPrompt = {
+const pluginSelectorPrompt = {
     type: 'checkbox',
     name:'selectedPlugins',
     message: 'Select the plugins to enable',
     choices: pluginTemplates.map((plugin) => plugin.key)
 }
 
-export const pluginPrompts = pluginTemplates.map((plugin) => {
+const pluginPrompts = pluginTemplates.map((plugin) => {
     return {
         type: 'input',
         name: `${plugin.key}Port`,
@@ -152,7 +152,7 @@ export const pluginPrompts = pluginTemplates.map((plugin) => {
         validate: (input: string, answers: inquirer.Answers = {plugins:{}}): string | boolean => {
             const portNumber = parseInt(input || answers[`${plugin.key}Port`])
             if (Number.isNaN(portNumber) || !Number.isInteger(portNumber)) {
-                return `Non-numeric value ${input} provided`
+                return `Non-numeric value provided`
             }
     
             if (portNumber < 1024 || portNumber > 49151) {
@@ -165,7 +165,9 @@ export const pluginPrompts = pluginTemplates.map((plugin) => {
     }
 })
 
-export const StorageAnswersPrompt = {
+prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
+
+export const storagePrompt = {
     type: 'input',
     name: 'destinationFolderPath',
     message: `Select a path to store the generated config in `,
@@ -184,7 +186,7 @@ export const StorageAnswersPrompt = {
 }
 
 async function selectValidDestinationPath (config: Config): Promise<string | undefined> {
-    const storageAnswers = await inquirer.prompt([StorageAnswersPrompt])
+    const storageAnswers = await inquirer.prompt([storagePrompt])
     if (storageAnswers.clearPath) {
         writeFileSync(storageAnswers.destinationFolderPath, JSON.stringify(config))
         return storageAnswers.destinationFolderPath
@@ -233,7 +235,7 @@ export const getConfigFromAnswers = (answers: any): Config => {
 }
 
 export async function startBrokerConfigWizard(): Promise<void> {
-    const prompts = basicPrompts.concat(pluginSelectorPrompt).concat(pluginPrompts)       
+    //const prompts = CONFIG_WIZARD_PROMPTS  
     const capturedAnswers = await inquirer.prompt(prompts)
     const config = getConfigFromAnswers(capturedAnswers)
     logger.info(`This will be your node's address: ${new Wallet(config.ethereumPrivateKey).address}`)
