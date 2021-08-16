@@ -30,10 +30,10 @@ export default class BrubeckNode implements Context {
         this.debug('destroy >>')
         this.getNode.reset()
 
+        const node = this.cachedNode
+        this.cachedNode = undefined
         // stop node only if started or in progress
-        if (this.cachedNode) {
-            const node = this.cachedNode
-            this.cachedNode = undefined
+        if (node && this.startNode.isStarted()) {
             this.debug('stopping node >>')
             await node.stop()
             this.debug('stopping node <<')
@@ -46,8 +46,11 @@ export default class BrubeckNode implements Context {
         await this.getNode()
     }
 
-    getNode = pOnce(async () => {
-        this.debug('getNode >>')
+    initNode() {
+        if (this.cachedNode) { return this.cachedNode }
+
+        this.debug('initNode >>')
+
         this.destroySignal.assertNotDestroyed(this)
 
         const node = createNetworkNode({
@@ -57,6 +60,15 @@ export default class BrubeckNode implements Context {
             name: this.id,
         })
 
+        this.cachedNode = node
+        this.debug('initNode <<')
+
+        return node
+    }
+
+    startNode = pOnce(async () => {
+        this.debug('start >>')
+        const node = this.initNode()
         await node.start()
 
         if (this.destroySignal.isDestroyed()) {
@@ -67,12 +79,11 @@ export default class BrubeckNode implements Context {
 
         // don't attach if disconnected while in progress
         this.destroySignal.assertNotDestroyed(this)
-
-        this.cachedNode = node
-
-        this.debug('getNode <<')
+        this.debug('start <<')
         return node
     })
+
+    getNode = this.startNode
 
     publishToNode(streamMessage: StreamMessage) {
         this.debug('publishToNode >> %o', streamMessage.getMessageID())
