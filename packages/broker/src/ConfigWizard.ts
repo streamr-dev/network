@@ -119,7 +119,7 @@ export class ConfigWizard{
         if (returnedValue === '') {
             return defaultValue
         }
-        
+
         if (!existsSync(returnedValue)) {
             logger.warn(`Path [${returnedValue}] does not exist`)
             return await this.promptExistingPathWithDefault(prompt, defaultValue)
@@ -139,7 +139,7 @@ export class ConfigWizard{
             }
         })
 
-        let wallet: Wallet 
+        let wallet: Wallet
         if (generateOrImport === 'generate') {
             wallet = Wallet.createRandom()
             this.config.ethereumPrivateKey = wallet.privateKey
@@ -165,7 +165,7 @@ export class ConfigWizard{
 
         return wallet
     }
-    
+
     async selectPlugins(): Promise<Array<string>>{
         const plugins: inquirer.Answers = await this.inquirerSinglePrompt( {
             type: 'checkbox',
@@ -221,7 +221,7 @@ export class ConfigWizard{
         if (!existsSync(destinationFolder)){
             throw new Error(`Destination folder [${destinationFolder}] does not exist`)
         }
-        const filename = `broker-config.json`        
+        const filename = `broker-config.json`
         const finalPath = path.join(destinationFolder, filename)
         // ask the user if they want to overwrite when the file already exists
         if (existsSync(finalPath)){
@@ -231,12 +231,12 @@ export class ConfigWizard{
                 message: `Config file ${finalPath} already exists. Overwrite?`,
                 default: false
             })
-            
+
             if (!overwrite) {
                 return this.storeConfig()
             }
         }
-        
+
         writeFileSync(finalPath, JSON.stringify(this.config, null, 2))
         return finalPath
     }
