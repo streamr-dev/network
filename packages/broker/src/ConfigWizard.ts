@@ -94,9 +94,9 @@ export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.C
         when: (answers: inquirer.Answers) => {
             return answers.generateOrImportEthereumPrivateKey === 'Import'
         },
-        validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
+        validate: (input: string): string | boolean => {
             try {
-                const wallet = new Wallet(input) 
+                new Wallet(input)
                 return true
             } catch (e) {
                 if (e.message.includes('invalid hexlify value')){
@@ -173,14 +173,18 @@ export const storagePrompt = {
     message: `Select a path to store the generated config in `,
     default: path.join(os.homedir(), '.streamr/broker-config.json'),
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
-        const path = input || answers.destinationFolderPath
-        const dirPath = path.substring(0, path.lastIndexOf('/'))
+        try {
+            const path = input || answers.destinationFolderPath
+            const dirPath = path.substring(0, path.lastIndexOf('/'))
 
-        answers.clearPath = !existsSync(path)
-        if (answers.clearPath && !existsSync(dirPath)){
-            mkdirSync(dirPath)
+            answers.clearPath = !existsSync(path)
+            if (answers.clearPath && !existsSync(dirPath)){
+                mkdirSync(dirPath)
+            }
+            return true
+        } catch (e) {
+            return e.message
         }
-        return true
     }
     
 }
@@ -216,7 +220,6 @@ async function selectValidDestinationPath (config: Config): Promise<string | und
 
 export const getConfigFromAnswers = (answers: any): Config => {
     const config = DefaultConfig 
-    config.ethereumPrivateKey = answers.ethereumPrivateKey
 
     if (answers.importPrivateKey){
         config.ethereumPrivateKey = answers.importPrivateKey
@@ -226,7 +229,7 @@ export const getConfigFromAnswers = (answers: any): Config => {
 
     for (let i = 0; i < pluginTemplates.length; i++){
         const template = pluginTemplates[i]
-        if (answers.selectedPlugins.includes(template.key)){
+        if (answers.selectedPlugins && answers.selectedPlugins.includes(template.key)){
             config.plugins[template.key] = template.config
             config.plugins[template.key].port = answers[`${template.key}Port`]
         }
@@ -235,7 +238,6 @@ export const getConfigFromAnswers = (answers: any): Config => {
 }
 
 export async function startBrokerConfigWizard(): Promise<void> {
-    //const prompts = CONFIG_WIZARD_PROMPTS  
     const capturedAnswers = await inquirer.prompt(prompts)
     const config = getConfigFromAnswers(capturedAnswers)
     logger.info(`This will be your node's address: ${new Wallet(config.ethereumPrivateKey).address}`)
