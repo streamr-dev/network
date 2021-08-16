@@ -1,7 +1,6 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream } from '../utils'
-import { getPublishTestMessages, getWaitForStorage } from './brubeck/utils'
+import { getPublishTestMessages, getWaitForStorage, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream } from '../utils'
 import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
 import { counterId } from '../../src/utils'
 import { StorageNode } from '../../src/StorageNode'

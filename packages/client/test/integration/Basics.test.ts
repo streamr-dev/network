@@ -1,11 +1,10 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, Msg } from '../../utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import { publishManyGenerator } from './utils'
+import { describeRepeats, uid, fakePrivateKey, Msg, publishManyGenerator } from '../utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
 
-import clientOptions from '../config'
-import { Stream } from '../../../src/Stream'
+import clientOptions from './config'
+import { Stream } from '../../src/Stream'
 
 describeRepeats('StreamrClient', () => {
     const MAX_MESSAGES = 10

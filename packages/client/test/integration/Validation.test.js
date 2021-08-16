@@ -1,7 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { fakePrivateKey, describeRepeats, createTestStream } from '../utils'
-import { getPublishTestMessages } from './brubeck/utils'
+import { getPublishTestMessages, fakePrivateKey, describeRepeats, createTestStream } from '../utils'
 import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
 
 import clientOptions from './config'

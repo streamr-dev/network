@@ -1,11 +1,10 @@
 import { wait } from 'streamr-test-utils'
-import { fakePrivateKey, describeRepeats, snapshot, LeaksDetector } from '../../utils'
-import { getPublishTestMessages } from './utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import Subscription from '../../../src/Subscription'
-import { counterId, Defer } from '../../../src/utils'
+import { getPublishTestMessages, fakePrivateKey, describeRepeats, snapshot, LeaksDetector } from '../utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
+import Subscription from '../../src/Subscription'
+import { counterId, Defer } from '../../src/utils'
 
-import clientOptions from '../config'
+import clientOptions from './config'
 
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000

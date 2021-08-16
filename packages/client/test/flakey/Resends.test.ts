@@ -1,7 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, fakePrivateKey, createTestStream } from '../utils'
-import { getPublishTestMessages } from '../integration/brubeck/utils'
+import { getPublishTestMessages, describeRepeats, fakePrivateKey, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 

@@ -4,16 +4,17 @@ import path from 'path'
 import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId } from '../../utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import { Defer } from '../../../src/utils'
-import * as G from '../../../src/utils/GeneratorUtils'
-import { getPublishTestMessages, getWaitForStorage, publishManyGenerator } from './utils'
+import {
+    getPublishTestMessages, getWaitForStorage, publishManyGenerator, describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId
+} from '../utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
+import { Defer } from '../../src/utils'
+import * as G from '../../src/utils/GeneratorUtils'
 
-import clientOptions from '../config'
-import { Stream } from '../../../src/Stream'
-// import Subscription from '../../../src/brubeck/Subscription'
-import { StorageNode } from '../../../src/StorageNode'
+import clientOptions from './config'
+import { Stream } from '../../src/Stream'
+// import Subscription from '../../src/brubeck/Subscription'
+import { StorageNode } from '../../src/StorageNode'
 
 const { StreamMessage } = MessageLayer
 

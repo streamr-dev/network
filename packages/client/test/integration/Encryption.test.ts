@@ -1,15 +1,16 @@
 import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
-import { describeRepeats, fakePrivateKey, Msg, Debug, addAfterFn } from '../../utils'
-import { getPublishTestStreamMessages, publishTestMessagesGenerator, createTestStream } from './utils'
-import { Defer } from '../../../src/utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import { GroupKey } from '../../../src/encryption/Encryption'
-import { Stream, StreamOperation } from '../../../src/Stream'
-import Subscription from '../../../src/Subscription'
-import { StorageNode } from '../../../src/StorageNode'
+import {
+    describeRepeats, fakePrivateKey, Msg, Debug, addAfterFn, getPublishTestStreamMessages, publishTestMessagesGenerator, createTestStream
+} from '../utils'
+import { Defer } from '../../src/utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
+import { GroupKey } from '../../src/encryption/Encryption'
+import { Stream, StreamOperation } from '../../src/Stream'
+import Subscription from '../../src/Subscription'
+import { StorageNode } from '../../src/StorageNode'
 
-import clientOptions from '../config'
+import clientOptions from './config'
 
 const debug = Debug('BrubeckClient::test')
 const TIMEOUT = 15 * 1000

@@ -1,18 +1,17 @@
 // import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { fakePrivateKey, describeRepeats, collect } from '../../utils'
-import { getPublishTestMessages, createTestStream } from './utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import { Defer } from '../../../src/utils'
-// import Connection from '../../../src/Connection'
-// import { StorageNode } from '../../../src/stream/StorageNode'
+import { getPublishTestMessages, createTestStream, fakePrivateKey, describeRepeats, collect } from '../utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
+import { Defer } from '../../src/utils'
+// import Connection from '../../src/Connection'
+// import { StorageNode } from '../../src/stream/StorageNode'
 
-import clientOptions from '../config'
-import { Stream } from '../../../src/Stream'
-import Subscription from '../../../src/Subscription'
-import Subscriber from '../../../src/Subscriber'
-import { Todo } from '../../../src/types'
+import clientOptions from './config'
+import { Stream } from '../../src/Stream'
+import Subscription from '../../src/Subscription'
+import Subscriber from '../../src/Subscriber'
+import { Todo } from '../../src/types'
 
 // const { ControlMessage } = ControlLayer
 
