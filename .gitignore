@@ -4,3 +4,4 @@ lerna-debug.log
 *.tsbuildinfo
 *.heapprofile
 *.heapsnapshot
+oldsrc
