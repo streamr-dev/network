@@ -85,11 +85,7 @@ export const basicPrompts: Array<inquirer.Question | inquirer.ListQuestion | inq
         type: 'list',
         name:'generateOrImportEthereumPrivateKey',
         message: 'Do you want to generate a new Ethereum private key or import an existing one?',
-        choices: ['Generate', 'Import'],
-        default: (answers: inquirer.Answers) => {
-            const wallet = Wallet.createRandom()
-            answers.ethereumPrivateKey = wallet.privateKey
-        }
+        choices: ['Generate', 'Import']
     },
     {
         type: 'input',
@@ -101,7 +97,6 @@ export const basicPrompts: Array<inquirer.Question | inquirer.ListQuestion | inq
         validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
             try {
                 const wallet = new Wallet(input) 
-                answers.ethereumPrivateKey = wallet.privateKey
                 return true
             } catch (e) {
                 if (e.message.includes('invalid hexlify value')){
@@ -149,13 +144,13 @@ export const pluginSelectorPrompt = {
 export const pluginPrompts = pluginTemplates.map((plugin) => {
     return {
         type: 'input',
-        name: `${plugin.key}-port`,
+        name: `${plugin.key}Port`,
         message: `Select a port for the ${plugin.key} Plugin [Enter for default: ${plugin.config.port}]`,
         when: (answers: inquirer.Answers) => {
             return answers.selectedPlugins.includes(plugin.key)
         },
         validate: (input: string, answers: inquirer.Answers = {plugins:{}}): string | boolean => {
-            const portNumber = parseInt(input || answers[`${plugin.key}-port`])
+            const portNumber = parseInt(input || answers[`${plugin.key}Port`])
             if (Number.isNaN(portNumber) || !Number.isInteger(portNumber)) {
                 return `Non-numeric value ${input} provided`
             }
@@ -164,8 +159,6 @@ export const pluginPrompts = pluginTemplates.map((plugin) => {
                 return `Out of range port ${portNumber} provided (valid range 1024-49151)`
             }
     
-            answers.plugins[plugin.key] = plugin.config 
-            answers.plugins[plugin.key].port = portNumber
             return true 
         },
         default: plugin.config.port
@@ -191,7 +184,6 @@ export const StorageAnswersPrompt = {
 }
 
 async function selectValidDestinationPath (config: Config): Promise<string | undefined> {
-    
     const storageAnswers = await inquirer.prompt([StorageAnswersPrompt])
     if (storageAnswers.clearPath) {
         writeFileSync(storageAnswers.destinationFolderPath, JSON.stringify(config))
@@ -224,22 +216,29 @@ export const getConfigFromAnswers = (answers: any): Config => {
     const config = DefaultConfig 
     config.ethereumPrivateKey = answers.ethereumPrivateKey
 
-    const plugins = Object.keys(answers.plugins)
-    for (let i = 0; i < plugins.length; i++){
-        config.plugins[plugins[i]] = answers.plugins[plugins[i]]
+    if (answers.importPrivateKey){
+        config.ethereumPrivateKey = answers.importPrivateKey
+    } else {
+        config.ethereumPrivateKey = Wallet.createRandom().privateKey
+    }
+
+    for (let i = 0; i < pluginTemplates.length; i++){
+        const template = pluginTemplates[i]
+        if (answers.selectedPlugins.includes(template.key)){
+            config.plugins[template.key] = template.config
+            config.plugins[template.key].port = answers[`${template.key}Port`]
+        }
     }
     return config
 }
 
 export async function startBrokerConfigWizard(): Promise<void> {
-    const answers = {plugins:{}}
     const prompts = basicPrompts.concat(pluginSelectorPrompt).concat(pluginPrompts)       
-    const capturedAnswers = await inquirer.prompt(prompts, answers)
-    console.log('answers', answers, capturedAnswers)
-    logger.info(`This will be your node's address: ${new Wallet(capturedAnswers.ethereumPrivateKey).address}`)
-    logger.info('This is your node\'s private key. Please store it in a secure location:')
-    logger.alert(capturedAnswers.ethereumPrivateKey)
+    const capturedAnswers = await inquirer.prompt(prompts)
     const config = getConfigFromAnswers(capturedAnswers)
+    logger.info(`This will be your node's address: ${new Wallet(config.ethereumPrivateKey).address}`)
+    logger.info('This is your node\'s private key. Please store it in a secure location:')
+    logger.alert(config.ethereumPrivateKey)
     const storePath = await selectValidDestinationPath(config)
     logger.log(`JSON config: ${JSON.stringify(config)}`)
     logger.info('Broker Config Wizard ran succesfully')
