@@ -1,13 +1,11 @@
+import { SmartContractRecord } from 'streamr-network/dist/src/streamr-protocol'
+
 export interface NetworkSmartContract {
     contractAddress: string
     jsonRpcProvider: string
 }
 
-export interface TrackerRegistryItem {
-    id: string
-    ws: string
-    http: string
-}
+export type TrackerRegistryItem = SmartContractRecord
 
 export interface TurnConfig {
     url: string,
@@ -29,7 +27,7 @@ export interface NetworkConfig {
 }
 
 export interface HttpServerConfig {
-    port: number, 
+    port: number,
     privateKeyFileName: string | null,
     certFileName: string | null
 }
