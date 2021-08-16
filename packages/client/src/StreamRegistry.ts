@@ -1,28 +1,25 @@
-import StreamrClient from '..'
-import { StreamPermission, Stream, StreamProperties, StreamOperation, Config } from './index'
+import { StreamPermission, Stream, StreamProperties, StreamOperation, Config,
+    EthereumAddress, StreamListQuery, NotFoundError, StrictStreamrClientConfig, ValidationError } from './index'
 
 import { Contract } from '@ethersproject/contracts'
 // import { Wallet } from '@ethersproject/wallet'
 import { Signer } from '@ethersproject/abstract-signer'
-import StreamrEthereum from '../Ethereum'
 import debug from 'debug'
 import type { StreamRegistry as StreamRegistryContract } from './ethereumArtifacts/StreamRegistry.d'
 import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryAbi.json'
 // import { Provider } from '@ethersproject/abstract-provider'
 import fetch from 'node-fetch'
-import { EthereumAddress } from '../types'
 // import { BigNumber, ethers } from 'ethers'
-import { Errors } from 'streamr-client-protocol'
-import { StreamListQuery } from '../rest/StreamEndpoints'
-import { NotFoundError } from '../rest/authFetch'
 import { AddressZero } from '@ethersproject/constants'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'
-import Ethereum, { AuthConfig } from './Ethereum'
+import Ethereum from './Ethereum'
+import { instanceId } from './utils'
+import { Context } from './utils/Context'
 
-const { ValidationError } = Errors
+// const { ValidationError } = Errors
 
 // const fetch = require('node-fetch');
 const log = debug('StreamrClient::StreamRegistry')
@@ -60,36 +57,31 @@ export type SingleStreamQueryResult = {
     stream: StreamPermissionsQueryResult | null
 }
 @scoped(Lifecycle.ContainerScoped)
-export class StreamRegistry {
-    ethereum: StreamrEthereum
-    config: AuthConfig
+export class StreamRegistry implements Context {
+    id
+    debug
     streamRegistryContract?: StreamRegistryContract
     streamRegistryContractReadonly: StreamRegistryContract
     sideChainProvider: Provider
     sideChainSigner?: Signer
 
-    constructor(@inject(BrubeckContainer) private container: DependencyContainer,
-    @inject(Config.Auth) private authConfig: AuthConfig) {
+    constructor(
+        context: Context,
+        @inject(Ethereum) private ethereum: Ethereum,
+        @inject(BrubeckContainer) private container: DependencyContainer,
+        @inject(Config.Root) private config: StrictStreamrClientConfig
+    ) {
         log('creating StreamRegistryOnchain')
-        this.config = authConfig
-        this.ethereum = container.resolve<Ethereum>(Ethereum)
+        this.id = instanceId(this)
+        this.debug = context.debug.extend(this.id)
         this.sideChainProvider = this.ethereum.getSidechainProvider()
         this.streamRegistryContractReadonly = new Contract(this.config.streamRegistrySidechainAddress,
             StreamRegistryArtifact, this.sideChainProvider) as StreamRegistryContract
     }
 
-    private parseStream(id: string, propsString: string): Stream {
-        return StreamRegistry.parseStreamFromProps(this.client, id, propsString)
-    }
-
-    /** @internal */
-    static parseStreamFromProps(client: StreamrClient, id: string, propsString: string): Stream {
-        try {
-            const parsedProps = JSON.parse(propsString)
-            return new Stream(client, { ...parsedProps, id })
-        } catch (error) {
-            throw new Error(`Could not parse properties from onchain metadata: ${propsString}`)
-        }
+    parseStream(id: string, propsString: string): Stream {
+        const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(propsString)
+        return new Stream({ ...parsedProps, id }, this.container)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -97,7 +89,7 @@ export class StreamRegistry {
     // --------------------------------------------------------------------------------------------
 
     async getStreamFromContract(id: string): Promise<Stream> {
-        this.client.debug('getStream %s', id)
+        this.debug('getStream %s', id)
         try {
             const propertiesString = await this.streamRegistryContractReadonly.getStreamMetadata(id) || '{}'
             return this.parseStream(id, propertiesString)
@@ -128,64 +120,47 @@ export class StreamRegistry {
     private async connectToStreamRegistryContract() {
         if (!this.sideChainSigner || !this.streamRegistryContract) {
             this.sideChainSigner = await this.ethereum.getSidechainSigner()
-            this.streamRegistryContract = new Contract(this.client.options.streamRegistrySidechainAddress,
+            this.streamRegistryContract = new Contract(this.config.streamRegistrySidechainAddress,
                 StreamRegistryArtifact, this.sideChainSigner) as StreamRegistryContract
         }
     }
 
-    async createStream(props?: StreamProperties): Promise<Stream> {
+    async createStream(props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {
         log('createStream %o', props)
-
-        let properties = props || {}
-        await this.connectToStreamRegistryContract()
-        const userAddress: string = (await this.ethereum.getAddress()).toLowerCase()
-        // const a = this.ethereum.getAddress()
-        const propsJsonStr : string = JSON.stringify(properties)
-        let path = '/'
-        if (properties.id && properties.id.includes('/')) {
-            path = properties.id.slice(properties.id.indexOf('/'), properties.id.length)
-        }
-
-        if (properties.id && !properties.id.startsWith('/') && !properties.id.startsWith(userAddress)) {
-            throw new ValidationError('Validation')
-            // TODO add check for ENS??
-        }
-        const tx = await this.streamRegistryContract!.createStream(path, propsJsonStr)
-        await tx.wait()
-        const id = userAddress + path
-        properties = {
-            ...properties,
-            id
-        }
-        return new Stream(this.client, properties)
+        return this._createOrUpdateStream(this.streamRegistryContract!.createStream, props)
     }
 
-    async updateStream(props?: StreamProperties): Promise<Stream> {
+    async updateStream(props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {
+        log('updateStream %o', props)
+        return this._createOrUpdateStream(this.streamRegistryContract!.updateStreamMetadata, props)
+    }
+
+    async _createOrUpdateStream(contractFunction: Function, props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {
         log('updateStream %o', props)
 
-        let properties = props || {}
+        let properties = props
         await this.connectToStreamRegistryContract()
         const userAddress: string = (await this.ethereum.getAddress()).toLowerCase()
         log('creating/registering stream onchain')
         // const a = this.ethereum.getAddress()
         const propsJsonStr : string = JSON.stringify(properties)
         let path = '/'
-        if (properties.id && properties.id.includes('/')) {
+        if (properties && properties.id && properties.id.includes('/')) {
             path = properties.id.slice(properties.id.indexOf('/'), properties.id.length)
         }
 
-        if (properties.id && !properties.id.startsWith('/') && !properties.id.startsWith(userAddress)) {
+        if (properties && properties.id && !properties.id.startsWith('/') && !properties.id.startsWith(userAddress)) {
             throw new ValidationError('Validation')
             // TODO add check for ENS??
         }
         const id = userAddress + path
-        const tx = await this.streamRegistryContract!.updateStreamMetadata(id, propsJsonStr)
+        const tx = await contractFunction(id, propsJsonStr)
         await tx.wait()
         properties = {
             ...properties,
             id
         }
-        return new Stream(this.client, properties)
+        return new Stream(properties, this.container)
     }
 
     async grantPermission(streamId: string, operation: StreamOperation, recievingUser: string) {
@@ -213,9 +188,9 @@ export class StreamRegistry {
     }
 
     async revokeAllMyPermission(streamId: string) {
-        log('Revoking all permissions user %s on stream %s', await this.client.getAddress(), streamId)
+        log('Revoking all permissions user %s on stream %s', await this.ethereum.getAddress(), streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, await this.client.getAddress())
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, await this.ethereum.getAddress())
         await tx.wait()
     }
 
@@ -277,7 +252,7 @@ export class StreamRegistry {
 
     private async sendStreamQuery(gqlQuery: string): Promise<Object> {
         log('GraphQL query: %s', gqlQuery)
-        const res = await fetch(this.client.options.theGraphUrl, {
+        const res = await fetch(this.config.theGraphUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -290,7 +265,7 @@ export class StreamRegistry {
         try {
             resJson = JSON.parse(resText)
         } catch {
-            throw new Error(`GraphQL query failed with "${resText}", check that your theGraphUrl="${this.client.options.theGraphUrl}" is correct`)
+            throw new Error(`GraphQL query failed with "${resText}", check that your theGraphUrl="${this.config.theGraphUrl}" is correct`)
         }
         log('GraphQL response: %o', resJson)
         if (!resJson.data) {
@@ -326,7 +301,7 @@ export class StreamRegistry {
         return response.stream.permissions.map(({ id, ...permissionobj }) => ({ ...permissionobj, streamId: id }))
     }
 
-    async listStreams(filter: StreamListQuery): Promise<Stream[]> {
+    async listStreams(filter: StreamListQuery = {}): Promise<Stream[]> {
         log('Getting all streams from thegraph that match filter %o', filter)
         const response = await this.sendStreamQuery(StreamRegistry.buildGetFilteredStreamListQuery(filter)) as FilteredStreamListQueryResult
         return response.streams.map((streamobj) => this.parseStream(streamobj.id, streamobj.metadata))

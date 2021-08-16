@@ -15,7 +15,7 @@ import { StorageNode } from './StorageNode'
 import { authRequest } from './authFetch'
 
 import Session from './Session'
-import NodeRegistry from './NodeRegistry'
+import { NodeRegistry } from './NodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
 
@@ -166,7 +166,7 @@ export default class Resend implements Context {
 
         const storageNodeAddresses = new Set(storageNodes.map((n) => n.getAddress()))
 
-        const nodes = await this.nodeRegistry.getNodes()
+        const nodes = await this.nodeRegistry.getAllStorageNodes()
 
         return nodes.filter((node: any) => storageNodeAddresses.has(node.address))
     }
@@ -241,6 +241,6 @@ export default class Resend implements Context {
     }
 
     async stop() {
-        await this.nodeRegistry.stop()
+        // await this.nodeRegistry.stop()
     }
 }

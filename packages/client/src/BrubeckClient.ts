@@ -17,7 +17,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
-import NodeRegistry from './NodeRegistry'
+import { NodeRegistry } from './NodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
@@ -61,6 +61,8 @@ type Methods<T> = Pick<T, MethodNames<T>>
 export interface BrubeckClient extends Ethereum,
     Methods<StreamEndpoints>,
     Methods<Subscriber>,
+    Methods<StreamRegistry>,
+    Methods<NodeRegistry>,
     // {dis}connect in BrubeckNode are pOnce
     Methods<Omit<BrubeckNode, 'disconnect' | 'connect'>>,
     Methods<LoginEndpoints>,

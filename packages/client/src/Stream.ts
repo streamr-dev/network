@@ -1,18 +1,17 @@
-import fetch from 'node-fetch'
-import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
-import { SPID, SID, MessageContent } from 'streamr-client-protocol'
+import { MessageContent } from 'streamr-client-protocol'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
 import { StorageNode } from './StorageNode'
 import { EthereumAddress } from './types'
-import { until } from './utils'
 
 import { Rest } from './Rest'
 import Resends from './Resends'
 import Publisher from './Publisher'
 import { BrubeckContainer } from './Container'
 import { BigNumber } from '@ethersproject/bignumber'
+import BrubeckClient from '.'
+import { StreamMetadata } from '../../protocol/dist/src/utils/StreamMessageValidator'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -67,24 +66,24 @@ export type Field = {
     type: typeof VALID_FIELD_TYPES[number];
 }
 
-function getFieldType(value: any): (Field['type'] | undefined) {
-    const type = typeof value
-    switch (true) {
-        case Array.isArray(value): {
-            return 'list'
-        }
-        case type === 'object': {
-            return 'map'
-        }
-        case (VALID_FIELD_TYPES as ReadonlyArray<string>).includes(type): {
-            // see https://github.com/microsoft/TypeScript/issues/36275
-            return type as Field['type']
-        }
-        default: {
-            return undefined
-        }
-    }
-}
+// function getFieldType(value: any): (Field['type'] | undefined) {
+//     const type = typeof value
+//     switch (true) {
+//         case Array.isArray(value): {
+//             return 'list'
+//         }
+//         case type === 'object': {
+//             return 'map'
+//         }
+//         case (VALID_FIELD_TYPES as ReadonlyArray<string>).includes(type): {
+//             // see https://github.com/microsoft/TypeScript/issues/36275
+//             return type as Field['type']
+//         }
+//         default: {
+//             return undefined
+//         }
+//     }
+// }
 
 class StreamrStream implements StreamMetadata {
     streamId: string
@@ -101,6 +100,7 @@ class StreamrStream implements StreamMetadata {
     requireSignedData!: boolean
     storageDays?: number
     inactivityThresholdHours?: number
+    _client: BrubeckClient
     _rest: Rest
     _resends: Resends
     _publisher: Publisher
@@ -112,6 +112,7 @@ class StreamrStream implements StreamMetadata {
         this._rest = container.resolve<Rest>(Rest)
         this._resends = container.resolve<Resends>(Resends)
         this._publisher = container.resolve<Publisher>(Publisher)
+        this._client = container.resolve<BrubeckClient>(BrubeckClient)
     }
 
     async update() {
@@ -140,7 +141,7 @@ class StreamrStream implements StreamMetadata {
     }
 
     async getPermissions() {
-        return this.getAllPermissionsForStream(this.id)
+        return this._client.getAllPermissionsForStream(this.id)
     }
 
     async getMyPermissions() {
@@ -196,6 +197,14 @@ class StreamrStream implements StreamMetadata {
 
     async publish<T extends MessageContent>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
         return this._publisher.publish(this.id, content, timestamp, partitionKey)
+    }
+
+    static parseStreamPropsFromJson(propsString: string): StreamProperties {
+        try {
+            return JSON.parse(propsString)
+        } catch (error) {
+            throw new Error(`Could not parse properties from onchain metadata: ${propsString}`)
+        }
     }
 }
 
