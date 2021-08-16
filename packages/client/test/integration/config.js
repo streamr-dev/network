@@ -29,9 +29,19 @@ module.exports = {
     },
     network: {
         trackers: [
-            { id: 'tracker1', ws: 'ws://127.0.0.1:30301', http: 'http://127.0.0.1:30301' },
-            { id: 'tracker2', ws: 'ws://127.0.0.1:30302', http: 'http://127.0.0.1:30301' },
-            { id: 'tracker3', ws: 'ws://127.0.0.1:30303', http: 'http://127.0.0.1:30301' },
+            {
+                id: '0xDE11165537ef6C01260ee89A850a281525A5b63F',
+                ws: 'ws://0.0.0.0:30301',
+                http: 'http://0.0.0.0:30301'
+            }, {
+                id: '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c',
+                ws: 'ws://0.0.0.0:30302',
+                http: 'http://0.0.0.0:30302'
+            }, {
+                id: '0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75',
+                ws: 'ws://0.0.0.0:30303',
+                http: 'http://0.0.0.0:30303'
+            }
         ],
     },
     nodeRegistry: {
