@@ -4,10 +4,12 @@ import merge from 'lodash/merge'
 import cloneDeep from 'lodash/cloneDeep'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NodeRegistryOptions } from './NodeRegistry'
+import { InspectOptions } from 'util'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Partial<NetworkNodeOptions>
     nodeRegistry?: Partial<NodeRegistryOptions>
+    debug?: Partial<DebugConfig>
 }
 
 export {
@@ -15,9 +17,14 @@ export {
     NodeRegistryOptions as NodeRegistryConfig
 }
 
+export type DebugConfig = {
+    inspectOpts: InspectOptions
+}
+
 export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
     network: NetworkNodeOptions
     nodeRegistry: NodeRegistryOptions
+    debug: DebugConfig
 }
 
 const BrubeckConfigInjection = {
@@ -39,6 +46,12 @@ export { BrubeckConfigInjection as Config }
 
 // TODO: Production values
 const BRUBECK_CLIENT_DEFAULTS = {
+    debug: {
+        inspectOpts: {
+            depth: 5,
+            maxStringLength: 256
+        }
+    },
     nodeRegistry: {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         jsonRpcProvider: 'http://10.200.10.1:8546',

@@ -169,6 +169,12 @@ export class BrubeckClient extends BrubeckClientBase {
         const config = BrubeckConfig(options)
         const id = counterId(`BrubeckClient:${uid}${config.id ? `:${config.id}` : ''}`)
         const debug = Debug(`Streamr::${id}`)
+        // @ts-expect-error not in types
+        debug.inspectOpts = {
+            // @ts-expect-error not in types
+            ...debug.inspectOpts,
+            ...config.debug.inspectOpts
+        }
         debug('create')
 
         const rootContext = {
