@@ -7,6 +7,7 @@ import { Metrics } from '../../../../network/dist/helpers/MetricsContext'
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
 import { fetchOrThrow } from '../../helpers/fetch'
+import { version as CURRENT_VERSION } from '../../../package.json'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
@@ -57,6 +58,10 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         if (this.pluginConfig.stunServerHost !== null) {
             this.natType = await this.getNatType()
         }
+        this.networkNode.setExtraMetadata({
+            natType: this.natType || null,
+            brokerVersion: CURRENT_VERSION,
+        })
         await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
             if (message.rewardCode) {
                 this.onRewardCodeReceived(message.rewardCode)

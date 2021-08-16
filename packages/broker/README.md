@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://streamr.network">
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
+  </a>
+</p>
+
 # streamr-broker
 
 Main executable for running a broker node in Streamr Network.
