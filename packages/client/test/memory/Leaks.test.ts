@@ -49,7 +49,7 @@ describeRepeats('Leaks', () => {
             const client = createClient()
             leakDetector = new LeakDetector(client)
             await client.connect()
-            await client.disconnect()
+            await client.destroy()
         })
 
         test('connect + disconnect + session token', async () => {
@@ -57,7 +57,7 @@ describeRepeats('Leaks', () => {
             leakDetector = new LeakDetector(client)
             await client.connect()
             await client.session.getSessionToken()
-            await client.disconnect()
+            await client.destroy()
         })
 
         test('connect + disconnect + getAddress', async () => {
@@ -66,7 +66,7 @@ describeRepeats('Leaks', () => {
             await client.connect()
             await client.session.getSessionToken()
             await client.getAddress()
-            await client.disconnect()
+            await client.destroy()
         })
 
         describe('stream', () => {
@@ -84,7 +84,7 @@ describeRepeats('Leaks', () => {
                 if (!client) { return }
                 const c = client
                 client = undefined
-                await c.disconnect()
+                await c.destroy()
                 snapshot()
             })
 
@@ -107,7 +107,7 @@ describeRepeats('Leaks', () => {
                 const ethAddress = await client.getAddress()
                 await client.cached.isStreamPublisher(stream.id, ethAddress)
                 await client.cached.isStreamSubscriber(stream.id, ethAddress)
-                await client.disconnect()
+                await client.destroy()
             }, 15000)
 
             test('publish', async () => {
@@ -122,7 +122,7 @@ describeRepeats('Leaks', () => {
                 })
 
                 await publishTestMessages(5)
-                await client.disconnect()
+                await client.destroy()
                 await wait(3000)
             }, 15000)
 
@@ -143,7 +143,7 @@ describeRepeats('Leaks', () => {
 
                     await publishTestMessages(MAX_MESSAGES)
                     sub = undefined
-                    await client.disconnect()
+                    await client.destroy()
                     await wait(3000)
                     expect(await subLeak.isLeaking()).toBeFalsy()
                 }, 15000)

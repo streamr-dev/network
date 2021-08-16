@@ -11,6 +11,7 @@ import StreamMessageCreator from './MessageCreator'
 import BrubeckNode from './BrubeckNode'
 import Signer from './Signer'
 import Encrypt from './Encrypt'
+import { DestroySignal } from './DestroySignal'
 
 export class FailedToPublishError extends Error {
     streamId
@@ -68,6 +69,7 @@ export default class PublishPipeline implements Context, Stoppable {
         private node: BrubeckNode,
         private messageCreator: StreamMessageCreator,
         private signer: Signer,
+        private destroySignal: DestroySignal,
         @inject(delay(() => Encrypt)) private encryption: Encrypt,
     ) {
         this.id = instanceId(this)
@@ -82,6 +84,8 @@ export default class PublishPipeline implements Context, Stoppable {
             .forEach(this.signMessage.bind(this))
             .filter(this.filterResolved)
             .forEach(this.consumeQueue.bind(this))
+
+        destroySignal.onDestroy(this.stop.bind(this))
     }
 
     private filterResolved = ([_streamMessage, defer]: PublishQueueOut): boolean => {
@@ -148,6 +152,8 @@ export default class PublishPipeline implements Context, Stoppable {
     }
 
     check(): void {
+        this.destroySignal.assertNotDestroyed(this)
+
         if (this.isStopped) {
             throw new ContextError(this, 'Pipeline Stopped. Client probably disconnected')
         }

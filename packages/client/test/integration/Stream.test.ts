@@ -28,7 +28,7 @@ describe('Stream', () => {
     })
 
     afterEach(async () => {
-        await client.disconnect()
+        await client.destroy()
     })
 
     describe('detectFields()', () => {

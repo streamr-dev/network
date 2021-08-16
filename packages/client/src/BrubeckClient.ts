@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { container, DependencyContainer, inject } from 'tsyringe'
 import Debug from 'debug'
 
-import { uuid, counterId } from './utils'
+import { uuid, counterId, pOnce } from './utils'
 import { Context } from './utils/Context'
 import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
 import { BrubeckContainer } from './Container'
@@ -13,6 +13,7 @@ import Resends from './Resends'
 import BrubeckNode from './BrubeckNode'
 import Ethereum from './Ethereum'
 import Session from './Session'
+import { DestroySignal } from './DestroySignal'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
@@ -59,8 +60,8 @@ type Methods<T> = Pick<T, MethodNames<T>>
 export interface BrubeckClient extends Ethereum,
     Methods<StreamEndpoints>,
     Methods<Subscriber>,
-    // {dis}connect in BrubeckNode are pOnce
-    Methods<Omit<BrubeckNode, 'disconnect' | 'connect'>>,
+    // connect/pOnce in BrubeckNode are pOnce, we override them anyway
+    Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
     Methods<LoginEndpoints>,
     Methods<Publisher>,
     Methods<GroupKeyStoreFactory>,
@@ -88,6 +89,7 @@ class BrubeckClientBase implements Context {
     session: Session
     node: BrubeckNode
     groupKeyStore: GroupKeyStoreFactory
+    protected destroySignal: DestroySignal
 
     constructor(
         rootContainer: DependencyContainer,
@@ -103,6 +105,7 @@ class BrubeckClientBase implements Context {
         publisher: Publisher,
         subscriber: Subscriber,
         groupKeyStore: GroupKeyStoreFactory,
+        destroySignal: DestroySignal,
     ) { // eslint-disable-line function-paren-newline
         this.options = options!
         this.id = context.id
@@ -118,6 +121,7 @@ class BrubeckClientBase implements Context {
         this.session = session!
         this.node = node!
         this.groupKeyStore = groupKeyStore
+        this.destroySignal = destroySignal
         Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
@@ -129,19 +133,25 @@ class BrubeckClientBase implements Context {
         Plugin(this, this.groupKeyStore)
     }
 
-    async connect(): Promise<void> {
+    connect = pOnce(async () => {
+        await this.node.connect()
         const tasks = [
             this.publisher.start(),
-            this.node.connect(),
         ]
 
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
+    })
+
+    /** @deprecated */
+    disconnect() {
+        return this.destroy()
     }
 
-    async disconnect(): Promise<void> {
+    destroy = pOnce(async () => {
+        this.connect.reset()
         const tasks = [
-            this.node.disconnect(),
+            this.destroySignal.destroy().then(() => undefined),
             this.resends.stop(),
             this.publisher.stop(),
             this.subscriber.stop(),
@@ -149,7 +159,7 @@ class BrubeckClientBase implements Context {
 
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
-    }
+    })
 }
 
 export class BrubeckClient extends BrubeckClientBase {
@@ -206,6 +216,7 @@ export class BrubeckClient extends BrubeckClientBase {
             c.resolve<Publisher>(Publisher),
             c.resolve<Subscriber>(Subscriber),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
+            c.resolve<DestroySignal>(DestroySignal),
         )
         this.container = c
     }

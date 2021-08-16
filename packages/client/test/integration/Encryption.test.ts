@@ -51,7 +51,7 @@ describeRepeats('decryption', () => {
         await wait(0)
         if (client) {
             client.debug(msg)
-            await client.disconnect()
+            await client.destroy()
         }
     }
 
@@ -110,12 +110,12 @@ describeRepeats('decryption', () => {
         debug('set up clients', opts)
         if (publisher) {
             debug('disconnecting old publisher')
-            await publisher.disconnect()
+            await publisher.destroy()
         }
 
         if (subscriber) {
             debug('disconnecting old subscriber')
-            await subscriber.disconnect()
+            await subscriber.destroy()
         }
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
@@ -417,8 +417,8 @@ describeRepeats('decryption', () => {
             }, TIMEOUT * 2)
 
             it('can rotate when publisher + subscriber initialised with groupkey', async () => {
-                await publisher.disconnect()
-                await subscriber.disconnect()
+                await publisher.destroy()
+                await subscriber.destroy()
 
                 const groupKey = GroupKey.generate()
                 const groupKeys = {

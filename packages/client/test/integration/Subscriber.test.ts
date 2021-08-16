@@ -55,7 +55,7 @@ describeRepeats('Subscriber', () => {
             client.getSessionToken(),
         ])
         stream = await createTestStream(client, module)
-        await client.disconnect()
+        await client.destroy()
         await client.connect()
         // await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         client.debug('connecting before test <<')
@@ -79,7 +79,7 @@ describeRepeats('Subscriber', () => {
         await wait(0)
         if (client) {
             client.debug('disconnecting after test >>')
-            await client.disconnect()
+            await client.destroy()
             client.debug('disconnecting after test <<')
         }
     })

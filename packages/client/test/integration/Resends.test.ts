@@ -98,7 +98,7 @@ describeRepeats('resends', () => {
     afterEach(async () => {
         if (client) {
             client.debug('disconnecting after test')
-            await client.disconnect()
+            await client.destroy()
         }
     })
 

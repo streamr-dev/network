@@ -56,7 +56,7 @@ describeRepeats('StreamrClient', () => {
         await wait(0)
         if (client) {
             client.debug('disconnecting after test')
-            await client.disconnect()
+            await client.destroy()
         }
     })
 
@@ -96,7 +96,7 @@ describeRepeats('StreamrClient', () => {
 
         if (client) {
             client.debug('disconnecting after test')
-            await client.disconnect()
+            await client.destroy()
         }
     })
 
