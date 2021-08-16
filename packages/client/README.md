@@ -3,7 +3,7 @@
     <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
   </a>
 </p>
-ss
+
 <h1 align="left">
   Streamr JavaScript Client
 </h1>
