@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { Logger } from 'streamr-network'
 import { StreamPart } from '../../types'
-import { Protocol } from 'streamr-network'
+import { StreamMessage } from 'streamr-network/dist/src/streamr-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
 
 const logger = new Logger(module)
@@ -142,9 +142,9 @@ export class StorageConfig {
         })
     }
 
-    startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: Protocol.StreamMessage<AssignmentMessage>) => void {
+    startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: StreamMessage<AssignmentMessage>) => void {
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
-        const messageListener = (msg: Protocol.StreamMessage<AssignmentMessage>) => {
+        const messageListener = (msg: StreamMessage<AssignmentMessage>) => {
             if (msg.messageId.streamId === assignmentStreamId) {
                 const content = msg.getParsedContent() as any
                 const keys = new Set(getKeysFromStream(content.stream.id, content.stream.partitions))
@@ -160,7 +160,7 @@ export class StorageConfig {
         return messageListener
     }
 
-    stopAssignmentEventListener(messageListener: (msg: Protocol.StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
+    stopAssignmentEventListener(messageListener: (msg: StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)

@@ -11,6 +11,7 @@ import StreamMessageCreator from './MessageCreator'
 import BrubeckNode from './BrubeckNode'
 import Signer from './Signer'
 import Encrypt from './Encrypt'
+import Validator from './Validator'
 import { DestroySignal } from './DestroySignal'
 
 export class FailedToPublishError extends Error {
@@ -69,6 +70,7 @@ export default class PublishPipeline implements Context, Stoppable {
         private node: BrubeckNode,
         private messageCreator: StreamMessageCreator,
         private signer: Signer,
+        private validator: Validator,
         private destroySignal: DestroySignal,
         @inject(delay(() => Encrypt)) private encryption: Encrypt,
     ) {
@@ -82,6 +84,8 @@ export default class PublishPipeline implements Context, Stoppable {
             .forEach(this.encryptMessage.bind(this))
             .filter(this.filterResolved)
             .forEach(this.signMessage.bind(this))
+            .filter(this.filterResolved)
+            .forEach(this.validateMessage.bind(this))
             .filter(this.filterResolved)
             .forEach(this.consumeQueue.bind(this))
 
@@ -124,6 +128,15 @@ export default class PublishPipeline implements Context, Stoppable {
         if (StreamMessage.isUnsigned(streamMessage)) {
             await this.signer.sign(streamMessage).catch(onError)
         }
+    }
+
+    private async validateMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
+        if (defer.isResolved()) { return }
+        const onError = (err: Error) => {
+            defer.reject(err)
+        }
+
+        await this.validator.validate(streamMessage).catch(onError)
     }
 
     private async consumeQueue([streamMessage, defer]: PublishQueueOut): Promise<void> {

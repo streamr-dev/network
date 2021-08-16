@@ -10,6 +10,8 @@ import { StreamEndpoints } from './StreamEndpoints'
 import PublishPipeline, { PublishMetadata } from './PublishPipeline'
 import { Stoppable } from './utils/Stoppable'
 import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
+import Validator from './Validator'
+import BrubeckNode from './BrubeckNode'
 
 export type { PublishMetadata }
 
@@ -28,6 +30,8 @@ export default class BrubeckPublisher implements Context, Stoppable {
     constructor(
         context: Context,
         private pipeline: PublishPipeline,
+        private node: BrubeckNode,
+        private validator: Validator,
         @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
     ) {
@@ -35,6 +39,11 @@ export default class BrubeckPublisher implements Context, Stoppable {
         this.debug = context.debug.extend(this.id)
         this.streamMessageQueue = pipeline.streamMessageQueue
         this.publishQueue = pipeline.publishQueue
+    }
+
+    async validateAndPublishStreamMessage<T extends MessageContent>(streamMessage: StreamMessage<T>) {
+        // await this.validator.validate(streamMessage)
+        await this.node.publishToNode(streamMessage)
     }
 
     async publish<T extends MessageContent>(

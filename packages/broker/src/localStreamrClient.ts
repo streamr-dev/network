@@ -5,9 +5,6 @@ import { Config } from './config'
 // This is a temporary solution to prototype Brubeck-plugins
 
 export const createLocalStreamrClient = (config: Config): StreamrClient|undefined => {
-    if (!config.plugins.legacyWebsocket) {
-        return undefined
-    }
     const wsPort = config.plugins.legacyWebsocket.port
     return new StreamrClient({
         auth:{

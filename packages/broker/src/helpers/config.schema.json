@@ -285,6 +285,12 @@
       "default": "https://streamr.network",
       "format": "uri"
     },
+    "streamrWsUrl": {
+      "type": "string",
+      "description": "Base URL of WebSocket API to use",
+      "default": "ws://streamr.network",
+      "format": "uri"
+    },
     "streamrAddress": {
       "type": "string",
       "description": "Ethereum address Core (E&E)",
