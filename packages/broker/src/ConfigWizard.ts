@@ -35,7 +35,7 @@ const DefaultConfig: Config = {
             id: "0x49D45c17bCA1Caf692001D21c38aDECCB4c08504"
         }],
         location: null,
-        stun: "stun:stun.turn.streamr.network:5349",
+        stun: "stun:turn.streamr.network:5349",
         turn: null
     },
     reporting: {
