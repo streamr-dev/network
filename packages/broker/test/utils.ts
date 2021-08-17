@@ -88,11 +88,11 @@ export function formConfig({
         streamrUrl,
         streamrAddress,
         storageNodeConfig,
-        httpServer: httpPort ? {
-            port: httpPort,
+        httpServer: {
+            port: httpPort ? httpPort : 8080,
             privateKeyFileName: null,
             certFileName: null
-        } : null,
+        },
         apiAuthentication,
         plugins
     }

@@ -3,11 +3,6 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "description": "Testnet miner plugin configuration",
-    "required": [
-        "rewardStreamId",
-        "claimServerUrl",
-        "maxClaimDelay"
-    ],
     "additionalProperties": false,
     "properties": {
         "rewardStreamId": {
@@ -20,7 +15,8 @@
         },
         "maxClaimDelay": {
             "type": "number",
-            "description": "Maximum time for delaying the claim in milliseconds"
+            "description": "Maximum time for delaying the claim in milliseconds",
+            "default": 60000
         },
         "stunServerHost": {
             "type": [
