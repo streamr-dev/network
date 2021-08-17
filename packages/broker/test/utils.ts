@@ -28,7 +28,6 @@ export function formConfig({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    streamrWsUrl = `ws://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
     reporting = false
@@ -105,7 +104,6 @@ export function formConfig({
             }
         },
         streamrUrl,
-        streamrWsUrl,
         streamrAddress,
         storageNodeConfig,
         httpServer: {
@@ -140,7 +138,7 @@ export function fastPrivateKey() {
 export const createMockUser = () => Wallet.createRandom()
 
 export function createClient(
-    wsPort: number,
+    _wsPort: number,
     privateKey = fastPrivateKey(),
     clientOptions?: StreamrClientOptions
 ): StreamrClient {
@@ -148,7 +146,6 @@ export function createClient(
         auth: {
             privateKey
         },
-        url: getWsUrl(wsPort),
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
         ...clientOptions,
     })

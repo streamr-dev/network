@@ -118,61 +118,6 @@ describeRepeats('StreamrClient Connection', () => {
         }
     })
 
-    describe('bad config.url', () => {
-        it('emits error without autoconnect', async () => {
-            client = createClient({
-                url: 'asdasd',
-                autoConnect: false,
-                autoDisconnect: false,
-            })
-
-            await expect(() => (
-                client.connect()
-            )).rejects.toThrow()
-        })
-
-        it('rejects on connect without autoconnect', async () => {
-            client = createClient({
-                url: 'asdasd',
-                autoConnect: false,
-                autoDisconnect: false,
-            })
-
-            await expect(() => (
-                client.connect()
-            )).rejects.toThrow()
-        })
-
-        it('emits error with autoconnect after first call that triggers connect()', async () => {
-            expectErrors = 1
-
-            client = createClient({
-                url: 'asdasd',
-                autoConnect: true,
-                autoDisconnect: true,
-            })
-            const client2 = createClient({
-                autoConnect: true,
-                autoDisconnect: true,
-            })
-
-            const otherOnError = jest.fn()
-            client2.on('error', otherOnError)
-
-            const stream = await createTestStream(client2, module) // this will succeed because it uses restUrl config, not url
-
-            // publish should trigger connect
-            await expect(() => (
-                client.publish(stream, {})
-            )).rejects.toThrow('Invalid URL')
-            // check error is emitted with same error before rejection
-            // not clear if emit or reject *should* occur first
-            expect(onError).toHaveBeenCalledTimes(1)
-            expect(client.onError).toHaveBeenCalledTimes(1)
-            expect(otherOnError).toHaveBeenCalledTimes(0)
-        }, 10000)
-    })
-
     describe('bad config.restUrl', () => {
         it('emits no error with no connection', async () => {
             client = createClient({

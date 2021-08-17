@@ -62,7 +62,6 @@ export interface Config {
         } | null,
     },
     streamrUrl: string,
-    streamrWsUrl: string,
     streamrAddress: string,
     storageNodeConfig: StorageNodeConfig,
     httpServer: HttpServerConfig

@@ -147,7 +147,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 maxStringLength: 99999,
             }
         },
-        url: `ws://${config.streamrWsUrl}/api/v1/ws` ,
         restUrl: `${config.streamrUrl}/api/v1`,
         network: {
             id: nodeId,
