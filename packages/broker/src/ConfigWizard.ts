@@ -154,9 +154,9 @@ const pluginPrompts = pluginTemplates.map((plugin) => {
         when: (answers: inquirer.Answers) => {
             return answers.selectedPlugins.includes(plugin.key)
         },
-        validate: (input: string, answers: inquirer.Answers = {plugins:{}}): string | boolean => {
+        validate: (input: string, answers: inquirer.Answers): string | boolean => {
             const portNumber = parseInt(input || answers[`${plugin.key}Port`])
-            if (Number.isNaN(portNumber) || !Number.isInteger(portNumber)) {
+            if (!Number.isInteger(portNumber)) {
                 return `Non-numeric value provided`
             }
     
