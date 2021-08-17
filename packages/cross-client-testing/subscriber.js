@@ -27,7 +27,7 @@ if (groupKey) {
 }
 
 const client = new StreamrClient(options)
-client.connect().then(() => {
+client.connect().then(async () => {
     const onMessage = (streamMessage) => {
         // to be logged in test mode
         console.log(`whole message received: ${streamMessage.serialize()}`)
