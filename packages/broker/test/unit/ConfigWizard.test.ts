@@ -95,7 +95,7 @@ describe('ConfigWizard', () => {
         })
 
         beforeEach(() => {
-            config = DEFAULT_CONFIG
+            config = DEFAULT_CONFIG as Config
         })
 
         it ('happy path with overwrite destination', () => {
@@ -187,15 +187,15 @@ describe('ConfigWizard', () => {
         it('should exercise the happy path for the answers to config', () => {
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
-                selectPlugins: [ 'websocket', 'mqtt', 'legacyPublishHttp' ],
+                selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
                 websocketPort: 3170,
                 mqttPort: 3171,
-                legacyPublishHttpPort: 3172
+                publishHttpPort: 3172
             }
             const config = getConfigFromAnswers(answers)
             expect(config.plugins.websocket.port).toBe(answers.websocketPort)
             expect(config.plugins.mqtt.port).toBe(answers.mqttPort)
-            expect(config.plugins.legacyPublishHttp.port).toBe(answers.legacyPublishHttpPort)
+            expect(config.plugins.publishHttp.port).toBe(answers.publishHttpPort)
             expect(config.ethereumPrivateKey.match(/^(0x)?[a-f0-9]{64}$/)).not.toBe(null)
         })
     })

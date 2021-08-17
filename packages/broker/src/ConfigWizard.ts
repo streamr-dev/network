@@ -29,14 +29,18 @@ logger.error = (...args: any[]) => {
 const MIN_PORT_VALUE = 1024
 const MAX_PORT_VALUE = 49151
 
-const DEFAULT_WS_PORT = 7170
-const DEFAULT_MQTT_PORT = 7171
-const DEFAULT_HTTP_PORT = 7172
-const DEFAULT_LEGACY_WS_PORT = 7173
+import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
+import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
+//import * as HttpConfigSchema from './plugins/publishHttp/config.schema.json'
+import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
 
-export const DEFAULT_CONFIG: Config = {
-    ethereumPrivateKey: '',
-    generateSessionId: false,
+
+const DEFAULT_WS_PORT = WebsocketConfigSchema.properties.port.default
+const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
+const DEFAULT_HTTP_PORT = 8585//HttpConfigSchema.properties.port.default
+const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
+
+export const DEFAULT_CONFIG: Partial<Config> = {
     network: {
         name: 'miner-node',
         trackers: [{
@@ -48,22 +52,6 @@ export const DEFAULT_CONFIG: Config = {
         stun: "stun:turn.streamr.network:5349",
         turn: null
     },
-    reporting: {
-        intervalInSeconds: 0,
-        streamr: null,
-        perNodeMetrics: {
-            enabled: true,
-            wsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
-            httpUrl: "https://streamr.network/api/v1",
-            storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-            intervals: {
-                "sec": 1000,
-                "min": 60000,
-                "hour": 3600000,
-                "day": 86400000
-            }
-        }
-    },
     streamrUrl: 'https://streamr.network',
     streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     storageNodeConfig: {
@@ -72,12 +60,6 @@ export const DEFAULT_CONFIG: Config = {
             url: "https://testnet2.streamr.network:8001"
         }]
     },
-    httpServer: {
-        port: DEFAULT_HTTP_PORT,
-        privateKeyFileName: null,
-        certFileName: null
-    },
-    apiAuthentication: null,
     plugins: {
         legacyWebsocket: {
             port: DEFAULT_LEGACY_WS_PORT
@@ -87,13 +69,12 @@ export const DEFAULT_CONFIG: Config = {
             claimServerUrl: "http://testnet2.streamr.network:3011",
             maxClaimDelay: 5000
         },
-        reporting: {
-            intervalInSeconds: 0,
-            streamr: null,
+        metrics: {
+            consoleAndPM2IntervalInSeconds: 0,
+            clientWsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
+            clientHttpUrl: "https://streamr.network/api/v1",
             perNodeMetrics: {
                 enabled: true,
-                wsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
-                httpUrl: "https://streamr.network/api/v1",
                 storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
                 intervals: {
                     "sec": 1000,
@@ -104,7 +85,6 @@ export const DEFAULT_CONFIG: Config = {
             }
         },
     },
-    
 }
 
 export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
@@ -139,7 +119,7 @@ export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.C
 const pluginTemplates = {
     websocket: { port: DEFAULT_WS_PORT },
     mqtt: { port: DEFAULT_MQTT_PORT },
-    legacyPublishHttp: { port: DEFAULT_HTTP_PORT }
+    publishHttp: { port: DEFAULT_HTTP_PORT }
 }
 
 const pluginSelectorPrompt = {
@@ -184,13 +164,13 @@ export const getConfigFromAnswers = (answers: any): Config => {
         const name = pluginNames[i]
         const template = pluginTemplatesArray[i]
         if (answers.selectPlugins && answers.selectPlugins.includes(name)){
-            config.plugins[name] = { ...template, port: answers[`${name}Port`] }
+            config.plugins![name] = { ...template, port: answers[`${name}Port`] }
         }
     }
 
     config.ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 
-    return config
+    return config as Config
 }
 
 export const selectDestinationPathPrompt = {

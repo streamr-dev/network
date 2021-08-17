@@ -53,7 +53,6 @@ describe('per-node metrics', () => {
     let broker1: Broker
     let storageNode: Broker
     let client1: StreamrClient
-    let legacyStream: Stream
     let nodeAddress: string
     let client2: StreamrClient
 
@@ -69,10 +68,6 @@ describe('per-node metrics', () => {
         client1 = createClient(wsPort, Wallet.createRandom().privateKey, {
             storageNode: storageNodeRegistry[0]
         })
-        legacyStream = await createTestStream(client1, module)
-
-        await legacyStream.grantPermission('stream_get' as StreamOperation, undefined)
-        await legacyStream.grantPermission('stream_publish' as StreamOperation, nodeAddress)
 
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -96,22 +91,21 @@ describe('per-node metrics', () => {
             privateKey: tmpAccount.privateKey,
             trackerPort,
             wsPort,
-            reporting: {
-                streamr: {
-                    streamId: legacyStream.id
-                },
-                intervalInSeconds: 1,
-                perNodeMetrics: {
-                    enabled: true,
-                    wsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
-                    httpUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
-                    intervals: {
-                        sec: 1000,
-                        min: 1000,
-                        hour: 1000,
-                        day: 1000
-                    },
-                    storageNode: storageNodeAccount.address
+            extraPlugins: {
+                metrics: {
+                    consoleAndPM2IntervalInSeconds: 1,
+                    clientWsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
+                    clientHttpUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+                    perNodeMetrics: {
+                        enabled: true,
+                        intervals: {
+                            sec: 1000,
+                            min: 1000,
+                            hour: 1000,
+                            day: 1000
+                        },
+                        storageNode: storageNodeAccount.address
+                    }
                 }
             },
             storageNodeConfig: { registry: storageNodeRegistry }
@@ -135,15 +129,6 @@ describe('per-node metrics', () => {
             client2.ensureDisconnected()
         ])
     }, 30 * 1000)
-
-    it('should ensure the legacy metrics endpoint still works properly', (done) => {
-        client1.subscribe({
-            stream: legacyStream.id,
-        }, (res) => {
-            expect(res.peerId).toEqual('broker1')
-            done()
-        })
-    })
 
     it('should retrieve the last `sec` metrics', (done) => {
         client1.subscribe({
