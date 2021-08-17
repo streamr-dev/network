@@ -86,8 +86,25 @@ export const DEFAULT_CONFIG: Config = {
             rewardStreamId: "streamr.eth/brubeck-testnet/rewards",
             claimServerUrl: "http://testnet2.streamr.network:3011",
             maxClaimDelay: 5000
-        }
-    }
+        },
+        reporting: {
+            intervalInSeconds: 0,
+            streamr: null,
+            perNodeMetrics: {
+                enabled: true,
+                wsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
+                httpUrl: "https://streamr.network/api/v1",
+                storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
+                intervals: {
+                    "sec": 1000,
+                    "min": 60000,
+                    "hour": 3600000,
+                    "day": 86400000
+                }
+            }
+        },
+    },
+    
 }
 
 export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
@@ -120,17 +137,9 @@ export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.C
 ]
 
 const pluginTemplates = {
-    websocket: {
-        port: DEFAULT_WS_PORT
-    },
-    mqtt: {
-        port: DEFAULT_MQTT_PORT,
-        payloadMetadata: false,
-        sslCertificate: null
-    },
-    legacyPublishHttp: {
-        port: DEFAULT_HTTP_PORT
-    }
+    websocket: { port: DEFAULT_WS_PORT },
+    mqtt: { port: DEFAULT_MQTT_PORT },
+    legacyPublishHttp: { port: DEFAULT_HTTP_PORT }
 }
 
 const pluginSelectorPrompt = {
