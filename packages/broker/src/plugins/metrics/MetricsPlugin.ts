@@ -39,9 +39,7 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
     }
 
     async start(): Promise<unknown> {
-        if (this.isHttpServerEnabled()) {
-            this.addHttpServerRouter(volumeEndpoint(this.metricsContext))
-        }
+        this.addHttpServerRouter(volumeEndpoint(this.metricsContext))
         return this.volumeLogger.start()
     }
 
