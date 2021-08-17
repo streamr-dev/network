@@ -2,25 +2,23 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { prompts, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, DEFAULT_CONFIG } from '../../src/ConfigWizard'
+import { CONFIG_WIZARD_PROMPTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, DEFAULT_CONFIG } from '../../src/ConfigWizard'
 import { Config } from '../config'
 
 describe('ConfigWizard', () => {
-    const importPrivateKeyPrompt = prompts[1]
-    const validatePortPrompt = prompts[3]
+    const importPrivateKeyPrompt = CONFIG_WIZARD_PROMPTS[1]
+    const portPrompt = CONFIG_WIZARD_PROMPTS[3]
 
     describe('importPrivateKey validate', () => {
         it ('happy path, prefixed', () => {
             const validate = importPrivateKeyPrompt.validate!
             const privateKey = Wallet.createRandom().privateKey
-            expect(privateKey.length).toBe(66)
             expect(validate(privateKey)).toBe(true)
         })
 
         it ('happy path, no prefix', () => {
             const validate = importPrivateKeyPrompt.validate!
             const privateKey = Wallet.createRandom().privateKey.substring(2)
-            expect(privateKey.length).toBe(64)
             expect(validate(privateKey)).toBe(true)
         })
 
@@ -33,18 +31,18 @@ describe('ConfigWizard', () => {
 
     describe('plugin port validation', () => {
         it ('happy path', () => {
-            const validate = validatePortPrompt.validate!
+            const validate = portPrompt.validate!
             expect(validate('7070')).toBe(true)
         })
 
         it ('invalid data: out-of-range number', () => {
-            const validate = validatePortPrompt.validate!
+            const validate = portPrompt.validate!
             const port = '10000000000'
             expect(validate(port)).toBe(`Out of range port ${port} provided (valid range 1024-49151)`)
         })
 
         it ('invalid data: non-numeric', () => {
-            const validate = validatePortPrompt.validate!
+            const validate = portPrompt.validate!
             const port = 'Not A Number!'
             expect(validate(port)).toBe(`Non-numeric value provided`)
         })
@@ -65,24 +63,13 @@ describe('ConfigWizard', () => {
 
         it ('invalid path provided', () => {
             const validate = selectDestinationPathPrompt.validate!
-            const invalidPath = 'invalid-path'
+            const invalidPath = `/invalid-path/${Date.now()}`
             const answers: any = {}
             const isValid = validate(invalidPath, answers)
             expect(isValid).toBe(false)
             expect(answers.parentDirExists).toBe(false)
             expect(answers.fileExists).toBe(false)
 
-        })
-
-        it ('happy path with overwrite destination', () => {
-            const validate = selectDestinationPathPrompt.validate!
-            const validPath = tmpDataDir + '/test-config.json'
-            writeFileSync(validPath, JSON.stringify({}))
-            const answers: any = {}
-            const isValid = validate(validPath, answers)
-            expect(isValid).toBe(true)
-            expect(answers.parentDirExists).toBe(true)
-            expect(answers.fileExists).toBe(true)
         })
     })
 
@@ -99,14 +86,14 @@ describe('ConfigWizard', () => {
         })
 
         it ('happy path with overwrite destination', () => {
-            const selectDestinationPath = tmpDataDir + '/test-config.json'
-            const configFileLocation: string = createStorageFile(config, {
-                selectDestinationPath,
-                parentDirExists: true,
-                fileExists: true
-            })
-            expect(configFileLocation).toBe(selectDestinationPath)
-            expect(existsSync(configFileLocation)).toBe(true)
+            const validate = selectDestinationPathPrompt.validate!
+            const validPath = tmpDataDir + '/test-config.json'
+            writeFileSync(validPath, JSON.stringify({}))
+            const answers: any = {}
+            const isValid = validate(validPath, answers)
+            expect(isValid).toBe(true)
+            expect(answers.parentDirExists).toBe(true)
+            expect(answers.fileExists).toBe(true)
         })
 
         it ('happy path; create parent dir when doesn\'t exist', () => {

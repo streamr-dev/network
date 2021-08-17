@@ -6,24 +6,22 @@ import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
 
-function logger(...args: any[]) {
-    console.log(chalk.bgWhite.black(':'), ...args)
-}
-
-logger.info = (...args: any[]) => {
-    console.log(chalk.bgWhite.black(':', ...args))
-}
-
-logger.alert = (...args: any[]) => {
-    console.log(chalk.bgYellow.black('!', ...args))
-}
-
-logger.warn = (...args: any[]) => {
-    console.log(chalk.bgYellow.black('!'), ...args)
-}
-
-logger.error = (...args: any[]) => {
-    console.log(chalk.bgRed.black('!'), ...args)
+const logger = {
+    print: (...args: any[]) => {
+        console.log(chalk.bgWhite.black(':'), ...args)
+    },
+    info: (...args: any[]) => {
+        console.log(chalk.bgWhite.black(':', ...args))
+    },
+    alert: (...args: any[]) => {
+        console.log(chalk.bgYellow.black('!', ...args))
+    },
+    warn: (...args: any[]) => {
+        console.log(chalk.bgYellow.black('!'), ...args)
+    },
+    error: (...args: any[]) => {
+        console.log(chalk.bgRed.black('!'), ...args)
+    }
 }
 
 const MIN_PORT_VALUE = 1024
@@ -31,13 +29,12 @@ const MAX_PORT_VALUE = 49151
 
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
-//import * as HttpConfigSchema from './plugins/publishHttp/config.schema.json'
+import * as BrokerConfigSchema from './helpers/config.schema.json'
 import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
-
 
 const DEFAULT_WS_PORT = WebsocketConfigSchema.properties.port.default
 const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
-const DEFAULT_HTTP_PORT = 8585//HttpConfigSchema.properties.port.default
+const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
 const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
 
 export const DEFAULT_CONFIG: Partial<Config> = {
@@ -59,6 +56,11 @@ export const DEFAULT_CONFIG: Partial<Config> = {
             address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
             url: "https://testnet2.streamr.network:8001"
         }]
+    },
+    httpServer: {
+        port: DEFAULT_HTTP_PORT,
+        privateKeyFileName: null,
+        certFileName: null
     },
     plugins: {
         legacyWebsocket: {
@@ -87,19 +89,24 @@ export const DEFAULT_CONFIG: Partial<Config> = {
     },
 }
 
-export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
+const promptValues = {
+    generate: 'Generate',
+    import: 'Import'
+}
+
+let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
     {
         type: 'list',
         name:'generateOrImportEthereumPrivateKey',
         message: 'Do you want to generate a new Ethereum private key or import an existing one?',
-        choices: ['Generate', 'Import']
+        choices: [promptValues.generate, promptValues.import]
     },
     {
         type: 'input',
         name:'importPrivateKey',
         message: 'Please provide the private key to import',
         when: (answers: inquirer.Answers) => {
-            return answers.generateOrImportEthereumPrivateKey === 'Import'
+            return answers.generateOrImportEthereumPrivateKey === promptValues.import
         },
         validate: (input: string): string | boolean => {
             try {
@@ -116,7 +123,7 @@ export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.C
     }
 ]
 
-const pluginTemplates = {
+const PLUGIN_TEMPLATES = {
     websocket: { port: DEFAULT_WS_PORT },
     mqtt: { port: DEFAULT_MQTT_PORT },
     publishHttp: { port: DEFAULT_HTTP_PORT }
@@ -126,11 +133,11 @@ const pluginSelectorPrompt = {
     type: 'checkbox',
     name:'selectPlugins',
     message: 'Select the plugins to enable',
-    choices: Object.keys(pluginTemplates)
+    choices: Object.keys(PLUGIN_TEMPLATES)
 }
 
-const pluginPrompts = Object.values(pluginTemplates).map((plugin, i) => {
-    const pluginName = Object.keys(pluginTemplates)[i]
+const pluginPrompts = Object.values(PLUGIN_TEMPLATES).map((plugin, i) => {
+    const pluginName = Object.keys(PLUGIN_TEMPLATES)[i]
     return {
         type: 'input',
         name: `${pluginName}Port`,
@@ -157,12 +164,12 @@ const pluginPrompts = Object.values(pluginTemplates).map((plugin, i) => {
 prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
 
 export const getConfigFromAnswers = (answers: any): Config => {
-    const config = DEFAULT_CONFIG
-    const pluginNames = Object.keys(pluginTemplates)
-    const pluginTemplatesArray = Object.values(pluginTemplates)
-    for (let i = 0; i < pluginTemplatesArray.length; i++){
+    const config = Object.assign({}, DEFAULT_CONFIG)
+    const pluginNames = Object.keys(PLUGIN_TEMPLATES)
+    const PLUGIN_TEMPLATESArray = Object.values(PLUGIN_TEMPLATES)
+    for (let i = 0; i < PLUGIN_TEMPLATESArray.length; i++){
         const name = pluginNames[i]
-        const template = pluginTemplatesArray[i]
+        const template = PLUGIN_TEMPLATESArray[i]
         if (answers.selectPlugins && answers.selectPlugins.includes(name)){
             config.plugins![name] = { ...template, port: answers[`${name}Port`] }
         }
@@ -181,16 +188,13 @@ export const selectDestinationPathPrompt = {
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
         try {
             const filePath = input || answers.selectDestinationPath
-            const parentDirPath = filePath.substring(0, filePath.lastIndexOf('/'))
+            const parentDirPath = path.dirname(filePath)
 
             answers.parentDirPath = parentDirPath
             answers.parentDirExists = existsSync(parentDirPath)
             answers.fileExists = existsSync(filePath)
 
-            if (!answers.parentDirExists && !answers.fileExists){
-                return false
-            }
-            return true
+            return (answers.parentDirExists || answers.fileExists)
         } catch (e) {
             return e.message
         }
@@ -237,11 +241,13 @@ export async function startBrokerConfigWizard(): Promise<void> {
         const storageAnswers = await selectValidDestinationPath()
         const destinationPath = createStorageFile(config, storageAnswers)
         logger.info('Broker Config Wizard ran succesfully')
-        logger(`Stored config under ${destinationPath}`)
-        logger(`You can start the broker now with`)
+        logger.print(`Stored config under ${destinationPath}`)
+        logger.print(`You can start the broker now with`)
         logger.info(`streamr-broker ${destinationPath}`)
     } catch (e) {
         logger.warn('Broker Config Wizard encountered an error:')
         logger.error(e.message)
     }
 }
+
+export const CONFIG_WIZARD_PROMPTS = prompts
