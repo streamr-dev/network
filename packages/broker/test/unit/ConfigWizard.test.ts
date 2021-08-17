@@ -1,19 +1,31 @@
 import { Wallet } from 'ethers'
-import { writeFileSync, mkdtempSync } from 'fs'
+import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { prompts, storagePrompt, getConfigFromAnswers } from '../../src/ConfigWizard'
+import { prompts, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, DEFAULT_CONFIG } from '../../src/ConfigWizard'
+import { Config } from '../config'
 
 describe('ConfigWizard', () => {
+    const importPrivateKeyPrompt = prompts[1]
+    const validatePortPrompt = prompts[3]
+
     describe('importPrivateKey validate', () => {
-        it ('happy path', () => {
-            const validate = prompts[1].validate!
+        it ('happy path, prefixed', () => {
+            const validate = importPrivateKeyPrompt.validate!
             const privateKey = Wallet.createRandom().privateKey
+            expect(privateKey.length).toBe(66)
+            expect(validate(privateKey)).toBe(true)
+        })
+
+        it ('happy path, no prefix', () => {
+            const validate = importPrivateKeyPrompt.validate!
+            const privateKey = Wallet.createRandom().privateKey.substring(2)
+            expect(privateKey.length).toBe(64)
             expect(validate(privateKey)).toBe(true)
         })
 
         it ('invalid data', () => {
-            const validate = prompts[1].validate!
+            const validate = importPrivateKeyPrompt.validate!
             const privateKey = '0xInvalidPrivateKey'
             expect(validate(privateKey)).toBe(`Invalid privateKey provided for import: ${privateKey}`)
         })
@@ -21,18 +33,18 @@ describe('ConfigWizard', () => {
 
     describe('plugin port validation', () => {
         it ('happy path', () => {
-            const validate = prompts[3].validate!
+            const validate = validatePortPrompt.validate!
             expect(validate('7070')).toBe(true)
         })
 
         it ('invalid data: out-of-range number', () => {
-            const validate = prompts[3].validate!
+            const validate = validatePortPrompt.validate!
             const port = '10000000000'
             expect(validate(port)).toBe(`Out of range port ${port} provided (valid range 1024-49151)`)
         })
 
         it ('invalid data: non-numeric', () => {
-            const validate = prompts[3].validate!
+            const validate = validatePortPrompt.validate!
             const port = 'Not A Number!'
             expect(validate(port)).toBe(`Non-numeric value provided`)
         })
@@ -44,27 +56,101 @@ describe('ConfigWizard', () => {
         beforeAll(() => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
+
         it ('happy path', () => {
-            const validate = storagePrompt.validate!
+            const validate = selectDestinationPathPrompt.validate!
             const validPath = tmpDataDir + '/test-config.json'
             expect(validate(validPath)).toBe(true)
         })
 
         it ('invalid path provided', () => {
-            const validate = storagePrompt.validate!
+            const validate = selectDestinationPathPrompt.validate!
             const invalidPath = 'invalid-path'
-            expect(validate(invalidPath)).toBe('ENOENT: no such file or directory, mkdir')
+            const answers: any = {}
+            const isValid = validate(invalidPath, answers)
+            expect(isValid).toBe(false)
+            expect(answers.parentDirExists).toBe(false)
+            expect(answers.fileExists).toBe(false)
+
         })
 
         it ('happy path with overwrite destination', () => {
-            const validate = storagePrompt.validate!
+            const validate = selectDestinationPathPrompt.validate!
             const validPath = tmpDataDir + '/test-config.json'
             writeFileSync(validPath, JSON.stringify({}))
             const answers: any = {}
             const isValid = validate(validPath, answers)
             expect(isValid).toBe(true)
-            expect(answers.clearPath).toBe(false)
+            expect(answers.parentDirExists).toBe(true)
+            expect(answers.fileExists).toBe(true)
         })
+    })
+
+    describe('createStorageFile', () => {
+        let tmpDataDir: string
+        let config: Config
+
+        beforeAll(() => {
+            tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
+        })
+
+        beforeEach(() => {
+            config = DEFAULT_CONFIG
+        })
+
+        it ('happy path with overwrite destination', () => {
+            const selectDestinationPath = tmpDataDir + '/test-config.json'
+            const configFileLocation: string = createStorageFile(config, {
+                selectDestinationPath,
+                parentDirExists: true,
+                fileExists: true
+            })
+            expect(configFileLocation).toBe(selectDestinationPath)
+            expect(existsSync(configFileLocation)).toBe(true)
+        })
+
+        it ('happy path; create parent dir when doesn\'t exist', () => {
+            const parentDirPath = tmpDataDir + '/newdir/'
+            const selectDestinationPath = parentDirPath + 'test-config.json'
+            const configFileLocation: string = createStorageFile(config, {
+                selectDestinationPath,
+                parentDirPath,
+                fileExists: false,
+                parentDirExists: false,
+            })
+            expect(configFileLocation).toBe(selectDestinationPath)
+            expect(existsSync(configFileLocation)).toBe(true)
+        })
+
+        it ('should throw when attempting to mkdir on existing path', () => {
+            try {
+                const parentDirPath = '/home/'
+                createStorageFile(config, {
+                    parentDirPath,
+                    parentDirExists: false,
+                })
+            } catch(e){
+                expect(e.code).toBe('EEXIST')
+                expect(e.syscall).toBe('mkdir')
+            }
+        })
+
+        it ('should throw when no permissions on path', () => {
+            try {
+                const parentDirPath = '/home/'
+                const selectDestinationPath = parentDirPath + 'test-config.json'
+                createStorageFile(config, {
+                    selectDestinationPath,
+                    parentDirPath,
+                    fileExists: false,
+                    parentDirExists: true,
+                })
+            } catch(e){
+                expect(e.code).toBe('EACCES')
+                expect(e.syscall).toBe('open')
+            }
+        })
+
     })
 
     describe('getConfigFromAnswers', () => {
@@ -91,7 +177,7 @@ describe('ConfigWizard', () => {
             const port = '3737'
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
-                selectedPlugins:['websocket'],
+                selectPlugins:['websocket'],
                 websocketPort: port,
             }
             const config = getConfigFromAnswers(answers)
@@ -101,7 +187,7 @@ describe('ConfigWizard', () => {
         it('should exercise the happy path for the answers to config', () => {
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
-                selectedPlugins: [ 'websocket', 'mqtt', 'legacyPublishHttp' ],
+                selectPlugins: [ 'websocket', 'mqtt', 'legacyPublishHttp' ],
                 websocketPort: 3170,
                 mqttPort: 3171,
                 legacyPublishHttpPort: 3172
@@ -113,5 +199,4 @@ describe('ConfigWizard', () => {
             expect(config.ethereumPrivateKey.match(/^(0x)?[a-f0-9]{64}$/)).not.toBe(null)
         })
     })
-
 })
