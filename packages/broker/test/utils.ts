@@ -30,12 +30,10 @@ export function formConfig({
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
-    reporting = false
 }: Todo): Config {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['legacyPublishHttp'] = {}
-        plugins['metrics'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -86,22 +84,6 @@ export function formConfig({
             },
             stun: null,
             turn : null
-        },
-        reporting: reporting || {
-            streamr: null,
-            intervalInSeconds: 0,
-            perNodeMetrics: {
-                enabled: false,
-                wsUrl: null,
-                httpUrl: null,
-                storageNode: null,
-                intervals:{
-                    sec: 0,
-                    min: 0,
-                    hour: 0,
-                    day: 0
-                }
-            }
         },
         streamrUrl,
         streamrAddress,
