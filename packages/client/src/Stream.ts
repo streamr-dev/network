@@ -1,5 +1,5 @@
 import { MessageContent } from 'streamr-client-protocol'
-import { DependencyContainer, inject } from 'tsyringe'
+import { delay, DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
 import { StorageNode } from './StorageNode'
@@ -8,7 +8,6 @@ import { EthereumAddress } from './types'
 import { Rest } from './Rest'
 import Resends from './Resends'
 import Publisher from './Publisher'
-import { BrubeckContainer } from './Container'
 import { BigNumber } from '@ethersproject/bignumber'
 import BrubeckClient from '.'
 import { StreamMetadata } from '../../protocol/dist/src/utils/StreamMessageValidator'
@@ -105,7 +104,9 @@ class StreamrStream implements StreamMetadata {
     _resends: Resends
     _publisher: Publisher
 
-    constructor(props: StreamProperties, @inject(BrubeckContainer) private container: DependencyContainer) {
+    constructor(
+        props: StreamProperties, private container: DependencyContainer
+    ) {
         Object.assign(this, props)
         this.id = props.id
         this.streamId = this.id
@@ -116,14 +117,10 @@ class StreamrStream implements StreamMetadata {
     }
 
     async update() {
-        const json = await this._rest.put<StreamProperties>(
-            ['streams', this.id],
-            this.toObject(),
-        )
-        return json ? new StreamrStream(json, this.container) : undefined
+        await this._client.updateStream(this.toObject())
     }
 
-    toObject() {
+    toObject() : StreamProperties {
         const result = {}
         Object.keys(this).forEach((key) => {
             if (!key.startsWith('_')) {
@@ -131,13 +128,11 @@ class StreamrStream implements StreamMetadata {
                 result[key] = this[key]
             }
         })
-        return result
+        return result as StreamProperties
     }
 
     async delete() {
-        await this._rest.del(
-            ['streams', this.id],
-        )
+        await this._client.deleteStream(this.id)
     }
 
     async getPermissions() {

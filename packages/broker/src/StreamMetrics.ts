@@ -247,8 +247,8 @@ export class StreamMetrics {
                 throw e
             }
         }
-        await metricsStream.grantPermission('stream_get' as StreamOperation, undefined)
-        await metricsStream.grantPermission('stream_subscribe' as StreamOperation, undefined)
+        await metricsStream.grantPublicPermission('stream_get' as StreamOperation)
+        await metricsStream.grantPublicPermission('stream_subscribe' as StreamOperation)
         return metricsStream.id
     }
 

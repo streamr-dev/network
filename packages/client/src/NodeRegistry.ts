@@ -9,7 +9,7 @@ import StreamStorageRegistryArtifact from './ethereumArtifacts/StreamStorageRegi
 import fetch from 'node-fetch'
 import { StorageNode } from './StorageNode'
 import { StreamQueryResult } from './StreamRegistry'
-import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
+import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
 import { BrubeckContainer } from './Container'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
@@ -61,7 +61,6 @@ type StorageNodeQueryResult = {
 }
 @scoped(Lifecycle.ContainerScoped)
 export class NodeRegistry {
-    ethereum: Ethereum
     clientConfig: StrictStreamrClientConfig
     sideChainProvider: Provider
     nodeRegistryContractReadonly: NodeRegistryContract
@@ -71,10 +70,13 @@ export class NodeRegistry {
     nodeRegistryContract?: NodeRegistryContract
     streamStorageRegistryContract?: StreamStorageRegistryContract
 
-    constructor(@inject(BrubeckContainer) private container: DependencyContainer, @inject(Config.Root) clientConfig: StrictStreamrClientConfig,) {
+    constructor(
+        @inject(BrubeckContainer) private container: DependencyContainer,
+        @inject(Ethereum) private ethereum: Ethereum,
+        @inject(Config.Root) clientConfig: StrictStreamrClientConfig
+    ) {
         log('creating NodeRegistryOnchain')
         this.clientConfig = clientConfig
-        this.ethereum = container.resolve<Ethereum>(Ethereum)
         this.sideChainProvider = this.ethereum.getSidechainProvider()
         this.nodeRegistryContractReadonly = new Contract(this.clientConfig.nodeRegistrySidechainAddress,
             NodeRegistryArtifact, this.sideChainProvider) as NodeRegistryContract
