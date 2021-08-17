@@ -6,6 +6,20 @@ import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
 
+import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
+import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
+import * as BrokerConfigSchema from './helpers/config.schema.json'
+import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
+
+const DEFAULT_WS_PORT = WebsocketConfigSchema.properties.port.default
+const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
+const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
+const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
+
+
+const MIN_PORT_VALUE = 1024
+const MAX_PORT_VALUE = 49151
+
 const logger = {
     print: (...args: any[]) => {
         console.log(chalk.bgWhite.black(':'), ...args)
@@ -23,19 +37,6 @@ const logger = {
         console.log(chalk.bgRed.black('!'), ...args)
     }
 }
-
-const MIN_PORT_VALUE = 1024
-const MAX_PORT_VALUE = 49151
-
-import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
-import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
-import * as BrokerConfigSchema from './helpers/config.schema.json'
-import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
-
-const DEFAULT_WS_PORT = WebsocketConfigSchema.properties.port.default
-const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
-const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
-const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
 
 export const DEFAULT_CONFIG: Partial<Config> = {
     network: {

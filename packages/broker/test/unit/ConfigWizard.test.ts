@@ -147,7 +147,7 @@ describe('ConfigWizard', () => {
             }
             const config = getConfigFromAnswers(answers)
             expect(config.ethereumPrivateKey).toBeDefined()
-            expect(config.ethereumPrivateKey.match(/^(0x)?[a-f0-9]{64}$/)).not.toBe(null)
+            expect(config.ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
         })
 
         it ('should exercise the `import` path', () => {
@@ -183,7 +183,7 @@ describe('ConfigWizard', () => {
             expect(config.plugins.websocket.port).toBe(answers.websocketPort)
             expect(config.plugins.mqtt.port).toBe(answers.mqttPort)
             expect(config.plugins.publishHttp.port).toBe(answers.publishHttpPort)
-            expect(config.ethereumPrivateKey.match(/^(0x)?[a-f0-9]{64}$/)).not.toBe(null)
+            expect(config.ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
         })
     })
 })
