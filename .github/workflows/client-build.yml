@@ -37,11 +37,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUNDLE_ANALYSIS: true
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: "14.x"
+          node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
         uses: actions/cache@v2
         with:
@@ -64,14 +67,14 @@ jobs:
           path: packages/client/dist
 
   test-exports:
-    name: Test Exports using Node 14.x
+    name: Test Exports using Node 16.x
     runs-on: ubuntu-latest
     needs: build
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: "14.x"
+          node-version: "16.x"
       - uses: actions/download-artifact@v2
         with:
           name: client-build
@@ -180,7 +183,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x, 12.x]
+        node-version: [14.x, 16.x]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2

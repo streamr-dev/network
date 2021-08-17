@@ -110,6 +110,10 @@ export function trackerHttpEndpoints(
         staticLogger.debug(`request to /location/${nodeId}/`)
         res.json(location || {})
     })
+    app.get('/metadata/', (req: express.Request, res: express.Response) => {
+        staticLogger.debug('request to /metadata/')
+        res.json(tracker.getAllExtraMetadatas())
+    })
     app.get('/metrics/', async (req: express.Request, res: express.Response) => {
         const metrics = await metricsContext.report()
         staticLogger.debug('request to /metrics/')

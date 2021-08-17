@@ -1,4 +1,4 @@
-import { TrackerLayer } from 'streamr-client-protocol'
+import { TrackerLayer, SmartContractRecord } from 'streamr-client-protocol'
 import { RtcSubTypes } from './logic/RtcMessage'
 
 /**
@@ -64,6 +64,7 @@ export interface Status {
     location: Location
     started: string
     singleStream: boolean // indicate whether this is a status update for only a single stream
+    extra: Record<string, unknown>
 }
 
 export type RtcIceCandidateMessage = {
@@ -109,3 +110,5 @@ export interface RtcErrorMessage {
     targetNode: string
     errorCode: string
 }
+
+export type TrackerInfo = SmartContractRecord

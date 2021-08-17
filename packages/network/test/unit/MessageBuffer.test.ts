@@ -1,8 +1,15 @@
 import { MessageBuffer } from '../../src/helpers/MessageBuffer'
 
-jest.useFakeTimers()
-
 describe('MessageBuffer', () => {
+
+    beforeEach(() => {
+        jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+        jest.runOnlyPendingTimers()
+        jest.useRealTimers()
+    })
     test('put, pop and popAll work as expected (no timeouts scenario)', () => {
         const buffer = new MessageBuffer(9999)
 

@@ -52,7 +52,10 @@
                     "description": "Interval (in milliseconds) in which to refresh storage config from Core API (0 = disable)"
                 }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "default": {
+                "refreshInterval": 600000
+            }
         }  
     }
 }

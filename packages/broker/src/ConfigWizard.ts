@@ -39,10 +39,14 @@ export const DEFAULT_CONFIG: Config = {
     generateSessionId: false,
     network: {
         name: 'miner-node',
-        trackers: [
-            "wss://testnet1.streamr.network:30300"
-        ],
-        location: null
+        trackers: [{
+            ws: "wss://testnet1.streamr.network:30300",
+            http: "https://testnet1.streamr.network:30300",
+            id: "0x49D45c17bCA1Caf692001D21c38aDECCB4c08504"
+        }],
+        location: null,
+        stun: "stun:turn.streamr.network:5349",
+        turn: null
     },
     reporting: {
         intervalInSeconds: 0,

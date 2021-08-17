@@ -44,6 +44,7 @@ export class Tracker extends EventEmitter {
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
+    private readonly extraMetadatas: { [key: string]: Record<string, unknown> }
     private readonly logger: Logger
     private readonly metrics: Metrics
 
@@ -67,6 +68,7 @@ export class Tracker extends EventEmitter {
         this.overlayConnectionRtts = {}
         this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
+        this.extraMetadatas = Object.create(null)
 
         this.trackerServer.on(TrackerServerEvent.NODE_CONNECTED, (nodeId) => {
             this.onNodeConnected(nodeId)
@@ -99,7 +101,7 @@ export class Tracker extends EventEmitter {
     processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
         this.metrics.record('processNodeStatus', 1)
         const status = statusMessage.status as Status
-        const { streams, rtts, location, singleStream } = status
+        const { streams, rtts, location, singleStream, extra } = status
         const filteredStreams = this.instructionCounter.filterStatus(status, source)
 
         // update RTTs and location
@@ -109,6 +111,7 @@ export class Tracker extends EventEmitter {
             location,
             address: this.trackerServer.resolveAddress(source),
         })
+        this.extraMetadatas[source] = extra
 
         // update topology
         this.createNewOverlayTopologies(streams)
@@ -198,6 +201,7 @@ export class Tracker extends EventEmitter {
         this.metrics.record('_removeNode', 1)
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
+        delete this.extraMetadatas[node]
         Object.entries(this.overlayPerStream)
             .forEach(([streamKey, overlayTopology]) => {
                 this.leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node)
@@ -224,6 +228,10 @@ export class Tracker extends EventEmitter {
 
     getAllNodeLocations(): Readonly<{[key: string]: Location}> {
         return this.locationManager.getAllNodeLocations()
+    }
+
+    getAllExtraMetadatas(): Readonly<{ [key: string]: Record<string, unknown> }> {
+        return this.extraMetadatas
     }
 
     getNodes(): ReadonlyArray<string> {

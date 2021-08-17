@@ -7,8 +7,9 @@ import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
-import { ClientWsEndpoint } from "../connection/ws/ClientWsEndpoint"
 import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
+import { AbstractClientWsEndpoint } from "../connection/ws/AbstractClientWsEndpoint"
+import { AbstractWsConnection } from "../connection/ws/AbstractWsConnection"
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
@@ -34,11 +35,11 @@ export interface TrackerNode {
 export type UUID = string
 
 export class TrackerNode extends EventEmitter {
-    private readonly endpoint: ClientWsEndpoint
+    private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
     private readonly logger: Logger
 
     // ServerWsEndpoint
-    constructor(endpoint: ClientWsEndpoint) {
+    constructor(endpoint: AbstractClientWsEndpoint<AbstractWsConnection>) {
         super()
         this.endpoint = endpoint
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
@@ -156,8 +157,8 @@ export class TrackerNode extends EventEmitter {
         }
     }
 
-    connectToTracker(trackerAddress: string): Promise<string> {
-        return this.endpoint.connect(trackerAddress)
+    connectToTracker(trackerAddress: string, trackerPeerInfo: PeerInfo): Promise<string> {
+        return this.endpoint.connect(trackerAddress, trackerPeerInfo)
     }
 
     onPeerConnected(peerInfo: PeerInfo): void {

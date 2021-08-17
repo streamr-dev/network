@@ -20,14 +20,16 @@ describe('node unsubscribing from a stream', () => {
             port: 30450,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+
         nodeA = createNetworkNode({
             id: 'a',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
         nodeB = createNetworkNode({
             id: 'b',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
 

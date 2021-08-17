@@ -57,7 +57,7 @@ export const createMessagingPluginTest = <T>(
 
         beforeAll(async () => {
             tracker = await startTracker({
-                id: 'tracker',
+                id: 'tracker-1',
                 host: '127.0.0.1',
                 port: ports.tracker,
             })

@@ -10,7 +10,7 @@ export const LOW_BACK_PRESSURE = 1024 * 1024
 
 export type ReadyState = 0 | 1 | 2 | 3
 
-export abstract class WsConnection {
+export abstract class AbstractWsConnection {
     private readonly peerInfo: PeerInfo
     private readonly logger: Logger
     private respondedPong = true

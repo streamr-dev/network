@@ -16,10 +16,11 @@ describe('latency metrics', () => {
             port: 32910,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
         metricsContext = new MetricsContext('node1')
         node = createNetworkNode({
             id: 'node1',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             metricsContext
         })
         node.start()

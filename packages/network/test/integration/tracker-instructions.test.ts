@@ -24,16 +24,18 @@ describe('check tracker, nodes and statuses from nodes', () => {
             port: trackerPort,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+
         // @ts-expect-error private method
         tracker.formAndSendInstructions = () => {}
         node1 = createNetworkNode({
             id: 'node1',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
         node2 = createNetworkNode({
             id: 'node2',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
 

@@ -7,6 +7,7 @@ import { Metrics } from '../../../../network/dist/helpers/MetricsContext'
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
 import { fetchOrThrow } from '../../helpers/fetch'
+import { version as CURRENT_VERSION } from '../../../package.json'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
@@ -39,6 +40,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     latencyPoller?: { stop: () => void }
     natType?: string
     metrics: Metrics
+    dummyMessagesReceived: number
 
     constructor(options: PluginOptions) {
         super(options)
@@ -46,6 +48,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             throw new Error('StreamrClient is not available')
         }
         this.metrics = this.metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
+        this.dummyMessagesReceived = 0
     }
 
     async start() {
@@ -55,8 +58,19 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         if (this.pluginConfig.stunServerHost !== null) {
             this.natType = await this.getNatType()
         }
+        this.networkNode.setExtraMetadata({
+            natType: this.natType || null,
+            brokerVersion: CURRENT_VERSION,
+        })
         await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
-            this.onRewardCodeReceived(message.rewardCode)
+            if (message.rewardCode) {
+                this.onRewardCodeReceived(message.rewardCode)
+            } if (message.info) {
+                logger.info(message.info)
+            } else {
+                logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
+                this.dummyMessagesReceived += 1
+            }
         })
         logger.info('Testnet miner plugin started')
     }

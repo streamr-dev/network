@@ -22,14 +22,15 @@ describe('message buffering of Node', () => {
             port: 30320,
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         sourceNode = createNetworkNode({
             id: 'source-node',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
         destinationNode = createNetworkNode({
             id: 'destination-node',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
 
         sourceNode.start()

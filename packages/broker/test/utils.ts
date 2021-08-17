@@ -16,6 +16,7 @@ export function formConfig({
     name,
     trackerPort,
     privateKey,
+    trackerId = 'tracker-1',
     generateSessionId = false,
     httpPort = null,
     wsPort = null,
@@ -71,14 +72,20 @@ export function formConfig({
         network: {
             name,
             trackers: [
-                `ws://127.0.0.1:${trackerPort}`
+                {
+                    id: trackerId,
+                    ws: `ws://127.0.0.1:${trackerPort}`,
+                    http: `http://127.0.0.1:${trackerPort}`
+                }
             ],
             location: {
                 latitude: 60.19,
                 longitude: 24.95,
                 country: 'Finland',
                 city: 'Helsinki'
-            }
+            },
+            stun: null,
+            turn : null
         },
         reporting: reporting || {
             streamr: null,
@@ -99,11 +106,11 @@ export function formConfig({
         streamrUrl,
         streamrAddress,
         storageNodeConfig,
-        httpServer: httpPort ? {
-            port: httpPort,
+        httpServer: {
+            port: httpPort ? httpPort : 8080,
             privateKeyFileName: null,
             certFileName: null
-        } : null,
+        },
         apiAuthentication,
         plugins
     }

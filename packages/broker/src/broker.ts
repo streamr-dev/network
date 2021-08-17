@@ -10,7 +10,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, NetworkSmartContract, StorageNodeRegistryItem } from './config'
+import { Config, NetworkSmartContract, StorageNodeRegistryItem, TrackerRegistryItem } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -29,15 +29,15 @@ export interface Broker {
     stop: () => Promise<unknown>
 }
 
-const getTrackers = async (config: Config): Promise<string[]> => {
+const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
     if ((config.network.trackers as NetworkSmartContract).contractAddress) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
             contractAddress: (config.network.trackers as NetworkSmartContract).contractAddress,
             jsonRpcProvider: (config.network.trackers as NetworkSmartContract).jsonRpcProvider
         })
-        return registry.getAllTrackers().map((record) => record.ws)
+        return registry.getAllTrackers()
     } else {
-        return config.network.trackers as string[]
+        return config.network.trackers as TrackerRegistryItem[]
     }
 }
 
@@ -51,6 +51,22 @@ const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[
     } else {
         return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
     }
+}
+
+const getStunTurnUrls = (config: Config): string[] | undefined => {
+    if (!config.network.stun && !config.network.turn) {
+        return undefined
+    }
+    const urls = []
+    if (config.network.stun) {
+        urls.push(config.network.stun)
+    }
+    if (config.network.turn) {
+        const parsedUrl = config.network.turn.url.replace('turn:', '')
+        const turn = `turn:${config.network.turn.username}:${config.network.turn.password}@${parsedUrl}`
+        urls.push(turn)
+    }
+    return urls
 }
 
 const createStreamMessageValidator = (config: Config): Protocol.StreamMessageValidator => {
@@ -147,7 +163,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         name: networkNodeName,
         trackers,
         location: config.network.location,
-        metricsContext
+        metricsContext,
+        stunUrls: getStunTurnUrls(config)
     })
 
     const publisher = new Publisher(networkNode, createStreamMessageValidator(config), metricsContext)
@@ -184,9 +201,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
             if (httpServerRoutes.length > 0) {
-                if (config.httpServer === null) {
-                    throw new Error('HTTP server config not defined')
-                }
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
             await volumeLogger.start()

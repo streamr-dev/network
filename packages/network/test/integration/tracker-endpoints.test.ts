@@ -44,9 +44,10 @@ describe('tracker endpoint', () => {
             id: 'tracker',
             attachHttpEndpoints: true
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             location: {
                 country: 'CH',
                 city: 'Zug',
@@ -56,13 +57,16 @@ describe('tracker endpoint', () => {
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             location: {
                 country: 'FI',
                 city: 'Helsinki',
                 latitude: null,
                 longitude: null
             }
+        })
+        nodeTwo.setExtraMetadata({
+            foo: 'bar'
         })
 
         nodeOne.subscribe('stream-1', 0)
@@ -278,5 +282,16 @@ describe('tracker endpoint', () => {
         expect(jsonResult.peerId).toEqual('tracker')
         expect(jsonResult.startTime).toBeGreaterThan(1600000000000)
         expect(jsonResult.metrics).not.toBeUndefined()
+    })
+
+    it('/metadata/', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/metadata/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual({
+            'node-1': {},
+            'node-2': {
+                foo: 'bar'
+            }
+        })
     })
 })

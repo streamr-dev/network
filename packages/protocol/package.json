@@ -1,10 +1,11 @@
 {
   "name": "streamr-client-protocol",
-  "version": "8.3.1",
+  "version": "8.4.0",
   "description": "JavaScript classes implementing the Streamr client-to-node protocol",
   "repository": {
     "type": "git",
-    "url": "git://github.com/streamr-dev/streamr-client-protocol-js.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/protocol"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -47,8 +48,10 @@
   "dependencies": {
     "@babel/runtime-corejs3": "^7.14.0",
     "@types/debug": "^4.1.5",
+    "bip39": "^3.0.4",
     "debug": "^4.3.2",
     "ethers": "^5.1.4",
+    "events": "^3.3.0",
     "heap": "^0.2.6",
     "promise-memoize": "^1.2.1",
     "secp256k1": "^4.0.2",
