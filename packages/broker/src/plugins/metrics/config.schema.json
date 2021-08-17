@@ -4,23 +4,15 @@
   "type": "object",
   "description": "Metrics plugin configuration",
   "required": [
-    "consoleLogIntervalInSeconds",
-    "legacyMetricsStreamId",
+    "consoleAndPM2IntervalInSeconds",
     "perNodeMetrics"
   ],
   "additionalProperties": false,
   "properties": {
-    "consoleLogIntervalInSeconds": {
+    "consoleAndPM2IntervalInSeconds": {
       "type": "integer",
       "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
       "minimum": 0
-    },
-    "legacyMetricsStreamId": {
-      "type": [
-        "null",
-        "string"
-      ],
-      "description": "Stream ID for reporting legacy metrics, leave as null to disable."
     },
     "clientWsUrl": {
       "type": "string",

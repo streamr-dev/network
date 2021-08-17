@@ -99,8 +99,7 @@ describe('ConfigWizard', () => {
                 rewardStreamId: 'streamr.eth/brubeck-testnet/rewards'
             },
             metrics: {
-                consoleLogIntervalInSeconds: 0,
-                legacyMetricsStreamId: null,
+                consoleAndPM2IntervalInSeconds: 0,
                 clientHttpUrl: 'https://streamr.network/api/v1',
                 clientWsUrl: 'ws://127.0.0.1:7173/api/v1/ws',
                 perNodeMetrics: {

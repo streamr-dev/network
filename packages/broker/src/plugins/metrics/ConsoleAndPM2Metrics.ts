@@ -1,6 +1,5 @@
 import io from '@pm2/io'
 import Gauge from '@pm2/io/build/main/utils/metrics/gauge'
-import { StreamrClient } from 'streamr-client'
 import { MetricsContext, Logger } from 'streamr-network'
 
 const logger = new Logger(module)
@@ -9,12 +8,10 @@ function formatNumber(n: number) {
     return n < 10 ? n.toFixed(1) : Math.round(n)
 }
 
-export class LegacyMetrics {
+export class ConsoleAndPM2Metrics {
 
     reportingIntervalSeconds: number
     metricsContext: MetricsContext
-    legacyStreamId?: string
-    client?: StreamrClient
     timeout?: NodeJS.Timeout
     brokerConnectionCountMetric: Gauge
     eventsInPerSecondMetric: Gauge
@@ -32,11 +29,9 @@ export class LegacyMetrics {
     meanBatchAge: Gauge
     messageQueueSizeMetric: Gauge
 
-    constructor(reportingIntervalSeconds: number, metricsContext: MetricsContext, legacyStreamId?: string, client?: StreamrClient) {
+    constructor(reportingIntervalSeconds: number, metricsContext: MetricsContext) {
         this.reportingIntervalSeconds = reportingIntervalSeconds
         this.metricsContext = metricsContext
-        this.legacyStreamId = legacyStreamId
-        this.client = client
         this.brokerConnectionCountMetric = io.metric({
             name: 'brokerConnectionCountMetric'
         })
@@ -104,13 +99,6 @@ export class LegacyMetrics {
 
     async reportAndReset(): Promise<void> {
         const report = await this.metricsContext.report(true)
-
-        // Report metrics to Streamr stream
-        if (this.client instanceof StreamrClient && this.legacyStreamId !== undefined) {
-            this.client.publish(this.legacyStreamId, report).catch((e) => {
-                logger.warn(`failed to publish metrics to ${this.legacyStreamId} because ${e}`)
-            })
-        }
 
         // @ts-expect-error
         const inPerSecond = report.metrics['broker/publisher'].messages.rate

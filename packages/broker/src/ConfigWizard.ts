@@ -62,8 +62,7 @@ const DefaultConfig: Config = {
             maxClaimDelay: 5000
         },
         metrics: {
-            consoleLogIntervalInSeconds: 0,
-            legacyMetricsStreamId: null,
+            consoleAndPM2IntervalInSeconds: 0,
             clientWsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
             clientHttpUrl: "https://streamr.network/api/v1",
             perNodeMetrics: {

@@ -8,8 +8,7 @@ import { StreamrClient } from 'streamr-client'
 import { Schema } from 'ajv'
 
 export interface MetricsPluginConfig {
-    consoleLogIntervalInSeconds: number
-    legacyMetricsStreamId: string | null
+    consoleAndPM2IntervalInSeconds: number
     clientWsUrl?: string
     clientHttpUrl?: string
     perNodeMetrics: {
@@ -59,9 +58,8 @@ const createVolumeLogger = (
     brokerAddress: string,
     storageNodes: StorageNodeRegistryItem[]
 ): VolumeLogger => {
-    const legacyStreamId = config.legacyMetricsStreamId ?? undefined
     let client: StreamrClient | undefined
-    if (config.legacyMetricsStreamId || (config.perNodeMetrics && config.perNodeMetrics.enabled)) {
+    if (config.perNodeMetrics && config.perNodeMetrics.enabled) {
         const targetStorageNode = config.perNodeMetrics!.storageNode
         const storageNodeRegistryItem = storageNodes.find((n) => n.address === targetStorageNode)
         if (storageNodeRegistryItem === undefined) {
@@ -86,10 +84,9 @@ const createVolumeLogger = (
     }
 
     return new VolumeLogger(
-        config.consoleLogIntervalInSeconds,
+        config.consoleAndPM2IntervalInSeconds,
         metricsContext,
         client,
-        legacyStreamId,
         brokerAddress,
         reportingIntervals,
         storageNodeAddress

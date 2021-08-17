@@ -3,7 +3,7 @@ import io from '@pm2/io'
 import { StreamrClient } from "streamr-client"
 import { startMetrics, StreamMetrics } from './StreamMetrics'
 import { MetricsPluginConfig } from './MetricsPlugin'
-import { LegacyMetrics } from './LegacyMetrics'
+import { ConsoleAndPM2Metrics } from './ConsoleAndPM2Metrics'
 
 type PerStreamReportingIntervals = NonNullable<MetricsPluginConfig['perNodeMetrics']>['intervals']
 
@@ -16,26 +16,24 @@ export class VolumeLogger {
     perStreamReportingIntervals?: PerStreamReportingIntervals
     storageNodeAddress?: string
     perStreamMetrics?: { [interval: string]: StreamMetrics }
-    legacyMetrics?: LegacyMetrics
+    legacyMetrics?: ConsoleAndPM2Metrics
 
     constructor(
-        reportingIntervalSeconds = 60,
+        consoleAndPM2IntervalInSeconds: number,
         metricsContext: MetricsContext,
         client: StreamrClient | undefined = undefined,
-        legacyStreamId?: string,
         brokerAddress?: string,
         perStreamReportingIntervals?: PerStreamReportingIntervals,
         storageNodeAddress?: string
     ) {
         this.metricsContext = metricsContext
         this.client = client
-        this.legacyStreamId = legacyStreamId
         this.brokerAddress = brokerAddress
         this.perStreamReportingIntervals = perStreamReportingIntervals
         this.storageNodeAddress = storageNodeAddress
     
-        if (reportingIntervalSeconds > 0) {
-            this.legacyMetrics = new LegacyMetrics(reportingIntervalSeconds, metricsContext, legacyStreamId, client)
+        if (consoleAndPM2IntervalInSeconds > 0) {
+            this.legacyMetrics = new ConsoleAndPM2Metrics(consoleAndPM2IntervalInSeconds, metricsContext)
         }
     }
 
