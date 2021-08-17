@@ -6,6 +6,7 @@ import { Logger } from './Logger'
 import { Tracker } from '../logic/Tracker'
 import http from 'http'
 import https from 'https'
+import { StreamIdAndPartition } from '../identifiers'
 
 const staticLogger = new Logger(module)
 
@@ -98,6 +99,21 @@ export function trackerHttpEndpoints(
         return Object.assign({}, ...Object.entries(topologyUnion).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, Array.from(neighbors), tracker.getOverlayConnectionRtts())
         }))
+    })
+    app.get('/nodes/:nodeId/streams', async (req: express.Request, res: express.Response) => {
+        const nodeId = req.params.nodeId
+        staticLogger.debug(`request to /nodes/${nodeId}/streams`)
+        const result = Object.entries(tracker.getOverlayPerStream())
+            .filter(([_, overlayTopology]) => overlayTopology.hasNode(nodeId))
+            .map(([streamKey, overlayTopology]) => {
+                const streamIdAndPartition = StreamIdAndPartition.fromKey(streamKey)
+                return {
+                    streamId: streamIdAndPartition.id,
+                    partition: streamIdAndPartition.partition,
+                    topologySize: overlayTopology.getNumberOfNodes()
+                }
+            })
+        res.json(result)
     })
     app.get('/location/', (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /location/')
