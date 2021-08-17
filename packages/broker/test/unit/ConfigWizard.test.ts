@@ -1,3 +1,4 @@
+import { Wallet } from 'ethers'
 import { existsSync, rmdirSync, mkdtempSync } from 'fs'
 import os from 'os'
 import path from 'path'
@@ -11,7 +12,6 @@ const mockPromptMethod = (wizard: ConfigWizard, mockedPromptResult: any) => {
 describe('ConfigWizard', () => {
     let wizard: ConfigWizard
     let tmpDataDir: string
-    
     beforeAll(() => {
         tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
     })
@@ -33,11 +33,14 @@ describe('ConfigWizard', () => {
         mockPromptMethod(wizard, {
             generateOrImportEthereumPrivateKey: 'generate'
         })
-        const privateKey = await wizard.generateOrImportPrivateKey()
-        expect(privateKey.length).toBe(66)
-        expect(privateKey.charAt(0)).toBe('0')
-        expect(privateKey.charAt(1)).toBe('x')
-        expect(wizard.config.ethereumPrivateKey).toBe(privateKey)
+        const wallet: Wallet = await wizard.generateOrImportPrivateKey()
+        expect(wallet.privateKey.length).toBe(66)
+        expect(wallet.privateKey.charAt(0)).toBe('0')
+        expect(wallet.privateKey.charAt(1)).toBe('x')
+        expect(wizard.config.ethereumPrivateKey).toBe(wallet.privateKey)
+        expect(wallet.address.length).toBe(42)
+        expect(wallet.address.charAt(0)).toBe('0')
+        expect(wallet.address.charAt(1)).toBe('x')
     })
 
     it ('should import a valid privateKey', async() => {
@@ -47,8 +50,8 @@ describe('ConfigWizard', () => {
             privateKey
         })
 
-        const importedPrivateKey = await wizard.generateOrImportPrivateKey()
-        expect(importedPrivateKey).toEqual(privateKey)
+        const importedWallet: Wallet = await wizard.generateOrImportPrivateKey()
+        expect(importedWallet.privateKey).toEqual(privateKey)
     })
 
     it ('should throw when importing an invalid privateKey', async() => {
@@ -105,6 +108,8 @@ describe('ConfigWizard', () => {
         mockPromptMethod(wizard, {
             generateOrImportEthereumPrivateKey: 'generate',
             selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
+            destinationFolder: tmpDataDir,
+            overwrite: false,
             wsPort: 7170,
             mqttPort: 7171,
             httpPort: 7172
@@ -112,13 +117,31 @@ describe('ConfigWizard', () => {
 
         await wizard.generateOrImportPrivateKey()
         await wizard.selectPlugins()
-        const finalPath = await wizard.storeConfig(tmpDataDir)
+        const finalPath = await wizard.storeConfig()
+        expect(existsSync(finalPath)).toEqual(true)
+    })
+
+    it ('should store the generated config with overwrite', async () => {
+        mockPromptMethod(wizard, {
+            generateOrImportEthereumPrivateKey: 'generate',
+            selectedItems: ['Websocket', 'MQTT', 'HttpPublish'],
+            destinationFolder: tmpDataDir,
+            overwrite: true,
+            wsPort: 7170,
+            mqttPort: 7171,
+            httpPort: 7172
+        })
+
+        await wizard.generateOrImportPrivateKey()
+        await wizard.selectPlugins()
+        const finalPath = await wizard.storeConfig()
         expect(existsSync(finalPath)).toEqual(true)
     })
 
     it ('should return the given destinationFolder when prompted', async() => {
         mockPromptMethod(wizard, {
-            destinationFolder: tmpDataDir
+            destinationFolder: tmpDataDir,
+            overwrite: true,
         })
         const selectedFolder = await wizard.selectDestinationFolder()
         expect(selectedFolder).toEqual(tmpDataDir)
@@ -131,10 +154,10 @@ describe('ConfigWizard', () => {
             wsPort: 7170,
             mqttPort: 7171,
             httpPort: 7172,
-            destinationFolder: tmpDataDir
+            destinationFolder: tmpDataDir,
+            overwrite: true
         })
         await startBrokerConfigWizard()
         expect(existsSync(tmpDataDir + '/broker-config.json')).toEqual(true)
     })
-    
 })
