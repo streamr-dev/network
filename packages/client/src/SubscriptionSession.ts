@@ -3,7 +3,7 @@ import { DependencyContainer, inject } from 'tsyringe'
 import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
 import { NetworkNode } from 'streamr-network'
 
-import { Scaffold, instanceId } from './utils'
+import { Scaffold, instanceId, until } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
 import { flow } from './utils/PushBuffer'
@@ -112,16 +112,23 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         node.subscribe(streamId, streamPartition)
     }
 
-    updateSubscriptions = Scaffold([
-        async () => {
-            let node: NetworkNode | undefined = await this.subscribe()
-            return async () => {
-                const prevNode = node
-                node = undefined
-                await this.unsubscribe(prevNode!)
-            }
-        }
-    ], () => !this.isStopped && !!this.count())
+    updateSubscriptions = (() => {
+        let node: NetworkNode | undefined
+        return Scaffold([
+            async () => {
+                node = await this.subscribe()
+                return async () => {
+                    const prevNode = node
+                    node = undefined
+                    await this.unsubscribe(prevNode!)
+                }
+            },
+        ], () => this.shouldBeSubscribed())
+    })()
+
+    shouldBeSubscribed() {
+        return !this.isStopped && !!this.count()
+    }
 
     async stop() {
         this.debug('stop')
@@ -132,6 +139,17 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
 
     has(sub: Subscription<T>): boolean {
         return this.subscriptions.has(sub)
+    }
+
+    async waitForNeighbours(numNeighbours = 1, timeout = 10000) {
+        const { streamId, streamPartition } = this.spid
+
+        return until(async () => {
+            if (!this.shouldBeSubscribed()) { return true } // abort
+            const node = await this.node.getNode()
+            if (!this.shouldBeSubscribed()) { return true } // abort
+            return node.getNeighborsForStream(streamId, streamPartition).length >= numNeighbours
+        }, timeout)
     }
 
     /**

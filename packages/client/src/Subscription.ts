@@ -35,6 +35,10 @@ export default class Subscription<T extends MessageContent | unknown = unknown> 
         return this.context.count()
     }
 
+    waitForNeighbours(numNeighbours?: number, timeout?: number) {
+        return this.context.waitForNeighbours(numNeighbours, timeout)
+    }
+
     cancel() {
         return this.unsubscribe()
     }

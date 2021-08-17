@@ -2,6 +2,7 @@ import { EventEmitter } from 'events'
 import { Logger } from '../helpers/Logger'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerServer'
+import { SmartContractRecord } from 'streamr-client-protocol'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
@@ -248,5 +249,13 @@ export class Tracker extends EventEmitter {
 
     getOverlayPerStream(): Readonly<OverlayPerStream> {
         return this.overlayPerStream
+    }
+
+    getConfigRecord(): SmartContractRecord {
+        return {
+            id: this.peerInfo.peerId,
+            http: this.getUrl().replace(/^ws/, 'http'),
+            ws: this.getUrl()
+        }
     }
 }

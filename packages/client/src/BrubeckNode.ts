@@ -14,6 +14,7 @@ export default class BrubeckNode implements Context {
     options
     id
     debug
+    isStarted = false
 
     constructor(
         context: Context,
@@ -33,7 +34,7 @@ export default class BrubeckNode implements Context {
         const node = this.cachedNode
         this.cachedNode = undefined
         // stop node only if started or in progress
-        if (node && this.startNode.isStarted()) {
+        if (node && this.isStarted) {
             this.debug('stopping node >>')
             await node.stop()
             this.debug('stopping node <<')
@@ -67,6 +68,7 @@ export default class BrubeckNode implements Context {
     }
 
     startNode = pOnce(async () => {
+        this.isStarted = true
         this.debug('start >>')
         const node = this.initNode()
         await node.start()

@@ -63,12 +63,13 @@ export default class StreamMessageCreator implements IMessageCreator, Stoppable 
         // streamId as queue key
         return this.queue(streamId, async () => {
             // load cached stream + publisher details
-            const [streamPartition, publisherId] = await Promise.all([
+            const [streamPartition, publisherIdChecksumCase] = await Promise.all([
                 this.streamPartitioner.compute(streamId, partitionKey),
                 this.ethereum.getAddress(),
             ])
 
             const spid = SPID.from({ streamId, streamPartition })
+            const publisherId = publisherIdChecksumCase.toLowerCase()
 
             // chain messages
             const chain = this.getMsgChain(spid, {

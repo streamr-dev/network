@@ -149,7 +149,7 @@ class BrubeckClientBase implements Context {
     }
 
     destroy = pOnce(async () => {
-        this.connect.reset()
+        this.connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
             this.resends.stop(),
