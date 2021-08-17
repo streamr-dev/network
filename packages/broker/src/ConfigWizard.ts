@@ -5,23 +5,29 @@ import path from 'path'
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import * as os from 'os'
 
-const logger = {
-    log: (...args: any[]) => {
-        console.log('\x1b[7m' + ':' +'\x1b[0m', ...args)
-    },
-    info: (...args: any[]) => {
-        console.log('\x1b[47m' +  '\x1b[30m' + ':', ...args, '\x1b[0m')
-    },
-    warn: (...args: any[]) => {
-        console.log('\x1b[33m' + '!' + '\x1b[0m', ...args)
-    },
-    error: (...args: any[]) => {
-        console.log('\x1b[31m' + '!' + '\x1b[0m', ...args)
-    },
-    alert:(...args: any[]) => {
-        console.log('\x1b[43m' + '\x1b[30m' + '!', ...args, '\x1b[0m')
-    }
+
+import chalk from "chalk"
+
+function logger(...args: any[]) {
+    console.log(chalk.bgWhite.black(':'), ...args)
 }
+
+logger.info = (...args: any[]) => {
+    console.log(chalk.bgWhite.black(':', ...args))
+}
+
+logger.alert = (...args: any[]) => {
+    console.log(chalk.bgYellow.black('!', ...args))
+}
+
+logger.warn = (...args: any[]) => {
+    console.log(chalk.bgYellow.black('!'), ...args)
+}
+
+logger.error = (...args: any[]) => {
+    console.log(chalk.bgRed.black('!'), ...args)
+}
+
 
 const DEFAULT_WS_PORT = 7170
 const DEFAULT_MQTT_PORT = 7171
@@ -110,7 +116,6 @@ export let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.C
     }
 ]
 
-// Plugin config
 const pluginTemplates = [
     {
         key: 'websocket', // used to reference config.plugins[key]
