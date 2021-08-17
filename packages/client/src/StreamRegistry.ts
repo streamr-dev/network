@@ -127,11 +127,13 @@ export class StreamRegistry implements Context {
 
     async createStream(props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {
         log('createStream %o', props)
+        await this.connectToStreamRegistryContract()
         return this._createOrUpdateStream(this.streamRegistryContract!.createStream, props)
     }
 
     async updateStream(props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {
         log('updateStream %o', props)
+        await this.connectToStreamRegistryContract()
         return this._createOrUpdateStream(this.streamRegistryContract!.updateStreamMetadata, props)
     }
 
@@ -139,7 +141,6 @@ export class StreamRegistry implements Context {
         log('updateStream %o', props)
 
         let properties = props
-        await this.connectToStreamRegistryContract()
         const userAddress: string = (await this.ethereum.getAddress()).toLowerCase()
         log('creating/registering stream onchain')
         // const a = this.ethereum.getAddress()

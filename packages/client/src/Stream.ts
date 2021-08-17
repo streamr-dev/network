@@ -1,5 +1,5 @@
 import { MessageContent } from 'streamr-client-protocol'
-import { delay, DependencyContainer, inject } from 'tsyringe'
+import { DependencyContainer } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
 import { StorageNode } from './StorageNode'
@@ -9,8 +9,10 @@ import { Rest } from './Rest'
 import Resends from './Resends'
 import Publisher from './Publisher'
 import { BigNumber } from '@ethersproject/bignumber'
-import BrubeckClient from '.'
 import { StreamMetadata } from '../../protocol/dist/src/utils/StreamMessageValidator'
+import { StreamRegistry } from './StreamRegistry'
+import Ethereum from './Ethereum'
+import { NodeRegistry } from './NodeRegistry'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -99,10 +101,12 @@ class StreamrStream implements StreamMetadata {
     requireSignedData!: boolean
     storageDays?: number
     inactivityThresholdHours?: number
-    _client: BrubeckClient
     _rest: Rest
     _resends: Resends
     _publisher: Publisher
+    _streamRegistry: StreamRegistry
+    _nodeRegistry: NodeRegistry
+    _ethereuem: Ethereum
 
     constructor(
         props: StreamProperties, private container: DependencyContainer
@@ -113,11 +117,14 @@ class StreamrStream implements StreamMetadata {
         this._rest = container.resolve<Rest>(Rest)
         this._resends = container.resolve<Resends>(Resends)
         this._publisher = container.resolve<Publisher>(Publisher)
-        this._client = container.resolve<BrubeckClient>(BrubeckClient)
+        this._streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
+        this._nodeRegistry = container.resolve<NodeRegistry>(NodeRegistry)
+        this._nodeRegistry = container.resolve<NodeRegistry>(NodeRegistry)
+        this._ethereuem = container.resolve<Ethereum>(Ethereum)
     }
 
     async update() {
-        await this._client.updateStream(this.toObject())
+        await this._streamRegistry.updateStream(this.toObject())
     }
 
     toObject() : StreamProperties {
@@ -132,22 +139,22 @@ class StreamrStream implements StreamMetadata {
     }
 
     async delete() {
-        await this._client.deleteStream(this.id)
+        await this._streamRegistry.deleteStream(this.id)
     }
 
     async getPermissions() {
-        return this._client.getAllPermissionsForStream(this.id)
+        return this._streamRegistry.getAllPermissionsForStream(this.id)
     }
 
     async getMyPermissions() {
-        return this._client.getPermissionsForUser(this.id, await this._client.getAddress())
+        return this._streamRegistry.getPermissionsForUser(this.id, await this._ethereuem.getAddress())
     }
 
     async hasPermission(operation: StreamOperation, userId: EthereumAddress) {
         // eth addresses may be in checksumcase, but userId from server has no case
 
         // const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
-        const permissions = await this._client.getPermissionsForUser(this.id, userId)
+        const permissions = await this._streamRegistry.getPermissionsForUser(this.id, userId)
 
         if (operation === StreamOperation.STREAM_PUBLISH || operation === StreamOperation.STREAM_SUBSCRIBE) {
             return permissions[operation].gt(Date.now())
@@ -156,38 +163,38 @@ class StreamrStream implements StreamMetadata {
     }
 
     async grantPermission(operation: StreamOperation, recipientId: EthereumAddress) {
-        await this._client.grantPermission(this.id, operation, recipientId.toLowerCase())
+        await this._streamRegistry.grantPermission(this.id, operation, recipientId.toLowerCase())
     }
 
     async grantPublicPermission(operation: StreamOperation) {
-        await this._client.grantPublicPermission(this.id, operation)
+        await this._streamRegistry.grantPublicPermission(this.id, operation)
     }
 
     async revokePermission(operation: StreamOperation, recipientId: EthereumAddress) {
-        await this._client.revokePermission(this.id, operation, recipientId.toLowerCase())
+        await this._streamRegistry.revokePermission(this.id, operation, recipientId.toLowerCase())
     }
 
     async revokePublicPermission(operation: StreamOperation) {
-        await this._client.revokePublicPermission(this.id, operation)
+        await this._streamRegistry.revokePublicPermission(this.id, operation)
     }
 
     async addToStorageNode(node: StorageNode | EthereumAddress) {
         // @ts-ignore
-        await this._client.addStreamToStorageNode(this.id, node.address || node)
+        await this._streamRegistry.addStreamToStorageNode(this.id, node.address || node)
     }
 
     async removeFromStorageNode(node: StorageNode | EthereumAddress) {
         // @ts-ignore
-        return this._client.removeStreamFromStorageNode(this.id, node.address || node)
+        return this._streamRegistry.removeStreamFromStorageNode(this.id, node.address || node)
     }
 
     private async isStreamStoredInStorageNode(node: StorageNode | EthereumAddress) {
         // @ts-ignore
-        return this._client.isStreamStoredInStorageNode(this.id, node.address || node)
+        return this._streamRegistry.isStreamStoredInStorageNode(this.id, node.address || node)
     }
 
     async getStorageNodes() {
-        return this._client.getAllStorageNodes()
+        return this._nodeRegistry.getAllStorageNodes()
     }
 
     async publish<T extends MessageContent>(content: T, timestamp?: number|string|Date, partitionKey?: string) {

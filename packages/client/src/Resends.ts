@@ -18,6 +18,7 @@ import Session from './Session'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
+import { StreamRegistry } from './StreamRegistry'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -95,9 +96,10 @@ export default class Resend implements Context {
     constructor(
         context: Context,
         private nodeRegistry: NodeRegistry,
+        private streamRegistry: StreamRegistry,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
         private session: Session,
-        @inject(BrubeckContainer) private container: DependencyContainer
+        @inject(BrubeckContainer) private container: DependencyContainer,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -161,7 +163,7 @@ export default class Resend implements Context {
         const sid = SPID.parse(sidLike)
         // this method should probably live somewhere else
         // like in the node registry or stream class
-        const stream = await this.streamEndpoints.getStream(sid.streamId)
+        const stream = await this.streamRegistry.getStream(sid.streamId)
         const storageNodes: StorageNode[] = await stream.getStorageNodes()
 
         const storageNodeAddresses = new Set(storageNodes.map((n) => n.getAddress()))

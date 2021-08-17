@@ -7,6 +7,8 @@ import { publishManyGenerator } from './utils'
 import clientOptions from '../config'
 import { Stream } from '../../../src/Stream'
 
+jest.setTimeout(15000)
+
 describeRepeats('StreamrClient', () => {
     const MAX_MESSAGES = 10
     let expectErrors = 0 // check no errors by default
@@ -23,9 +25,9 @@ describeRepeats('StreamrClient', () => {
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+            //     privateKey: fakePrivateKey(),
+            // },
             autoConnect: false,
             autoDisconnect: false,
             maxRetries: 2,
