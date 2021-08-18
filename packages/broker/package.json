@@ -4,7 +4,8 @@
   "description": "A full-featured broker node implementation for the Streamr Network.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streamr-dev/broker.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/broker"
   },
   "bin": {
     "streamr-broker": "bin/broker.js",
@@ -49,6 +50,7 @@
     "ajv-formats": "^2.0.1",
     "body-parser": "^1.19.0",
     "cassandra-driver": "^4.6.3",
+    "chalk": "^4.0.0",
     "commander": "^7.2.0",
     "cors": "^2.7.1",
     "ethers": "^5.1.4",

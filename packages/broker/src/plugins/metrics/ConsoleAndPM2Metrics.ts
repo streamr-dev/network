@@ -1,10 +1,6 @@
-import { MetricsContext } from 'streamr-network'
 import io from '@pm2/io'
 import Gauge from '@pm2/io/build/main/utils/metrics/gauge'
-import { StreamrClient } from "streamr-client"
-import { Logger } from 'streamr-network'
-import { startMetrics, StreamMetrics } from './StreamMetrics'
-import { Config } from './config'
+import { MetricsContext, Logger } from 'streamr-network'
 
 const logger = new Logger(module)
 
@@ -12,12 +8,11 @@ function formatNumber(n: number) {
     return n < 10 ? n.toFixed(1) : Math.round(n)
 }
 
-type PerStreamReportingIntervals = NonNullable<Config['reporting']['perNodeMetrics']>['intervals']
+export class ConsoleAndPM2Metrics {
 
-export class VolumeLogger {
+    reportingIntervalSeconds: number
     metricsContext: MetricsContext
-    client?: StreamrClient
-    legacyStreamId?: string
+    timeout?: NodeJS.Timeout
     brokerConnectionCountMetric: Gauge
     eventsInPerSecondMetric: Gauge
     eventsOutPerSecondMetric: Gauge
@@ -33,30 +28,10 @@ export class VolumeLogger {
     totalBatchesMetric: Gauge
     meanBatchAge: Gauge
     messageQueueSizeMetric: Gauge
-    timeout?: NodeJS.Timeout
-    brokerAddress?: string
-    perStreamReportingIntervals?: PerStreamReportingIntervals
-    storageNodeAddress?: string
-    reportingIntervalSeconds: number
-    perStreamMetrics?: { [interval: string]: StreamMetrics }
 
-    constructor(
-        reportingIntervalSeconds = 60,
-        metricsContext: MetricsContext,
-        client: StreamrClient | undefined = undefined,
-        legacyStreamId?: string,
-        brokerAddress?: string,
-        perStreamReportingIntervals?: PerStreamReportingIntervals,
-        storageNodeAddress?: string
-    ) {
+    constructor(reportingIntervalSeconds: number, metricsContext: MetricsContext) {
         this.reportingIntervalSeconds = reportingIntervalSeconds
         this.metricsContext = metricsContext
-        this.client = client
-        this.legacyStreamId = legacyStreamId
-        this.brokerAddress = brokerAddress
-        this.perStreamReportingIntervals = perStreamReportingIntervals
-        this.storageNodeAddress = storageNodeAddress
-
         this.brokerConnectionCountMetric = io.metric({
             name: 'brokerConnectionCountMetric'
         })
@@ -104,76 +79,33 @@ export class VolumeLogger {
         })
     }
 
-    async start() {
-        if (this.client instanceof StreamrClient) {
-            await this.initializePerMetricsStream()
-        }
-
-        if (this.reportingIntervalSeconds > 0) {
-            logger.info('starting legacy metrics reporting interval')
-            const reportingIntervalInMs = this.reportingIntervalSeconds * 1000
-            const reportFn = async () => {
-                try {
-                    await this.reportAndReset()
-                } catch (e) {
-                    logger.warn(`Error reporting metrics ${e}`)
-                }
-                this.timeout = setTimeout(reportFn, reportingIntervalInMs)
+    start() {
+        logger.info('starting legacy metrics reporting interval')
+        const reportingIntervalInMs = this.reportingIntervalSeconds * 1000
+        const reportFn = async () => {
+            try {
+                await this.reportAndReset()
+            } catch (e) {
+                logger.warn(`Error reporting metrics ${e}`)
             }
             this.timeout = setTimeout(reportFn, reportingIntervalInMs)
         }
+        this.timeout = setTimeout(reportFn, reportingIntervalInMs)
     }
 
-    async initializePerMetricsStream() {
-        if (!this.client || !this.brokerAddress || !this.storageNodeAddress) {
-            throw new Error('Cannot initialize perStream metrics without valid client, brokerAddress, storageNodeAddress')
-        }
-        this.perStreamMetrics = {
-            sec: await startMetrics({
-                client: this.client,
-                metricsContext: this.metricsContext,
-                brokerAddress: this.brokerAddress,
-                interval: 'sec',
-                reportMiliseconds: ((this.perStreamReportingIntervals) ? this.perStreamReportingIntervals.sec :0),
-                storageNodeAddress: this.storageNodeAddress
-            }),
-            min: await startMetrics({
-                client: this.client,
-                metricsContext: this.metricsContext,
-                brokerAddress: this.brokerAddress,
-                interval: 'min',
-                reportMiliseconds: (this.perStreamReportingIntervals) ? this.perStreamReportingIntervals.min : 0,
-                storageNodeAddress: this.storageNodeAddress,
-            }),
-            hour: await startMetrics({
-                client: this.client,
-                metricsContext: this.metricsContext,
-                brokerAddress: this.brokerAddress,
-                interval: 'hour',
-                reportMiliseconds: (this.perStreamReportingIntervals) ? this.perStreamReportingIntervals.hour : 0,
-                storageNodeAddress: this.storageNodeAddress,
-            }),
-            day: await startMetrics({
-                client: this.client,
-                metricsContext: this.metricsContext,
-                brokerAddress: this.brokerAddress,
-                interval: 'day',
-                reportMiliseconds: (this.perStreamReportingIntervals) ? this.perStreamReportingIntervals.day : 0,
-                storageNodeAddress: this.storageNodeAddress,
-            })
-        }
+    stop() {
+        clearTimeout(this.timeout!)
     }
 
-    async reportAndReset() {
+    async reportAndReset(): Promise<void> {
         const report = await this.metricsContext.report(true)
-
+        /*
         // Report metrics to Streamr stream
         if (this.client instanceof StreamrClient && this.client.isConnected() && this.legacyStreamId !== undefined) {
             this.client.publish(this.legacyStreamId, report).catch((e) => {
                 logger.warn(`failed to publish metrics to ${this.legacyStreamId} because ${e}`)
             })
-        }
-
+        }*/
         // @ts-expect-error
         const inPerSecond = report.metrics['broker/publisher'].messages.rate
         // @ts-expect-error
@@ -290,6 +222,7 @@ export class VolumeLogger {
         }
     }
 
+    /*
     async close() {
         if (this.perStreamMetrics) {
             this.perStreamMetrics.sec.stop()
@@ -304,4 +237,5 @@ export class VolumeLogger {
             await this.client.ensureDisconnected()
         }
     }
+    */
 }

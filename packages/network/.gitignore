@@ -9,6 +9,5 @@ dist/
 .idea/git_toolbox_prj.xml
 bin/.idea
 
-.DS_Store
 docs
 .vscode

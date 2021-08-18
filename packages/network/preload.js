@@ -1,3 +1,4 @@
+// Loads non-browser compatible components to Electron's NodeJS sandbox during tests
 process.once("loaded", () => {
 
     let WebSocket = require('ws')

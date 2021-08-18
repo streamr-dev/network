@@ -85,6 +85,7 @@ export class Node extends EventEmitter {
     private readonly metrics: Metrics
     private connectToBoostrapTrackersInterval?: NodeJS.Timeout | null
     private handleBufferedMessagesTimeoutRef?: NodeJS.Timeout | null
+    protected extraMetadata: Record<string, unknown> = {}
 
     constructor(opts: NodeOptions) {
         super()
@@ -417,7 +418,8 @@ export class Node extends EventEmitter {
             started: this.started,
             rtts: this.nodeToNode.getRtts(),
             location: this.peerInfo.location,
-            singleStream: false
+            singleStream: false,
+            extra: this.extraMetadata
         }
     }
 
@@ -427,7 +429,8 @@ export class Node extends EventEmitter {
             started: this.started,
             rtts: this.nodeToNode.getRtts(),
             location: this.peerInfo.location,
-            singleStream: true
+            singleStream: true,
+            extra: this.extraMetadata
         }
     }
 

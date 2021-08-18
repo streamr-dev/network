@@ -30,12 +30,10 @@ export function formConfig({
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
-    reporting = false
 }: Todo): Config {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['legacyPublishHttp'] = {}
-        plugins['metrics'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -83,32 +81,18 @@ export function formConfig({
                 longitude: 24.95,
                 country: 'Finland',
                 city: 'Helsinki'
-            }
-        },
-        reporting: reporting || {
-            streamr: null,
-            intervalInSeconds: 0,
-            perNodeMetrics: {
-                enabled: false,
-                wsUrl: null,
-                httpUrl: null,
-                storageNode: null,
-                intervals:{
-                    sec: 0,
-                    min: 0,
-                    hour: 0,
-                    day: 0
-                }
-            }
+            },
+            stun: null,
+            turn : null
         },
         streamrUrl,
         streamrAddress,
         storageNodeConfig,
-        httpServer: httpPort ? {
-            port: httpPort,
+        httpServer: {
+            port: httpPort ? httpPort : 8080,
             privateKeyFileName: null,
             certFileName: null
-        } : null,
+        },
         apiAuthentication,
         plugins
     }

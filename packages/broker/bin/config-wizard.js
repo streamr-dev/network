@@ -12,4 +12,3 @@ program
     .description('Run the configuration wizard for the broker')
     
 startBrokerConfigWizard()
-

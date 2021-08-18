@@ -65,6 +65,9 @@ describe('tracker endpoint', () => {
                 longitude: null
             }
         })
+        nodeTwo.setExtraMetadata({
+            foo: 'bar'
+        })
 
         nodeOne.subscribe('stream-1', 0)
         nodeTwo.subscribe('stream-1', 0)
@@ -237,6 +240,46 @@ describe('tracker endpoint', () => {
         })
     })
 
+    it('/nodes/node-1/streams', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/nodes/node-1/streams/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual([
+            {
+                "partition": 0,
+                "streamId": "stream-1",
+                "topologySize": 2
+            },
+            {
+                "partition": 0,
+                "streamId": "stream-2",
+                "topologySize": 1
+            },
+            {
+                "partition": 0,
+                "streamId": "sandbox/test/stream-3",
+                "topologySize": 1
+            }
+        ])
+    })
+
+    it('/nodes/node-2/streams', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/nodes/node-2/streams/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual([
+            {
+                "partition": 0,
+                "streamId": "stream-1",
+                "topologySize": 2
+            }
+        ])
+    })
+
+    it('/nodes/non-existing-node/streams', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/nodes/non-existing-node/streams/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual([])
+    })
+
     it('/location/', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/location/`)
         expect(status).toEqual(200)
@@ -279,5 +322,16 @@ describe('tracker endpoint', () => {
         expect(jsonResult.peerId).toEqual('tracker')
         expect(jsonResult.startTime).toBeGreaterThan(1600000000000)
         expect(jsonResult.metrics).not.toBeUndefined()
+    })
+
+    it('/metadata/', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/metadata/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual({
+            'node-1': {},
+            'node-2': {
+                foo: 'bar'
+            }
+        })
     })
 })

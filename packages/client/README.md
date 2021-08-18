@@ -1,8 +1,9 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/streamr-client-javascript/master/readme-header-img.png" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
   </a>
 </p>
+
 <h1 align="left">
   Streamr JavaScript Client
 </h1>
@@ -395,6 +396,10 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 -->
 
 ### Admin Functions
+
+Admin functions require xDai tokens on the xDai network. To get xDai you can either use a [faucet](https://www.xdaichain.com/for-users/get-xdai-tokens/xdai-faucet) or you can reach out on the [Streamr Discord #dev channel](https://discord.gg/gZAm8P7hK8).
+
+Adding members using admin functions is not at feature parity with the member function `join`. The newly added member will not be granted publish permissions to the streams inside the Data Union. This will need to be done manually using, `streamr.grantPermission(stream_publish, user)`. Similarly, after removing a member using the admin function `removeMembers`, the publish permissions will need to be removed in a secondary step using `revokePermission(permissionId)`.
 
 | Name                              | Returns             | Description                                                    |
 | :-------------------------------- | :------------------ | :------------------------------------------------------------- |

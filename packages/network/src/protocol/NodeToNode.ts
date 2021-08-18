@@ -96,7 +96,7 @@ export class NodeToNode extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                this.logger.warn('NodeToNode invalid message from %s: %s', peerInfo, rawMessage)
+                this.logger.warn('invalid message from %s: %s', peerInfo, rawMessage)
             }
         }
     }

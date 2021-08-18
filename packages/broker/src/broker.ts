@@ -5,7 +5,6 @@ import { Logger } from 'streamr-network'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
 import { Publisher } from './Publisher'
-import { VolumeLogger } from './VolumeLogger'
 import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
@@ -53,6 +52,22 @@ const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[
     }
 }
 
+const getStunTurnUrls = (config: Config): string[] | undefined => {
+    if (!config.network.stun && !config.network.turn) {
+        return undefined
+    }
+    const urls = []
+    if (config.network.stun) {
+        urls.push(config.network.stun)
+    }
+    if (config.network.turn) {
+        const parsedUrl = config.network.turn.url.replace('turn:', '')
+        const turn = `turn:${config.network.turn.username}:${config.network.turn.password}@${parsedUrl}`
+        urls.push(turn)
+    }
+    return urls
+}
+
 const createStreamMessageValidator = (config: Config): Protocol.StreamMessageValidator => {
     // Validator only needs public information, so use unauthenticated client for that
     const unauthenticatedClient = new StreamrClient({
@@ -63,58 +78,6 @@ const createStreamMessageValidator = (config: Config): Protocol.StreamMessageVal
         isPublisher: (address, sId) => unauthenticatedClient.isStreamPublisher(sId, address),
         isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
     })
-}
-
-const createVolumeLogger = (
-    config: Config,
-    metricsContext: MetricsContext,
-    brokerAddress: string,
-    storageNodes: StorageNodeRegistryItem[]
-): VolumeLogger => {
-    // Set up reporting to Streamr stream
-    let client: StreamrClient | undefined
-    let legacyStreamId: string | undefined
-    if (config.reporting.streamr || (config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.enabled)) {
-        const targetStorageNode = config.reporting.perNodeMetrics!.storageNode
-        const storageNodeRegistryItem = storageNodes.find((n) => n.address === targetStorageNode)
-        if (storageNodeRegistryItem === undefined) {
-            throw new Error(`Value ${storageNodeRegistryItem} (config.reporting.perNodeMetrics.storageNode) not ` +
-                'present in config.storageNodeRegistry')
-        }
-        client = new StreamrClient({
-            auth: {
-                privateKey: config.ethereumPrivateKey,
-            },
-            url: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.wsUrl || undefined) : undefined,
-            restUrl: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.httpUrl || undefined) : undefined,
-            storageNode: storageNodeRegistryItem
-        })
-
-        if (config.reporting.streamr && config.reporting.streamr.streamId) {
-            const { streamId } = config.reporting.streamr
-            legacyStreamId = streamId
-            logger.info(`Starting StreamrClient reporting with streamId: ${streamId}`)
-        } else {
-            logger.info('StreamrClient reporting disabled')
-        }
-    }
-
-    let reportingIntervals
-    let storageNodeAddress
-    if (config.reporting && config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.intervals) {
-        reportingIntervals = config.reporting.perNodeMetrics.intervals
-        storageNodeAddress = config.reporting.perNodeMetrics.storageNode
-    }
-
-    return new VolumeLogger(
-        config.reporting.intervalInSeconds,
-        metricsContext,
-        client,
-        legacyStreamId,
-        brokerAddress,
-        reportingIntervals,
-        storageNodeAddress
-    )
 }
 
 export const createBroker = async (config: Config): Promise<Broker> => {
@@ -147,7 +110,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         name: networkNodeName,
         trackers,
         location: config.network.location,
-        metricsContext
+        metricsContext,
+        stunUrls: getStunTurnUrls(config)
     })
 
     const publisher = new Publisher(networkNode, createStreamMessageValidator(config), metricsContext)
@@ -171,8 +135,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         return createPlugin(name, pluginOptions)
     })
 
-    const volumeLogger = createVolumeLogger(config, metricsContext, brokerAddress, storageNodes)
-
     let httpServer: HttpServer|HttpsServer|undefined
 
     return {
@@ -184,12 +146,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
             if (httpServerRoutes.length > 0) {
-                if (config.httpServer === null) {
-                    throw new Error('HTTP server config not defined')
-                }
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
-            await volumeLogger.start()
             logger.info(`Network node '${networkNodeName}' (id=${nodeId}) running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             logger.info(`Configured with trackers: ${trackers.join(', ')}`)
@@ -204,7 +162,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (localStreamrClient !== undefined) {
                 await localStreamrClient.ensureDisconnected()
             }        
-            await Promise.all([networkNode.stop(), volumeLogger.close()])
+            await networkNode.stop()
         }
     }
 }

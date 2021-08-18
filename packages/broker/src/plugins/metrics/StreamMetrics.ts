@@ -1,6 +1,5 @@
-import { StreamOperation, StreamrClient } from "streamr-client"
-import { MetricsContext } from 'streamr-network'
-import { Logger } from 'streamr-network'
+import { StreamOperation, StreamrClient } from 'streamr-client'
+import { MetricsContext, Logger } from 'streamr-network'
 
 const logger = new Logger(module)
 

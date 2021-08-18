@@ -11,7 +11,7 @@ describe('StorageNodeRegistry', () => {
                 contractAddress: 'address', jsonRpcProvider
             })
         } catch (e) {
-            expect(e.toString()).toContain('Error: resolver or addr is not configured for ENS name')
+            expect(e.toString()).toContain('ENS')
             done()
         }
     })

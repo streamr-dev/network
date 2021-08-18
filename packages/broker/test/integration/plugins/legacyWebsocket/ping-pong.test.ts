@@ -29,7 +29,7 @@ describe('ping-pong test between broker and clients', () => {
     })
 
     beforeEach(async () => {
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: '' }
         networkNode = createNetworkNode({
             id: 'networkNode',
             trackers: [trackerInfo]

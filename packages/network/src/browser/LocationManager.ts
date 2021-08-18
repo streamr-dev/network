@@ -1,5 +1,5 @@
-import { Logger } from '../../src/helpers/Logger'
-import { Location } from '../../src/identifiers'
+import { Logger } from '../helpers/Logger'
+import { Location } from '../identifiers'
 
 function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)
