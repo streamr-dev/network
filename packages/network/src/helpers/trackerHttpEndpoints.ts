@@ -1,12 +1,17 @@
 import express from 'express'
 import cors from 'cors'
 import { MetricsContext } from './MetricsContext'
-import { addRttsToNodeConnections, getNodeConnections, getTopology, getStreamSizes } from '../logic/trackerSummaryUtils'
+import {
+    addRttsToNodeConnections,
+    findStreamsForNode,
+    getNodeConnections,
+    getTopology,
+    getStreamSizes
+} from '../logic/trackerSummaryUtils'
 import { Logger } from './Logger'
 import { Tracker } from '../logic/Tracker'
 import http from 'http'
 import https from 'https'
-import { StreamIdAndPartition } from '../identifiers'
 
 const staticLogger = new Logger(module)
 
@@ -103,16 +108,7 @@ export function trackerHttpEndpoints(
     app.get('/nodes/:nodeId/streams', async (req: express.Request, res: express.Response) => {
         const nodeId = req.params.nodeId
         staticLogger.debug(`request to /nodes/${nodeId}/streams`)
-        const result = Object.entries(tracker.getOverlayPerStream())
-            .filter(([_, overlayTopology]) => overlayTopology.hasNode(nodeId))
-            .map(([streamKey, overlayTopology]) => {
-                const streamIdAndPartition = StreamIdAndPartition.fromKey(streamKey)
-                return {
-                    streamId: streamIdAndPartition.id,
-                    partition: streamIdAndPartition.partition,
-                    topologySize: overlayTopology.getNumberOfNodes()
-                }
-            })
+        const result = findStreamsForNode(tracker.getOverlayPerStream(), nodeId)
         res.json(result)
     })
     app.get('/location/', (req: express.Request, res: express.Response) => {
