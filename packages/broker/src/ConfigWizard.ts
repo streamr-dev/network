@@ -126,11 +126,17 @@ const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {
     publishHttp: DEFAULT_HTTP_PORT
 }
 
+const PLUGIN_NAMES: {[pluginName: string]: string} = {
+    WEBSOCKET: 'websocket',
+    MQTT: 'mqtt',
+    PUBLISH_HTTP: 'publishHttp'
+}
+
 const pluginSelectorPrompt = {
     type: 'checkbox',
     name:'selectPlugins',
     message: 'Select the plugins to enable',
-    choices: Object.keys(PLUGIN_DEFAULT_PORTS)
+    choices: Object.values(PLUGIN_NAMES)
 }
 
 const pluginPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = []
@@ -164,13 +170,13 @@ prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
 export const getConfigFromAnswers = (answers: any): Config => {
     const config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
 
-    const pluginNames = Object.keys(PLUGIN_DEFAULT_PORTS)
+    const pluginNames = Object.values(PLUGIN_NAMES)
     pluginNames.forEach((pluginName) => {
         const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
             if (answers[`${pluginName}Port`] !== defaultPluginPort){
-                if (pluginName === 'publishHttp') {
+                if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
                     // the publishHttp plugin is special, it needs to be added to the config after the other plugins
                     config.httpServer = {
                         port: answers[`${pluginName}Port`]
