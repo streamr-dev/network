@@ -99,13 +99,6 @@ export class ConsoleAndPM2Metrics {
 
     async reportAndReset(): Promise<void> {
         const report = await this.metricsContext.report(true)
-        /*
-        // Report metrics to Streamr stream
-        if (this.client instanceof StreamrClient && this.client.isConnected() && this.legacyStreamId !== undefined) {
-            this.client.publish(this.legacyStreamId, report).catch((e) => {
-                logger.warn(`failed to publish metrics to ${this.legacyStreamId} because ${e}`)
-            })
-        }*/
         // @ts-expect-error
         const inPerSecond = report.metrics['broker/publisher'].messages.rate
         // @ts-expect-error
@@ -221,21 +214,4 @@ export class ConsoleAndPM2Metrics {
             this.meanBatchAge.set(meanBatchAge)
         }
     }
-
-    /*
-    async close() {
-        if (this.perStreamMetrics) {
-            this.perStreamMetrics.sec.stop()
-            this.perStreamMetrics.min.stop()
-            this.perStreamMetrics.hour.stop()
-            this.perStreamMetrics.day.stop()
-        }
-
-        io.destroy()
-        clearTimeout(this.timeout!)
-        if (this.client) {
-            await this.client.ensureDisconnected()
-        }
-    }
-    */
 }
