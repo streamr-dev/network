@@ -40,7 +40,7 @@ const logger = {
     }
 }
 
-export const DEFAULT_CONFIG: Partial<Config> = {
+export const DEFAULT_CONFIG: any = {
     network: {
         name: 'miner-node',
         trackers: [{
@@ -168,10 +168,7 @@ export const getConfigFromAnswers = (answers: any): Config => {
             // the publishHttp plugin is special, it needs to be added to the config after the other plugins
             if (pluginName === 'publishHttp') {
                 config.httpServer = {
-                    port: answers[`${pluginName}Port`],
-
-                    privateKeyFileName: null,
-                    certFileName: null
+                    port: answers[`${pluginName}Port`]
                 }
             }
         }
