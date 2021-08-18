@@ -21,7 +21,8 @@ export default class BrubeckNode implements Context {
     options
     id
     debug
-    isStarted = false
+    private startNodeCalled = false
+    private startNodeComplete = false
 
     constructor(
         context: Context,
@@ -34,32 +35,15 @@ export default class BrubeckNode implements Context {
         destroySignal.onDestroy(this.destroy)
     }
 
-    destroy = pOnce(async () => {
-        this.debug('destroy >>')
-        this.getNode.reset()
-
-        const node = this.cachedNode
-        this.cachedNode = undefined
-        // stop node only if started or in progress
-        if (node && this.isStarted) {
-            this.debug('stopping node >>')
-            await node.stop()
-            this.debug('stopping node <<')
-        }
-
-        this.debug('destroy <<')
-    })
-
-    async connect() {
-        await this.getNode()
+    private assertNotDestroyed() {
+        this.destroySignal.assertNotDestroyed(this)
     }
 
     initNode() {
+        this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
-        this.debug('initNode >>')
-
-        this.destroySignal.assertNotDestroyed(this)
+        this.debug('initNode')
 
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
@@ -69,37 +53,83 @@ export default class BrubeckNode implements Context {
         })
 
         this.cachedNode = node
-        this.debug('initNode <<')
 
         return node
     }
 
-    startNode = pOnce(async () => {
-        this.isStarted = true
-        this.debug('start >>')
-        const node = this.initNode()
-        await node.start()
+    /**
+     * Stop network node, or wait for it to stop if already stopping.
+     * Subsequent calls to getNode/start will fail.
+     */
+    destroy = pOnce(async () => {
+        this.debug('destroy >>')
 
-        if (this.destroySignal.isDestroyed()) {
-            this.debug('stopping node before init >>')
+        const node = this.cachedNode
+        this.cachedNode = undefined
+        // stop node only if started or in progress
+        if (node && this.startNodeCalled) {
+            this.debug('stopping node >>')
+            if (!this.startNodeComplete) {
+                // wait for start to finish before stopping node
+                const startNodeTask = this.startNode()
+                this.startNode.reset() // allow subsequent calls to fail
+                await startNodeTask
+            }
+
             await node.stop()
-            this.debug('stopping node before init <<')
+            this.debug('stopping node <<')
         }
+        this.startNode.reset() // allow subsequent calls to fail
 
-        // don't attach if disconnected while in progress
-        this.destroySignal.assertNotDestroyed(this)
-        this.debug('start <<')
-        return node
+        this.debug('destroy <<')
     })
 
+    /**
+     * Start network node, or wait for it to start if already started.
+     */
+    startNode = pOnce(async () => {
+        this.startNodeCalled = true
+        this.debug('start >>')
+        try {
+            const node = this.initNode()
+            await node.start()
+
+            if (this.destroySignal.isDestroyed()) {
+                this.debug('stopping node before init >>')
+                await node.stop()
+                this.debug('stopping node before init <<')
+            }
+            this.assertNotDestroyed()
+            return node
+        } finally {
+            this.startNodeComplete = true
+            this.debug('start <<')
+        }
+    })
+
+    /**
+     * Get started network node.
+     */
     getNode = this.startNode
 
-    publishToNode(streamMessage: StreamMessage) {
+    /**
+     * Calls publish on node after starting it.
+     * Basically a wrapper around: (await getNode()).publish(…)
+     * but will be sync in case that node is already started.
+     * Zalgo intentional. See below.
+     */
+    publishToNode(streamMessage: StreamMessage): void | Promise<void> {
+        // NOTE: function is intentionally not async for performance reasons.
+        // Will call cachedNode.publish immediately if cachedNode is set.
+        // Otherwise will wait for node to start.
         this.debug('publishToNode >> %o', streamMessage.getMessageID())
         try {
             this.destroySignal.assertNotDestroyed(this)
-            if (!this.cachedNode) {
-                return this.getNode().then((node) => {
+
+            if (!this.cachedNode || !this.startNodeComplete) {
+                // use .then instead of async/await so
+                // this.cachedNode.publish call can be sync
+                return this.startNode().then((node) => {
                     return node.publish(streamMessage)
                 })
             }

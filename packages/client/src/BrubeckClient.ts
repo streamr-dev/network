@@ -134,7 +134,7 @@ class BrubeckClientBase implements Context {
     }
 
     connect = pOnce(async () => {
-        await this.node.connect()
+        await this.node.startNode()
         const tasks = [
             this.publisher.start(),
         ]
