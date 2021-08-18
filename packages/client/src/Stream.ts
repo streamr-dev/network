@@ -1,3 +1,6 @@
+/**
+ * Wrapper for Stream metadata and (some) methods.
+ */
 import fetch from 'node-fetch'
 import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
 import { SPID, SID, MessageContent } from 'streamr-client-protocol'

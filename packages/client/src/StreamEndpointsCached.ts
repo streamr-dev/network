@@ -1,3 +1,6 @@
+/**
+ * Cached Subset of StreamEndpoints.
+ */
 import { SPID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 

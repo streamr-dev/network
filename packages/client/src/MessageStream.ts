@@ -1,3 +1,8 @@
+/**
+ * Wrapper around PushPipeline specific to StreamMessages.
+ * Subscriptions are MessageStreams.
+ * Not all MessageStreams are Subscriptions.
+ */
 import { PushPipeline, PipelineTransform } from './utils/Pipeline'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'

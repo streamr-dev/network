@@ -1,16 +1,17 @@
 /**
  * @module StreamrClientConfig
+ *
+ * Old Client Config
+ * New Brubeck Configuration in Config.ts.
+ * TODO: Disolve ConfigBase.
  */
 
-import qs from 'qs'
-import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 import { BigNumber } from '@ethersproject/bignumber'
 import { isAddress } from '@ethersproject/address'
 import has from 'lodash/has'
 import get from 'lodash/get'
 
 import { EthereumAddress, Todo } from './types'
-import { getVersionString } from './utils'
 import { StorageNode } from './StorageNode'
 
 import { AuthConfig, EthereumConfig } from './Ethereum'

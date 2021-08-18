@@ -1,3 +1,7 @@
+/**
+ * Public Subscribe APIs
+ */
+
 import { DependencyContainer, inject, scoped, Lifecycle } from 'tsyringe'
 import { allSettledValues, instanceId } from './utils'
 import { Context } from './utils/Context'
@@ -7,10 +11,6 @@ import { SPIDLike, SPID, SIDLike } from 'streamr-client-protocol'
 import { BrubeckContainer } from './Container'
 
 export { Subscription, SubscriptionSession }
-
-/**
- * Keeps track of subscriptions.
- */
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Subscriber implements Context {

@@ -1,3 +1,6 @@
+/**
+ * Validation Wrapper
+ */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamMessage, GroupKeyErrorResponse, StreamMessageValidator, SigningUtil, ValidationError } from 'streamr-client-protocol'
 

@@ -1,3 +1,6 @@
+/**
+ * StreamMessage Signing in-place.
+ */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamMessageUnsigned, StreamMessageSigned, SignatureType, SigningUtil } from 'streamr-client-protocol'
 import { Web3Provider } from '@ethersproject/providers'

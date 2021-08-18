@@ -1,3 +1,6 @@
+/**
+ * Login Endpoints Wrapper.
+ */
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import Ethereum, { AuthConfig } from './Ethereum'
 import { instanceId } from './utils'

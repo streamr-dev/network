@@ -1,3 +1,6 @@
+/**
+ * Public Resends API
+ */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { SPID, SIDLike, MessageRef, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'

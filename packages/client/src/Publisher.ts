@@ -1,3 +1,6 @@
+/**
+ * Public Publishing API
+ */
 import { StreamMessage, SPID, SIDLike, MessageContent } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 

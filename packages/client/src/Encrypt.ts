@@ -1,3 +1,6 @@
+/**
+ * Encrypt StreamMessages in-place.
+ */
 import { StreamMessage } from 'streamr-client-protocol'
 import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
 import { StreamEndpointsCached } from './StreamEndpointsCached'

@@ -1,3 +1,6 @@
+/**
+ * Central place to fetch async dependencies and convert message metadata into StreamMessages.
+ */
 import { inject, scoped, Lifecycle } from 'tsyringe'
 import { StreamMessage, SPID, MessageContent, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
 
@@ -31,6 +34,9 @@ export class StreamMessageCreatorAnonymous implements IMessageCreator {
     stop() {}
 }
 
+/**
+ * Create StreamMessages from metadata.
+ */
 @scoped(Lifecycle.ContainerScoped)
 export default class StreamMessageCreator implements IMessageCreator, Stoppable {
     isStopped = false

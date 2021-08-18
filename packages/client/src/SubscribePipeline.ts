@@ -1,3 +1,7 @@
+/**
+ * Subscription message processing pipeline
+ */
+
 import { MessageContent, SPID } from 'streamr-client-protocol'
 
 import OrderMessages from './OrderMessages'
@@ -11,10 +15,6 @@ import { Config } from './Config'
 import Resends from './Resends'
 import { DependencyContainer } from 'tsyringe'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-
-/**
- * Subscription message processing pipeline
- */
 
 export default function SubscribePipeline<T extends MessageContent | unknown>(
     spid: SPID,

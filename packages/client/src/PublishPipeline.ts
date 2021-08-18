@@ -1,3 +1,6 @@
+/**
+ * Organises async Publish steps into a Pipeline
+ */
 import { StreamMessage, MessageContent } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 

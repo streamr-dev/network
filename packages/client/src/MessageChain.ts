@@ -1,3 +1,6 @@
+/**
+ * MessageChains
+ */
 import { MessageRef, MessageID, MessageIDStrict, SPID } from 'streamr-client-protocol'
 import { CacheConfig } from './Config'
 import { randomString, CacheFn } from './utils'
@@ -19,6 +22,9 @@ export function getCachedMesssageChain(cacheConfig: CacheConfig) {
     })
 }
 
+/**
+ * Manage sequenceNumber & msgChainId for StreamMessages
+ */
 export default class MessageChain {
     readonly publisherId
     readonly msgChainId

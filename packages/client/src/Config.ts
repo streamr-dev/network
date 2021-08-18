@@ -1,3 +1,8 @@
+/**
+ * New Brubeck Configuration.
+ * Old Config in ConfigBase.
+ * TODO: Disolve ConfigBase.
+ */
 import 'reflect-metadata'
 import Config, { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
 import mergeWith from 'lodash/mergeWith'
@@ -27,6 +32,16 @@ export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
     debug: DebugConfig
 }
 
+/**
+ * DI Injection tokens for pieces of config.
+ * tsyringe needs a concrete value to use as the injection token.
+ * In the case of interfaces & types, these have no runtime value
+ * so we have to introduce some token to use for their injection.
+ * These symbols represent subsections of the full config.
+ *
+ * For example:
+ * config.ethereum can be injected with a token like: @inject(Config.Ethereum)
+ */
 const BrubeckConfigInjection = {
     Root: Symbol('Config.Root'),
     Auth: Symbol('Config.Auth'),

@@ -1,3 +1,6 @@
+/**
+ * Derive partitions for StreamMessages.
+ */
 import crypto from 'crypto'
 
 import { CacheFn } from './utils'

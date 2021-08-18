@@ -1,3 +1,6 @@
+/**
+ * Makes OrderingUtil more compatible with use in pipeline.
+ */
 import { injectable } from 'tsyringe'
 import { OrderingUtil, StreamMessage, SPID } from 'streamr-client-protocol'
 
@@ -13,7 +16,6 @@ import { SubscribeConfig } from './Config'
  * Wraps OrderingUtil into a PushBuffer.
  * Implements gap filling
  */
-
 @injectable()
 export default class OrderMessages<T> implements Context {
     id

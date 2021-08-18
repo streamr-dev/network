@@ -1,3 +1,6 @@
+/**
+ * Wrap fetch with default headers performing authentication if required.
+ */
 import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 

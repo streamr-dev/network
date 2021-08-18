@@ -1,3 +1,6 @@
+/**
+ * Wrap a network node.
+ */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode } from 'streamr-network'
 import { pOnce, uuid, instanceId, counterId } from './utils'
@@ -8,6 +11,10 @@ import { DestroySignal } from './DestroySignal'
 
 const uid = process.pid != null ? `p${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
+/**
+ * Wrap a network node.
+ * Lazily creates & starts node on first call to getNode().
+ */
 @scoped(Lifecycle.ContainerScoped)
 export default class BrubeckNode implements Context {
     private cachedNode?: NetworkNode

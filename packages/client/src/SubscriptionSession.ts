@@ -14,8 +14,8 @@ import { BrubeckContainer } from './Container'
 import BrubeckNode from './BrubeckNode'
 
 /**
- * Sends Subscribe/Unsubscribe requests as needed.
- * Adds connection handles as needed.
+ * Manages adding & removing subscriptions to node as needed.
+ * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
 export default class SubscriptionSession<T extends MessageContent | unknown> implements Context, Stoppable {

@@ -1,3 +1,6 @@
+/**
+ * Public Stream meta APIs.
+ */
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
 import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'

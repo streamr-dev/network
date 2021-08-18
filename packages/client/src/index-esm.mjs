@@ -1,3 +1,4 @@
+// ESM EntryPoint
 import StreamrClient from './index.js'
 // required to get import { DataUnion } from 'streamr-client' to work
 export * from './index.js'

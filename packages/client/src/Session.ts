@@ -1,3 +1,6 @@
+/**
+ * Session token caching and async init.
+ */
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
 

@@ -1,3 +1,6 @@
+/**
+ * More ergonomic wrapper around fetch/authFetch
+ */
 import { Lifecycle, scoped, inject, DependencyContainer } from 'tsyringe'
 
 import { Debugger } from './utils/log'

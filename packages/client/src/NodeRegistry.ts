@@ -1,3 +1,7 @@
+/**
+ * Handle async + lazy initialisation of storage node contract
+ * and cache of storage node registry items.
+ */
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import * as StorageNodeRegistryConfig from 'streamr-client-protocol/contracts/NodeRegistry.json'

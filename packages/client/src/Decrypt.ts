@@ -1,3 +1,6 @@
+/**
+ * Decrypt StreamMessages in-place.
+ */
 import { StreamMessage } from 'streamr-client-protocol'
 
 import EncryptionUtil, { UnableToDecryptError } from './encryption/Encryption'
