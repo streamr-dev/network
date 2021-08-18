@@ -177,7 +177,7 @@ export const getConfigFromAnswers = (answers: any): Config => {
                     }
                 } else {
                     // user provided a custom value, fill in
-                    pluginConfig = { ...template, port: answers[`${pluginName}Port`] }
+                    pluginConfig = { port: answers[`${pluginName}Port`] }
                 }
             }
             config.plugins![pluginName] = pluginConfig
