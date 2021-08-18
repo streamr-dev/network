@@ -70,7 +70,7 @@ export const DEFAULT_CONFIG: any = {
         testnetMiner: {
             rewardStreamId: "streamr.eth/brubeck-testnet/rewards",
             claimServerUrl: "http://testnet2.streamr.network:3011",
-            maxClaimDelay: 5000
+            maxClaimDelay: 60000
         },
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
