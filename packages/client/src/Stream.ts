@@ -105,9 +105,9 @@ class StreamrStream implements StreamMetadata {
     requireSignedData!: boolean
     storageDays?: number
     inactivityThresholdHours?: number
-    _rest: Rest
-    _resends: Resends
-    _publisher: Publisher
+    protected _rest: Rest
+    protected _resends: Resends
+    protected _publisher: Publisher
 
     constructor(props: StreamProperties, @inject(BrubeckContainer) private container: DependencyContainer) {
         Object.assign(this, props)
@@ -129,10 +129,9 @@ class StreamrStream implements StreamMetadata {
     toObject() {
         const result = {}
         Object.keys(this).forEach((key) => {
-            if (!key.startsWith('_')) {
-                // @ts-expect-error
-                result[key] = this[key]
-            }
+            if (key.startsWith('_') || typeof key === 'function') { return }
+            // @ts-expect-error
+            result[key] = this[key]
         })
         return result
     }
@@ -224,10 +223,7 @@ class StreamrStream implements StreamMetadata {
         await this.update()
     }
 
-    async addToStorageNode(node: StorageNode|EthereumAddress, {
-        timeout = 30000,
-        pollInterval = 200
-    }: {
+    async addToStorageNode(node: StorageNode|EthereumAddress, waitOptions: {
         timeout?: number,
         pollInterval?: number
     } = {}) {
@@ -237,6 +233,16 @@ class StreamrStream implements StreamMetadata {
             ['streams', this.id, 'storageNodes'],
             { address }
         )
+        await this.waitUntilStorageAssigned(waitOptions)
+    }
+
+    async waitUntilStorageAssigned({
+        timeout = 30000,
+        pollInterval = 200
+    }: {
+        timeout?: number,
+        pollInterval?: number
+    } = {}) {
         // wait for propagation: the storage node sees the database change in E&E and
         // is ready to store the any stream data which we publish
         await until(() => this.isStreamStoredInStorageNode(this.id), timeout, pollInterval, () => (
