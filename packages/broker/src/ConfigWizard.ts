@@ -164,12 +164,13 @@ export const getConfigFromAnswers = (answers: any): Config => {
     pluginNames.forEach((pluginName) => {
         const template = PLUGIN_TEMPLATES[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
-            config.plugins![pluginName] = { ...template, port: answers[`${pluginName}Port`] }
             // the publishHttp plugin is special, it needs to be added to the config after the other plugins
             if (pluginName === 'publishHttp') {
                 config.httpServer = {
                     port: answers[`${pluginName}Port`]
                 }
+            } else {
+                config.plugins![pluginName] = { ...template, port: answers[`${pluginName}Port`] }
             }
         }
     })
