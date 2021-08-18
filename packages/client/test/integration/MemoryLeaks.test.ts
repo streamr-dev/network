@@ -1,11 +1,10 @@
 import { wait } from 'streamr-test-utils'
-import { fakePrivateKey, describeRepeats, snapshot, LeaksDetector } from '../../utils'
-import { getPublishTestMessages } from './utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import Subscription from '../../../src/Subscription'
-import { counterId, Defer } from '../../../src/utils'
+import { getPublishTestMessages, fakePrivateKey, describeRepeats, snapshot, LeaksDetector } from '../utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
+import Subscription from '../../src/Subscription'
+import { counterId, Defer } from '../../src/utils'
 
-import clientOptions from '../config'
+import clientOptions from './config'
 
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
@@ -50,7 +49,7 @@ describeRepeats('Leaks', () => {
                 const client = createClient()
                 leaksDetector.addAll(client.id, client)
                 await client.connect()
-                await client.disconnect()
+                await client.destroy()
             })
 
             test('connect + disconnect + session token', async () => {
@@ -58,7 +57,7 @@ describeRepeats('Leaks', () => {
                 leaksDetector.addAll(client.id, client)
                 await client.connect()
                 await client.getSessionToken()
-                await client.disconnect()
+                await client.destroy()
             })
 
             test('connect + disconnect + getAddress', async () => {
@@ -67,7 +66,7 @@ describeRepeats('Leaks', () => {
                 await client.connect()
                 await client.getSessionToken()
                 await client.getAddress()
-                await client.disconnect()
+                await client.destroy()
             })
         })
 
@@ -86,7 +85,7 @@ describeRepeats('Leaks', () => {
                 const c = client
                 // @ts-expect-error doesn't want us to unassign but it's ok
                 client = undefined // unassign so can gc
-                await c.disconnect()
+                await c.destroy()
                 snapshot()
             })
 
@@ -107,7 +106,7 @@ describeRepeats('Leaks', () => {
                 })
 
                 await publishTestMessages(5)
-                await client.disconnect()
+                await client.destroy()
                 leaksDetector.add('stream', stream)
                 await wait(3000)
             }, 15000)

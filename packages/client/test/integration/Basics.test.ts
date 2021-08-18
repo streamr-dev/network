@@ -1,11 +1,10 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, Msg } from '../../utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import { publishManyGenerator } from './utils'
+import { describeRepeats, uid, fakePrivateKey, Msg, publishManyGenerator } from '../utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
 
-import clientOptions from '../config'
-import { Stream } from '../../../src/Stream'
+import clientOptions from './config'
+import { Stream } from '../../src/Stream'
 
 jest.setTimeout(15000)
 
@@ -59,7 +58,7 @@ describeRepeats('StreamrClient', () => {
         await wait(0)
         if (client) {
             client.debug('disconnecting after test')
-            await client.disconnect()
+            await client.destroy()
         }
     })
 
@@ -100,7 +99,7 @@ describeRepeats('StreamrClient', () => {
 
         if (client) {
             client.debug('disconnecting after test')
-            await client.disconnect()
+            await client.destroy()
         }
     })
 

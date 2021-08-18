@@ -109,7 +109,7 @@ describe('resend cancellation', () => {
     })
 
     afterEach(async () => {
-        await client.ensureDisconnected()
+        await client.disconnect()
         await networkNode.stop()
         await websocketServer.close()
         await tracker.stop()
@@ -132,7 +132,7 @@ describe('resend cancellation', () => {
             }
         })
         const p = waitForEvent(mockStorageData, 'close', 2000)
-        await client.ensureDisconnected()
+        await client.disconnect()
         await p
         expect(mockStorageData.destroyed).toBe(true)
     })

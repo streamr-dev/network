@@ -1,13 +1,11 @@
+import { SmartContractRecord } from 'streamr-network/dist/src/streamr-protocol'
+
 export interface NetworkSmartContract {
     contractAddress: string
     jsonRpcProvider: string
 }
 
-export interface TrackerRegistryItem {
-    id: string
-    ws: string
-    http: string
-}
+export type TrackerRegistryItem = SmartContractRecord
 
 export interface TurnConfig {
     url: string,
@@ -29,7 +27,7 @@ export interface NetworkConfig {
 }
 
 export interface HttpServerConfig {
-    port: number, 
+    port: number,
     privateKeyFileName: string | null,
     certFileName: string | null
 }
@@ -54,8 +52,6 @@ export interface Config {
         } | null,
         perNodeMetrics: {
             enabled: boolean
-            wsUrl: string | null
-            httpUrl: string | null
             intervals: {
                 sec: number,
                 min: number,
@@ -66,9 +62,10 @@ export interface Config {
         } | null,
     },
     streamrUrl: string,
+    streamrWsUrl: string,
     streamrAddress: string,
     storageNodeConfig: StorageNodeConfig,
-    httpServer: HttpServerConfig | null
+    httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: {
         keys: string[]

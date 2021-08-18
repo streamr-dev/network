@@ -28,6 +28,7 @@ export function formConfig({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
+    streamrWsUrl = `ws://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
     reporting = false
@@ -47,7 +48,7 @@ export function formConfig({
                 },
                 storageConfig: {
                     refreshInterval: storageConfigRefreshInterval
-                } 
+                }
             }
         }
     }
@@ -104,13 +105,14 @@ export function formConfig({
             }
         },
         streamrUrl,
+        streamrWsUrl,
         streamrAddress,
         storageNodeConfig,
-        httpServer: httpPort ? {
-            port: httpPort,
+        httpServer: {
+            port: httpPort ? httpPort : 8080,
             privateKeyFileName: null,
             certFileName: null
-        } : null,
+        },
         apiAuthentication,
         plugins
     }

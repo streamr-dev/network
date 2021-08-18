@@ -1,7 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, fakePrivateKey, createTestStream } from '../utils'
-import { getPublishTestMessages } from '../integration/brubeck/utils'
+import { getPublishTestMessages, describeRepeats, fakePrivateKey, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 
@@ -52,7 +51,7 @@ describeRepeats('StreamrClient resends', () => {
             await wait(500)
             if (client) {
                 client.debug('disconnecting after test')
-                await client.disconnect()
+                await client.destroy()
             }
         })
 
@@ -73,7 +72,7 @@ describeRepeats('StreamrClient resends', () => {
                     waitForLast: true,
                 })
                 client.debug(`Published ${LONG_RESEND} messages`)
-                await client.disconnect()
+                await client.destroy()
             }, 300000)
 
             test('receives all messages', async () => {

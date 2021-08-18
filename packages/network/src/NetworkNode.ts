@@ -13,6 +13,10 @@ export class NetworkNode extends Node {
         super(networkOpts)
     }
 
+    setExtraMetadata(metadata: Record<string, unknown>): void {
+        this.extraMetadata = metadata
+    }
+
     publish(streamMessage: StreamMessage): void {
         this.onDataReceived(streamMessage)
     }

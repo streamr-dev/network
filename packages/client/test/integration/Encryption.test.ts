@@ -1,15 +1,16 @@
 import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
-import { describeRepeats, fakePrivateKey, Msg, Debug, addAfterFn } from '../../utils'
-import { getPublishTestStreamMessages, publishTestMessagesGenerator, createTestStream } from './utils'
-import { Defer } from '../../../src/utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import { GroupKey } from '../../../src/encryption/Encryption'
-import { Stream, StreamOperation } from '../../../src/Stream'
-import Subscription from '../../../src/Subscription'
-import { StorageNode } from '../../../src/StorageNode'
+import {
+    describeRepeats, fakePrivateKey, Msg, Debug, addAfterFn, getPublishTestStreamMessages, publishTestMessagesGenerator, createTestStream
+} from '../utils'
+import { Defer } from '../../src/utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
+import { GroupKey } from '../../src/encryption/Encryption'
+import { Stream, StreamOperation } from '../../src/Stream'
+import Subscription from '../../src/Subscription'
+import { StorageNode } from '../../src/StorageNode'
 
-import clientOptions from '../config'
+import clientOptions from './config'
 
 const debug = Debug('BrubeckClient::test')
 const TIMEOUT = 15 * 1000
@@ -50,7 +51,7 @@ describeRepeats('decryption', () => {
         await wait(0)
         if (client) {
             client.debug(msg)
-            await client.disconnect()
+            await client.destroy()
         }
     }
 
@@ -109,12 +110,12 @@ describeRepeats('decryption', () => {
         debug('set up clients', opts)
         if (publisher) {
             debug('disconnecting old publisher')
-            await publisher.disconnect()
+            await publisher.destroy()
         }
 
         if (subscriber) {
             debug('disconnecting old subscriber')
-            await subscriber.disconnect()
+            await subscriber.destroy()
         }
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
@@ -416,8 +417,8 @@ describeRepeats('decryption', () => {
             }, TIMEOUT * 2)
 
             it('can rotate when publisher + subscriber initialised with groupkey', async () => {
-                await publisher.disconnect()
-                await subscriber.disconnect()
+                await publisher.destroy()
+                await subscriber.destroy()
 
                 const groupKey = GroupKey.generate()
                 const groupKeys = {

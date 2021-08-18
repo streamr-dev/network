@@ -1,13 +1,15 @@
 import 'reflect-metadata'
 import Config, { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
-import defaultsDeep from 'lodash/defaultsDeep'
+import merge from 'lodash/merge'
 import cloneDeep from 'lodash/cloneDeep'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NodeRegistryOptions } from './NodeRegistry'
+import { InspectOptions } from 'util'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Partial<NetworkNodeOptions>
     nodeRegistry?: Partial<NodeRegistryOptions>
+    debug?: Partial<DebugConfig>
 }
 
 export {
@@ -15,9 +17,14 @@ export {
     NodeRegistryOptions as NodeRegistryConfig
 }
 
+export type DebugConfig = {
+    inspectOpts: InspectOptions
+}
+
 export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
     network: NetworkNodeOptions
     nodeRegistry: NodeRegistryOptions
+    debug: DebugConfig
 }
 
 const BrubeckConfigInjection = {
@@ -39,19 +46,35 @@ export { BrubeckConfigInjection as Config }
 
 // TODO: Production values
 const BRUBECK_CLIENT_DEFAULTS = {
+    debug: {
+        inspectOpts: {
+            depth: 5,
+            maxStringLength: 256
+        }
+    },
     nodeRegistry: {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         jsonRpcProvider: 'http://192.168.0.8:8546',
     },
     network: {
         trackers: [
-            { id: 'tracker1', ws: 'ws://192.168.0.8:30301', http: 'http://192.168.0.8:30301' },
-            { id: 'tracker2', ws: 'ws://192.168.0.8:30302', http: 'http://192.168.0.8:30301' },
-            { id: 'tracker3', ws: 'ws://192.168.0.8:30303', http: 'http://192.168.0.8:30301' },
+            {
+                id: '0xDE11165537ef6C01260ee89A850a281525A5b63F',
+                ws: 'ws://192.168.0.8:30301',
+                http: 'http://192.168.0.8:30301'
+            }, {
+                id: '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c',
+                ws: 'ws://192.168.0.8:30302',
+                http: 'http://192.168.0.8:30302'
+            }, {
+                id: '0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75',
+                ws: 'ws://192.168.0.8:30303',
+                http: 'http://192.168.0.8:30303'
+            }
         ],
     },
 }
 
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
-    return cloneDeep(defaultsDeep({}, BRUBECK_CLIENT_DEFAULTS, Config(config)))
+    return cloneDeep(merge({}, BRUBECK_CLIENT_DEFAULTS, Config(config)))
 }

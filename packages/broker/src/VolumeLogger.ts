@@ -126,7 +126,7 @@ export class VolumeLogger {
 
     async initializePerMetricsStream() {
         if (!this.client || !this.brokerAddress || !this.storageNodeAddress) {
-            throw new Error('Cannot initialize perStream metrics without valid client, brokerAddress, storageNodeAddress')
+            throw new Error(`Cannot initialize perStream metrics without valid client (${!!this.client}), brokerAddress (${this.brokerAddress}), storageNodeAddress (${this.storageNodeAddress})`)
         }
         this.perStreamMetrics = {
             sec: await startMetrics({

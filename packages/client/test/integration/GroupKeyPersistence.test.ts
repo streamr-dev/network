@@ -37,12 +37,12 @@ describeRepeats('Group Key Persistence', () => {
         await wait(0)
         if (publisher) {
             publisher.debug('disconnecting after test')
-            await publisher.disconnect()
+            await publisher.destroy()
         }
 
         if (subscriber) {
             subscriber.debug('disconnecting after test')
-            await subscriber.disconnect()
+            await subscriber.destroy()
         }
     })
 
@@ -110,7 +110,7 @@ describeRepeats('Group Key Persistence', () => {
                 // for group keys, which the new publisher will have to read from
                 // persistence
                 published = await publishTestMessages(5)
-                await publisher.disconnect()
+                await publisher.destroy()
                 publisher2 = createClient({
                     id: 'publisher2',
                     auth: {
@@ -119,7 +119,7 @@ describeRepeats('Group Key Persistence', () => {
                 })
 
                 addAfter(async () => {
-                    await publisher2.disconnect()
+                    await publisher2.destroy()
                 })
 
                 await publisher2.connect()
@@ -167,8 +167,8 @@ describeRepeats('Group Key Persistence', () => {
                     break
                 }
             }
-            await subscriber.disconnect()
-            await publisher.disconnect()
+            await subscriber.destroy()
+            await publisher.destroy()
 
             const subscriber2 = createClient({
                 id: 'subscriber2',
@@ -178,7 +178,7 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             addAfter(async () => {
-                await subscriber2.disconnect()
+                await subscriber2.destroy()
             })
 
             await subscriber2.connect()
@@ -214,7 +214,7 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             addAfter(async () => {
-                await publisher2.disconnect()
+                await publisher2.destroy()
             })
 
             await publisher2.connect()

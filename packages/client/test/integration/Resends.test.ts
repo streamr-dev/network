@@ -4,17 +4,19 @@ import { wait } from 'streamr-test-utils'
 import {
     describeRepeats,
     fakePrivateKey,
+    getPublishTestStreamMessages,
+    getWaitForStorage,
+    createTestStream
     // getTestSetTimeout,
     // addAfterFn,
-} from '../../utils'
-import { getPublishTestStreamMessages, getWaitForStorage, createTestStream } from './utils'
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import Resend from '../../../src/Resends'
-// import { Defer } from '../../../src/utils'
+} from '../utils'
+import { BrubeckClient } from '../../src/BrubeckClient'
+import Resend from '../../src/Resends'
+// import { Defer } from '../../src/utils'
 
-import clientOptions from '../config'
-import { Stream } from '../../../src/Stream'
-import { StorageNode } from '../../../src/StorageNode'
+import clientOptions from './config'
+import { Stream } from '../../src/Stream'
+import { StorageNode } from '../../src/StorageNode'
 
 // const { ControlMessage } = ControlLayer
 
@@ -96,7 +98,7 @@ describeRepeats('resends', () => {
     afterEach(async () => {
         if (client) {
             client.debug('disconnecting after test')
-            await client.disconnect()
+            await client.destroy()
         }
     })
 

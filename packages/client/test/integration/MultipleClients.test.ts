@@ -1,7 +1,6 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream } from '../utils'
-import { getPublishTestMessages, getWaitForStorage } from './brubeck/utils'
+import { getPublishTestMessages, getWaitForStorage, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream } from '../utils'
 import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
 import { counterId } from '../../src/utils'
 import { StorageNode } from '../../src/StorageNode'
@@ -54,12 +53,12 @@ describeRepeats('PubSub with multiple clients', () => {
     afterEach(async () => {
         if (mainClient) {
             mainClient.debug('disconnecting after test')
-            await mainClient.disconnect()
+            await mainClient.destroy()
         }
 
         if (otherClient) {
             otherClient.debug('disconnecting after test')
-            await otherClient.disconnect()
+            await otherClient.destroy()
         }
 
         expect(errors).toEqual([])
@@ -76,7 +75,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
         addAfter(async () => {
             counterId.clear(publisherId) // prevent overflows in counter
-            await pubClient.disconnect()
+            await pubClient.destroy()
         })
 
         // pubClient.on('error', getOnError(errors))
@@ -101,7 +100,7 @@ describeRepeats('PubSub with multiple clients', () => {
         })
 
         addAfter(async () => (
-            client.disconnect()
+            client.destroy()
         ))
 
         // client.on('error', getOnError(errors))

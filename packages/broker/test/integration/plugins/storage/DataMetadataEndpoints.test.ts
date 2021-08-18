@@ -63,7 +63,7 @@ describe('DataMetadataEndpoints', () => {
 
     afterAll(async () => {
         await tracker.stop()
-        await client1.ensureDisconnected()
+        await client1.disconnect()
         await publisherNode.stop()
         await storageNode.stop()
         await assignmentEventManager.close()

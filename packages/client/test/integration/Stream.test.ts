@@ -1,7 +1,6 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { fakePrivateKey, createTestStream } from '../utils'
-import { getPublishTestMessages } from './brubeck/utils'
+import { getPublishTestMessages, fakePrivateKey, createTestStream } from '../utils'
 import { StorageNode } from '../../src/StorageNode'
 
 import clientOptions from './config'
@@ -29,7 +28,7 @@ describe('Stream', () => {
     })
 
     afterEach(async () => {
-        await client.disconnect()
+        await client.destroy()
     })
 
     describe('detectFields()', () => {

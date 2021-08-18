@@ -11,7 +11,7 @@ describe('authFetch', () => {
     let client: StreamrClient
     afterEach(async () => {
         if (!client) { return }
-        await client.disconnect()
+        await client.destroy()
     })
 
     afterAll(() => {

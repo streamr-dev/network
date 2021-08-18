@@ -79,7 +79,7 @@ describe('StorageConfig', () => {
     })
 
     afterEach(async () => {
-        await client.ensureDisconnected()
+        await client.disconnect()
         await Promise.allSettled([storageNode.stop(), broker.stop(), tracker.stop(), assignmentEventManager.close()])
     })
 

@@ -1,16 +1,15 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { BrubeckClient } from '../../../src/BrubeckClient'
-import { BrubeckClientConfig } from '../../../src/Config'
-import { Stream } from '../../../src/Stream'
-import Subscriber from '../../../src/Subscriber'
-import Subscription from '../../../src/Subscription'
-import { StorageNode } from '../../../src/StorageNode'
+import { BrubeckClient } from '../../src/BrubeckClient'
+import { BrubeckClientConfig } from '../../src/Config'
+import { Stream } from '../../src/Stream'
+import Subscriber from '../../src/Subscriber'
+import Subscription from '../../src/Subscription'
+import { StorageNode } from '../../src/StorageNode'
 
-import { fakePrivateKey, describeRepeats, Msg } from '../../utils'
-import { getPublishTestStreamMessages, createTestStream } from './utils'
-import clientOptions from '../config'
+import { getPublishTestStreamMessages, createTestStream, fakePrivateKey, describeRepeats, Msg } from '../utils'
+import clientOptions from './config'
 
 const MAX_MESSAGES = 10
 
@@ -93,7 +92,7 @@ describeRepeats('GapFill', () => {
         await wait(0)
         if (client) {
             client.debug('disconnecting after test >>')
-            await client.disconnect()
+            await client.destroy()
             client.debug('disconnecting after test <<')
         }
     })

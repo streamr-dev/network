@@ -3,23 +3,27 @@ import { writeHeapSnapshot } from 'v8'
 
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { PublishRequest } from 'streamr-client-protocol'
+import { PublishRequest, StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
-import { counterId, CounterId, AggregatedError } from '../src/utils'
+import { counterId, CounterId, AggregatedError, Scaffold } from '../src/utils'
 import { Debug, format } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { StreamProperties } from '../src/Stream'
 import clientOptions from './integration/config'
 import { BrubeckClient } from '../src/BrubeckClient'
 
+import { startTracker, Tracker } from 'streamr-network'
+
+import Signal from '../src/utils/Signal'
+import { PublishMetadata } from '../src/Publisher'
+import { Pipeline } from '../src/utils/Pipeline'
+
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
 export {
     testDebug as Debug
 }
-
-export * from './integration/brubeck/utils' // TODO: move this in here
 
 export function mockContext() {
     const id = counterId('mockContext')
@@ -150,7 +154,8 @@ const getTestName = (module: NodeModule) => {
     return (groups !== null) ? groups[1] : module.filename
 }
 
-const randomTestRunId = crypto.randomBytes(4).toString('hex')
+const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
+
 // eslint-disable-next-line no-undef
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
@@ -251,4 +256,156 @@ export class LeaksDetector {
     clear() {
         this.leakDetectors.clear()
     }
+}
+
+type PublishManyOpts = Partial<{
+    delay: number,
+    timestamp: number | (() => number)
+    sequenceNumber: number | (() => number)
+    createMessage: (content: any) => any
+}>
+
+export async function* publishManyGenerator(
+    total: number = 5,
+    opts: PublishManyOpts = {}
+): AsyncGenerator<PublishMetadata<any>> {
+    const { delay = 10, sequenceNumber, timestamp, createMessage = Msg } = opts
+    const batchId = counterId('publishMany')
+    for (let i = 0; i < total; i++) {
+        yield {
+            timestamp: typeof timestamp === 'function' ? timestamp() : timestamp,
+            sequenceNumber: typeof sequenceNumber === 'function' ? sequenceNumber() : sequenceNumber,
+            content: createMessage({
+                batchId,
+                value: `${i + 1} of ${total}`
+            })
+        }
+
+        if (delay) {
+            // eslint-disable-next-line no-await-in-loop
+            await wait(delay)
+        }
+    }
+}
+
+type PublishTestMessageOptions = PublishManyOpts & {
+    waitForLast?: boolean
+    waitForLastCount?: number
+    waitForLastTimeout?: number,
+    retainMessages?: boolean
+    onSourcePipeline?: Signal<Pipeline<PublishMetadata<any>>>
+    onPublishPipeline?: Signal<Pipeline<StreamMessage>>
+    afterEach?: (msg: StreamMessage) => Promise<void> | void
+}
+
+export function publishTestMessagesGenerator(client: BrubeckClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
+    const sid = SPID.parse(stream)
+    const source = new Pipeline(publishManyGenerator(maxMessages, opts))
+    if (opts.onSourcePipeline) {
+        opts.onSourcePipeline.trigger(source)
+    }
+    const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(sid, source))
+    if (opts.afterEach) {
+        pipeline.forEach(opts.afterEach)
+    }
+    return pipeline
+
+}
+
+export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
+    const sid = SPID.parse(stream)
+    return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
+        const {
+            waitForLast,
+            waitForLastCount,
+            waitForLastTimeout,
+            retainMessages = true,
+            ...options
+        } = {
+            ...defaultOpts,
+            ...opts,
+        }
+        const publishStream = publishTestMessagesGenerator(client, sid, maxMessages, options)
+        if (opts.onPublishPipeline) {
+            opts.onPublishPipeline.trigger(publishStream)
+        }
+        const streamMessages = []
+        let count = 0
+        for await (const streamMessage of publishStream) {
+            count += 1
+            if (!retainMessages) {
+                streamMessages.length = 0 // only keep last message
+            }
+            streamMessages.push(streamMessage)
+            if (count === maxMessages) {
+                break
+            }
+        }
+        streamMessages.forEach((s) => s.getParsedContent())
+        if (!waitForLast) {
+            return streamMessages
+        }
+
+        await getWaitForStorage(client, {
+            count: waitForLastCount,
+            timeout: waitForLastTimeout,
+        })(streamMessages[streamMessages.length - 1])
+        return streamMessages
+    }
+}
+
+export function getPublishTestMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
+    const sid = SPID.parse(stream)
+    const publishTestStreamMessages = getPublishTestStreamMessages(client, sid, defaultOpts)
+    return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
+        const streamMessages = await publishTestStreamMessages(maxMessages, opts)
+        return streamMessages.map((s) => s.getParsedContent())
+    }
+}
+
+export function getWaitForStorage(client: BrubeckClient, defaultOpts = {}) {
+    return async (lastPublished: StreamMessage, opts = {}) => {
+        return client.publisher.waitForStorage(lastPublished, {
+            ...defaultOpts,
+            ...opts,
+        })
+    }
+}
+
+function initTracker() {
+    const trackerPort = 30304 + (process.pid % 1000)
+    let counter = 0
+    let tracker: Tracker
+    const update = Scaffold([
+        async () => {
+            tracker = await startTracker({
+                host: '127.0.0.1',
+                port: trackerPort,
+                id: `tracker${trackerPort}`
+            })
+
+            return async () => {
+                await tracker.stop()
+            }
+        }
+    ], () => counter > 0)
+
+    return {
+        trackerPort,
+        async up() {
+            counter += 1
+            return update()
+        },
+        async down() {
+            counter = Math.max(0, counter - 1)
+            return update()
+        }
+    }
+}
+
+export function useTracker() {
+    const { up, down, trackerPort } = initTracker()
+    beforeEach(up)
+    afterEach(down)
+    return trackerPort
 }

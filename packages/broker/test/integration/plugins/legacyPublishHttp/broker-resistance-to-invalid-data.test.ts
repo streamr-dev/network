@@ -29,7 +29,7 @@ describe('broker resistance to invalid data', () => {
         const client = createClient(0)
         const freshStream = await createTestStream(client, module)
         streamId = freshStream.id
-        await client.ensureDisconnected()
+        await client.disconnect()
         sessionToken = await client.session.getSessionToken()
     })
 
