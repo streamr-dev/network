@@ -120,26 +120,26 @@ let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.Checkbox
     }
 ]
 
-const PLUGIN_TEMPLATES: {[pluginName: string]: {port: number}} = {
-    websocket: { port: DEFAULT_WS_PORT },
-    mqtt: { port: DEFAULT_MQTT_PORT },
-    publishHttp: { port: DEFAULT_HTTP_PORT }
+const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {
+    websocket: DEFAULT_WS_PORT,
+    mqtt: DEFAULT_MQTT_PORT,
+    publishHttp: DEFAULT_HTTP_PORT
 }
 
 const pluginSelectorPrompt = {
     type: 'checkbox',
     name:'selectPlugins',
     message: 'Select the plugins to enable',
-    choices: Object.keys(PLUGIN_TEMPLATES)
+    choices: Object.keys(PLUGIN_DEFAULT_PORTS)
 }
 
 const pluginPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = []
-Object.keys(PLUGIN_TEMPLATES).map((pluginName) => {
-    const plugin = PLUGIN_TEMPLATES[pluginName]
+Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
+    const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
     pluginPrompts.push({
         type: 'input',
         name: `${pluginName}Port`,
-        message: `Select a port for the ${pluginName} Plugin [Enter for default: ${plugin.port}]`,
+        message: `Select a port for the ${pluginName} Plugin [Enter for default: ${defaultPluginPort}]`,
         when: (answers: inquirer.Answers) => {
             return answers.selectPlugins.includes(pluginName)
         },
@@ -155,7 +155,7 @@ Object.keys(PLUGIN_TEMPLATES).map((pluginName) => {
 
             return true
         },
-        default: plugin.port
+        default: defaultPluginPort
     })
 })
 
@@ -164,12 +164,12 @@ prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
 export const getConfigFromAnswers = (answers: any): Config => {
     const config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
 
-    const pluginNames = Object.keys(PLUGIN_TEMPLATES)
+    const pluginNames = Object.keys(PLUGIN_DEFAULT_PORTS)
     pluginNames.forEach((pluginName) => {
-        const template = PLUGIN_TEMPLATES[pluginName]
+        const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
-            if (answers[`${pluginName}Port`] !== template.port){
+            if (answers[`${pluginName}Port`] !== defaultPluginPort){
                 if (pluginName === 'publishHttp') {
                     // the publishHttp plugin is special, it needs to be added to the config after the other plugins
                     config.httpServer = {
