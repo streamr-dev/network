@@ -7,7 +7,6 @@ import chalk from "chalk"
 
 import { generateMnemonicFromAddress } from 'streamr-client-protocol'
 
-
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'

@@ -16,6 +16,7 @@ import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
 import { StorageNodeRegistry } from "./StorageNodeRegistry"
+import { generateMnemonicFromAddress } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
 const { Utils } = Protocol
 
@@ -148,6 +149,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (httpServerRoutes.length > 0) {
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
+
+            logger.info(`Welcome to the Streamr Network. Your node's generated name is ${generateMnemonicFromAddress(brokerAddress)}.`)
+            logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${brokerAddress}`)
+
             logger.info(`Network node '${networkNodeName}' (id=${nodeId}) running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             logger.info(`Configured with trackers: ${trackers.join(', ')}`)
