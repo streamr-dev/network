@@ -16,9 +16,11 @@ const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
 const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
 const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
 
-
 const MIN_PORT_VALUE = 1024
 const MAX_PORT_VALUE = 49151
+
+const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
+const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 const logger = {
     print: (...args: any[]) => {
@@ -58,11 +60,6 @@ export const DEFAULT_CONFIG: Partial<Config> = {
             url: "https://testnet2.streamr.network:8001"
         }]
     },
-    httpServer: {
-        port: DEFAULT_HTTP_PORT,
-        privateKeyFileName: null,
-        certFileName: null
-    },
     plugins: {
         legacyWebsocket: {
             port: DEFAULT_LEGACY_WS_PORT
@@ -90,24 +87,19 @@ export const DEFAULT_CONFIG: Partial<Config> = {
     },
 }
 
-const promptValues = {
-    generate: 'Generate',
-    import: 'Import'
-}
-
 let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
     {
         type: 'list',
         name:'generateOrImportEthereumPrivateKey',
         message: 'Do you want to generate a new Ethereum private key or import an existing one?',
-        choices: [promptValues.generate, promptValues.import]
+        choices: [PRIVATE_KEY_SOURCE_GENERATE, PRIVATE_KEY_SOURCE_IMPORT]
     },
     {
         type: 'input',
         name:'importPrivateKey',
         message: 'Please provide the private key to import',
         when: (answers: inquirer.Answers) => {
-            return answers.generateOrImportEthereumPrivateKey === promptValues.import
+            return answers.generateOrImportEthereumPrivateKey === PRIVATE_KEY_SOURCE_IMPORT
         },
         validate: (input: string): string | boolean => {
             try {
@@ -124,7 +116,7 @@ let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.Checkbox
     }
 ]
 
-const PLUGIN_TEMPLATES = {
+const PLUGIN_TEMPLATES: {[pluginName: string]: {port: number}} = {
     websocket: { port: DEFAULT_WS_PORT },
     mqtt: { port: DEFAULT_MQTT_PORT },
     publishHttp: { port: DEFAULT_HTTP_PORT }
@@ -137,9 +129,10 @@ const pluginSelectorPrompt = {
     choices: Object.keys(PLUGIN_TEMPLATES)
 }
 
-const pluginPrompts = Object.values(PLUGIN_TEMPLATES).map((plugin, i) => {
-    const pluginName = Object.keys(PLUGIN_TEMPLATES)[i]
-    return {
+const pluginPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = []
+Object.keys(PLUGIN_TEMPLATES).map((pluginName) => {
+    const plugin = PLUGIN_TEMPLATES[pluginName]
+    pluginPrompts.push({
         type: 'input',
         name: `${pluginName}Port`,
         message: `Select a port for the ${pluginName} Plugin [Enter for default: ${plugin.port}]`,
@@ -151,30 +144,38 @@ const pluginPrompts = Object.values(PLUGIN_TEMPLATES).map((plugin, i) => {
             if (!Number.isInteger(portNumber)) {
                 return `Non-numeric value provided`
             }
-   
+
             if (portNumber < MIN_PORT_VALUE || portNumber > MAX_PORT_VALUE) {
                 return `Out of range port ${portNumber} provided (valid range ${MIN_PORT_VALUE}-${MAX_PORT_VALUE})`
             }
-   
+
             return true
         },
         default: plugin.port
-    }
+    })
 })
 
 prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
 
 export const getConfigFromAnswers = (answers: any): Config => {
-    const config = Object.assign({}, DEFAULT_CONFIG)
+    const config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
+
     const pluginNames = Object.keys(PLUGIN_TEMPLATES)
-    const PLUGIN_TEMPLATESArray = Object.values(PLUGIN_TEMPLATES)
-    for (let i = 0; i < PLUGIN_TEMPLATESArray.length; i++){
-        const name = pluginNames[i]
-        const template = PLUGIN_TEMPLATESArray[i]
-        if (answers.selectPlugins && answers.selectPlugins.includes(name)){
-            config.plugins![name] = { ...template, port: answers[`${name}Port`] }
+    pluginNames.forEach((pluginName) => {
+        const template = PLUGIN_TEMPLATES[pluginName]
+        if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
+            config.plugins![pluginName] = { ...template, port: answers[`${pluginName}Port`] }
+            // the publishHttp plugin is special, it needs to be added to the config after the other plugins
+            if (pluginName === 'publishHttp') {
+                config.httpServer = {
+                    port: answers[`${pluginName}Port`],
+
+                    privateKeyFileName: null,
+                    certFileName: null
+                }
+            }
         }
-    }
+    })
 
     config.ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 
@@ -228,7 +229,7 @@ export const createStorageFile = (config: Config, answers: inquirer.Answers): st
         mkdirSync(answers.parentDirPath)
     }
    
-    writeFileSync(answers.selectDestinationPath, JSON.stringify(config))
+    writeFileSync(answers.selectDestinationPath, JSON.stringify(config, null, 2))
     return answers.selectDestinationPath
 }
 

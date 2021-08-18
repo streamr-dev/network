@@ -61,6 +61,17 @@ describe('ConfigWizard', () => {
             expect(validate(validPath)).toBe(true)
         })
 
+        it ('happy path with overwrite destination', () => {
+            const validate = selectDestinationPathPrompt.validate!
+            const validPath = tmpDataDir + '/test-config.json'
+            writeFileSync(validPath, JSON.stringify({}))
+            const answers: any = {}
+            const isValid = validate(validPath, answers)
+            expect(isValid).toBe(true)
+            expect(answers.parentDirExists).toBe(true)
+            expect(answers.fileExists).toBe(true)
+        })
+
         it ('invalid path provided', () => {
             const validate = selectDestinationPathPrompt.validate!
             const invalidPath = `/invalid-path/${Date.now()}`
@@ -83,17 +94,6 @@ describe('ConfigWizard', () => {
 
         beforeEach(() => {
             config = DEFAULT_CONFIG as Config
-        })
-
-        it ('happy path with overwrite destination', () => {
-            const validate = selectDestinationPathPrompt.validate!
-            const validPath = tmpDataDir + '/test-config.json'
-            writeFileSync(validPath, JSON.stringify({}))
-            const answers: any = {}
-            const isValid = validate(validPath, answers)
-            expect(isValid).toBe(true)
-            expect(answers.parentDirExists).toBe(true)
-            expect(answers.fileExists).toBe(true)
         })
 
         it ('happy path; create parent dir when doesn\'t exist', () => {
