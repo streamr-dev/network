@@ -1,6 +1,6 @@
-import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
+import StreamrClient from 'streamr-client'
 import {startTracker, Tracker} from 'streamr-network'
-import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from '../utils'
+import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST } from '../utils'
 import { Wallet } from 'ethers'
 import { Broker } from '../broker'
 
