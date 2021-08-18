@@ -3,7 +3,6 @@ import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
 import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, DEFAULT_CONFIG } from '../../src/ConfigWizard'
-import { Config } from '../config'
 
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = CONFIG_WIZARD_PROMPTS[1]
@@ -86,14 +85,14 @@ describe('ConfigWizard', () => {
 
     describe('createStorageFile', () => {
         let tmpDataDir: string
-        let config: Config
+        let config: any
 
         beforeAll(() => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
 
         beforeEach(() => {
-            config = DEFAULT_CONFIG as Config
+            config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
         })
 
         it ('happy path; create parent dir when doesn\'t exist', () => {

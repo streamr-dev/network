@@ -1,6 +1,5 @@
 import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
-import { Config } from './config'
 import path from 'path'
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import * as os from 'os'
@@ -167,7 +166,7 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
 
 prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
 
-export const getConfigFromAnswers = (answers: any): Config => {
+export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
     const config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
 
     const pluginNames = Object.values(PLUGIN_NAMES)
@@ -192,7 +191,7 @@ export const getConfigFromAnswers = (answers: any): Config => {
 
     config.ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 
-    return config as Config
+    return config
 }
 
 export const selectDestinationPathPrompt = {
@@ -237,7 +236,7 @@ const selectValidDestinationPath = async (): Promise<inquirer.Answers> => {
     return answers
 }
 
-export const createStorageFile = (config: Config, answers: inquirer.Answers): string => {
+export const createStorageFile = (config: any, answers: inquirer.Answers): string => {
     if (!answers.parentDirExists) {
         mkdirSync(answers.parentDirPath)
     }
