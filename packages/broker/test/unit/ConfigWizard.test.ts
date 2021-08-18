@@ -2,7 +2,7 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, DEFAULT_CONFIG } from '../../src/ConfigWizard'
+import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers } from '../../src/ConfigWizard'
 
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = CONFIG_WIZARD_PROMPTS[1]
@@ -84,21 +84,17 @@ describe('ConfigWizard', () => {
     })
 
     describe('createStorageFile', () => {
+        const CONFIG: any = {}
         let tmpDataDir: string
-        let config: any
 
         beforeAll(() => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
 
-        beforeEach(() => {
-            config = {}
-        })
-
         it ('happy path; create parent dir when doesn\'t exist', () => {
             const parentDirPath = tmpDataDir + '/newdir/'
             const selectDestinationPath = parentDirPath + 'test-config.json'
-            const configFileLocation: string = createStorageFile(config, {
+            const configFileLocation: string = createStorageFile(CONFIG, {
                 selectDestinationPath,
                 parentDirPath,
                 fileExists: false,
@@ -111,7 +107,7 @@ describe('ConfigWizard', () => {
         it ('should throw when attempting to mkdir on existing path', () => {
             try {
                 const parentDirPath = '/home/'
-                createStorageFile(config, {
+                createStorageFile(CONFIG, {
                     parentDirPath,
                     parentDirExists: false,
                 })
@@ -125,7 +121,7 @@ describe('ConfigWizard', () => {
             try {
                 const parentDirPath = '/home/'
                 const selectDestinationPath = parentDirPath + 'test-config.json'
-                createStorageFile(config, {
+                createStorageFile(CONFIG, {
                     selectDestinationPath,
                     parentDirPath,
                     fileExists: false,
