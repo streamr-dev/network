@@ -17,6 +17,7 @@ import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
+import { StorageNode } from './StorageNode'
 
 const debug = Debug('StreamEndpoints')
 
@@ -138,7 +139,7 @@ export class StreamEndpoints implements Context {
         this.debug('getStreamByName %o', {
             name,
         })
-        return this.streamRegistry.listStreams({ name })
+        return (await this.streamRegistry.listStreams({ name }))[0]
     }
 
     /**
@@ -223,6 +224,22 @@ export class StreamEndpoints implements Context {
         })
 
         return json
+    }
+
+    async getStreamPartsByStorageNode(node: StorageNode|EthereumAddress) {
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
+        type ItemType = { id: string, partitions: number}
+        const json = await this.rest.get<ItemType[]>([
+            'storageNodes', address, 'streams'
+        ])
+
+        const result: SPID[] = []
+        json.forEach((stream: ItemType) => {
+            for (let i = 0; i < stream.partitions; i++) {
+                result.push(new SPID(stream.id, i))
+            }
+        })
+        return result
     }
 
     async publishHttp(streamObjectOrId: Stream|string, data: any, requestOptions: any = {}, keepAlive: boolean = true) {

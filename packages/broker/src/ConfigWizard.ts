@@ -27,6 +27,7 @@ const DEFAULT_LEGACY_WS_PORT = 7173
 const DefaultConfig: Config = {
     ethereumPrivateKey: '',
     generateSessionId: false,
+    streamrWsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
     network: {
         name: 'miner-node',
         trackers: [{

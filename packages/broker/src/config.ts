@@ -51,7 +51,9 @@ export interface Config {
             streamId: string
         } | null,
         perNodeMetrics: {
-            enabled: boolean
+            enabled: boolean,
+            wsUrl: string,
+            httpUrl: string,
             intervals: {
                 sec: number,
                 min: number,

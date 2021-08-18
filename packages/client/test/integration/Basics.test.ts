@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, Msg, publishManyGenerator } from '../utils'
+import { describeRepeats, until, uid, Msg, publishManyGenerator } from '../utils'
 import { BrubeckClient } from '../../src/BrubeckClient'
 
 import clientOptions from './config'
@@ -71,6 +71,8 @@ describeRepeats('StreamrClient', () => {
             partitions: 1,
             ...opts,
         })
+        await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
+
         // await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         expect(s.id).toBeTruthy()
