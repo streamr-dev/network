@@ -19,7 +19,7 @@ enum State {
 @scoped(Lifecycle.ContainerScoped)
 export default class Session extends EventEmitter {
     state: State
-    sessionTokenPromise?: Promise<string|undefined>
+    sessionTokenPromise?: Promise<string>
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
@@ -59,13 +59,13 @@ export default class Session extends EventEmitter {
         throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to login.')
     }
 
-    async getSessionToken(requireNewToken = false) {
+    async getSessionToken(requireNewToken = false): Promise<string> {
         if (this.options.sessionToken && !requireNewToken) {
             return this.options.sessionToken
         }
 
         if (!this.options.privateKey && !this.options.ethereum && !this.options.sessionToken) {
-            return undefined
+            return ''
         }
 
         if (this.state !== State.LOGGING_IN) {
@@ -85,7 +85,8 @@ export default class Session extends EventEmitter {
                 })
             }
         }
-        return this.sessionTokenPromise
+
+        return this.sessionTokenPromise!
     }
 
     async logout() {
