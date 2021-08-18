@@ -68,9 +68,6 @@ export const DEFAULT_CONFIG: any = {
         }]
     },
     plugins: {
-        legacyWebsocket: {
-            port: DEFAULT_LEGACY_WS_PORT
-        },
         testnetMiner: {
             rewardStreamId: "streamr.eth/brubeck-testnet/rewards",
             claimServerUrl: "http://testnet2.streamr.network:3011",
