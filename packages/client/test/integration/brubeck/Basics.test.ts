@@ -69,6 +69,7 @@ describeRepeats('StreamrClient', () => {
         const id = `/${uid('stream')}`
         const s = await client.createStream({
             id,
+            partitions: 1,
             ...opts,
         })
         // await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
@@ -155,7 +156,7 @@ describeRepeats('StreamrClient', () => {
                     }
                 }
                 expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
-                expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
+                return expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
             }
             const stream2 = await createStream()
             const tasks = [

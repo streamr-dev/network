@@ -155,7 +155,7 @@ export class StreamRegistry implements Context {
             // TODO add check for ENS??
         }
         const id = userAddress + path
-        const tx = await contractFunction(id, propsJsonStr)
+        const tx = await contractFunction(path, propsJsonStr)
         await tx.wait()
         properties = {
             ...properties,
