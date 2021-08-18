@@ -4,39 +4,32 @@
 import util from 'util'
 import Debug from 'debug'
 
-export const DEFAULT_INSPECT_OPTS = {
-    maxStringLength: 256
-}
-
-const debug = Debug('Streamr')
-// @ts-expect-error inspectOpts not in debug types
-debug.inspectOpts = {
-    ...DEFAULT_INSPECT_OPTS,
-}
-
 // add global support for pretty millisecond formatting with %n
 Debug.formatters.n = (v) => {
     if (v == null || Number.isNaN(v)) { return String(v) }
     return Debug.humanize(v)
 }
 
+export const DEFAULT_INSPECT_OPTS = {
+    maxStringLength: 256
+}
+
 // override default formatters for node
 if (typeof window === 'undefined') {
-    // override %o & %O to ensure default opts apply
-    Debug.formatters.o = function o(v: any) {
+    // monkeypatch default log function to use current inspectOpts.  This
+    // ensures values without placeholders will have inspect options applied.
+    // e.g. debug('msg', obj) should use same inspectOpts as debug('msg %O', msg)
+    // without this only values with a placeholder e.g. '%o' will use inspectOpts
+    Debug.log = function log(...args) {
         // @ts-expect-error inspectOpts not in debug types
-        this.inspectOpts.colors = this.useColors
-        return util.inspect(v, { ...DEFAULT_INSPECT_OPTS, ...this.inspectOpts })
-            .split('\n')
-            .map((str) => str.trim())
-            .join(' ')
+        return process.stderr.write(util.formatWithOptions(this.inspectOpts || {}, ...args) + '\n')
     }
+}
 
-    Debug.formatters.O = function O(v: any) {
-        // @ts-expect-error inspectOpts not in debug types
-        this.inspectOpts.colors = this.useColors
-        return util.inspect(v, { ...DEFAULT_INSPECT_OPTS, ...this.inspectOpts, })
-    }
+const debug = Debug('Streamr')
+// @ts-expect-error inspectOpts not in debug types
+debug.inspectOpts = {
+    ...DEFAULT_INSPECT_OPTS,
 }
 
 const StreamrDebug = Object.assign(debug.extend.bind(debug), {
