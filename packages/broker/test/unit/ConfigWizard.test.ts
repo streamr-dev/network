@@ -92,7 +92,7 @@ describe('ConfigWizard', () => {
         })
 
         beforeEach(() => {
-            config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
+            config = {}
         })
 
         it ('happy path; create parent dir when doesn\'t exist', () => {
