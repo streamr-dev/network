@@ -127,22 +127,21 @@ describe('per-node metrics', () => {
             wsPort,
             httpPort,
             enableCassandra: true,
-            reporting: {
-                streamr: {
-                    streamId: legacyStream.id
-                },
-                intervalInSeconds: 1,
-                perNodeMetrics: {
-                    enabled: true,
-                    wsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
-                    httpUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
-                    intervals: {
-                        sec: 1000,
-                        min: 1000,
-                        hour: 1000,
-                        day: 1000
-                    },
-                    storageNode: storageNodeAccount.address
+            extraPlugins: {
+                metrics: {
+                    consoleAndPM2IntervalInSeconds: 1,
+                    clientWsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
+                    clientHttpUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+                    perNodeMetrics: {
+                        enabled: true,
+                        intervals: {
+                            sec: 1000,
+                            min: 1000,
+                            hour: 1000,
+                            day: 1000
+                        },
+                        storageNode: storageNodeAccount.address
+                    }
                 }
             },
             storageNodeConfig: { registry: storageNodeRegistry },
@@ -157,7 +156,7 @@ describe('per-node metrics', () => {
             fillMetrics(client2, 24, storageNodeAccount.address, 'hour'),
         ])
 
-    }, 35 * 1000)
+    }, 10 * 1000)
 
     afterAll(async () => {
         await Promise.allSettled([
@@ -167,7 +166,7 @@ describe('per-node metrics', () => {
             tracker.stop(),
             storageNode.stop(),
         ])
-    }, 30 * 1000)
+    }, 10 * 1000)
 
     it('should ensure the legacy metrics endpoint still works properly', async () => {
         const res = await waitForMessage(legacyStream.id, client1)
