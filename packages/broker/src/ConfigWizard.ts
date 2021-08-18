@@ -171,19 +171,19 @@ export const getConfigFromAnswers = (answers: any): Config => {
     pluginNames.forEach((pluginName) => {
         const template = PLUGIN_TEMPLATES[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
-            if (answers[`${pluginName}Port`] === template.port){
-                // user selected default value, enable without specifying the port
-                config.plugins![pluginName] = {}
-            } else if (pluginName === 'publishHttp') {
-                // the publishHttp plugin is special, it needs to be added to the config after the other plugins
-                config.plugins![pluginName] = {}
-                config.httpServer = {
-                    port: answers[`${pluginName}Port`]
+            let pluginConfig = {}
+            if (answers[`${pluginName}Port`] !== template.port){
+                if (pluginName === 'publishHttp') {
+                    // the publishHttp plugin is special, it needs to be added to the config after the other plugins
+                    config.httpServer = {
+                        port: answers[`${pluginName}Port`]
+                    }
+                } else {
+                    // user provided a custom value, fill in
+                    pluginConfig = { ...template, port: answers[`${pluginName}Port`] }
                 }
-            } else {
-                // use provided a custom value, fill in
-                config.plugins![pluginName] = { ...template, port: answers[`${pluginName}Port`] }
             }
+            config.plugins![pluginName] = pluginConfig
         }
     })
 
