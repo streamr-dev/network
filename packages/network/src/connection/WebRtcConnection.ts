@@ -36,6 +36,7 @@ interface Events {
     error: (err: Error) => void
     bufferLow: () => void
     bufferHigh: () => void
+    timeout: () => void
 }
 
 // reminder: only use Connection emitter for external handlers
@@ -162,6 +163,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             if (this.isFinished) { return }
             this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
+            this.emit('timeout')
         }, this.newConnectionTimeout)
     }
 
@@ -477,6 +479,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             if (this.isFinished) { return }
             this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
+            this.emit('timeout')
         }, this.newConnectionTimeout)
     }
 }
