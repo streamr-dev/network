@@ -2,7 +2,7 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { CONFIG_WIZARD_PROMPTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, DEFAULT_CONFIG } from '../../src/ConfigWizard'
+import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, DEFAULT_CONFIG } from '../../src/ConfigWizard'
 import { Config } from '../config'
 
 describe('ConfigWizard', () => {
@@ -171,9 +171,27 @@ describe('ConfigWizard', () => {
             expect(config.plugins.websocket.port).toBe(port)
         })
 
-        it('should exercise the happy path for the answers to config', () => {
+        it ('should exercise the happy path with default answers', () => {
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
+                selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                websocketPort: DEFAULT_CONFIG_PORTS.DEFAULT_WS_PORT,
+                mqttPort: DEFAULT_CONFIG_PORTS.DEFAULT_MQTT_PORT,
+                publishHttpPort: DEFAULT_CONFIG_PORTS.DEFAULT_HTTP_PORT,
+            }
+            const config = getConfigFromAnswers(answers)
+            expect(config.plugins.websocket).toMatchObject({})
+            expect(config.plugins.mqtt).toMatchObject({})
+            expect(config.plugins.publishHttp).toMatchObject({})
+            expect(config.ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
+            expect(config.httpServer).toBe(undefined)
+        })
+
+        it('should exercise the happy path with user input', () => {
+            const privateKey = Wallet.createRandom().privateKey
+            const answers = {
+                generateOrImportEthereumPrivateKey: 'Import',
+                importPrivateKey: privateKey,
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
                 websocketPort: 3170,
                 mqttPort: 3171,
@@ -182,8 +200,9 @@ describe('ConfigWizard', () => {
             const config = getConfigFromAnswers(answers)
             expect(config.plugins.websocket.port).toBe(answers.websocketPort)
             expect(config.plugins.mqtt.port).toBe(answers.mqttPort)
-            expect(config.plugins.publishHttp.port).toBe(answers.publishHttpPort)
-            expect(config.ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
+            expect(config.httpServer.port).toBe(answers.publishHttpPort)
+            expect(config.plugins.publishHttp).toMatchObject({})
+            expect(config.ethereumPrivateKey).toBe(privateKey)
         })
     })
 })

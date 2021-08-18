@@ -16,6 +16,13 @@ const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
 const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
 const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
 
+export const DEFAULT_CONFIG_PORTS = {
+    DEFAULT_WS_PORT,
+    DEFAULT_MQTT_PORT,
+    DEFAULT_HTTP_PORT,
+    DEFAULT_LEGACY_WS_PORT
+}
+
 const MIN_PORT_VALUE = 1024
 const MAX_PORT_VALUE = 49151
 
@@ -164,12 +171,17 @@ export const getConfigFromAnswers = (answers: any): Config => {
     pluginNames.forEach((pluginName) => {
         const template = PLUGIN_TEMPLATES[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
-            // the publishHttp plugin is special, it needs to be added to the config after the other plugins
-            if (pluginName === 'publishHttp') {
+            if (answers[`${pluginName}Port`] === template.port){
+                // user selected default value, enable without specifying the port
+                config.plugins![pluginName] = {}
+            } else if (pluginName === 'publishHttp') {
+                // the publishHttp plugin is special, it needs to be added to the config after the other plugins
+                config.plugins![pluginName] = {}
                 config.httpServer = {
                     port: answers[`${pluginName}Port`]
                 }
             } else {
+                // use provided a custom value, fill in
                 config.plugins![pluginName] = { ...template, port: answers[`${pluginName}Port`] }
             }
         }
