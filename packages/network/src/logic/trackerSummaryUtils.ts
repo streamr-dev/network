@@ -66,6 +66,22 @@ export function addRttsToNodeConnections(
     }
 }
 
+export function findStreamsForNode(
+    overlayPerStream: OverlayPerStream,
+    nodeId: string
+): Array<{ streamId: string, partition: number, topologySize: number}> {
+    return Object.entries(overlayPerStream)
+        .filter(([_, overlayTopology]) => overlayTopology.hasNode(nodeId))
+        .map(([streamKey, overlayTopology]) => {
+            const streamIdAndPartition = StreamIdAndPartition.fromKey(streamKey)
+            return {
+                streamId: streamIdAndPartition.id,
+                partition: streamIdAndPartition.partition,
+                topologySize: overlayTopology.getNumberOfNodes()
+            }
+        })
+}
+
 function getNodeToNodeConnectionRtts(
     nodeOne: string,
     nodeTwo: string,
