@@ -5,7 +5,7 @@ import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
 
-import { generateMnemonicFromAddress } from 'streamr-client-protocol'
+import { Protocol } from 'streamr-network'
 
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
@@ -253,7 +253,7 @@ export async function startBrokerConfigWizard(): Promise<void> {
         const answers = await inquirer.prompt(prompts)
         const config = getConfigFromAnswers(answers)
         const nodeAddress = new Wallet(config.ethereumPrivateKey).address
-        const mnemonic = generateMnemonicFromAddress(nodeAddress)
+        const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
         logger.info('Welcome to the Streamr Network')
         logger.print(`Your node's generated name is ${mnemonic}.`)
         logger.print('View your node in the Network Explorer:')
