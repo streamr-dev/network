@@ -5,6 +5,8 @@ import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
 
+import { Protocol } from 'streamr-network'
+
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'
@@ -250,14 +252,19 @@ export async function startBrokerConfigWizard(): Promise<void> {
     try {
         const answers = await inquirer.prompt(prompts)
         const config = getConfigFromAnswers(answers)
-        logger.info(`This will be your node's address: ${new Wallet(config.ethereumPrivateKey).address}`)
+        const nodeAddress = new Wallet(config.ethereumPrivateKey).address
+        const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
+        logger.info('Welcome to the Streamr Network')
+        logger.print(`Your node's generated name is ${mnemonic}.`)
+        logger.print('View your node in the Network Explorer:')
+        logger.print(`https://streamr.network/network-explorer/nodes/${nodeAddress}`)
         logger.info('This is your node\'s private key. Please store it in a secure location:')
         logger.alert(config.ethereumPrivateKey)
         const storageAnswers = await selectValidDestinationPath()
         const destinationPath = createStorageFile(config, storageAnswers)
         logger.info('Broker Config Wizard ran succesfully')
         logger.print(`Stored config under ${destinationPath}`)
-        logger.print(`You can start the broker now with`)
+        logger.print('You can start the broker now with')
         logger.info(`streamr-broker ${destinationPath}`)
     } catch (e) {
         logger.warn('Broker Config Wizard encountered an error:')

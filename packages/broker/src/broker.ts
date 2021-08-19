@@ -148,6 +148,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (httpServerRoutes.length > 0) {
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
+
+            logger.info(`Welcome to the Streamr Network. Your node's generated name is ${Protocol.generateMnemonicFromAddress(brokerAddress)}.`)
+            logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${brokerAddress}`)
+
             logger.info(`Network node '${networkNodeName}' (id=${nodeId}) running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             logger.info(`Configured with trackers: ${trackers.join(', ')}`)
