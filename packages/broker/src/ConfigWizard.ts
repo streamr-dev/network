@@ -58,6 +58,7 @@ export const DEFAULT_CONFIG: any = {
         stun: "stun:turn.streamr.network:5349",
         turn: null
     },
+    generateSessionId: false,
     streamrUrl: 'https://streamr.network',
     streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     storageNodeConfig: {
@@ -67,9 +68,10 @@ export const DEFAULT_CONFIG: any = {
         }]
     },
     plugins: {
+        legacyWebsocket: {},
         testnetMiner: {
             rewardStreamId: "streamr.eth/brubeck-testnet/rewards",
-            claimServerUrl: "http://testnet2.streamr.network:3011",
+            claimServerUrl: "http://testnet1.streamr.network:3011",
             maxClaimDelay: 60000
         },
         metrics: {
