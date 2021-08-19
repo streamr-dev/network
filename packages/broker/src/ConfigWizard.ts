@@ -71,8 +71,7 @@ export const DEFAULT_CONFIG: any = {
         legacyWebsocket: {},
         testnetMiner: {
             rewardStreamId: "streamr.eth/brubeck-testnet/rewards",
-            claimServerUrl: "http://testnet1.streamr.network:3011",
-            maxClaimDelay: 5000
+            claimServerUrl: "http://testnet1.streamr.network:3011"
         },
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
