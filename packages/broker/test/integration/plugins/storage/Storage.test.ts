@@ -100,7 +100,7 @@ describe('Storage', () => {
     })
 
     afterAll(() => {
-        cassandraClient.shutdown()
+        return cassandraClient.shutdown()
     })
 
     beforeEach(async () => {

@@ -67,14 +67,9 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     beforeEach(async () => {
-        const options = {
-            network: {
-                trackers: [tracker.getConfigRecord()]
-            }
-        }
-        client1 = createClient(wsPort1, privateKey, options)
-        client2 = createClient(wsPort2, privateKey, options)
-        client3 = createClient(wsPort3, privateKey, options)
+        client1 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
+        client3 = createClient(tracker, privateKey)
 
         mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
@@ -87,9 +82,9 @@ describe('mqtt: end-to-end', () => {
         await tracker.stop()
 
         await Promise.all([
-            client1.disconnect(),
-            client2.disconnect(),
-            client3.disconnect(),
+            client1.destroy(),
+            client2.destroy(),
+            client3.destroy(),
         ])
 
         await Promise.all([

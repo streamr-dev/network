@@ -66,19 +66,20 @@ describe('per-node metrics', () => {
         }]
         nodeAddress = tmpAccount.address
 
-        client1 = createClient(wsPort, Wallet.createRandom().privateKey, {
-            storageNode: storageNodeRegistry[0]
-        })
-        legacyStream = await createTestStream(client1, module)
-
-        await legacyStream.grantPermission('stream_get' as StreamOperation, undefined)
-        await legacyStream.grantPermission('stream_publish' as StreamOperation, nodeAddress)
-
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
             id: 'tracker-1'
         })
+
+        client1 = createClient(tracker, undefined, {
+            storageNode: storageNodeRegistry[0]
+        })
+
+        legacyStream = await createTestStream(client1, module)
+
+        await legacyStream.grantPermission('stream_get' as StreamOperation, undefined)
+        await legacyStream.grantPermission('stream_publish' as StreamOperation, nodeAddress)
 
         storageNode = await startBroker({
             name: 'storageNode',
@@ -117,7 +118,7 @@ describe('per-node metrics', () => {
             storageNodeConfig: { registry: storageNodeRegistry }
         })
 
-        client2 = createClient(wsPort, tmpAccount.privateKey)
+        client2 = createClient(tracker, tmpAccount.privateKey)
         await Promise.all([
             fillMetrics(client2, 60, nodeAddress, 'sec'),
             fillMetrics(client2, 60, nodeAddress, 'min'),
@@ -139,7 +140,7 @@ describe('per-node metrics', () => {
     it('should ensure the legacy metrics endpoint still works properly', (done) => {
         client1.subscribe({
             stream: legacyStream.id,
-        }, (res) => {
+        }, (res: any) => {
             expect(res.peerId).toEqual('broker1')
             done()
         })
@@ -148,7 +149,7 @@ describe('per-node metrics', () => {
     it('should retrieve the last `sec` metrics', (done) => {
         client1.subscribe({
             stream: nodeAddress + '/streamr/node/metrics/sec',
-        }, (res) => {
+        }, (res: any) => {
             expect(res.peerName).toEqual('broker1')
             expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
             expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
@@ -171,7 +172,7 @@ describe('per-node metrics', () => {
     it('should retrieve the last `min` metrics', (done) => {
         client1.subscribe({
             stream: nodeAddress + '/streamr/node/metrics/min',
-        }, (res) => {
+        }, (res: any) => {
             expect(res.peerName).toEqual('broker1')
             expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
             expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
@@ -193,7 +194,7 @@ describe('per-node metrics', () => {
     it('should retrieve the last `hour` metrics', (done) => {
         client1.subscribe({
             stream: nodeAddress + '/streamr/node/metrics/hour',
-        }, (res) => {
+        }, (res: any) => {
             expect(res.peerName).toEqual('broker1')
             expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
             expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)
@@ -215,7 +216,7 @@ describe('per-node metrics', () => {
     it('should retrieve the last `day` metrics', (done) => {
         client1.subscribe({
             stream: nodeAddress + '/streamr/node/metrics/day',
-        }, (res) => {
+        }, (res: any) => {
             expect(res.peerName).toEqual('broker1')
             expect(res.broker.messagesToNetworkPerSec).toBeGreaterThanOrEqual(0)
             expect(res.broker.bytesToNetworkPerSec).toBeGreaterThanOrEqual(0)

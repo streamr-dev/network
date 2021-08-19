@@ -38,8 +38,8 @@ describe('local propagation', () => {
             legacyMqttPort: mqttPort
         })
 
-        client1 = createClient(wsPort, privateKey)
-        client2 = createClient(wsPort, privateKey)
+        client1 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
 
         mqttClient1 = createMqttClient(mqttPort, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort, 'localhost', privateKey)
@@ -55,8 +55,8 @@ describe('local propagation', () => {
     afterEach(async () => {
         await Promise.all([
             tracker.stop(),
-            client1.disconnect(),
-            client2.disconnect(),
+            client1.destroy(),
+            client2.destroy(),
             mqttClient2.end(true),
             mqttClient1.end(true),
             broker.stop()

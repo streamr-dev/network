@@ -1,9 +1,8 @@
 import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startTracker } from 'streamr-network'
+import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
-import { Todo } from '../types'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
 
 const httpPort1 = 13381
@@ -15,7 +14,7 @@ const mqttPort1 = 13551
 const mqttPort2 = 13552
 
 describe('SubscriptionManager', () => {
-    let tracker: Todo
+    let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
     const privateKey = fastPrivateKey()
@@ -52,8 +51,8 @@ describe('SubscriptionManager', () => {
 
         await wait(2000)
 
-        client1 = createClient(wsPort1, privateKey)
-        client2 = createClient(wsPort2, privateKey)
+        client1 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
 
         mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
@@ -65,8 +64,8 @@ describe('SubscriptionManager', () => {
     afterEach(async () => {
         await mqttClient1.end(true)
         await mqttClient2.end(true)
-        await client1.disconnect()
-        await client2.disconnect()
+        await client1.destroy()
+        await client2.destroy()
         await broker1.stop()
         await broker2.stop()
         await tracker.stop()

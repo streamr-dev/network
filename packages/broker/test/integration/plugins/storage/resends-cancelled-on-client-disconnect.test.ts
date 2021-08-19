@@ -1,30 +1,22 @@
-import { startTracker, createNetworkNode, Protocol, MetricsContext, NetworkNode } from 'streamr-network'
-import { waitForEvent } from 'streamr-test-utils'
-import StreamrClient, { Stream } from 'streamr-client'
-import express from 'express'
-import http, { Server } from 'http'
-import { once } from 'events'
+import http from 'http'
+import { startTracker, Tracker, Protocol } from 'streamr-network'
 import { Wallet } from 'ethers'
-import { wait } from 'streamr-test-utils'
+import StreamrClient, { Stream } from 'streamr-client'
+import { wait, waitForEvent } from 'streamr-test-utils'
+
+import { startBroker, createClient, StorageAssignmentEventManager, createTestStream } from '../../../utils'
 import { PassThrough } from 'stream'
-import { WebsocketServer } from '../../../../src/plugins/legacyWebsocket/WebsocketServer'
-import { StreamFetcher } from '../../../../src/StreamFetcher'
-import { Publisher } from '../../../../src/Publisher'
-import { SubscriptionManager } from '../../../../src/SubscriptionManager'
-import { Todo } from '../../../../src/types'
-import { router as dataQueryEndpoints } from '../../../../src/plugins/storage/DataQueryEndpoints'
-import { StorageNodeRegistry } from '../../../../src/StorageNodeRegistry'
-import { createClient, createTestStream, StorageAssignmentEventManager, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { Broker } from "../../../../src/broker"
+import {StoragePlugin} from '../../../plugins/storage/StoragePlugin'
 
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
-const trackerPort = 17750
-const wsPort = 17753
-const mockServerPort = 17754
+const httpPort1 = 12371
+const wsPort1 = 12372
+const trackerPort = 12375
 const MOCK_DATA_MESSAGE_COUNT = 100
 
 class MockStorageData extends PassThrough {
-
     constructor(opts: any) {
         super({
             objectMode: true,
@@ -46,85 +38,65 @@ class MockStorageData extends PassThrough {
     }
 }
 
-describe('resend cancellation', () => {
-    let tracker: Todo
-    let metricsContext: MetricsContext
-    let websocketServer: WebsocketServer
-    let networkNode: NetworkNode
+describe.skip('resend cancellation', () => {
+    let tracker: Tracker
+    let storageNode: Broker
     let client: StreamrClient
-    let freshStream: Stream
-    let mockDataQueryServer: Server
-    const mockStorageData = new MockStorageData({})
+    const storageNodeAccount = Wallet.createRandom()
+    let mockStorageData: MockStorageData
+    let assignmentEventManager: StorageAssignmentEventManager
 
-    const createMockDataServer = async () => {
-        const storage: any = {
-            requestLast: () => mockStorageData
-        }
-
-        const app = express()
-        app.use(dataQueryEndpoints(storage, {
-            authenticate: () => Promise.resolve(undefined)
-        } as any, new MetricsContext(undefined as any)))
-        const server = app.listen(mockServerPort)
-        await once(server, 'listening')
-        return server
-    }
-
-    beforeEach(async () => {
-        client = createClient(wsPort)
-        freshStream = await createTestStream(client, module)
-        metricsContext = new MetricsContext(null as any)
+    beforeAll(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
-            id: 'tracker'
+            id: 'tracker-DataMetadataEndpoints'
         })
-        networkNode = createNetworkNode({
-            id: 'networkNode',
-            trackers: [tracker.getUrl()],
-        })
-        const storageNodeAddress = Wallet.createRandom().address
-        const storageNodeRegistry = StorageNodeRegistry.createInstance(
-            { streamrUrl: `http://${STREAMR_DOCKER_DEV_HOST}`} as any,
-            [{
-                address: storageNodeAddress,
-                url: `http://127.0.0.1:${mockServerPort}`
-            }]
-        )
-        websocketServer = new WebsocketServer(
-            http.createServer().listen(wsPort),
-            networkNode,
-            new StreamFetcher(`http://${STREAMR_DOCKER_DEV_HOST}`),
-            new Publisher(networkNode, {
-                validate: () => {}
-            }, metricsContext),
-            metricsContext,
-            new SubscriptionManager(networkNode),
-            storageNodeRegistry,
-            `http://${STREAMR_DOCKER_DEV_HOST}`
-        )
-        const assignmentEventManager = new StorageAssignmentEventManager(wsPort, Wallet.createRandom())
-        await assignmentEventManager.createStream()
-        await assignmentEventManager.addStreamToStorageNode(freshStream.id, storageNodeAddress, client)
-    })
-
-    afterEach(async () => {
-        await client.disconnect()
-        await networkNode.stop()
-        await websocketServer.close()
-        await tracker.stop()
+        client = createClient(tracker)
     })
 
     beforeAll(async () => {
-        mockDataQueryServer = await createMockDataServer()
-    })
+        const engineAndEditorAccount = Wallet.createRandom()
+        const trackerInfo = tracker.getConfigRecord()
+
+        storageNode = await startBroker({
+            name: 'storageNode',
+            privateKey: storageNodeAccount.privateKey,
+            trackerPort,
+            trackerId: trackerInfo.id,
+            httpPort: httpPort1,
+            wsPort: wsPort1,
+            enableCassandra: true,
+            streamrAddress: engineAndEditorAccount.address,
+            trackers: [trackerInfo]
+        })
+
+        mockStorageData = new MockStorageData({})
+        const storagePlugin: StoragePlugin = storageNode.plugins.find((p) => p.name === 'storage')
+        // @ts-expect-error .cassandra is private
+        storagePlugin.cassandra.requestLast = mockStorageData
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
+        await assignmentEventManager.createStream()
+    }, 10 * 1000)
 
     afterAll(async () => {
-        mockDataQueryServer.close()
-        await once(mockDataQueryServer, 'close')
+        await tracker.stop()
+        await client.destroy()
+        await storageNode.stop()
+        await assignmentEventManager.close()
     })
 
-    it('on client disconnect: associated resend is cancelled', async () => {
+    async function setUpStream(): Promise<Stream> {
+        const freshStream = await createTestStream(client, module)
+        await freshStream.addToStorageNode(storageNodeAccount.address)
+        return freshStream
+    }
+
+    it('on client destroy: associated resend is cancelled', async () => {
+        const freshStream = await setUpStream()
+        await client.getSessionToken()
+        // eslint-disable-next-line require-atomic-updates
+        client.options.restUrl = `http://127.0.0.1:${httpPort1}`,
         await client.resend({
             stream: freshStream.id,
             resend: {
@@ -132,7 +104,7 @@ describe('resend cancellation', () => {
             }
         })
         const p = waitForEvent(mockStorageData, 'close', 2000)
-        await client.disconnect()
+        await client.destroy()
         await p
         expect(mockStorageData.destroyed).toBe(true)
     })

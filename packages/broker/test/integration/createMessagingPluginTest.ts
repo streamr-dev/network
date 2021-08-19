@@ -87,11 +87,7 @@ export const createMessagingPluginTest = <T>(
         })
 
         beforeEach(async () => {
-            streamrClient = createClient(ports.legacyWebsocket, brokerUser.privateKey, {
-                network: {
-                    trackers: [tracker.getConfigRecord()]
-                }
-            })
+            streamrClient = createClient(tracker, brokerUser.privateKey)
             stream = await createTestStream(streamrClient, testModule)
             messageQueue = new Queue<Message>()
         })

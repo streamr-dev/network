@@ -26,11 +26,11 @@ describe('broker resistance to invalid data', () => {
         })
 
         // Create new stream
-        const client = createClient(0)
+        const client = createClient(tracker)
         const freshStream = await createTestStream(client, module)
         streamId = freshStream.id
-        await client.disconnect()
-        sessionToken = await client.session.getSessionToken()
+        sessionToken = await client.getSessionToken()
+        await client.destroy()
     })
 
     afterEach(async () => {

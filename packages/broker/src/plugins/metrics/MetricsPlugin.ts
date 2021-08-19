@@ -8,7 +8,7 @@ export class MetricsPlugin extends Plugin<void> {
     }
 
     async start() {
-        this.addHttpServerRouter(volumeEndpoint(this.metricsContext))    
+        this.addHttpServerRouter(volumeEndpoint(this.metricsContext))
     }
 
     async stop() {

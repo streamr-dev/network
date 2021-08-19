@@ -142,11 +142,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         auth: {
             privateKey: config.ethereumPrivateKey,
         },
-        debug: {
-            inspectOpts: {
-                maxStringLength: 99999,
-            }
-        },
         restUrl: `${config.streamrUrl}/api/v1`,
         network: {
             id: nodeId,
