@@ -89,7 +89,7 @@ export function formConfig({
         streamrAddress,
         storageNodeConfig,
         httpServer: {
-            port: httpPort ? httpPort : 8080,
+            port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,
             certFileName: null
         },
