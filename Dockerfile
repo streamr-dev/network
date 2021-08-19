@@ -14,15 +14,6 @@ RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl 
 COPY --from=build /usr/src/monorepo /usr/src/monorepo
 WORKDIR /usr/src/monorepo
 
-# Make ports available to the world outside this container
-EXPOSE 30315
-# WebSocket
-EXPOSE 8890
-# HTTP
-EXPOSE 8891
-# MQTT
-EXPOSE 9000
-
 ENV LOG_LEVEL=info
 ENV CONFIG_FILE configs/docker-1.env.json
 
