@@ -23,7 +23,7 @@
                 "string",
                 "null"
             ],
-            "default": "TODO: Streamr's STUN server host"
+            "default": "stun.streamr.network:5349"
         }
     }
 }

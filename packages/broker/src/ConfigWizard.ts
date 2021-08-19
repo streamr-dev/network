@@ -57,7 +57,7 @@ export const DEFAULT_CONFIG: any = {
             id: "0x49D45c17bCA1Caf692001D21c38aDECCB4c08504"
         }],
         location: null,
-        stun: "stun:turn.streamr.network:5349",
+        stun: "stun:stun.streamr.network:5349",
         turn: null
     },
     generateSessionId: false,
@@ -73,7 +73,8 @@ export const DEFAULT_CONFIG: any = {
         legacyWebsocket: {},
         testnetMiner: {
             rewardStreamId: "streamr.eth/brubeck-testnet/rewards",
-            claimServerUrl: "http://testnet1.streamr.network:3011"
+            claimServerUrl: "http://testnet1.streamr.network:3011",
+            stunServerHost: "stun.sipgate.net"
         },
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
