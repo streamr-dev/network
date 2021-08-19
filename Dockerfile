@@ -2,6 +2,7 @@ FROM node:16-buster as build
 WORKDIR /usr/src/monorepo
 COPY . .
 RUN npm set unsafe-perm true
+RUN npm install -g npm@6 # explicitly use npm v6
 RUN npm ci
 RUN npm run bootstrap-pkg streamr-broker
 RUN npx lerna exec -- npm prune --production # image contains all packages, remove devDeps to keep image size down
