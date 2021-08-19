@@ -18,12 +18,13 @@
               "--verbose",
               "-i",
               "--no-cache",
+              "--detectOpenHandles",
               // "test/integration/Stream.test.ts"
               // "test/integration/StreamEndpoints.test.ts"
               // "test/integration/NodeEndpoints.test.ts"
               // "test/integration/Encryption.test.ts"
               // "test/integration/MultipleClients.test.js"
-              "test/integration/brubeck/Basics.test.ts"
+              "test/integration/Stream.test.ts"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",

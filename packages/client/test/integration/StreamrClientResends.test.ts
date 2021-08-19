@@ -13,9 +13,9 @@ describeRepeats('StreamrClient Resend', () => {
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+//                 privateKey: fakePrivateKey(),
+//            },
             autoConnect: false,
             autoDisconnect: false,
             // disconnectDelay: 500,

@@ -263,6 +263,21 @@ export class NodeRegistry {
         return JSON.stringify({ query })
     }
 
+    async stop() {
+        // if (!this.didInitialize) {
+        //     return
+        // }
+    //     const contractTask = this.getContract()
+    //     this.getContract.reset()
+    // nodeRegistryContract?: NodeRegistryContract
+        // this.didInitialize = false
+        // const contract = await contractTask
+        if (this.nodeRegistryContract) {
+            this.nodeRegistryContract.removeAllListeners()
+            this.nodeRegistryContract.provider.removeAllListeners()
+        }
+    }
+
     // static buildGetFilteredNodeListQuery(filter: NodeListQuery): string {
     //     const nameparam = filter.name ? `metadata_contains: "name\\\\\\":\\\\\\"${filter.name}"` : ''
     //     const maxparam = filter.max ? `, first: ${filter.max}` : ''

@@ -5,7 +5,7 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import {
-    getPublishTestMessages, getWaitForStorage, publishManyGenerator, describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId
+    getPublishTestMessages, getWaitForStorage, publishManyGenerator, describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId, until
 } from '../utils'
 import { BrubeckClient } from '../../src/BrubeckClient'
 import { Defer } from '../../src/utils'
@@ -15,6 +15,9 @@ import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 // import Subscription from '../../src/brubeck/Subscription'
 import { StorageNode } from '../../src/StorageNode'
+import { AddressZero } from '@ethersproject/constants'
+
+jest.setTimeout(60000)
 
 const { StreamMessage } = MessageLayer
 
@@ -35,9 +38,9 @@ describeRepeats('StreamrClient', () => {
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+//                 privateKey: fakePrivateKey(),
+//            },
             autoConnect: false,
             autoDisconnect: false,
             // disconnectDelay: 500,
@@ -90,7 +93,7 @@ describeRepeats('StreamrClient', () => {
             requireSignedData,
             ...opts,
         })
-
+        await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
         expect(s.id).toBeTruthy()
         expect(s.name).toEqual(name)
         expect(s.requireSignedData).toBe(requireSignedData)
@@ -352,7 +355,9 @@ describeRepeats('StreamrClient', () => {
             expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
         })
         it('decodes resent messages correctly', async () => {
-            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+            await stream.addToStorageNode(await client.getAddress())// use actual storage nodes Address, actually register it
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, await client.getAddress()) }, 100000, 1000)
+
             const publishedMessage = Msg({
                 content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
             })

@@ -27,9 +27,9 @@ describeRepeats('Connection State', () => {
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+//                 privateKey: fakePrivateKey(),
+//            },
             autoConnect: false,
             autoDisconnect: false,
             publishAutoDisconnectDelay: 250,

@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {
-    describeRepeats, fakePrivateKey, Msg, Debug, addAfterFn, getPublishTestStreamMessages, publishTestMessagesGenerator, createTestStream
+    describeRepeats, Msg, Debug, addAfterFn, getPublishTestStreamMessages, publishTestMessagesGenerator, createTestStream
 } from '../utils'
 import { Defer } from '../../src/utils'
 import { BrubeckClient } from '../../src/BrubeckClient'
@@ -29,9 +29,9 @@ describeRepeats('decryption', () => {
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+            //                 privateKey: fakePrivateKey(),
+            //            },
             autoConnect: false,
             autoDisconnect: false,
             disconnectDelay: 1,

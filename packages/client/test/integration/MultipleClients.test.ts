@@ -66,9 +66,9 @@ describeRepeats('PubSub with multiple clients', () => {
 
     async function createPublisher(opts = {}) {
         const pubClient = createClient({
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+//                 privateKey: fakePrivateKey(),
+//            },
             ...opts,
         })
         const publisherId = (await pubClient.getAddress()).toLowerCase()

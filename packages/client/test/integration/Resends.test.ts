@@ -40,9 +40,9 @@ describeRepeats('resends', () => {
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+//                 privateKey: fakePrivateKey(),
+//            },
             publishAutoDisconnectDelay: 1000,
             autoConnect: false,
             autoDisconnect: false,

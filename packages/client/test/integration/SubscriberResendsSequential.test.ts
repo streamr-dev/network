@@ -38,9 +38,9 @@ describeRepeats.skip('sequential resend subscribe', () => {
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+//                 privateKey: fakePrivateKey(),
+//            },
             publishAutoDisconnectDelay: 1000,
             autoConnect: false,
             autoDisconnect: false,

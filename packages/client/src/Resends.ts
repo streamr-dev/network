@@ -243,6 +243,6 @@ export default class Resend implements Context {
     }
 
     async stop() {
-        // await this.nodeRegistry.stop()
+        await this.nodeRegistry.stop()
     }
 }

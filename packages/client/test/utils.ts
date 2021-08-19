@@ -162,11 +162,13 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) 
 }
 
 // eslint-disable-next-line no-undef
-export const createTestStream = (streamrClient: BrubeckClient, module: NodeModule, props?: Partial<StreamProperties>) => {
-    return streamrClient.createStream({
+export const createTestStream = async (streamrClient: BrubeckClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+    const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
     })
+    await until(async () => { return streamrClient.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
+    return stream
 }
 
 /**
@@ -424,7 +426,7 @@ export async function sleep(ms: number = 0) {
  * @param failedMsgFn - append the string return value of this getter function to the error message, if given
  * @return the (last) truthy value returned by the condition function
  */
- export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
+export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
     // condition could as well return any instead of boolean, could be convenient
     // sometimes if waiting until a value is returned. Maybe change if such use
     // case emerges.

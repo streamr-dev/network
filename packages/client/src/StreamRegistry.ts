@@ -125,10 +125,12 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async createStream(props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {
+    async createStream(props: Partial<StreamProperties> & { id: string }): Promise<Stream> {
         log('createStream %o', props)
+        const completeProps = props
+        completeProps.partitions = props.partitions ? props.partitions : 1
         await this.connectToStreamRegistryContract()
-        return this._createOrUpdateStream(this.streamRegistryContract!.createStream, props)
+        return this._createOrUpdateStream(this.streamRegistryContract!.createStream, completeProps)
     }
 
     async updateStream(props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {

@@ -40,9 +40,9 @@ describeRepeats('GapFill', () => {
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+//                 privateKey: fakePrivateKey(),
+//            },
             autoConnect: false,
             autoDisconnect: false,
             maxRetries: 2,

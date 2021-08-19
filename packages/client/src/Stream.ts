@@ -67,24 +67,24 @@ export type Field = {
     type: typeof VALID_FIELD_TYPES[number];
 }
 
-// function getFieldType(value: any): (Field['type'] | undefined) {
-//     const type = typeof value
-//     switch (true) {
-//         case Array.isArray(value): {
-//             return 'list'
-//         }
-//         case type === 'object': {
-//             return 'map'
-//         }
-//         case (VALID_FIELD_TYPES as ReadonlyArray<string>).includes(type): {
-//             // see https://github.com/microsoft/TypeScript/issues/36275
-//             return type as Field['type']
-//         }
-//         default: {
-//             return undefined
-//         }
-//     }
-// }
+function getFieldType(value: any): (Field['type'] | undefined) {
+    const type = typeof value
+    switch (true) {
+        case Array.isArray(value): {
+            return 'list'
+        }
+        case type === 'object': {
+            return 'map'
+        }
+        case (VALID_FIELD_TYPES as ReadonlyArray<string>).includes(type): {
+            // see https://github.com/microsoft/TypeScript/issues/36275
+            return type as Field['type']
+        }
+        default: {
+            return undefined
+        }
+    }
+}
 
 class StreamrStream implements StreamMetadata {
     streamId: string
@@ -138,6 +138,34 @@ class StreamrStream implements StreamMetadata {
         return result as StreamProperties
     }
 
+    async detectFields() {
+        // Get last message of the stream to be used for field detecting
+        const sub = await this._resends.resend({
+            streamId: this.id,
+            resend: {
+                last: 1,
+            },
+        })
+
+        const receivedMsgs = await sub.collect()
+
+        if (!receivedMsgs.length) { return }
+
+        const [lastMessage] = receivedMsgs
+
+        const fields = Object.entries(lastMessage).map(([name, value]) => {
+            const type = getFieldType(value)
+            return !!type && {
+                name,
+                type,
+            }
+        }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
+
+        // Save field config back to the stream
+        this.config.fields = fields
+        await this.update()
+    }
+
     async delete() {
         await this._streamRegistry.deleteStream(this.id)
     }
@@ -180,17 +208,17 @@ class StreamrStream implements StreamMetadata {
 
     async addToStorageNode(node: StorageNode | EthereumAddress) {
         // @ts-ignore
-        await this._streamRegistry.addStreamToStorageNode(this.id, node.address || node)
+        await this._nodeRegistry.addStreamToStorageNode(this.id, node.address || node)
     }
 
     async removeFromStorageNode(node: StorageNode | EthereumAddress) {
         // @ts-ignore
-        return this._streamRegistry.removeStreamFromStorageNode(this.id, node.address || node)
+        return this._nodeRegistry.removeStreamFromStorageNode(this.id, node.address || node)
     }
 
     private async isStreamStoredInStorageNode(node: StorageNode | EthereumAddress) {
         // @ts-ignore
-        return this._streamRegistry.isStreamStoredInStorageNode(this.id, node.address || node)
+        return this._nodeRegistry.isStreamStoredInStorageNode(this.id, node.address || node)
     }
 
     async getStorageNodes() {
