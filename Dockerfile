@@ -15,7 +15,8 @@ COPY --from=build /usr/src/monorepo /usr/src/monorepo
 WORKDIR /usr/src/monorepo
 
 ENV LOG_LEVEL=info
-ENV CONFIG_FILE configs/docker-1.env.json
 
 RUN ln -s packages/broker/tracker.js tracker.js
-CMD node packages/broker/bin/broker.js packages/broker/${CONFIG_FILE}
+
+WORKDIR /usr/src/monorepo/packages/broker
+CMD ./bin/broker.js # start broker from default config
