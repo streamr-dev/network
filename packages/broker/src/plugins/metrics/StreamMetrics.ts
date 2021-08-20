@@ -136,7 +136,7 @@ export class StreamMetrics {
                     this.report.network.bytesToPeersPerSec = throttledAvg(this.report.network.bytesToPeersPerSec, (metricsReport.metrics.WebRtcEndpoint.outSpeed as any).rate || 0)
                     this.report.network.bytesFromPeersPerSec = throttledAvg(this.report.network.bytesFromPeersPerSec, (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0)
                     this.report.network.connections = throttledAvg(this.report.network.connections, (metricsReport.metrics.WebRtcEndpoint.connections as any).rate || 0)
-                    this.report.network.webRtcConnectionFailures = (metricsReport.metrics.WebRtcEndpoint.openTimeout as any).last
+                    this.report.network.webRtcConnectionFailures = (metricsReport.metrics.WebRtcEndpoint.failedConnection as any).last
 
                     if (metricsReport.metrics['broker/cassandra']) {
                         this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, (metricsReport.metrics['broker/cassandra']) ? (metricsReport.metrics['broker/cassandra'].writeBytes as any).rate: 0)

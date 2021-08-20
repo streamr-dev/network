@@ -36,7 +36,7 @@ interface Events {
     error: (err: Error) => void
     bufferLow: () => void
     bufferHigh: () => void
-    timeout: () => void
+    failed: () => void // connection never opened
 }
 
 // reminder: only use Connection emitter for external handlers
@@ -95,6 +95,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
+    private hasOpened = false
 
     protected readonly id: string
     protected readonly maxMessageSize: number
@@ -163,7 +164,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             if (this.isFinished) { return }
             this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
-            this.emit('timeout')
         }, this.newConnectionTimeout)
     }
 
@@ -215,6 +215,9 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
 
         if (err) {
+            if (!this.hasOpened) {
+                this.emit('failed')
+            }
             this.emitClose(err)
             return
         }
@@ -426,6 +429,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.deferredConnectionAttempt = null
             def.resolve(this.peerInfo.peerId)
         }
+        this.hasOpened = true
         this.setFlushRef()
         this.emit('open')
     }
@@ -479,7 +483,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             if (this.isFinished) { return }
             this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
-            this.emit('timeout')
         }, this.newConnectionTimeout)
     }
 }
