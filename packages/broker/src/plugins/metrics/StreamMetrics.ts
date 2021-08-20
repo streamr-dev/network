@@ -89,6 +89,7 @@ export class StreamMetrics {
                 bytesToPeersPerSec: 0,
                 bytesFromPeersPerSec: 0,
                 connections: 0,
+                webRtcConnectionFailures: 0
             },
             storage: {
                 bytesWrittenPerSec: 0,
@@ -135,6 +136,7 @@ export class StreamMetrics {
                     this.report.network.bytesToPeersPerSec = throttledAvg(this.report.network.bytesToPeersPerSec, (metricsReport.metrics.WebRtcEndpoint.outSpeed as any).rate || 0)
                     this.report.network.bytesFromPeersPerSec = throttledAvg(this.report.network.bytesFromPeersPerSec, (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate || 0)
                     this.report.network.connections = throttledAvg(this.report.network.connections, (metricsReport.metrics.WebRtcEndpoint.connections as any).rate || 0)
+                    this.report.network.webRtcConnectionFailures = (metricsReport.metrics.WebRtcEndpoint.failedConnection as any).last
 
                     if (metricsReport.metrics['broker/cassandra']) {
                         this.report.storage.bytesWrittenPerSec = throttledAvg(this.report.storage.bytesWrittenPerSec, (metricsReport.metrics['broker/cassandra']) ? (metricsReport.metrics['broker/cassandra'].writeBytes as any).rate: 0)
@@ -174,6 +176,7 @@ export class StreamMetrics {
                             this.report.network.bytesToPeersPerSec += messages[i].network.bytesToPeersPerSec
                             this.report.network.bytesFromPeersPerSec += messages[i].network.bytesFromPeersPerSec
                             this.report.network.connections += messages[i].network.connections
+                            this.report.network.webRtcConnectionFailures = messages[i].network.webRtcConnectionFailures
 
                             if (metricsReport.metrics['broker/cassandra']) {
                                 this.report.storage.bytesWrittenPerSec += messages[i].storage.bytesWrittenPerSec
@@ -190,6 +193,7 @@ export class StreamMetrics {
                         this.report.network.bytesToPeersPerSec /= messages.length
                         this.report.network.bytesFromPeersPerSec /= messages.length
                         this.report.network.connections /= messages.length
+                        this.report.network.webRtcConnectionFailures /= messages.length
 
                         if (metricsReport.metrics['broker/cassandra']) {
                             this.report.storage.bytesWrittenPerSec /= messages.length
@@ -312,6 +316,7 @@ export class StreamMetrics {
         this.report.network.bytesToPeersPerSec = 0
         this.report.network.bytesFromPeersPerSec = 0
         this.report.network.connections = 0
+        this.report.network.webRtcConnectionFailures = 0
 
         if (this.report.storage) {
             this.report.storage.bytesWrittenPerSec = 0

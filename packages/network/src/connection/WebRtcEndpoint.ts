@@ -106,6 +106,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             .addRecordedMetric('open')
             .addRecordedMetric('close')
             .addRecordedMetric('sendFailed')
+            .addRecordedMetric('failedConnection')
             .addQueriedMetric('connections', () => Object.keys(this.connections).length)
             .addQueriedMetric('pendingConnections', () => {
                 return Object.values(this.connections).filter((c) => !c.isOpen()).length
@@ -181,6 +182,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
         connection.on('bufferHigh', () => {
             this.emit(Event.HIGH_BACK_PRESSURE, connection.getPeerInfo())
+        })
+        connection.on('failed', () => {
+            this.metrics.record('failedConnection', 1)
         })
         
         return connection
