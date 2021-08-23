@@ -78,16 +78,11 @@ export const DEFAULT_CONFIG: any = {
         },
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
-            clientWsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
-            clientHttpUrl: "https://streamr.network/api/v1",
-            perNodeMetrics: {
-                enabled: true,
+            nodeMetrics: {
                 storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-                intervals: {
-                    "sec": 1000,
-                    "min": 60000,
-                    "hour": 3600000,
-                    "day": 86400000
+                client: {
+                    wsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
+                    httpUrl: "https://streamr.network/api/v1",
                 }
             }
         },

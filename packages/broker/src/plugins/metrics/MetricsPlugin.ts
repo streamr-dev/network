@@ -1,94 +1,68 @@
-import { MetricsContext } from 'streamr-network'
+import { Schema } from 'ajv'
 import { router as volumeEndpoint } from './VolumeEndpoint'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { StorageNodeRegistryItem } from '../../config'
 import { VolumeLogger } from './VolumeLogger'
-import { StreamrClient } from 'streamr-client'
-import { Schema } from 'ajv'
+import { NodeMetrics } from './node/NodeMetrics'
+import { MetricsPublisher } from './node/MetricsPublisher'
+import { Logger } from 'streamr-network'
+
+const logger = new Logger(module)
 
 export interface MetricsPluginConfig {
     consoleAndPM2IntervalInSeconds: number
-    clientWsUrl?: string
-    clientHttpUrl?: string
-    perNodeMetrics: {
-        enabled: boolean
-        intervals: {
-            sec: number,
-            min: number,
-            hour: number,
-            day: number
-        } | null
+    nodeMetrics: {
+        client: {
+            wsUrl: string
+            httpUrl: string
+        }
         storageNode: string
     } | null
 }
 
 export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
     private readonly volumeLogger: VolumeLogger
+    private nodeMetrics?: NodeMetrics
 
     constructor(options: PluginOptions) {
         super(options)
-        this.volumeLogger = createVolumeLogger(
-            this.brokerConfig.ethereumPrivateKey,
-            this.pluginConfig,
+        this.volumeLogger = new VolumeLogger(
+            this.pluginConfig.consoleAndPM2IntervalInSeconds,
             this.metricsContext,
-            this.nodeId,
-            this.storageNodeRegistry.getStorageNodes()
         )
+        if (this.pluginConfig.nodeMetrics !== null) {
+            const metricsPublisher = new MetricsPublisher(this.nodeId, {
+                ethereumPrivateKey: this.brokerConfig.ethereumPrivateKey,
+                storageNode: this.pluginConfig.nodeMetrics.storageNode,
+                storageNodes: this.storageNodeRegistry.getStorageNodes(),
+                clientWsUrl: this.pluginConfig.nodeMetrics.client.wsUrl,
+                clientHttpUrl: this.pluginConfig.nodeMetrics.client.httpUrl
+            })
+            this.nodeMetrics = new NodeMetrics(this.metricsContext, metricsPublisher) 
+        }
     }
 
-    async start(): Promise<unknown> {
-        this.addHttpServerRouter(volumeEndpoint(this.metricsContext))
-        return this.volumeLogger.start()
+    async start(): Promise<void> {
+        try {
+            this.addHttpServerRouter(volumeEndpoint(this.metricsContext))
+            if (this.nodeMetrics !== undefined) {
+                await this.nodeMetrics.start()
+            }
+            await this.volumeLogger.start()
+        } catch (e) {
+            // TODO remove this catch block after testnet is completed (it is ok to that the plugin throws an error and Broker doesn't start)
+            logger.warn(`Unable to start MetricsPlugin: ${e.message}`)
+        }
     }
 
-    async stop(): Promise<unknown> {
-        return this.volumeLogger.stop()
+    async stop(): Promise<void> {
+        if (this.nodeMetrics !== undefined) {
+            await this.nodeMetrics.stop()
+        }
+        await this.volumeLogger.stop()
     }
 
     getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
-}
-
-const createVolumeLogger = (
-    ethereumPrivateKey: string,
-    config: MetricsPluginConfig,
-    metricsContext: MetricsContext,
-    brokerAddress: string,
-    storageNodes: StorageNodeRegistryItem[]
-): VolumeLogger => {
-    let client: StreamrClient | undefined
-    if (config.perNodeMetrics && config.perNodeMetrics.enabled) {
-        const targetStorageNode = config.perNodeMetrics!.storageNode
-        const storageNodeRegistryItem = storageNodes.find((n) => n.address === targetStorageNode)
-        if (storageNodeRegistryItem === undefined) {
-            throw new Error(`Value ${storageNodeRegistryItem} (config.reporting.perNodeMetrics.storageNode) not ` +
-                'present in config.storageNodeRegistry')
-        }
-        client = new StreamrClient({
-            auth: {
-                privateKey: ethereumPrivateKey,
-            },
-            url: config.clientWsUrl ?? undefined,
-            restUrl: config.clientHttpUrl ?? undefined,
-            storageNode: storageNodeRegistryItem
-        })
-    }
-
-    let reportingIntervals
-    let storageNodeAddress
-    if (config.perNodeMetrics && config.perNodeMetrics.intervals) {
-        reportingIntervals = config.perNodeMetrics.intervals
-        storageNodeAddress = config.perNodeMetrics.storageNode
-    }
-
-    return new VolumeLogger(
-        config.consoleAndPM2IntervalInSeconds,
-        metricsContext,
-        client,
-        brokerAddress,
-        reportingIntervals,
-        storageNodeAddress
-    )
 }
