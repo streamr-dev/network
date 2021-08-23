@@ -180,6 +180,9 @@ describe('ConfigWizard', () => {
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
             expect(config.httpServer).toBe(undefined)
+            expect(config.apiAuthentication).toBeDefined()
+            expect(config.apiAuthentication.keys).toBeDefined()
+            expect(config.apiAuthentication.keys.length).toBe(1)
         })
 
         it('should exercise the happy path with user input', () => {

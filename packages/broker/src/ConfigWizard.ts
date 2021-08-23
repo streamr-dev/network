@@ -4,7 +4,7 @@ import path from 'path'
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
-
+import { v4 as uuid } from 'uuid'
 import { Protocol } from 'streamr-network'
 
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
@@ -46,6 +46,11 @@ const logger = {
     error: (...args: any[]) => {
         console.log(chalk.bgRed.black('!'), ...args)
     }
+}
+
+function generateApiKey(){
+    const hex = uuid().split('-').join('')
+    return Buffer.from(hex).toString('base64')
 }
 
 export const DEFAULT_CONFIG: any = {
@@ -92,6 +97,9 @@ export const DEFAULT_CONFIG: any = {
             }
         },
     },
+    apiAuthentication: {
+        keys: [generateApiKey()]
+    }
 }
 
 let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
