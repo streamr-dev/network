@@ -53,7 +53,7 @@ const generateApiKey = ():string => {
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
 
-export const DEFAULT_CONFIG: any = {
+export const CONFIG_TEMPLATE: any = {
     network: {
         name: 'miner-node',
         trackers: [{
@@ -179,7 +179,7 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
 prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
 
 export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
-    const config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
+    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
 
     const pluginNames = Object.values(PLUGIN_NAMES)
     pluginNames.forEach((pluginName) => {
