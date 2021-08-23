@@ -90,7 +90,8 @@ describe('NodeMetrics', () => {
                 avgLatencyMs: expect.any(Number),
                 bytesToPeersPerSec: expect.any(Number),
                 bytesFromPeersPerSec: expect.any(Number),
-                connections: expect.any(Number)
+                connections: expect.any(Number),
+                webRtcConnectionFailures: expect.any(Number)
             },
             period: {
                 start: expect.any(Number),

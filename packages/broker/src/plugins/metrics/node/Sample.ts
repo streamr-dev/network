@@ -22,7 +22,8 @@ export interface Sample {
         avgLatencyMs: number
         bytesToPeersPerSec: number
         bytesFromPeersPerSec: number
-        connections: number
+        connections: number,
+        webRtcConnectionFailures: number
     },
     storage?: {
         bytesWrittenPerSec: number
@@ -47,7 +48,8 @@ export class SampleFactory {
         'network.avgLatencyMs',
         'network.bytesToPeersPerSec',
         'network.bytesFromPeersPerSec',
-        'network.connections'
+        'network.connections',
+        'network.webRtcConnectionFailures'
     ]
     
     static STORAGE_METRICS = [
@@ -75,6 +77,7 @@ export class SampleFactory {
                 bytesToPeersPerSec: (metricsReport.metrics.WebRtcEndpoint.outSpeed as any).rate,
                 bytesFromPeersPerSec: (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate,
                 connections: metricsReport.metrics.WebRtcEndpoint.connections as number,
+                webRtcConnectionFailures: (metricsReport.metrics.WebRtcEndpoint.failedConnection as any).last
             },
             storage: (this.storageMetricsEnabled) ? {
                 bytesWrittenPerSec: (metricsReport.metrics[CONTEXT_STORAGE].writeBytes as any).rate,

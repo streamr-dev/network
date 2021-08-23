@@ -31,6 +31,7 @@ describe('NodeMetrics', () => {
             .addRecordedMetric('inSpeed')
             .addRecordedMetric('outSpeed')
             .addQueriedMetric('connections', () => MOCK_METRICS_VALUE)
+            .addRecordedMetric('failedConnection')
         const nodeMetricsProducer = metricsContext.create('node')
             .addFixedMetric('latency')
         const storageMetricsProducer = metricsContext.create('broker/cassandra')
@@ -41,6 +42,7 @@ describe('NodeMetrics', () => {
             brokerMetricsProducer.record('messages', value)
             webRtcMetricsProducer.record('inSpeed', value)
             webRtcMetricsProducer.record('outSpeed', value)
+            webRtcMetricsProducer.record('failedConnection', value)
             nodeMetricsProducer.set('latency', value)
             storageMetricsProducer.record('readBytes', value)
             storageMetricsProducer.record('writeBytes', value)
@@ -153,7 +155,8 @@ describe('NodeMetrics', () => {
                 avgLatencyMs: 0,
                 bytesToPeersPerSec: 0,
                 bytesFromPeersPerSec: 0,
-                connections: MOCK_METRICS_VALUE
+                connections: MOCK_METRICS_VALUE,
+                webRtcConnectionFailures: 0
             },
             storage: {
                 bytesWrittenPerSec: 0,
@@ -179,7 +182,8 @@ describe('NodeMetrics', () => {
                 avgLatencyMs: MOCK_METRICS_VALUE,
                 bytesToPeersPerSec: MOCK_METRICS_VALUE,
                 bytesFromPeersPerSec: MOCK_METRICS_VALUE,
-                connections: MOCK_METRICS_VALUE
+                connections: MOCK_METRICS_VALUE,
+                webRtcConnectionFailures: MOCK_METRICS_VALUE
             },
             storage: {
                 bytesWrittenPerSec: MOCK_METRICS_VALUE,
@@ -213,7 +217,8 @@ describe('NodeMetrics', () => {
                 avgLatencyMs: 20,
                 bytesToPeersPerSec: expect.any(Number),
                 bytesFromPeersPerSec: expect.any(Number),
-                connections: MOCK_METRICS_VALUE
+                connections: MOCK_METRICS_VALUE,
+                webRtcConnectionFailures: expect.any(Number)
             },
             storage: {
                 bytesWrittenPerSec: expect.any(Number),
