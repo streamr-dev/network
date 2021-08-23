@@ -105,30 +105,22 @@ describe('ConfigWizard', () => {
         })
 
         it ('should throw when attempting to mkdir on existing path', () => {
-            try {
-                const parentDirPath = '/home/'
-                createStorageFile(CONFIG, {
-                    parentDirPath,
-                    parentDirExists: false,
-                })
-            } catch(e) {
-                expect(e).not.toBeUndefined()
-            }
+            const parentDirPath = '/home/'
+            expect(createStorageFile(CONFIG, {
+                parentDirPath,
+                parentDirExists: false,
+            })).toThrow()
         })
 
         it ('should throw when no permissions on path', () => {
-            try {
-                const parentDirPath = '/home/'
-                const selectDestinationPath = parentDirPath + 'test-config.json'
-                createStorageFile(CONFIG, {
-                    selectDestinationPath,
-                    parentDirPath,
-                    fileExists: false,
-                    parentDirExists: true,
-                })
-            } catch (e) {
-                expect(e).not.toBeUndefined()
-            }
+            const parentDirPath = '/home/'
+            const selectDestinationPath = parentDirPath + 'test-config.json'
+            expect(createStorageFile(CONFIG, {
+                selectDestinationPath,
+                parentDirPath,
+                fileExists: false,
+                parentDirExists: true,
+            })).toThrow()
         })
 
     })
