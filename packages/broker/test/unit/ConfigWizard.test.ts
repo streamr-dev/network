@@ -91,10 +91,10 @@ describe('ConfigWizard', () => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
 
-        it ('happy path; create parent dir when doesn\'t exist', () => {
+        it ('happy path; create parent dir when doesn\'t exist', async () => {
             const parentDirPath = tmpDataDir + '/newdir/'
             const selectDestinationPath = parentDirPath + 'test-config.json'
-            const configFileLocation: string = createStorageFile(CONFIG, {
+            const configFileLocation: string = await createStorageFile(CONFIG, {
                 selectDestinationPath,
                 parentDirPath,
                 fileExists: false,
@@ -104,33 +104,23 @@ describe('ConfigWizard', () => {
             expect(existsSync(configFileLocation)).toBe(true)
         })
 
-        it ('should throw when attempting to mkdir on existing path', () => {
-            try {
-                const parentDirPath = '/home/'
-                createStorageFile(CONFIG, {
-                    parentDirPath,
-                    parentDirExists: false,
-                })
-            } catch(e){
-                expect(e.code).toBe('EEXIST')
-                expect(e.syscall).toBe('mkdir')
-            }
+        it ('should throw when attempting to mkdir on existing path', async () => {
+            const parentDirPath = '/home/'
+            await expect(createStorageFile(CONFIG, {
+                parentDirPath,
+                parentDirExists: false,
+            })).rejects.toThrow()
         })
 
-        it ('should throw when no permissions on path', () => {
-            try {
-                const parentDirPath = '/home/'
-                const selectDestinationPath = parentDirPath + 'test-config.json'
-                createStorageFile(CONFIG, {
-                    selectDestinationPath,
-                    parentDirPath,
-                    fileExists: false,
-                    parentDirExists: true,
-                })
-            } catch(e){
-                expect(e.code).toBe('EACCES')
-                expect(e.syscall).toBe('open')
-            }
+        it ('should throw when no permissions on path', async () => {
+            const parentDirPath = '/home/'
+            const selectDestinationPath = parentDirPath + 'test-config.json'
+            await expect(createStorageFile(CONFIG, {
+                selectDestinationPath,
+                parentDirPath,
+                fileExists: false,
+                parentDirExists: true,
+            })).rejects.toThrow()
         })
 
     })
@@ -180,6 +170,9 @@ describe('ConfigWizard', () => {
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
             expect(config.httpServer).toBe(undefined)
+            expect(config.apiAuthentication).toBeDefined()
+            expect(config.apiAuthentication.keys).toBeDefined()
+            expect(config.apiAuthentication.keys.length).toBe(1)
         })
 
         it('should exercise the happy path with user input', () => {

@@ -4,7 +4,7 @@ import path from 'path'
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
-
+import { v4 as uuid } from 'uuid'
 import { Protocol } from 'streamr-network'
 
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
@@ -48,7 +48,12 @@ const logger = {
     }
 }
 
-export const DEFAULT_CONFIG: any = {
+const generateApiKey = (): string => {
+    const hex = uuid().split('-').join('')
+    return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
+}
+
+export const CONFIG_TEMPLATE: any = {
     network: {
         name: 'miner-node',
         trackers: [{
@@ -87,6 +92,9 @@ export const DEFAULT_CONFIG: any = {
             }
         },
     },
+    apiAuthentication: {
+        keys: [generateApiKey()]
+    }
 }
 
 let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
@@ -166,7 +174,7 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
 prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
 
 export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
-    const config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
+    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
 
     const pluginNames = Object.values(PLUGIN_NAMES)
     pluginNames.forEach((pluginName) => {
@@ -235,7 +243,7 @@ const selectValidDestinationPath = async (): Promise<inquirer.Answers> => {
     return answers
 }
 
-export const createStorageFile = (config: any, answers: inquirer.Answers): string => {
+export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
     if (!answers.parentDirExists) {
         mkdirSync(answers.parentDirPath)
     }
@@ -244,7 +252,7 @@ export const createStorageFile = (config: any, answers: inquirer.Answers): strin
     return answers.selectDestinationPath
 }
 
-export async function startBrokerConfigWizard(): Promise<void> {
+export const startBrokerConfigWizard = async(): Promise<void> => {
     try {
         const answers = await inquirer.prompt(prompts)
         const config = getConfigFromAnswers(answers)
@@ -257,7 +265,7 @@ export async function startBrokerConfigWizard(): Promise<void> {
         logger.info('This is your node\'s private key. Please store it in a secure location:')
         logger.alert(config.ethereumPrivateKey)
         const storageAnswers = await selectValidDestinationPath()
-        const destinationPath = createStorageFile(config, storageAnswers)
+        const destinationPath = await createStorageFile(config, storageAnswers)
         logger.info('Broker Config Wizard ran succesfully')
         logger.print(`Stored config under ${destinationPath}`)
         logger.print('You can start the broker now with')
