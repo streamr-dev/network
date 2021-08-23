@@ -154,7 +154,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
             logger.info(`Network node '${networkNodeName}' (id=${nodeId}) running`)
             logger.info(`Ethereum address ${brokerAddress}`)
-            logger.info(`Configured with trackers: ${trackers.join(', ')}`)
+            logger.info(`Configured with trackers: [${trackers.map((tracker) => tracker.http).join(', ')}]`)
             logger.info(`Configured with Streamr: ${config.streamrUrl}`)
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
         },
