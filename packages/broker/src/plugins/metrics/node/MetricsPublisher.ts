@@ -32,7 +32,7 @@ export class MetricsPublisher {
         this.storageNodeAddress = clientOptions.storageNode
     }
 
-    createClient(options: {
+    private createClient(options: {
         ethereumPrivateKey: string,
         storageNode: string, 
         storageNodes: StorageNodeRegistryItem[]
@@ -53,7 +53,7 @@ export class MetricsPublisher {
         })
     }
 
-    async publish(sample: Sample) {
+    async publish(sample: Sample): Promise<void> {
         const periodLength = sample.period.end - sample.period.start
         const streamId = this.getStreamId(periodLength)
         try {
@@ -151,7 +151,7 @@ export class MetricsPublisher {
     // TODO simplify error handling?
     private async getHistoricalSamples(
         periodLength: number,
-        last = 1,
+        last: number,
         timeout = 10 * 1000
     ): Promise<Sample[]> {
         return new Promise((resolve, reject) => {
@@ -193,7 +193,12 @@ export class MetricsPublisher {
     }
 
     getStreamId(periodLength: number) {
-        return `${this.nodeAddress.toLowerCase()}/streamr/node/metrics/${STREAM_ID_SUFFIXES[periodLength]}`
+        const suffix = STREAM_ID_SUFFIXES[periodLength]
+        if (suffix !== undefined) {
+            return `${this.nodeAddress.toLowerCase()}/streamr/node/metrics/${suffix}`
+        } else {
+            throw new Error(`Invalid period length: ${periodLength}`)
+        }
     }
 
     async stop() {

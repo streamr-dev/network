@@ -24,12 +24,18 @@ export class Aggregator {
         this.listener = listener
     }
 
-    async addSample(sample: Sample) {
+    async addSample(sample: Sample): Promise<void> {
         this.samples.push(sample)
         const sampleStart = sample.period.start
         if (this.startTimestamp === undefined) {
             const elapsedTime = (sampleStart % this.periodLength)
             this.startTimestamp = sampleStart - elapsedTime
+        }
+    }
+
+    async addSamples(samples: Sample[]): Promise<void> {
+        for await (const sample of samples) {
+            await this.addSample(sample)
         }
     }
 
@@ -42,12 +48,6 @@ export class Aggregator {
             await this.listener(aggregated)
             this.samples = []
             this.startTimestamp = undefined
-        }
-    }
-
-    async addSamples(samples: Sample[]): Promise<void> {
-        for await (const sample of samples) {
-            await this.addSample(sample)
         }
     }
 }
@@ -68,17 +68,13 @@ export class NodeMetrics {
                 if (propagationTarget !== undefined) {
                     await propagationTarget.addSample(sample)
                 }
-                this.publish(sample)
+                this.publisher.publish(sample)
             }
         }
         this.sampleFactory = new SampleFactory(metricsContext)
         this.dayAggregator = new Aggregator(PERIOD_LENGTHS.ONE_DAY, this.sampleFactory, createListener())
         this.hourAggregator = new Aggregator(PERIOD_LENGTHS.ONE_HOUR, this.sampleFactory, createListener(this.dayAggregator))
         this.minuteAggregator = new Aggregator(PERIOD_LENGTHS.ONE_MINUTE, this.sampleFactory, createListener(this.hourAggregator))
-    }
-
-    async publish(sample: Sample) {
-        await this.publisher.publish(sample)
     }
 
     async start() {
@@ -96,7 +92,7 @@ export class NodeMetrics {
             start: now - PERIOD_LENGTHS.FIVE_SECONDS,
             end: now
         })
-        await this.publish(sample)
+        await this.publisher.publish(sample)
         await this.minuteAggregator.addSample(sample)
         for await (const aggregator of [this.minuteAggregator, this.hourAggregator, this.dayAggregator]) {
             await aggregator.onTick(sample.period.end)

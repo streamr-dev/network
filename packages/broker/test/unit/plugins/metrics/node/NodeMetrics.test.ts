@@ -2,11 +2,11 @@ import { MetricsContext } from 'streamr-network'
 import { Sample } from '../../../../../src/plugins/metrics/node/Sample'
 import { NodeMetrics } from '../../../../../src/plugins/metrics/node/NodeMetrics'
 
-const getTime = (dateStr: string) => {
+const getTime = (dateStr: string): number => {
     return new Date(dateStr).getTime()
 }
 
-const getPeriod = (sample: Sample) => {
+const getPeriod = (sample: Sample): { start: string, end: string } => {
     const { period } = sample
     return {
         start: new Date(period.start).toISOString(),

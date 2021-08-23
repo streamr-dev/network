@@ -35,7 +35,7 @@ export interface Sample {
 const CONTEXT_PUBLISHER = 'broker/publisher'
 const CONTEXT_STORAGE = 'broker/cassandra'
 
-const areStorageMetricsAvailable = (metricsContext: MetricsContext) => {
+const areStorageMetricsAvailable = (metricsContext: MetricsContext): boolean => {
     // TODO add a method to metricsContext to query current metrics
     return (metricsContext as any).metrics[CONTEXT_STORAGE] !== undefined
 }
