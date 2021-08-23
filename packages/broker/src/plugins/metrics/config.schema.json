@@ -5,7 +5,7 @@
   "description": "Metrics plugin configuration",
   "required": [
     "consoleAndPM2IntervalInSeconds",
-    "perNodeMetrics"
+    "nodeMetrics"
   ],
   "additionalProperties": false,
   "properties": {
@@ -14,47 +14,37 @@
       "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
       "minimum": 0
     },
-    "clientWsUrl": {
-      "type": "string",
-      "description": "WebSocket URL to configure metrics reporting StreamrClient with"
-    },
-    "clientHttpUrl": {
-      "type": "string",
-      "description": "Core API URL to configure metrics reporting StreamrClient with"
-    },
-    "perNodeMetrics" : {
+    "nodeMetrics" : {
       "type": [
         "object",
         "null"
       ],
-      "description": "Specific configuration for the metrics on each node",
       "required": [
-        "enabled",
-        "intervals",
+        "client",
         "storageNode"
       ],
       "additionalProperties": false,
       "properties": {
-        "enabled" : {
-          "type" : "boolean"
-        },
-        "intervals": {
-          "type":[
-            "object",
-            "null"
-          ],
+        "client": {
+          "type": "object",
+          "additionalProperties": false,
           "required": [
-            "sec",
-            "min",
-            "hour",
-            "day"
-          ]
+            "wsUrl",
+            "httpUrl"
+          ],
+          "properties": {
+            "wsUrl": {
+              "type": "string",
+              "description": "WebSocket URL to configure metrics reporting StreamrClient with"
+            },
+            "httpUrl": {
+              "type": "string",
+              "description": "Core API URL to configure metrics reporting StreamrClient with"
+            }
+          }
         },
         "storageNode":{
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": "string"
         }
       }
     }
