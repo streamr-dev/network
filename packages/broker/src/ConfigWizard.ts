@@ -48,7 +48,7 @@ const logger = {
     }
 }
 
-const generateApiKey = ():string => {
+const generateApiKey = (): string => {
     const hex = uuid().split('-').join('')
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
@@ -248,7 +248,7 @@ const selectValidDestinationPath = async (): Promise<inquirer.Answers> => {
     return answers
 }
 
-export const createStorageFile = (config: any, answers: inquirer.Answers): string => {
+export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
     if (!answers.parentDirExists) {
         mkdirSync(answers.parentDirPath)
     }
@@ -270,7 +270,7 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
         logger.info('This is your node\'s private key. Please store it in a secure location:')
         logger.alert(config.ethereumPrivateKey)
         const storageAnswers = await selectValidDestinationPath()
-        const destinationPath = createStorageFile(config, storageAnswers)
+        const destinationPath = await createStorageFile(config, storageAnswers)
         logger.info('Broker Config Wizard ran succesfully')
         logger.print(`Stored config under ${destinationPath}`)
         logger.print('You can start the broker now with')

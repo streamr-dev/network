@@ -91,10 +91,10 @@ describe('ConfigWizard', () => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
 
-        it ('happy path; create parent dir when doesn\'t exist', () => {
+        it ('happy path; create parent dir when doesn\'t exist', async () => {
             const parentDirPath = tmpDataDir + '/newdir/'
             const selectDestinationPath = parentDirPath + 'test-config.json'
-            const configFileLocation: string = createStorageFile(CONFIG, {
+            const configFileLocation: string = await createStorageFile(CONFIG, {
                 selectDestinationPath,
                 parentDirPath,
                 fileExists: false,
@@ -104,23 +104,23 @@ describe('ConfigWizard', () => {
             expect(existsSync(configFileLocation)).toBe(true)
         })
 
-        it ('should throw when attempting to mkdir on existing path', () => {
+        it ('should throw when attempting to mkdir on existing path', async () => {
             const parentDirPath = '/home/'
-            expect(createStorageFile(CONFIG, {
+            await expect(createStorageFile(CONFIG, {
                 parentDirPath,
                 parentDirExists: false,
-            })).toThrow()
+            })).rejects.toThrow()
         })
 
-        it ('should throw when no permissions on path', () => {
+        it ('should throw when no permissions on path', async () => {
             const parentDirPath = '/home/'
             const selectDestinationPath = parentDirPath + 'test-config.json'
-            expect(createStorageFile(CONFIG, {
+            await expect(createStorageFile(CONFIG, {
                 selectDestinationPath,
                 parentDirPath,
                 fileExists: false,
                 parentDirExists: true,
-            })).toThrow()
+            })).rejects.toThrow()
         })
 
     })
