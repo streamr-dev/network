@@ -50,7 +50,7 @@ const logger = {
 
 function generateApiKey(){
     const hex = uuid().split('-').join('')
-    return Buffer.from(hex).toString('base64')
+    return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
 
 export const DEFAULT_CONFIG: any = {
