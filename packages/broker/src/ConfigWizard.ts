@@ -48,7 +48,7 @@ const logger = {
     }
 }
 
-function generateApiKey(){
+const generateApiKey = ():string => {
     const hex = uuid().split('-').join('')
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
@@ -257,7 +257,7 @@ export const createStorageFile = (config: any, answers: inquirer.Answers): strin
     return answers.selectDestinationPath
 }
 
-export async function startBrokerConfigWizard(): Promise<void> {
+export const startBrokerConfigWizard = async(): Promise<void> => {
     try {
         const answers = await inquirer.prompt(prompts)
         const config = getConfigFromAnswers(answers)
