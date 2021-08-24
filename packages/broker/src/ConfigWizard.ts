@@ -31,20 +31,14 @@ const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
 const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 const logger = {
-    print: (...args: any[]) => {
+    info: (...args: any[]) => {
         console.log(chalk.bgWhite.black(':'), ...args)
     },
-    info: (...args: any[]) => {
-        console.log(chalk.bgWhite.black(':', ...args))
-    },
-    alert: (...args: any[]) => {
-        console.log(chalk.bgYellow.black('!', ...args))
-    },
     warn: (...args: any[]) => {
-        console.log(chalk.bgYellow.black('!'), ...args)
+        console.warn(chalk.bgYellow.black('!'), ...args)
     },
     error: (...args: any[]) => {
-        console.log(chalk.bgRed.black('!'), ...args)
+        console.error(chalk.bgRed.black('!'), ...args)
     }
 }
 
@@ -105,7 +99,7 @@ let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.Checkbox
         choices: [PRIVATE_KEY_SOURCE_GENERATE, PRIVATE_KEY_SOURCE_IMPORT]
     },
     {
-        type: 'input',
+        type: 'password',
         name:'importPrivateKey',
         message: 'Please provide the private key to import',
         when: (answers: inquirer.Answers) => {
@@ -171,7 +165,17 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
     })
 })
 
-prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
+const revealGeneratedPrivateKeyPrompt = {
+    type: 'confirm',
+    name: 'revealGeneratedPrivateKey',
+    message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see it on screen now?',
+    default: true,
+    when: (answers: inquirer.Answers) => {
+        return answers.generateOrImportEthereumPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
+    }
+}
+
+prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts).concat(revealGeneratedPrivateKeyPrompt)
 
 export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
@@ -197,7 +201,6 @@ export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
     })
 
     config.ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
-
     return config
 }
 
@@ -256,19 +259,20 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
     try {
         const answers = await inquirer.prompt(prompts)
         const config = getConfigFromAnswers(answers)
+        if (answers.revealGeneratedPrivateKey) {
+            logger.info(`This is your node\'s private key: ${config.ethereumPrivateKey}`)
+        }
         const nodeAddress = new Wallet(config.ethereumPrivateKey).address
         const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
         logger.info('Welcome to the Streamr Network')
-        logger.print(`Your node's generated name is ${mnemonic}.`)
-        logger.print('View your node in the Network Explorer:')
-        logger.print(`https://streamr.network/network-explorer/nodes/${nodeAddress}`)
-        logger.info('This is your node\'s private key. Please store it in a secure location:')
-        logger.alert(config.ethereumPrivateKey)
+        logger.info(`Your node's generated name is ${mnemonic}.`)
+        logger.info('View your node in the Network Explorer:')
+        logger.info(`https://streamr.network/network-explorer/nodes/${nodeAddress}`)
         const storageAnswers = await selectValidDestinationPath()
         const destinationPath = await createStorageFile(config, storageAnswers)
         logger.info('Broker Config Wizard ran succesfully')
-        logger.print(`Stored config under ${destinationPath}`)
-        logger.print('You can start the broker now with')
+        logger.info(`Stored config under ${destinationPath}`)
+        logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${destinationPath}`)
     } catch (e) {
         logger.warn('Broker Config Wizard encountered an error:')
