@@ -5,8 +5,8 @@
  */
 import 'reflect-metadata'
 import Config, { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
-import mergeWith from 'lodash/mergeWith'
 import cloneDeep from 'lodash/cloneDeep'
+import merge from 'lodash/merge'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NodeRegistryOptions } from './NodeRegistry'
 import { InspectOptions } from 'util'
@@ -65,7 +65,7 @@ const BRUBECK_CLIENT_DEFAULTS = {
     debug: {
         inspectOpts: {
             depth: 5,
-            maxStringLength: 256
+            maxStringLength: 512
         }
     },
     nodeRegistry: [{
@@ -82,16 +82,11 @@ const BRUBECK_CLIENT_DEFAULTS = {
 }
 
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
-    // merge config with defaults, but replace arrays, rather than merge them.
-    return mergeWith(cloneDeep(BRUBECK_CLIENT_DEFAULTS), Config(config), (objValue: any, srcValue: any) => {
-        if (Array.isArray(srcValue)) {
-            return srcValue
-        }
-
-        if (Array.isArray(objValue) && !Array.isArray(srcValue)) {
-            return srcValue
-        }
-
-        return undefined
-    })
+    const defaults = cloneDeep(BRUBECK_CLIENT_DEFAULTS)
+    const userConfig = Config(config)
+    return {
+        ...defaults,
+        ...userConfig,
+        debug: merge(defaults.debug, config.debug),
+    }
 }
