@@ -32,12 +32,15 @@ const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 const logger = {
     info: (...args: any[]) => {
+        // eslint-disable-next-line no-console
         console.log(chalk.bgWhite.black(':'), ...args)
     },
     warn: (...args: any[]) => {
+        // eslint-disable-next-line no-console
         console.warn(chalk.bgYellow.black('!'), ...args)
     },
     error: (...args: any[]) => {
+        // eslint-disable-next-line no-console
         console.error(chalk.bgRed.black('!'), ...args)
     }
 }
@@ -168,8 +171,8 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
 const revealGeneratedPrivateKeyPrompt = {
     type: 'confirm',
     name: 'revealGeneratedPrivateKey',
-    message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see it on screen now?',
-    default: true,
+    message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
+    default: false,
     when: (answers: inquirer.Answers) => {
         return answers.generateOrImportEthereumPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
     }

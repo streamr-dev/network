@@ -159,7 +159,7 @@ describe('ConfigWizard', () => {
         it ('should exercise the happy path with default answers', () => {
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
-                revealGeneratedPrivateKey: true,
+                revealGeneratedPrivateKey: false,
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
                 websocketPort: DEFAULT_CONFIG_PORTS.DEFAULT_WS_PORT,
                 mqttPort: DEFAULT_CONFIG_PORTS.DEFAULT_MQTT_PORT,
@@ -180,7 +180,7 @@ describe('ConfigWizard', () => {
             const privateKey = Wallet.createRandom().privateKey
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Import',
-                revealGeneratedPrivateKey: false,
+                revealGeneratedPrivateKey: true,
                 importPrivateKey: privateKey,
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
                 websocketPort: 3170,
