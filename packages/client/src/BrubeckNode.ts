@@ -8,6 +8,7 @@ import { Context } from './utils/Context'
 import { Config } from './Config'
 import { StreamMessage } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
+import Ethereum from './Ethereum'
 
 const uid = process.pid != null ? `p${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -27,6 +28,7 @@ export default class BrubeckNode implements Context {
     constructor(
         context: Context,
         private destroySignal: DestroySignal,
+        private ethereum: Ethereum,
         @inject(Config.Network) options: NetworkNodeOptions
     ) {
         this.options = options
@@ -39,20 +41,24 @@ export default class BrubeckNode implements Context {
         this.destroySignal.assertNotDestroyed(this)
     }
 
-    initNode() {
+    async initNode() {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
         this.debug('initNode')
+        const address = await this.ethereum.getAddress()
+        const nodeId = counterId(`${address}-${uid}`)
 
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
             ...this.options,
-            id: `${uid}-${counterId(this.id)}`,
-            name: this.id,
+            id: nodeId,
+            name: nodeId
         })
 
-        this.cachedNode = node
+        if (!this.destroySignal.isDestroyed()) {
+            this.cachedNode = node
+        }
 
         return node
     }
@@ -91,8 +97,10 @@ export default class BrubeckNode implements Context {
         this.startNodeCalled = true
         this.debug('start >>')
         try {
-            const node = this.initNode()
-            await node.start()
+            const node = await this.initNode()
+            if (!this.destroySignal.isDestroyed()) {
+                await node.start()
+            }
 
             if (this.destroySignal.isDestroyed()) {
                 this.debug('stopping node before init >>')
