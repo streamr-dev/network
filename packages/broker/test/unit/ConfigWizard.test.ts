@@ -146,11 +146,11 @@ describe('ConfigWizard', () => {
         })
 
         it ('should exercise the plugin port assignation path', () => {
-            const port = '3737'
+            const port = 3737
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
                 selectPlugins:['websocket'],
-                websocketPort: port,
+                websocketPort: port.toString(),
             }
             const config = getConfigFromAnswers(answers)
             expect(config.plugins.websocket.port).toBe(port)
@@ -160,9 +160,9 @@ describe('ConfigWizard', () => {
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: DEFAULT_CONFIG_PORTS.DEFAULT_WS_PORT,
-                mqttPort: DEFAULT_CONFIG_PORTS.DEFAULT_MQTT_PORT,
-                publishHttpPort: DEFAULT_CONFIG_PORTS.DEFAULT_HTTP_PORT,
+                websocketPort: DEFAULT_CONFIG_PORTS.DEFAULT_WS_PORT.toString(),
+                mqttPort: DEFAULT_CONFIG_PORTS.DEFAULT_MQTT_PORT.toString(),
+                publishHttpPort: DEFAULT_CONFIG_PORTS.DEFAULT_HTTP_PORT.toString(),
             }
             const config = getConfigFromAnswers(answers)
             expect(config.plugins.websocket).toMatchObject({})
@@ -181,14 +181,15 @@ describe('ConfigWizard', () => {
                 generateOrImportEthereumPrivateKey: 'Import',
                 importPrivateKey: privateKey,
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: 3170,
-                mqttPort: 3171,
-                publishHttpPort: 3172
+                websocketPort: '3170',
+                mqttPort: '3171',
+                publishHttpPort: '3172'
             }
+
             const config = getConfigFromAnswers(answers)
-            expect(config.plugins.websocket.port).toBe(answers.websocketPort)
-            expect(config.plugins.mqtt.port).toBe(answers.mqttPort)
-            expect(config.httpServer.port).toBe(answers.publishHttpPort)
+            expect(config.plugins.websocket.port).toBe(parseInt(answers.websocketPort))
+            expect(config.plugins.mqtt.port).toBe(parseInt(answers.mqttPort))
+            expect(config.httpServer.port).toBe(parseInt(answers.publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.ethereumPrivateKey).toBe(privateKey)
         })

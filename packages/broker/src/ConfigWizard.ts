@@ -164,10 +164,9 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
             if (portNumber < MIN_PORT_VALUE || portNumber > MAX_PORT_VALUE) {
                 return `Out of range port ${portNumber} provided (valid range ${MIN_PORT_VALUE}-${MAX_PORT_VALUE})`
             }
-
             return true
         },
-        default: defaultPluginPort
+        default: defaultPluginPort.toString()
     })
 })
 
@@ -181,15 +180,15 @@ export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
         const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
-            if (answers[`${pluginName}Port`] !== defaultPluginPort){
+            if (answers[`${pluginName}Port`] !== defaultPluginPort.toString()){
                 if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
                     // the publishHttp plugin is special, it needs to be added to the config after the other plugins
                     config.httpServer = {
-                        port: answers[`${pluginName}Port`]
+                        port: parseInt(answers[`${pluginName}Port`])
                     }
                 } else {
                     // user provided a custom value, fill in
-                    pluginConfig = { port: answers[`${pluginName}Port`] }
+                    pluginConfig = { port: parseInt(answers[`${pluginName}Port`]) }
                 }
             }
             config.plugins![pluginName] = pluginConfig
