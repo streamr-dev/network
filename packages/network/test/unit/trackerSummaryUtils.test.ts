@@ -40,5 +40,3 @@ test('getNodeConnections', () => {
     expect(result.node6).toEqual(new Set([]))
     expect(result.nodeNotInTopology).toEqual(new Set([]))
 })
-
-test('')
