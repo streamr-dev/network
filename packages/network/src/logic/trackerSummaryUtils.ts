@@ -3,7 +3,7 @@ import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
 
 type OverLayWithRtts = { [key: string]: { [key: string]: { neighborId: string, rtt: number | null }[] } }
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
-type NodesWithLocations = { [key: string]: Location }[]
+type NodesWithLocations = { [key: string]: Location }
 
 export function getTopology(
     overlayPerStream: OverlayPerStream,
