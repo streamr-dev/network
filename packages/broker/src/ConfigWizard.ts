@@ -215,7 +215,7 @@ export const selectDestinationPathPrompt = {
             answers.parentDirExists = existsSync(parentDirPath)
             answers.fileExists = existsSync(filePath)
 
-            return (answers.parentDirExists || answers.fileExists)
+            return true
         } catch (e) {
             return e.message
         }

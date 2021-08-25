@@ -76,7 +76,7 @@ describe('ConfigWizard', () => {
             const invalidPath = `/invalid-path/${Date.now()}`
             const answers: any = {}
             const isValid = validate(invalidPath, answers)
-            expect(isValid).toBe(false)
+            expect(isValid).toBe(true)
             expect(answers.parentDirExists).toBe(false)
             expect(answers.fileExists).toBe(false)
 
