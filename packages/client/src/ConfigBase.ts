@@ -12,7 +12,6 @@ import has from 'lodash/has'
 import get from 'lodash/get'
 
 import { EthereumAddress, Todo } from './types'
-import { StorageNode } from './StorageNode'
 
 import { AuthConfig, EthereumConfig } from './Ethereum'
 import { EncryptionConfig } from './encryption/KeyExchangeUtils'
@@ -78,10 +77,6 @@ export type StrictStreamrClientConfig = {
     streamrNodeAddress: EthereumAddress
     keyExchange: Todo
     dataUnion: DataUnionConfig
-    storageNode: {
-        address: EthereumAddress
-        url: string
-    },
     cache: CacheConfig,
 } & (
     EthereumConfig
@@ -158,10 +153,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         factorySidechainAddress: '0x1b55587Beea0b5Bc96Bb2ADa56bD692870522e9f',
         templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',
         templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
-    },
-    storageNode: {
-        address: StorageNode.STREAMR_GERMANY.getAddress(),
-        url: 'https://corea1.streamr.network:8001'
     },
     cache: {
         maxSize: 10000,

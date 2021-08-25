@@ -10,10 +10,11 @@ import cloneDeep from 'lodash/cloneDeep'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NodeRegistryOptions } from './NodeRegistry'
 import { InspectOptions } from 'util'
+import { StorageNode } from './StorageNode'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Partial<NetworkNodeOptions>
-    nodeRegistry?: Partial<NodeRegistryOptions>
+    nodeRegistry?: NodeRegistryOptions
     debug?: Partial<DebugConfig>
 }
 
@@ -67,35 +68,30 @@ const BRUBECK_CLIENT_DEFAULTS = {
             maxStringLength: 256
         }
     },
-    nodeRegistry: {
-        contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-        jsonRpcProvider: 'http://10.200.10.1:8546',
-    },
+    nodeRegistry: [{
+        address: StorageNode.STREAMR_GERMANY.getAddress(),
+        url: 'https://corea1.streamr.network:8001',
+    }],
     network: {
-        trackers: [
-            {
-                id: '0xDE11165537ef6C01260ee89A850a281525A5b63F',
-                ws: 'ws://127.0.0.1:30301',
-                http: 'http://127.0.0.1:30301'
-            }, {
-                id: '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c',
-                ws: 'ws://127.0.0.1:30302',
-                http: 'http://127.0.0.1:30302'
-            }, {
-                id: '0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75',
-                ws: 'ws://127.0.0.1:30303',
-                http: 'http://127.0.0.1:30303'
-            }
-        ],
+        trackers: [{
+            ws: 'wss://testnet1.streamr.network:30300',
+            http: 'https://testnet1.streamr.network:30300',
+            id: '0x49D45c17bCA1Caf692001D21c38aDECCB4c08504',
+        }],
     },
 }
 
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
     // merge config with defaults, but replace arrays, rather than merge them.
-    return cloneDeep(mergeWith({}, BRUBECK_CLIENT_DEFAULTS, Config(config), (_objValue: any, srcValue: any) => {
+    return mergeWith(cloneDeep(BRUBECK_CLIENT_DEFAULTS), Config(config), (objValue: any, srcValue: any) => {
         if (Array.isArray(srcValue)) {
-            return srcValue.slice(0)
+            return srcValue
         }
+
+        if (Array.isArray(objValue) && !Array.isArray(srcValue)) {
+            return srcValue
+        }
+
         return undefined
-    }))
+    })
 }

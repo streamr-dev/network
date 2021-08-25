@@ -34,7 +34,6 @@ export default class Session extends EventEmitter {
         if (!this.options.sessionToken) {
             this.options.unauthenticated = true
         }
-        debug('options', this.options)
     }
 
     isUnauthenticated() {

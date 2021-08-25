@@ -1,4 +1,3 @@
-// import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import {
@@ -7,18 +6,13 @@ import {
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream
-    // getTestSetTimeout,
-    // addAfterFn,
 } from '../utils'
 import { BrubeckClient } from '../../src/BrubeckClient'
 import Resend from '../../src/Resends'
-// import { Defer } from '../../src/utils'
 
 import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
-
-// const { ControlMessage } = ControlLayer
 
 /* eslint-disable no-await-in-loop */
 
@@ -34,8 +28,6 @@ describeRepeats('resends', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
     let subscriber: Resend
-    // const addAfter = addAfterFn()
-    // const testSetTimeout = getTestSetTimeout()
 
     const createClient = (opts: any = {}) => {
         const c = new BrubeckClient({
@@ -63,12 +55,12 @@ describeRepeats('resends', () => {
             client.getSessionToken(),
         ])
         client.debug('connecting before all tests <<')
-        client.debug('createStream >>')
-        stream = await createTestStream(client, module)
-        client.debug('createStream <<')
     })
 
     beforeAll(async () => {
+        client.debug('createStream >>')
+        stream = await createTestStream(client, module)
+        client.debug('createStream <<')
         client.debug('addToStorageNode >>')
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
             timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
@@ -95,7 +87,7 @@ describeRepeats('resends', () => {
         expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
-    afterEach(async () => {
+    afterAll(async () => {
         if (client) {
             client.debug('disconnecting after test')
             await client.destroy()
@@ -110,6 +102,17 @@ describeRepeats('resends', () => {
                 last: 5,
             })
         }).rejects.toThrow('badstream')
+    })
+
+    it('throws if no storage assigned', async () => {
+        const notStoredStream = await createTestStream(client, module)
+        await expect(async () => {
+            await subscriber.resend({
+                streamId: notStoredStream.id,
+                streamPartition: 0,
+                last: 5,
+            })
+        }).rejects.toThrow('storage')
     })
 
     it('throws error if bad partition', async () => {
@@ -176,9 +179,7 @@ describeRepeats('resends', () => {
         beforeEach(async () => {
             if (published && published.length) { return }
             // eslint-disable-next-line require-atomic-updates
-            published = await publishTestMessages(MAX_MESSAGES, {
-                timestamp: 111111,
-            })
+            published = await publishTestMessages(MAX_MESSAGES)
         }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
         beforeEach(async () => {
@@ -187,7 +188,7 @@ describeRepeats('resends', () => {
             await waitForStorage(published[published.length - 1])
         }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
-        it.skip('gives zero results for last 0', async () => {
+        it('gives zero results for last 0', async () => {
             const sub = await subscriber.resend({
                 streamId: stream.id,
                 streamPartition: 0,
@@ -220,6 +221,76 @@ describeRepeats('resends', () => {
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(2)
                 expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.slice(-2).map((s) => s.toObject()))
+            })
+        })
+
+        describe('from', () => {
+            it('can resend all', async () => {
+                const sub = await subscriber.resend({
+                    streamId: stream.id,
+                    streamPartition: 0,
+                    resend: {
+                        from: {
+                            timestamp: published[0].getTimestamp(),
+                        },
+                    }
+                })
+
+                const receivedMsgs = await sub.collect()
+                expect(receivedMsgs).toHaveLength(published.length)
+                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
+            })
+
+            it('can resend subset', async () => {
+                const sub = await subscriber.resend({
+                    streamId: stream.id,
+                    streamPartition: 0,
+                    from: {
+                        timestamp: published[2].getTimestamp(),
+                    },
+                })
+
+                const receivedMsgs = await sub.collect()
+                expect(receivedMsgs).toHaveLength(MAX_MESSAGES - 2)
+                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.slice(2).map((s) => s.toObject()))
+            })
+        })
+
+        describe('range', () => {
+            it('can resend all', async () => {
+                const sub = await subscriber.resend({
+                    streamId: stream.id,
+                    streamPartition: 0,
+                    resend: {
+                        from: {
+                            timestamp: published[0].getTimestamp(),
+                        },
+                        to: {
+                            timestamp: published[published.length - 1].getTimestamp(),
+                        },
+                    }
+                })
+
+                const receivedMsgs = await sub.collect()
+                expect(receivedMsgs).toHaveLength(published.length)
+                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
+            })
+
+            it('can resend subset', async () => {
+                const sub = await subscriber.resend({
+                    streamId: stream.id,
+                    streamPartition: 0,
+                    from: {
+                        timestamp: published[2].getTimestamp(),
+                    },
+                    to: {
+                        timestamp: published[3].getTimestamp(),
+                    },
+                })
+
+                const receivedMsgs = await sub.collect()
+                expect(receivedMsgs).toHaveLength(2)
+                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.slice(2, 4).map((s) => s.toObject()))
             })
         })
 

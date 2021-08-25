@@ -197,6 +197,12 @@ export default class Resend implements Context {
     }
 
     async last<T>(spid: SPID, { count }: { count: number }): Promise<MessageStream<T>> {
+        if (count <= 0) {
+            const emptyStream = new MessageStream<T>(this)
+            emptyStream.endWrite()
+            return emptyStream
+        }
+
         return this.fetchStream('last', spid, {
             count,
         })
@@ -233,7 +239,7 @@ export default class Resend implements Context {
         publisherId?: string,
         msgChainId?: string
     }): Promise<MessageStream<T>> {
-        return this.fetchStream('from', spid, {
+        return this.fetchStream('range', spid, {
             fromTimestamp,
             fromSequenceNumber,
             toTimestamp,

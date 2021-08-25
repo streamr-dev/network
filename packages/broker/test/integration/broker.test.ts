@@ -77,13 +77,13 @@ describe('broker: end-to-end', () => {
         const user1 = Wallet.createRandom()
         const user2 = Wallet.createRandom()
         client1 = createClient(tracker, user1.privateKey, {
-            storageNode: storageNodeRegistry[0]
+            nodeRegistry: storageNodeRegistry
         })
         client2 = createClient(tracker, user1.privateKey, {
-            storageNode: storageNodeRegistry[0]
+            nodeRegistry: storageNodeRegistry
         })
         client3 = createClient(tracker, user2.privateKey, {
-            storageNode: storageNodeRegistry[0]
+            nodeRegistry: storageNodeRegistry
         })
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
         await assignmentEventManager.createStream()

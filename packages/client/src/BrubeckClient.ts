@@ -18,6 +18,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
+import * as NodeRegistry from './NodeRegistry'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -164,7 +165,7 @@ class BrubeckClientBase implements Context {
 
 export class BrubeckClient extends BrubeckClientBase {
     container
-    constructor(options: BrubeckClientConfig, parentContainer = container) {
+    constructor(options: BrubeckClientConfig = {}, parentContainer = container) {
         const c = parentContainer.createChildContainer()
         const config = BrubeckConfig(options)
         const id = counterId(`BrubeckClient:${uid}${config.id ? `:${config.id}` : ''}`)
@@ -207,6 +208,8 @@ export class BrubeckClient extends BrubeckClientBase {
         configTokens.forEach(([token, useValue]) => {
             c.register(token, { useValue })
         })
+
+        NodeRegistry.register(c)
 
         super(
             c,

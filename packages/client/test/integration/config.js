@@ -22,10 +22,6 @@ module.exports = {
         templateMainnetAddress: process.env.DU_TEMPLATE_MAINNET || '0x7bFBAe10AE5b5eF45e2aC396E0E605F6658eF3Bc',
         templateSidechainAddress: process.env.DU_TEMPLATE_SIDECHAIN || '0x36afc8c9283CC866b8EB6a61C6e6862a83cd6ee8',
     },
-    storageNode: {
-        address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-        url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
-    },
     network: {
         trackers: [
             {
@@ -47,6 +43,10 @@ module.exports = {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     },
+    //nodeRegistry: [{
+        //address: '0xde1112f631486CfC759A50196853011528bC5FA0',
+        //url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
+    //}],
     sidechain: {
         url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
         timeout: toNumber(process.env.TEST_TIMEOUT),
