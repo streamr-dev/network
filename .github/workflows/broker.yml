@@ -122,6 +122,17 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: false
+          load: false
+          tags: streamr/broker-node:dev-testm1
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Build (is cached!) and load x86 image
+        uses: docker/build-push-action@v2.7.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
           load: true
           tags: streamr/broker-node:dev-testm1
           cache-from: type=local,src=/tmp/.buildx-cache
