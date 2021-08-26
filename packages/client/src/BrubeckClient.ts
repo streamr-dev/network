@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+import './utils/PatchTsyringe'
 import { container, DependencyContainer, inject } from 'tsyringe'
 import Debug from 'debug'
 

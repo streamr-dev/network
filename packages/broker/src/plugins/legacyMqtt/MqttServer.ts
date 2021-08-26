@@ -1,7 +1,9 @@
-import events from 'events'
-// @ts-expect-error
+import { Server } from 'net'
+import { EventEmitter } from 'events'
+// @ts-expect-error no types for module
 import mqttCon from 'mqtt-connection'
-import { MetricsContext, NetworkNode, Protocol } from 'streamr-network'
+import { MetricsContext, NetworkNode } from 'streamr-network'
+import { StreamMessage, MessageID } from 'streamr-network/dist/streamr-protocol'
 import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Logger } from 'streamr-network'
 import { partition } from '../../helpers/partition'
@@ -14,7 +16,18 @@ import { Connection } from './Connection'
 
 const logger = new Logger(module)
 
-const { StreamMessage, MessageID } = Protocol.MessageLayer
+export type MQTTSubscription = {
+    topic: string,
+}
+
+export type MQTTPacket = {
+    messageId: string,
+    topic: string,
+    payload: string | Buffer,
+    qos: number,
+    subscriptions: MQTTSubscription[],
+    unsubscriptions: string[]
+}
 
 let sequenceNumber = 0
 
@@ -29,22 +42,21 @@ function mqttPayloadToObject(payload: Todo) {
     return payload
 }
 
-export class MqttServer extends events.EventEmitter {
-
-    mqttServer: Todo
-    streamsTimeout: Todo
+export class MqttServer extends EventEmitter {
+    mqttServer: Server
+    streamsTimeout
     networkNode: NetworkNode
     streamFetcher: StreamFetcher
     publisher: Publisher
-    partitionFn: Todo
-    subscriptionManager: Todo
-    connections: Todo
-    streams: Todo
+    partitionFn
+    subscriptionManager: SubscriptionManager
+    connections = new Set<Connection>()
+    streams: StreamStateManager
     metrics: Metrics
 
     constructor(
-        mqttServer: Todo,
-        streamsTimeout: Todo,
+        mqttServer: Server,
+        streamsTimeout: number | null,
         networkNode: NetworkNode,
         streamFetcher: StreamFetcher,
         publisher: Publisher,
@@ -61,12 +73,12 @@ export class MqttServer extends events.EventEmitter {
         this.publisher = publisher
         this.partitionFn = partitionFn
         this.subscriptionManager = subscriptionManager
-        this.connections = new Set()
 
         this.streams = new StreamStateManager()
-
-        this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
-        this.mqttServer.on('connection', this.onNewClientConnection.bind(this))
+        this.broadcastMessage = this.broadcastMessage.bind(this)
+        this.onNewClientConnection = this.onNewClientConnection.bind(this)
+        this.networkNode.addMessageListener(this.broadcastMessage)
+        this.mqttServer.on('connection', this.onNewClientConnection)
 
         this.metrics = metricsContext.create('broker/mqtt')
             .addRecordedMetric('outBytes')
@@ -74,36 +86,39 @@ export class MqttServer extends events.EventEmitter {
             .addQueriedMetric('connections', () => this.connections.size)
     }
 
-    close() {
+    close(): Promise<void> {
+        this.networkNode.removeMessageListener(this.broadcastMessage)
+        this.mqttServer.off('connection', this.onNewClientConnection)
         this.streams.close()
-        this.connections.forEach((connection: Todo) => this._closeConnection(connection))
+        this.connections.forEach((connection) => this.closeConnection(connection))
 
         return new Promise((resolve, reject) => {
-            this.mqttServer.close((err: Todo) => {
+            this.mqttServer.close((err?: Error) => {
                 if (err) {
                     reject(err)
                 } else {
-                    // @ts-expect-error
-                    resolve()
+                    resolve(undefined)
                 }
             })
         })
     }
 
-    _createNewConnection(client: Todo) {
+    private createNewConnection(client: EventEmitter) {
         const connection = new Connection(client)
 
         connection.on('close', () => {
             logger.debug('closing client')
             connection.markAsDead()
-            this._closeConnection(connection)
+            this.closeConnection(connection)
+            connection.removeAllListeners()
         })
 
         connection.on('error', (err) => {
             logger.warn(`dropping client because: ${err.message}`)
             logger.debug('error in client %s', err)
             connection.markAsDead()
-            this._closeConnection(connection)
+            this.closeConnection(connection)
+            connection.removeAllListeners()
         })
 
         connection.on('disconnect', () => {
@@ -125,14 +140,14 @@ export class MqttServer extends events.EventEmitter {
         return connection
     }
 
-    onNewClientConnection(mqttStream: Todo) {
-        const connection = this._createNewConnection(mqttCon(mqttStream))
+    private onNewClientConnection(mqttStream: Todo) {
+        const connection = this.createNewConnection(mqttCon(mqttStream))
         this.connections.add(connection)
 
         mqttStream.setTimeout(this.streamsTimeout)
-        mqttStream.on('timeout', () => {
+        mqttStream.once('timeout', () => {
             logger.debug('mqttStream timeout')
-            this._closeConnection(connection)
+            this.closeConnection(connection)
         })
 
         connection.on('connect', (packet) => {
@@ -150,9 +165,8 @@ export class MqttServer extends events.EventEmitter {
                     connection.sendConnectionAccepted()
                     connection.setClientId(packet.clientId).setToken(sessionToken)
                     logger.debug('onNewClientConnection: mqtt "%s" connected', connection.id)
-                })
-                .catch((err) => {
-                    logger.warn('onNewClientConnection: error fetching token %o', err)
+                }, (err) => {
+                    logger.warn('onNewClientConnection: error fetching token %s', err.stack)
                     if (err.code === 'INVALID_ARGUMENT') {
                         connection.sendConnectionRefused()
                     } else {
@@ -162,7 +176,7 @@ export class MqttServer extends events.EventEmitter {
         })
     }
 
-    async handlePublishRequest(connection: Todo, packet: Todo) {
+    async handlePublishRequest(connection: Connection, packet: MQTTPacket): Promise<void> {
         logger.debug('publish request %o', packet)
 
         const { topic, payload, qos } = packet
@@ -196,7 +210,7 @@ export class MqttServer extends events.EventEmitter {
         }
     }
 
-    handleUnsubscribeRequest(connection: Todo, packet: Todo) {
+    handleUnsubscribeRequest(connection: Connection, packet: MQTTPacket): void {
         logger.debug('unsubscribe request %o', packet)
 
         const topic = packet.unsubscriptions[0]
@@ -210,7 +224,7 @@ export class MqttServer extends events.EventEmitter {
         }
     }
 
-    async handleSubscribeRequest(connection: Todo, packet: Todo) {
+    async handleSubscribeRequest(connection: Connection, packet: MQTTPacket): Promise<void> {
         logger.debug('subscribe request %o', packet)
 
         const { topic } = packet.subscriptions[0]
@@ -245,7 +259,7 @@ export class MqttServer extends events.EventEmitter {
         }
     }
 
-    _closeConnection(connection: Todo) {
+    closeConnection(connection: Connection): void {
         this.connections.delete(connection)
         logger.debug('closing client "%s" on streams "%o"', connection.id, connection.streamsAsString())
 
@@ -278,7 +292,7 @@ export class MqttServer extends events.EventEmitter {
         connection.close()
     }
 
-    broadcastMessage(streamMessage: Todo) {
+    broadcastMessage(streamMessage: StreamMessage): void {
         const streamId = streamMessage.getStreamId()
         const streamPartition = streamMessage.getStreamPartition()
         const stream = this.streams.get(streamId, 0)
@@ -290,7 +304,7 @@ export class MqttServer extends events.EventEmitter {
                 payload: JSON.stringify(streamMessage.getParsedContent())
             }
 
-            stream.forEachConnection((connection: Todo) => {
+            stream.forEachConnection((connection: Connection) => {
                 connection.client.publish(object, () => {})
             })
 
