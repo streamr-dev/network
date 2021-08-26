@@ -123,7 +123,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           load: false
-          tags: streamr/broker-node:dev-testm1
+          tags: streamr/broker-node:dev
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Build (is cached!) and load x86 image
@@ -134,7 +134,7 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
-          tags: streamr/broker-node:dev-testm1
+          tags: streamr/broker-node:dev
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Start Streamr Docker Stack
@@ -167,7 +167,7 @@ jobs:
             type=sha
             type=ref,event=branch
             type=semver,pattern=v{{version}}
-            type=raw,value=dev-testm1
+            type=raw,value=dev
           flavor: |
             latest=auto
       - name: Set up Docker Buildx
