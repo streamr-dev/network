@@ -80,6 +80,10 @@ export class OverlayTopology {
         return Object.entries(this.nodes).length === 0
     }
 
+    getNodes(): TopologyNodes {
+        return this.nodes
+    }
+
     state(): TopologyState {
         const objects = Object.entries(this.nodes).map(([nodeId, neighbors]) => {
             return {
