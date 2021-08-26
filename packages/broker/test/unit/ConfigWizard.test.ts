@@ -31,12 +31,12 @@ describe('ConfigWizard', () => {
     describe('plugin port validation', () => {
         it ('happy path', () => {
             const validate = portPrompt.validate!
-            expect(validate('7070')).toBe(true)
+            expect(validate(7070)).toBe(true)
         })
 
         it ('invalid data: out-of-range number', () => {
             const validate = portPrompt.validate!
-            const port = '10000000000'
+            const port = 10000000000
             expect(validate(port)).toBe(`Out of range port ${port} provided (valid range 1024-49151)`)
         })
 
