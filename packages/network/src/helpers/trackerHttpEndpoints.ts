@@ -99,7 +99,7 @@ export function trackerHttpEndpoints(
         staticLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
         res.json(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, askedPartition))
     })
-    cachedJsonGet(app,'/node-connections/', 15 * 1000, () => {
+    cachedJsonGet(app,'/node-connections/', 5 * 60 * 1000, () => {
         const topologyUnion = getNodeConnections(tracker.getNodes(), tracker.getOverlayPerStream())
         return Object.assign({}, ...Object.entries(topologyUnion).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, Array.from(neighbors), tracker.getOverlayConnectionRtts())
