@@ -155,7 +155,7 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
         when: (answers: inquirer.Answers) => {
             return answers.selectPlugins.includes(pluginName)
         },
-        validate: (input: string, answers: inquirer.Answers): string | boolean => {
+        validate: (input: number, answers: inquirer.Answers): string | boolean => {
             const portNumber = parseInt(input || answers[`${pluginName}Port`])
             if (!Number.isInteger(portNumber)) {
                 return `Non-numeric value provided`
@@ -166,7 +166,7 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
             }
             return true
         },
-        default: defaultPluginPort.toString()
+        default: defaultPluginPort
     })
 })
 
@@ -180,7 +180,7 @@ export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
         const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
-            if (answers[`${pluginName}Port`] !== defaultPluginPort.toString()){
+            if (answers[`${pluginName}Port`] !== defaultPluginPort){
                 if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
                     // the publishHttp plugin is special, it needs to be added to the config after the other plugins
                     config.httpServer = {

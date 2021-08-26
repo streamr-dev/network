@@ -150,7 +150,7 @@ describe('ConfigWizard', () => {
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
                 selectPlugins:['websocket'],
-                websocketPort: port.toString(),
+                websocketPort: port,
             }
             const config = getConfigFromAnswers(answers)
             expect(config.plugins.websocket.port).toBe(port)
@@ -160,9 +160,9 @@ describe('ConfigWizard', () => {
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: DEFAULT_CONFIG_PORTS.DEFAULT_WS_PORT.toString(),
-                mqttPort: DEFAULT_CONFIG_PORTS.DEFAULT_MQTT_PORT.toString(),
-                publishHttpPort: DEFAULT_CONFIG_PORTS.DEFAULT_HTTP_PORT.toString(),
+                websocketPort: DEFAULT_CONFIG_PORTS.DEFAULT_WS_PORT,
+                mqttPort: DEFAULT_CONFIG_PORTS.DEFAULT_MQTT_PORT,
+                publishHttpPort: DEFAULT_CONFIG_PORTS.DEFAULT_HTTP_PORT,
             }
             const config = getConfigFromAnswers(answers)
             expect(config.plugins.websocket).toMatchObject({})
