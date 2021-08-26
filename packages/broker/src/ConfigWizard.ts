@@ -1,7 +1,7 @@
 import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
 import path from 'path'
-import { writeFileSync, existsSync, mkdirSync } from 'fs'
+import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
 import { v4 as uuid } from 'uuid'
@@ -249,6 +249,7 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     }
    
     writeFileSync(answers.selectDestinationPath, JSON.stringify(config, null, 2))
+    chmodSync(answers.selectDestinationPath, '0600')
     return answers.selectDestinationPath
 }
 
