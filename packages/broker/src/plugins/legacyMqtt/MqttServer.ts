@@ -110,7 +110,6 @@ export class MqttServer extends EventEmitter {
             logger.debug('closing client')
             connection.markAsDead()
             this.closeConnection(connection)
-            connection.removeAllListeners()
         })
 
         connection.on('error', (err) => {
@@ -118,7 +117,6 @@ export class MqttServer extends EventEmitter {
             logger.debug('error in client %s', err)
             connection.markAsDead()
             this.closeConnection(connection)
-            connection.removeAllListeners()
         })
 
         connection.on('disconnect', () => {
