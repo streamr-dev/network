@@ -73,7 +73,7 @@ describe('per-node metrics', () => {
         })
 
         client1 = createClient(tracker, undefined, {
-            storageNode: storageNodeRegistry[0]
+            nodeRegistry: storageNodeRegistry
         })
 
         legacyStream = await createTestStream(client1, module)

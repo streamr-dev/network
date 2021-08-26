@@ -38,7 +38,8 @@ class MockStorageData extends PassThrough {
     }
 }
 
-describe.skip('resend cancellation', () => {
+it.skip('resend cancellation', () => {
+    /*
     let tracker: Tracker
     let storageNode: Broker
     let client: StreamrClient
@@ -108,4 +109,5 @@ describe.skip('resend cancellation', () => {
         await p
         expect(mockStorageData.destroyed).toBe(true)
     })
+    */
 })

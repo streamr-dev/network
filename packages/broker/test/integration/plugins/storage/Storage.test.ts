@@ -327,16 +327,16 @@ describe('Storage', () => {
                 const msg = buildMsg({
                     streamId: storedStreamId,
                     streamPartition: 0,
-                    timestamp: (i + 1) * 1000,
-                    sequenceNumber: i,
+                    timestamp: 1000000 + (i + 1),
+                    sequenceNumber: 0,
                     publisherId: 'publisher1',
                     content: randomBuffer.toString('hex')
                 })
-                storePromises.push(storage.store(msg))
+                storePromises.push(() => storage.store(msg))
             }
             const half = Math.floor(storePromises.length / 2)
-            await Promise.all(storePromises.slice(0, half))
-            await Promise.all(storePromises.slice(half))
+            await Promise.all(storePromises.slice(0, half).map((fn) => fn()))
+            await Promise.all(storePromises.slice(half).map((fn) => fn()))
         }, 60000)
 
         it(`can store ${NUM_MESSAGES} ${MESSAGE_SIZE} byte messages and requestLast 1`, async () => {
@@ -345,13 +345,13 @@ describe('Storage', () => {
             expect(results.length).toEqual(1)
         })
 
-        it('can requestLast', async () => {
+        it('can requestLast all', async () => {
             const streamingResults = storage.requestLast(storedStreamId, 0, NUM_MESSAGES)
             const results = await toArray(streamingResults)
             expect(results.length).toEqual(NUM_MESSAGES)
         })
 
-        it('can requestLast again', async () => {
+        it('can requestLast all again', async () => {
             const streamingResults = storage.requestLast(storedStreamId, 0, NUM_MESSAGES)
             const results = await toArray(streamingResults)
             expect(results.length).toEqual(NUM_MESSAGES)

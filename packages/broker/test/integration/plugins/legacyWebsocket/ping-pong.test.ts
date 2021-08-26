@@ -11,7 +11,7 @@ import { createClient } from '../../../utils'
 const trackerPort = 17370
 const wsPort = 17351
 
-describe('ping-pong test between broker and clients', () => {
+describe.skip('ping-pong test between broker and clients', () => {
     let tracker: Tracker
     let websocketServer: WebsocketServer
     let networkNode: NetworkNode

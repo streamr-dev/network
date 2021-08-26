@@ -143,6 +143,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             privateKey: config.ethereumPrivateKey,
         },
         restUrl: `${config.streamrUrl}/api/v1`,
+        nodeRegistry: config.storageNodeConfig?.registry,
         network: {
             id: nodeId,
             name: networkNodeName,
