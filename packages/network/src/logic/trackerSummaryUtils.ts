@@ -46,6 +46,9 @@ export function getNodeConnections(nodes: readonly string[], overlayPerStream: O
     Object.values(overlayPerStream).forEach((overlayTopology) => {
         Object.entries(overlayTopology.getNodes()).forEach(([nodeId, neighbors]) => {
             neighbors.forEach((neighborNode) => {
+                if (!(nodeId in result)) {
+                    result[nodeId] = new Set<string>()
+                }
                 result[nodeId].add(neighborNode)
             })
         })
