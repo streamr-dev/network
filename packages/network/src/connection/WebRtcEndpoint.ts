@@ -49,6 +49,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly bufferThresholdHigh: number
     private readonly maxMessageSize
 
+    private statusReportTimeout?: NodeJS.Timeout
+    private statusReportIntervalMs: number
+
     constructor(
         peerInfo: PeerInfo,
         stunUrls: string[],
@@ -117,6 +120,29 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             .addQueriedMetric('messageQueueSize', () => {
                 return Object.values(this.connections).reduce((total, c) => total + c.getQueueSize(), 0)
             })
+
+        this.statusReportIntervalMs = 5 * 60 * 1000
+        this.startConnectionStatusReport()
+    }
+
+    private startConnectionStatusReport(): void {
+        if (this.statusReportTimeout) {
+            clearTimeout(this.statusReportTimeout)
+        }
+        this.statusReportTimeout = setTimeout(() => {
+            let connectedPeerCount = 0
+            const pendingConnectionIds = []
+            for (const peerId of Object.keys(this.connections)) {
+                const lastState = this.connections[peerId].getLastState()
+                if (lastState === 'open') {
+                    connectedPeerCount += 1
+                } else if (lastState === 'connecting') {
+                    pendingConnectionIds.push(peerId)
+                }
+            }
+            this.logger.info(`Successfully connected to ${connectedPeerCount} peers. Still trying to connect to the following peers: [${pendingConnectionIds.join(', ')}]`)
+            this.startConnectionStatusReport()
+        }, this.statusReportIntervalMs)
     }
 
     private createConnection(
@@ -431,6 +457,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.rtcSignaller.setIceCandidateListener(() => {})
         this.rtcSignaller.setErrorListener(() => {})
         this.rtcSignaller.setConnectListener(() => {})
+        clearTimeout(this.statusReportTimeout!)
         this.removeAllListeners()
         Object.values(connections).forEach((connection) => connection.close())
         Object.values(messageQueues).forEach((queue) => queue.clear())

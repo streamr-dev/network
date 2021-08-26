@@ -162,7 +162,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.doConnect()
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
-            this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
     }
@@ -481,7 +480,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         clearTimeout(this.connectionTimeoutRef!)
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
-            this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
     }
