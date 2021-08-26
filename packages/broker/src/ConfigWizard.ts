@@ -2,10 +2,10 @@ import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
 import path from 'path'
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
-import * as os from 'os'
 import chalk from "chalk"
 import { v4 as uuid } from 'uuid'
 import { Protocol } from 'streamr-network'
+import envPaths from 'env-paths'
 
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
@@ -16,6 +16,8 @@ const DEFAULT_WS_PORT = WebsocketConfigSchema.properties.port.default
 const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
 const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
 const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
+
+const PATHS = envPaths('streamr', { suffix: '' })
 
 export const DEFAULT_CONFIG_PORTS = {
     DEFAULT_WS_PORT,
@@ -205,7 +207,7 @@ export const selectDestinationPathPrompt = {
     type: 'input',
     name: 'selectDestinationPath',
     message: `Select a path to store the generated config in `,
-    default: path.join(os.homedir(), '.streamr/broker-config.json'),
+    default: path.join(PATHS.config, 'broker-config.json'),
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
         try {
             const filePath = input || answers.selectDestinationPath
