@@ -276,6 +276,10 @@ class StreamrStream implements StreamMetadata {
         )
     }
 
+    async getStreamNodes() {
+        return this._resends.getStreamNodes(this.id)
+    }
+
     async getStorageNodes() {
         const json = await this._rest.get<{ storageNodeAddress: string}[] >(
             ['streams', this.id, 'storageNodes']

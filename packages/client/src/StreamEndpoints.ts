@@ -262,7 +262,7 @@ export class StreamEndpoints implements Context {
         return json
     }
 
-    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject> {
+    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject | undefined> {
         const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
         this.debug('getStreamLast %o', {
             streamId,
@@ -270,10 +270,14 @@ export class StreamEndpoints implements Context {
             count,
         })
 
+        const stream = await this.getStream(streamId)
+        const nodes = await stream.getStreamNodes()
+
         const json = await this.rest.get<StreamMessageAsObject>([
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
-            query: { count }
+            query: { count },
+            restUrl: nodes[0] ? nodes[0].url + '/api/v1' : undefined,
         })
 
         return json

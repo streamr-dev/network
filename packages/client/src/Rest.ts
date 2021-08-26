@@ -18,6 +18,7 @@ export type FetchOptions = {
     options?: any,
     requireNewToken?: boolean
     debug?: Debugger
+    restUrl?: string
 }
 
 export type UrlParts = (string | number)[]
@@ -40,8 +41,8 @@ export class Rest implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    getUrl(urlParts: UrlParts, query = {}) {
-        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), this.options.restUrl + '/')
+    getUrl(urlParts: UrlParts, query = {}, restUrl = this.options.restUrl) {
+        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), restUrl + '/')
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
         return url
@@ -52,9 +53,9 @@ export class Rest implements Context {
     }
 
     fetch<T extends object>(urlParts: UrlParts, {
-        query, useSession = true, options, requireNewToken = false, debug = this.debug
+        query, useSession = true, options, requireNewToken = false, debug = this.debug, restUrl
     }: FetchOptions) {
-        const url = this.getUrl(urlParts, query)
+        const url = this.getUrl(urlParts, query, restUrl)
         return authFetch<T>(
             url.toString(),
             useSession ? this.session : undefined,
@@ -65,9 +66,9 @@ export class Rest implements Context {
     }
 
     request<T extends object>(urlParts: UrlParts, {
-        query, useSession = true, options, requireNewToken = false, debug = this.debug
+        query, useSession = true, options, requireNewToken = false, debug = this.debug, restUrl
     }: FetchOptions) {
-        const url = this.getUrl(urlParts, query)
+        const url = this.getUrl(urlParts, query, restUrl)
         return authRequest<T>(
             url.toString(),
             useSession ? this.session : undefined,

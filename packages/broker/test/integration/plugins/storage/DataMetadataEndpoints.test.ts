@@ -30,15 +30,16 @@ describe('DataMetadataEndpoints', () => {
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
+
+        const storageNodeRegistry = [{
+            address: storageNodeAccount.address,
+            url: `http://127.0.0.1:${httpPort1}`
+        }]
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
             id: 'tracker-DataMetadataEndpoints'
         })
-        client1 = createClient(tracker)
-    })
-
-    beforeAll(async () => {
         const engineAndEditorAccount = Wallet.createRandom()
         const trackerInfo = tracker.getConfigRecord()
 
@@ -51,7 +52,11 @@ describe('DataMetadataEndpoints', () => {
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [trackerInfo]
+            trackers: [trackerInfo],
+            storageNodeConfig: { registry: storageNodeRegistry }
+        })
+        client1 = createClient(tracker, undefined, {
+            nodeRegistry: storageNodeRegistry,
         })
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
         await assignmentEventManager.createStream()
