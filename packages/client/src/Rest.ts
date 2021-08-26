@@ -6,7 +6,6 @@ import { ConnectionConfig, Config } from './Config'
 import authFetch, { authRequest } from './authFetch'
 import { Context } from './utils/Context'
 
-import Session from './Session'
 import { BrubeckContainer } from './Container'
 
 export type FetchOptions = {
@@ -44,17 +43,13 @@ export class Rest implements Context {
         return url
     }
 
-    get session() {
-        return this.container.resolve<Session>(Session)
-    }
 
-    fetch<T extends object>(urlParts: UrlParts, {
+    fetch<T extends object>(baseUrl: string, urlParts: UrlParts, {
         query, useSession = true, options, requireNewToken = false, debug = this.debug
     }: FetchOptions) {
         const url = this.getUrl(urlParts, query)
         return authFetch<T>(
             url.toString(),
-            useSession ? this.session : undefined,
             options,
             requireNewToken,
             debug,
@@ -67,15 +62,14 @@ export class Rest implements Context {
         const url = this.getUrl(urlParts, query)
         return authRequest<T>(
             url.toString(),
-            useSession ? this.session : undefined,
             options,
             requireNewToken,
             debug,
         )
     }
 
-    post<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
-        return this.fetch<T>(urlParts, {
+    post<T extends object>(baseUrl: string, urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
+        return this.fetch<T>(baseUrl, urlParts, {
             ...options,
             options: {
                 ...options?.options,
@@ -89,8 +83,8 @@ export class Rest implements Context {
         })
     }
 
-    get<T extends object>(urlParts: UrlParts, options: FetchOptions = {}) {
-        return this.fetch<T>(urlParts, {
+    get<T extends object>(baseUrl: string, urlParts: UrlParts, options: FetchOptions = {}) {
+        return this.fetch<T>(baseUrl, urlParts, {
             ...options,
             options: {
                 ...options.options,
@@ -99,8 +93,8 @@ export class Rest implements Context {
         })
     }
 
-    put<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
-        return this.fetch<T>(urlParts, {
+    put<T extends object>(baseUrl: string, urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
+        return this.fetch<T>(baseUrl, urlParts, {
             ...options,
             options: {
                 ...options.options,
@@ -114,8 +108,8 @@ export class Rest implements Context {
         })
     }
 
-    del<T extends object>(urlParts: UrlParts, options: FetchOptions = {}) {
-        return this.fetch<T>(urlParts, {
+    del<T extends object>(baseUrl: string, urlParts: UrlParts, options: FetchOptions = {}) {
+        return this.fetch<T>(baseUrl, urlParts, {
             ...options,
             options: {
                 ...options.options,

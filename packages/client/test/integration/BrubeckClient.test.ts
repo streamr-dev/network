@@ -102,10 +102,7 @@ describeRepeats('StreamrClient', () => {
 
     beforeEach(async () => {
         client = createClient()
-        await Promise.all([
-            client.getSessionToken(),
-            client.connect(),
-        ])
+        await client.connect()
         stream = await createStream()
         publishTestMessages = getPublishTestMessages(client, stream)
         expect(onError).toHaveBeenCalledTimes(0)

@@ -54,22 +54,22 @@ const BRUBECK_CLIENT_DEFAULTS = {
     },
     nodeRegistry: {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-        jsonRpcProvider: 'http://192.168.0.8:8546',
+        jsonRpcProvider: 'http://127.0.0.1:8546',
     },
     network: {
         trackers: [
             {
                 id: '0xDE11165537ef6C01260ee89A850a281525A5b63F',
-                ws: 'ws://192.168.0.8:30301',
-                http: 'http://192.168.0.8:30301'
+                ws: 'ws://127.0.0.1:30301',
+                http: 'http://127.0.0.1:30301'
             }, {
                 id: '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c',
-                ws: 'ws://192.168.0.8:30302',
-                http: 'http://192.168.0.8:30302'
+                ws: 'ws://127.0.0.1:30302',
+                http: 'http://127.0.0.1:30302'
             }, {
                 id: '0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75',
-                ws: 'ws://192.168.0.8:30303',
-                http: 'http://192.168.0.8:30303'
+                ws: 'ws://127.0.0.1:30303',
+                http: 'http://127.0.0.1:30303'
             }
         ],
     },

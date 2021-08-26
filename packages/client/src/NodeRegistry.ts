@@ -144,10 +144,13 @@ export class NodeRegistry {
     // GraphQL queries
     // --------------------------------------------------------------------------------------------
 
-    async getStorageNode(nodeAddress: string): Promise<StorageNode | null> {
+    async getStorageNode(nodeAddress: string): Promise<StorageNode> {
         log('getnode %s ', nodeAddress)
         const res = await this.sendNodeQuery(NodeRegistry.buildGetNodeQuery(nodeAddress.toLowerCase())) as SingleNodeQueryResult
-        return res.node === null ? null : new StorageNode(res.node.id, res.node.metadata)
+        if (res.node === null) {
+            throw new NotFoundError('Node not found, id: ' + nodeAddress)
+        }
+        return new StorageNode(res.node.id, res.node.metadata)
     }
 
     async isStreamStoredInStorageNode(streamId: string, nodeAddress: string): Promise<boolean> {

@@ -213,14 +213,14 @@ function TestStreamEndpoints(getName: () => string) {
         })
     })
 
-    describe('getStreamValidationInfo', () => {
-        it('returns an object with expected fields', async () => {
-            const result = await client.getStreamValidationInfo(createdStream.id)
-            expect(result.partitions > 0).toBeTruthy()
-            expect(result.requireSignedData === true).toBeTruthy()
-            expect(result.requireEncryptedData === false).toBeTruthy()
-        })
-    })
+    // describe('getStreamValidationInfo', () => {
+    //     it('returns an object with expected fields', async () => {
+    //         const result = await client.getStreamValidationInfo(createdStream.id)
+    //         expect(result.partitions > 0).toBeTruthy()
+    //         expect(result.requireSignedData === true).toBeTruthy()
+    //         expect(result.requireEncryptedData === false).toBeTruthy()
+    //     })
+    // })
 
     describe('Stream.update', () => {
         it('can change stream name', async () => {

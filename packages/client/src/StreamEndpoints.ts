@@ -18,6 +18,7 @@ import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
 import { StorageNode } from './StorageNode'
+import { NodeRegistry } from './NodeRegistry'
 
 const debug = Debug('StreamEndpoints')
 
@@ -110,6 +111,7 @@ export class StreamEndpoints implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Config.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
+        @inject(NodeRegistry) private readonly nodeRegistry: NodeRegistry,
         @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
         private readonly ethereum: StreamrEthereum
     ) {
@@ -201,13 +203,13 @@ export class StreamEndpoints implements Context {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }
 
-    async getStreamValidationInfo(streamId: string) {
-        this.debug('getStreamValidationInfo %o', {
-            streamId,
-        })
-        const json = await this.rest.get<StreamValidationInfo>(['streams', streamId, 'validation'])
-        return json
-    }
+    // async getStreamValidationInfo(streamId: string) {
+    //     this.debug('getStreamValidationInfo %o', {
+    //         streamId,
+    //     })
+    //     const json = await this.rest.get<StreamValidationInfo>(['streams', streamId, 'validation'])
+    //     return json
+    // }
 
     async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject> {
         const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
@@ -216,8 +218,11 @@ export class StreamEndpoints implements Context {
             streamPartition,
             count,
         })
+        const stream = await this.streamRegistry.getStream(streamId)
+        const nodes = await stream.getStorageNodes()
+        const storageNode = nodes[Math.floor(Math.random() * nodes.length)]
 
-        const json = await this.rest.get<StreamMessageAsObject>([
+        const json = await this.rest.get<StreamMessageAsObject>(storageNode.url, [
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
             query: { count }
@@ -227,10 +232,10 @@ export class StreamEndpoints implements Context {
     }
 
     async getStreamPartsByStorageNode(node: StorageNode|EthereumAddress) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
+        const storageNode = (node instanceof StorageNode) ? node : await this.nodeRegistry.getStorageNode(node)
         type ItemType = { id: string, partitions: number}
-        const json = await this.rest.get<ItemType[]>([
-            'storageNodes', address, 'streams'
+        const json = await this.rest.get<ItemType[]>(storageNode.url, [
+            'storageNodes', storageNode.getAddress(), 'streams'
         ])
 
         const result: SPID[] = []
@@ -242,7 +247,7 @@ export class StreamEndpoints implements Context {
         return result
     }
 
-    async publishHttp(streamObjectOrId: Stream|string, data: any, requestOptions: any = {}, keepAlive: boolean = true) {
+    async publishHttp(nodeUrl: string, streamObjectOrId: Stream|string, data: any, requestOptions: any = {}, keepAlive: boolean = true) {
         let streamId
         if (streamObjectOrId instanceof Stream) {
             streamId = streamObjectOrId.id
@@ -255,12 +260,13 @@ export class StreamEndpoints implements Context {
 
         // Send data to the stream
         await this.rest.post(
+            nodeUrl,
             ['streams', streamId, 'data'],
             data,
             {
                 ...requestOptions,
                 agent: keepAlive ? getKeepAliveAgentForUrl(this.options.restUrl!) : undefined,
-            },
+            }
         )
     }
 }

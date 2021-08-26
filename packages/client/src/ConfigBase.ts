@@ -123,7 +123,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     // Streamr Core options
     url: 'wss://streamr.network/api/v1/ws',
     restUrl: 'https://streamr.network/api/v1',
-    theGraphUrl: 'http://192.168.0.8:8000/subgraphs/name/githubname/subgraphname',
+    theGraphUrl: 'http://127.0.0.1:8000/subgraphs/name/githubname/subgraphname',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
 
     // P2P Streamr Network options
@@ -161,9 +161,9 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     binanceAdapterAddress: '0x0c1aF6edA561fbDA48E9A7B1Dd46D216F31A97cC',
     binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
     withdrawServerUrl: 'https://streamr.com:3000',
-    streamRegistrySidechainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',
-    nodeRegistrySidechainAddress: '0x7739b57beC285539A62434DF9808f66ebB405ba3',
-    streamStorageRegistrySidechainAddress: '0xCBAcfA0592B3D809aEc805d527f8ceAe9307D9C0',
+    streamRegistrySidechainAddress: '0x00E680d549FE53a627a3db86a6F88fA2471CFfAa',
+    nodeRegistrySidechainAddress: '0xA90CeCcA042312b8f2e8B924C04Ce62516CBF7b2',
+    streamStorageRegistrySidechainAddress: '0xAf71Ee871ff1a374F88D6Ff01Cd618cE85127e78',
     ensCacheSidechainAddress: '',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',

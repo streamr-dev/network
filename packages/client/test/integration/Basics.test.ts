@@ -81,9 +81,6 @@ describeRepeats('StreamrClient', () => {
 
     beforeEach(async () => {
         client = createClient()
-        client.debug('getSessionToken >>')
-        const t = await client.getSessionToken()
-        client.debug('getSessionToken <<', t)
         client.debug('create stream >>')
         stream = await createStream()
         client.debug('create stream <<')

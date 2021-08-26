@@ -14,7 +14,6 @@ import SubscribePipeline from './SubscribePipeline'
 import { StorageNode } from './StorageNode'
 import { authRequest } from './authFetch'
 
-import Session from './Session'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
@@ -24,9 +23,9 @@ const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
-async function fetchStream(url: string, session: Session, opts = {}, abortController = new AbortController()) {
+async function fetchStream(url: string, opts = {}, abortController = new AbortController()) {
     const startTime = Date.now()
-    const response = await authRequest(url, session, {
+    const response = await authRequest(url, {
         signal: abortController.signal,
         ...opts,
     })
@@ -98,7 +97,6 @@ export default class Resend implements Context {
         private nodeRegistry: NodeRegistry,
         private streamRegistry: StreamRegistry,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
-        private session: Session,
         @inject(BrubeckContainer) private container: DependencyContainer,
     ) {
         this.id = instanceId(this)
@@ -184,7 +182,7 @@ export default class Resend implements Context {
         const url = createUrl(`${nodes[0].url}/api/v1`, endpointSuffix, spid, query)
         const messageStream = SubscribePipeline<T>(spid, {}, this.container.resolve<Context>(Context as any), this.container)
         messageStream.pull((async function* readStream(this: Resend) {
-            const dataStream = await fetchStream(url, this.session)
+            const dataStream = await fetchStream(url)
             try {
                 yield* dataStream
             } finally {
