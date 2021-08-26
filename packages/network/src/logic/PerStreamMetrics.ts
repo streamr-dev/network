@@ -1,4 +1,4 @@
-import speedometer from 'speedometer'
+import { Speedometer } from '../helpers/Speedometer'
 
 interface AllMetrics<M> {
     resends: M
@@ -9,9 +9,10 @@ interface AllMetrics<M> {
 }
 
 interface Metric {
+    _speedometer: Speedometer
     total: number
     last: number
-    rate: (delta?: number) => number
+    rate: () => number
 }
 
 interface ReportedMetric {
@@ -26,41 +27,38 @@ export class PerStreamMetrics {
     recordResend(streamId: string): void {
         this.setUpIfNeeded(streamId)
         const { resends } = this.streams[streamId]
-        resends.total += 1
-        resends.last += 1
-        resends.rate(1)
+        this.recordMetric(resends)
     }
 
     recordTrackerInstruction(streamId: string): void {
         this.setUpIfNeeded(streamId)
         const { trackerInstructions } = this.streams[streamId]
-        trackerInstructions.total += 1
-        trackerInstructions.last += 1
-        trackerInstructions.rate(1)
+        this.recordMetric(trackerInstructions)
     }
 
     recordDataReceived(streamId: string): void {
         this.setUpIfNeeded(streamId)
         const { onDataReceived } = this.streams[streamId]
-        onDataReceived.total += 1
-        onDataReceived.last += 1
-        onDataReceived.rate(1)
+        this.recordMetric(onDataReceived)
     }
 
     recordIgnoredDuplicate(streamId: string): void {
         this.setUpIfNeeded(streamId)
         const ignoredDuplicate = this.streams[streamId]['onDataReceived:ignoredDuplicate']
-        ignoredDuplicate.total += 1
-        ignoredDuplicate.last += 1
-        ignoredDuplicate.rate(1)
+        this.recordMetric(ignoredDuplicate)
     }
 
     recordPropagateMessage(streamId: string): void {
         this.setUpIfNeeded(streamId)
         const { propagateMessage } = this.streams[streamId]
-        propagateMessage.total += 1
-        propagateMessage.last += 1
-        propagateMessage.rate(1)
+        this.recordMetric(propagateMessage)
+    }
+
+    // updates the target metric object
+    private recordMetric(metric: Metric) {
+        metric.total += 1
+        metric.last += 1
+        metric._speedometer.record(1)
     }
 
     report(): { [key: string]: AllMetrics<ReportedMetric> } {
@@ -98,33 +96,22 @@ export class PerStreamMetrics {
     }
 
     private setUpIfNeeded(streamId: string): void {
+        const createMetrics = () => {
+            const _speedometer = new Speedometer()
+            return {
+                _speedometer,
+                rate: () => _speedometer.getRate(),
+                last: 0,
+                total: 0,
+            }
+        }
         if (!this.streams[streamId]) {
             this.streams[streamId] = {
-                resends: {
-                    rate: speedometer(),
-                    last: 0,
-                    total: 0,
-                },
-                trackerInstructions: {
-                    rate: speedometer(),
-                    last: 0,
-                    total: 0
-                },
-                onDataReceived: {
-                    rate: speedometer(),
-                    last: 0,
-                    total: 0
-                },
-                'onDataReceived:ignoredDuplicate': {
-                    rate: speedometer(),
-                    last: 0,
-                    total: 0
-                },
-                propagateMessage: {
-                    rate: speedometer(),
-                    last: 0,
-                    total: 0
-                }
+                resends: createMetrics(),
+                trackerInstructions: createMetrics(),
+                onDataReceived: createMetrics(),
+                'onDataReceived:ignoredDuplicate': createMetrics(),
+                propagateMessage: createMetrics()
             }
         }
     }

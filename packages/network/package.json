@@ -51,7 +51,6 @@
     "node-datachannel": "^0.1.5",
     "pino": "^6.11.3",
     "setimmediate": "^1.0.5",
-    "speedometer": "^1.1.0",
     "streamr-client-protocol": "^8.4.1",
     "strict-event-emitter-types": "^2.0.0",
     "uuid": "^8.3.2",
