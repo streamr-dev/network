@@ -26,6 +26,7 @@ export class Metrics {
     }
     private readonly recordedMetrics: {
         [key: string]: {
+            // eslint-disable-next-line no-underscore-dangle
             _speedometer: Speedometer
             rate: (delta?: number) => number,
             last: number,
@@ -51,8 +52,10 @@ export class Metrics {
 
     addRecordedMetric(name: string, windowSizeInSeconds = 5): Metrics {
         this.verifyUniqueness(name)
+        // eslint-disable-next-line no-underscore-dangle
         const _speedometer = new Speedometer(windowSizeInSeconds)
         this.recordedMetrics[name] = {
+            // eslint-disable-next-line no-underscore-dangle
             _speedometer,
             rate: () => _speedometer.getRate(),
             last: 0,
@@ -71,6 +74,7 @@ export class Metrics {
         if (!this.recordedMetrics[name]) {
             throw new Error(`Not a recorded metric "${this.name}.${name}".`)
         }
+        // eslint-disable-next-line no-underscore-dangle
         this.recordedMetrics[name]._speedometer.record(value)
         this.recordedMetrics[name].total += value
         this.recordedMetrics[name].last += value

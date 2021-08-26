@@ -9,6 +9,7 @@ interface AllMetrics<M> {
 }
 
 interface Metric {
+    // eslint-disable-next-line no-underscore-dangle
     _speedometer: Speedometer
     total: number
     last: number
@@ -58,6 +59,7 @@ export class PerStreamMetrics {
     private recordMetric(metric: Metric) {
         metric.total += 1
         metric.last += 1
+        // eslint-disable-next-line no-underscore-dangle
         metric._speedometer.record(1)
     }
 
@@ -97,6 +99,7 @@ export class PerStreamMetrics {
 
     private setUpIfNeeded(streamId: string): void {
         const createMetrics = () => {
+            // eslint-disable-next-line no-underscore-dangle
             const _speedometer = new Speedometer()
             return {
                 _speedometer,

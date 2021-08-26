@@ -12,7 +12,7 @@ const createMockCurrentTimeProvider = () => {
 describe('Speedometer', () => {
 
     let speedometer: Speedometer
-    let currentTimeProvider = createMockCurrentTimeProvider()
+    const currentTimeProvider = createMockCurrentTimeProvider()
 
     beforeEach(() => {
         currentTimeProvider.set('2000-01-02T00:00:00.123Z')
