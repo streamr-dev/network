@@ -49,10 +49,6 @@ subscriber.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, (streamMessage) => {
 })
 
 setInterval(() => {
-    console.log(Object.keys(subscriber.nodeToNode.endpoint.connections).length)
-}, 2000)
-
-setInterval(() => {
     const newMessages = messageNo - lastReported
     logger.info('%s received %d (%d)', id, messageNo, newMessages)
     lastReported = messageNo
