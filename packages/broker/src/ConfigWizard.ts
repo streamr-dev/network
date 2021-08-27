@@ -155,11 +155,8 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
         when: (answers: inquirer.Answers) => {
             return answers.selectPlugins.includes(pluginName)
         },
-        filter: (input: any, answers: inquirer.Answers) => {
-            return parseInt(input || answers[`${pluginName}Port`])
-        },
-        validate: (input: number): string | boolean => {
-            const portNumber = input
+        validate: (input: any): string | boolean => {
+            const portNumber = parseInt(input)
             if (!Number.isInteger(portNumber)) {
                 return `Non-numeric value provided`
             }
