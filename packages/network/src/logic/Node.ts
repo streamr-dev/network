@@ -411,13 +411,8 @@ export class Node extends EventEmitter {
     }
 
     // Gets statuses of all streams assigned to a tracker by default
-    private getMultipleStatusMessages(tracker: string, predefinedStreams: StreamIdAndPartition[]): Status[] {
-        let streams
-        if (predefinedStreams.length === 0) {
-            streams = this.streams.getStreams()
-        } else {
-            streams = predefinedStreams
-        }
+    private getMultipleStatusMessages(tracker: string, explicitStreams?: StreamIdAndPartition[]): Status[] {
+        const streams = explicitStreams || this.streams.getStreams()
         const statusMessages = streams
             .filter((streamId) => this.getTrackerId(streamId) === tracker)
             .map((streamId) => this.getStreamStatus(streamId))
@@ -448,7 +443,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    private prepareAndSendMultipleStatuses(tracker: string, streams: StreamIdAndPartition[] = []): void {
+    private prepareAndSendMultipleStatuses(tracker: string, streams?: StreamIdAndPartition[]): void {
         const statusMessages = this.getMultipleStatusMessages(tracker, streams)
         statusMessages.map((status) => {
             this.sendStatus(tracker, status)
