@@ -55,11 +55,10 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     it('tracker should receive status message from node', (done) => {
+        nodeOne.subscribe(streamId, 0)
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-1')
-            // @ts-expect-error private field
-            expect(statusMessage.status).toEqual(nodeOne.getFullStatus(TRACKER_ID))
             done()
         })
 
@@ -67,11 +66,10 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     it('tracker should receive status from second node', (done) => {
+        nodeTwo.subscribe(streamId, 0)
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-2')
-            // @ts-expect-error private field
-            expect(statusMessage.status).toEqual(nodeTwo.getFullStatus(TRACKER_ID))
             done()
         })
         nodeTwo.start()
@@ -80,28 +78,26 @@ describe('check status message flow between tracker and two nodes', () => {
     it('tracker should receive from both nodes new statuses', (done) => {
         nodeOne.start()
         nodeTwo.start()
+        nodeOne.subscribe(streamId, 0)
+        nodeTwo.subscribe(streamId, 0)
 
         let receivedTotal = 0
-        let nodeOneStatus: any = null
-        let nodeTwoStatus: any = null
+        let nodeOneStatusReceived = false
+        let nodeTwoStatusReceived = false
 
         // @ts-expect-error private field
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            if (nodeId === 'node-1') {
-                nodeOneStatus = statusMessage.status
+            if (nodeId === 'node-1' && !nodeOneStatusReceived) {
+                nodeOneStatusReceived = true
                 receivedTotal += 1
             }
 
-            if (nodeId === 'node-2') {
-                nodeTwoStatus = statusMessage.status
+            if (nodeId === 'node-2' && !nodeTwoStatusReceived) {
+                nodeTwoStatusReceived = true
                 receivedTotal += 1
             }
 
             if (receivedTotal === 2) {
-                // @ts-expect-error private field
-                expect(nodeOneStatus).toEqual(nodeOne.getFullStatus())
-                // @ts-expect-error private field
-                expect(nodeTwoStatus).toEqual(nodeTwo.getFullStatus())
                 done()
             }
         })

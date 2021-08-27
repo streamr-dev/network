@@ -182,7 +182,7 @@ export class Node extends EventEmitter {
         const serverUrl = this.trackerNode.getServerUrlByTrackerId(tracker)
         if (serverUrl !== undefined) {
             this.trackerBook[serverUrl] = tracker
-            this.prepareAndSendFullStatus(tracker)
+            this.prepareAndSendMultipleStatuses(tracker)
         } else {
             this.logger.warn('onConnectedToTracker: unknown tracker %s', tracker)
         }
@@ -410,17 +410,18 @@ export class Node extends EventEmitter {
         ])
     }
 
-    private getFullStatus(tracker: string): Status {
-        return {
-            streams: this.streams.getStreamsWithConnections((streamKey) => {
-                return this.getTrackerId(StreamIdAndPartition.fromKey(streamKey)) === tracker
-            }),
-            started: this.started,
-            rtts: this.nodeToNode.getRtts(),
-            location: this.peerInfo.location,
-            singleStream: false,
-            extra: this.extraMetadata
+    // Gets statuses of all streams assigned to a tracker by default
+    private getMultipleStatusMessages(tracker: string, predefinedStreams: StreamIdAndPartition[]): Status[] {
+        let streams
+        if (predefinedStreams.length === 0) {
+            streams = this.streams.getStreams()
+        } else {
+            streams = predefinedStreams
         }
+        const statusMessages = streams
+            .filter((streamId) => this.getTrackerId(streamId) === tracker)
+            .map((streamId) => this.getStreamStatus(streamId))
+        return statusMessages
     }
 
     private getStreamStatus(streamId: StreamIdAndPartition): Status {
@@ -447,9 +448,11 @@ export class Node extends EventEmitter {
         }
     }
 
-    private prepareAndSendFullStatus(tracker: string): void {
-        const status = this.getFullStatus(tracker)
-        this.sendStatus(tracker, status)
+    private prepareAndSendMultipleStatuses(tracker: string, streams: StreamIdAndPartition[] = []): void {
+        const statusMessages = this.getMultipleStatusMessages(tracker, streams)
+        statusMessages.map((status) => {
+            this.sendStatus(tracker, status)
+        })
     }
 
     private async sendStatus(tracker: string, status: Status) {
@@ -508,7 +511,7 @@ export class Node extends EventEmitter {
         const trackers = [...new Set(streams.map((streamId) => this.getTrackerId(streamId)))]
         trackers.forEach((trackerId) => {
             if (trackerId) {
-                this.prepareAndSendFullStatus(trackerId)
+                this.prepareAndSendMultipleStatuses(trackerId, streams)
             }
         })
         this.emit(Event.NODE_DISCONNECTED, node)
