@@ -155,8 +155,8 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
         when: (answers: inquirer.Answers) => {
             return answers.selectPlugins.includes(pluginName)
         },
-        validate: (input: any): string | boolean => {
-            const portNumber = parseInt(input)
+        validate: (input: string | number): string | boolean => {
+            const portNumber = (typeof input === 'string')  ? parseInt(input) : input
             if (!Number.isInteger(portNumber)) {
                 return `Non-numeric value provided`
             }
@@ -207,7 +207,7 @@ export const selectDestinationPathPrompt = {
     default: path.join(os.homedir(), '.streamr/broker-config.json'),
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
         try {
-            const filePath = input || answers.selectDestinationPath
+            const filePath = input
             const parentDirPath = path.dirname(filePath)
 
             answers.parentDirPath = parentDirPath
