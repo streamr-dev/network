@@ -181,14 +181,13 @@ export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
             if (answers[`${pluginName}Port`] !== defaultPluginPort){
+                const portObject = { port: parseInt(answers[`${pluginName}Port`]) }
                 if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
                     // the publishHttp plugin is special, it needs to be added to the config after the other plugins
-                    config.httpServer = {
-                        port: parseInt(answers[`${pluginName}Port`])
-                    }
+                    config.httpServer = portObject
                 } else {
                     // user provided a custom value, fill in
-                    pluginConfig = { port: parseInt(answers[`${pluginName}Port`]) }
+                    pluginConfig = portObject
                 }
             }
             config.plugins![pluginName] = pluginConfig
