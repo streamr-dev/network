@@ -157,8 +157,13 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
         },
         validate: (input: string | number): string | boolean => {
             const portNumber = (typeof input === 'string') ? Number(input) : input
-            if (!Number.isInteger(portNumber)) {
+
+            if (Number.isNaN(portNumber)) {
                 return `Non-numeric value provided`
+            }
+
+            if (!Number.isInteger(portNumber)) {
+                return `Non-integer value provided`
             }
 
             if (portNumber < MIN_PORT_VALUE || portNumber > MAX_PORT_VALUE) {

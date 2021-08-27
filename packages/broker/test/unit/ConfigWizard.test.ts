@@ -29,9 +29,14 @@ describe('ConfigWizard', () => {
     })
 
     describe('plugin port validation', () => {
-        it ('happy path', () => {
+        it ('happy path: numeric value', () => {
             const validate = portPrompt.validate!
             expect(validate(7070)).toBe(true)
+        })
+
+        it ('happy path: string value', () => {
+            const validate = portPrompt.validate!
+            expect(validate('7070')).toBe(true)
         })
 
         it ('invalid data: out-of-range number', () => {
@@ -43,7 +48,7 @@ describe('ConfigWizard', () => {
         it ('invalid data: float-point number', () => {
             const validate = portPrompt.validate!
             const port = 55.55
-            expect(validate(port)).toBe(`Non-numeric value provided`)
+            expect(validate(port)).toBe(`Non-integer value provided`)
         })
 
         it ('invalid data: non-numeric', () => {
