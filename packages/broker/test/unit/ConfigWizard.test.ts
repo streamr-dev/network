@@ -40,6 +40,12 @@ describe('ConfigWizard', () => {
             expect(validate(port)).toBe(`Out of range port ${port} provided (valid range 1024-49151)`)
         })
 
+        it ('invalid data: float-point number', () => {
+            const validate = portPrompt.validate!
+            const port = 55.55
+            expect(validate(port)).toBe(`Non-numeric value provided`)
+        })
+
         it ('invalid data: non-numeric', () => {
             const validate = portPrompt.validate!
             const port = 'Not A Number!'
@@ -145,12 +151,23 @@ describe('ConfigWizard', () => {
             expect(config.ethereumPrivateKey).toBe(privateKey)
         })
 
-        it ('should exercise the plugin port assignation path', () => {
+        it ('should exercise the plugin port assignation path with a number', () => {
             const port = 3737
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
                 selectPlugins:['websocket'],
                 websocketPort: port,
+            }
+            const config = getConfigFromAnswers(answers)
+            expect(config.plugins.websocket.port).toBe(port)
+        })
+
+        it ('should exercise the plugin port assignation path with a stringified number', () => {
+            const port = 3737
+            const answers = {
+                generateOrImportEthereumPrivateKey: 'Generate',
+                selectPlugins:['websocket'],
+                websocketPort: port.toString(),
             }
             const config = getConfigFromAnswers(answers)
             expect(config.plugins.websocket.port).toBe(port)

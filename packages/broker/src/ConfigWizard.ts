@@ -180,8 +180,9 @@ export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
         const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
-            if (answers[`${pluginName}Port`] !== defaultPluginPort){
-                const portObject = { port: parseInt(answers[`${pluginName}Port`]) }
+            const portNumber = parseInt(answers[`${pluginName}Port`])
+            if (portNumber !== defaultPluginPort){
+                const portObject = { port: portNumber }
                 if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
                     // the publishHttp plugin is special, it needs to be added to the config after the other plugins
                     config.httpServer = portObject
@@ -206,12 +207,11 @@ export const selectDestinationPathPrompt = {
     default: path.join(os.homedir(), '.streamr/broker-config.json'),
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
         try {
-            const filePath = input
-            const parentDirPath = path.dirname(filePath)
+            const parentDirPath = path.dirname(input)
 
             answers.parentDirPath = parentDirPath
             answers.parentDirExists = existsSync(parentDirPath)
-            answers.fileExists = existsSync(filePath)
+            answers.fileExists = existsSync(input)
 
             return true
         } catch (e) {
