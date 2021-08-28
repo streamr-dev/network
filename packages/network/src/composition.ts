@@ -35,7 +35,6 @@ export interface AbstractNodeOptions {
     name?: string
     location?: Location | null
     metricsContext?: MetricsContext
-    peerPingInterval?: number
     trackerPingInterval?: number
 }
 
@@ -51,6 +50,7 @@ export interface TrackerOptions extends AbstractNodeOptions {
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerInfo[],
     disconnectionWaitTime?: number,
+    peerPingInterval?: number
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
@@ -97,6 +97,7 @@ export const createNetworkNode = ({
     trackers,
     metricsContext = new MetricsContext(id),
     peerPingInterval,
+    trackerPingInterval,
     disconnectionWaitTime,
     newWebrtcConnectionTimeout,
     webrtcDatachannelBufferThresholdLow,
@@ -104,7 +105,7 @@ export const createNetworkNode = ({
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
-    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, peerPingInterval)
+    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, trackerPingInterval)
     const trackerNode = new TrackerNode(endpoint)
 
     const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
