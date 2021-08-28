@@ -445,7 +445,7 @@ export class Node extends EventEmitter {
 
     private prepareAndSendMultipleStatuses(tracker: string, streams?: StreamIdAndPartition[]): void {
         const statusMessages = this.getMultipleStatusMessages(tracker, streams)
-        statusMessages.map((status) => {
+        statusMessages.forEach((status) => {
             this.sendStatus(tracker, status)
         })
     }
