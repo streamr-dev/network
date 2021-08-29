@@ -1,6 +1,6 @@
 {
   "name": "streamr-network",
-  "version": "28.1.0",
+  "version": "28.2.0",
   "description": "Minimal and extendable implementation of the Streamr Network network node.",
   "repository": {
     "type": "git",
