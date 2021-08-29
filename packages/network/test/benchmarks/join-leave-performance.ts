@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { OverlayTopology } from '../../src/logic/OverlayTopology'
 
 const NODE_DEGREE = 4
