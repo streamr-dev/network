@@ -27,5 +27,4 @@ nodeIdxPicks.forEach((nodeId) => {
     topology.formInstructions(nodeId)
 })
 const diff = Date.now() - startTime
-// @ts-expect-error console identifier not found?
 console.info(`took ${diff / NUM_OF_ROUNDS} ms per node`)
