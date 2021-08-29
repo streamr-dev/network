@@ -51,7 +51,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
     protected constructor(
         peerInfo: PeerInfo,
         metricsContext: MetricsContext = new MetricsContext(peerInfo.peerId),
-        pingInterval = 5 * 1000
+        pingInterval = 60 * 1000
     ) {
         super()
 

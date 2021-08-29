@@ -19,7 +19,8 @@ describe('Signalling error scenarios', () => {
         tracker = await startTracker({
             host: '127.0.0.1',
             port: 35115,
-            id: 'tracker'
+            id: 'tracker',
+            trackerPingInterval: 3000
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
@@ -27,13 +28,15 @@ describe('Signalling error scenarios', () => {
             id: 'node-1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 4000,
-            newWebrtcConnectionTimeout: 8000
+            newWebrtcConnectionTimeout: 8000,
+            trackerPingInterval: 3000
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 4000,
-            newWebrtcConnectionTimeout: 8000
+            newWebrtcConnectionTimeout: 8000,
+            trackerPingInterval: 3000
         })
 
         nodeOne.start()
