@@ -23,6 +23,7 @@ export class OverlayTopology {
     private readonly shuffleArray: (arr: Array<string>) => Array<string>
     private readonly pickRandomElement: (arr: Array<string>) => string
     private readonly nodes: TopologyNodes
+    private readonly nodesWithOpenSlots: Set<string>
 
     constructor(
         maxNeighborsPerNode: number,
@@ -36,6 +37,7 @@ export class OverlayTopology {
         this.shuffleArray = shuffleArrayFunction
         this.pickRandomElement = pickRandomElementFunction
         this.nodes = {}
+        this.nodesWithOpenSlots = new Set<string>()
     }
 
     getNeighbors(nodeId: string): Set<string> {
@@ -51,17 +53,36 @@ export class OverlayTopology {
     }
 
     update(nodeId: string, neighbors: string[]): void {
-        const knownNeighbors = [...neighbors]
+        const newNeighbors = [...neighbors]
             .filter((n) => n in this.nodes)
             .filter((n) => n !== nodeId) // in case nodeId is reporting itself as neighbor
 
-        this.nodes[nodeId] = new Set(knownNeighbors)
-        knownNeighbors.forEach((neighbor) => this.nodes[neighbor].add(nodeId))
-        Object.keys(this.nodes)
-            .filter((n) => !this.nodes[nodeId].has(n))
-            .forEach((n) => {
+        if (this.nodes[nodeId]) {
+            const neighborsToRemove = [...this.nodes[nodeId]].filter((n) => !newNeighbors.includes(n))
+            neighborsToRemove.forEach((n) => {
                 this.nodes[n].delete(nodeId)
+                if (this.numOfMissingNeighbors(n) > 0) {
+                    this.nodesWithOpenSlots.add(n)
+                }
             })
+        }
+
+        this.nodes[nodeId] = new Set(newNeighbors)
+        newNeighbors.forEach((neighbor) => this.nodes[neighbor].add(nodeId))
+
+        if (this.numOfMissingNeighbors(nodeId) > 0) {
+            this.nodesWithOpenSlots.add(nodeId)
+        } else {
+            this.nodesWithOpenSlots.delete(nodeId)
+        }
+
+        newNeighbors.forEach((neighbor) => {
+            if (this.numOfMissingNeighbors(neighbor) > 0) {
+                this.nodesWithOpenSlots.add(neighbor)
+            } else {
+                this.nodesWithOpenSlots.delete(neighbor)
+            }
+        })
     }
 
     leave(nodeId: string): string[] {
@@ -69,8 +90,12 @@ export class OverlayTopology {
             const neighbors = [...this.nodes[nodeId]]
             this.nodes[nodeId].forEach((neighbor) => {
                 this.nodes[neighbor].delete(nodeId)
+                if (this.numOfMissingNeighbors(neighbor) > 0) {
+                    this.nodesWithOpenSlots.add(neighbor)
+                }
             })
             delete this.nodes[nodeId]
+            this.nodesWithOpenSlots.delete(nodeId)
             return neighbors
         }
         return []
@@ -107,11 +132,9 @@ export class OverlayTopology {
         }
 
         if (this.numOfMissingNeighbors(nodeId) > 0) {
-            const candidates = Object.entries(this.nodes)
-                .filter(([_n, neighbors]) => neighbors.size < this.maxNeighborsPerNode) // nodes with open slots
-                .filter(([_n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not yet neighbors
-                .filter(([n, _]) => n !== nodeId) // remove self
-                .map(([n, _]) => n)
+            const candidates = [...this.nodesWithOpenSlots]
+                .filter((n) => !this.nodes[n].has(nodeId)) // nodes that are not yet neighbors
+                .filter((n) => n !== nodeId) // remove self
 
             const neighborsToAdd = this.shuffleArray(candidates).slice(0, this.numOfMissingNeighbors(nodeId))
             if (neighborsToAdd.length > 0) {
@@ -162,6 +185,12 @@ export class OverlayTopology {
 
         if (forceGenerate) {
             updatedNodes.add(nodeId)
+        }
+
+        if (this.numOfMissingNeighbors(nodeId) > 0) {
+            this.nodesWithOpenSlots.add(nodeId)
+        } else {
+            this.nodesWithOpenSlots.delete(nodeId)
         }
 
         // check invariant: no node should be a neighbor of itself
