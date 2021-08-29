@@ -82,6 +82,8 @@ describe('ws-endpoint', () => {
                 port: trackerPort,
                 id: 'tracker'
             })
+            // @ts-expect-error TODO: do this proper way (pass via constructor)
+            tracker.trackerServer.endpoint.handshakeTimer = 3000
         })
 
         afterEach(async () => {

@@ -59,7 +59,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         this.logger = new Logger(module)
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
         this.handshakeTimeoutRefs = {}
-        this.handshakeTimer = 3000
+        this.handshakeTimer = 15 * 1000
 
         this.metrics = metricsContext.create('WsEndpoint')
             .addRecordedMetric('inSpeed')
