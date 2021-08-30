@@ -36,6 +36,7 @@ interface Events {
     error: (err: Error) => void
     bufferLow: () => void
     bufferHigh: () => void
+    failed: () => void // connection never opened
 }
 
 // reminder: only use Connection emitter for external handlers
@@ -94,6 +95,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
+    private hasOpened = false
 
     protected readonly id: string
     protected readonly maxMessageSize: number
@@ -113,7 +115,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
-        pingInterval = 2 * 1000,
+        pingInterval = 5 * 1000,
         flushRetryTimeout = 500,
         maxMessageSize = 1048576,
     }: ConstructorOptions) {
@@ -213,6 +215,9 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
 
         if (err) {
+            if (!this.hasOpened) {
+                this.emit('failed')
+            }
             this.emitClose(err)
             return
         }
@@ -424,6 +429,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.deferredConnectionAttempt = null
             def.resolve(this.peerInfo.peerId)
         }
+        this.hasOpened = true
         this.setFlushRef()
         this.emit('open')
     }

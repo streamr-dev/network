@@ -26,7 +26,7 @@
         "port": {
           "$ref": "#/definitions/port",
           "description": "Port to start HTTP server on",
-          "default": 8080
+          "default": 7171
         },
         "certFileName": {
           "type": [

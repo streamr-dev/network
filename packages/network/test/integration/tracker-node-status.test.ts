@@ -37,14 +37,16 @@ describe('check status message flow between tracker and two nodes', () => {
         nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
-            pingInterval: 100
+            peerPingInterval: 100,
+            trackerPingInterval: 100,
         })
         
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             location,
-            pingInterval: 100
+            peerPingInterval: 100,
+            trackerPingInterval: 100,
         })
     })
 

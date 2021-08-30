@@ -89,7 +89,7 @@ export function formConfig({
         streamrAddress,
         storageNodeConfig,
         httpServer: {
-            port: httpPort ? httpPort : 8080,
+            port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,
             certFileName: null
         },
@@ -222,8 +222,8 @@ export class Queue<T> {
         this.items.push(item)
     }
 
-    async pop(): Promise<T> {
-        await waitForCondition(() => this.items.length > 0)
+    async pop(timeout?: number): Promise<T> {
+        await waitForCondition(() => this.items.length > 0, timeout)
         return this.items.shift()!
     }
 }

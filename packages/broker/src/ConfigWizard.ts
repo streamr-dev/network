@@ -1,9 +1,11 @@
 import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
 import path from 'path'
-import { writeFileSync, existsSync, mkdirSync } from 'fs'
+import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
+import { v4 as uuid } from 'uuid'
+import { Protocol } from 'streamr-network'
 
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
@@ -46,7 +48,12 @@ const logger = {
     }
 }
 
-export const DEFAULT_CONFIG: any = {
+const generateApiKey = (): string => {
+    const hex = uuid().split('-').join('')
+    return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
+}
+
+export const CONFIG_TEMPLATE: any = {
     network: {
         name: 'miner-node',
         trackers: [{
@@ -55,7 +62,7 @@ export const DEFAULT_CONFIG: any = {
             id: "0x49D45c17bCA1Caf692001D21c38aDECCB4c08504"
         }],
         location: null,
-        stun: "stun:turn.streamr.network:5349",
+        stun: "stun:stun.streamr.network:5349",
         turn: null
     },
     generateSessionId: false,
@@ -71,24 +78,23 @@ export const DEFAULT_CONFIG: any = {
         legacyWebsocket: {},
         testnetMiner: {
             rewardStreamId: "streamr.eth/brubeck-testnet/rewards",
-            claimServerUrl: "http://testnet1.streamr.network:3011"
+            claimServerUrl: "http://testnet1.streamr.network:3011",
+            stunServerHost: "stun.sipgate.net"
         },
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
-            clientWsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
-            clientHttpUrl: "https://streamr.network/api/v1",
-            perNodeMetrics: {
-                enabled: true,
+            nodeMetrics: {
                 storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-                intervals: {
-                    "sec": 1000,
-                    "min": 60000,
-                    "hour": 3600000,
-                    "day": 86400000
+                client: {
+                    wsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
+                    httpUrl: "https://streamr.network/api/v1",
                 }
             }
         },
     },
+    apiAuthentication: {
+        keys: [generateApiKey()]
+    }
 }
 
 let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
@@ -168,7 +174,7 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
 prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts)
 
 export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
-    const config = { ... DEFAULT_CONFIG, plugins: { ... DEFAULT_CONFIG.plugins } }
+    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
 
     const pluginNames = Object.values(PLUGIN_NAMES)
     pluginNames.forEach((pluginName) => {
@@ -209,7 +215,7 @@ export const selectDestinationPathPrompt = {
             answers.parentDirExists = existsSync(parentDirPath)
             answers.fileExists = existsSync(filePath)
 
-            return (answers.parentDirExists || answers.fileExists)
+            return true
         } catch (e) {
             return e.message
         }
@@ -237,27 +243,33 @@ const selectValidDestinationPath = async (): Promise<inquirer.Answers> => {
     return answers
 }
 
-export const createStorageFile = (config: any, answers: inquirer.Answers): string => {
+export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
     if (!answers.parentDirExists) {
         mkdirSync(answers.parentDirPath)
     }
    
     writeFileSync(answers.selectDestinationPath, JSON.stringify(config, null, 2))
+    chmodSync(answers.selectDestinationPath, '0600')
     return answers.selectDestinationPath
 }
 
-export async function startBrokerConfigWizard(): Promise<void> {
+export const startBrokerConfigWizard = async(): Promise<void> => {
     try {
         const answers = await inquirer.prompt(prompts)
         const config = getConfigFromAnswers(answers)
-        logger.info(`This will be your node's address: ${new Wallet(config.ethereumPrivateKey).address}`)
+        const nodeAddress = new Wallet(config.ethereumPrivateKey).address
+        const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
+        logger.info('Welcome to the Streamr Network')
+        logger.print(`Your node's generated name is ${mnemonic}.`)
+        logger.print('View your node in the Network Explorer:')
+        logger.print(`https://streamr.network/network-explorer/nodes/${nodeAddress}`)
         logger.info('This is your node\'s private key. Please store it in a secure location:')
         logger.alert(config.ethereumPrivateKey)
         const storageAnswers = await selectValidDestinationPath()
-        const destinationPath = createStorageFile(config, storageAnswers)
+        const destinationPath = await createStorageFile(config, storageAnswers)
         logger.info('Broker Config Wizard ran succesfully')
         logger.print(`Stored config under ${destinationPath}`)
-        logger.print(`You can start the broker now with`)
+        logger.print('You can start the broker now with')
         logger.info(`streamr-broker ${destinationPath}`)
     } catch (e) {
         logger.warn('Broker Config Wizard encountered an error:')
