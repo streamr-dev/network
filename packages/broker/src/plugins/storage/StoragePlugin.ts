@@ -54,7 +54,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             onStreamRemoved: (stream: StreamPart) => this.subscriptionManager.unsubscribe(stream.id, stream.partition)
         })
         this.networkNode.addMessageListener(this.messageListener)
-        const streamFetcher = new StreamFetcher(this.brokerConfig.streamrUrl)
+        const streamFetcher = new StreamFetcher(this.streamrClient!)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, streamFetcher, this.metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))

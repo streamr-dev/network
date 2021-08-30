@@ -32,7 +32,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
             new net.Server().listen(this.pluginConfig.port).on('listening', () => logger.info(`Mqtt plugin listening on ${this.pluginConfig.port}`)),
             this.pluginConfig.streamsTimeout,
             this.networkNode,
-            new StreamFetcher(this.brokerConfig.streamrUrl),
+            new StreamFetcher(this.streamrClient!),
             this.publisher,
             this.metricsContext,
             this.subscriptionManager

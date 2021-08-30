@@ -12,7 +12,7 @@ import { Connection } from './Connection'
 import { StreamFetcher } from '../../StreamFetcher'
 import { createResponse as createHistoricalDataResponse, HistoricalDataResponse } from './historicalData'
 import { GenericError } from '../../errors/GenericError'
-import { StreamOperation, StreamrClient } from '../../../../client/dist/types/src'
+import StreamrClient, { StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 

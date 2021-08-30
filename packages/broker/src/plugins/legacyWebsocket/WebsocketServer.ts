@@ -10,7 +10,6 @@ import { Publisher } from '../../Publisher'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Logger } from 'streamr-network'
 import { StreamStateManager } from '../../StreamStateManager'
-import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { Stream } from '../../Stream'
 import { StreamFetcher } from '../../StreamFetcher'
 import http from "http"
@@ -18,6 +17,7 @@ import https from "https"
 import { parse as parseQuery } from 'querystring'
 // @ts-expect-error no type definitions
 import Cutter from 'utf8-binary-cutter'
+import StreamrClient from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -59,9 +59,9 @@ export class WebsocketServer extends EventEmitter {
         publisher: Publisher,
         metricsContext: MetricsContext,
         subscriptionManager: SubscriptionManager,
-        storageNodeRegistry: StorageNodeRegistry,
         streamrUrl: string,
         pingIntervalInMs = 60 * 1000,
+        streamrClient: StreamrClient
     ) {
         super()
         this.httpServer = httpServer
@@ -112,8 +112,7 @@ export class WebsocketServer extends EventEmitter {
             streams,
             subscriptionManager,
             this.metrics,
-            storageNodeRegistry,
-            streamrUrl
+            streamrClient
         )
         networkNode.addMessageListener((msg: Protocol.MessageLayer.StreamMessage) => this.broadcastMessage(msg, streams))
 

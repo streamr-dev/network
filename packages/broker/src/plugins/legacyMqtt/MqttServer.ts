@@ -11,7 +11,7 @@ import { StreamStateManager } from '../../StreamStateManager'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Todo } from '../../types'
 import { Connection } from './Connection'
-import { StreamOperation } from '../../../../client/dist/types/src'
+import { StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 

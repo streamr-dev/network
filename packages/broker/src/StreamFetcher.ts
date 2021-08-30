@@ -11,14 +11,12 @@ const MAX_AGE_MINUTE = 1000 // 1 minutes
 
 export class StreamFetcher {
 
-    apiUrl: string
     fetch
     checkPermission
     authenticate
     client: StreamrClient
 
-    constructor(baseUrl: string, client: StreamrClient) {
-        this.apiUrl = `${baseUrl}/api/v1`
+    constructor(client: StreamrClient) {
         this.fetch = memoize<StreamFetcher['_fetch']>(this._fetch, {
             maxAge: MAX_AGE,
             promise: true,

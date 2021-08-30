@@ -9,7 +9,6 @@ const logger = new Logger(module)
  * Middleware used to authenticate REST API requests
  */
 export const authenticator = (streamFetcher: StreamFetcher, permission = 'stream_subscribe') => (req: Todo, res: Todo, next: Todo) => {
-    let sessionToken
 
     // Try to parse authorization header if defined
     if (req.headers.authorization !== undefined) {
@@ -23,12 +22,9 @@ export const authenticator = (streamFetcher: StreamFetcher, permission = 'stream
             })
             return
         }
-        sessionToken = req.headers.authorization
-            .substring(7)
-            .trim()
     }
 
-    streamFetcher.authenticate(req.params.id, sessionToken, permission)
+    streamFetcher.authenticate(req.params.id, permission)
         .then((streamJson: Todo) => {
             req.stream = streamJson
             next()
