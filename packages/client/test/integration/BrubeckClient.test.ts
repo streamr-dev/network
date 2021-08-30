@@ -352,8 +352,9 @@ describeRepeats('StreamrClient', () => {
             expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
         })
         it('decodes resent messages correctly', async () => {
-            await stream.addToStorageNode(await client.getAddress())// use actual storage nodes Address, actually register it
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, await client.getAddress()) }, 100000, 1000)
+            const node = await client.setNode(await client.getAddress())
+            await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, node.getAddress()) }, 100000, 1000)
 
             const publishedMessage = Msg({
                 content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
@@ -369,7 +370,7 @@ describeRepeats('StreamrClient', () => {
             })
             const messages = await sub.collect()
             expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
-        }, 10000)
+        }, 30000)
     })
 })
 

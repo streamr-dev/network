@@ -15,7 +15,6 @@ import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
-import { StorageNodeRegistry } from "./StorageNodeRegistry"
 import { v4 as uuidv4 } from 'uuid'
 
 const logger = new Logger(module)
@@ -130,7 +129,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const trackers = await getTrackers(config)
 
     const storageNodes = await getStorageNodes(config)
-    const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
     // Start network node
     let sessionId
@@ -147,8 +145,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 maxStringLength: 99999,
             }
         },
-        url: `ws://${config.streamrWsUrl}/api/v1/ws` ,
-        restUrl: `${config.streamrUrl}/api/v1`,
         network: {
             id: nodeId,
             name: networkNodeName,
@@ -173,7 +169,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             apiAuthenticator,
             metricsContext,
             brokerConfig: config,
-            storageNodeRegistry,
             nodeId
         }
         return createPlugin(name, pluginOptions)

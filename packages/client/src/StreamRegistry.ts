@@ -1,6 +1,3 @@
-import { StreamPermission, Stream, StreamProperties, StreamOperation, Config,
-    EthereumAddress, StreamListQuery, NotFoundError, StrictStreamrClientConfig, ValidationError } from './index'
-
 import { Contract } from '@ethersproject/contracts'
 // import { Wallet } from '@ethersproject/wallet'
 import { Signer } from '@ethersproject/abstract-signer'
@@ -18,6 +15,11 @@ import { BrubeckContainer } from './Container'
 import Ethereum from './Ethereum'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
+import { Config, StrictStreamrClientConfig } from './Config'
+import { Stream, StreamOperation, StreamPermission, StreamProperties } from './Stream'
+import { NotFoundError, ValidationError } from './authFetch'
+import { EthereumAddress } from './types'
+import { StreamListQuery } from './StreamEndpoints'
 
 // const { ValidationError } = Errors
 

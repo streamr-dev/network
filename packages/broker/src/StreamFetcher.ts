@@ -1,44 +1,13 @@
-import fetch, { Response } from 'node-fetch'
 import memoize from 'memoizee'
 import { Logger } from 'streamr-network'
-import { HttpError } from './errors/HttpError'
 // TODO do all REST operations to E&E via StreamrClient
-import StreamrClient from 'streamr-client'
+import StreamrClient, { StreamOperation } from 'streamr-client'
 import { Todo } from './types'
-import { formAuthorizationHeader } from './helpers/authentication'
 
 const logger = new Logger(module)
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes
-
-async function fetchWithErrorLogging(...args: Parameters<typeof fetch>) {
-    try {
-        return await fetch(...args)
-    } catch (err) {
-        logger.error(`failed to communicate with core-api: ${err}`)
-        throw err
-    }
-}
-
-async function handleNon2xxResponse(
-    funcName: string,
-    response: Response,
-    streamId: string,
-    sessionToken: string|undefined|null,
-    method: string,
-    url: string,
-): Promise<HttpError> {
-    const errorMsg = await response.text().catch((err) => {
-        logger.warn('Error reading response text: %s', err)
-        return ''
-    })
-    logger.debug(
-        '%s failed with status %d for streamId %s, sessionToken %s: %o',
-        funcName, response.status, streamId, sessionToken, errorMsg,
-    )
-    return new HttpError(response.status, method, url)
-}
 
 export class StreamFetcher {
 
@@ -46,8 +15,9 @@ export class StreamFetcher {
     fetch
     checkPermission
     authenticate
+    client: StreamrClient
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, client: StreamrClient) {
         this.apiUrl = `${baseUrl}/api/v1`
         this.fetch = memoize<StreamFetcher['_fetch']>(this._fetch, {
             maxAge: MAX_AGE,
@@ -61,22 +31,12 @@ export class StreamFetcher {
             maxAge: MAX_AGE_MINUTE,
             promise: true,
         })
+        this.client = client
     }
 
-    async getToken(privateKey: string): Promise<Todo> {
-        const client = new StreamrClient({
-            auth: {
-                privateKey,
-            },
-            restUrl: this.apiUrl,
-            autoConnect: false
-        })
-        return client.session.getSessionToken()
-    }
-
-    private async _authenticate(streamId: string, sessionToken: string|undefined, operation = 'stream_subscribe'): Promise<Todo>  {
-        await this.checkPermission(streamId, sessionToken, operation)
-        return this.fetch(streamId, sessionToken)
+    private async _authenticate(streamId: string, sessionToken: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE): Promise<Todo>  {
+        await this.checkPermission(streamId, operation)
+        return this.fetch(streamId)
     }
 
     /**
@@ -88,20 +48,8 @@ export class StreamFetcher {
      * @returns {Promise.<TResult>}
      * @private
      */
-    private async _fetch(streamId: string, sessionToken?: string): Promise<Todo> {
-        const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}`
-        const headers = formAuthorizationHeader(sessionToken)
-
-        const response = await fetchWithErrorLogging(url, {
-            headers,
-        })
-
-        if (response.status !== 200) {
-            this.fetch.delete(streamId, sessionToken) // clear cache result
-            throw await handleNon2xxResponse('_fetch', response, streamId, sessionToken, 'GET', url)
-        }
-
-        return response.json()
+    private async _fetch(streamId: string): Promise<Todo> {
+        return this.client.getStream(streamId)
     }
 
     /**
@@ -115,35 +63,10 @@ export class StreamFetcher {
      * @returns {Promise}
      * @private
      */
-    private async _checkPermission(streamId: string, sessionToken: string | undefined | null, operation = 'stream_subscribe'): Promise<true> {
+    private async _checkPermission(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE): Promise<boolean> {
         if (streamId == null) {
             throw new Error('_checkPermission: streamId can not be null!')
         }
-
-        sessionToken = sessionToken || undefined
-
-        const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}/permissions/me`
-        const headers = formAuthorizationHeader(sessionToken)
-
-        const response = await fetchWithErrorLogging(url, {
-            headers,
-        })
-
-        if (response.status !== 200) {
-            this.checkPermission.delete(streamId, sessionToken) // clear cache result
-            throw await handleNon2xxResponse('_checkPermission', response, streamId, sessionToken, 'GET', url)
-        }
-
-        const permissions = await response.json()
-        if (permissions.some((p: Todo) => p.operation === operation)) {
-            return true
-        }
-
-        logger.debug(
-            'checkPermission failed for streamId %s, sessionToken %s, operation %s. permissions were: %o',
-            streamId, sessionToken, operation, permissions,
-        )
-
-        throw new HttpError(403, 'GET', url)
+        return (await this.client.getStream(streamId)).hasPermission(operation, await this.client.getAddress())
     }
 }

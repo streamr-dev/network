@@ -36,18 +36,17 @@ export class Rest implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    getUrl(urlParts: UrlParts, query = {}) {
-        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), this.options.restUrl + '/')
+    static getUrl(baseUrl:string, urlParts: UrlParts, query = {}) {
+        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl + '/')
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
         return url
     }
 
-
     fetch<T extends object>(baseUrl: string, urlParts: UrlParts, {
         query, useSession = true, options, requireNewToken = false, debug = this.debug
     }: FetchOptions) {
-        const url = this.getUrl(urlParts, query)
+        const url = Rest.getUrl(baseUrl, urlParts, query)
         return authFetch<T>(
             url.toString(),
             options,
@@ -56,10 +55,10 @@ export class Rest implements Context {
         )
     }
 
-    request<T extends object>(urlParts: UrlParts, {
+    request<T extends object>(baseUrl:string, urlParts: UrlParts, {
         query, useSession = true, options, requireNewToken = false, debug = this.debug
     }: FetchOptions) {
-        const url = this.getUrl(urlParts, query)
+        const url = Rest.getUrl(baseUrl, urlParts, query)
         return authRequest<T>(
             url.toString(),
             options,
@@ -118,9 +117,9 @@ export class Rest implements Context {
         })
     }
 
-    async stream(urlParts: UrlParts, options: FetchOptions = {}, abortController = new AbortController()) {
+    async stream(baseUrl:string, urlParts: UrlParts, options: FetchOptions = {}, abortController = new AbortController()) {
         const startTime = Date.now()
-        const response = await this.request(urlParts, {
+        const response = await this.request(baseUrl, urlParts, {
             ...options,
             options: {
                 signal: abortController.signal,

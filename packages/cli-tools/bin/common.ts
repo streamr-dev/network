@@ -34,7 +34,7 @@ export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: nu
 }
 
 export function formStreamrOptionsWithEnv(
-    { dev, stg, wsUrl, httpUrl, privateKey }: EnvironmentOptions & AuthenticationOptions
+    { dev, stg, privateKey }: EnvironmentOptions & AuthenticationOptions
 ): StreamrClientOptions {
     const options: StreamrClientOptions = {}
 
@@ -44,23 +44,11 @@ export function formStreamrOptionsWithEnv(
     }
 
     if (dev) {
-        options.url = 'ws://localhost/api/v1/ws'
-        options.restUrl = 'http://localhost/api/v1'
         options.storageNode = {
             // "broker-node-storage-1" on Docker environment
             address: '0xde1112f631486CfC759A50196853011528bC5FA0',
             url: 'http://10.200.10.1:8891'
         }
-    } else if (stg) {
-        options.url = 'wss://staging.streamr.com/api/v1/ws'
-        options.restUrl = 'https://staging.streamr.com/api/v1/'
-    }
-
-    if (wsUrl) {
-        options.url = wsUrl
-    }
-    if (httpUrl) {
-        options.restUrl = httpUrl
     }
 
     if (privateKey) {

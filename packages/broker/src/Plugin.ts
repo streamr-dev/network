@@ -7,7 +7,6 @@ import { validateConfig } from './helpers/validateConfig'
 import { Schema } from 'ajv'
 import { StreamrClient } from 'streamr-client'
 import { ApiAuthenticator } from './apiAuthenticator'
-import { StorageNodeRegistry } from "./StorageNodeRegistry"
 
 export interface PluginOptions {
     name: string
@@ -18,7 +17,6 @@ export interface PluginOptions {
     apiAuthenticator: ApiAuthenticator
     metricsContext: MetricsContext
     brokerConfig: Config
-    storageNodeRegistry: StorageNodeRegistry
     nodeId: string
 }
 
@@ -32,7 +30,6 @@ export abstract class Plugin<T> {
     readonly apiAuthenticator: ApiAuthenticator
     readonly metricsContext: MetricsContext
     readonly brokerConfig: Config
-    readonly storageNodeRegistry: StorageNodeRegistry
     readonly pluginConfig: T
     readonly nodeId: string
     private readonly httpServerRouters: express.Router[] = []
@@ -47,7 +44,6 @@ export abstract class Plugin<T> {
         this.metricsContext = options.metricsContext
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]
-        this.storageNodeRegistry = options.storageNodeRegistry
         this.nodeId = options.nodeId
         const configSchema = this.getConfigSchema()
         if (configSchema !== undefined) {

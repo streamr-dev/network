@@ -41,10 +41,6 @@ export type SubscribeConfig = {
 }
 
 export type ConnectionConfig = {
-    /** Websocket server to connect to */
-    url: string
-    /** Core HTTP API calls go here */
-    restUrl: string
     /** Some TheGraph instance, that indexes the streamr registries */
     theGraphUrl: string
     /** Automatically connect on first subscribe */
@@ -121,8 +117,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 
     // Streamr Core options
-    url: 'wss://streamr.network/api/v1/ws',
-    restUrl: 'https://streamr.network/api/v1',
     theGraphUrl: 'http://127.0.0.1:8000/subgraphs/name/githubname/subgraphname',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
 
@@ -216,24 +210,24 @@ export default function ClientConfig(opts: StreamrClientConfig = {}) {
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
 
-    const parts = options.url!.split('?')
-    if (parts.length === 1) { // there is no query string
-        const controlLayer = `controlLayerVersion=${ControlMessage.LATEST_VERSION}`
-        const messageLayer = `messageLayerVersion=${StreamMessage.LATEST_VERSION}`
-        options.url = `${options.url}?${controlLayer}&${messageLayer}`
-    } else {
-        const queryObj = qs.parse(parts[1])
-        if (!queryObj.controlLayerVersion) {
-            options.url = `${options.url}&controlLayerVersion=1`
-        }
+    // const parts = options.url!.split('?')
+    // if (parts.length === 1) { // there is no query string
+    //     const controlLayer = `controlLayerVersion=${ControlMessage.LATEST_VERSION}`
+    //     const messageLayer = `messageLayerVersion=${StreamMessage.LATEST_VERSION}`
+    //     options.url = `${options.url}?${controlLayer}&${messageLayer}`
+    // } else {
+    //     const queryObj = qs.parse(parts[1])
+    //     if (!queryObj.controlLayerVersion) {
+    //         options.url = `${options.url}&controlLayerVersion=1`
+    //     }
 
-        if (!queryObj.messageLayerVersion) {
-            options.url = `${options.url}&messageLayerVersion=31`
-        }
-    }
+    //     if (!queryObj.messageLayerVersion) {
+    //         options.url = `${options.url}&messageLayerVersion=31`
+    //     }
+    // }
 
     // always add streamrClient version
-    options.url = `${options.url}&streamrClient=${getVersionString()}`
+    // options.url = `${options.url}&streamrClient=${getVersionString()}`
 
     // Backwards compatibility for option 'authKey' => 'apiKey'
     // @ts-expect-error

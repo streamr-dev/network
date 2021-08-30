@@ -6,7 +6,7 @@
     "configurations": [
         {
             "type": "node",
-            "runtimeVersion": "14.17.0", // If i need to run node 4.8.7
+            "runtimeVersion": "16.2.0", // If i need to run node 4.8.7
             "request": "launch",
             "name": "Jest single test",
             "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",

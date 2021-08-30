@@ -265,7 +265,7 @@ export class StreamEndpoints implements Context {
             data,
             {
                 ...requestOptions,
-                agent: keepAlive ? getKeepAliveAgentForUrl(this.options.restUrl!) : undefined,
+                agent: keepAlive ? getKeepAliveAgentForUrl(nodeUrl) : undefined,
             }
         )
     }
