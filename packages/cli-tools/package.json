@@ -39,7 +39,7 @@
     "@streamr/dev-config": "^1.0.0",
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^27.0.1",
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
     "eslint": "^7.29.0",
