@@ -87,6 +87,6 @@ export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubec
     return {
         ...defaults,
         ...userConfig,
-        debug: merge(defaults.debug, config.debug),
+        debug: merge(defaults.debug || {}, config.debug),
     }
 }

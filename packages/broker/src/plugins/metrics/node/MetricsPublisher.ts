@@ -12,7 +12,7 @@ export const STREAM_ID_SUFFIXES = {
 
 export interface ClientOptions {
     ethereumPrivateKey: string,
-    storageNode: string, 
+    storageNode: string,
     storageNodes: StorageNodeRegistryItem[]
     clientWsUrl?: string,
     clientHttpUrl?: string
@@ -34,7 +34,7 @@ export class MetricsPublisher {
 
     private createClient(options: {
         ethereumPrivateKey: string,
-        storageNode: string, 
+        storageNode: string,
         storageNodes: StorageNodeRegistryItem[]
         clientWsUrl?: string,
         clientHttpUrl?: string
@@ -47,9 +47,8 @@ export class MetricsPublisher {
             auth: {
                 privateKey: options.ethereumPrivateKey,
             },
-            url: options.clientWsUrl,
             restUrl: options.clientHttpUrl,
-            storageNode: storageNodeRegistryItem
+            nodeRegistry: options.storageNodes,
         })
     }
 
@@ -96,21 +95,21 @@ export class MetricsPublisher {
 
     /**
      * Fetch the sample from the previous Broker session.
-     * 
-     * E.g. if Broker was running at 01:23:00-03:45:59, it generated 
+     *
+     * E.g. if Broker was running at 01:23:00-03:45:59, it generated
      * - 'hour' reports of 01 and 02
      * - 'min' reports for 01:23-03:44
      * - many 'sec' reports
-     * 
-     * We'll fetch all 'hour' reports, and all 'min' reports which have not yet been 
+     *
+     * We'll fetch all 'hour' reports, and all 'min' reports which have not yet been
      * aggerated to 'hour' reports. All 'sec' reports are ignored.
-     * 
-     * With this data we are able to generate the correct 'day' report at midnight 
-     * as it will include the 'hour' data for both this run and the previous run. 
+     *
+     * With this data we are able to generate the correct 'day' report at midnight
+     * as it will include the 'hour' data for both this run and the previous run.
      * The aggregator will also generate the missing 'hour' report from the 'min' samples.
-     * 
-     * This same logic applies also if the previous Broker run was before the current date. 
-     * In that case the missing 'hour' and 'day' reports are  aggregated and published, 
+     *
+     * This same logic applies also if the previous Broker run was before the current date.
+     * In that case the missing 'hour' and 'day' reports are  aggregated and published,
      * but they don't affect to the current 'day' sample.
      */
     async fetchExistingSamples(): Promise<{ minutes: Sample[], hours: Sample[] }> {
@@ -154,45 +153,51 @@ export class MetricsPublisher {
         last: number,
         timeout = 10 * 1000
     ): Promise<Sample[]> {
-        return new Promise((resolve, reject) => {
-            const startTimeout = () => {
-                return setTimeout(() => {
-                    reject(new Error('StreamMetrics timed out'))
-                }, timeout)
-            }
-            let timeoutId = startTimeout()
-            const messages: Sample[] = []
-            return this.client.resend(
-                {
+        return new Promise(async (resolve, reject) => {
+            let isTimedOut = false
+            try {
+                function startTimeout() {
+                    return setTimeout(() => {
+                        isTimedOut = true
+                        reject(new Error('StreamMetrics timed out'))
+                        if (sub) {
+                            sub.return()
+                        }
+                    }, timeout)
+                }
+
+                let timeoutId = startTimeout()
+                const messages: Sample[] = []
+                const sub = await this.client.resend<Sample>({
                     stream: this.getStreamId(periodLength),
                     resend: {
                         last
                     }
-                },
-                (message) => {
-                    messages.push(message)
+                }, (message) => {
                     clearTimeout(timeoutId)
+                    messages.push(message)
                     timeoutId = startTimeout()
-                }
-            )
-                .then((subscription) => {
-                    // @ts-ignore subscription type does not property inherit EventEmitter in client codebase
-                    subscription.once('resent', () => {
-                        // currently there can be previous data from the previous PerNodeMetrics implementation,
-                        // -> filter those out 
-                        // TODO remove this filter soon
-                        resolve(messages.filter((m) => m.period !== undefined && m.period.start !== undefined && m.period.end !== undefined))
-                    })
-                    // @ts-ignore subscription type does not property inherit EventEmitter in client codebase
-                    subscription.once('no_resend', () => {
-                        resolve(messages)
-                    })
                 })
-                .catch(reject)
+
+                if (isTimedOut) {
+                    resolve([])
+                    sub.return()
+                    return
+                }
+
+                await sub.consume()
+
+                // currently there can be previous data from the previous PerNodeMetrics implementation,
+                // -> filter those out
+                // TODO remove this filter soon
+                resolve(messages.filter((m) => m.period !== undefined && m.period.start !== undefined && m.period.end !== undefined))
+            } catch (err) {
+                reject(err)
+            }
         })
     }
 
-    getStreamId(periodLength: number) {
+    getStreamId(periodLength: number): string {
         const suffix = STREAM_ID_SUFFIXES[periodLength]
         if (suffix !== undefined) {
             return `${this.nodeAddress.toLowerCase()}/streamr/node/metrics/${suffix}`
@@ -201,7 +206,6 @@ export class MetricsPublisher {
         }
     }
 
-    async stop() {
-        await this.client.ensureDisconnected()
+    async stop(): Promise<void> {
     }
 }

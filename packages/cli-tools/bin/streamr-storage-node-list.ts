@@ -18,7 +18,8 @@ const getStorageNodes = async (streamId: string | undefined, client: StreamrClie
         return storageNodes.map((storageNode) => storageNode.getAddress())
     } else {
         // all storage nodes (currently there is only one)
-        return [client.options.storageNode.address]
+        const nodes = await client.getNodes()
+        return nodes.map((n) => n.address)
     }
 }
 
@@ -26,7 +27,9 @@ const program = new Command()
 program
     .description('fetch a list of storage nodes')
     .option('-s, --stream <streamId>', 'only storage nodes which store the given stream (needs authentication)')
+
 authOptions(program)
+
 envOptions(program)
     .version(pkg.version)
     .action((options: any) => {

@@ -37,7 +37,7 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
                 storageNodes: this.storageNodeRegistry.getStorageNodes(),
                 clientHttpUrl: this.pluginConfig.nodeMetrics.client.httpUrl,
             })
-            this.nodeMetrics = new NodeMetrics(this.metricsContext, metricsPublisher) 
+            this.nodeMetrics = new NodeMetrics(this.metricsContext, metricsPublisher)
         }
     }
 

@@ -19,7 +19,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
-import * as NodeRegistry from './NodeRegistry'
+import NodeRegistry, { register as registerNodeRegistry } from './NodeRegistry'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -66,6 +66,7 @@ export interface BrubeckClient extends Ethereum,
     Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
     Methods<LoginEndpoints>,
     Methods<Publisher>,
+    Methods<NodeRegistry>,
     Methods<GroupKeyStoreFactory>,
     // Omit sessionTokenPromise because TS complains:
     // Type 'undefined' is not assignable to type 'keyof Session'
@@ -99,6 +100,7 @@ class BrubeckClientBase implements Context {
         @inject(Config.Root) options: StrictBrubeckClientConfig,
         node: BrubeckNode,
         ethereum: Ethereum,
+        nodeRegistry: NodeRegistry,
         session: Session,
         loginEndpoints: LoginEndpoints,
         streamEndpoints: StreamEndpoints,
@@ -210,7 +212,7 @@ export class BrubeckClient extends BrubeckClientBase {
             c.register(token, { useValue })
         })
 
-        NodeRegistry.register(c)
+        registerNodeRegistry(c)
 
         super(
             c,
@@ -218,6 +220,7 @@ export class BrubeckClient extends BrubeckClientBase {
             config,
             c.resolve<BrubeckNode>(BrubeckNode),
             c.resolve<Ethereum>(Ethereum),
+            c.resolve<NodeRegistry>(NodeRegistry as any),
             c.resolve<Session>(Session),
             c.resolve<LoginEndpoints>(LoginEndpoints),
             c.resolve<StreamEndpoints>(StreamEndpoints),

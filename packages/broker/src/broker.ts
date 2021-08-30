@@ -66,18 +66,6 @@ const getStunTurnUrls = (config: Config): string[] | undefined => {
     return urls
 }
 
-const createStreamMessageValidator = (config: Config): Protocol.StreamMessageValidator => {
-    // Validator only needs public information, so use unauthenticated client for that
-    const unauthenticatedClient = new StreamrClient({
-        restUrl: config.streamrUrl + '/api/v1',
-    })
-    return new Utils.CachingStreamMessageValidator({
-        getStream: (sId) => unauthenticatedClient.getStreamValidationInfo(sId),
-        isPublisher: (address, sId) => unauthenticatedClient.isStreamPublisher(sId, address),
-        isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
-    })
-}
-
 export const createBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
 
@@ -166,9 +154,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 await stopServer(httpServer)
             }
             await Promise.all(plugins.map((plugin) => plugin.stop()))
-            if (localStreamrClient !== undefined) {
-                await localStreamrClient.ensureDisconnected()
-            }        
+            if (streamrClient !== undefined) {
+                await streamrClient.destroy()
+            }
             await networkNode.stop()
         }
     }
