@@ -4,6 +4,17 @@ import os from 'os'
 import path from 'path'
 import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers } from '../../src/ConfigWizard'
 
+const assertValidPort = (port: number | string, pluginName = 'websocket') => {
+    const numericPort = (typeof port === 'string') ? parseInt(port) : port
+    const answers = {
+        generateOrImportEthereumPrivateKey: 'Generate',
+        selectPlugins:[pluginName],
+        websocketPort: port,
+    }
+    const config = getConfigFromAnswers(answers)
+    expect(config.plugins[pluginName].port).toBe(numericPort)
+}
+
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = CONFIG_WIZARD_PROMPTS[1]
     const portPrompt = CONFIG_WIZARD_PROMPTS[3]
@@ -157,25 +168,11 @@ describe('ConfigWizard', () => {
         })
 
         it ('should exercise the plugin port assignation path with a number', () => {
-            const port = 3737
-            const answers = {
-                generateOrImportEthereumPrivateKey: 'Generate',
-                selectPlugins:['websocket'],
-                websocketPort: port,
-            }
-            const config = getConfigFromAnswers(answers)
-            expect(config.plugins.websocket.port).toBe(port)
+            assertValidPort(3737)
         })
 
         it ('should exercise the plugin port assignation path with a stringified number', () => {
-            const port = 3737
-            const answers = {
-                generateOrImportEthereumPrivateKey: 'Generate',
-                selectPlugins:['websocket'],
-                websocketPort: port.toString(),
-            }
-            const config = getConfigFromAnswers(answers)
-            expect(config.plugins.websocket.port).toBe(port)
+            assertValidPort('3737')
         })
 
         it ('should exercise the happy path with default answers', () => {
