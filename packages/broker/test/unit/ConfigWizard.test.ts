@@ -2,11 +2,11 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers } from '../../src/ConfigWizard'
+import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getEthereumConfigFromAnswers, getPluginsConfigFromAnswers, CONFIG_TEMPLATE } from '../../src/ConfigWizard'
 
 describe('ConfigWizard', () => {
-    const importPrivateKeyPrompt = CONFIG_WIZARD_PROMPTS[1]
-    const portPrompt = CONFIG_WIZARD_PROMPTS[3]
+    const importPrivateKeyPrompt = CONFIG_WIZARD_PROMPTS.ethereum[1]
+    const portPrompt = CONFIG_WIZARD_PROMPTS.plugins[0]
 
     describe('importPrivateKey validate', () => {
         it ('happy path, prefixed', () => {
@@ -125,12 +125,17 @@ describe('ConfigWizard', () => {
 
     })
 
-    describe('getConfigFromAnswers', () => {
+    describe('getEthereumConfigFromAnswers', () => {
+        let config: any
+        beforeEach(() => {
+            config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
+        })
+
         it ('should exercise the `generate` path', () => {
             const answers = {
                 generateOrImportEthereumPrivateKey: 'Generate',
             }
-            const config = getConfigFromAnswers(answers)
+            config = getEthereumConfigFromAnswers(answers, config)
             expect(config.ethereumPrivateKey).toBeDefined()
             expect(config.ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
         })
@@ -141,10 +146,17 @@ describe('ConfigWizard', () => {
                 generateOrImportEthereumPrivateKey: 'Import',
                 importPrivateKey: privateKey,
             }
-            const config = getConfigFromAnswers(answers)
+            config = getEthereumConfigFromAnswers(answers, config)
             expect(config.ethereumPrivateKey).toBe(privateKey)
         })
 
+    })
+
+    describe('getPluginsConfigFromAnswers', () => {
+        let config: any
+        beforeEach(() => {
+            config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
+        })
         it ('should exercise the plugin port assignation path', () => {
             const port = '3737'
             const answers = {
@@ -152,8 +164,15 @@ describe('ConfigWizard', () => {
                 selectPlugins:['websocket'],
                 websocketPort: port,
             }
-            const config = getConfigFromAnswers(answers)
+            config = getPluginsConfigFromAnswers(answers, config)
             expect(config.plugins.websocket.port).toBe(port)
+        })
+    })
+
+    describe('end-to-end', () => {
+        let config: any
+        beforeEach(() => {
+            config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
         })
 
         it ('should exercise the happy path with default answers', () => {
@@ -165,7 +184,8 @@ describe('ConfigWizard', () => {
                 mqttPort: DEFAULT_CONFIG_PORTS.DEFAULT_MQTT_PORT,
                 publishHttpPort: DEFAULT_CONFIG_PORTS.DEFAULT_HTTP_PORT,
             }
-            const config = getConfigFromAnswers(answers)
+            config = getEthereumConfigFromAnswers(answers, config)
+            config = getPluginsConfigFromAnswers(answers, config)
             expect(config.plugins.websocket).toMatchObject({})
             expect(config.plugins.mqtt).toMatchObject({})
             expect(config.plugins.publishHttp).toMatchObject({})
@@ -187,7 +207,8 @@ describe('ConfigWizard', () => {
                 mqttPort: 3171,
                 publishHttpPort: 3172
             }
-            const config = getConfigFromAnswers(answers)
+            config = getEthereumConfigFromAnswers(answers, config)
+            config = getPluginsConfigFromAnswers(answers, config)
             expect(config.plugins.websocket.port).toBe(answers.websocketPort)
             expect(config.plugins.mqtt.port).toBe(answers.mqttPort)
             expect(config.httpServer.port).toBe(answers.publishHttpPort)

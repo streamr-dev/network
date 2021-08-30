@@ -94,7 +94,7 @@ export const CONFIG_TEMPLATE: any = {
     }
 }
 
-let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
+const privateKeyPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
     {
         type: 'list',
         name:'generateOrImportEthereumPrivateKey',
@@ -119,6 +119,15 @@ let prompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.Checkbox
                     return e.message
                 }
             }
+        }
+    },
+    {
+        type: 'confirm',
+        name: 'revealGeneratedPrivateKey',
+        message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
+        default: false,
+        when: (answers: inquirer.Answers) => {
+            return answers.generateOrImportEthereumPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
         }
     }
 ]
@@ -168,21 +177,16 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
     })
 })
 
-const revealGeneratedPrivateKeyPrompt = {
-    type: 'confirm',
-    name: 'revealGeneratedPrivateKey',
-    message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
-    default: false,
-    when: (answers: inquirer.Answers) => {
-        return answers.generateOrImportEthereumPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
+// prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts).concat(revealGeneratedPrivateKeyPrompt)
+export const getEthereumConfigFromAnswers = (answers: inquirer.Answers, config: any) => {
+    config.ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
+    if (answers.revealGeneratedPrivateKey) {
+        logger.info(`This is your node\'s private key: ${config.ethereumPrivateKey}`)
     }
+    return config
 }
 
-prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts).concat(revealGeneratedPrivateKeyPrompt)
-
-export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
-    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
-
+export const getPluginsConfigFromAnswers = (answers: inquirer.Answers, config: any): any => {
     const pluginNames = Object.values(PLUGIN_NAMES)
     pluginNames.forEach((pluginName) => {
         const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
@@ -202,8 +206,6 @@ export const getConfigFromAnswers = (answers: inquirer.Answers): any => {
             config.plugins![pluginName] = pluginConfig
         }
     })
-
-    config.ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
     return config
 }
 
@@ -260,11 +262,11 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
 
 export const startBrokerConfigWizard = async(): Promise<void> => {
     try {
-        const answers = await inquirer.prompt(prompts)
-        const config = getConfigFromAnswers(answers)
-        if (answers.revealGeneratedPrivateKey) {
-            logger.info(`This is your node\'s private key: ${config.ethereumPrivateKey}`)
-        }
+        let config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
+        const ethereumAnswers = await inquirer.prompt(privateKeyPrompts)
+        config = getEthereumConfigFromAnswers(ethereumAnswers, config)
+        const pluginAnswers = await inquirer.prompt([pluginSelectorPrompt, ...pluginPrompts])
+        config = getPluginsConfigFromAnswers(pluginAnswers, config)
         const nodeAddress = new Wallet(config.ethereumPrivateKey).address
         const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
         logger.info('Welcome to the Streamr Network')
@@ -283,4 +285,7 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
     }
 }
 
-export const CONFIG_WIZARD_PROMPTS = prompts
+export const CONFIG_WIZARD_PROMPTS = {
+    ethereum: privateKeyPrompts,
+    plugins: pluginPrompts,
+}
