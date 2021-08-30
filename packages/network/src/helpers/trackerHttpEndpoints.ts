@@ -1,11 +1,18 @@
 import express from 'express'
 import cors from 'cors'
 import { MetricsContext } from './MetricsContext'
-import { addRttsToNodeConnections, getNodeConnections, getTopology, getStreamSizes } from '../logic/trackerSummaryUtils'
+import {
+    addRttsToNodeConnections,
+    findStreamsForNode,
+    getNodeConnections,
+    getTopology,
+    getStreamSizes
+} from '../logic/trackerSummaryUtils'
 import { Logger } from './Logger'
 import { Tracker } from '../logic/Tracker'
 import http from 'http'
 import https from 'https'
+import morgan from 'morgan'
 
 const staticLogger = new Logger(module)
 
@@ -64,6 +71,7 @@ export function trackerHttpEndpoints(
 ): void {
     const app = express()
     app.use(cors())
+    app.use(morgan(process.env.CUSTOM_MORGAN_FORMAT ?? ':method :url :status :response-time ms - :res[content-length] - :remote-addr'))
     httpServer.on('request', app)
 
     app.get('/topology/', (req: express.Request, res: express.Response) => {
@@ -93,11 +101,17 @@ export function trackerHttpEndpoints(
         staticLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
         res.json(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, askedPartition))
     })
-    cachedJsonGet(app,'/node-connections/', 15 * 1000, () => {
+    cachedJsonGet(app,'/node-connections/', 5 * 60 * 1000, () => {
         const topologyUnion = getNodeConnections(tracker.getNodes(), tracker.getOverlayPerStream())
         return Object.assign({}, ...Object.entries(topologyUnion).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, Array.from(neighbors), tracker.getOverlayConnectionRtts())
         }))
+    })
+    app.get('/nodes/:nodeId/streams', async (req: express.Request, res: express.Response) => {
+        const nodeId = req.params.nodeId
+        staticLogger.debug(`request to /nodes/${nodeId}/streams`)
+        const result = findStreamsForNode(tracker.getOverlayPerStream(), nodeId)
+        res.json(result)
     })
     app.get('/location/', (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /location/')

@@ -45,22 +45,6 @@ export interface Config {
     ethereumPrivateKey: string
     generateSessionId: boolean
     network: NetworkConfig,
-    reporting: {
-        intervalInSeconds: number,
-        streamr: {
-            streamId: string
-        } | null,
-        perNodeMetrics: {
-            enabled: boolean
-            intervals: {
-                sec: number,
-                min: number,
-                hour: number,
-                day: number
-            } | null,
-            storageNode: string
-        } | null,
-    },
     streamrUrl: string,
     streamrAddress: string,
     storageNodeConfig: StorageNodeConfig,

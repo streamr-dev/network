@@ -52,7 +52,7 @@ socket.addEventListener('open', () => {
 
 #### Port
 
-The default port is `8081`. You can change it by specifying a `port` value:
+The default websocket port is `7170`. You can change it by specifying a `port` value:
 
 ```
 plugins: {
@@ -218,7 +218,7 @@ plugins: {
 }
 ```
 
-The default HTTP server port is `8080`. You can change it by specifying a `port` value for the root level `httpServer` option:
+The default HTTP server port is `7171`. You can change it by specifying a `port` value for the root level `httpServer` option:
 
 ```
 "network": ...
@@ -248,7 +248,7 @@ To publish a message to a stream, send the data as a POST payload:
 curl \
 --header 'Content-Type: application/json' \
 --data '{"foo":"bar"}' \
-http://localhost:8080/streams/foo.eth%2fbar
+http://localhost:7171/streams/foo.eth%2fbar
 ```
 
 The endpoint returns HTTP 200 status if the message was published successfully. 
