@@ -1,7 +1,7 @@
 import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
 import path from 'path'
-import { writeFileSync, existsSync, mkdirSync } from 'fs'
+import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
 import * as os from 'os'
 import chalk from "chalk"
 import { v4 as uuid } from 'uuid'
@@ -161,16 +161,20 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
         when: (answers: inquirer.Answers) => {
             return answers.selectPlugins.includes(pluginName)
         },
-        validate: (input: string, answers: inquirer.Answers): string | boolean => {
-            const portNumber = parseInt(input || answers[`${pluginName}Port`])
-            if (!Number.isInteger(portNumber)) {
+        validate: (input: string | number): string | boolean => {
+            const portNumber = (typeof input === 'string') ? Number(input) : input
+
+            if (Number.isNaN(portNumber)) {
                 return `Non-numeric value provided`
+            }
+
+            if (!Number.isInteger(portNumber)) {
+                return `Non-integer value provided`
             }
 
             if (portNumber < MIN_PORT_VALUE || portNumber > MAX_PORT_VALUE) {
                 return `Out of range port ${portNumber} provided (valid range ${MIN_PORT_VALUE}-${MAX_PORT_VALUE})`
             }
-
             return true
         },
         default: defaultPluginPort
@@ -192,15 +196,15 @@ export const getPluginsConfigFromAnswers = (answers: inquirer.Answers, config: a
         const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
         if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
-            if (answers[`${pluginName}Port`] !== defaultPluginPort){
+            const portNumber = parseInt(answers[`${pluginName}Port`])
+            if (portNumber !== defaultPluginPort){
+                const portObject = { port: portNumber }
                 if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
                     // the publishHttp plugin is special, it needs to be added to the config after the other plugins
-                    config.httpServer = {
-                        port: answers[`${pluginName}Port`]
-                    }
+                    config.httpServer = portObject
                 } else {
                     // user provided a custom value, fill in
-                    pluginConfig = { port: answers[`${pluginName}Port`] }
+                    pluginConfig = portObject
                 }
             }
             config.plugins![pluginName] = pluginConfig
@@ -216,14 +220,13 @@ export const selectDestinationPathPrompt = {
     default: path.join(os.homedir(), '.streamr/broker-config.json'),
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
         try {
-            const filePath = input || answers.selectDestinationPath
-            const parentDirPath = path.dirname(filePath)
+            const parentDirPath = path.dirname(input)
 
             answers.parentDirPath = parentDirPath
             answers.parentDirExists = existsSync(parentDirPath)
-            answers.fileExists = existsSync(filePath)
+            answers.fileExists = existsSync(input)
 
-            return (answers.parentDirExists || answers.fileExists)
+            return true
         } catch (e) {
             return e.message
         }
@@ -257,6 +260,7 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     }
    
     writeFileSync(answers.selectDestinationPath, JSON.stringify(config, null, 2))
+    chmodSync(answers.selectDestinationPath, '0600')
     return answers.selectDestinationPath
 }
 

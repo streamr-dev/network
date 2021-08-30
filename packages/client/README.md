@@ -438,6 +438,7 @@ const receipt = await dataUnion.addMembers([
 | Name                                                                  | Returns                   | Description                                                                 |
 | :-------------------------------------------------------------------- | :------------------------ | :-------------------------------------------------------------------------- |
 | join(\[secret])                                                       | JoinRequest               | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
+| part()                                                                | Transaction receipt       | Leave the Data Union
 | isMember(memberAddress)                                               | boolean                   |                                                                             |
 | withdrawAll(\[[options](#withdraw-options)\])                         | Transaction receipt `*`   | Withdraw funds from Data Union                                              |
 | withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\])     | Transaction receipt `*`   | Donate/move your earnings to recipientAddress instead of your memberAddress |

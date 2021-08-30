@@ -4,6 +4,17 @@ import os from 'os'
 import path from 'path'
 import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getEthereumConfigFromAnswers, getPluginsConfigFromAnswers, CONFIG_TEMPLATE } from '../../src/ConfigWizard'
 
+const assertValidPort = (port: number | string, config:any, pluginName = 'websocket') => {
+    const numericPort = (typeof port === 'string') ? parseInt(port) : port
+    const answers = {
+        generateOrImportEthereumPrivateKey: 'Generate',
+        selectPlugins:[pluginName],
+        websocketPort: port,
+    }
+    config = getPluginsConfigFromAnswers(answers, config)
+    expect(config.plugins[pluginName].port).toBe(numericPort)
+}
+
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = CONFIG_WIZARD_PROMPTS.ethereum[1]
     const portPrompt = CONFIG_WIZARD_PROMPTS.plugins[0]
@@ -29,15 +40,26 @@ describe('ConfigWizard', () => {
     })
 
     describe('plugin port validation', () => {
-        it ('happy path', () => {
+        it ('happy path: numeric value', () => {
+            const validate = portPrompt.validate!
+            expect(validate(7070)).toBe(true)
+        })
+
+        it ('happy path: string value', () => {
             const validate = portPrompt.validate!
             expect(validate('7070')).toBe(true)
         })
 
         it ('invalid data: out-of-range number', () => {
             const validate = portPrompt.validate!
-            const port = '10000000000'
+            const port = 10000000000
             expect(validate(port)).toBe(`Out of range port ${port} provided (valid range 1024-49151)`)
+        })
+
+        it ('invalid data: float-point number', () => {
+            const validate = portPrompt.validate!
+            const port = 55.55
+            expect(validate(port)).toBe(`Non-integer value provided`)
         })
 
         it ('invalid data: non-numeric', () => {
@@ -76,7 +98,7 @@ describe('ConfigWizard', () => {
             const invalidPath = `/invalid-path/${Date.now()}`
             const answers: any = {}
             const isValid = validate(invalidPath, answers)
-            expect(isValid).toBe(false)
+            expect(isValid).toBe(true)
             expect(answers.parentDirExists).toBe(false)
             expect(answers.fileExists).toBe(false)
 
@@ -150,22 +172,12 @@ describe('ConfigWizard', () => {
             expect(config.ethereumPrivateKey).toBe(privateKey)
         })
 
-    })
-
-    describe('getPluginsConfigFromAnswers', () => {
-        let config: any
-        beforeEach(() => {
-            config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
+        it ('should exercise the plugin port assignation path with a number', () => {
+            assertValidPort(3737, config)
         })
-        it ('should exercise the plugin port assignation path', () => {
-            const port = '3737'
-            const answers = {
-                generateOrImportEthereumPrivateKey: 'Generate',
-                selectPlugins:['websocket'],
-                websocketPort: port,
-            }
-            config = getPluginsConfigFromAnswers(answers, config)
-            expect(config.plugins.websocket.port).toBe(port)
+
+        it ('should exercise the plugin port assignation path with a stringified number', () => {
+            assertValidPort('3737', config)
         })
     })
 
@@ -203,15 +215,15 @@ describe('ConfigWizard', () => {
                 revealGeneratedPrivateKey: true,
                 importPrivateKey: privateKey,
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: 3170,
-                mqttPort: 3171,
-                publishHttpPort: 3172
+                websocketPort: '3170',
+                mqttPort: '3171',
+                publishHttpPort: '3172'
             }
             config = getEthereumConfigFromAnswers(answers, config)
             config = getPluginsConfigFromAnswers(answers, config)
-            expect(config.plugins.websocket.port).toBe(answers.websocketPort)
-            expect(config.plugins.mqtt.port).toBe(answers.mqttPort)
-            expect(config.httpServer.port).toBe(answers.publishHttpPort)
+            expect(config.plugins.websocket.port).toBe(parseInt(answers.websocketPort))
+            expect(config.plugins.mqtt.port).toBe(parseInt(answers.mqttPort))
+            expect(config.httpServer.port).toBe(parseInt(answers.publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.ethereumPrivateKey).toBe(privateKey)
         })
