@@ -100,6 +100,8 @@ jobs:
       - uses: actions/checkout@v2.3.4
       - name: Setup qemu
         uses: docker/setup-qemu-action@v1.2.0
+        with:
+          platforms: arm64
       - name: Cache Docker layers
         uses: actions/cache@v2.1.6
         with:
@@ -108,25 +110,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
       - name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@v1.5.1
         with:
           driver-opts: |
             network=host
-      - name: available platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
       - name: Build
-        uses: docker/build-push-action@v2.7.0
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: false
-          load: false
-          tags: streamr/broker-node:dev
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-      - name: Build (is cached!) and load x86 image
         uses: docker/build-push-action@v2.7.0
         with:
           context: .
@@ -171,19 +159,16 @@ jobs:
           flavor: |
             latest=auto
       - name: Set up Docker Buildx
-        id: buildx2
         uses: docker/setup-buildx-action@v1.5.1
         with:
           driver-opts: |
             network=host
-      - name: available platforms
-        run: echo ${{ steps.buildx2.outputs.platforms }}
       - name: Build
         uses: docker/build-push-action@v2.7.0
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           push: true
           load: false
           tags: ${{ steps.docker_meta.outputs.tags }}
