@@ -62,7 +62,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                     if (uuid === handshakeUUID && peerId) {
                         otherNodeIdForLogging = peerId
                         this.clearHandshake(uuid)
-                        this.acceptConnection(ws, duplexStream, peerId, request.socket.remoteAddress as string)
+                        this.acceptConnection(ws, duplexStream, peerId, this.resolveIP(request))
                     } else {
                         this.logger.trace('Expected a handshake message got: ' + data.toString())
                     }
@@ -139,6 +139,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 })
             })
         })
+    }
+
+    private resolveIP(request: http.IncomingMessage): string {
+        // Accept X-Forwarded-For header on connections from the local machine
+        if (request.socket.remoteAddress?.endsWith('127.0.0.1')) {
+            return (request.headers['x-forwarded-for'] || request.socket.remoteAddress) as string
+        }
+        return request.socket.remoteAddress as string
     }
 }
 
