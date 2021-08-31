@@ -21,7 +21,7 @@ const assertValidPort = (port: number | string, pluginName = 'websocket') => {
 const assertValidMisc = (config: any) => {
     const misc = generateMiscFromConfig(config)
     expect(misc.mnemonic).toBeDefined()
-    expect(misc.nodeExplorerUrl).toBeDefined()
+    expect(misc.networkExplorerUrl).toBeDefined()
 }
 
 describe('ConfigWizard', () => {

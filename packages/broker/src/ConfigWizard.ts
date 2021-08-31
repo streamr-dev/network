@@ -268,10 +268,10 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
 export const generateMiscFromConfig = (config: any) => {
     const nodeAddress = new Wallet(config.ethereumPrivateKey).address
     const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
-    const nodeExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
+    const networkExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
     return {
         mnemonic,
-        nodeExplorerUrl
+        networkExplorerUrl
     }
 }
 
@@ -288,10 +288,10 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
         const storageAnswers = await selectValidDestinationPath()
         const destinationPath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
-        const {mnemonic, nodeExplorerUrl} = generateMiscFromConfig(config)
+        const {mnemonic, networkExplorerUrl} = generateMiscFromConfig(config)
         logger.info(`Your node's generated name is ${mnemonic}.`)
         logger.info('View your node in the Network Explorer:')
-        logger.info(nodeExplorerUrl)
+        logger.info(networkExplorerUrl)
         logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${destinationPath}`)
     } catch (e) {
