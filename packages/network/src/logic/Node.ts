@@ -36,7 +36,6 @@ export interface NodeOptions {
     peerInfo: PeerInfo
     trackers: Array<TrackerInfo>
     metricsContext?: MetricsContext
-    connectToBootstrapTrackersInterval?: number
     sendStatusToAllTrackersInterval?: number
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
@@ -45,6 +44,7 @@ export interface NodeOptions {
     instructionRetryInterval?: number
 }
 
+const TRACKER_CONNECTION_MAINTENANCE_INTERVAL = 5000
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
 
 export interface Node {
@@ -62,7 +62,6 @@ export class Node extends EventEmitter {
     protected readonly nodeToNode: NodeToNode
     private readonly trackerNode: TrackerNode
     private readonly peerInfo: PeerInfo
-    private readonly connectToBootstrapTrackersInterval: number
     private readonly sendStatusToAllTrackersInterval: number
     private readonly bufferTimeoutInMs: number
     private readonly bufferMaxSize: number
@@ -83,7 +82,7 @@ export class Node extends EventEmitter {
     private readonly consecutiveDeliveryFailures: { [key: string]: number } // id => counter
     private readonly perStreamMetrics: PerStreamMetrics
     private readonly metrics: Metrics
-    private connectToBoostrapTrackersInterval?: NodeJS.Timeout | null
+    private maintainTrackerConnectionsInterval?: NodeJS.Timeout | null
     private handleBufferedMessagesTimeoutRef?: NodeJS.Timeout | null
     protected extraMetadata: Record<string, unknown> = {}
 
@@ -101,7 +100,6 @@ export class Node extends EventEmitter {
         this.trackerNode = opts.protocols.trackerNode
         this.peerInfo = opts.peerInfo
 
-        this.connectToBootstrapTrackersInterval = opts.connectToBootstrapTrackersInterval || 5000
         this.sendStatusToAllTrackersInterval = opts.sendStatusToAllTrackersInterval || 1000
         this.bufferTimeoutInMs = opts.bufferTimeoutInMs || 60 * 1000
         this.bufferMaxSize = opts.bufferMaxSize || 10000
@@ -170,10 +168,10 @@ export class Node extends EventEmitter {
 
     start(): void {
         this.logger.trace('started')
-        this.connectToBootstrapTrackers()
-        this.connectToBoostrapTrackersInterval = setInterval(
-            this.connectToBootstrapTrackers.bind(this),
-            this.connectToBootstrapTrackersInterval
+        this.maintainTrackerConnections()
+        this.maintainTrackerConnectionsInterval = setInterval(
+            this.maintainTrackerConnections.bind(this),
+            TRACKER_CONNECTION_MAINTENANCE_INTERVAL
         )
     }
 
@@ -392,9 +390,9 @@ export class Node extends EventEmitter {
         this.instructionThrottler.stop()
         this.instructionRetryManager.stop()
 
-        if (this.connectToBoostrapTrackersInterval) {
-            clearInterval(this.connectToBoostrapTrackersInterval)
-            this.connectToBoostrapTrackersInterval = null
+        if (this.maintainTrackerConnectionsInterval) {
+            clearInterval(this.maintainTrackerConnectionsInterval)
+            this.maintainTrackerConnectionsInterval = null
         }
         if (this.handleBufferedMessagesTimeoutRef) {
             clearTimeout(this.handleBufferedMessagesTimeoutRef)
@@ -525,7 +523,7 @@ export class Node extends EventEmitter {
             })
     }
 
-    private connectToBootstrapTrackers(): void {
+    private maintainTrackerConnections(): void {
         this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
             this.trackerNode.connectToTracker(trackerInfo.ws, PeerInfo.newTracker(trackerInfo.id))
                 .catch((err) => {
