@@ -2,7 +2,7 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, getPrivateKeyFromAnswers } from '../../src/ConfigWizard'
+import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfigFromAnswers, getPrivateKeyFromAnswers, generateMiscFromConfig } from '../../src/ConfigWizard'
 
 const assertValidPort = (port: number | string, pluginName = 'websocket') => {
     const numericPort = (typeof port === 'string') ? parseInt(port) : port
@@ -16,6 +16,12 @@ const assertValidPort = (port: number | string, pluginName = 'websocket') => {
     const ethereumPrivateKey = getPrivateKeyFromAnswers(privateKeyAnswers)
     const config = getConfigFromAnswers(ethereumPrivateKey, pluginsAnswers)
     expect(config.plugins[pluginName].port).toBe(numericPort)
+}
+
+const assertValidMisc = (config: any) => {
+    const misc = generateMiscFromConfig(config)
+    expect(misc.mnemonic).toBeDefined()
+    expect(misc.nodeExplorerUrl).toBeDefined()
 }
 
 describe('ConfigWizard', () => {
@@ -202,6 +208,7 @@ describe('ConfigWizard', () => {
             expect(config.apiAuthentication).toBeDefined()
             expect(config.apiAuthentication.keys).toBeDefined()
             expect(config.apiAuthentication.keys.length).toBe(1)
+            assertValidMisc(config)
         })
 
         it('should exercise the happy path with user input', () => {
@@ -224,6 +231,7 @@ describe('ConfigWizard', () => {
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.ethereumPrivateKey).toBe(privateKey)
+            assertValidMisc(config)
         })
     })
 })
