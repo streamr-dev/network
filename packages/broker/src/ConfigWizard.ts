@@ -282,8 +282,7 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
         if (privateKeyAnswers.revealGeneratedPrivateKey) {
             logger.info(`This is your node\'s private key: ${privateKey}`)
         }
-        const pluginPrompts = createPluginPrompts()
-        const pluginsAnswers = await inquirer.prompt(pluginPrompts)
+        const pluginsAnswers = await inquirer.prompt(createPluginPrompts())
         const config = getConfig(privateKey, pluginsAnswers)
         const storageAnswers = await selectStoragePath()
         const destinationPath = await createStorageFile(config, storageAnswers)
