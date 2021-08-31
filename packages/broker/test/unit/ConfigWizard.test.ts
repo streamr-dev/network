@@ -2,7 +2,7 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { CONFIG_WIZARD_PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfig, getPrivateKey, getNodeIdentity } from '../../src/ConfigWizard'
+import { PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfig, getPrivateKey, getNodeIdentity } from '../../src/ConfigWizard'
 
 const assertValidPort = (port: number | string, pluginName = 'websocket') => {
     const numericPort = (typeof port === 'string') ? parseInt(port) : port
@@ -25,8 +25,8 @@ const assertValidMisc = (config: any) => {
 }
 
 describe('ConfigWizard', () => {
-    const importPrivateKeyPrompt = CONFIG_WIZARD_PROMPTS.privateKey[1]
-    const portPrompt = CONFIG_WIZARD_PROMPTS.plugins[1]
+    const importPrivateKeyPrompt = PROMPTS.privateKey[1]
+    const portPrompt = PROMPTS.plugins[1]
 
     describe('importPrivateKey validate', () => {
         it ('happy path, prefixed', () => {

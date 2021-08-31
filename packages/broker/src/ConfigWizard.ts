@@ -285,21 +285,21 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
         const pluginsAnswers = await inquirer.prompt(createPluginPrompts())
         const config = getConfig(privateKey, pluginsAnswers)
         const storageAnswers = await selectStoragePath()
-        const destinationPath = await createStorageFile(config, storageAnswers)
+        const storagePath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
         const {mnemonic, networkExplorerUrl} = getNodeIdentity(config)
         logger.info(`Your node's generated name is ${mnemonic}.`)
         logger.info('View your node in the Network Explorer:')
         logger.info(networkExplorerUrl)
         logger.info('You can start the broker now with')
-        logger.info(`streamr-broker ${destinationPath}`)
+        logger.info(`streamr-broker ${storagePath}`)
     } catch (e) {
         logger.warn('Broker Config Wizard encountered an error:')
         logger.error(e.message)
     }
 }
 
-export const CONFIG_WIZARD_PROMPTS = {
+export const PROMPTS = {
     privateKey: privateKeyPrompts,
     plugins: createPluginPrompts(),
 }
