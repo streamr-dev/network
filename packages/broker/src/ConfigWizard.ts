@@ -148,41 +148,44 @@ const PLUGIN_NAMES: {[pluginName: string]: string} = {
     PUBLISH_HTTP: 'publishHttp'
 }
 
-const pluginPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [{
-    type: 'checkbox',
-    name:'selectPlugins',
-    message: 'Select the plugins to enable',
-    choices: Object.values(PLUGIN_NAMES)
-}]
+const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> => {
+    const selectPluginsPrompt: inquirer.CheckboxQuestion = {
+        type: 'checkbox',
+        name:'selectPlugins',
+        message: 'Select the plugins to enable',
+        choices: Object.values(PLUGIN_NAMES)
+    }
 
-Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
-    const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
-    pluginPrompts.push({
-        type: 'input',
-        name: `${pluginName}Port`,
-        message: `Select a port for the ${pluginName} Plugin [Enter for default: ${defaultPluginPort}]`,
-        when: (answers: inquirer.Answers) => {
-            return answers.selectPlugins.includes(pluginName)
-        },
-        validate: (input: string | number): string | boolean => {
-            const portNumber = (typeof input === 'string') ? Number(input) : input
+    const pluginPortPrompts: Array<inquirer.Question> = Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
+        const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
+        return {
+            type: 'input',
+            name: `${pluginName}Port`,
+            message: `Select a port for the ${pluginName} Plugin [Enter for default: ${defaultPluginPort}]`,
+            when: (answers: inquirer.Answers) => {
+                return answers.selectPlugins.includes(pluginName)
+            },
+            validate: (input: string | number): string | boolean => {
+                const portNumber = (typeof input === 'string') ? Number(input) : input
+                if (Number.isNaN(portNumber)) {
+                    return `Non-numeric value provided`
+                }
 
-            if (Number.isNaN(portNumber)) {
-                return `Non-numeric value provided`
-            }
+                if (!Number.isInteger(portNumber)) {
+                    return `Non-integer value provided`
+                }
 
-            if (!Number.isInteger(portNumber)) {
-                return `Non-integer value provided`
-            }
-
-            if (portNumber < MIN_PORT_VALUE || portNumber > MAX_PORT_VALUE) {
-                return `Out of range port ${portNumber} provided (valid range ${MIN_PORT_VALUE}-${MAX_PORT_VALUE})`
-            }
-            return true
-        },
-        default: defaultPluginPort
+                if (portNumber < MIN_PORT_VALUE || portNumber > MAX_PORT_VALUE) {
+                    return `Out of range port ${portNumber} provided (valid range ${MIN_PORT_VALUE}-${MAX_PORT_VALUE})`
+                }
+                return true
+            },
+            default: defaultPluginPort
+        }
     })
-})
+
+    return [selectPluginsPrompt, ...pluginPortPrompts]
+}
 
 export const getConfigFromAnswers = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
@@ -269,6 +272,7 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
         if (privateKeyAnswers.revealGeneratedPrivateKey) {
             logger.info(`This is your node\'s private key: ${privateKey}`)
         }
+        const pluginPrompts = createPluginPrompts()
         const pluginsAnswers = await inquirer.prompt(pluginPrompts)
         const config = getConfigFromAnswers(privateKey, pluginsAnswers)
         const nodeAddress = new Wallet(config.privateKey).address
@@ -289,5 +293,5 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
 
 export const CONFIG_WIZARD_PROMPTS = {
     privateKey: privateKeyPrompts,
-    plugins: pluginPrompts,
+    plugins: createPluginPrompts(),
 }
