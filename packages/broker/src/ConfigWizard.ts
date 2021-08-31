@@ -132,7 +132,7 @@ const privateKeyPrompts: Array<inquirer.Question | inquirer.ListQuestion | inqui
     }
 ]
 
-export const getPrivateKeyFromAnswers = (answers: inquirer.Answers): string => {
+export const getPrivateKey = (answers: inquirer.Answers): string => {
     return (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 }
 
@@ -187,7 +187,7 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
     return [selectPluginsPrompt, ...pluginPortPrompts]
 }
 
-export const getConfigFromAnswers = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
+export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
     config.ethereumPrivateKey = privateKey
 
@@ -234,7 +234,7 @@ export const selectDestinationPathPrompt = {
     }
 }
 
-const selectValidDestinationPath = async (): Promise<inquirer.Answers> => {
+const selectStoragePath = async (): Promise<inquirer.Answers> => {
     const answers = await inquirer.prompt([selectDestinationPathPrompt])
 
     if (answers.fileExists) {
@@ -248,7 +248,7 @@ const selectValidDestinationPath = async (): Promise<inquirer.Answers> => {
         ])
 
         if (!overwriteAnswers.confirmOverwrite) {
-            return selectValidDestinationPath()
+            return selectStoragePath()
         }
     }
 
@@ -265,7 +265,7 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     return answers.selectDestinationPath
 }
 
-export const generateMiscFromConfig = (config: any) => {
+export const getNodeIdentity = (config: any) => {
     const nodeAddress = new Wallet(config.ethereumPrivateKey).address
     const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
     const networkExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
@@ -278,17 +278,17 @@ export const generateMiscFromConfig = (config: any) => {
 export const startBrokerConfigWizard = async(): Promise<void> => {
     try {
         const privateKeyAnswers = await inquirer.prompt(privateKeyPrompts)
-        const privateKey = getPrivateKeyFromAnswers(privateKeyAnswers)
+        const privateKey = getPrivateKey(privateKeyAnswers)
         if (privateKeyAnswers.revealGeneratedPrivateKey) {
             logger.info(`This is your node\'s private key: ${privateKey}`)
         }
         const pluginPrompts = createPluginPrompts()
         const pluginsAnswers = await inquirer.prompt(pluginPrompts)
-        const config = getConfigFromAnswers(privateKey, pluginsAnswers)
-        const storageAnswers = await selectValidDestinationPath()
+        const config = getConfig(privateKey, pluginsAnswers)
+        const storageAnswers = await selectStoragePath()
         const destinationPath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
-        const {mnemonic, networkExplorerUrl} = generateMiscFromConfig(config)
+        const {mnemonic, networkExplorerUrl} = getNodeIdentity(config)
         logger.info(`Your node's generated name is ${mnemonic}.`)
         logger.info('View your node in the Network Explorer:')
         logger.info(networkExplorerUrl)
