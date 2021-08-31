@@ -275,7 +275,7 @@ export const getNodeIdentity = (config: any) => {
     }
 }
 
-export const startBrokerConfigWizard = async(): Promise<void> => {
+export const start = async(): Promise<void> => {
     try {
         const privateKeyAnswers = await inquirer.prompt(privateKeyPrompts)
         const privateKey = getPrivateKey(privateKeyAnswers)
