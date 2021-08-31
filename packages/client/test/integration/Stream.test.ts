@@ -27,8 +27,8 @@ describe('Stream', () => {
         await client.connect()
 
         stream = await createTestStream(client, module)
-        const node = await client.setNode(await client.getAddress())
-        await stream.addToStorageNode(await client.getAddress())
+        const node = await client.setNode(clientOptions.storageNode.url)
+        await stream.addToStorageNode(node.getAddress())
         await until(async () => { return client.isStreamStoredInStorageNode(stream.id, node.getAddress()) }, 100000, 1000)
     })
 

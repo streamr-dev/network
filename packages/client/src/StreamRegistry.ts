@@ -138,7 +138,11 @@ export class StreamRegistry implements Context {
     async updateStream(props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {
         log('updateStream %o', props)
         await this.connectToStreamRegistryContract()
-        return this._createOrUpdateStream(this.streamRegistryContract!.updateStreamMetadata, props)
+        return this._createOrUpdateStream(async (path: string, metadata: string) => {
+            const userAddress: string = (await this.ethereum.getAddress()).toLowerCase()
+            const id = userAddress + path
+            return this.streamRegistryContract!.updateStreamMetadata(id, metadata)
+        }, props)
     }
 
     async _createOrUpdateStream(contractFunction: Function, props?: Partial<StreamProperties> & { id: string }): Promise<Stream> {

@@ -48,7 +48,7 @@
     "test-types": "(cd test/exports && npm run link) && tsc --noEmit --incremental --project ./tsconfig.test.json",
     "coverage": "jest --coverage",
     "test-integration": "jest --verbose --useStderr --forceExit test/integration/",
-    "t": "jest --verbose --forceExit test/integration/BrubeckClient.test.ts",
+    "t": "jest --verbose --forceExit test/integration/StreamEndpoints.test.ts -t 'Storage node assignment'",
     "test-exports": "cd test/exports && npm run link && npm test",
     "test-integration-no-resend": "jest --verbose --useStderr --forceExit --testTimeout=15000 --testPathIgnorePatterns='resend|Resend' --testNamePattern='^((?!(resend|Resend|resent|Resent|gap|Gap)).)*$' test/integration/*.test.*",
     "test-integration-resend": "jest --verbose --useStderr --forceExit --testTimeout=20000 --testNamePattern='(resend|Resend|resent|Resent)' test/integration/*.test.*",

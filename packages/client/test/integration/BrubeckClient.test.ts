@@ -352,7 +352,7 @@ describeRepeats('StreamrClient', () => {
             expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
         })
         it('decodes resent messages correctly', async () => {
-            const node = await client.setNode(await client.getAddress())
+            const node = await client.setNode(clientOptions.storageNode.url)
             await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
             await until(async () => { return client.isStreamStoredInStorageNode(stream.id, node.getAddress()) }, 100000, 1000)
 

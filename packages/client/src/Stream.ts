@@ -207,8 +207,8 @@ class StreamrStream implements StreamMetadata {
     }
 
     async addToStorageNode(node: StorageNode | EthereumAddress) {
-        // @ts-ignore
-        await this._nodeRegistry.addStreamToStorageNode(this.id, node.address || node)
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
+        await this._nodeRegistry.addStreamToStorageNode(this.id, address)
     }
 
     async removeFromStorageNode(node: StorageNode | EthereumAddress) {

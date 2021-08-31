@@ -1,5 +1,5 @@
 import { Protocol, MetricsContext } from 'streamr-network'
-import StreamrClient from 'streamr-client'
+import StreamrClient, { StorageNode } from 'streamr-client'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
 import { Server as HttpServer } from 'http'
@@ -10,7 +10,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, NetworkSmartContract, StorageNodeRegistryItem, TrackerRegistryItem } from './config'
+import { Config, NetworkSmartContract, TrackerRegistryItem } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -38,17 +38,17 @@ const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
     }
 }
 
-const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[]> => {
-    if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
-        const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
-            contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
-            jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
-        })
-        return registry.getAllStorageNodes()
-    } else {
-        return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
-    }
-}
+// const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[]> => {
+//     if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
+//         const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
+//             contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
+//             jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
+//         })
+//         return registry.getAllStorageNodes()
+//     } else {
+//         return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
+//     }
+// }
 
 const getStunTurnUrls = (config: Config): string[] | undefined => {
     if (!config.network.stun && !config.network.turn) {
@@ -70,7 +70,7 @@ const createVolumeLogger = (
     config: Config,
     metricsContext: MetricsContext,
     brokerAddress: string,
-    storageNodes: StorageNodeRegistryItem[],
+    storageNodes: StorageNode[],
     client: StreamrClient,
 ): VolumeLogger | undefined => {
     // Set up reporting to Streamr stream
@@ -81,7 +81,7 @@ const createVolumeLogger = (
     }
 
     const targetStorageNode = config.reporting.perNodeMetrics!.storageNode
-    const storageNodeRegistryItem = storageNodes.find((n) => n.address === targetStorageNode)
+    const storageNodeRegistryItem = storageNodes.find((n) => n.getAddress() === targetStorageNode)
     if (storageNodeRegistryItem === undefined) {
         throw new Error(`Value ${storageNodeRegistryItem} (config.reporting.perNodeMetrics.storageNode) not ` +
             'present in config.storageNodeRegistry')
@@ -128,8 +128,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const trackers = await getTrackers(config)
 
-    const storageNodes = await getStorageNodes(config)
-
     // Start network node
     let sessionId
     if (config.generateSessionId && !config.plugins['storage']) { // Exception: storage node needs consistent id
@@ -154,6 +152,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             stunUrls: getStunTurnUrls(config)
         }
     })
+    const storageNodes = await streamrClient.getAllStorageNodes()
     const publisher = new Publisher(streamrClient, metricsContext)
     const networkNode = await streamrClient.getNode()
     const subscriptionManager = new SubscriptionManager(networkNode)
