@@ -16,13 +16,19 @@ export const DEFAULT_INSPECT_OPTS = {
 
 // override default formatters for node
 if (typeof window === 'undefined') {
-    // monkeypatch default log function to use current inspectOpts.  This
-    // ensures values without placeholders will have inspect options applied.
-    // e.g. debug('msg', obj) should use same inspectOpts as debug('msg %O', msg)
-    // without this only values with a placeholder e.g. '%o' will use inspectOpts
+    // monkeypatch default log function to use current `inspectOpts`.  This
+    // ensures values logged without placeholders e.g. %o, %O will have the
+    // same inspect options applied. Without this only values with a
+    // placeholder will use the `inspectOpts` config.
+    // e.g.
+    // `debug('msg', obj)` should use same `inspectOpts` as `debug('msg %O', msg)`
     Debug.log = function log(...args) {
-        // @ts-expect-error inspectOpts not in debug types
-        return process.stderr.write(util.formatWithOptions(this.inspectOpts || {}, ...args) + '\n')
+        // @ts-expect-error inspectOpts/useColors not in debug types
+        this.inspectOpts.colors = this.useColors // need this to get colours when no placeholder
+        return process.stderr.write(util.formatWithOptions({
+            // @ts-expect-error inspectOpts not in debug types
+            ...this.inspectOpts,
+        }, ...args) + '\n')
     }
 }
 
