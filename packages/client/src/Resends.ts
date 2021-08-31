@@ -7,7 +7,7 @@ import AbortController from 'node-abort-controller'
 import split2 from 'split2'
 import { Transform } from 'stream'
 
-import { instanceId } from './utils'
+import { instanceId, counterId } from './utils'
 import { Context, ContextError } from './utils/Context'
 import { inspect } from './utils/log'
 
@@ -175,6 +175,8 @@ export default class Resend implements Context {
     }
 
     private async fetchStream<T>(endpointSuffix: 'last' | 'range' | 'from', spid: SPID, query: QueryDict = {}) {
+        const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
+        debug('fetching resend %s %s %o', endpointSuffix, spid.key, query)
         const nodes = await this.getStreamNodes(spid)
         if (!nodes.length) {
             throw new ContextError(this, `no storage assigned: ${inspect(spid)}`)
@@ -184,12 +186,18 @@ export default class Resend implements Context {
         // TODO: handle multiple nodes
         const url = createUrl(`${nodes[0].url}/api/v1`, endpointSuffix, spid, query)
         const messageStream = SubscribePipeline<T>(spid, {}, this.container.resolve<Context>(Context as any), this.container)
+
+        let count = 0
+        messageStream.forEach(() => {
+            count += 1
+        })
+
         messageStream.pull((async function* readStream(this: Resend) {
             const dataStream = await fetchStream(url, this.session)
             try {
                 yield* dataStream
             } finally {
-                this.debug('destroy')
+                debug('resent %s messages.', count)
                 dataStream.destroy()
             }
         }.bind(this)()))
