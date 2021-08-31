@@ -275,7 +275,7 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
         const pluginPrompts = createPluginPrompts()
         const pluginsAnswers = await inquirer.prompt(pluginPrompts)
         const config = getConfigFromAnswers(privateKey, pluginsAnswers)
-        const nodeAddress = new Wallet(config.privateKey).address
+        const nodeAddress = new Wallet(privateKey).address
         const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
         const storageAnswers = await selectValidDestinationPath()
         const destinationPath = await createStorageFile(config, storageAnswers)
