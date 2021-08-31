@@ -132,6 +132,11 @@ const privateKeyPrompts: Array<inquirer.Question | inquirer.ListQuestion | inqui
     }
 ]
 
+export const getEthereumPrivateKeyFromAnswers = (answers: inquirer.Answers): string => {
+    const ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
+    return ethereumPrivateKey
+}
+
 const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {
     websocket: DEFAULT_WS_PORT,
     mqtt: DEFAULT_MQTT_PORT,
@@ -144,14 +149,13 @@ const PLUGIN_NAMES: {[pluginName: string]: string} = {
     PUBLISH_HTTP: 'publishHttp'
 }
 
-const pluginSelectorPrompt = {
+const pluginPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [{
     type: 'checkbox',
     name:'selectPlugins',
     message: 'Select the plugins to enable',
     choices: Object.values(PLUGIN_NAMES)
-}
+}]
 
-const pluginPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = []
 Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
     const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
     pluginPrompts.push({
@@ -181,22 +185,16 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
     })
 })
 
-// prompts = prompts.concat(pluginSelectorPrompt).concat(pluginPrompts).concat(revealGeneratedPrivateKeyPrompt)
-export const getEthereumConfigFromAnswers = (answers: inquirer.Answers, config: any) => {
-    config.ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
-    if (answers.revealGeneratedPrivateKey) {
-        logger.info(`This is your node\'s private key: ${config.ethereumPrivateKey}`)
-    }
-    return config
-}
+export const getConfigFromAnswers = (ethereumPrivateKey: string, pluginsAnswers: inquirer.Answers): any => {
+    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
+    config.ethereumPrivateKey = ethereumPrivateKey
 
-export const getPluginsConfigFromAnswers = (answers: inquirer.Answers, config: any): any => {
     const pluginNames = Object.values(PLUGIN_NAMES)
     pluginNames.forEach((pluginName) => {
         const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
-        if (answers.selectPlugins && answers.selectPlugins.includes(pluginName)){
+        if (pluginsAnswers.selectPlugins && pluginsAnswers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
-            const portNumber = parseInt(answers[`${pluginName}Port`])
+            const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
             if (portNumber !== defaultPluginPort){
                 const portObject = { port: portNumber }
                 if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
@@ -210,6 +208,7 @@ export const getPluginsConfigFromAnswers = (answers: inquirer.Answers, config: a
             config.plugins![pluginName] = pluginConfig
         }
     })
+
     return config
 }
 
@@ -266,21 +265,22 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
 
 export const startBrokerConfigWizard = async(): Promise<void> => {
     try {
-        let config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
-        const ethereumAnswers = await inquirer.prompt(privateKeyPrompts)
-        config = getEthereumConfigFromAnswers(ethereumAnswers, config)
-        const pluginAnswers = await inquirer.prompt([pluginSelectorPrompt, ...pluginPrompts])
-        config = getPluginsConfigFromAnswers(pluginAnswers, config)
+        const privateKeyAnswers = await inquirer.prompt(privateKeyPrompts)
+        const ethereumPrivateKey = getEthereumPrivateKeyFromAnswers(privateKeyAnswers)
+        if (privateKeyAnswers.revealGeneratedPrivateKey) {
+            logger.info(`This is your node\'s private key: ${ethereumPrivateKey}`)
+        }
+
+        const pluginsAnswers = await inquirer.prompt(pluginPrompts)
+        const config = getConfigFromAnswers(ethereumPrivateKey, pluginsAnswers)
         const nodeAddress = new Wallet(config.ethereumPrivateKey).address
         const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
+        const storageAnswers = await selectValidDestinationPath()
+        const destinationPath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
         logger.info(`Your node's generated name is ${mnemonic}.`)
         logger.info('View your node in the Network Explorer:')
         logger.info(`https://streamr.network/network-explorer/nodes/${nodeAddress}`)
-        const storageAnswers = await selectValidDestinationPath()
-        const destinationPath = await createStorageFile(config, storageAnswers)
-        logger.info('Broker Config Wizard ran succesfully')
-        logger.info(`Stored config under ${destinationPath}`)
         logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${destinationPath}`)
     } catch (e) {
