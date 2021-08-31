@@ -97,7 +97,7 @@ export const CONFIG_TEMPLATE: any = {
 const privateKeyPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
     {
         type: 'list',
-        name:'generateOrImportEthereumPrivateKey',
+        name:'generateOrImportPrivateKey',
         message: 'Do you want to generate a new Ethereum private key or import an existing one?',
         choices: [PRIVATE_KEY_SOURCE_GENERATE, PRIVATE_KEY_SOURCE_IMPORT]
     },
@@ -106,7 +106,7 @@ const privateKeyPrompts: Array<inquirer.Question | inquirer.ListQuestion | inqui
         name:'importPrivateKey',
         message: 'Please provide the private key to import',
         when: (answers: inquirer.Answers) => {
-            return answers.generateOrImportEthereumPrivateKey === PRIVATE_KEY_SOURCE_IMPORT
+            return answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT
         },
         validate: (input: string): string | boolean => {
             try {
@@ -127,14 +127,13 @@ const privateKeyPrompts: Array<inquirer.Question | inquirer.ListQuestion | inqui
         message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
         default: false,
         when: (answers: inquirer.Answers) => {
-            return answers.generateOrImportEthereumPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
+            return answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
         }
     }
 ]
 
-export const getEthereumPrivateKeyFromAnswers = (answers: inquirer.Answers): string => {
-    const ethereumPrivateKey = (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
-    return ethereumPrivateKey
+export const getPrivateKeyFromAnswers = (answers: inquirer.Answers): string => {
+    return (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 }
 
 const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {
@@ -185,9 +184,9 @@ Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
     })
 })
 
-export const getConfigFromAnswers = (ethereumPrivateKey: string, pluginsAnswers: inquirer.Answers): any => {
+export const getConfigFromAnswers = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
-    config.ethereumPrivateKey = ethereumPrivateKey
+    config.ethereumPrivateKey = privateKey
 
     const pluginNames = Object.values(PLUGIN_NAMES)
     pluginNames.forEach((pluginName) => {
@@ -266,14 +265,13 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
 export const startBrokerConfigWizard = async(): Promise<void> => {
     try {
         const privateKeyAnswers = await inquirer.prompt(privateKeyPrompts)
-        const ethereumPrivateKey = getEthereumPrivateKeyFromAnswers(privateKeyAnswers)
+        const privateKey = getPrivateKeyFromAnswers(privateKeyAnswers)
         if (privateKeyAnswers.revealGeneratedPrivateKey) {
-            logger.info(`This is your node\'s private key: ${ethereumPrivateKey}`)
+            logger.info(`This is your node\'s private key: ${privateKey}`)
         }
-
         const pluginsAnswers = await inquirer.prompt(pluginPrompts)
-        const config = getConfigFromAnswers(ethereumPrivateKey, pluginsAnswers)
-        const nodeAddress = new Wallet(config.ethereumPrivateKey).address
+        const config = getConfigFromAnswers(privateKey, pluginsAnswers)
+        const nodeAddress = new Wallet(config.privateKey).address
         const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
         const storageAnswers = await selectValidDestinationPath()
         const destinationPath = await createStorageFile(config, storageAnswers)
@@ -290,6 +288,6 @@ export const startBrokerConfigWizard = async(): Promise<void> => {
 }
 
 export const CONFIG_WIZARD_PROMPTS = {
-    ethereum: privateKeyPrompts,
+    privateKey: privateKeyPrompts,
     plugins: pluginPrompts,
 }
