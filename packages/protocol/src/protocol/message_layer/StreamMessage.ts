@@ -247,7 +247,7 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
             if (this.contentType === StreamMessage.CONTENT_TYPES.JSON) {
                 try {
                     this.parsedContent = JSON.parse(this.serializedContent!)
-                } catch (err) {
+                } catch (err: any) {
                     throw new InvalidJsonError(
                         this.getStreamId(),
                         this.serializedContent!,

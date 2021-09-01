@@ -202,9 +202,9 @@ export class SPID implements SPIDKeyShape {
         try {
             // constructor can handle partial input but we want external interface to check for it.
             return new SPID(streamId!, streamPartition!)
-        } catch (err) {
+        } catch (err: any) {
             // TODO: add more conversions?
-            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err.message} %o`, spidLike)
+            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err && err.message} %o`, spidLike)
         }
     }
 

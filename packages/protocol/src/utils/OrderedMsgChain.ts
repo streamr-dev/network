@@ -366,7 +366,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             }
 
             this.inOrderHandler(msg)
-        } catch (err) {
+        } catch (err: any) {
             this.emit('error', err)
         }
         return msg
@@ -419,7 +419,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             this.gapRequestCount += 1
             try {
                 await this.gapHandler(from, to, this.publisherId, this.msgChainId)
-            } catch (err) {
+            } catch (err: any) {
                 this.emit('error', err)
             }
         } else {
