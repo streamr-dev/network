@@ -1,8 +1,5 @@
-import { Wallet } from '@ethersproject/wallet'
 import debug from 'debug'
-import { EthereumAddress } from '../../src'
-import { Stream } from '../../src/stream'
-import { StorageNode } from '../../src/stream/StorageNode'
+import { EthereumAddress, NotFoundError, StorageNode, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
 import { createTestStream } from '../utils'
@@ -54,13 +51,13 @@ describe('createNode', () => {
         createdNode = await client.setNode(nodeUrl)
         await until(async () => {
             try {
-                return (await client.getNode(nodeAddress)) !== null
+                return (await client.getStorageNode(nodeAddress)) !== null
             } catch (err) {
                 log('node not found yet %o', err)
                 return false
             }
         }, 100000, 1000)
-        expect(createdNode.address).toEqual(nodeAddress)
+        expect(createdNode.getAddress()).toEqual(nodeAddress)
         return expect(createdNode.url).toEqual(nodeUrl)
     })
 
@@ -80,7 +77,7 @@ describe('createNode', () => {
     it('getStorageNodesOf', async () => {
         const storageNodes: StorageNode[] = await client.getStorageNodesOf(createdStream.id)
         expect(storageNodes.length).toEqual(1)
-        return expect(storageNodes[0].address).toEqual(nodeAddress.toLowerCase())
+        return expect(storageNodes[0].getAddress()).toEqual(nodeAddress.toLowerCase())
     })
 
     it('getStoredStreamsOf', async () => {
@@ -92,7 +89,7 @@ describe('createNode', () => {
     it('getAllStorageNodes', async () => {
         const storageNodes: StorageNode[] = await client.getAllStorageNodes()
         expect(storageNodes.length).toEqual(1)
-        return expect(storageNodes[0].address).toEqual(nodeAddress.toLowerCase())
+        return expect(storageNodes[0].getAddress()).toEqual(nodeAddress.toLowerCase())
     })
 
     it('removeStreamFromStorageNode', async () => {
@@ -125,14 +122,15 @@ describe('createNode', () => {
         await client.removeNode()
         await until(async () => {
             try {
-                const res = await client.getNode(nodeAddress)
+                const res = await client.getStorageNode(nodeAddress)
                 return res === null
             } catch (err) {
+                if (err instanceof NotFoundError) { return true }
                 log('node still there after being deleted %o', err)
                 return false
             }
         }, 100000, 1000)
-        return expect(await client.getNode(nodeAddress)).toEqual(null)
+        return expect(client.getStorageNode(nodeAddress)).rejects.toThrow()
     })
 })
 
