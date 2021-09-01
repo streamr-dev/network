@@ -247,7 +247,7 @@ describe('StreamMessage', () => {
             })
 
             it('should throw on unsupported version', () => {
-                assert.throws(() => m.serialize(999), (err) => {
+                assert.throws(() => m.serialize(999), (err: UnsupportedVersionError) => {
                     assert(err instanceof UnsupportedVersionError)
                     assert.strictEqual(err.version, 999)
                     return true
@@ -266,7 +266,7 @@ describe('StreamMessage', () => {
 
             it('should throw on unsupported version', () => {
                 const arr = [999]
-                assert.throws(() => StreamMessage.deserialize(JSON.stringify(arr)), (err) => {
+                assert.throws(() => StreamMessage.deserialize(JSON.stringify(arr)), (err: UnsupportedVersionError) => {
                     assert(err instanceof UnsupportedVersionError)
                     assert.strictEqual(err.version, 999)
                     return true

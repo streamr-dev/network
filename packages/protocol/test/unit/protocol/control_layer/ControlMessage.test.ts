@@ -94,7 +94,7 @@ describe('ControlMessage', () => {
 
         it('should throw on unsupported version', () => {
             const m = new TestControlMessage(999, TYPE, REQUEST_ID)
-            assert.throws(() => m.serialize(), (err) => {
+            assert.throws(() => m.serialize(), (err: UnsupportedVersionError) => {
                 assert(err instanceof UnsupportedVersionError)
                 assert.strictEqual(err.version, 999)
                 return true
@@ -103,7 +103,7 @@ describe('ControlMessage', () => {
 
         it('should throw on unsupported type', () => {
             const m = new TestControlMessage(VERSION, 999, REQUEST_ID)
-            assert.throws(() => m.serialize(), (err) => {
+            assert.throws(() => m.serialize(), (err: UnsupportedTypeError) => {
                 assert(err instanceof UnsupportedTypeError)
                 assert.strictEqual(err.type, 999)
                 return true
@@ -122,7 +122,7 @@ describe('ControlMessage', () => {
 
         it('should throw on unsupported version', () => {
             const arr = [999, TYPE]
-            assert.throws(() => ControlMessage.deserialize(JSON.stringify(arr)), (err) => {
+            assert.throws(() => ControlMessage.deserialize(JSON.stringify(arr)), (err: UnsupportedVersionError) => {
                 assert(err instanceof UnsupportedVersionError)
                 assert.strictEqual(err.version, 999)
                 return true
@@ -131,7 +131,7 @@ describe('ControlMessage', () => {
 
         it('should throw on unsupported type', () => {
             const arr = [VERSION, 999]
-            assert.throws(() => ControlMessage.deserialize(JSON.stringify(arr)), (err) => {
+            assert.throws(() => ControlMessage.deserialize(JSON.stringify(arr)), (err: UnsupportedTypeError) => {
                 assert(err instanceof UnsupportedTypeError)
                 assert.strictEqual(err.type, 999)
                 return true
