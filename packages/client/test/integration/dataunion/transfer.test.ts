@@ -8,7 +8,7 @@ import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress, relayTokensA
 import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { EthereumAddress } from '../../../src/types'
-import authFetch from '../../../src/rest/authFetch'
+import authFetch from '../../../src/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-transfer')
 

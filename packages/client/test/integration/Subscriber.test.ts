@@ -55,9 +55,7 @@ describeRepeats('Subscriber', () => {
             client.getSessionToken(),
         ])
         stream = await createTestStream(client, module)
-        await client.destroy()
         await client.connect()
-        // await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream)
     })

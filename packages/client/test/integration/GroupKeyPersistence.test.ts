@@ -4,6 +4,7 @@ import { describeRepeats, fakePrivateKey, getPublishTestMessages, addAfterFn, cr
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
+import { StorageNode } from '../../src/StorageNode'
 
 import clientOptions from './config'
 
@@ -64,7 +65,7 @@ describeRepeats('Group Key Persistence', () => {
                 ...streamOpts,
             })
 
-            await stream.addToStorageNode(clientOptions.storageNode.address)
+            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
             publishTestMessages = getPublishTestMessages(client, stream, {
                 waitForLast: true,
@@ -258,7 +259,7 @@ describeRepeats('Group Key Persistence', () => {
                 ...streamOpts,
             })
 
-            await stream.addToStorageNode(clientOptions.storageNode.address)
+            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
             return stream
         }
 

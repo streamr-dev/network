@@ -277,7 +277,9 @@ export async function* publishManyGenerator(
             sequenceNumber: typeof sequenceNumber === 'function' ? sequenceNumber() : sequenceNumber,
             content: createMessage({
                 batchId,
-                value: `${i + 1} of ${total}`
+                value: `${i + 1} of ${total}`,
+                index: i,
+                total,
             })
         }
 
