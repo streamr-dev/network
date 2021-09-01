@@ -13,7 +13,7 @@ export interface PluginOptions {
     networkNode: NetworkNode
     subscriptionManager: SubscriptionManager
     publisher: Publisher
-    streamrClient?: StreamrClient
+    streamrClient: StreamrClient
     apiAuthenticator: ApiAuthenticator
     metricsContext: MetricsContext
     brokerConfig: Config
@@ -26,7 +26,7 @@ export abstract class Plugin<T> {
     readonly networkNode: NetworkNode
     readonly subscriptionManager: SubscriptionManager
     readonly publisher: Publisher
-    readonly streamrClient?: StreamrClient
+    readonly streamrClient: StreamrClient
     readonly apiAuthenticator: ApiAuthenticator
     readonly metricsContext: MetricsContext
     readonly brokerConfig: Config

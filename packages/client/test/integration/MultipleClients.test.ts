@@ -1,18 +1,16 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { getPublishTestMessages, getWaitForStorage, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream } from '../utils'
+import { getPublishTestMessages, getWaitForStorage, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream, until } from '../utils'
 import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
 import { counterId } from '../../src/utils'
 import { StorageNode } from '../../src/StorageNode'
 import { Stream, StreamOperation } from '../../src/Stream'
 
+jest.setTimeout(30000)
 import clientOptions from './config'
 
 const createClient = (opts: any = {}) => new StreamrClient({
     ...clientOptions,
-    auth: {
-        privateKey: fakePrivateKey()
-    },
     autoConnect: false,
     autoDisconnect: false,
     // disconnectDelay: 1,
@@ -35,9 +33,9 @@ describeRepeats('PubSub with multiple clients', () => {
         errs.push(err)
     })
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         errors = []
-        privateKey = fakePrivateKey()
+        privateKey = clientOptions.auth.privateKey
 
         mainClient = createClient({
             id: 'main',
@@ -47,10 +45,12 @@ describeRepeats('PubSub with multiple clients', () => {
         })
         // mainClient.on('error', getOnError(errors))
         stream = await createTestStream(mainClient, module)
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+        const storageNode = await mainClient.setNode(clientOptions.storageNode.url)
+        await stream.addToStorageNode(storageNode.getAddress())
+        await until(async () => { return mainClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
     })
 
-    afterEach(async () => {
+    afterAll(async () => {
         if (mainClient) {
             mainClient.debug('disconnecting after test')
             await mainClient.destroy()
@@ -67,8 +67,8 @@ describeRepeats('PubSub with multiple clients', () => {
     async function createPublisher(opts = {}) {
         const pubClient = createClient({
             // auth: {
-//                 privateKey: fakePrivateKey(),
-//            },
+            //                 privateKey: fakePrivateKey(),
+            //            },
             ...opts,
         })
         const publisherId = (await pubClient.getAddress()).toLowerCase()
@@ -79,12 +79,10 @@ describeRepeats('PubSub with multiple clients', () => {
         })
 
         // pubClient.on('error', getOnError(errors))
-        const pubUser = await pubClient.getUserInfo()
-        await stream.grantPermission(StreamOperation.STREAM_GET, pubUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_PUBLISH, pubUser.username)
+        const pubUser = await pubClient.getAddress()
+        await stream.grantPermission(StreamOperation.STREAM_PUBLISH, pubUser)
         // needed to check last
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, pubUser.username)
-        await pubClient.session.getSessionToken()
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, pubUser)
         await pubClient.connect()
 
         return pubClient
@@ -104,11 +102,9 @@ describeRepeats('PubSub with multiple clients', () => {
         ))
 
         // client.on('error', getOnError(errors))
-        await client.session.getSessionToken()
-        const user = await client.getUserInfo()
+        const user = await client.getAddress()
 
-        await stream.grantPermission(StreamOperation.STREAM_GET, user.username)
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user.username)
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user)
         await client.connect()
         return client
     }
@@ -325,7 +321,6 @@ describeRepeats('PubSub with multiple clients', () => {
         test('works with multiple publishers on a single stream', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
-            await mainClient.session.getSessionToken()
             await mainClient.connect()
 
             otherClient = await createSubscriber()
@@ -401,7 +396,6 @@ describeRepeats('PubSub with multiple clients', () => {
             // all subscribing and publishing to same stream
             // the otherClient subscribes after the 3rd message hits storage
             otherClient = await createSubscriber()
-            await mainClient.session.getSessionToken()
             await mainClient.connect()
 
             const receivedMessagesOther: Record<string, any[]> = {}
@@ -499,7 +493,6 @@ describeRepeats('PubSub with multiple clients', () => {
     })
 
     test.only('works with multiple publishers on one stream', async () => {
-        await mainClient.session.getSessionToken()
         await mainClient.connect()
 
         otherClient = createClient({
@@ -508,10 +501,8 @@ describeRepeats('PubSub with multiple clients', () => {
             }
         })
         // otherClient.on('error', getOnError(errors))
-        await otherClient.session.getSessionToken()
-        const otherUser = await otherClient.getUserInfo()
-        await stream.grantPermission(StreamOperation.STREAM_GET, otherUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser.username)
+        const otherUser = await otherClient.getAddress()
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser)
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
@@ -576,7 +567,6 @@ describeRepeats('PubSub with multiple clients', () => {
 
     test('works with multiple publishers on one stream with late subscriber', async () => {
         const published: Record<string, any[]> = {}
-        await mainClient.session.getSessionToken()
         await mainClient.connect()
 
         otherClient = createClient({
@@ -584,12 +574,10 @@ describeRepeats('PubSub with multiple clients', () => {
                 privateKey
             }
         })
-        otherClient.on('error', getOnError(errors))
-        await otherClient.session.getSessionToken()
-        const otherUser = await otherClient.getUserInfo()
+        // otherClient.on('error', getOnError(errors))
+        const otherUser = await otherClient.getAddress()
 
-        await stream.grantPermission(StreamOperation.STREAM_GET, otherUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser.username)
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser)
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}

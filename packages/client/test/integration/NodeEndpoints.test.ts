@@ -134,6 +134,7 @@ describe('createNode', () => {
     })
 })
 
+// these tests are the same as in StremEndpoints
 // describe('Storage node assignment', () => {
 //     it('add', async () => {
 //         const storageNode = StorageNode.STREAMR_DOCKER_DEV

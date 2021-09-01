@@ -77,8 +77,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     private async createStorageConfig() {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
-        const apiUrl = this.brokerConfig.streamrUrl + '/api/v1'
-        const storageConfig = await StorageConfig.createInstance(brokerAddress, apiUrl, this.pluginConfig.storageConfig.refreshInterval)
+        const storageConfig = await StorageConfig.createInstance(brokerAddress, this.streamrClient, this.pluginConfig.storageConfig.refreshInterval)
         this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.subscriptionManager)
         return storageConfig
     }

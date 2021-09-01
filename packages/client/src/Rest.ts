@@ -37,7 +37,7 @@ export class Rest implements Context {
     }
 
     static getUrl(baseUrl:string, urlParts: UrlParts, query = {}) {
-        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl + '/')
+        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl + '/api/v1/')
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
         return url

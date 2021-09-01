@@ -12,6 +12,9 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/packages/broker/bin/broker.js",
+            "env": { "DEBUG": "*" },
+            "console": "internalConsole", 
+            "outputCapture": "std",
             "args": ["packages/broker/configs/development-1.env.json"],
             "outFiles": [
                 "${workspaceFolder}/**/*.js"

@@ -3,6 +3,7 @@ import { Logger } from 'streamr-network'
 import { StreamPart } from '../../types'
 import { StreamMessage } from 'streamr-network/dist/src/streamr-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
+import StreamrClient from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -52,21 +53,21 @@ export class StorageConfig {
     streamKeys: Set<StreamKey>
     listeners: StorageConfigListener[]
     nodeId: string
-    apiUrl: string
     private _poller!: ReturnType<typeof setTimeout>
     private _stopPoller: boolean
+    streamrClient: StreamrClient
 
     // use createInstance method instead: it fetches the up-to-date config from API
-    constructor(nodeId: string, apiUrl: string) {
+    constructor(nodeId: string, streamrClient: StreamrClient) {
         this.streamKeys = new Set<StreamKey>()
         this.listeners = []
         this.nodeId = nodeId
-        this.apiUrl = apiUrl
         this._stopPoller = false
+        this.streamrClient = streamrClient
     }
 
-    static async createInstance(nodeId: string, apiUrl: string, pollInterval: number): Promise<StorageConfig> {
-        const instance = new StorageConfig(nodeId, apiUrl)
+    static async createInstance(nodeId: string, streamrClient: StreamrClient, pollInterval: number): Promise<StorageConfig> {
+        const instance = new StorageConfig(nodeId, streamrClient)
         // eslint-disable-next-line no-underscore-dangle
         if (pollInterval !== 0) {
             await instance._poll(pollInterval)
@@ -104,9 +105,12 @@ export class StorageConfig {
     }
 
     async refresh(): Promise<void> {
-        const res = await fetch(`${this.apiUrl}/storageNodes/${this.nodeId}/streams`)
-        const json = await res.json()
-        const streamKeys = new Set<StreamKey>(json.flatMap((stream: { id: string, partitions: number }) => ([
+        // const res = await fetch(`${this.apiUrl}/storageNodes/${this.nodeId}/streams`)
+        // const json = await res.json()
+        // const node = this.streamrClient.getStorageNode(this.nodeId)
+        const streamsToStore = await this.streamrClient.getStoredStreamsOf(this.nodeId)
+        const streamKeys = new Set<StreamKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
+
             ...getKeysFromStream(stream.id, stream.partitions)
         ])))
         this._setStreams(streamKeys)
