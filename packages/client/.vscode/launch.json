@@ -20,13 +20,13 @@
               "--no-cache",
               "--detectOpenHandles",
               // "test/integration/Stream.test.ts",
-              "test/integration/StreamEndpoints.test.ts",
+              // "test/integration/StreamEndpoints.test.ts",
               // "test/integration/NodeEndpoints.test.ts",
               // "test/integration/Encryption.test.ts",
               // "test/integration/MultipleClients.test.js",
-              // "test/integration/BrubeckClient.test.ts",
+              "test/integration/BrubeckClient.test.ts",
               "-t",
-              "getStreamLast"
+              "decodes resent messages correctly"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",

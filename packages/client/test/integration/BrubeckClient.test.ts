@@ -370,7 +370,7 @@ describeRepeats('StreamrClient', () => {
             })
             const messages = await sub.collect()
             expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
-        }, 30000)
+        }, 60000)
     })
 })
 

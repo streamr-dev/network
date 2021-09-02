@@ -492,7 +492,7 @@ describeRepeats('PubSub with multiple clients', () => {
         }, 60000)
     })
 
-    test.only('works with multiple publishers on one stream', async () => {
+    test('works with multiple publishers on one stream', async () => {
         await mainClient.connect()
 
         otherClient = createClient({

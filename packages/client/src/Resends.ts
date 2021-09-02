@@ -162,13 +162,14 @@ export default class Resend implements Context {
         // this method should probably live somewhere else
         // like in the node registry or stream class
         const stream = await this.streamRegistry.getStream(sid.streamId)
-        const storageNodes: StorageNode[] = await stream.getStorageNodes()
+        // const storageNodes: StorageNode[] = await stream.getStorageNodes()
+        return stream.getStorageNodes()
 
-        const storageNodeAddresses = new Set(storageNodes.map((n) => n.getAddress()))
+        // const storageNodeAddresses = new Set(storageNodes.map((n) => n.getAddress()))
 
-        const nodes = await this.nodeRegistry.getAllStorageNodes()
+        // const nodes = await this.nodeRegistry.getAllStorageNodes()
 
-        return nodes.filter((node: any) => storageNodeAddresses.has(node.address))
+        // return nodes.filter((node: any) => storageNodeAddresses.has(node._address))
     }
 
     private async fetchStream<T>(endpointSuffix: 'last' | 'range' | 'from', spid: SPID, query: QueryDict = {}) {
