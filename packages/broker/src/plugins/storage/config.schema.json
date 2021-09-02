@@ -63,7 +63,7 @@
             "required": [
                 "clusterAddress",
                 "clusterSize",
-                "indexOfThisNode"
+                "myIndexInCluster"
             ],
             "additionalProperties": false,
             "properties": {
@@ -80,7 +80,7 @@
             "default": {
                 "clusterAddress": null,
                 "clusterSize": 1,
-                "indexOfThisNode": 0
+                "myIndexInCluster": 0
             }
         }
     }

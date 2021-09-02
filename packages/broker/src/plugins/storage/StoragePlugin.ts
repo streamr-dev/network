@@ -24,7 +24,7 @@ export interface StoragePluginConfig {
     cluster: {
         clusterAddress: string,
         clusterSize: number,
-        indexOfThisNode: number
+        myIndexInCluster: number
     }
 }
 
@@ -86,7 +86,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         const storageConfig = await StorageConfig.createInstance(
             this.pluginConfig.cluster.clusterAddress || brokerAddress, 
             this.pluginConfig.cluster.clusterSize || 1,
-            this.pluginConfig.cluster.indexOfThisNode || 0,
+            this.pluginConfig.cluster.myIndexInCluster || 0,
             apiUrl, 
             this.pluginConfig.storageConfig.refreshInterval)
         this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.subscriptionManager)

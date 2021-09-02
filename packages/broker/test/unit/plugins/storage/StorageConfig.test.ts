@@ -58,7 +58,7 @@ describe('StorageConfig', () => {
         })
 
         it('refresh', async () => {
-            const scope = nock('http://api-url.com')
+            nock('http://api-url.com')
                 .get('/path/storageNodes/nodeId/streams')
                 .reply(200, [
                     {
@@ -104,7 +104,7 @@ describe('StorageConfig', () => {
 
         it('refresh', async () => {
             // One http call per config
-            const scope = configs.map(() => nock('http://api-url.com')
+            configs.map(() => nock('http://api-url.com')
                 .get('/path/storageNodes/nodeId/streams')
                 .reply(200, [
                     {
