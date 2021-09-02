@@ -2,23 +2,23 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { PROMPTS, DEFAULT_CONFIG_PORTS, selectDestinationPathPrompt, createStorageFile, getConfig, getPrivateKey, getNodeIdentity } from '../../src/ConfigWizard'
+import { PROMPTS, DEFAULT_CONFIG_PORTS, selectStoragePathPrompt, createStorageFile, getConfig, getPrivateKey, getNodeIdentity } from '../../src/ConfigWizard'
 
 const assertValidPort = (port: number | string, pluginName = 'websocket') => {
     const numericPort = (typeof port === 'string') ? parseInt(port) : port
     const privateKeyAnswers = {
-        generateOrImportEthereumPrivateKey: 'Generate',
+        generateOrImportPrivateKey: 'Generate',
     }
     const pluginsAnswers = {
         selectPlugins:[pluginName],
         websocketPort: port,
     }
-    const ethereumPrivateKey = getPrivateKey(privateKeyAnswers)
-    const config = getConfig(ethereumPrivateKey, pluginsAnswers)
+    const privateKey = getPrivateKey(privateKeyAnswers)
+    const config = getConfig(privateKey, pluginsAnswers)
     expect(config.plugins[pluginName].port).toBe(numericPort)
 }
 
-const assertValidMisc = (config: any) => {
+const assertValidIdentity = (config: any) => {
     const misc = getNodeIdentity(config)
     expect(misc.mnemonic).toBeDefined()
     expect(misc.networkExplorerUrl).toBeDefined()
@@ -86,13 +86,13 @@ describe('ConfigWizard', () => {
         })
 
         it ('happy path', () => {
-            const validate = selectDestinationPathPrompt.validate!
+            const validate = selectStoragePathPrompt.validate!
             const validPath = tmpDataDir + '/test-config.json'
             expect(validate(validPath)).toBe(true)
         })
 
         it ('happy path with overwrite destination', () => {
-            const validate = selectDestinationPathPrompt.validate!
+            const validate = selectStoragePathPrompt.validate!
             const validPath = tmpDataDir + '/test-config.json'
             writeFileSync(validPath, JSON.stringify({}))
             const answers: any = {}
@@ -103,7 +103,7 @@ describe('ConfigWizard', () => {
         })
 
         it ('invalid path provided', () => {
-            const validate = selectDestinationPathPrompt.validate!
+            const validate = selectStoragePathPrompt.validate!
             const invalidPath = `/invalid-path/${Date.now()}`
             const answers: any = {}
             const isValid = validate(invalidPath, answers)
@@ -124,14 +124,15 @@ describe('ConfigWizard', () => {
 
         it ('happy path; create parent dir when doesn\'t exist', async () => {
             const parentDirPath = tmpDataDir + '/newdir/'
-            const selectDestinationPath = parentDirPath + 'test-config.json'
+            const selectStoragePath = parentDirPath + 'test-config.json'
             const configFileLocation: string = await createStorageFile(CONFIG, {
-                selectDestinationPath,
+                selectStoragePath,
                 parentDirPath,
                 fileExists: false,
                 parentDirExists: false,
             })
-            expect(configFileLocation).toBe(selectDestinationPath)
+            console.log(configFileLocation)
+            expect(configFileLocation).toBe(selectStoragePath)
             expect(existsSync(configFileLocation)).toBe(true)
         })
 
@@ -145,9 +146,9 @@ describe('ConfigWizard', () => {
 
         it ('should throw when no permissions on path', async () => {
             const parentDirPath = '/home/'
-            const selectDestinationPath = parentDirPath + 'test-config.json'
+            const selectStoragePath = parentDirPath + 'test-config.json'
             await expect(createStorageFile(CONFIG, {
-                selectDestinationPath,
+                selectStoragePath,
                 parentDirPath,
                 fileExists: false,
                 parentDirExists: true,
@@ -159,22 +160,22 @@ describe('ConfigWizard', () => {
     describe('getEthereumConfig', () => {
         it ('should exercise the `generate` path', () => {
             const answers = {
-                generateOrImportEthereumPrivateKey: 'Generate',
+                generateOrImportPrivateKey: 'Generate',
             }
 
-            const ethereumPrivateKey = getPrivateKey(answers)
-            expect(ethereumPrivateKey).toBeDefined()
-            expect(ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
+            const privateKey = getPrivateKey(answers)
+            expect(privateKey).toBeDefined()
+            expect(privateKey).toMatch(/^0x[0-9a-f]{64}$/)
         })
 
         it ('should exercise the `import` path', () => {
-            const privateKey = Wallet.createRandom().privateKey
+            const importPrivateKey = Wallet.createRandom().privateKey
             const answers = {
-                generateOrImportEthereumPrivateKey: 'Import',
-                importPrivateKey: privateKey,
+                generateOrImportPrivateKey: 'Import',
+                importPrivateKey
             }
-            const ethereumPrivateKey = getPrivateKey(answers)
-            expect(ethereumPrivateKey).toBe(privateKey)
+            const privateKey = getPrivateKey(answers)
+            expect(privateKey).toBe(privateKey)
         })
 
         it ('should exercise the plugin port assignation path with a number', () => {
@@ -189,17 +190,17 @@ describe('ConfigWizard', () => {
     describe('end-to-end', () => {
         it ('should exercise the happy path with default answers', () => {
             const privateKeyAnswers = {
-                generateOrImportEthereumPrivateKey: 'Generate',
+                generateOrImportPrivateKey: 'Generate',
                 revealGeneratedPrivateKey: false
             }
             const pluginsAnswers = {
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: DEFAULT_CONFIG_PORTS.DEFAULT_WS_PORT,
-                mqttPort: DEFAULT_CONFIG_PORTS.DEFAULT_MQTT_PORT,
-                publishHttpPort: DEFAULT_CONFIG_PORTS.DEFAULT_HTTP_PORT,
+                websocketPort: DEFAULT_CONFIG_PORTS.WS,
+                mqttPort: DEFAULT_CONFIG_PORTS.MQTT,
+                publishHttpPort: DEFAULT_CONFIG_PORTS.HTTP,
             }
-            const ethereumPrivateKey = getPrivateKey(privateKeyAnswers)
-            const config = getConfig(ethereumPrivateKey, pluginsAnswers)
+            const privateKey = getPrivateKey(privateKeyAnswers)
+            const config = getConfig(privateKey, pluginsAnswers)
             expect(config.plugins.websocket).toMatchObject({})
             expect(config.plugins.mqtt).toMatchObject({})
             expect(config.plugins.publishHttp).toMatchObject({})
@@ -208,15 +209,15 @@ describe('ConfigWizard', () => {
             expect(config.apiAuthentication).toBeDefined()
             expect(config.apiAuthentication.keys).toBeDefined()
             expect(config.apiAuthentication.keys.length).toBe(1)
-            assertValidMisc(config)
+            assertValidIdentity(config)
         })
 
         it('should exercise the happy path with user input', () => {
-            const privateKey = Wallet.createRandom().privateKey
+            const importPrivateKey = Wallet.createRandom().privateKey
             const privateKeyAnswers = {
-                generateOrImportEthereumPrivateKey: 'Import',
+                generateOrImportPrivateKey: 'Import',
                 revealGeneratedPrivateKey: true,
-                importPrivateKey: privateKey
+                importPrivateKey
             }
             const pluginsAnswers = {
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
@@ -224,14 +225,14 @@ describe('ConfigWizard', () => {
                 mqttPort: '3171',
                 publishHttpPort: '3172'
             }
-            const ethereumPrivateKey = getPrivateKey(privateKeyAnswers)
-            const config = getConfig(ethereumPrivateKey, pluginsAnswers)
+            const privateKey = getPrivateKey(privateKeyAnswers)
+            const config = getConfig(privateKey, pluginsAnswers)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.ethereumPrivateKey).toBe(privateKey)
-            assertValidMisc(config)
+            assertValidIdentity(config)
         })
     })
 })

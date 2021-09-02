@@ -18,10 +18,10 @@ const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.po
 const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
 
 export const DEFAULT_CONFIG_PORTS = {
-    DEFAULT_WS_PORT,
-    DEFAULT_MQTT_PORT,
-    DEFAULT_HTTP_PORT,
-    DEFAULT_LEGACY_WS_PORT
+    WS: DEFAULT_WS_PORT,
+    MQTT: DEFAULT_MQTT_PORT,
+    HTTP: DEFAULT_HTTP_PORT,
+    LEGACY_WS: DEFAULT_LEGACY_WS_PORT
 }
 
 const MIN_PORT_VALUE = 1024
@@ -149,21 +149,21 @@ const PLUGIN_NAMES: {[pluginName: string]: string} = {
 }
 
 const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> => {
-    const selectPluginsPrompt: inquirer.CheckboxQuestion = {
+    const selectPrompt: inquirer.CheckboxQuestion = {
         type: 'checkbox',
         name:'selectPlugins',
         message: 'Select the plugins to enable',
         choices: Object.values(PLUGIN_NAMES)
     }
 
-    const pluginPortPrompts: Array<inquirer.Question> = Object.keys(PLUGIN_DEFAULT_PORTS).map((pluginName) => {
-        const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
+    const portPrompts: Array<inquirer.Question> = Object.keys(PLUGIN_DEFAULT_PORTS).map((name) => {
+        const defaultPort = PLUGIN_DEFAULT_PORTS[name]
         return {
             type: 'input',
-            name: `${pluginName}Port`,
-            message: `Select a port for the ${pluginName} Plugin [Enter for default: ${defaultPluginPort}]`,
+            name: `${name}Port`,
+            message: `Select a port for the ${name} Plugin [Enter for default: ${defaultPort}]`,
             when: (answers: inquirer.Answers) => {
-                return answers.selectPlugins.includes(pluginName)
+                return answers.selectPlugins.includes(name)
             },
             validate: (input: string | number): string | boolean => {
                 const portNumber = (typeof input === 'string') ? Number(input) : input
@@ -180,11 +180,11 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
                 }
                 return true
             },
-            default: defaultPluginPort
+            default: defaultPort
         }
     })
 
-    return [selectPluginsPrompt, ...pluginPortPrompts]
+    return [selectPrompt, ...portPrompts]
 }
 
 export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
@@ -214,9 +214,9 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
     return config
 }
 
-export const selectDestinationPathPrompt = {
+export const selectStoragePathPrompt = {
     type: 'input',
-    name: 'selectDestinationPath',
+    name: 'selectStoragePath',
     message: `Select a path to store the generated config in `,
     default: path.join(os.homedir(), '.streamr/broker-config.json'),
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
@@ -235,14 +235,14 @@ export const selectDestinationPathPrompt = {
 }
 
 const selectStoragePath = async (): Promise<inquirer.Answers> => {
-    const answers = await inquirer.prompt([selectDestinationPathPrompt])
+    const answers = await inquirer.prompt([selectStoragePathPrompt])
 
     if (answers.fileExists) {
         const overwriteAnswers = await inquirer.prompt([
             {
                 type: 'confirm',
                 name: 'confirmOverwrite',
-                message: `The selected destination ${answers.selectDestinationPath} already exists, do you want to overwrite it?`,
+                message: `The selected destination ${answers.selectStoragePath} already exists, do you want to overwrite it?`,
                 default: false,
             }
         ])
@@ -260,9 +260,9 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
         mkdirSync(answers.parentDirPath)
     }
    
-    writeFileSync(answers.selectDestinationPath, JSON.stringify(config, null, 2))
-    chmodSync(answers.selectDestinationPath, '0600')
-    return answers.selectDestinationPath
+    writeFileSync(answers.selectStoragePath, JSON.stringify(config, null, 2))
+    chmodSync(answers.selectStoragePath, '0600')
+    return answers.selectStoragePath
 }
 
 export const getNodeIdentity = (config: any) => {
