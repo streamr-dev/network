@@ -56,6 +56,32 @@
             "default": {
                 "refreshInterval": 600000
             }
-        }  
+        },
+        "cluster": {
+            "type": "object",
+            "description": "Storage node cluster config",
+            "required": [
+                "clusterAddress",
+                "clusterSize",
+                "indexOfThisNode"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "clusterAddress": {
+                    "type": "string"
+                },
+                "clusterSize": {
+                    "type": "number"
+                },
+                "myIndexInCluster": {
+                    "type": "number"
+                }
+            },
+            "default": {
+                "clusterAddress": null,
+                "clusterSize": 1,
+                "indexOfThisNode": 0
+            }
+        }
     }
 }

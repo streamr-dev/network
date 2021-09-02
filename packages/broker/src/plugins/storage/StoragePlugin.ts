@@ -21,6 +21,11 @@ export interface StoragePluginConfig {
     storageConfig: {
         refreshInterval: number
     }
+    cluster: {
+        clusterAddress: string,
+        clusterSize: number,
+        indexOfThisNode: number
+    }
 }
 
 export class StoragePlugin extends Plugin<StoragePluginConfig> {
@@ -78,7 +83,12 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     private async createStorageConfig() {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
         const apiUrl = this.brokerConfig.streamrUrl + '/api/v1'
-        const storageConfig = await StorageConfig.createInstance(brokerAddress, apiUrl, this.pluginConfig.storageConfig.refreshInterval)
+        const storageConfig = await StorageConfig.createInstance(
+            this.pluginConfig.cluster.clusterAddress || brokerAddress, 
+            this.pluginConfig.cluster.clusterSize || 1,
+            this.pluginConfig.cluster.indexOfThisNode || 0,
+            apiUrl, 
+            this.pluginConfig.storageConfig.refreshInterval)
         this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.subscriptionManager)
         return storageConfig
     }
