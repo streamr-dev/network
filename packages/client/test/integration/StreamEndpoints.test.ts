@@ -31,6 +31,7 @@ function TestStreamEndpoints(getName: () => string) {
     let client: StreamrClient
     let wallet: Wallet
     let createdStream: Stream
+    let storageNode: StorageNode
 
     const createClient = (opts = {}) => new StreamrClient({
         ...clientOptions,
@@ -51,6 +52,9 @@ function TestStreamEndpoints(getName: () => string) {
             requireSignedData: true,
             requireEncryptedData: false,
         })
+        storageNode = await client.setNode(clientOptions.storageNode.url)
+        await createdStream.addToStorageNode(storageNode.getAddress())
+        await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, storageNode.getAddress()) }, 100000, 1000)
     })
 
     describe('createStream', () => {
@@ -391,7 +395,6 @@ function TestStreamEndpoints(getName: () => string) {
 
     describe('Storage node assignment', () => {
         it('add', async () => {
-            const storageNode = await client.setNode(clientOptions.storageNode.url)
             // await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
             const stream = await createTestStream(client, module)
             await stream.addToStorageNode(storageNode.getAddress())
@@ -406,12 +409,11 @@ function TestStreamEndpoints(getName: () => string) {
         })
 
         it('remove', async () => {
-            const storageNode = await client.setNode(clientOptions.storageNode.url)
             const stream = await createTestStream(client, module)
             await stream.addToStorageNode(storageNode)
             await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
             await stream.removeFromStorageNode(storageNode)
-            await until(async () => { return !client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
+            await until(async () => { return !(await client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress())) }, 100000, 1000)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)

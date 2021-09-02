@@ -102,16 +102,22 @@ export class StreamRegistry implements Context {
     }
 
     async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermission> {
-        log('Getting permissions for stream %s for user %s', streamId, userAddress)
-        const permissions = await this.streamRegistryContractReadonly.getPermissionsForUser(streamId, userAddress || AddressZero)
-        return {
-            streamId,
-            userAddress: userAddress || AddressZero,
-            edit: permissions?.edit || false,
-            canDelete: permissions?.canDelete || false,
-            publishExpiration: permissions?.publishExpiration || BigNumber.from(0),
-            subscribeExpiration: permissions?.subscribeExpiration || BigNumber.from(0),
-            share: permissions?.share || false
+        try {
+            await this.connectToStreamRegistryContract()
+            log('Getting permissions for stream %s for user %s', streamId, userAddress)
+            const permissions = await this.streamRegistryContract!.getPermissionsForUser(streamId, userAddress || AddressZero)
+            return {
+                streamId,
+                userAddress: userAddress || AddressZero,
+                edit: permissions?.edit || false,
+                canDelete: permissions?.canDelete || false,
+                publishExpiration: permissions?.publishExpiration || BigNumber.from(0),
+                subscribeExpiration: permissions?.subscribeExpiration || BigNumber.from(0),
+                share: permissions?.share || false
+            }
+        } catch (err) {
+            console.log(err);
+            throw err
         }
     }
 

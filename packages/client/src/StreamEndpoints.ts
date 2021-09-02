@@ -221,8 +221,8 @@ export class StreamEndpoints implements Context {
         })
         const stream = await this.streamRegistry.getStream(streamId)
         const nodes = await stream.getStorageNodes()
+        if (nodes.length === 0) { throw new NotFoundError('Stream: name=' + streamId + ' has no storage nodes!') }
         const storageNode = nodes[Math.floor(Math.random() * nodes.length)]
-
         const json = await this.rest.get<StreamMessageAsObject>(storageNode.url, [
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
@@ -234,13 +234,10 @@ export class StreamEndpoints implements Context {
 
     async getStreamPartsByStorageNode(node: StorageNode|EthereumAddress) {
         const storageNode = (node instanceof StorageNode) ? node : await this.nodeRegistry.getStorageNode(node)
-        type ItemType = { id: string, partitions: number}
-        const json = await this.rest.get<ItemType[]>(storageNode.url, [
-            'storageNodes', storageNode.getAddress(), 'streams'
-        ])
+        const streams = await this.nodeRegistry.getStoredStreamsOf(storageNode.getAddress())
 
         const result: SPID[] = []
-        json.forEach((stream: ItemType) => {
+        streams.forEach((stream: Stream) => {
             for (let i = 0; i < stream.partitions; i++) {
                 result.push(new SPID(stream.id, i))
             }

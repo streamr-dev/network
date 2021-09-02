@@ -212,17 +212,17 @@ class StreamrStream implements StreamMetadata {
     }
 
     async removeFromStorageNode(node: StorageNode | EthereumAddress) {
-        // @ts-ignore
-        return this._nodeRegistry.removeStreamFromStorageNode(this.id, node.address || node)
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
+        return this._nodeRegistry.removeStreamFromStorageNode(this.id, address)
     }
 
     private async isStreamStoredInStorageNode(node: StorageNode | EthereumAddress) {
-        // @ts-ignore
-        return this._nodeRegistry.isStreamStoredInStorageNode(this.id, node.address || node)
+        const address = (node instanceof StorageNode) ? node.getAddress() : node
+        return this._nodeRegistry.isStreamStoredInStorageNode(this.id, address)
     }
 
     async getStorageNodes() {
-        return this._nodeRegistry.getAllStorageNodes()
+        return this._nodeRegistry.getStorageNodesOf(this.id)
     }
 
     async publish<T extends MessageContent>(content: T, timestamp?: number|string|Date, partitionKey?: string) {

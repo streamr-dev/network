@@ -26,7 +26,7 @@
               // "test/integration/MultipleClients.test.js",
               // "test/integration/BrubeckClient.test.ts",
               "-t",
-              "add"
+              "getStreamLast"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",
