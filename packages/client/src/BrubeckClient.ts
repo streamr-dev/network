@@ -1,9 +1,9 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 import { container, DependencyContainer, inject } from 'tsyringe'
-import Debug from 'debug'
 
 import { uuid, counterId, pOnce } from './utils'
+import { Debug } from './utils/log'
 import { Context } from './utils/Context'
 import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
 import { BrubeckContainer } from './Container'
@@ -172,13 +172,13 @@ export class BrubeckClient extends BrubeckClientBase {
         const c = parentContainer.createChildContainer()
         const config = BrubeckConfig(options)
         const id = counterId(`BrubeckClient:${uid}${config.id ? `:${config.id}` : ''}`)
-        const debug = Debug(`Streamr::${id}`)
+        const debug = Debug(id)
         // @ts-expect-error not in types
-        debug.inspectOpts = {
+        Object.assign(debug.inspectOpts, {
             // @ts-expect-error not in types
             ...debug.inspectOpts,
             ...config.debug.inspectOpts
-        }
+        })
         debug('create')
 
         const rootContext = {

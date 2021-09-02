@@ -30,13 +30,15 @@ if (typeof window === 'undefined') {
             ...this.inspectOpts,
         }, ...args) + '\n')
     }
+
+    // mutate inspectOpts rather than replace, otherwise changes are lost
+    // @ts-expect-error inspectOpts not in debug types
+    Object.assign(Debug.inspectOpts, {
+        ...DEFAULT_INSPECT_OPTS,
+    })
 }
 
 const debug = Debug('Streamr')
-// @ts-expect-error inspectOpts not in debug types
-debug.inspectOpts = {
-    ...DEFAULT_INSPECT_OPTS,
-}
 
 const StreamrDebug = Object.assign(debug.extend.bind(debug), {
     enable: Debug.enable.bind(Debug),
