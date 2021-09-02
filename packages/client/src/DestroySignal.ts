@@ -13,7 +13,7 @@ import Signal from './utils/Signal'
  */
 @scoped(Lifecycle.ContainerScoped)
 export class DestroySignal {
-    onDestroy = Signal.once<void, this>(this)
+    onDestroy = Signal.once<void>()
 
     destroy() {
         return this.onDestroy.trigger()

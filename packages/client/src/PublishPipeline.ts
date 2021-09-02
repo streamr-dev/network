@@ -162,9 +162,7 @@ export default class PublishPipeline implements Context, Stoppable {
 
         this.isStarted = true
 
-        this.publishQueue.consume(() => {
-            this.debug('consume')
-        }).catch(this.debug.bind(this.debug))
+        this.publishQueue.consume().catch(this.debug.bind(this.debug))
     }
 
     check(): void {

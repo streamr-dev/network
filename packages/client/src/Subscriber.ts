@@ -35,11 +35,7 @@ export default class Subscriber implements Context {
     async subscribeTo<T>(spid: SPID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
         const sub: Subscription<T> = await this.add(spid)
         if (onMessage) {
-            setImmediate(() => {
-                sub.consume(async (streamMessage) => {
-                    await onMessage(streamMessage.getParsedContent(), streamMessage)
-                })
-            })
+            sub.useLegacyOnMessageHandler(onMessage)
         }
 
         return sub

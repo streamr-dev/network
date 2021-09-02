@@ -294,6 +294,26 @@ describeRepeats('resends', () => {
             })
         })
 
+        it('can resend with onMessage callback', async () => {
+            const receivedMsgs: any[] = []
+            const sub = await subscriber.resend({
+                streamId: stream.id,
+                streamPartition: 0,
+                resend: {
+                    from: {
+                        timestamp: published[0].getTimestamp(),
+                    },
+                }
+            }, (_msg, streamMessage) => {
+                receivedMsgs.push(streamMessage)
+            })
+
+            await sub.consume()
+            await sub.onFinally()
+            expect(receivedMsgs).toHaveLength(published.length)
+            expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
+        })
+
         /*
         it('closes stream', async () => {
             const sub = await subscriber.resend({

@@ -45,8 +45,8 @@ export class StartStop {
         this.stop = this.stop.bind(this)
     }
 
-    onStart = Signal.create<void, this>(this)
-    onStop = Signal.create<void, this>(this)
+    onStart = Signal.create<void>()
+    onStop = Signal.create<void>()
     async start() {
         this.isStopped = false
         await this.update()

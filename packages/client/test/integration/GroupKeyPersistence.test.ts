@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, fakePrivateKey, getPublishTestMessages, addAfterFn, createTestStream } from '../utils'
+import { describeRepeats, fakePrivateKey, getPublishTestStreamMessages, addAfterFn, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
@@ -13,7 +13,7 @@ const TIMEOUT = 10 * 1000
 describeRepeats('Group Key Persistence', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
-    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
+    let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     const addAfter = addAfterFn()
 
     const createClient = (opts = {}) => {
@@ -56,7 +56,7 @@ describeRepeats('Group Key Persistence', () => {
         async function setupPublisher(opts?: any, streamOpts: any = {}) {
             const client = createClient(opts)
             await Promise.all([
-                client.session.getSessionToken(),
+                client.getSessionToken(),
                 client.connect(),
             ])
 
@@ -67,7 +67,7 @@ describeRepeats('Group Key Persistence', () => {
 
             await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
-            publishTestMessages = getPublishTestMessages(client, stream, {
+            publishTestMessages = getPublishTestStreamMessages(client, stream, {
                 waitForLast: true,
             })
             return client
@@ -97,7 +97,7 @@ describeRepeats('Group Key Persistence', () => {
             await publisher.setNextGroupKey(stream.id, groupKey)
         })
 
-        describe('publisher persists group key', () => {
+        describe('publisher persists group key, can keep serving group key requests (resend)', () => {
             let published: any[]
             let publisher2: StreamrClient
             beforeEach(async () => {
@@ -105,12 +105,13 @@ describeRepeats('Group Key Persistence', () => {
                 // 1. publish some messages with publisher
                 // 2. then disconnect publisher
                 // 3. create new publisher with same key
-                // 4. subscribe with subscriber
+                // 4. resend messages with subscriber
                 // because original publisher is disconnected
                 // subscriber will need to ask new publisher
                 // for group keys, which the new publisher will have to read from
                 // persistence
                 published = await publishTestMessages(5)
+
                 await publisher.destroy()
                 publisher2 = createClient({
                     id: 'publisher2',
@@ -131,12 +132,14 @@ describeRepeats('Group Key Persistence', () => {
                 // also probably needs to create a connection handle
                 await publisher2.publisher.startKeyExchange()
 
-                const sub = await subscriber.subscribe({
-                    stream: stream.id,
-                })
                 const received = []
+                const sub = await subscriber.resend({
+                    stream: stream.id,
+                    last: published.length
+                })
+
                 for await (const m of sub) {
-                    received.push(m.getParsedContent())
+                    received.push(m)
                     if (received.length === published.length) {
                         break
                     }
@@ -159,11 +162,12 @@ describeRepeats('Group Key Persistence', () => {
             const sub = await subscriber.subscribe({
                 stream: stream.id,
             })
+
             const published = await publishTestMessages(5)
 
             const received = []
             for await (const m of sub) {
-                received.push(m.getParsedContent())
+                received.push(m)
                 if (received.length === 1) {
                     break
                 }
@@ -183,16 +187,16 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             await subscriber2.connect()
-            const sub2 = await subscriber2.subscribe({
+            const sub2 = await subscriber2.resend({
                 stream: stream.id,
-                // resend: {
-                // last: 5
-                // }
+                resend: {
+                    last: 5
+                }
             })
 
             const received2 = []
             for await (const m of sub2) {
-                received2.push(m.getParsedContent())
+                received2.push(m)
                 if (received2.length === published.length) {
                     break
                 }
@@ -219,7 +223,7 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             await publisher2.connect()
-            const publishTestMessages2 = getPublishTestMessages(publisher2, stream, {
+            const publishTestMessages2 = getPublishTestStreamMessages(publisher2, stream, {
                 waitForLast: true,
             })
             const MAX_MESSAGES = 16
@@ -235,9 +239,9 @@ describeRepeats('Group Key Persistence', () => {
                 // 'n of MAX_MESSAGES' messages belong to publisher2
                 // @ts-expect-error
                 if (content.value.endsWith(`of ${MAX_MESSAGES}`)) {
-                    received2.push(content)
+                    received2.push(m)
                 } else {
-                    received1.push(content)
+                    received1.push(m)
                 }
 
                 if (received1.length === published1.length && received2.length === published2.length) {
@@ -248,9 +252,55 @@ describeRepeats('Group Key Persistence', () => {
             expect(received1).toEqual(published1)
             expect(received2).toEqual(published2)
         }, 2 * TIMEOUT)
+
+        describe('publisher does not complain about group key when many concurrent publishes', () => {
+            const NUM_STREAMS = 20
+            let streams: Stream[]
+
+            async function setupStream(client: StreamrClient, streamOpts: any = {}) {
+                const s = await createTestStream(client, module, {
+                    ...streamOpts,
+                })
+
+                await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+                return s
+            }
+
+            beforeEach(async () => {
+                publisherPrivateKey = fakePrivateKey()
+                publisher = createClient({
+                    id: 'publisher',
+                    auth: {
+                        privateKey: publisherPrivateKey,
+                    },
+                })
+
+                streams = await Promise.all(Array(NUM_STREAMS).fill(true).map(async () => setupStream(publisher)))
+            }, 2 * TIMEOUT)
+
+            afterEach(() => (
+                publisher.destroy()
+            ))
+
+            test('works', async () => {
+                const tasks = streams.map(async (s) => {
+                    const publish = getPublishTestStreamMessages(publisher, s)
+                    const published = await Promise.all([
+                        publish(5),
+                        publish(5),
+                        publish(5),
+                        publish(5),
+                    ])
+                    return published.flat()
+                })
+                await Promise.allSettled(tasks)
+                const publishedPerStream = await Promise.all(tasks)
+                expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(20))
+            }, 2 * TIMEOUT)
+        })
     })
 
-    describe('with requireEncryptedData = false and autoconnect', () => {
+    describe('with requireEncryptedData = false', () => {
         const NUM_STREAMS = 20
         let streams: Stream[]
 
@@ -270,28 +320,28 @@ describeRepeats('Group Key Persistence', () => {
                 auth: {
                     privateKey: publisherPrivateKey,
                 },
-                autoConnect: true,
-                autoDisconnect: true,
-                disconnectDelay: 600,
-                publishAutoDisconnectDelay: 600,
             })
 
             streams = await Promise.all(Array(NUM_STREAMS).fill(true).map(async () => setupStream(publisher)))
         }, 2 * TIMEOUT)
 
+        afterEach(() => (
+            publisher.destroy()
+        ))
+
         test('publisher does not complain about group key when many concurrent publishes', async () => {
             const tasks = streams.map(async (stream) => {
-                const publish = getPublishTestMessages(publisher, stream)
-                return Promise.all([
-                    publish(20),
-                    publish(20),
-                    publish(20),
-                    publish(20),
+                const publish = getPublishTestStreamMessages(publisher, stream)
+                const published = await Promise.all([
+                    publish(5),
+                    publish(5),
+                    publish(5),
+                    publish(5),
                 ])
+                return published.flat()
             })
             await Promise.allSettled(tasks)
             const publishedPerStream = await Promise.all(tasks)
-            // await publisher.disconnect()
             expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(20))
         }, 2 * TIMEOUT)
     })

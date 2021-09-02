@@ -327,6 +327,11 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDL
             ...defaultOpts,
             ...opts,
         }
+
+        const contents = new WeakMap()
+        client.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
+            contents.set(streamMessage, streamMessage.serializedContent)
+        })
         const publishStream = publishTestMessagesGenerator(client, sid, maxMessages, options)
         if (opts.onPublishPipeline) {
             opts.onPublishPipeline.trigger(publishStream)
@@ -343,16 +348,22 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDL
                 break
             }
         }
-        streamMessages.forEach((s) => s.getParsedContent())
-        if (!waitForLast) {
-            return streamMessages
+
+        if (waitForLast) {
+            await getWaitForStorage(client, {
+                count: waitForLastCount,
+                timeout: waitForLastTimeout,
+            })(streamMessages[streamMessages.length - 1])
         }
 
-        await getWaitForStorage(client, {
-            count: waitForLastCount,
-            timeout: waitForLastTimeout,
-        })(streamMessages[streamMessages.length - 1])
-        return streamMessages
+        return streamMessages.map((streamMessage) => {
+            const targetStreamMessage = streamMessage.clone()
+            targetStreamMessage.serializedContent = contents.get(streamMessage)
+            targetStreamMessage.encryptionType = 0
+            targetStreamMessage.parsedContent = null
+            targetStreamMessage.getParsedContent()
+            return targetStreamMessage
+        })
     }
 }
 

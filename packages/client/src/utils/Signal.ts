@@ -1,7 +1,7 @@
 import { pOnce, pOne } from './index'
 import AggregatedError from './AggregatedError'
 
-type SignalListener<T> = (t: T) => void | Promise<void>
+type SignalListener<T> = (t: T) => (unknown | Promise<unknown>)
 type SignalListenerWrap<T> = SignalListener<T> & {
     listener: SignalListener<T>
 }
@@ -30,12 +30,20 @@ export default class Signal<ValueType = void> {
      *  Create a Signal's listen function with signal utility methods attached.
      *  See example above.
      */
-    static create<ValueType, ReturnType>(returnValue: ReturnType, once?: boolean) {
+    static create<ValueType>(once?: boolean) {
         const signal = new Signal<ValueType>(once)
-        return Object.assign((cb: SignalListener<ValueType>) => {
+        function listen(): Promise<ValueType>
+        function listen<ReturnType>(this: ReturnType, cb: SignalListener<ValueType>): ReturnType
+        function listen<ReturnType>(this: ReturnType, cb?: SignalListener<ValueType>) {
+            if (!cb) {
+                return signal.listen()
+            }
+
             signal.listen(cb)
-            return returnValue
-        }, {
+            return this
+        }
+
+        return Object.assign(listen, {
             triggerCount() {
                 return signal.triggerCount
             },
@@ -45,7 +53,8 @@ export default class Signal<ValueType = void> {
             unlisten: signal.unlisten.bind(signal),
             listen: signal.listen.bind(signal),
             unlistenAll: signal.unlistenAll.bind(signal),
-            end: signal.end,
+            countListeners: signal.countListeners.bind(signal),
+            end: signal.end
         })
     }
 
@@ -54,8 +63,8 @@ export default class Signal<ValueType = void> {
      * Adding listeners after already fired will fire listener immediately.
      * Calling trigger after already triggered is a noop.
      */
-    static once<ValueType, ReturnType>(returnValue: ReturnType) {
-        return this.create<ValueType, ReturnType>(returnValue, true)
+    static once<ValueType>() {
+        return this.create<ValueType>(true)
     }
 
     listeners: (SignalListener<ValueType> | SignalListenerWrap<ValueType>)[] = []
@@ -82,7 +91,7 @@ export default class Signal<ValueType = void> {
     /**
      * Promise that resolves on next trigger.
      */
-    wait() {
+    wait(): Promise<ValueType> {
         return new Promise((resolve) => {
             this.once(resolve)
         })
@@ -91,7 +100,21 @@ export default class Signal<ValueType = void> {
     /**
      * Attach a callback listener to this Signal.
      */
-    listen(cb: SignalListener<ValueType>) {
+    listen(): Promise<ValueType>
+    listen(cb: SignalListener<ValueType>): Signal<ValueType>
+    listen(cb?: SignalListener<ValueType>): Signal<ValueType> | Promise<ValueType> {
+        if (!cb) {
+            if (this.isEnded) {
+                return this.trigger(this.lastValue!).then(() => {
+                    return this.lastValue!
+                })
+            }
+
+            return new Promise((resolve) => {
+                this.once(resolve)
+            })
+        }
+
         if (this.isEnded) {
             // wait for any outstanding, ended so can't re-trigger
             // eslint-disable-next-line promise/no-callback-in-promise
@@ -103,7 +126,44 @@ export default class Signal<ValueType = void> {
         return this
     }
 
-    once(cb: SignalListener<ValueType>) {
+    asListener<ReturnType>(this: Signal<ValueType>, returnValue: ReturnType) {
+        function listen(): Promise<ValueType>
+        function listen(cb: SignalListener<ValueType>): ReturnType
+        function listen(this: Signal<ValueType>, cb?: SignalListener<ValueType>) {
+            if (!cb) {
+                return this.listen()
+            }
+
+            this.listen(cb)
+            return returnValue
+        }
+
+        return Object.assign(listen, {
+            triggerCount() {
+                return this.triggerCount
+            },
+            once: this.once.bind(this),
+            wait: this.wait.bind(this),
+            trigger: this.trigger,
+            unlisten: this.unlisten.bind(this),
+            listen: this.listen.bind(this),
+            unlistenAll: this.unlistenAll.bind(this),
+            countListeners: this.countListeners.bind(this),
+            end: this.end
+        })
+    }
+
+    countListeners() {
+        return this.listeners.length
+    }
+
+    once(): Promise<ValueType>
+    once(cb: SignalListener<ValueType>): this
+    once(cb?: SignalListener<ValueType>): this | Promise<ValueType> {
+        if (!cb) {
+            return this.listen()
+        }
+
         if (this.isEnded) {
             // wait for any outstanding, ended so can't re-trigger
             // eslint-disable-next-line promise/no-callback-in-promise

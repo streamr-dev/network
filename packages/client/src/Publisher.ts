@@ -175,6 +175,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {
                     found = true
+                    this.debug('last message found')
                     return
                 }
             }

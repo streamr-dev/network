@@ -120,8 +120,11 @@ describeRepeats('GapFill', () => {
             it('can fill single gap', async () => {
                 const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
-                monkeypatchMessageHandler(sub, (_msg, count) => {
-                    if (count === 2) { return null }
+                monkeypatchMessageHandler(sub, (msg, count) => {
+                    if (count === 2) {
+                        sub.debug('test dropping message %d:', count, msg)
+                        return null
+                    }
                     return undefined
                 })
 

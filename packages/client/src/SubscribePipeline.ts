@@ -17,6 +17,7 @@ import { DependencyContainer } from 'tsyringe'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 
 export default function SubscribePipeline<T extends MessageContent | unknown>(
+    messageStream: MessageStream<T>,
     spid: SPID,
     options: DecryptWithExchangeOptions<T>,
     context: Context,
@@ -70,51 +71,24 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
 
-    return new MessageStream<T>(context)
-        // take messages
-        .pipe(async function* PrintMessages(src) {
-            for await (const streamMessage of src) {
-                yield streamMessage
-            }
-        })
+    return messageStream
         // order messages (fill gaps)
         .pipe(orderMessages.transform(spid))
         // validate
-        .pipe(async function* ValidateMessages(src) {
-            for await (const streamMessage of src) {
-                try {
-                    await validate.validate(streamMessage)
-                } catch (err) {
-                    ignoreMessages.add(streamMessage)
-                    await onError(err)
-                }
-                yield streamMessage
-            }
+        .forEach(async (streamMessage) => {
+            await validate.validate(streamMessage)
         })
         // decrypt
-        .pipe(decrypt.decrypt)
+        .forEach(decrypt.decrypt)
         // parse content
-        .pipe(async function* ParseMessages(src) {
-            for await (const streamMessage of src) {
-                try {
-                    streamMessage.getParsedContent()
-                } catch (err) {
-                    ignoreMessages.add(streamMessage)
-                    await onError(err)
-                }
-                yield streamMessage
-            }
+        .forEach(async (streamMessage) => {
+            streamMessage.getParsedContent()
         })
         // re-order messages (ignore gaps)
         .pipe(orderMessages.transform(spid, { gapFill: false }))
         // ignore any failed messages
-        .pipe(async function* IgnoreMessages(src) {
-            for await (const streamMessage of src) {
-                if (ignoreMessages.has(streamMessage)) {
-                    continue
-                }
-                yield streamMessage
-            }
+        .filter(async (streamMessage) => {
+            return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally(async () => {
             const tasks = [

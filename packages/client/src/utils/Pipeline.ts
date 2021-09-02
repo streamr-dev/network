@@ -30,7 +30,6 @@ export type IPipeline<InType, OutType = InType> = {
     collect(n?: number): Promise<OutType[]>
     consume(): Promise<void>
     pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
-    onFinally(onFinally: FinallyFn): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType> & Context
 
 class PipelineDefinition<InType, OutType = InType> {
@@ -91,8 +90,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     id
     protected iterator: AsyncGenerator<OutType>
     isIterating = false
-    forkRoot?: Pipeline<InType, OutType>
-    buffers: PushBuffer<OutType>[] = []
     definition: PipelineDefinition<InType, OutType>
 
     constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
@@ -101,7 +98,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         this.definition = definition || new PipelineDefinition<InType, OutType>(this, source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)
-        // this.debug('create', this.definition.source.id)
+        this.handleError = this.handleError.bind(this)
     }
 
     /**
@@ -131,6 +128,9 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this
     }
 
+    /**
+     * Fires this callback the moment this part of the pipeline starts returning.
+     */
     onConsumed(fn: () => void | Promise<void>) {
         return this.pipe(async function* onConsumed(src) {
             try {
@@ -154,66 +154,100 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         })
     }
 
-    onMessage = Signal.create<OutType, this>(this)
+    /**
+     * Triggers once when pipeline ends.
+     * Usage: `pipeline.onFinally(callback)`
+     */
+    onFinally = Signal.once<Error | void>()
+
+    /**
+     * Triggers once when pipeline is about to end.
+     */
+    onBeforeFinally = Signal.once<void>()
 
     /**
      * Triggers once when pipeline starts flowing.
      * Usage: `pipeline.onStart(callback)`
      */
-    onStart = Signal.once<void, this>(this)
+    onStart = Signal.once<void>()
 
-    /**
-     * Triggers once when pipeline ends.
-     * Usage: `pipeline.onFinally(callback)`
-     */
-    onFinally = Signal.once<Error | undefined, this>(this)
+    onMessage = Signal.create<OutType>()
 
-    /**
-     * Triggers once when pipeline is about to end.
-     */
-    onBeforeFinally = Signal.once<undefined, this>(this)
+    onError = Signal.create<Error>()
+
+    protected seenErrors = new WeakSet<Error>()
+
+    async handleError(err: Error) {
+        // don't double-handle errors
+        // i.e. same handler used for pipeline step errors
+        // and pipeline end errors. pipeline step errors
+        // will become pipeline end errors if not handled
+        // thus will hit this function twice.
+        if (!this.seenErrors.has(err)) {
+            const hadNoListeners = this.onError.countListeners() === 0
+            this.seenErrors.add(err)
+            try {
+                await this.onError.trigger(err)
+                if (hadNoListeners) {
+                    throw err
+                }
+            } catch (nextErr) {
+                // don't double handle if different error thrown
+                // by onError trigger
+                this.seenErrors.add(nextErr)
+                throw nextErr
+            }
+
+            return
+        }
+
+        // if we've seen this error, just throw
+        throw err
+    }
 
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>) {
-        return this.pipe((src) => G.map(src, fn))
+        return this.pipe((src) => G.map(src, fn, this.handleError))
     }
 
     mapBefore(fn: G.GeneratorMap<InType, InType>) {
-        return this.pipeBefore((src) => G.map(src, fn))
+        return this.pipeBefore((src) => G.map(src, fn, this.handleError))
     }
 
     forEach(fn: G.GeneratorForEach<OutType>) {
-        return this.pipe((src) => G.forEach(src, fn))
+        return this.pipe((src) => G.forEach(src, fn, this.handleError))
     }
 
     filter(fn: G.GeneratorFilter<OutType>) {
-        return this.pipe((src) => G.filter(src, fn))
+        return this.pipe((src) => G.filter(src, fn, this.handleError))
     }
 
     reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType) {
-        return this.pipe((src) => G.reduce(src, fn, initialValue))
+        return this.pipe((src) => G.reduce(src, fn, initialValue, this.handleError))
     }
 
     forEachBefore(fn: G.GeneratorForEach<InType>) {
-        return this.pipeBefore((src) => G.forEach(src, fn))
+        return this.pipeBefore((src) => G.forEach(src, fn, this.handleError))
     }
 
     filterBefore(fn: G.GeneratorFilter<InType>) {
         return this.pipeBefore((src) => G.filter(src, fn))
     }
 
-    consume(fn?: G.GeneratorForEach<OutType>) {
-        return G.consume(this, fn)
+    async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {
+        return G.consume(this, fn, this.handleError)
     }
 
     collect(n?: number) {
-        return G.collect(this, n)
+        return G.collect(this, n, this.handleError)
     }
 
     private async cleanup(error?: Error) {
         try {
-            if (error) {
-                await this.definition.source.throw(error).catch(() => {})
-            } else {
+            try {
+                if (error) {
+                    await this.handleError(error)
+                }
+            } finally {
                 await this.definition.source.return(undefined)
             }
         } finally {
@@ -241,12 +275,16 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
             return transform(prev)
         }, this.definition.source)
 
-        for await (const msg of pipeline) {
-            await this.onMessage.trigger(msg)
-            yield msg
+        try {
+            for await (const msg of pipeline) {
+                await this.onMessage.trigger(msg)
+                yield msg
+            }
+        } catch (err) {
+            await this.handleError(err)
+        } finally {
+            await this.onBeforeFinally.trigger()
         }
-
-        await this.onBeforeFinally.trigger()
     }
 
     // AsyncGenerator implementation

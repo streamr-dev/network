@@ -7,6 +7,7 @@ import { Scaffold, instanceId, until } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
 import { flow } from './utils/PushBuffer'
+import MessageStream from './MessageStream'
 
 import Subscription from './Subscription'
 import SubscribePipeline from './SubscribePipeline'
@@ -37,13 +38,16 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
         this.onError = this.onError.bind(this)
-        this.pipeline = SubscribePipeline<T>(this.spid, {
+        this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.spid, {
             onError: this.onError,
         }, this, container)
             .pipe(this.distributeMessage)
-            .onFinally(() => (
-                this.removeAll()
-            ))
+            .onFinally(async () => {
+                this.debug('subsession pipeline done.')
+                await this.removeAll()
+            })
+
+        this.pipeline.onError(this.onError)
 
         // this.debug('create')
         setImmediate(() => {
@@ -158,6 +162,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
 
     async add(sub: Subscription<T>): Promise<void> {
         if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
+        this.debug('add', sub.id)
         this.subscriptions.add(sub)
         await this.updateSubscriptions()
     }
@@ -167,10 +172,10 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
      */
 
     async remove(sub: Subscription<T>): Promise<void> {
-        this.debug('remove')
         if (!sub || this.pendingRemoval.has(sub) || !this.subscriptions.has(sub)) {
             return
         }
+        this.debug('remove', sub.id)
 
         this.pendingRemoval.add(sub)
         this.subscriptions.delete(sub)
@@ -193,6 +198,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
      */
 
     async removeAll(): Promise<void> {
+        this.debug('removeAll')
         await Promise.all([...this.subscriptions].map((sub) => (
             this.remove(sub)
         )))

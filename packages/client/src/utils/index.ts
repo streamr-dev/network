@@ -5,7 +5,7 @@ import uniqueId from 'lodash/uniqueId'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import mem from 'mem'
-import { L, F } from 'ts-toolbelt'
+import { L } from 'ts-toolbelt'
 
 import pkg from '../../package.json'
 import LRU from '../../vendor/quick-lru'
@@ -307,27 +307,27 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
     })
     p.catch(() => {}) // prevent unhandledrejection
 
-    function wrap(fn: F.Function) {
-        return async (...args: unknown[]) => {
+    function wrap<ArgsType extends any[], ReturnType>(fn: (...args: ArgsType) => ReturnType) {
+        return async (...args: ArgsType) => {
             try {
                 return resolve(await fn(...args))
             } catch (err) {
                 reject(err)
+                throw err
             } finally {
                 isResolved = true
             }
-            return Promise.resolve()
         }
     }
 
-    function wrapError(fn: F.Function) {
-        return async (...args: unknown[]) => {
+    function wrapError<ArgsType extends any[], ReturnType>(fn: (...args: ArgsType) => ReturnType) {
+        return async (...args: ArgsType) => {
             try {
                 return await fn(...args)
             } catch (err) {
                 reject(err)
+                throw err
             }
-            return Promise.resolve()
         }
     }
 

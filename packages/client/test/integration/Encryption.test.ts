@@ -176,28 +176,24 @@ describeRepeats('decryption', () => {
             })
 
             it('client.subscribe can get the group key and decrypt encrypted message using an RSA key pair', async () => {
-                const done = Defer()
                 const msg = Msg()
                 const groupKey = GroupKey.generate()
                 // subscribe without knowing the group key to decrypt stream messages
-                await subscriber.subscribe({
+                const sub = await subscriber.subscribe({
                     stream: stream.id,
-                }, done.wrap((parsedContent, streamMessage) => {
-                    expect(parsedContent).toEqual(msg)
-
-                    // Check signature stuff
-                    expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                    expect(streamMessage.getPublisherId())
-                    expect(streamMessage.signature)
-                }))
+                })
 
                 await publisher.setNextGroupKey(stream.id, groupKey)
                 const onEncryptionMessageErr = checkEncryptionMessages(publisher)
 
-                await Promise.all([
-                    publisher.publish(stream.id, msg),
-                    done,
-                ])
+                await publisher.publish(stream.id, msg)
+                const received = await sub.collect(1)
+                expect(received[0].getParsedContent()).toEqual(msg)
+
+                // Check signature stuff
+                expect(received[0].signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(received[0].getPublisherId()).toBeTruthy()
+                expect(received[0].signature).toBeTruthy()
                 onEncryptionMessageErr.resolve(undefined)
                 await onEncryptionMessageErr
             }, TIMEOUT * 2)
@@ -205,28 +201,24 @@ describeRepeats('decryption', () => {
             it('allows other users to get group key', async () => {
                 const onEncryptionMessageErr = checkEncryptionMessages(publisher)
                 const onEncryptionMessageErr2 = checkEncryptionMessages(subscriber)
-                const done = Defer()
                 const msg = Msg()
                 // subscribe without knowing the group key to decrypt stream messages
-                await subscriber.subscribe({
+                const sub = await subscriber.subscribe({
                     stream: stream.id,
-                }, done.wrap((parsedContent, streamMessage) => {
-                    expect(parsedContent).toEqual(msg)
-
-                    // Check signature stuff
-                    expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                    expect(streamMessage.getPublisherId())
-                    expect(streamMessage.signature)
-                }))
+                })
                 // sub.once('error', done.reject)
 
                 const groupKey = GroupKey.generate()
                 await publisher.setNextGroupKey(stream.id, groupKey)
 
-                await Promise.all([
-                    publisher.publish(stream.id, msg),
-                    done,
-                ])
+                await publisher.publish(stream.id, msg)
+                const received = await sub.collect(1)
+                expect(received[0].getParsedContent()).toEqual(msg)
+
+                // Check signature stuff
+                expect(received[0].signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(received[0].getPublisherId()).toBeTruthy()
+                expect(received[0].signature).toBeTruthy()
                 onEncryptionMessageErr.resolve(undefined)
                 await onEncryptionMessageErr
                 onEncryptionMessageErr2.resolve(undefined)
@@ -234,19 +226,11 @@ describeRepeats('decryption', () => {
             }, TIMEOUT * 2)
 
             it('changing group key injects group key into next stream message', async () => {
-                const done = Defer()
                 const msgs = [Msg(), Msg(), Msg()]
-                const received: any[] = []
                 // subscribe without knowing the group key to decrypt stream messages
-                await subscriber.subscribe({
+                const sub = await subscriber.subscribe({
                     stream: stream.id,
-                }, done.wrapError((_parsedContent, streamMessage) => {
-                    // Check signature stuff
-                    received.push(streamMessage)
-                    if (received.length === msgs.length) {
-                        done.resolve(undefined)
-                    }
-                }))
+                })
 
                 const onEncryptionMessageErr = checkEncryptionMessages(publisher)
                 // id | groupKeyId | newGroupKey (encrypted by groupKeyId)
@@ -260,35 +244,20 @@ describeRepeats('decryption', () => {
                 await publisher.setNextGroupKey(stream.id, groupKey2)
                 await publisher.publish(stream.id, msgs[1])
                 await publisher.publish(stream.id, msgs[2])
-                await done
+                const received = await sub.collect(msgs.length)
                 onEncryptionMessageErr.resolve(undefined)
-                expect(received.map((m) => m.getParsedContent())).toEqual(msgs)
-                received.forEach((streamMessage, index) => {
+                received.forEach((streamMessage) => {
                     expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                    expect(streamMessage.getPublisherId())
-                    expect(streamMessage.signature)
-                    switch (index) {
-                        case 0: {
-                            expect(streamMessage.newGroupKey).toEqual(null)
-                            expect(streamMessage.groupKeyId).toEqual(groupKey1.id)
-                            break
-                        }
-                        case 1: {
-                            expect(streamMessage.newGroupKey).toEqual(groupKey2)
-                            expect(streamMessage.groupKeyId).toEqual(groupKey1.id)
-                            break
-                        }
-                        case 2: {
-                            expect(streamMessage.newGroupKey).toEqual(null)
-                            expect(streamMessage.groupKeyId).toEqual(groupKey2.id)
-                            break
-                        }
-                        default: {
-                            throw new Error(`should not get here: ${index}`)
-                        }
-                    }
+                    expect(streamMessage.getPublisherId()).toBeTruthy()
+                    expect(streamMessage.signature).toBeTruthy()
                 })
-
+                expect(received[0].newGroupKey).toEqual(null)
+                expect(received[0].groupKeyId).toEqual(groupKey1.id)
+                expect(received[1].newGroupKey).toEqual(groupKey2)
+                expect(received[1].groupKeyId).toEqual(groupKey1.id)
+                expect(received[2].newGroupKey).toEqual(null)
+                expect(received[2].groupKeyId).toEqual(groupKey2.id)
+                expect(received.map((m) => m.getParsedContent())).toEqual(msgs)
                 await onEncryptionMessageErr
             }, TIMEOUT * 2)
 

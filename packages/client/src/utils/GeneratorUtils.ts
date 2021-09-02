@@ -7,6 +7,8 @@ export type GeneratorReduce<InType, OutType> = (
     prevValue: OutType, value: InType, index: number, src: AsyncGenerator<InType>
 ) => OutType | Promise<OutType>
 
+type OnError = (err: Error) => Promise<any> | any
+
 const noopConsume = async (src: AsyncGenerator) => {
     // eslint-disable-next-line no-underscore-dangle
     for await (const _msg of src) {
@@ -21,12 +23,23 @@ const noopConsume = async (src: AsyncGenerator) => {
  */
 export async function* forEach<InType>(
     src: AsyncGenerator<InType>,
-    fn: GeneratorForEach<InType>
+    fn: GeneratorForEach<InType>,
+    onError?: OnError
 ): AsyncGenerator<InType> {
     let index = 0
     for await (const v of src) {
-        await fn(v, index, src)
-        index += 1
+        try {
+            await fn(v, index, src)
+        } catch (err) {
+            if (onError) {
+                await onError(err)
+                continue
+            } else {
+                throw err
+            }
+        } finally {
+            index += 1
+        }
         yield v
     }
 }
@@ -36,12 +49,23 @@ export async function* forEach<InType>(
  */
 export async function* map<InType, OutType>(
     src: AsyncGenerator<InType>,
-    fn: GeneratorMap<InType, OutType>
+    fn: GeneratorMap<InType, OutType>,
+    onError?: OnError
 ): AsyncGenerator<OutType> {
     let index = 0
     for await (const v of src) {
-        yield await fn(v, index, src)
-        index += 1
+        try {
+            yield await fn(v, index, src)
+        } catch (err) {
+            if (onError) {
+                await onError(err)
+                continue
+            } else {
+                throw err
+            }
+        } finally {
+            index += 1
+        }
     }
 }
 
@@ -50,16 +74,26 @@ export async function* map<InType, OutType>(
  */
 export async function* filter<InType>(
     src: AsyncGenerator<InType>,
-    fn: GeneratorFilter<InType>
+    fn: GeneratorFilter<InType>,
+    onError?: OnError
 ): AsyncGenerator<InType> {
     let index = 0
     for await (const v of src) {
-        const ok = await fn(v, index, src)
-        index += 1
+        let ok
+        try {
+            ok = await fn(v, index, src)
+        } catch (err) {
+            if (onError) {
+                await onError(err)
+                continue
+            } else {
+                throw err
+            }
+        } finally {
+            index += 1
+        }
         if (ok) {
             yield v
-        } else {
-            continue
         }
     }
 }
@@ -73,13 +107,14 @@ export async function* filter<InType>(
 export async function* reduce<InType, OutType>(
     src: AsyncGenerator<InType>,
     fn: GeneratorReduce<InType, OutType>,
-    initialValue: OutType
+    initialValue: OutType,
+    onError?: OnError
 ): AsyncGenerator<OutType> {
     let result = initialValue
     yield* map(src, async (value, index, srcGen) => {
         result = await fn(result, value, index, srcGen) // eslint-disable-line require-atomic-updates
         return result
-    })
+    }, onError)
 }
 
 /**
@@ -90,6 +125,7 @@ export async function collect<InType>(
     src: AsyncGenerator<InType>,
     /** number of items to consume before ending, consumes all if undefined */
     n?: number,
+    onError?: OnError
 ): Promise<InType[]> {
     const results: InType[] = []
     await consume(src, async (value, index, srcGen) => {
@@ -97,7 +133,7 @@ export async function collect<InType>(
         if (n != null && index === n - 1) {
             await srcGen.return(undefined)
         }
-    })
+    }, onError)
 
     return results
 }
@@ -109,6 +145,7 @@ export async function collect<InType>(
 export async function consume<InType>(
     src: AsyncGenerator<InType>,
     fn: GeneratorForEach<InType> = (v) => v,
+    onError?: OnError
 ): Promise<void> {
-    return noopConsume(forEach(src, fn))
+    return noopConsume(forEach(src, fn, onError))
 }

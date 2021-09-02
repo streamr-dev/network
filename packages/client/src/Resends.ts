@@ -11,8 +11,7 @@ import { instanceId, counterId } from './utils'
 import { Context, ContextError } from './utils/Context'
 import { inspect } from './utils/log'
 
-import MessageStream from './MessageStream'
-import { SubscriptionOnMessage } from './Subscription'
+import MessageStream, { MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 import { StorageNode } from './StorageNode'
 import { authRequest } from './authFetch'
@@ -112,7 +111,7 @@ export default class Resend implements Context {
 
     async resend<T>(
         options: (SIDLike | { stream: SIDLike }) & (ResendOptions | { resend: ResendOptions }),
-        onMessage?: SubscriptionOnMessage<T>
+        onMessage?: MessageStreamOnMessage<T>
     ): Promise<MessageStream<T>> {
         const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptions
         const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SIDLike
@@ -121,11 +120,7 @@ export default class Resend implements Context {
         const sub = await this.resendMessages<T>(spid, resendOptions)
 
         if (onMessage) {
-            setImmediate(() => {
-                sub.consume(async (streamMessage) => {
-                    await onMessage(streamMessage.getParsedContent(), streamMessage)
-                })
-            })
+            sub.useLegacyOnMessageHandler(onMessage)
         }
 
         return sub
@@ -185,7 +180,13 @@ export default class Resend implements Context {
         // just pick first node
         // TODO: handle multiple nodes
         const url = createUrl(`${nodes[0].url}/api/v1`, endpointSuffix, spid, query)
-        const messageStream = SubscribePipeline<T>(spid, {}, this.container.resolve<Context>(Context as any), this.container)
+        const messageStream = SubscribePipeline<T>(
+            new MessageStream<T>(this),
+            spid,
+            {},
+            this.container.resolve<Context>(Context as any),
+            this.container
+        )
 
         let count = 0
         messageStream.forEach(() => {
