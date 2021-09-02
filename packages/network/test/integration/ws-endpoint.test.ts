@@ -106,11 +106,9 @@ describe('ws-endpoint', () => {
             const server = await startServerWsEndpoint('127.0.0.1', 38482, PeerInfo.newNode('server'))
 
             await client1.connect(server.getUrl(), PeerInfo.newTracker('server'))
-            try {
-                await client2.connect(server.getUrl(), PeerInfo.newTracker('server'))
-            } catch (err) {
-                expect(err).toContain('private key')
-            }
+            await client2.connect(server.getUrl(), PeerInfo.newTracker('server'))
+            await waitForEvent(client2, Event.PEER_DISCONNECTED)
+
             await client1.stop()
             await client2.stop()
             await server.stop()
