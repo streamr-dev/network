@@ -1,7 +1,7 @@
 import { IMessageEvent, w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import {DisconnectionCode, DisconnectionReason} from "./AbstractWsEndpoint"
+import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { BrowserClientWsConnection, BrowserWebSocketConnectionFactory } from './BrowserClientWsConnection'
 import { AbstractClientWsEndpoint, HandshakeValues } from "./AbstractClientWsEndpoint"
 

@@ -62,11 +62,13 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                     if (uuid === handshakeUUID && peerId) {
                         otherNodeIdForLogging = peerId
                         this.clearHandshake(uuid)
+
+                        // Check that a client with the same peerId has not already connected to the server.
                         if (!this.getConnectionByPeerId(peerId)) {
                             this.acceptConnection(ws, duplexStream, peerId, this.resolveIP(request))
                         } else {
                             this.metrics.record('open:duplicateSocket', 1)
-                            const failedMessage = `Connection for node: ${peerId} has already been established, closing new attempt with UUID ${uuid}`
+                            const failedMessage = `Connection for node: ${peerId} has already been established, rejecting duplicate`
                             ws.close(DisconnectionCode.DUPLICATE_SOCKET, failedMessage)
                             this.logger.warn(failedMessage)
                         }
