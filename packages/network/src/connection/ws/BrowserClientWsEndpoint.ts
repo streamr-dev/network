@@ -58,10 +58,10 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         ws.onclose = (event) => {
             this.onClose(connection, event.code, event.reason as DisconnectionReason)
             if (event.code === DisconnectionCode.DUPLICATE_SOCKET) {
-                const errorMessage = `Duplicate nodeId detected process will exit in 5 seconds, are you running multiple nodes with the same private key?`
-                this.logger.error(errorMessage)
+                const errorMessage = 'Duplicate nodeId detected, are you running multiple nodes with the same private key?'
+                this.logger.error(errorMessage + ' process will exit in 5 seconds')
                 this.killTimeout = setTimeout(() => {
-                    throw new Error('Duplicate nodeId detected')
+                    throw new Error(errorMessage)
                 }, 5000)
             }
         }
