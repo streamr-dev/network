@@ -124,7 +124,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     private startConnectionStatusReport(): void {
-        const STATUS_REPORT_TIMER_MS = 5 * 60 * 1000
+        const STATUS_REPORT_INTERVAL_MS = 5 * 60 * 1000
         this.statusReportTimer = setInterval(() => {
             let connectedPeerCount = 0
             const pendingPeerIds = []
@@ -137,7 +137,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 }
             }
             this.logger.info(`Successfully connected to ${connectedPeerCount} peers. Still trying to connect to the following peers: [${pendingPeerIds.join(', ')}]`)
-        }, STATUS_REPORT_TIMER_MS)
+        }, STATUS_REPORT_INTERVAL_MS)
     }
 
     private createConnection(
