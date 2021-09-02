@@ -101,7 +101,7 @@ export class Node extends EventEmitter {
         this.trackerNode = opts.protocols.trackerNode
         this.peerInfo = opts.peerInfo
 
-        this.connectToBootstrapTrackersInterval = opts.connectToBootstrapTrackersInterval || 5000
+        this.connectToBootstrapTrackersInterval = opts.connectToBootstrapTrackersInterval || 10000
         this.sendStatusToAllTrackersInterval = opts.sendStatusToAllTrackersInterval || 1000
         this.bufferTimeoutInMs = opts.bufferTimeoutInMs || 60 * 1000
         this.bufferMaxSize = opts.bufferMaxSize || 10000

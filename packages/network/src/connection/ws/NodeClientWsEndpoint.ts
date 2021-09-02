@@ -1,7 +1,7 @@
 import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import { DisconnectionReason } from "./AbstractWsEndpoint"
+import {DisconnectionCode, DisconnectionReason} from "./AbstractWsEndpoint"
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
 import { AbstractClientWsEndpoint, HandshakeValues, PeerId, ServerUrl } from "./AbstractClientWsEndpoint"
 
@@ -54,6 +54,9 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         })
         ws.once('close', (code: number, reason: string): void => {
             this.onClose(connection, code, reason as DisconnectionReason)
+            if (code === DisconnectionCode.DUPLICATE_SOCKET) {
+                throw new Error(`Duplicate nodeId detected, are you running multiple nodes with the same private key?`)
+            }
         })
 
         ws.on('error', (err) => {

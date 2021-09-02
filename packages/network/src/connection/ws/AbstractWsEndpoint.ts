@@ -17,7 +17,8 @@ export enum Event {
 export enum DisconnectionCode {
     GRACEFUL_SHUTDOWN = 1000,
     FAILED_HANDSHAKE = 4000,
-    DEAD_CONNECTION = 4001
+    DEAD_CONNECTION = 4001,
+    DUPLICATE_SOCKET = 4002
 }
 
 export enum DisconnectionReason {
@@ -203,9 +204,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
      * Implementer should invoke this whenever a connection is closed.
      */
     protected onClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void {
-        if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
-            this.metrics.record('open:duplicateSocket', 1)
-        }
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
         this.connectionById.delete(connection.getPeerId())
