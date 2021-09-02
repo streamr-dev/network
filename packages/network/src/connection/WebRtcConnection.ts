@@ -115,7 +115,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
-        pingInterval = 2 * 1000,
+        pingInterval = 5 * 1000,
         flushRetryTimeout = 500,
         maxMessageSize = 1048576,
     }: ConstructorOptions) {
