@@ -217,7 +217,7 @@ describe('metrics', () => {
         metricOne.record('c', 208)
         metricTwo.record('a', 39)
         metricTwo.set('b', 100)
-        jest.advanceTimersByTime(1000)
+        jest.advanceTimersByTime(2000)
 
         const rep3 = await context.report()
         expect(rep3.metrics).toEqual({
@@ -225,14 +225,14 @@ describe('metrics', () => {
                 a: 15,
                 b: 666,
                 c: {
-                    rate: 308,
+                    rate: 308 / 4,
                     last: 208,
                     total: 308
                 }
             },
             metricTwo: {
                 a: {
-                    rate: 49,
+                    rate: 49 / 4,
                     last: 39,
                     total: 49
                 },
