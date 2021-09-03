@@ -246,17 +246,17 @@ describe('tracker endpoint', () => {
         expect(jsonResult).toEqual([
             {
                 "partition": 0,
+                "streamId": "sandbox/test/stream-3",
+                "topologySize": 1
+            },
+            {
+                "partition": 0,
                 "streamId": "stream-1",
                 "topologySize": 2
             },
             {
                 "partition": 0,
                 "streamId": "stream-2",
-                "topologySize": 1
-            },
-            {
-                "partition": 0,
-                "streamId": "sandbox/test/stream-3",
                 "topologySize": 1
             }
         ])

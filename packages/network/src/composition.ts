@@ -35,7 +35,7 @@ export interface AbstractNodeOptions {
     name?: string
     location?: Location | null
     metricsContext?: MetricsContext
-    pingInterval?: number
+    trackerPingInterval?: number
 }
 
 export interface TrackerOptions extends AbstractNodeOptions {
@@ -50,10 +50,12 @@ export interface TrackerOptions extends AbstractNodeOptions {
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerInfo[],
     disconnectionWaitTime?: number,
+    peerPingInterval?: number
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
-    stunUrls?: string[]
+    stunUrls?: string[],
+    rttUpdateTimeout?: number
 }
 
 export const startTracker = async ({
@@ -65,13 +67,13 @@ export const startTracker = async ({
     attachHttpEndpoints = true,
     maxNeighborsPerNode = 4,
     metricsContext = new MetricsContext(id),
-    pingInterval,
+    trackerPingInterval,
     privateKeyFileName,
     certFileName,
 }: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
     const httpServer = await startHttpServer(host, port, privateKeyFileName, certFileName)
-    const endpoint = new ServerWsEndpoint(host, port, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, pingInterval)
+    const endpoint = new ServerWsEndpoint(host, port, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, trackerPingInterval)
 
     const tracker = new Tracker({
         peerInfo,
@@ -95,15 +97,17 @@ export const createNetworkNode = ({
     location,
     trackers,
     metricsContext = new MetricsContext(id),
-    pingInterval,
+    peerPingInterval,
+    trackerPingInterval,
     disconnectionWaitTime,
     newWebrtcConnectionTimeout,
+    rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
-    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, pingInterval)
+    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, trackerPingInterval)
     const trackerNode = new TrackerNode(endpoint)
 
     const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
@@ -116,7 +120,7 @@ export const createNetworkNode = ({
         negotiatedProtocolVersions,
         NodeWebRtcConnectionFactory,
         newWebrtcConnectionTimeout,
-        pingInterval,
+        peerPingInterval,
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
     ))
@@ -129,6 +133,7 @@ export const createNetworkNode = ({
             nodeToNode
         },
         metricsContext,
-        disconnectionWaitTime
+        disconnectionWaitTime,
+        rttUpdateTimeout
     })
 }
