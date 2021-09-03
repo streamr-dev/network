@@ -265,8 +265,8 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     return answers.selectStoragePath
 }
 
-export const getNodeIdentity = (config: any) => {
-    const nodeAddress = new Wallet(config.ethereumPrivateKey).address
+export const getNodeIdentity = (privateKey: string) => {
+    const nodeAddress = new Wallet(privateKey).address
     const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
     const networkExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
     return {

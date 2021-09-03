@@ -18,12 +18,6 @@ const assertValidPort = (port: number | string, pluginName = 'websocket') => {
     expect(config.plugins[pluginName].port).toBe(numericPort)
 }
 
-const assertValidIdentity = (config: any) => {
-    const misc = getNodeIdentity(config)
-    expect(misc.mnemonic).toBeDefined()
-    expect(misc.networkExplorerUrl).toBeDefined()
-}
-
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = PROMPTS.privateKey[1]
     const portPrompt = PROMPTS.plugins[1]
@@ -187,6 +181,15 @@ describe('ConfigWizard', () => {
         })
     })
 
+    describe('identity', () => {
+        it ('happy path', () => {
+            const privateKey = '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
+            const identity = getNodeIdentity(privateKey)
+            expect(identity.mnemonic).toBe('Mountain Until Gun')
+            expect(identity.networkExplorerUrl).toBe('https://streamr.network/network-explorer/nodes/0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc')
+        })
+    })
+
     describe('end-to-end', () => {
         it ('should exercise the happy path with default answers', () => {
             const privateKeyAnswers = {
@@ -209,7 +212,6 @@ describe('ConfigWizard', () => {
             expect(config.apiAuthentication).toBeDefined()
             expect(config.apiAuthentication.keys).toBeDefined()
             expect(config.apiAuthentication.keys.length).toBe(1)
-            assertValidIdentity(config)
         })
 
         it('should exercise the happy path with user input', () => {
@@ -232,7 +234,6 @@ describe('ConfigWizard', () => {
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.ethereumPrivateKey).toBe(privateKey)
-            assertValidIdentity(config)
         })
     })
 })
