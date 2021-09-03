@@ -73,7 +73,7 @@ export class MetricsPublisher {
             id: this.getStreamId(periodLegth)
         })
 
-        if (periodLegth > PERIOD_LENGTHS.FIVE_SECONDS) {
+        if (periodLegth !== PERIOD_LENGTHS.FIVE_SECONDS) {
             // TODO: pretify this error handler
             // https://linear.app/streamr/issue/BACK-155/assign-a-stream-to-a-storage-node-when-it-has-already-been-assigned
             try {
