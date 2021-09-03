@@ -2,7 +2,7 @@ import { Speedometer } from '../../src/helpers/Speedometer'
 
 const WINDOW_SIZE_IN_SECONDS = 5
 
-const createMockCurrentTimeProvider = () => {
+const createMockCurrentTimeProvider = (): (() => number) & { set: (dateStr: string) => void } => {
     let now: number
     const fn = () => now
     fn.set = (dateStr: string) => now = new Date(dateStr).getTime()
