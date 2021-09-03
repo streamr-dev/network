@@ -56,6 +56,7 @@ describe('Speedometer', () => {
         currentTimeProvider.set('2000-01-02T03:04:05.678Z')
         speedometer.record(100)
         currentTimeProvider.set('2000-01-02T03:04:10.123Z')
+        // 12.3% of the current second have been elapsed -> the same amount of recorded data has expired
         expect(speedometer.getRate()).toBeCloseTo((100 - 12.3) / WINDOW_SIZE_IN_SECONDS)
     })
 
@@ -63,6 +64,9 @@ describe('Speedometer', () => {
         currentTimeProvider.set('2000-01-02T03:04:05.678Z')
         speedometer.record(100)
         currentTimeProvider.set('2000-01-02T03:04:10.888Z')
+        // 88.8% of the current second have been elapsed -> the same amount of recorded data has expired
+        // the recorded item is actually 5.21 seconds old, but we calculate all items from the 03:04:05 sec
+        // unit that sec has fully expired (at 03:04:11.000)
         expect(speedometer.getRate()).toBeCloseTo((100 - 88.8) / WINDOW_SIZE_IN_SECONDS)
     })
 
