@@ -10,6 +10,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { isAddress } from '@ethersproject/address'
 import has from 'lodash/has'
 import get from 'lodash/get'
+import cloneDeep from 'lodash/cloneDeep'
 
 import { EthereumAddress, Todo } from './types'
 
@@ -161,8 +162,9 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 }
 
 /** @internal */
-export default function ClientConfig(opts: StreamrClientConfig = {}) {
-
+export default function ClientConfig(inputOptions: StreamrClientConfig = {}) {
+    const opts = cloneDeep(inputOptions)
+    const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
     // validate all Ethereum addresses which are required in StrictStreamrClientConfig: if user
     // overrides a setting, which has a default value, it must be a non-null valid Ethereum address
     // TODO could also validate
@@ -180,14 +182,14 @@ export default function ClientConfig(opts: StreamrClientConfig = {}) {
     ])
 
     const options: StrictStreamrClientConfig = {
-        ...STREAM_CLIENT_DEFAULTS,
+        ...defaults,
         ...opts,
         dataUnion: {
-            ...STREAM_CLIENT_DEFAULTS.dataUnion,
+            ...defaults.dataUnion,
             ...opts.dataUnion
         },
         cache: {
-            ...STREAM_CLIENT_DEFAULTS.cache,
+            ...defaults.cache,
             ...opts.cache,
         }
         // NOTE: sidechain and storageNode settings are not merged with the defaults

@@ -126,33 +126,6 @@ export default class Signal<ValueType = void> {
         return this
     }
 
-    asListener<ReturnType>(this: Signal<ValueType>, returnValue: ReturnType) {
-        function listen(): Promise<ValueType>
-        function listen(cb: SignalListener<ValueType>): ReturnType
-        function listen(this: Signal<ValueType>, cb?: SignalListener<ValueType>) {
-            if (!cb) {
-                return this.listen()
-            }
-
-            this.listen(cb)
-            return returnValue
-        }
-
-        return Object.assign(listen, {
-            triggerCount() {
-                return this.triggerCount
-            },
-            once: this.once.bind(this),
-            wait: this.wait.bind(this),
-            trigger: this.trigger,
-            unlisten: this.unlisten.bind(this),
-            listen: this.listen.bind(this),
-            unlistenAll: this.unlistenAll.bind(this),
-            countListeners: this.countListeners.bind(this),
-            end: this.end
-        })
-    }
-
     countListeners() {
         return this.listeners.length
     }

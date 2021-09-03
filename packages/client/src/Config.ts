@@ -82,11 +82,12 @@ const BRUBECK_CLIENT_DEFAULTS = {
 }
 
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
+    const clonedConfig = cloneDeep(config)
     const defaults = cloneDeep(BRUBECK_CLIENT_DEFAULTS)
-    const userConfig = Config(config)
+    const userConfig = Config(clonedConfig)
     return {
         ...defaults,
         ...userConfig,
-        debug: merge(defaults.debug || {}, config.debug),
+        debug: merge(defaults.debug || {}, clonedConfig.debug),
     }
 }

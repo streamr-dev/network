@@ -1,18 +1,21 @@
 import { wait } from 'streamr-test-utils'
-import { getPublishTestMessages, fakePrivateKey, describeRepeats, snapshot, LeaksDetector } from '../utils'
-import { BrubeckClient } from '../../src/BrubeckClient'
+import { getPublishTestMessages, fakePrivateKey, snapshot, LeaksDetector } from '../utils'
+import { BrubeckClient, initContainer, Dependencies } from '../../src/BrubeckClient'
+import { container } from 'tsyringe'
 import Subscription from '../../src/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
 import clientOptions from './config'
 
 const MAX_MESSAGES = 5
-const TIMEOUT = 30000
-describeRepeats('Leaks', () => {
+const TIMEOUT = 60000
+describe('Leaks', () => {
     let leaksDetector: LeaksDetector
 
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
+        leaksDetector.ignoreAll(container)
+        snapshot()
     })
 
     afterEach(async () => {
@@ -20,9 +23,67 @@ describeRepeats('Leaks', () => {
         if (!leaksDetector) { return }
         const detector = leaksDetector
         await wait(1000)
+        snapshot()
         await detector.checkNoLeaks() // this is very slow
         detector.clear()
     }, TIMEOUT)
+
+    describe('client container', () => {
+        function createContainer(opts: any = {}) {
+            return initContainer({
+                ...clientOptions,
+                auth: {
+                    privateKey: fakePrivateKey(),
+                },
+                autoConnect: false,
+                autoDisconnect: false,
+                maxRetries: 2,
+                ...opts,
+            })
+        }
+
+        /* Uncomment to debug get all failure
+        for (const [key, value] of Object.entries(Dependencies)) {
+            // eslint-disable-next-line no-loop-func
+            test(`container get ${key}`, async () => {
+                const { config, childContainer, rootContext } = createContainer()
+                const destroySignal = childContainer.resolve<any>(Dependencies.DestroySignal)
+                const result = childContainer.resolve<any>(value as any)
+                expect(result).toBeTruthy()
+                await wait(100)
+                leaksDetector.addAll(rootContext.id, { config, childContainer, result })
+                if (result && typeof result.stop === 'function') {
+                    await result.stop()
+                }
+                await destroySignal.trigger()
+                childContainer.clearInstances()
+            })
+        }
+        */
+
+        test('container get all', async () => {
+            const { config, childContainer, rootContext } = createContainer()
+            const toStop = []
+            const destroySignal = childContainer.resolve<any>(Dependencies.DestroySignal)
+            for (const [key, value] of Object.entries(Dependencies)) {
+                const result = childContainer.resolve<any>(value as any)
+                expect(result).toBeTruthy()
+
+                if (result && typeof result.stop === 'function') {
+                    toStop.push(result)
+                }
+                leaksDetector.addAll(key, result)
+            }
+            await wait(100)
+            leaksDetector.addAll(rootContext.id, { config, childContainer })
+            await destroySignal.trigger()
+            for (const result of toStop) {
+                // eslint-disable-next-line no-await-in-loop
+                await result.stop()
+            }
+            childContainer.clearInstances()
+        })
+    })
 
     describe('BrubeckClient', () => {
         const createClient = (opts: any = {}) => {
@@ -36,36 +97,39 @@ describeRepeats('Leaks', () => {
                 maxRetries: 2,
                 ...opts,
             })
+            // ignore stuff captured by leaking network node
+            leaksDetector.ignoreAll(c.options.nodeRegistry)
+            leaksDetector.ignoreAll(c.options.network)
             return c
         }
 
         describe('with client', () => {
-            test('creating client', () => {
+            test('creating client', async () => {
                 const client = createClient()
                 leaksDetector.addAll(client.id, client)
             })
 
-            test('connect + disconnect', async () => {
+            test('connect + destroy', async () => {
                 const client = createClient()
-                leaksDetector.addAll(client.id, client)
                 await client.connect()
+                leaksDetector.addAll(client.id, client)
                 await client.destroy()
             })
 
-            test('connect + disconnect + session token', async () => {
+            test('connect + destroy + session token', async () => {
                 const client = createClient()
-                leaksDetector.addAll(client.id, client)
                 await client.connect()
+                leaksDetector.addAll(client.id, client)
                 await client.getSessionToken()
                 await client.destroy()
             })
 
             test('connect + disconnect + getAddress', async () => {
                 const client = createClient()
-                leaksDetector.addAll(client.id, client)
                 await client.connect()
                 await client.getSessionToken()
                 await client.getAddress()
+                leaksDetector.addAll(client.id, client)
                 await client.destroy()
             })
         })
@@ -78,7 +142,6 @@ describeRepeats('Leaks', () => {
                 leaksDetector.addAll(client.id, client)
                 await client.connect()
                 await client.getSessionToken()
-                snapshot()
             })
 
             afterEach(async () => {
@@ -86,7 +149,6 @@ describeRepeats('Leaks', () => {
                 // @ts-expect-error doesn't want us to unassign but it's ok
                 client = undefined // unassign so can gc
                 await c.destroy()
-                snapshot()
             })
 
             test('create', async () => {
@@ -109,7 +171,7 @@ describeRepeats('Leaks', () => {
                 await client.destroy()
                 leaksDetector.add('stream', stream)
                 await wait(3000)
-            }, 15000)
+            }, 25000)
 
             describe('publish + subscribe', () => {
                 it('does not leak subscription', async () => {
@@ -124,7 +186,7 @@ describeRepeats('Leaks', () => {
                     })
 
                     await publishTestMessages(MAX_MESSAGES)
-                }, 15000)
+                }, 25000)
 
                 test('subscribe using async iterator', async () => {
                     const stream = await client.createStream({
@@ -146,7 +208,7 @@ describeRepeats('Leaks', () => {
                             break
                         }
                     }
-                }, 15000)
+                }, 25000)
 
                 test('subscribe using onMessage callback', async () => {
                     const stream = await client.createStream({
@@ -171,7 +233,7 @@ describeRepeats('Leaks', () => {
 
                     await publishTestMessages(MAX_MESSAGES)
                     await wait(1000)
-                }, 15000)
+                }, 25000)
 
                 test('subscriptions can be collected before all subscriptions removed', async () => {
                     // leaksDetector = new LeaksDetector()
@@ -223,7 +285,7 @@ describeRepeats('Leaks', () => {
                     expect(received2).toHaveLength(MAX_MESSAGES)
                     await sub2.unsubscribe()
                     await wait(1000)
-                }, 15000)
+                }, 30000)
             })
         })
     })

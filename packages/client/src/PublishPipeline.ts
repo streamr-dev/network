@@ -202,15 +202,19 @@ export default class PublishPipeline implements Context, Stoppable {
     }
 
     async stop(): Promise<void> {
+        this.debug('stop >>')
         this.isStopped = true
         const inProgress = new Set(this.inProgress)
         this.inProgress.clear()
         inProgress.forEach((defer) => {
             defer.reject(new ContextError(this, 'Pipeline Stopped. Client probably disconnected'))
         })
+        await this.publishQueue.return()
+        await this.streamMessageQueue.return()
         await Promise.allSettled([
             this.encryption.stop(),
             this.messageCreator.stop(),
         ])
+        this.debug('stop <<')
     }
 }

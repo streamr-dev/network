@@ -86,6 +86,7 @@ class BrubeckClientBase implements Context {
     streamEndpoints: StreamEndpoints
     cached: StreamEndpointsCached
     ethereum: Ethereum
+    nodeRegistry
     publisher: Publisher
     subscriber: Subscriber
     resends: Resends
@@ -118,6 +119,7 @@ class BrubeckClientBase implements Context {
         this.loginEndpoints = loginEndpoints!
         this.streamEndpoints = streamEndpoints!
         this.ethereum = ethereum!
+        this.nodeRegistry = nodeRegistry!
         this.publisher = publisher!
         this.cached = cached
         this.subscriber = subscriber!
@@ -129,6 +131,7 @@ class BrubeckClientBase implements Context {
         Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
+        Plugin(this, this.nodeRegistry)
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
         Plugin(this, this.resends)
@@ -158,62 +161,75 @@ class BrubeckClientBase implements Context {
             this.destroySignal.destroy().then(() => undefined),
             this.resends.stop(),
             this.publisher.stop(),
+            this.nodeRegistry.stop(),
             this.subscriber.stop(),
         ]
 
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
+        this.container.clearInstances()
     })
+}
+
+/**
+ * @internal
+ */
+export function initContainer(options: BrubeckClientConfig = {}, parentContainer = container) {
+    const c = parentContainer.createChildContainer()
+    const config = BrubeckConfig(options)
+    const id = counterId(`BrubeckClient:${uid}${config.id ? `:${config.id}` : ''}`)
+    const debug = Debug(id)
+    // @ts-expect-error not in types
+    Object.assign(debug.inspectOpts, {
+        // @ts-expect-error not in types
+        ...debug.inspectOpts,
+        ...config.debug.inspectOpts
+    })
+    debug('create')
+
+    const rootContext = {
+        id,
+        debug
+    }
+
+    c.register(Context as any, {
+        useValue: rootContext
+    })
+
+    c.register(BrubeckContainer, {
+        useValue: c
+    })
+
+    // associate values to config tokens
+    const configTokens: [symbol, object][] = [
+        [Config.Root, config],
+        [Config.Auth, config.auth],
+        [Config.Ethereum, config],
+        [Config.NodeRegistry, config.nodeRegistry],
+        [Config.Network, config.network],
+        [Config.Connection, config],
+        [Config.Subscribe, config],
+        [Config.Publish, config],
+        [Config.Encryption, config],
+        [Config.Cache, config.cache],
+    ]
+
+    configTokens.forEach(([token, useValue]) => {
+        c.register(token, { useValue })
+    })
+
+    registerNodeRegistry(c)
+    return {
+        config,
+        childContainer: c,
+        rootContext,
+    }
 }
 
 export class BrubeckClient extends BrubeckClientBase {
     container
     constructor(options: BrubeckClientConfig = {}, parentContainer = container) {
-        const c = parentContainer.createChildContainer()
-        const config = BrubeckConfig(options)
-        const id = counterId(`BrubeckClient:${uid}${config.id ? `:${config.id}` : ''}`)
-        const debug = Debug(id)
-        // @ts-expect-error not in types
-        Object.assign(debug.inspectOpts, {
-            // @ts-expect-error not in types
-            ...debug.inspectOpts,
-            ...config.debug.inspectOpts
-        })
-        debug('create')
-
-        const rootContext = {
-            id,
-            debug
-        }
-
-        c.register(Context as any, {
-            useValue: rootContext
-        })
-
-        c.register(BrubeckContainer, {
-            useValue: c
-        })
-
-        // associate values to config tokens
-        const configTokens: [symbol, object][] = [
-            [Config.Root, config],
-            [Config.Auth, config.auth],
-            [Config.Ethereum, config],
-            [Config.NodeRegistry, config.nodeRegistry],
-            [Config.Network, config.network],
-            [Config.Connection, config],
-            [Config.Subscribe, config],
-            [Config.Publish, config],
-            [Config.Encryption, config],
-            [Config.Cache, config.cache],
-        ]
-
-        configTokens.forEach(([token, useValue]) => {
-            c.register(token, { useValue })
-        })
-
-        registerNodeRegistry(c)
-
+        const { childContainer: c, config } = initContainer(options, parentContainer)
         super(
             c,
             c.resolve<Context>(Context as any),
@@ -233,6 +249,21 @@ export class BrubeckClient extends BrubeckClientBase {
         )
         this.container = c
     }
+}
+
+export const Dependencies = {
+    Context,
+    BrubeckNode,
+    NodeRegistry,
+    Session,
+    LoginEndpoints,
+    StreamEndpoints,
+    StreamEndpointsCached,
+    Resends,
+    Publisher,
+    Subscriber,
+    GroupKeyStoreFactory,
+    DestroySignal,
 }
 
 export { BrubeckClient as StreamrClient }
