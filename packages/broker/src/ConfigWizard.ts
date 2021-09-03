@@ -93,7 +93,7 @@ export const CONFIG_TEMPLATE: any = {
     }
 }
 
-const privateKeyPrompts: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
+const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
     {
         type: 'list',
         name:'generateOrImportPrivateKey',
@@ -279,7 +279,7 @@ export const getNodeIdentity = (privateKey: string) => {
 
 export const start = async(): Promise<void> => {
     try {
-        const privateKeyAnswers = await inquirer.prompt(privateKeyPrompts)
+        const privateKeyAnswers = await inquirer.prompt(PRIVATE_KEY_PROMPTS)
         const privateKey = getPrivateKey(privateKeyAnswers)
         if (privateKeyAnswers.revealGeneratedPrivateKey) {
             logger.info(`This is your node\'s private key: ${privateKey}`)
@@ -302,6 +302,6 @@ export const start = async(): Promise<void> => {
 }
 
 export const PROMPTS = {
-    privateKey: privateKeyPrompts,
+    privateKey: PRIVATE_KEY_PROMPTS,
     plugins: createPluginPrompts(),
 }
