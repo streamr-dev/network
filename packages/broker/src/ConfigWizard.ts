@@ -228,7 +228,7 @@ const selectStoragePath = async (): Promise<inquirer.Answers> => {
 }
 
 export const getPrivateKey = (answers: inquirer.Answers): string => {
-    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT && answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
+    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 }
 
 export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {

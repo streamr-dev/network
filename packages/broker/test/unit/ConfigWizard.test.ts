@@ -10,8 +10,7 @@ const assertValidPort = (port: number | string, pluginName = 'websocket') => {
         selectPlugins:[pluginName],
         websocketPort: port,
     }
-    const privateKey = getPrivateKey({})
-    const config = getConfig(privateKey, pluginsAnswers)
+    const config = getConfig(undefined as any, pluginsAnswers)
     expect(config.plugins[pluginName].port).toBe(numericPort)
 }
 
@@ -147,7 +146,7 @@ describe('ConfigWizard', () => {
 
     })
 
-    describe('getEthereumConfig', () => {
+    describe('getPrivateKey and getConfig', () => {
         it ('should exercise the `generate` path', () => {
             const privateKey = getPrivateKey({})
             expect(privateKey).toBeDefined()
