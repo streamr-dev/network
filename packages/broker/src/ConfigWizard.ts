@@ -12,7 +12,6 @@ import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'
 import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
 
-
 const logger = {
     info: (...args: any[]) => {
         // eslint-disable-next-line no-console
@@ -130,7 +129,6 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
     }
 ]
 
-
 const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {
     websocket: DEFAULT_WS_PORT,
     mqtt: DEFAULT_MQTT_PORT,
@@ -184,7 +182,6 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
 
     return [selectPrompt, ...portPrompts]
 }
-
 
 export const selectStoragePathPrompt = {
     type: 'input',
