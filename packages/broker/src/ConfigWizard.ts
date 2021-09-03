@@ -161,7 +161,7 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         return {
             type: 'input',
             name: `${name}Port`,
-            message: `Select a port for the ${name} Plugin [Enter for default: ${defaultPort}]`,
+            message: `Provide a port for the ${name} Plugin [Enter for default: ${defaultPort}]`,
             when: (answers: inquirer.Answers) => {
                 return answers.selectPlugins.includes(name)
             },
