@@ -7,7 +7,7 @@ import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
-import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
+import { DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 import { AbstractClientWsEndpoint } from "../connection/ws/AbstractClientWsEndpoint"
 import { AbstractWsConnection } from "../connection/ws/AbstractWsConnection"
 
@@ -159,6 +159,10 @@ export class TrackerNode extends EventEmitter {
 
     connectToTracker(trackerAddress: string, trackerPeerInfo: PeerInfo): Promise<string> {
         return this.endpoint.connect(trackerAddress, trackerPeerInfo)
+    }
+
+    disconnectFromTracker(trackerId: string): void {
+        this.endpoint.close(trackerId, 1000, DisconnectionReason.NO_SHARED_STREAMS)
     }
 
     onPeerConnected(peerInfo: PeerInfo): void {

@@ -51,9 +51,11 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     afterEach(async () => {
-        await nodeOne.stop()
-        await nodeTwo.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            nodeOne.stop(),
+            nodeTwo.stop(),
+            tracker.stop()
+        ])
     })
 
     it('tracker should receive status message from node', (done) => {
@@ -65,6 +67,7 @@ describe('check status message flow between tracker and two nodes', () => {
             done()
         })
 
+        nodeOne.subscribe('stream-id', 0)
         nodeOne.start()
     })
 
@@ -76,10 +79,14 @@ describe('check status message flow between tracker and two nodes', () => {
             expect(statusMessage.status).toEqual(nodeTwo.getFullStatus(TRACKER_ID))
             done()
         })
+
+        nodeTwo.subscribe('stream-id', 0)
         nodeTwo.start()
     })
 
     it('tracker should receive from both nodes new statuses', (done) => {
+        nodeOne.subscribe('stream-id', 0)
+        nodeTwo.subscribe('stream-id', 0)
         nodeOne.start()
         nodeTwo.start()
 
@@ -101,9 +108,9 @@ describe('check status message flow between tracker and two nodes', () => {
 
             if (receivedTotal === 2) {
                 // @ts-expect-error private field
-                expect(nodeOneStatus).toEqual(nodeOne.getFullStatus())
+                expect(nodeOneStatus).toEqual(nodeOne.getFullStatus('tracker'))
                 // @ts-expect-error private field
-                expect(nodeTwoStatus).toEqual(nodeTwo.getFullStatus())
+                expect(nodeTwoStatus).toEqual(nodeTwo.getFullStatus('tracker'))
                 done()
             }
         })

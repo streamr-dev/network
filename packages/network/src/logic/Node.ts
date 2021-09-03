@@ -42,9 +42,9 @@ export interface NodeOptions {
     disconnectionWaitTime?: number
     nodeConnectTimeout?: number
     instructionRetryInterval?: number
+    trackerConnectionMaintenanceInterval?: number
 }
 
-const TRACKER_CONNECTION_MAINTENANCE_INTERVAL = 5000
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
 
 export interface Node {
@@ -68,6 +68,7 @@ export class Node extends EventEmitter {
     private readonly disconnectionWaitTime: number
     private readonly nodeConnectTimeout: number
     private readonly instructionRetryInterval: number
+    private readonly trackerConnectionMaintenanceInterval: number
     private readonly started: string
 
     private readonly logger: Logger
@@ -106,6 +107,7 @@ export class Node extends EventEmitter {
         this.disconnectionWaitTime = opts.disconnectionWaitTime || 30 * 1000
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.instructionRetryInterval = opts.instructionRetryInterval || 60000
+        this.trackerConnectionMaintenanceInterval = opts.trackerConnectionMaintenanceInterval ?? 5000
         this.started = new Date().toLocaleString()
         this.logger = new Logger(module)
 
@@ -171,7 +173,7 @@ export class Node extends EventEmitter {
         this.maintainTrackerConnections()
         this.maintainTrackerConnectionsInterval = setInterval(
             this.maintainTrackerConnections.bind(this),
-            TRACKER_CONNECTION_MAINTENANCE_INTERVAL
+            this.trackerConnectionMaintenanceInterval
         )
     }
 
@@ -190,6 +192,7 @@ export class Node extends EventEmitter {
         if (!this.streams.isSetUp(streamId)) {
             this.logger.trace('add %s to streams', streamId)
             this.streams.setUpStream(streamId)
+            this.maintainTrackerConnections()
             if (sendStatus) {
                 this.prepareAndSendStreamStatus(streamId)
             }
@@ -524,11 +527,20 @@ export class Node extends EventEmitter {
     }
 
     private maintainTrackerConnections(): void {
-        this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
-            this.trackerNode.connectToTracker(trackerInfo.ws, PeerInfo.newTracker(trackerInfo.id))
-                .catch((err) => {
-                    this.logger.warn('could not connect to tracker %s, reason: %j', trackerInfo.ws, err)
-                })
+        const activeTrackers = new Set<string>()
+        this.streams.getStreams().forEach((s) => {
+            const trackerInfo = this.trackerRegistry.getTracker(s.id, s.partition)
+            activeTrackers.add(trackerInfo.id)
+        })
+        this.trackerRegistry.getAllTrackers().forEach(({ id, ws }) => {
+            if (activeTrackers.has(id)) {
+                this.trackerNode.connectToTracker(ws, PeerInfo.newTracker(id))
+                    .catch((err) => {
+                        this.logger.warn('could not connect to tracker %s, reason: %j', ws, err)
+                    })
+            } else {
+                this.trackerNode.disconnectFromTracker(id)
+            }
         })
     }
 
