@@ -34,7 +34,7 @@ export class Speedometer {
     private secValues: number[]
     // UTC time of a second (millisecond part always 0)
     private firstSecStartTime: number
-    private startupTime: number
+    private readonly startupTime: number
     private readonly windowSizeInSeconds: number
     // CurrentTimeProvider is used only for unit tests
     private readonly currentTimeProvider: () => number
