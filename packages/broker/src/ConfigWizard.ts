@@ -32,11 +32,17 @@ const generateApiKey = (): string => {
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
 
-export const DEFAULT_CONFIG_PORTS = {
+export const DEFAULT_CONFIG_PORTS: { [plugin: string]: number } = {
     WS: WebsocketConfigSchema.properties.port.default,
     MQTT: MqttConfigSchema.properties.port.default,
     HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default,
     LEGACY_WS: LegacyWebsocketConfigSchema.properties.port.default,
+}
+
+const PLUGIN_NAMES: {[pluginName: string]: string} = {
+    WS: 'websocket',
+    MQTT: 'mqtt',
+    HTTP: 'publishHttp'
 }
 
 const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
@@ -104,7 +110,7 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
             try {
                 new Wallet(input)
                 return true
-            } catch (e) {
+            } catch (e: any) {
                 if (e.message.includes('invalid hexlify value')){
                     return `Invalid privateKey provided for import: ${input}`
                 } else {
@@ -124,18 +130,6 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
     }
 ]
 
-const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {
-    websocket: DEFAULT_CONFIG_PORTS.WS,
-    mqtt: DEFAULT_CONFIG_PORTS.MQTT,
-    publishHttp: DEFAULT_CONFIG_PORTS.HTTP,
-}
-
-const PLUGIN_NAMES: {[pluginName: string]: string} = {
-    WEBSOCKET: 'websocket',
-    MQTT: 'mqtt',
-    PUBLISH_HTTP: 'publishHttp'
-}
-
 const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> => {
     const selectPrompt: inquirer.CheckboxQuestion = {
         type: 'checkbox',
@@ -144,8 +138,8 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         choices: Object.values(PLUGIN_NAMES)
     }
 
-    const portPrompts: Array<inquirer.Question> = Object.keys(PLUGIN_DEFAULT_PORTS).map((name) => {
-        const defaultPort = PLUGIN_DEFAULT_PORTS[name]
+    const portPrompts: Array<inquirer.Question> = Object.keys(DEFAULT_CONFIG_PORTS).map((name) => {
+        const defaultPort = DEFAULT_CONFIG_PORTS[name]
         const MIN_PORT_VALUE = 1024
         const MAX_PORT_VALUE = 49151
         return {
@@ -191,7 +185,7 @@ export const selectStoragePathPrompt = {
             answers.fileExists = existsSync(input)
 
             return true
-        } catch (e) {
+        } catch (e: any) {
             return e.message
         }
     }
@@ -226,15 +220,17 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
     config.ethereumPrivateKey = privateKey
 
-    const pluginNames = Object.values(PLUGIN_NAMES)
-    pluginNames.forEach((pluginName) => {
-        const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
+    const pluginNames = Object.keys(PLUGIN_NAMES)
+    pluginNames.forEach((pluginKey) => {
+        const pluginName = PLUGIN_NAMES[pluginKey]
+        const defaultPort = DEFAULT_CONFIG_PORTS[pluginKey]
         if (pluginsAnswers.selectPlugins && pluginsAnswers.selectPlugins.includes(pluginName)){
             let pluginConfig = {}
             const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
-            if (portNumber !== defaultPluginPort){
+            console.log('portNumber', portNumber, defaultPort)
+            if (portNumber !== defaultPort){
                 const portObject = { port: portNumber }
-                if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
+                if (pluginName === PLUGIN_NAMES.HTTP) {
                     // the publishHttp plugin is special, it needs to be added to the config after the other plugins
                     config.httpServer = portObject
                 } else {
@@ -287,7 +283,7 @@ export const start = async(): Promise<void> => {
         logger.info(networkExplorerUrl)
         logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${storagePath}`)
-    } catch (e) {
+    } catch (e: any) {
         logger.warn('Broker Config Wizard encountered an error:')
         logger.error(e.message)
     }
