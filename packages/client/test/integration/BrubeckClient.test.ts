@@ -329,7 +329,7 @@ describeRepeats('StreamrClient', () => {
                 await publishTask
             }).rejects.toThrow('publish')
             expect(received.map((s) => s.getParsedContent())).toEqual(published.slice(0, 3))
-            expect(onMessage).toHaveBeenCalledTimes(4)
+            expect(onMessage).toHaveBeenCalledTimes(3)
         })
 
         it('destroying resolves publish promises', async () => {
@@ -408,9 +408,9 @@ describeRepeats('StreamrClient', () => {
                     last: 3,
                 },
             })
-            const messages = await sub.collect()
-            expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
-        }, 10000)
+            const messages = await sub.collectContent()
+            expect(messages).toEqual([publishedMessage])
+        }, 20000)
     })
 })
 

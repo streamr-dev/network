@@ -112,13 +112,13 @@ class StreamrStream implements StreamMetadata {
     protected _resends: Resends
     protected _publisher: Publisher
 
-    constructor(props: StreamProperties, @inject(BrubeckContainer) private container: DependencyContainer) {
+    constructor(props: StreamProperties, @inject(BrubeckContainer) private _container: DependencyContainer) {
         Object.assign(this, props)
         this.id = props.id
         this.streamId = this.id
-        this._rest = container.resolve<Rest>(Rest)
-        this._resends = container.resolve<Resends>(Resends)
-        this._publisher = container.resolve<Publisher>(Publisher)
+        this._rest = _container.resolve<Rest>(Rest)
+        this._resends = _container.resolve<Resends>(Resends)
+        this._publisher = _container.resolve<Publisher>(Publisher)
     }
 
     async update() {
@@ -126,7 +126,7 @@ class StreamrStream implements StreamMetadata {
             ['streams', this.id],
             this.toObject(),
         )
-        return json ? new StreamrStream(json, this.container) : undefined
+        return json ? new StreamrStream(json, this._container) : undefined
     }
 
     toObject() {
@@ -207,7 +207,7 @@ class StreamrStream implements StreamMetadata {
             },
         })
 
-        const receivedMsgs = await sub.collect()
+        const receivedMsgs = await sub.collectContent()
 
         if (!receivedMsgs.length) { return }
 

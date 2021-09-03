@@ -363,7 +363,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 const publishTestMessages = getPublishTestMessages(pubClient, stream, {
                     // delay: 500 + Math.random() * 1500,
                     waitForLast: true,
-                    waitForLastTimeout: 15000,
+                    waitForLastTimeout: 25000,
                     waitForLastCount: MAX_MESSAGES * publishers.length,
                     createMessage: ({ batchId }) => ({
                         batchId,
@@ -389,7 +389,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
-        }, 60000)
+        }, 80000)
 
         // skipped because needs resend + subscribe
         test.skip('works with multiple publishers on one stream with late subscriber', async () => {

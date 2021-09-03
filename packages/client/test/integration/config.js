@@ -43,10 +43,10 @@ module.exports = {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     },
-    //nodeRegistry: [{
-        //address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-        //url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
-    //}],
+    // nodeRegistry: [{
+    // address: '0xde1112f631486CfC759A50196853011528bC5FA0',
+    // url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
+    // }],
     sidechain: {
         url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
         timeout: toNumber(process.env.TEST_TIMEOUT),

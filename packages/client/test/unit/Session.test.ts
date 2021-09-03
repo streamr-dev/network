@@ -65,12 +65,12 @@ describe('Session', () => {
             expect(sessionToken).toBe(clientNone.options.auth.sessionToken)
         })
 
-        it('should return undefined with no authentication', async () => {
+        it('should return empty string with no authentication', async () => {
             const clientNone = createClient({
                 auth: {},
             })
             const sessionToken = await clientNone.session.getSessionToken()
-            expect(sessionToken).toBe(undefined)
+            expect(sessionToken).toBe('')
         })
 
         it('login function should throw if only session token provided', async () => {

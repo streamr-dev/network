@@ -31,7 +31,7 @@ export default class Subscription<T extends MessageContent | unknown = unknown> 
         this.streamPartition = this.spid.streamPartition
         this.key = this.spid.key
         this.onMessage((msg) => {
-            this.debug('receive << %o', msg)
+            this.debug('<< %o', msg)
         })
         // this.debug('create', this.key, new Error('Subscription').stack)
     }

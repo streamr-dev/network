@@ -299,12 +299,12 @@ describeRepeats('decryption', () => {
                     await grantSubscriberPermissions({ stream: testStream })
                     await subscriber.subscribe({
                         stream: testStream.id,
-                    }, done.wrapError((parsedContent) => {
+                    }, (parsedContent) => {
                         received.push(parsedContent)
                         if (received.length === NUM_MESSAGES) {
                             done.resolve(undefined)
                         }
-                    }))
+                    })
 
                     const published: any[] = []
                     publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
@@ -376,9 +376,6 @@ describeRepeats('decryption', () => {
                     await publisher.rotateGroupKey(stream.id)
                 })
                 const published = await getPublishTestStreamMessages(publisher, stream)(NUM_MESSAGES)
-
-                // published with encryption
-                expect(published.map((s) => s.encryptionType)).toEqual(published.map(() => StreamMessage.ENCRYPTION_TYPES.AES))
 
                 const received = await sub.collect(published.length)
                 expect(received.map((s) => s.getParsedContent())).toEqual(publishedStreamMessages.map((s) => s.getParsedContent()))
@@ -568,6 +565,7 @@ await subscriber.unsubscribe(sub)
 
                 it('throws if onError does rethrow', async () => {
                     const onSubError = jest.fn((err) => {
+                        sub.debug('ON SUB ERROR', err)
                         throw err
                     })
                     sub.onError(onSubError)
@@ -638,12 +636,12 @@ await subscriber.unsubscribe(sub)
                 await grantSubscriberPermissions({ stream: testStream })
                 await subscriber.subscribe({
                     streamId: testStream.id,
-                }, done.wrapError((parsedContent) => {
+                }, (parsedContent) => {
                     received.push(parsedContent)
                     if (received.length === NUM_MESSAGES) {
                         done.resolve(undefined)
                     }
-                }))
+                })
 
                 await publisher.rotateGroupKey(testStream.id)
                 const published: any[] = []
@@ -712,12 +710,12 @@ await subscriber.unsubscribe(sub)
                 await grantSubscriberPermissions({ stream: testStream })
                 await subscriber.subscribe({
                     streamId: testStream.id,
-                }, done.wrapError((parsedContent) => {
+                }, (parsedContent) => {
                     received.push(parsedContent)
                     if (received.length === NUM_MESSAGES) {
                         done.resolve(undefined)
                     }
-                }))
+                })
 
                 const contentClear: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(([streamMessage]) => {

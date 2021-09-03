@@ -167,7 +167,6 @@ class BrubeckClientBase implements Context {
 
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
-        this.container.clearInstances()
     })
 }
 

@@ -176,9 +176,12 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     onError = Signal.create<Error>()
 
     protected seenErrors = new WeakSet<Error>()
+    protected ignoredErrors = new WeakSet<Error>()
 
     async handleError(err: Error) {
         // don't double-handle errors
+        if (this.ignoredErrors.has(err)) { return }
+
         // i.e. same handler used for pipeline step errors
         // and pipeline end errors. pipeline step errors
         // will become pipeline end errors if not handled
@@ -191,6 +194,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 if (hadNoListeners) {
                     throw err
                 }
+                this.ignoredErrors.add(err)
             } catch (nextErr) {
                 // don't double handle if different error thrown
                 // by onError trigger
@@ -378,8 +382,16 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
 
     // wrapped PushBuffer methods below here
 
-    async push(item: InType) {
+    async push(item: InType | Error) {
         return this.source.push(item)
+    }
+
+    async pushError(err: Error) {
+        try {
+            await this.handleError(err)
+        } catch (error) {
+            await this.push(error)
+        }
     }
 
     end(err?: Error) {

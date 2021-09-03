@@ -194,12 +194,15 @@ export default class Resend implements Context {
         })
 
         messageStream.pull((async function* readStream(this: Resend) {
-            const dataStream = await fetchStream(url, this.session)
+            let dataStream
             try {
+                dataStream = await fetchStream(url, this.session)
                 yield* dataStream
             } finally {
                 debug('resent %s messages.', count)
-                dataStream.destroy()
+                if (dataStream) {
+                    dataStream.destroy()
+                }
             }
         }.bind(this)()))
         return messageStream

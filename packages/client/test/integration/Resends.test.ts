@@ -308,7 +308,6 @@ describeRepeats('resends', () => {
                 receivedMsgs.push(streamMessage)
             })
 
-            await sub.consume()
             await sub.onFinally()
             expect(receivedMsgs).toHaveLength(published.length)
             expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))

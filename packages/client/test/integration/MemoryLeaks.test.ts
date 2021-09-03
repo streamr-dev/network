@@ -9,7 +9,7 @@ import clientOptions from './config'
 
 const MAX_MESSAGES = 5
 const TIMEOUT = 60000
-describe('Leaks', () => {
+describe.skip('Leaks', () => {
     let leaksDetector: LeaksDetector
 
     beforeEach(() => {

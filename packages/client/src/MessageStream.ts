@@ -31,7 +31,6 @@ export default class MessageStream<
     useLegacyOnMessageHandler(onMessage?: MessageStreamOnMessage<T>): this {
         if (onMessage) {
             this.onMessage(async (streamMessage) => {
-                this.debug('<< ', streamMessage)
                 if (streamMessage instanceof StreamMessage) {
                     await onMessage(streamMessage.getParsedContent(), streamMessage)
                 }

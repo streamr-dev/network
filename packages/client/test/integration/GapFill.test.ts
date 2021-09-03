@@ -144,7 +144,7 @@ describeRepeats('GapFill', () => {
                 // message pipeline is processed as soon as messages arrive,
                 // not when sub starts iterating
                 expect(calledResend).toHaveBeenCalled()
-            }, 15000)
+            }, 35000)
 
             it('can fill gap of multiple messages', async () => {
                 const sub = await client.subscribe(stream.id)
@@ -165,7 +165,7 @@ describeRepeats('GapFill', () => {
                     }
                 }
                 expect(received).toEqual(published)
-            }, 20000)
+            }, 35000)
 
             it('can fill multiple gaps', async () => {
                 const sub = await client.subscribe(stream.id)
@@ -187,7 +187,7 @@ describeRepeats('GapFill', () => {
                     }
                 }
                 expect(received).toEqual(published)
-            }, 15000)
+            }, 35000)
         })
 
         describe('resend', () => {
@@ -268,7 +268,7 @@ describeRepeats('GapFill', () => {
                         last: MAX_MESSAGES,
                     })
                 }).rejects.toThrow('storage')
-            }, 15000)
+            }, 25000)
         })
     })
 
@@ -311,7 +311,7 @@ describeRepeats('GapFill', () => {
             const published = await publishedTask
             expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
             expect(calledResend).toHaveBeenCalledTimes(0)
-        }, 20000)
+        }, 30000)
 
         it('calls gapfill max maxGapRequests times', async () => {
             await setupClient({
@@ -353,7 +353,7 @@ describeRepeats('GapFill', () => {
             }
             expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
             expect(calledResend).toHaveBeenCalledTimes(3)
-        }, 20000)
+        }, 40000)
     })
 })
 

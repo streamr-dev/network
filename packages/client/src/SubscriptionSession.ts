@@ -63,11 +63,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
     private onError(error: Error) {
         this.debug('subsession error', error)
         this.subscriptions.forEach(async (sub) => {
-            try {
-                await sub.onError.trigger(error)
-            } catch (err) {
-                await sub.push(err)
-            }
+            await sub.pushError(error)
         })
     }
 
@@ -80,9 +76,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
                 yield msg
             }
         } catch (err) {
-            this.subscriptions.forEach((sub) => (
-                sub.push(err)
-            ))
+            this.onError(err)
         }
     }
 
