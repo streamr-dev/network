@@ -133,7 +133,7 @@ const privateKeyPrompts: Array<inquirer.Question | inquirer.ListQuestion | inqui
 ]
 
 export const getPrivateKey = (answers: inquirer.Answers): string => {
-    return (answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
+    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT && answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 }
 
 const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {

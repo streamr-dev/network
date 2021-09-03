@@ -6,14 +6,11 @@ import { PROMPTS, DEFAULT_CONFIG_PORTS, selectStoragePathPrompt, createStorageFi
 
 const assertValidPort = (port: number | string, pluginName = 'websocket') => {
     const numericPort = (typeof port === 'string') ? parseInt(port) : port
-    const privateKeyAnswers = {
-        generateOrImportPrivateKey: 'Generate',
-    }
     const pluginsAnswers = {
         selectPlugins:[pluginName],
         websocketPort: port,
     }
-    const privateKey = getPrivateKey(privateKeyAnswers)
+    const privateKey = getPrivateKey({})
     const config = getConfig(privateKey, pluginsAnswers)
     expect(config.plugins[pluginName].port).toBe(numericPort)
 }
@@ -125,7 +122,6 @@ describe('ConfigWizard', () => {
                 fileExists: false,
                 parentDirExists: false,
             })
-            console.log(configFileLocation)
             expect(configFileLocation).toBe(selectStoragePath)
             expect(existsSync(configFileLocation)).toBe(true)
         })
@@ -153,11 +149,7 @@ describe('ConfigWizard', () => {
 
     describe('getEthereumConfig', () => {
         it ('should exercise the `generate` path', () => {
-            const answers = {
-                generateOrImportPrivateKey: 'Generate',
-            }
-
-            const privateKey = getPrivateKey(answers)
+            const privateKey = getPrivateKey({})
             expect(privateKey).toBeDefined()
             expect(privateKey).toMatch(/^0x[0-9a-f]{64}$/)
         })
@@ -192,10 +184,7 @@ describe('ConfigWizard', () => {
 
     describe('end-to-end', () => {
         it ('should exercise the happy path with default answers', () => {
-            const privateKeyAnswers = {
-                generateOrImportPrivateKey: 'Generate',
-                revealGeneratedPrivateKey: false
-            }
+            const privateKeyAnswers = {}
             const pluginsAnswers = {
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
                 websocketPort: DEFAULT_CONFIG_PORTS.WS,
@@ -218,7 +207,6 @@ describe('ConfigWizard', () => {
             const importPrivateKey = Wallet.createRandom().privateKey
             const privateKeyAnswers = {
                 generateOrImportPrivateKey: 'Import',
-                revealGeneratedPrivateKey: true,
                 importPrivateKey
             }
             const pluginsAnswers = {
@@ -229,11 +217,11 @@ describe('ConfigWizard', () => {
             }
             const privateKey = getPrivateKey(privateKeyAnswers)
             const config = getConfig(privateKey, pluginsAnswers)
+            expect(config.ethereumPrivateKey).toBe(importPrivateKey)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
-            expect(config.ethereumPrivateKey).toBe(privateKey)
         })
     })
 })
