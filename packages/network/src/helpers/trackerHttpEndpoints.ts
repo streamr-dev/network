@@ -60,7 +60,7 @@ const cachedJsonGet = (
             }
         }
         res.setHeader('Content-Type', 'application/json')
-        res.end(cache.json)
+        res.send(cache.json)
     })
 }
 
