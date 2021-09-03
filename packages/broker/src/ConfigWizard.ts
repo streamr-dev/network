@@ -12,22 +12,6 @@ import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'
 import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
 
-const DEFAULT_WS_PORT = WebsocketConfigSchema.properties.port.default
-const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
-const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
-const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
-
-export const DEFAULT_CONFIG_PORTS = {
-    WS: DEFAULT_WS_PORT,
-    MQTT: DEFAULT_MQTT_PORT,
-    HTTP: DEFAULT_HTTP_PORT,
-    LEGACY_WS: DEFAULT_LEGACY_WS_PORT
-}
-
-
-
-const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
-const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 const logger = {
     info: (...args: any[]) => {
@@ -48,6 +32,21 @@ const generateApiKey = (): string => {
     const hex = uuid().split('-').join('')
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
+
+const DEFAULT_WS_PORT = WebsocketConfigSchema.properties.port.default
+const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
+const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
+const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
+
+export const DEFAULT_CONFIG_PORTS = {
+    WS: DEFAULT_WS_PORT,
+    MQTT: DEFAULT_MQTT_PORT,
+    HTTP: DEFAULT_HTTP_PORT,
+    LEGACY_WS: DEFAULT_LEGACY_WS_PORT
+}
+
+const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
+const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 export const CONFIG_TEMPLATE: any = {
     network: {
@@ -131,9 +130,6 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
     }
 ]
 
-export const getPrivateKey = (answers: inquirer.Answers): string => {
-    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT && answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
-}
 
 const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {
     websocket: DEFAULT_WS_PORT,
@@ -189,32 +185,6 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
     return [selectPrompt, ...portPrompts]
 }
 
-export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
-    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
-    config.ethereumPrivateKey = privateKey
-
-    const pluginNames = Object.values(PLUGIN_NAMES)
-    pluginNames.forEach((pluginName) => {
-        const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
-        if (pluginsAnswers.selectPlugins && pluginsAnswers.selectPlugins.includes(pluginName)){
-            let pluginConfig = {}
-            const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
-            if (portNumber !== defaultPluginPort){
-                const portObject = { port: portNumber }
-                if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
-                    // the publishHttp plugin is special, it needs to be added to the config after the other plugins
-                    config.httpServer = portObject
-                } else {
-                    // user provided a custom value, fill in
-                    pluginConfig = portObject
-                }
-            }
-            config.plugins![pluginName] = pluginConfig
-        }
-    })
-
-    return config
-}
 
 export const selectStoragePathPrompt = {
     type: 'input',
@@ -255,6 +225,37 @@ const selectStoragePath = async (): Promise<inquirer.Answers> => {
     }
 
     return answers
+}
+
+export const getPrivateKey = (answers: inquirer.Answers): string => {
+    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT && answers.importPrivateKey) ? answers.importPrivateKey : Wallet.createRandom().privateKey
+}
+
+export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
+    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
+    config.ethereumPrivateKey = privateKey
+
+    const pluginNames = Object.values(PLUGIN_NAMES)
+    pluginNames.forEach((pluginName) => {
+        const defaultPluginPort = PLUGIN_DEFAULT_PORTS[pluginName]
+        if (pluginsAnswers.selectPlugins && pluginsAnswers.selectPlugins.includes(pluginName)){
+            let pluginConfig = {}
+            const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
+            if (portNumber !== defaultPluginPort){
+                const portObject = { port: portNumber }
+                if (pluginName === PLUGIN_NAMES.PUBLISH_HTTP) {
+                    // the publishHttp plugin is special, it needs to be added to the config after the other plugins
+                    config.httpServer = portObject
+                } else {
+                    // user provided a custom value, fill in
+                    pluginConfig = portObject
+                }
+            }
+            config.plugins![pluginName] = pluginConfig
+        }
+    })
+
+    return config
 }
 
 export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
