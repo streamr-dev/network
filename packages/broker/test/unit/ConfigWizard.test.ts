@@ -203,10 +203,9 @@ describe('ConfigWizard', () => {
         })
 
         it('should exercise the happy path with user input', () => {
-            const importPrivateKey = Wallet.createRandom().privateKey
             const privateKeyAnswers = {
                 generateOrImportPrivateKey: 'Import',
-                importPrivateKey
+                importPrivateKey: Wallet.createRandom().privateKey
             }
             const pluginsAnswers = {
                 selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
@@ -216,7 +215,7 @@ describe('ConfigWizard', () => {
             }
             const privateKey = getPrivateKey(privateKeyAnswers)
             const config = getConfig(privateKey, pluginsAnswers)
-            expect(config.ethereumPrivateKey).toBe(importPrivateKey)
+            expect(config.ethereumPrivateKey).toBe(privateKeyAnswers.importPrivateKey)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
