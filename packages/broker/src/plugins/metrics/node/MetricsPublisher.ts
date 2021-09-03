@@ -72,21 +72,24 @@ export class MetricsPublisher {
         const stream = await this.client.getOrCreateStream({
             id: this.getStreamId(periodLegth)
         })
-        // TODO: pretify this error handler
-        // https://linear.app/streamr/issue/BACK-155/assign-a-stream-to-a-storage-node-when-it-has-already-been-assigned
-        try {
-            await stream.addToStorageNode(this.storageNodeAddress)
-        } catch (e) {
-            if (!e.body) { throw e }
-            let parsedBody
+
+        if (periodLegth > PERIOD_LENGTHS.FIVE_SECONDS) {
+            // TODO: pretify this error handler
+            // https://linear.app/streamr/issue/BACK-155/assign-a-stream-to-a-storage-node-when-it-has-already-been-assigned
             try {
-                parsedBody = JSON.parse(e.body)
-            } catch (jsonError) {
-                throw e // original error, not parsing one
-            }
-            // expected error when re-adding storage node
-            if (parsedBody.code !== 'DUPLICATE_NOT_ALLOWED') {
-                throw e
+                await stream.addToStorageNode(this.storageNodeAddress)
+            } catch (e) {
+                if (!e.body) { throw e }
+                let parsedBody
+                try {
+                    parsedBody = JSON.parse(e.body)
+                } catch (jsonError) {
+                    throw e // original error, not parsing one
+                }
+                // expected error when re-adding storage node
+                if (parsedBody.code !== 'DUPLICATE_NOT_ALLOWED') {
+                    throw e
+                }
             }
         }
         await stream.grantPermission('stream_get' as StreamOperation, undefined)
