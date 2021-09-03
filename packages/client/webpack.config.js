@@ -105,6 +105,7 @@ module.exports = (env, argv) => {
                 buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
                 'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
+                'streamr-client-protocol/contracts/NodeRegistry.json': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/contracts/NodeRegistry.json'),
                 'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/src'),
                 // swap out ServerPersistentStore for BrowserPersistentStore
                 [path.resolve(__dirname, 'src/encryption/ServerPersistentStore')]: (

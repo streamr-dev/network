@@ -32,7 +32,7 @@ module.exports = {
         }],
          "@babel/plugin-transform-modules-commonjs",
         ['@babel/plugin-proposal-class-properties', {
-            loose: true
+            loose: false
         }]
     ]
 }
