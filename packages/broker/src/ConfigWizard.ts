@@ -24,8 +24,7 @@ export const DEFAULT_CONFIG_PORTS = {
     LEGACY_WS: DEFAULT_LEGACY_WS_PORT
 }
 
-const MIN_PORT_VALUE = 1024
-const MAX_PORT_VALUE = 49151
+
 
 const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
 const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
@@ -155,6 +154,9 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         message: 'Select the plugins to enable',
         choices: Object.values(PLUGIN_NAMES)
     }
+
+    const MIN_PORT_VALUE = 1024
+    const MAX_PORT_VALUE = 49151
 
     const portPrompts: Array<inquirer.Question> = Object.keys(PLUGIN_DEFAULT_PORTS).map((name) => {
         const defaultPort = PLUGIN_DEFAULT_PORTS[name]
