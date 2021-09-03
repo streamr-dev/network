@@ -47,13 +47,13 @@ export class Speedometer {
         this.currentTimeProvider = currentTimeProvider
     }
 
-    record(value: number) {
+    record(value: number): void {
         const now = this.currentTimeProvider()
         this.update(now)
         this.secValues[0] += value
     }
 
-    getRate() {
+    getRate(): number {
         const now = this.currentTimeProvider()
         this.update(now)
         const fraction = now % ONE_SECOND
