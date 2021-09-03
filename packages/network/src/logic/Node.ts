@@ -7,7 +7,6 @@ import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
 import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
-import { PerStreamMetrics } from './PerStreamMetrics'
 import { StreamManager } from './StreamManager'
 import { InstructionThrottler } from './InstructionThrottler'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
@@ -81,7 +80,6 @@ export class Node extends EventEmitter {
     private readonly instructionThrottler: InstructionThrottler
     private readonly instructionRetryManager: InstructionRetryManager
     private readonly consecutiveDeliveryFailures: { [key: string]: number } // id => counter
-    private readonly perStreamMetrics: PerStreamMetrics
     private readonly rttUpdateTimeoutsOnTrackers: { [key: string]: NodeJS.Timeout } // trackerId => timeout
     private readonly metrics: Metrics
     private connectToBoostrapTrackersInterval?: NodeJS.Timeout | null
@@ -152,8 +150,6 @@ export class Node extends EventEmitter {
             this.metrics.set('latency', avgLatency)
         })
 
-        this.perStreamMetrics = new PerStreamMetrics()
-        // .addQueriedMetric('perStream', () => this.perStreamMetrics.report()) NET-122
         this.metrics = metricsContext.create('node')
             .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
             .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
@@ -229,7 +225,6 @@ export class Node extends EventEmitter {
         }
 
         this.metrics.record('trackerInstructions', 1)
-        this.perStreamMetrics.recordTrackerInstruction(instructionMessage.streamId)
         this.logger.trace('received instructions for %s, nodes to connect %o', streamId, nodeIds)
 
         this.subscribeToStreamIfHaveNotYet(streamId, false)
@@ -285,7 +280,6 @@ export class Node extends EventEmitter {
 
     onDataReceived(streamMessage: MessageLayer.StreamMessage, source: string | null = null): void | never {
         this.metrics.record('onDataReceived', 1)
-        this.perStreamMetrics.recordDataReceived(streamMessage.getStreamId())
         const streamIdAndPartition = new StreamIdAndPartition(
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
@@ -326,13 +320,11 @@ export class Node extends EventEmitter {
         } else {
             this.logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
             this.metrics.record('onDataReceived:ignoredDuplicate', 1)
-            this.perStreamMetrics.recordIgnoredDuplicate(streamMessage.getStreamId())
         }
     }
 
     private propagateMessage(streamMessage: MessageLayer.StreamMessage, source: string | null): void {
         this.metrics.record('propagateMessage', 1)
-        this.perStreamMetrics.recordPropagateMessage(streamMessage.getStreamId())
         const streamIdAndPartition = new StreamIdAndPartition(
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
