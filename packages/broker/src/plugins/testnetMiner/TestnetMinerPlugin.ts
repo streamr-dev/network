@@ -41,6 +41,8 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     natType?: string
     metrics: Metrics
     dummyMessagesReceived: number
+    rewardSubscriptionRetryRef: NodeJS.Timeout | null
+    subscriptionRetryInterval: number
 
     constructor(options: PluginOptions) {
         super(options)
@@ -49,6 +51,8 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         }
         this.metrics = this.metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
         this.dummyMessagesReceived = 0
+        this.rewardSubscriptionRetryRef = null
+        this.subscriptionRetryInterval = 3 * 60 * 1000
     }
 
     async start() {
@@ -62,16 +66,11 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             natType: this.natType || null,
             brokerVersion: CURRENT_VERSION,
         })
-        await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
-            if (message.rewardCode) {
-                this.onRewardCodeReceived(message.rewardCode)
-            } if (message.info) {
-                logger.info(message.info)
-            } else {
-                logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
-                this.dummyMessagesReceived += 1
-            }
-        })
+
+        await this.subscribe()
+
+        this.rewardSubscriptionRetryRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
+
         logger.info('Testnet miner plugin started')
     }
 
@@ -82,6 +81,30 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 
         await this.claimRewardCode(rewardCode, peers, delay)
+    }
+
+    private async subscriptionIntervalFn(): Promise<void> {
+        if (this.streamrClient && this.streamrClient.getSubscription(this.pluginConfig.rewardStreamId).length === 0) {
+            try {
+                await this.subscribe()
+            } catch (err) {
+                logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
+            }
+        }
+        this.rewardSubscriptionRetryRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
+    }
+
+    private async subscribe(): Promise<void> {
+        await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
+            if (message.rewardCode) {
+                this.onRewardCodeReceived(message.rewardCode)
+            } if (message.info) {
+                logger.info(message.info)
+            } else {
+                logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
+                this.dummyMessagesReceived += 1
+            }
+        })
     }
 
     private getPeers(): Peer[] {
@@ -144,6 +167,10 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
 
     async stop() {
         this.latencyPoller?.stop()
+        if (this.rewardSubscriptionRetryRef) {
+            clearTimeout(this.rewardSubscriptionRetryRef)
+            this.rewardSubscriptionRetryRef = null
+        }
     }
 
     getConfigSchema() {
