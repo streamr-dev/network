@@ -1,11 +1,13 @@
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 
+const STARTUP_TIME = 100
+
 describe('metrics', () => {
     let context: MetricsContext
 
     beforeEach(() => {
         jest.useFakeTimers('modern')
-        jest.setSystemTime(100)
+        jest.setSystemTime(STARTUP_TIME)
         context = new MetricsContext('peerId')
     })
 
@@ -184,7 +186,7 @@ describe('metrics', () => {
             },
         })
 
-        jest.advanceTimersByTime(100 * 2)
+        jest.advanceTimersByTime(200)
 
         const metricTwo = context.create('metricTwo')
             .addRecordedMetric('a')
@@ -213,26 +215,27 @@ describe('metrics', () => {
             }
         })
 
-        jest.advanceTimersByTime(1000 * 2)
+        jest.advanceTimersByTime(2000)
         metricOne.record('c', 208)
         metricTwo.record('a', 39)
         metricTwo.set('b', 100)
         jest.advanceTimersByTime(2000)
 
+        const elapsedSeconds = Math.floor((Date.now() - STARTUP_TIME) / 1000)
         const rep3 = await context.report()
         expect(rep3.metrics).toEqual({
             metricOne: {
                 a: 15,
                 b: 666,
                 c: {
-                    rate: 308 / 4,
+                    rate: 308 / elapsedSeconds,
                     last: 208,
                     total: 308
                 }
             },
             metricTwo: {
                 a: {
-                    rate: 49 / 4,
+                    rate: 49 / elapsedSeconds,
                     last: 39,
                     total: 49
                 },
