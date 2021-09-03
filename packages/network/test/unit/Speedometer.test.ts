@@ -9,13 +9,15 @@ const createMockCurrentTimeProvider = () => {
     return fn
 }
 
+const STARTUP_TIME = '2000-01-02T00:00:00.123Z' 
+
 describe('Speedometer', () => {
 
     let speedometer: Speedometer
     const currentTimeProvider = createMockCurrentTimeProvider()
 
     beforeEach(() => {
-        currentTimeProvider.set('2000-01-02T00:00:00.123Z')
+        currentTimeProvider.set(STARTUP_TIME)
         speedometer = new Speedometer(WINDOW_SIZE_IN_SECONDS, currentTimeProvider)
     })
 
@@ -104,23 +106,24 @@ describe('Speedometer', () => {
         expect(speedometer.getRate()).toBeCloseTo((123 * 0.4 + 456 + 789 + 222 + 333 + 444) / WINDOW_SIZE_IN_SECONDS)
     })
 
-    describe('soon after startup', () => {
+    describe('during warmup', () => {
 
         it('empty', () => {
             currentTimeProvider.set('2000-01-02T00:00:00.200Z')
             expect(speedometer.getRate()).toBe(0)
         })
     
-        it('before 1 sec', () => {
-            currentTimeProvider.set('2000-01-02T00:00:01.100Z')
-            speedometer.record(100)
-            expect(speedometer.getRate()).toBe(100)
-        })
-
-        it('before 2 sec', () => {
-            currentTimeProvider.set('2000-01-02T00:00:02.200Z')
-            speedometer.record(100)
-            expect(speedometer.getRate()).toBe(50)
+        describe.each([
+            [0.9, 100],
+            [2.4, 50],
+            [3.6, 25]
+        ])('after n seconds', (seconds: number, expectedRate: number) => {
+            it(String(seconds), () => {
+                const now = Date.parse(STARTUP_TIME) + seconds * 1000
+                currentTimeProvider.set(new Date(now).toISOString())
+                speedometer.record(100)
+                expect(speedometer.getRate()).toBe(expectedRate)
+            })
         })
     })
 })

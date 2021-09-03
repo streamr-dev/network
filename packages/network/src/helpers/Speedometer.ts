@@ -69,7 +69,7 @@ export class Speedometer {
         // calculate the divider based on the elapsed time from the startup. In that situation
         // the divider will be between 1 and windowSizeInSeconds - 1
         const warmupEndtime = this.startupTime + this.windowSizeInSeconds * ONE_SECOND
-        const divider = (now >= warmupEndtime) ? this.windowSizeInSeconds : Math.max(Math.floor((now - this.startupTime) / ONE_SECOND), 1)
+        const divider = (now >= warmupEndtime) ? this.windowSizeInSeconds : Math.max(Math.round((now - this.startupTime) / ONE_SECOND), 1)
         return sum / divider
     }
 
