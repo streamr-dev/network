@@ -32,16 +32,11 @@ const generateApiKey = (): string => {
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
 
-const DEFAULT_WS_PORT = WebsocketConfigSchema.properties.port.default
-const DEFAULT_MQTT_PORT = MqttConfigSchema.properties.port.default
-const DEFAULT_HTTP_PORT = BrokerConfigSchema.properties.httpServer.properties.port.default
-const DEFAULT_LEGACY_WS_PORT = LegacyWebsocketConfigSchema.properties.port.default
-
 export const DEFAULT_CONFIG_PORTS = {
-    WS: DEFAULT_WS_PORT,
-    MQTT: DEFAULT_MQTT_PORT,
-    HTTP: DEFAULT_HTTP_PORT,
-    LEGACY_WS: DEFAULT_LEGACY_WS_PORT
+    WS: WebsocketConfigSchema.properties.port.default,
+    MQTT: MqttConfigSchema.properties.port.default,
+    HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default,
+    LEGACY_WS: LegacyWebsocketConfigSchema.properties.port.default,
 }
 
 const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
@@ -80,7 +75,7 @@ export const CONFIG_TEMPLATE: any = {
             nodeMetrics: {
                 storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
                 client: {
-                    wsUrl: `ws://127.0.0.1:${DEFAULT_LEGACY_WS_PORT}/api/v1/ws`,
+                    wsUrl: `ws://127.0.0.1:${DEFAULT_CONFIG_PORTS.LEGACY_WS}/api/v1/ws`,
                     httpUrl: "https://streamr.network/api/v1",
                 }
             }
@@ -130,9 +125,9 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
 ]
 
 const PLUGIN_DEFAULT_PORTS: {[pluginName: string]: number} = {
-    websocket: DEFAULT_WS_PORT,
-    mqtt: DEFAULT_MQTT_PORT,
-    publishHttp: DEFAULT_HTTP_PORT
+    websocket: DEFAULT_CONFIG_PORTS.WS,
+    mqtt: DEFAULT_CONFIG_PORTS.MQTT,
+    publishHttp: DEFAULT_CONFIG_PORTS.HTTP,
 }
 
 const PLUGIN_NAMES: {[pluginName: string]: string} = {
