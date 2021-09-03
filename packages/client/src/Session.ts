@@ -62,6 +62,16 @@ export default class Session extends EventEmitter {
     }
 
     async getSessionToken(requireNewToken = false): Promise<string> {
+        // @ts-expect-error
+        if (typeof this.options.apiKey !== 'undefined') {
+            throw new Error('apiKey auth no longer supported')
+        }
+
+        // @ts-expect-error
+        if (typeof this.options.username !== 'undefined') {
+            throw new Error('username/password auth no longer supported')
+        }
+
         if (this.options.sessionToken && !requireNewToken) {
             return this.options.sessionToken
         }

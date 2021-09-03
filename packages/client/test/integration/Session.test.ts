@@ -13,25 +13,25 @@ describe('Session', () => {
 
     describe('Token retrievals', () => {
         it('fails if trying to use apiKey', async () => {
-            expect.assertions(1)
-            await expect(() => createClient({
-                auth: {
-                    apiKey: 'tester1-api-key',
-                },
-            }).session.getSessionToken()).rejects.toThrow('no longer supported')
+            await expect(async () => {
+                await createClient({
+                    auth: {
+                        apiKey: 'tester1-api-key',
+                    },
+                }).session.getSessionToken()
+            }).rejects.toThrow('no longer supported')
         })
 
         it('gets the token using private key', async () => {
-            expect.assertions(1)
-            await expect(createClient({
+            const token = await createClient({
                 auth: {
                     privateKey: fakePrivateKey(),
                 },
-            }).session.getSessionToken()).resolves.toBeTruthy()
+            }).session.getSessionToken()
+            expect(token).toBeTruthy()
         })
 
         it('can handle multiple client instances', async () => {
-            expect.assertions(1)
             const client1 = createClient({
                 auth: {
                     privateKey: fakePrivateKey(),
@@ -48,20 +48,20 @@ describe('Session', () => {
         })
 
         it('fails if trying to get the token using username and password', async () => {
-            expect.assertions(1)
-            await expect(() => createClient({
-                auth: {
-                    username: 'tester2@streamr.com',
-                    password: 'tester2',
-                },
-            }).session.getSessionToken()).rejects.toThrow('no longer supported')
+            await expect(async () => {
+                await createClient({
+                    auth: {
+                        username: 'tester2@streamr.com',
+                        password: 'tester2',
+                    },
+                }).session.getSessionToken()
+            }).rejects.toThrow('no longer supported')
         })
 
         it('gets no token (undefined) when the auth object is empty', async () => {
-            expect.assertions(1)
-            await expect(createClient({
+            expect(await createClient({
                 auth: {},
-            }).session.getSessionToken()).resolves.toBeUndefined()
+            }).session.getSessionToken()).toBe('')
         })
     })
 })
