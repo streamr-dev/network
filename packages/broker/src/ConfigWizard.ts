@@ -149,11 +149,10 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         choices: Object.values(PLUGIN_NAMES)
     }
 
-    const MIN_PORT_VALUE = 1024
-    const MAX_PORT_VALUE = 49151
-
     const portPrompts: Array<inquirer.Question> = Object.keys(PLUGIN_DEFAULT_PORTS).map((name) => {
         const defaultPort = PLUGIN_DEFAULT_PORTS[name]
+        const MIN_PORT_VALUE = 1024
+        const MAX_PORT_VALUE = 49151
         return {
             type: 'input',
             name: `${name}Port`,
