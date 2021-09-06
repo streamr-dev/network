@@ -106,7 +106,9 @@ export class Tracker extends EventEmitter {
         const filteredStreams = this.instructionCounter.filterStatus(status, source)
 
         // update RTTs and location
-        this.overlayConnectionRtts[source] = rtts
+        if (rtts) {
+            this.overlayConnectionRtts[source] = rtts
+        }
         this.locationManager.updateLocation({
             nodeId: source,
             location,

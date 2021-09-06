@@ -54,7 +54,8 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
-    stunUrls?: string[]
+    stunUrls?: string[],
+    rttUpdateTimeout?: number
 }
 
 export const startTracker = async ({
@@ -100,6 +101,7 @@ export const createNetworkNode = ({
     trackerPingInterval,
     disconnectionWaitTime,
     newWebrtcConnectionTimeout,
+    rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
     stunUrls = ['stun:stun.l.google.com:19302']
@@ -131,6 +133,7 @@ export const createNetworkNode = ({
             nodeToNode
         },
         metricsContext,
-        disconnectionWaitTime
+        disconnectionWaitTime,
+        rttUpdateTimeout
     })
 }

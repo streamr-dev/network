@@ -7,7 +7,6 @@ import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
 import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
-import { PerStreamMetrics } from './PerStreamMetrics'
 import { StreamManager } from './StreamManager'
 import { InstructionThrottler } from './InstructionThrottler'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
@@ -37,12 +36,12 @@ export interface NodeOptions {
     trackers: Array<TrackerInfo>
     metricsContext?: MetricsContext
     connectToBootstrapTrackersInterval?: number
-    sendStatusToAllTrackersInterval?: number
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
     disconnectionWaitTime?: number
     nodeConnectTimeout?: number
     instructionRetryInterval?: number
+    rttUpdateTimeout?: number
 }
 
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
@@ -63,12 +62,12 @@ export class Node extends EventEmitter {
     private readonly trackerNode: TrackerNode
     private readonly peerInfo: PeerInfo
     private readonly connectToBootstrapTrackersInterval: number
-    private readonly sendStatusToAllTrackersInterval: number
     private readonly bufferTimeoutInMs: number
     private readonly bufferMaxSize: number
     private readonly disconnectionWaitTime: number
     private readonly nodeConnectTimeout: number
     private readonly instructionRetryInterval: number
+    private readonly rttUpdateInterval: number
     private readonly started: string
 
     private readonly logger: Logger
@@ -81,7 +80,7 @@ export class Node extends EventEmitter {
     private readonly instructionThrottler: InstructionThrottler
     private readonly instructionRetryManager: InstructionRetryManager
     private readonly consecutiveDeliveryFailures: { [key: string]: number } // id => counter
-    private readonly perStreamMetrics: PerStreamMetrics
+    private readonly rttUpdateTimeoutsOnTrackers: { [key: string]: NodeJS.Timeout } // trackerId => timeout
     private readonly metrics: Metrics
     private connectToBoostrapTrackersInterval?: NodeJS.Timeout | null
     private handleBufferedMessagesTimeoutRef?: NodeJS.Timeout | null
@@ -102,12 +101,12 @@ export class Node extends EventEmitter {
         this.peerInfo = opts.peerInfo
 
         this.connectToBootstrapTrackersInterval = opts.connectToBootstrapTrackersInterval || 5000
-        this.sendStatusToAllTrackersInterval = opts.sendStatusToAllTrackersInterval || 1000
         this.bufferTimeoutInMs = opts.bufferTimeoutInMs || 60 * 1000
         this.bufferMaxSize = opts.bufferMaxSize || 10000
         this.disconnectionWaitTime = opts.disconnectionWaitTime || 30 * 1000
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
-        this.instructionRetryInterval = opts.instructionRetryInterval || 60000
+        this.instructionRetryInterval = opts.instructionRetryInterval || 3 * 60 * 1000
+        this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.started = new Date().toLocaleString()
         this.logger = new Logger(module)
 
@@ -122,6 +121,7 @@ export class Node extends EventEmitter {
 
         this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
         this.trackerBook = {}
+        this.rttUpdateTimeoutsOnTrackers = {}
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
         this.instructionRetryManager = new InstructionRetryManager(
             this.handleTrackerInstruction.bind(this),
@@ -150,8 +150,6 @@ export class Node extends EventEmitter {
             this.metrics.set('latency', avgLatency)
         })
 
-        this.perStreamMetrics = new PerStreamMetrics()
-        // .addQueriedMetric('perStream', () => this.perStreamMetrics.report()) NET-122
         this.metrics = metricsContext.create('node')
             .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
             .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
@@ -182,7 +180,7 @@ export class Node extends EventEmitter {
         const serverUrl = this.trackerNode.getServerUrlByTrackerId(tracker)
         if (serverUrl !== undefined) {
             this.trackerBook[serverUrl] = tracker
-            this.prepareAndSendFullStatus(tracker)
+            this.prepareAndSendMultipleStatuses(tracker)
         } else {
             this.logger.warn('onConnectedToTracker: unknown tracker %s', tracker)
         }
@@ -227,7 +225,6 @@ export class Node extends EventEmitter {
         }
 
         this.metrics.record('trackerInstructions', 1)
-        this.perStreamMetrics.recordTrackerInstruction(instructionMessage.streamId)
         this.logger.trace('received instructions for %s, nodes to connect %o', streamId, nodeIds)
 
         this.subscribeToStreamIfHaveNotYet(streamId, false)
@@ -281,7 +278,6 @@ export class Node extends EventEmitter {
 
     onDataReceived(streamMessage: MessageLayer.StreamMessage, source: string | null = null): void | never {
         this.metrics.record('onDataReceived', 1)
-        this.perStreamMetrics.recordDataReceived(streamMessage.getStreamId())
         const streamIdAndPartition = new StreamIdAndPartition(
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
@@ -322,13 +318,11 @@ export class Node extends EventEmitter {
         } else {
             this.logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
             this.metrics.record('onDataReceived:ignoredDuplicate', 1)
-            this.perStreamMetrics.recordIgnoredDuplicate(streamMessage.getStreamId())
         }
     }
 
     private propagateMessage(streamMessage: MessageLayer.StreamMessage, source: string | null): void {
         this.metrics.record('propagateMessage', 1)
-        this.perStreamMetrics.recordPropagateMessage(streamMessage.getStreamId())
         const streamIdAndPartition = new StreamIdAndPartition(
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
@@ -399,6 +393,7 @@ export class Node extends EventEmitter {
         }
 
         Object.values(this.disconnectionTimers).forEach((timeout) => clearTimeout(timeout))
+        Object.values(this.rttUpdateTimeoutsOnTrackers).forEach((timeout) => clearTimeout(timeout))
 
         this.messageBuffer.clear()
         return Promise.all([
@@ -407,24 +402,21 @@ export class Node extends EventEmitter {
         ])
     }
 
-    private getFullStatus(tracker: string): Status {
-        return {
-            streams: this.streams.getStreamsWithConnections((streamKey) => {
-                return this.getTrackerId(StreamIdAndPartition.fromKey(streamKey)) === tracker
-            }),
-            started: this.started,
-            rtts: this.nodeToNode.getRtts(),
-            location: this.peerInfo.location,
-            singleStream: false,
-            extra: this.extraMetadata
-        }
+    // Gets statuses of all streams assigned to a tracker by default
+    private getMultipleStatusMessages(tracker: string, explicitStreams?: StreamIdAndPartition[]): Status[] {
+        const streams = explicitStreams || this.streams.getStreams()
+        const statusMessages = streams
+            .filter((streamId) => this.getTrackerId(streamId) === tracker)
+            .map((streamId) => this.getStreamStatus(streamId, tracker))
+        return statusMessages
     }
 
-    private getStreamStatus(streamId: StreamIdAndPartition): Status {
+    private getStreamStatus(streamId: StreamIdAndPartition, trackerId: string): Status {
+        const rtts = this.checkRttTimeout(trackerId) ? this.nodeToNode.getRtts() : null
         return {
             streams: this.streams.getStreamState(streamId),
             started: this.started,
-            rtts: this.nodeToNode.getRtts(),
+            rtts,
             location: this.peerInfo.location,
             singleStream: true,
             extra: this.extraMetadata
@@ -434,7 +426,7 @@ export class Node extends EventEmitter {
     private prepareAndSendStreamStatus(streamId: StreamIdAndPartition): void {
         const trackerId = this.getTrackerId(streamId)
         if (trackerId) {
-            const status = this.getStreamStatus(streamId)
+            const status = this.getStreamStatus(streamId, trackerId)
             if (status) {
                 this.sendStatus(trackerId, status)
             } else {
@@ -444,9 +436,11 @@ export class Node extends EventEmitter {
         }
     }
 
-    private prepareAndSendFullStatus(tracker: string): void {
-        const status = this.getFullStatus(tracker)
-        this.sendStatus(tracker, status)
+    private prepareAndSendMultipleStatuses(tracker: string, streams?: StreamIdAndPartition[]): void {
+        const statusMessages = this.getMultipleStatusMessages(tracker, streams)
+        statusMessages.forEach((status) => {
+            this.sendStatus(tracker, status)
+        })
     }
 
     private async sendStatus(tracker: string, status: Status) {
@@ -478,6 +472,17 @@ export class Node extends EventEmitter {
         return this.streams.isNodePresent(nodeId)
     }
 
+    private checkRttTimeout(trackerId: string): boolean {
+        if (!(trackerId in this.rttUpdateTimeoutsOnTrackers)) {
+            this.rttUpdateTimeoutsOnTrackers[trackerId] = setTimeout(() => {
+                this.logger.trace(`RTT timeout to ${trackerId} triggered, RTTs to connections will be updated with the next status message`)
+                delete this.rttUpdateTimeoutsOnTrackers[trackerId]
+            }, this.rttUpdateInterval)
+            return true
+        }
+        return false
+    }
+
     private unsubscribeFromStreamOnNode(node: string, streamId: StreamIdAndPartition, sendStatus = true): void {
         this.streams.removeNodeFromStream(streamId, node)
         this.logger.trace('node %s unsubscribed from stream %s', node, streamId)
@@ -505,7 +510,7 @@ export class Node extends EventEmitter {
         const trackers = [...new Set(streams.map((streamId) => this.getTrackerId(streamId)))]
         trackers.forEach((trackerId) => {
             if (trackerId) {
-                this.prepareAndSendFullStatus(trackerId)
+                this.prepareAndSendMultipleStatuses(trackerId, streams)
             }
         })
         this.emit(Event.NODE_DISCONNECTED, node)

@@ -61,25 +61,9 @@ describe('multi trackers', () => {
             trackers: trackerAddresses
         })
 
-        nodeOne.start()
-        await Promise.all([
-            // @ts-expect-error private field
-            waitForEvent(trackerOne.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerTwo.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerThree.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        ])
+        await nodeOne.start()
+        await nodeTwo.start()
 
-        nodeTwo.start()
-        await Promise.all([
-            // @ts-expect-error private field
-            waitForEvent(trackerOne.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerTwo.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerThree.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        ])
     })
 
     afterEach(async () => {
@@ -156,10 +140,10 @@ describe('multi trackers', () => {
             waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
         ])
 
-        expect(nodeOneEvents).toHaveLength(1)
-        expect(nodeTwoEvents).toHaveLength(1)
-        expect(nodeTwoEvents[0][0]).toEqual(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED)
-        expect(nodeTwoEvents[0][2]).toEqual('trackerOne')
+        expect(nodeOneEvents).toHaveLength(4)
+        expect(nodeTwoEvents).toHaveLength(4)
+        expect(nodeTwoEvents[3][0]).toEqual(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED)
+        expect(nodeTwoEvents[3][2]).toEqual('trackerOne')
 
         // second stream, second tracker
         nodeOne.subscribe(SECOND_STREAM_2, 0)
