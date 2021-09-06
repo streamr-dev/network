@@ -12,6 +12,17 @@ import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'
 import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
 
+const createLogger = () => {
+    return {
+        info: (...args: any[]) => {
+            console.log(chalk.bgWhite.black(':'), ...args)
+        },
+        error: (...args: any[]) => {
+            console.error(chalk.bgRed.black('!'), ...args)
+        }
+    }
+}
+
 const generateApiKey = (): string => {
     const hex = uuid().split('-').join('')
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
@@ -259,17 +270,7 @@ export const start = async (
     getPrivateKeyAnswers = () => inquirer.prompt(PRIVATE_KEY_PROMPTS),
     getPluginAnswers = () => inquirer.prompt(createPluginPrompts()),
     getStorageAnswers = selectStoragePath,
-    logger = {
-        info: (...args: any[]) => {
-            console.log(chalk.bgWhite.black(':'), ...args)
-        },
-        warn: (...args: any[]) => {
-            console.warn(chalk.bgYellow.black('!'), ...args)
-        },
-        error: (...args: any[]) => {
-            console.error(chalk.bgRed.black('!'), ...args)
-        }
-    }
+    logger = createLogger()
 ): Promise<void> => {
     try {
         const privateKeyAnswers = await getPrivateKeyAnswers()
@@ -289,7 +290,6 @@ export const start = async (
         logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${storagePath}`)
     } catch (e: any) {
-        logger.warn('Broker Config Wizard encountered an error:')
-        logger.error(e.message)
+        logger.error('Broker Config Wizard encountered an error:' + e.message)
     }
 }
