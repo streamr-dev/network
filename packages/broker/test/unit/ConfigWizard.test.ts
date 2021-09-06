@@ -146,7 +146,7 @@ describe('ConfigWizard', () => {
 
     })
 
-    describe('getPrivateKey and getConfig', () => {
+    describe('getPrivateKey', () => {
         it ('should exercise the `generate` path', () => {
             const privateKey = getPrivateKey({})
             expect(privateKey).toBeDefined()
@@ -163,6 +163,9 @@ describe('ConfigWizard', () => {
             expect(privateKey).toBe(privateKey)
         })
 
+    })
+
+    describe('getConfig', () => {
         it ('should exercise the plugin port assignation path with a number', () => {
             assertValidPort(3737)
         })

@@ -171,6 +171,11 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
     return [selectPrompt, ...portPrompts]
 }
 
+export const PROMPTS = {
+    privateKey: PRIVATE_KEY_PROMPTS,
+    plugins: createPluginPrompts(),
+}
+
 export const selectStoragePathPrompt = {
     type: 'input',
     name: 'selectStoragePath',
@@ -189,6 +194,34 @@ export const selectStoragePathPrompt = {
             return e.message
         }
     }
+}
+
+export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
+    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
+    config.ethereumPrivateKey = privateKey
+
+    const pluginKeys = Object.keys(PLUGIN_NAMES)
+    pluginKeys.forEach((pluginKey) => {
+        const pluginName = PLUGIN_NAMES[pluginKey]
+        const defaultPort = DEFAULT_CONFIG_PORTS[pluginKey]
+        if (pluginsAnswers.selectPlugins && pluginsAnswers.selectPlugins.includes(pluginName)){
+            let pluginConfig = {}
+            const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
+            if (portNumber !== defaultPort){
+                const portObject = { port: portNumber }
+                if (pluginName === PLUGIN_NAMES.HTTP) {
+                    // the publishHttp plugin is special, it needs to be added to the config after the other plugins
+                    config.httpServer = portObject
+                } else {
+                    // user provided a custom value, fill in
+                    pluginConfig = portObject
+                }
+            }
+            config.plugins![pluginName] = pluginConfig
+        }
+    })
+
+    return config
 }
 
 const selectStoragePath = async (): Promise<inquirer.Answers> => {
@@ -212,39 +245,6 @@ const selectStoragePath = async (): Promise<inquirer.Answers> => {
     return answers
 }
 
-export const getPrivateKey = (answers: inquirer.Answers): string => {
-    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT) ? answers.importPrivateKey : Wallet.createRandom().privateKey
-}
-
-export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
-    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
-    config.ethereumPrivateKey = privateKey
-
-    const pluginNames = Object.keys(PLUGIN_NAMES)
-    pluginNames.forEach((pluginKey) => {
-        const pluginName = PLUGIN_NAMES[pluginKey]
-        const defaultPort = DEFAULT_CONFIG_PORTS[pluginKey]
-        if (pluginsAnswers.selectPlugins && pluginsAnswers.selectPlugins.includes(pluginName)){
-            let pluginConfig = {}
-            const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
-            console.log('portNumber', portNumber, defaultPort)
-            if (portNumber !== defaultPort){
-                const portObject = { port: portNumber }
-                if (pluginName === PLUGIN_NAMES.HTTP) {
-                    // the publishHttp plugin is special, it needs to be added to the config after the other plugins
-                    config.httpServer = portObject
-                } else {
-                    // user provided a custom value, fill in
-                    pluginConfig = portObject
-                }
-            }
-            config.plugins![pluginName] = pluginConfig
-        }
-    })
-
-    return config
-}
-
 export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
     if (!answers.parentDirExists) {
         mkdirSync(answers.parentDirPath)
@@ -253,6 +253,10 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     writeFileSync(answers.selectStoragePath, JSON.stringify(config, null, 2))
     chmodSync(answers.selectStoragePath, '0600')
     return answers.selectStoragePath
+}
+
+export const getPrivateKey = (answers: inquirer.Answers): string => {
+    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 }
 
 export const getNodeIdentity = (privateKey: string) => {
@@ -287,9 +291,4 @@ export const start = async(): Promise<void> => {
         logger.warn('Broker Config Wizard encountered an error:')
         logger.error(e.message)
     }
-}
-
-export const PROMPTS = {
-    privateKey: PRIVATE_KEY_PROMPTS,
-    plugins: createPluginPrompts(),
 }
