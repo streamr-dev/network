@@ -261,15 +261,12 @@ export const start = async (
     getStorageAnswers = selectStoragePath,
     logger = {
         info: (...args: any[]) => {
-            // eslint-disable-next-line no-console
             console.log(chalk.bgWhite.black(':'), ...args)
         },
         warn: (...args: any[]) => {
-            // eslint-disable-next-line no-console
             console.warn(chalk.bgYellow.black('!'), ...args)
         },
         error: (...args: any[]) => {
-            // eslint-disable-next-line no-console
             console.error(chalk.bgRed.black('!'), ...args)
         }
     }
