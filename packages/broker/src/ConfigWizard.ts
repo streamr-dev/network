@@ -138,8 +138,9 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         choices: Object.values(PLUGIN_NAMES)
     }
 
-    const portPrompts: Array<inquirer.Question> = Object.keys(DEFAULT_CONFIG_PORTS).map((name) => {
-        const defaultPort = DEFAULT_CONFIG_PORTS[name]
+    const portPrompts: Array<inquirer.Question> = Object.keys(DEFAULT_CONFIG_PORTS).map((key) => {
+        const name = PLUGIN_NAMES[key]
+        const defaultPort = DEFAULT_CONFIG_PORTS[key]
         return {
             type: 'input',
             name: `${name}Port`,
