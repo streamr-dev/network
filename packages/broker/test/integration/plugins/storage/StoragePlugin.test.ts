@@ -38,6 +38,7 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
         networkNode,
         subscriptionManager,
         publisher: undefined as any,
+        // @ts-expect-error
         streamrClient: undefined,
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
