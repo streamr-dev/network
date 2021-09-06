@@ -290,6 +290,6 @@ export const start = async (
         logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${storagePath}`)
     } catch (e: any) {
-        logger.error('Broker Config Wizard encountered an error:' + e.message)
+        logger.error("Broker Config Wizard encountered an error:\n" + e.message)
     }
 }

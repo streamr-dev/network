@@ -115,14 +115,14 @@ describe('ConfigWizard', () => {
 
         it ('happy path; create parent dir when doesn\'t exist', async () => {
             const parentDirPath = tmpDataDir + '/newdir/'
-            const selectStoragePath = parentDirPath + 'test-config.json'
+            const configPath = parentDirPath + 'test-config.json'
             const configFileLocation: string = await createStorageFile(CONFIG, {
-                selectStoragePath,
+                selectStoragePath: configPath,
                 parentDirPath,
                 fileExists: false,
                 parentDirExists: false,
             })
-            expect(configFileLocation).toBe(selectStoragePath)
+            expect(configFileLocation).toBe(configPath)
             expect(existsSync(configFileLocation)).toBe(true)
         })
 
@@ -136,9 +136,9 @@ describe('ConfigWizard', () => {
 
         it ('should throw when no permissions on path', async () => {
             const parentDirPath = '/home/'
-            const selectStoragePath = parentDirPath + 'test-config.json'
+            const configPath = parentDirPath + 'test-config.json'
             await expect(createStorageFile(CONFIG, {
-                selectStoragePath,
+                selectStoragePath: configPath,
                 parentDirPath,
                 fileExists: false,
                 parentDirExists: true,
@@ -226,7 +226,7 @@ describe('ConfigWizard', () => {
     describe('user flow', () => {
         it ('should exercise the happy path', async () => {
             const tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
-            const selectStoragePath = tmpDataDir + 'test-config.json'
+            const configPath = tmpDataDir + 'test-config.json'
             const privateKey = '0x1234567890123456789012345678901234567890123456789012345678901234'
             const websocketPort = '3170'
             const mqttPort = '3171'
@@ -245,7 +245,7 @@ describe('ConfigWizard', () => {
                 }),
                 jest.fn().mockResolvedValue({
                     parentDirExists: true,
-                    selectStoragePath
+                    selectStoragePath: configPath
                 }),
                 logger
             )
@@ -255,9 +255,9 @@ describe('ConfigWizard', () => {
                 'View your node in the Network Explorer:',
                 'https://streamr.network/network-explorer/nodes/0x2e988A386a799F506693793c6A5AF6B54dfAaBfB',
                 'You can start the broker now with',
-                `streamr-broker ${selectStoragePath}`,
+                `streamr-broker ${configPath}`,
             ])
-            const fileContent = readFileSync(selectStoragePath).toString()
+            const fileContent = readFileSync(configPath).toString()
             const config = JSON.parse(fileContent)
             expect(config.ethereumPrivateKey).toBe(privateKey)
             expect(config.plugins.websocket.port).toBe(parseInt(websocketPort))
