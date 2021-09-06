@@ -107,11 +107,7 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
                 new Wallet(input)
                 return true
             } catch (e: any) {
-                if (e.message.includes('invalid hexlify value')){
-                    return `Invalid privateKey provided for import: ${input}`
-                } else {
-                    return e.message
-                }
+                return 'Invalid private key provided.'
             }
         }
     },

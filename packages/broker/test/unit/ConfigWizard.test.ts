@@ -35,7 +35,7 @@ describe('ConfigWizard', () => {
         it ('invalid data', () => {
             const validate = importPrivateKeyPrompt.validate!
             const privateKey = '0xInvalidPrivateKey'
-            expect(validate(privateKey)).toBe(`Invalid privateKey provided for import: ${privateKey}`)
+            expect(validate(privateKey)).toBe(`Invalid private key provided.`)
         })
     })
 
