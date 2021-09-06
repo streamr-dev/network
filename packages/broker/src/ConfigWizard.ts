@@ -140,8 +140,6 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
 
     const portPrompts: Array<inquirer.Question> = Object.keys(DEFAULT_CONFIG_PORTS).map((name) => {
         const defaultPort = DEFAULT_CONFIG_PORTS[name]
-        const MIN_PORT_VALUE = 1024
-        const MAX_PORT_VALUE = 49151
         return {
             type: 'input',
             name: `${name}Port`,
@@ -150,6 +148,8 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
                 return answers.selectPlugins.includes(name)
             },
             validate: (input: string | number): string | boolean => {
+                const MIN_PORT_VALUE = 1024
+                const MAX_PORT_VALUE = 49151
                 const portNumber = (typeof input === 'string') ? Number(input) : input
                 if (Number.isNaN(portNumber)) {
                     return `Non-numeric value provided`
