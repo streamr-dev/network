@@ -12,21 +12,6 @@ import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'
 import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
 
-const logger = {
-    info: (...args: any[]) => {
-        // eslint-disable-next-line no-console
-        console.log(chalk.bgWhite.black(':'), ...args)
-    },
-    warn: (...args: any[]) => {
-        // eslint-disable-next-line no-console
-        console.warn(chalk.bgYellow.black('!'), ...args)
-    },
-    error: (...args: any[]) => {
-        // eslint-disable-next-line no-console
-        console.error(chalk.bgRed.black('!'), ...args)
-    }
-}
-
 const generateApiKey = (): string => {
     const hex = uuid().split('-').join('')
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
@@ -270,16 +255,34 @@ export const getNodeIdentity = (privateKey: string) => {
     }
 }
 
-export const start = async(): Promise<void> => {
+export const start = async (
+    getPrivateKeyAnswers = () => inquirer.prompt(PRIVATE_KEY_PROMPTS),
+    getPluginAnswers = () => inquirer.prompt(createPluginPrompts()),
+    getStorageAnswers = selectStoragePath,
+    logger = {
+        info: (...args: any[]) => {
+            // eslint-disable-next-line no-console
+            console.log(chalk.bgWhite.black(':'), ...args)
+        },
+        warn: (...args: any[]) => {
+            // eslint-disable-next-line no-console
+            console.warn(chalk.bgYellow.black('!'), ...args)
+        },
+        error: (...args: any[]) => {
+            // eslint-disable-next-line no-console
+            console.error(chalk.bgRed.black('!'), ...args)
+        }
+    }
+): Promise<void> => {
     try {
-        const privateKeyAnswers = await inquirer.prompt(PRIVATE_KEY_PROMPTS)
+        const privateKeyAnswers = await getPrivateKeyAnswers()
         const privateKey = getPrivateKey(privateKeyAnswers)
         if (privateKeyAnswers.revealGeneratedPrivateKey) {
             logger.info(`This is your node\'s private key: ${privateKey}`)
         }
-        const pluginsAnswers = await inquirer.prompt(createPluginPrompts())
+        const pluginsAnswers = await getPluginAnswers()
         const config = getConfig(privateKey, pluginsAnswers)
-        const storageAnswers = await selectStoragePath()
+        const storageAnswers = await getStorageAnswers()
         const storagePath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
         const {mnemonic, networkExplorerUrl} = getNodeIdentity(privateKey)

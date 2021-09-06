@@ -2,7 +2,18 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { PROMPTS, DEFAULT_CONFIG_PORTS, selectStoragePathPrompt, createStorageFile, getConfig, getPrivateKey, getNodeIdentity } from '../../src/ConfigWizard'
+import { PROMPTS, DEFAULT_CONFIG_PORTS, selectStoragePathPrompt, createStorageFile, getConfig, getPrivateKey, getNodeIdentity, start } from '../../src/ConfigWizard'
+import { readFileSync } from 'fs'
+
+const createMockLogger = () => {
+    const messages: string[] = []
+    return {
+        info: (message: string) => messages.push(message),
+        warn: console.log,
+        error: console.log,
+        messages
+    }
+}
 
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = PROMPTS.privateKey[1]
@@ -173,6 +184,34 @@ describe('ConfigWizard', () => {
         it ('should exercise the plugin port assignation path with a stringified number', () => {
             assertValidPort('3737')
         })
+
+        it ('should exercise the happy path with default answers', () => {
+            const pluginsAnswers = {
+                selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                websocketPort: DEFAULT_CONFIG_PORTS.WS,
+                mqttPort: DEFAULT_CONFIG_PORTS.MQTT,
+                publishHttpPort: DEFAULT_CONFIG_PORTS.HTTP,
+            }
+            const config = getConfig(undefined as any, pluginsAnswers)
+            expect(config.plugins.websocket).toMatchObject({})
+            expect(config.plugins.mqtt).toMatchObject({})
+            expect(config.plugins.publishHttp).toMatchObject({})
+            expect(config.httpServer).toBe(undefined)
+        })
+
+        it('should exercise the happy path with user-provided data', () => {
+            const pluginsAnswers = {
+                selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                websocketPort: '3170',
+                mqttPort: '3171',
+                publishHttpPort: '3172'
+            }
+            const config = getConfig(undefined as any, pluginsAnswers)
+            expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
+            expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
+            expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
+            expect(config.plugins.publishHttp).toMatchObject({})
+        })
     })
 
     describe('identity', () => {
@@ -184,45 +223,50 @@ describe('ConfigWizard', () => {
         })
     })
 
-    describe('end-to-end', () => {
-        it ('should exercise the happy path with default answers', () => {
-            const privateKeyAnswers = {}
-            const pluginsAnswers = {
-                selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: DEFAULT_CONFIG_PORTS.WS,
-                mqttPort: DEFAULT_CONFIG_PORTS.MQTT,
-                publishHttpPort: DEFAULT_CONFIG_PORTS.HTTP,
-            }
-            const privateKey = getPrivateKey(privateKeyAnswers)
-            const config = getConfig(privateKey, pluginsAnswers)
-            expect(config.plugins.websocket).toMatchObject({})
-            expect(config.plugins.mqtt).toMatchObject({})
+    describe('user flow', () => {
+        it ('should exercise the happy path', async () => {
+            const tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
+            const selectStoragePath = tmpDataDir + 'test-config.json'
+            const privateKey = '0x1234567890123456789012345678901234567890123456789012345678901234'
+            const websocketPort = '3170'
+            const mqttPort = '3171'
+            const publishHttpPort = '3172'
+            const logger = createMockLogger()
+            await start(
+                jest.fn().mockResolvedValue({
+                    generateOrImportPrivateKey: 'Import',
+                    importPrivateKey: privateKey
+                }),
+                jest.fn().mockResolvedValue({
+                    selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                    websocketPort,
+                    mqttPort,
+                    publishHttpPort,
+                }),
+                jest.fn().mockResolvedValue({
+                    parentDirExists: true,
+                    selectStoragePath
+                }),
+                logger
+            )
+            expect(logger.messages).toEqual([
+                'Welcome to the Streamr Network',
+                'Your node\'s generated name is Company Session Mix.',
+                'View your node in the Network Explorer:',
+                'https://streamr.network/network-explorer/nodes/0x2e988A386a799F506693793c6A5AF6B54dfAaBfB',
+                'You can start the broker now with',
+                `streamr-broker ${selectStoragePath}`,
+            ])
+            const fileContent = readFileSync(selectStoragePath).toString()
+            const config = JSON.parse(fileContent)
+            expect(config.ethereumPrivateKey).toBe(privateKey)
+            expect(config.plugins.websocket.port).toBe(parseInt(websocketPort))
+            expect(config.plugins.mqtt.port).toBe(parseInt(mqttPort))
+            expect(config.httpServer.port).toBe(parseInt(publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
-            expect(config.ethereumPrivateKey).toMatch(/^0x[0-9a-f]{64}$/)
-            expect(config.httpServer).toBe(undefined)
             expect(config.apiAuthentication).toBeDefined()
             expect(config.apiAuthentication.keys).toBeDefined()
             expect(config.apiAuthentication.keys.length).toBe(1)
-        })
-
-        it('should exercise the happy path with user input', () => {
-            const privateKeyAnswers = {
-                generateOrImportPrivateKey: 'Import',
-                importPrivateKey: Wallet.createRandom().privateKey
-            }
-            const pluginsAnswers = {
-                selectPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: '3170',
-                mqttPort: '3171',
-                publishHttpPort: '3172'
-            }
-            const privateKey = getPrivateKey(privateKeyAnswers)
-            const config = getConfig(privateKey, pluginsAnswers)
-            expect(config.ethereumPrivateKey).toBe(privateKeyAnswers.importPrivateKey)
-            expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
-            expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
-            expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
-            expect(config.plugins.publishHttp).toMatchObject({})
         })
     })
 })
