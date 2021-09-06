@@ -1,7 +1,7 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
-import { createClient, STREAMR_DOCKER_DEV_HOST, createTestStream, fastPrivateKey } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST, createTestStream, fastPrivateKey } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
 import { StreamrClient } from 'streamr-client'
@@ -12,8 +12,6 @@ const { TimeUuid } = cassandraTypes
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
-
-const DUMMY_WS_PORT = 9999
 
 const insertBucket = async (cassandraClient: Client, streamId: string) => {
     const dateCreate = Date.now()

@@ -1,3 +1,4 @@
+/*
 import http from 'http'
 import { startTracker, Tracker, Protocol } from 'streamr-network'
 import { Wallet } from 'ethers'
@@ -37,7 +38,7 @@ class MockStorageData extends PassThrough {
         this.end()
     }
 }
-
+*/
 it.skip('resend cancellation', () => {
     /*
     let tracker: Tracker
@@ -74,7 +75,7 @@ it.skip('resend cancellation', () => {
 
         mockStorageData = new MockStorageData({})
         const storagePlugin: StoragePlugin = storageNode.plugins.find((p) => p.name === 'storage')
-        // @ts-expect-error .cassandra is private
+        //@ts-expect-error .cassandra is private
         storagePlugin.cassandra.requestLast = mockStorageData
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
         await assignmentEventManager.createStream()
