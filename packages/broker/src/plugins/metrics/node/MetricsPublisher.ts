@@ -26,30 +26,10 @@ export class MetricsPublisher {
     client: StreamrClient
     storageNodeAddress: string
 
-    constructor(nodeAddress: string, clientOptions: ClientOptions) {
+    constructor(nodeAddress: string, client: StreamrClient, storageNodeAddress: string) {
         this.nodeAddress = nodeAddress
-        this.client = this.createClient(clientOptions)
-        this.storageNodeAddress = clientOptions.storageNode
-    }
-
-    private createClient(options: {
-        ethereumPrivateKey: string,
-        storageNode: string,
-        storageNodes: StorageNodeRegistryItem[]
-        clientWsUrl?: string,
-        clientHttpUrl?: string
-    }) {
-        const storageNodeRegistryItem = options.storageNodes.find((n) => n.address === options.storageNode)
-        if (storageNodeRegistryItem === undefined) {
-            throw new Error(`Value ${storageNodeRegistryItem} not present in config.storageNodeRegistry`)
-        }
-        return new StreamrClient({
-            auth: {
-                privateKey: options.ethereumPrivateKey,
-            },
-            restUrl: options.clientHttpUrl,
-            nodeRegistry: options.storageNodes,
-        })
+        this.client = client
+        this.storageNodeAddress = storageNodeAddress
     }
 
     async publish(sample: Sample): Promise<void> {

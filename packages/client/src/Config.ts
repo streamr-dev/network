@@ -85,9 +85,15 @@ export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubec
     const clonedConfig = cloneDeep(config)
     const defaults = cloneDeep(BRUBECK_CLIENT_DEFAULTS)
     const userConfig = Config(clonedConfig)
-    return {
+    const result: StrictBrubeckClientConfig = {
         ...defaults,
         ...userConfig,
         debug: merge(defaults.debug || {}, clonedConfig.debug),
     }
+
+    // pass supplied metricsContext by reference
+    if (config.network?.metricsContext) {
+        result.network.metricsContext = config.network.metricsContext
+    }
+    return result
 }
