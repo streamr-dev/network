@@ -4,16 +4,6 @@ import os from 'os'
 import path from 'path'
 import { PROMPTS, DEFAULT_CONFIG_PORTS, selectStoragePathPrompt, createStorageFile, getConfig, getPrivateKey, getNodeIdentity } from '../../src/ConfigWizard'
 
-const assertValidPort = (port: number | string, pluginName = 'websocket') => {
-    const numericPort = (typeof port === 'string') ? parseInt(port) : port
-    const pluginsAnswers = {
-        selectPlugins:[pluginName],
-        websocketPort: port,
-    }
-    const config = getConfig(undefined as any, pluginsAnswers)
-    expect(config.plugins[pluginName].port).toBe(numericPort)
-}
-
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = PROMPTS.privateKey[1]
     const portPrompt = PROMPTS.plugins[1]
@@ -166,6 +156,16 @@ describe('ConfigWizard', () => {
     })
 
     describe('getConfig', () => {
+        const assertValidPort = (port: number | string, pluginName = 'websocket') => {
+            const numericPort = (typeof port === 'string') ? parseInt(port) : port
+            const pluginsAnswers = {
+                selectPlugins:[pluginName],
+                websocketPort: port,
+            }
+            const config = getConfig(undefined as any, pluginsAnswers)
+            expect(config.plugins[pluginName].port).toBe(numericPort)
+        }
+
         it ('should exercise the plugin port assignation path with a number', () => {
             assertValidPort(3737)
         })
