@@ -4,7 +4,6 @@ import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
 

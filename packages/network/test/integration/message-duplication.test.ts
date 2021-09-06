@@ -4,7 +4,6 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 import { Event as NodeEvent } from "../../src/logic/Node"
 
 const { StreamMessage, MessageID } = MessageLayer
