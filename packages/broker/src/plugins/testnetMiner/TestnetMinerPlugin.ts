@@ -23,7 +23,7 @@ const METRIC_LATEST_CODE = 'latestCode'
 const logger = new Logger(module)
 
 export interface TestnetMinerPluginConfig {
-    rewardStreamId: string
+    rewardStreamIds: string
     claimServerUrl: string
     maxClaimDelay: number
     stunServerHost: string|null
@@ -41,7 +41,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     natType?: string
     metrics: Metrics
     dummyMessagesReceived: number
-
+    streamId: string
     constructor(options: PluginOptions) {
         super(options)
         if (this.streamrClient === undefined) {
@@ -49,6 +49,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         }
         this.metrics = this.metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
         this.dummyMessagesReceived = 0
+        this.streamId = this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)]
     }
 
     async start() {
@@ -62,7 +63,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             natType: this.natType || null,
             brokerVersion: CURRENT_VERSION,
         })
-        await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
+        await this.streamrClient!.subscribe(this.streamId, (message: any) => {
             if (message.rewardCode) {
                 this.onRewardCodeReceived(message.rewardCode)
             } if (message.info) {
@@ -85,7 +86,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private getPeers(): Peer[] {
-        const neighbors = this.networkNode.getNeighborsForStream(this.pluginConfig.rewardStreamId, REWARD_STREAM_PARTITION)
+        const neighbors = this.networkNode.getNeighborsForStream(this.streamId, REWARD_STREAM_PARTITION)
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
             rtt: this.networkNode.getRtt(nodeId)
@@ -96,6 +97,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         const body = {
             rewardCode,
             nodeAddress: this.nodeId,
+            streamId: this.streamId,
             clientServerLatency: this.latestLatency,
             waitTime: delay,
             natType: this.natType,
