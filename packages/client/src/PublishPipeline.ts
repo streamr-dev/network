@@ -1,7 +1,7 @@
 /**
  * Organises async Publish steps into a Pipeline
  */
-import { StreamMessage, MessageContent } from 'streamr-client-protocol'
+import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from './utils/log'
@@ -40,14 +40,14 @@ export class FailedToPublishError extends Error {
     }
 }
 
-export type PublishMetadata<T extends MessageContent | unknown = unknown> = {
+export type PublishMetadata<T = unknown> = {
     content: T
     timestamp?: string | number | Date
     sequenceNumber?: number
     partitionKey?: string | number
 }
 
-export type PublishMetadataStrict<T extends MessageContent | unknown = unknown> = PublishMetadata<T> & {
+export type PublishMetadataStrict<T = unknown> = PublishMetadata<T> & {
     timestamp: number
     streamId: string
     partitionKey: number | string

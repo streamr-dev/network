@@ -3,7 +3,7 @@ import MessageIDStrict from "./MessageIDStrict"
 import MessageRef from "./MessageRef"
 import MessageRefStrict from "./MessageRefStrict"
 import StreamMessage from "./StreamMessage"
-import { StreamMessageType, MessageContent } from "./StreamMessage"
+import { StreamMessageType } from "./StreamMessage"
 import GroupKeyMessage from "./GroupKeyMessage"
 import GroupKeyRequest from "./GroupKeyRequest"
 import GroupKeyResponse from "./GroupKeyResponse"
@@ -31,5 +31,4 @@ export {
     GroupKeyAnnounce,
     GroupKeyErrorResponse,
     EncryptedGroupKey,
-    MessageContent,
 }

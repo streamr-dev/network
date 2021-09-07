@@ -50,16 +50,13 @@ type StreamMessageOptions<T> = {
     signature?: string | null
 }
 
-export type MessageValue = unknown | null | string | number | boolean | MessageContent | MessageContent[]
-export type MessageContent = {
-  [key: string]: MessageValue
-} | MessageValue[] | any // TODO
-
+/**
+ * Any object that contains a toStreamMessage interface.
+ * e.g. GroupKeyMessage
+ */
 export type StreamMessageContainer<T = unknown> = {
     toStreamMessage: (messageId: MessageID, prevMsgRef: MessageRef | null) => StreamMessage<T>
 }
-
-export type PublishContent<T extends MessageContent | unknown = unknown> = MessageContent | StreamMessageContainer<T>
 
 export type StreamMessageUnsigned<T> = StreamMessage<T> & {
     signatureType: SignatureType.NONE
@@ -83,7 +80,7 @@ export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
     parsedContent: string
 }
 
-export default class StreamMessage<T extends MessageContent | unknown = unknown> {
+export default class StreamMessage<T = unknown> {
     static LATEST_VERSION = LATEST_VERSION
 
     // TODO can we remove these static field and use the enum object directly?

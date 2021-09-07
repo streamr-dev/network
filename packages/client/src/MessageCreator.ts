@@ -2,7 +2,7 @@
  * Central place to fetch async dependencies and convert message metadata into StreamMessages.
  */
 import { inject, scoped, Lifecycle } from 'tsyringe'
-import { StreamMessage, SPID, MessageContent, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
+import { StreamMessage, SPID, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from './utils'
 import { Stoppable } from './utils/Stoppable'
@@ -12,7 +12,7 @@ import { Config, CacheConfig } from './Config'
 import Ethereum from './Ethereum'
 import StreamPartitioner from './StreamPartitioner'
 
-export type MessageCreateOptions<T extends MessageContent | unknown = unknown> = {
+export type MessageCreateOptions<T = unknown> = {
     content: T,
     timestamp: number,
     partitionKey: string | number
@@ -20,13 +20,13 @@ export type MessageCreateOptions<T extends MessageContent | unknown = unknown> =
 }
 
 export interface IMessageCreator {
-    create: <T extends MessageContent>(streamId: string, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
+    create: <T>(streamId: string, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
     stop: () => Promise<void> | void
 }
 
 export class StreamMessageCreatorAnonymous implements IMessageCreator {
     // eslint-disable-next-line class-methods-use-this
-    async create<T extends MessageContent>(_streamId: string, _options: MessageCreateOptions<T>): Promise<StreamMessage<T>> {
+    async create<T>(_streamId: string, _options: MessageCreateOptions<T>): Promise<StreamMessage<T>> {
         throw new Error('Anonymous user can not publish.')
     }
 
@@ -59,7 +59,7 @@ export default class StreamMessageCreator implements IMessageCreator, Stoppable 
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create<T extends MessageContent | unknown = unknown>(streamId: string, {
+    async create<T = unknown>(streamId: string, {
         content,
         timestamp,
         partitionKey,

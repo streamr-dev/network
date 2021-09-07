@@ -3,7 +3,7 @@
  */
 import fetch from 'node-fetch'
 import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
-import { SPID, SID, MessageContent } from 'streamr-client-protocol'
+import { SPID, SID } from 'streamr-client-protocol'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
@@ -287,7 +287,7 @@ class StreamrStream implements StreamMetadata {
         return json.map((item: any) => new StorageNode(item.storageNodeAddress))
     }
 
-    async publish<T extends MessageContent>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
+    async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
         return this._publisher.publish(this.id, content, timestamp, partitionKey)
     }
 }

@@ -1,6 +1,6 @@
 import { DependencyContainer, inject } from 'tsyringe'
 
-import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
+import { StreamMessage, SPID } from 'streamr-client-protocol'
 import { NetworkNode } from 'streamr-network'
 
 import { Scaffold, instanceId, until } from './utils'
@@ -19,7 +19,7 @@ import BrubeckNode from './BrubeckNode'
  * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
-export default class SubscriptionSession<T extends MessageContent | unknown> implements Context, Stoppable {
+export default class SubscriptionSession<T> implements Context, Stoppable {
     id
     debug
     spid: SPID

@@ -1,7 +1,7 @@
 /**
  * Public Publishing API
  */
-import { StreamMessage, SPID, SIDLike, MessageContent } from 'streamr-client-protocol'
+import { StreamMessage, SPID, SIDLike } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from './utils'
@@ -44,12 +44,12 @@ export default class BrubeckPublisher implements Context, Stoppable {
         this.publishQueue = pipeline.publishQueue
     }
 
-    async validateAndPublishStreamMessage<T extends MessageContent>(streamMessage: StreamMessage<T>) {
+    async validateAndPublishStreamMessage<T>(streamMessage: StreamMessage<T>) {
         // await this.validator.validate(streamMessage)
         await this.node.publishToNode(streamMessage)
     }
 
-    async publish<T extends MessageContent>(
+    async publish<T>(
         streamObjectOrId: SIDLike,
         content: T,
         timestamp: string | number | Date = Date.now(),
@@ -62,7 +62,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         })
     }
 
-    async publishMessage<T extends MessageContent>(streamObjectOrId: SIDLike, {
+    async publishMessage<T>(streamObjectOrId: SIDLike, {
         content,
         timestamp = Date.now(),
         partitionKey
@@ -110,7 +110,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         return msgs
     }
 
-    async* publishFrom<T extends MessageContent>(streamObjectOrId: SIDLike, seq: AsyncIterable<T>) {
+    async* publishFrom<T>(streamObjectOrId: SIDLike, seq: AsyncIterable<T>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -122,7 +122,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         }
     }
 
-    async* publishFromMetadata<T extends MessageContent>(streamObjectOrId: SIDLike, seq: AsyncIterable<PublishMetadata<T>>) {
+    async* publishFromMetadata<T>(streamObjectOrId: SIDLike, seq: AsyncIterable<PublishMetadata<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
