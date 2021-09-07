@@ -1,3 +1,4 @@
+import { PeerId } from '../connection/PeerInfo'
 import { Speedometer } from './Speedometer'
 
 type QueryFn = () => (Promise<number> | number | Promise<Record<string, unknown>> | Record<string, unknown>)
@@ -11,7 +12,7 @@ interface IndividualReport {
 }
 
 interface Report {
-    peerId: string
+    peerId: PeerId
     startTime: number
     currentTime: number
     metrics: {
@@ -119,13 +120,13 @@ export class Metrics {
 }
 
 export class MetricsContext {
-    private readonly peerId: string
+    private readonly peerId: PeerId
     private readonly startTime: number
     private readonly metrics: {
         [key: string]: Metrics
     }
 
-    constructor(peerId: string) {
+    constructor(peerId: PeerId) {
         this.peerId = peerId
         this.startTime = Date.now()
         this.metrics = {}

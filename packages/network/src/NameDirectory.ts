@@ -3,6 +3,8 @@
 // -> in the future each node receives the peer names from Tracker
 //    and we can remove the hardcoded values
 
+import { PeerId } from './connection/PeerInfo'
+
 const NAMES: Record<string,string> = {
     '0xDE11165537ef6C01260ee89A850a281525A5b63F': 'T1',
     '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c': 'T2',
@@ -17,7 +19,7 @@ export class NameDirectory {
     static MAX_FALLBACK_NAME_LENGTH = 8
 
     // if name is not known, creates a short name from the peerId
-    static getName(peerId: string): string {
+    static getName(peerId: PeerId): string {
         const name = NAMES[peerId]
         if (name !== undefined) {
             return name

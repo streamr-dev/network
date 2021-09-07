@@ -17,6 +17,7 @@ import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersi
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import NodeWebRtcConnectionFactory from "./connection/NodeWebRtcConnection"
+import { NodeId } from './logic/Node'
 
 require('setimmediate')
 
@@ -31,7 +32,7 @@ export {
 }
 
 export interface AbstractNodeOptions {
-    id?: string
+    id?: NodeId
     name?: string
     location?: Location | null
     metricsContext?: MetricsContext
