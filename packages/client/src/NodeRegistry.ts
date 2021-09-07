@@ -4,7 +4,7 @@
  */
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import * as StorageNodeRegistryConfig from 'streamr-client-protocol/contracts/NodeRegistry.json'
+import * as StorageNodeRegistryConfig from 'streamr-client-protocol/dist/contracts/NodeRegistry.json'
 import { Contract } from '@ethersproject/contracts'
 import { Context, ContextError } from './utils/Context'
 import { Debug } from './utils/log'
