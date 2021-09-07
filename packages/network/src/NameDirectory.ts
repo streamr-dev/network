@@ -1,4 +1,3 @@
-
 import { PeerId } from './connection/PeerInfo'
 
 // Get human-readable names for Trackers and Brokers
