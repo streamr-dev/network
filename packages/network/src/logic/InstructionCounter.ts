@@ -1,23 +1,20 @@
 import { Status, StatusStreams, StreamKey } from '../identifiers'
+import { NodeId } from './Node'
 
-interface Counters {
-    [key: string]: {
-        [key: string]: number
-    }
-}
+type Counters = Record<NodeId,Record<StreamKey,number>>
 
 export class InstructionCounter {
     private readonly counters: Counters = {}
 
     constructor() {}
 
-    setOrIncrement(nodeId: string, streamKey: StreamKey): number {
+    setOrIncrement(nodeId: NodeId, streamKey: StreamKey): number {
         this.getAndSetIfNecessary(nodeId, streamKey)
         this.counters[nodeId][streamKey] += 1
         return this.counters[nodeId][streamKey]
     }
 
-    filterStatus(status: Status, source: string): StatusStreams {
+    filterStatus(status: Status, source: NodeId): StatusStreams {
         const filteredStreams: StatusStreams = {}
         Object.entries(status.streams).forEach(([streamKey, entry]) => {
             const currentCounter = this.getAndSetIfNecessary(source, streamKey)
@@ -28,7 +25,7 @@ export class InstructionCounter {
         return filteredStreams
     }
 
-    removeNode(nodeId: string): void {
+    removeNode(nodeId: NodeId): void {
         delete this.counters[nodeId]
     }
 
@@ -38,7 +35,7 @@ export class InstructionCounter {
         })
     }
 
-    private getAndSetIfNecessary(nodeId: string, streamKey: StreamKey): number {
+    private getAndSetIfNecessary(nodeId: NodeId, streamKey: StreamKey): number {
         if (this.counters[nodeId] === undefined) {
             this.counters[nodeId] = {}
         }

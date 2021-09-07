@@ -1,9 +1,10 @@
 import EventEmitter from "events"
+import { PeerId } from './PeerInfo'
 
 export class DeferredConnectionAttempt {
     
     private eventEmitter: EventEmitter
-    private connectionAttemptPromise: Promise<string>
+    private connectionAttemptPromise: Promise<PeerId>
 
     constructor() {
         this.eventEmitter = new EventEmitter()
@@ -21,11 +22,11 @@ export class DeferredConnectionAttempt {
         this.connectionAttemptPromise.catch(() => {})
     }
 
-    getPromise(): Promise<string> {
+    getPromise(): Promise<PeerId> {
         return this.connectionAttemptPromise
     }
 
-    resolve(targetPeerId: string): void {
+    resolve(targetPeerId: PeerId): void {
         this.eventEmitter.emit('resolve', targetPeerId)
     }
 

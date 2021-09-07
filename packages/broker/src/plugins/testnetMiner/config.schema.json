@@ -5,9 +5,11 @@
     "description": "Testnet miner plugin configuration",
     "additionalProperties": false,
     "properties": {
-        "rewardStreamId": {
-            "type": "string",
-            "default": "streamr.eth/testnets/brubeck-rewards"
+        "rewardStreamIds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "uniqueItems": true,
+            "default": ["streamr.eth/testnets/brubeck-rewards"]
         },
         "claimServerUrl": {
             "type": "string",
