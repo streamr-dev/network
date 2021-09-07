@@ -1,7 +1,7 @@
 import { Status, StatusStreams, StreamKey } from '../identifiers'
 import { NodeId } from './Node'
 
-type Counters = Record<NodeId,Record<string,number>>
+type Counters = Record<NodeId,Record<StreamKey,number>>
 
 export class InstructionCounter {
     private readonly counters: Counters = {}

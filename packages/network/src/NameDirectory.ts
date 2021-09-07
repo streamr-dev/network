@@ -5,7 +5,7 @@
 
 import { PeerId } from './connection/PeerInfo'
 
-const NAMES: Record<string,string> = {
+const NAMES: Record<PeerId,string> = {
     '0xDE11165537ef6C01260ee89A850a281525A5b63F': 'T1',
     '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c': 'T2',
     '0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75': 'T3',

@@ -45,7 +45,7 @@ export class TrackerServer extends EventEmitter {
     async sendInstruction(
         receiverNodeId: NodeId, 
         streamId: StreamIdAndPartition, 
-        nodeIds: string[], counter: number
+        nodeIds: NodeId[], counter: number
     ): Promise<void> {
         await this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
             requestId: uuidv4(),
@@ -129,7 +129,7 @@ export class TrackerServer extends EventEmitter {
         }))
     }
 
-    async sendUnknownPeerRtcError(receiverNodeId: NodeId, requestId: string, targetNode: string): Promise<void> {
+    async sendUnknownPeerRtcError(receiverNodeId: NodeId, requestId: string, targetNode: NodeId): Promise<void> {
         await this.send(receiverNodeId, new TrackerLayer.ErrorMessage({
             requestId,
             errorCode: TrackerLayer.ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
