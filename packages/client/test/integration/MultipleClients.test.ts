@@ -391,8 +391,7 @@ describeRepeats('PubSub with multiple clients', () => {
             checkMessages(published, receivedMessagesOther)
         }, 80000)
 
-        // skipped because needs resend + subscribe
-        test.skip('works with multiple publishers on one stream with late subscriber', async () => {
+        test('works with multiple publishers on one stream with late subscriber', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
             // the otherClient subscribes after the 3rd message hits storage
@@ -454,6 +453,7 @@ describeRepeats('PubSub with multiple clients', () => {
                     // late subscribe to stream from other client instance
                     const lateSub = await otherClient.subscribe({
                         stream: stream.id,
+                        last: 100
                     }, (msg, streamMessage) => {
                         const key = streamMessage.getPublisherId().toLowerCase()
                         const msgs = receivedMessagesOther[key] || []
@@ -570,8 +570,7 @@ describeRepeats('PubSub with multiple clients', () => {
         })
     }, 40000)
 
-    // skip late needs resend + subscribe
-    test.skip('works with multiple publishers on one stream with late subscriber', async () => {
+    test('works with multiple publishers on one stream with late subscriber', async () => {
         const published: Record<string, any[]> = {}
         await mainClient.session.getSessionToken()
         await mainClient.connect()
@@ -631,6 +630,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 // late subscribe to stream from other client instance
                 const lateSub = await otherClient.subscribe({
                     stream: stream.id,
+                    last: MAX_MESSAGES * publishers.length,
                 }, (msg, streamMessage) => {
                     const key = streamMessage.getPublisherId().toLowerCase()
                     const msgs = receivedMessagesOther[key] || []

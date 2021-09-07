@@ -11,6 +11,7 @@ import { BrubeckContainer } from './Container'
 import Publisher from './Publisher'
 import Subscriber from './Subscriber'
 import Resends from './Resends'
+import ResendSubscribe from './ResendSubscribe'
 import BrubeckNode from './BrubeckNode'
 import Ethereum from './Ethereum'
 import Session from './Session'
@@ -61,7 +62,8 @@ type Methods<T> = Pick<T, MethodNames<T>>
 // use MethodNames to only grab methods
 export interface BrubeckClient extends Ethereum,
     Methods<StreamEndpoints>,
-    Methods<Subscriber>,
+    Methods<Omit<Subscriber, 'subscribe'>>,
+    Methods<ResendSubscribe>,
     // connect/pOnce in BrubeckNode are pOnce, we override them anyway
     Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
     Methods<LoginEndpoints>,
@@ -83,6 +85,7 @@ class BrubeckClientBase implements Context {
     container: DependencyContainer
     options: StrictBrubeckClientConfig
     loginEndpoints: LoginEndpoints
+    resendSubscriber: ResendSubscribe
     streamEndpoints: StreamEndpoints
     cached: StreamEndpointsCached
     ethereum: Ethereum
@@ -93,6 +96,7 @@ class BrubeckClientBase implements Context {
     session: Session
     node: BrubeckNode
     groupKeyStore: GroupKeyStoreFactory
+    subscribe
     protected destroySignal: DestroySignal
 
     constructor(
@@ -109,6 +113,7 @@ class BrubeckClientBase implements Context {
         resends: Resends,
         publisher: Publisher,
         subscriber: Subscriber,
+        resendSubscriber: ResendSubscribe,
         groupKeyStore: GroupKeyStoreFactory,
         destroySignal: DestroySignal,
     ) { // eslint-disable-line function-paren-newline
@@ -123,6 +128,7 @@ class BrubeckClientBase implements Context {
         this.publisher = publisher!
         this.cached = cached
         this.subscriber = subscriber!
+        this.resendSubscriber = resendSubscriber!
         this.resends = resends!
         this.session = session!
         this.node = node!
@@ -135,9 +141,11 @@ class BrubeckClientBase implements Context {
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
         Plugin(this, this.resends)
+        Plugin(this, this.resendSubscriber)
         Plugin(this, this.session)
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
+        this.subscribe = resendSubscriber.subscribe.bind(resendSubscriber)
     }
 
     connect = pOnce(async () => {
@@ -243,6 +251,7 @@ export class BrubeckClient extends BrubeckClientBase {
             c.resolve<Resends>(Resends),
             c.resolve<Publisher>(Publisher),
             c.resolve<Subscriber>(Subscriber),
+            c.resolve<ResendSubscribe>(ResendSubscribe),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
         )
@@ -266,5 +275,5 @@ export const Dependencies = {
 }
 
 export { BrubeckClient as StreamrClient }
-export { ResendOptions } from './Resends'
+export { ResendOptionsStrict as ResendOptions } from './Resends'
 export { BrubeckClientConfig as StreamrClientOptions } from './Config'

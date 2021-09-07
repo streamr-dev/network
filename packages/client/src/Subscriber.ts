@@ -12,6 +12,8 @@ import { BrubeckContainer } from './Container'
 
 export { Subscription, SubscriptionSession }
 
+export type SubscribeOptions = SIDLike | { stream: SIDLike }
+
 @scoped(Lifecycle.ContainerScoped)
 export default class Subscriber implements Context {
     id
@@ -23,7 +25,7 @@ export default class Subscriber implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    async subscribe<T>(opts: SIDLike | { stream: SIDLike }, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
+    async subscribe<T>(opts: SubscribeOptions, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
         if (opts && typeof opts === 'object' && 'stream' in opts) {
             return this.subscribe(opts.stream, onMessage)
         }
@@ -41,21 +43,28 @@ export default class Subscriber implements Context {
         return sub
     }
 
-    async add<T>(spid: SPID): Promise<Subscription<T>> {
+    getOrCreateSubscriptionSession<T>(spidLike: SPIDLike) {
+        const spid = SPID.from(spidLike)
         const { key } = spid
+        if (this.subSessions.has(key)) {
+            return this.getSubscriptionSession<T>(spid)!
+        }
 
-        // get/create subscription session
-        // don't add SubscriptionSession to subSessions until after subscription successfully created
-        const subSession = this.subSessions.get(key) as SubscriptionSession<T> || new SubscriptionSession<T>(this, spid, this.container)
+        const subSession = new SubscriptionSession<T>(this, spid, this.container)
+        this.subSessions.set(key, subSession as SubscriptionSession<unknown>)
+        subSession.onRetired(() => {
+            this.subSessions.delete(key)
+        })
+        return subSession
+    }
 
-        // create subscription
-        const sub = new Subscription<T>(subSession)
+    async addSubscription<T>(sub: Subscription<T>): Promise<Subscription<T>> {
+        const { spid } = sub
         sub.onFinally(() => {
             return this.remove(sub)
         })
-
-        // sub didn't throw, add subsession
-        this.subSessions.set(key, subSession as SubscriptionSession<unknown>)
+        // get/create subscription session
+        const subSession = this.getOrCreateSubscriptionSession<T>(spid)
 
         // add subscription to subSession
         try {
@@ -70,19 +79,24 @@ export default class Subscriber implements Context {
         return sub
     }
 
+    async add<T>(spid: SPID): Promise<Subscription<T>> {
+        // get/create subscription session
+        const subSession = this.getOrCreateSubscriptionSession<T>(spid)
+
+        // create subscription
+        const sub = new Subscription<T>(subSession)
+        return this.addSubscription(sub)
+    }
+
     async remove(sub: Subscription<any>): Promise<void> {
         if (!sub) { return }
         const { key } = sub.spid
         const subSession = this.subSessions.get(key)
-        if (subSession) {
-            await subSession.remove(sub)
-            const count = subSession.count()
-            // remove subSession if no more subscriptions
-            if (!count) {
-                this.subSessions.delete(key)
-                await subSession.stop()
-            }
+        if (!subSession) {
+            return
         }
+
+        await subSession.remove(sub)
     }
 
     async unsubscribe(streamMatcher?: SIDLike) {

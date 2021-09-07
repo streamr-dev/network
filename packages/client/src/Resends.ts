@@ -75,7 +75,7 @@ export type ResendRangeOptions = {
     publisherId?: string
 }
 
-export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
+export type ResendOptionsStrict = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && 'last' in options && options.last != null
@@ -87,6 +87,22 @@ function isResendFrom<T extends ResendFromOptions>(options: any): options is T {
 
 function isResendRange<T extends ResendRangeOptions>(options: any): options is T {
     return options && 'from' in options && 'to' in options && options.to && options.from != null
+}
+
+export type ResendOptions = (SIDLike | { stream: SIDLike }) & (ResendOptionsStrict | { resend: ResendOptionsStrict })
+
+export function isResendOptions(options: any): options is ResendOptions {
+    if ('resend' in options && options.resend) {
+        return isResendOptions(options.resend)
+    }
+
+    if (!options || typeof options !== 'object') { return false }
+
+    return !!(
+        isResendLast(options)
+        || isResendFrom(options)
+        || isResendRange(options)
+    )
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -110,10 +126,10 @@ export default class Resend implements Context {
      */
 
     async resend<T>(
-        options: (SIDLike | { stream: SIDLike }) & (ResendOptions | { resend: ResendOptions }),
+        options: ResendOptions,
         onMessage?: MessageStreamOnMessage<T>
     ): Promise<MessageStream<T>> {
-        const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptions
+        const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
         const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SIDLike
         const spid = SPID.fromDefaults(spidOptions, { streamPartition: 0 })
 
@@ -126,7 +142,7 @@ export default class Resend implements Context {
         return sub
     }
 
-    resendMessages<T>(spid: SPID, options: ResendOptions): Promise<MessageStream<T>> {
+    resendMessages<T>(spid: SPID, options: ResendOptionsStrict): Promise<MessageStream<T>> {
         if (isResendLast(options)) {
             return this.last<T>(spid, {
                 count: options.last,

@@ -6,6 +6,7 @@ import { NetworkNode } from 'streamr-network'
 import { Scaffold, instanceId, until } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
+import Signal from './utils/Signal'
 import { flow } from './utils/PushBuffer'
 import MessageStream from './MessageStream'
 
@@ -26,10 +27,11 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()
     pendingRemoval: Set<Subscription<T>> = new Set()
-    active = false
+    isRetired: boolean = false
     isStopped = false
     pipeline
     node
+    onRetired = Signal.once<void>()
 
     constructor(context: Context, spid: SPID, @inject(BrubeckContainer) container: DependencyContainer) {
         this.id = instanceId(this)
@@ -42,6 +44,9 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
             onError: this.onError,
         }, this, container)
             .pipe(this.distributeMessage)
+            .onBeforeFinally(() => {
+                return this.retire()
+            })
             .onFinally(async () => {
                 this.debug('subsession pipeline done.')
                 await this.removeAll()
@@ -58,6 +63,11 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
                 this.debug('end')
             })
         })
+    }
+
+    private async retire() {
+        this.isRetired = true
+        await this.onRetired.trigger()
     }
 
     private onError(error: Error) {
@@ -81,7 +91,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     }
 
     private onMessageInput = async (msg: StreamMessage) => {
-        if (!msg || this.isStopped || !this.active) {
+        if (!msg || this.isStopped || this.isRetired) {
             return
         }
 
@@ -94,7 +104,6 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
 
     private async subscribe() {
         this.debug('subscribe')
-        this.active = true
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
@@ -104,7 +113,6 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
 
     private async unsubscribe(node: NetworkNode) {
         this.debug('unsubscribe')
-        this.active = false
         node.removeMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
         node.subscribe(streamId, streamPartition)
@@ -118,6 +126,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
                 return async () => {
                     const prevNode = node
                     node = undefined
+                    await this.retire()
                     await this.unsubscribe(prevNode!)
                 }
             },
@@ -125,12 +134,13 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     })()
 
     shouldBeSubscribed() {
-        return !this.isStopped && !!this.count()
+        return !this.isRetired && !this.isStopped && !!this.count()
     }
 
     async stop() {
         this.debug('stop')
         this.isStopped = true
+        await this.retire()
         this.pipeline.return()
         await this.removeAll()
     }
@@ -169,6 +179,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         if (!sub || this.pendingRemoval.has(sub) || !this.subscriptions.has(sub)) {
             return
         }
+
         this.debug('remove', sub.id)
 
         this.pendingRemoval.add(sub)

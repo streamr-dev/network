@@ -92,6 +92,7 @@ export default function SubscribePipeline<T = unknown>(
         })
         .onBeforeFinally(async () => {
             const tasks = [
+                orderMessages.stop(),
                 decrypt.stop(),
                 validate.stop(),
             ]
