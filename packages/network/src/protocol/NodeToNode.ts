@@ -48,7 +48,7 @@ export class NodeToNode extends EventEmitter {
         receiverNodeId: NodeId,
         trackerAddress: string,
         trackerInstructed = true
-    ): Promise<PeerId> {
+    ): Promise<NodeId> {
         return this.endpoint.connect(receiverNodeId, trackerAddress, trackerInstructed)
     }
 
@@ -118,10 +118,10 @@ export class NodeToNode extends EventEmitter {
         return this.endpoint.getRtts()
     }
 
-    getNegotiatedProtocolVersionsOnNode(peerId: PeerId): [number, number] {
-        const messageLayerVersion = this.endpoint.getNegotiatedMessageLayerProtocolVersionOnNode(peerId)
+    getNegotiatedProtocolVersionsOnNode(nodeId: NodeId): [number, number] {
+        const messageLayerVersion = this.endpoint.getNegotiatedMessageLayerProtocolVersionOnNode(nodeId)
             || this.endpoint.getDefaultMessageLayerProtocolVersion()
-        const controlLayerVersion = this.endpoint.getNegotiatedControlLayerProtocolVersionOnNode(peerId)
+        const controlLayerVersion = this.endpoint.getNegotiatedControlLayerProtocolVersionOnNode(nodeId)
             || this.endpoint.getDefaultControlLayerProtocolVersion()
         return [controlLayerVersion, messageLayerVersion]
     }

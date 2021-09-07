@@ -136,8 +136,8 @@ export class TrackerNode extends EventEmitter {
         return requestId
     }
 
-    async send<T>(receiverPeerId: PeerId, message: T & TrackerLayer.TrackerMessage): Promise<void> {
-        await this.endpoint.send(receiverPeerId, message.serialize())
+    async send<T>(receiverTrackerId: TrackerId, message: T & TrackerLayer.TrackerMessage): Promise<void> {
+        await this.endpoint.send(receiverTrackerId, message.serialize())
     }
 
     getServerUrlByTrackerId(trackerId: TrackerId): string | undefined {
@@ -159,7 +159,7 @@ export class TrackerNode extends EventEmitter {
         }
     }
 
-    connectToTracker(trackerAddress: string, trackerPeerInfo: PeerInfo): Promise<PeerId> {
+    connectToTracker(trackerAddress: string, trackerPeerInfo: PeerInfo): Promise<TrackerId> {
         return this.endpoint.connect(trackerAddress, trackerPeerInfo)
     }
 
