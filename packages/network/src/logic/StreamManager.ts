@@ -1,17 +1,18 @@
 import { StreamIdAndPartition, StreamKey } from '../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { MessageLayer } from 'streamr-client-protocol'
+import { NodeId } from './Node'
 
 interface StreamStateRepresentation {
-    inboundNodes: Array<string>
-    outboundNodes: Array<string>
+    inboundNodes: Array<NodeId>
+    outboundNodes: Array<NodeId>
     counter: number
 }
 
 interface StreamState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
-    inboundNodes: Set<string> // Nodes that I am subscribed to for messages
-    outboundNodes: Set<string> // Nodes that subscribe to me for messages
+    inboundNodes: Set<NodeId> // Nodes that I am subscribed to for messages
+    outboundNodes: Set<NodeId> // Nodes that subscribe to me for messages
     counter: number
 }
 
@@ -62,19 +63,19 @@ export class StreamManager {
         this.streams.get(streamId.key())!.counter = counter
     }
 
-    addInboundNode(streamId: StreamIdAndPartition, node: string): void {
+    addInboundNode(streamId: StreamIdAndPartition, node: NodeId): void {
         this.verifyThatIsSetUp(streamId)
         const { inboundNodes } = this.streams.get(streamId.key())!
         inboundNodes.add(node)
     }
 
-    addOutboundNode(streamId: StreamIdAndPartition, node: string): void {
+    addOutboundNode(streamId: StreamIdAndPartition, node: NodeId): void {
         this.verifyThatIsSetUp(streamId)
         const { outboundNodes } = this.streams.get(streamId.key())!
         outboundNodes.add(node)
     }
 
-    removeNodeFromStream(streamId: StreamIdAndPartition, node: string): void {
+    removeNodeFromStream(streamId: StreamIdAndPartition, node: NodeId): void {
         this.verifyThatIsSetUp(streamId)
         const { inboundNodes, outboundNodes } = this.streams.get(streamId.key())!
         inboundNodes.delete(node)
@@ -86,8 +87,8 @@ export class StreamManager {
         const result: { [key: string]: StreamStateRepresentation } = {}
         if (!streamState) {
             result[streamId.key()] = {
-                inboundNodes: new Array<string>(),
-                outboundNodes: new Array<string>(),
+                inboundNodes: new Array<NodeId>(),
+                outboundNodes: new Array<NodeId>(),
                 counter: -1 // -1 signals unsubscribe
             }
             return result
@@ -100,7 +101,7 @@ export class StreamManager {
         return result
     }
 
-    removeNodeFromAllStreams(node: string): StreamIdAndPartition[] {
+    removeNodeFromAllStreams(node: NodeId): StreamIdAndPartition[] {
         const streams: StreamIdAndPartition[] = []
         this.streams.forEach(({ inboundNodes, outboundNodes }, streamKey) => {
             const b1 = inboundNodes.delete(node)
@@ -112,7 +113,7 @@ export class StreamManager {
         return streams
     }
 
-    removeStream(streamId: StreamIdAndPartition): ReadonlyArray<string> {
+    removeStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
         this.verifyThatIsSetUp(streamId)
         const { inboundNodes, outboundNodes } = this.streams.get(streamId.key())!
         this.streams.delete(streamId.key())
@@ -123,7 +124,7 @@ export class StreamManager {
         return this.streams.has(streamId.key())
     }
 
-    isNodePresent(node: string): boolean {
+    isNodePresent(node: NodeId): boolean {
         return [...this.streams.values()].some(({ inboundNodes, outboundNodes }) => {
             return inboundNodes.has(node) || outboundNodes.has(node)
         })
@@ -151,24 +152,24 @@ export class StreamManager {
         return [...this.streams.keys()].sort()
     }
 
-    getOutboundNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<string> {
+    getOutboundNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
         this.verifyThatIsSetUp(streamId)
         return [...this.streams.get(streamId.key())!.outboundNodes]
     }
 
-    getInboundNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<string> {
+    getInboundNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
         this.verifyThatIsSetUp(streamId)
         return [...this.streams.get(streamId.key())!.inboundNodes]
     }
 
-    getAllNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<string> {
+    getAllNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
         return [...new Set([
             ...this.getInboundNodesForStream(streamId),
             ...this.getOutboundNodesForStream(streamId)])].sort()
     }
 
-    getAllNodes(): ReadonlyArray<string> {
-        const nodes: string[] = []
+    getAllNodes(): ReadonlyArray<NodeId> {
+        const nodes: NodeId[] = []
         this.streams.forEach(({ inboundNodes, outboundNodes }) => {
             nodes.push(...inboundNodes)
             nodes.push(...outboundNodes)
@@ -176,12 +177,12 @@ export class StreamManager {
         return [...new Set(nodes)]
     }
 
-    hasOutboundNode(streamId: StreamIdAndPartition, node: string): boolean {
+    hasOutboundNode(streamId: StreamIdAndPartition, node: NodeId): boolean {
         this.verifyThatIsSetUp(streamId)
         return this.streams.get(streamId.key())!.outboundNodes.has(node)
     }
 
-    hasInboundNode(streamId: StreamIdAndPartition, node: string): boolean {
+    hasInboundNode(streamId: StreamIdAndPartition, node: NodeId): boolean {
         this.verifyThatIsSetUp(streamId)
         return this.streams.get(streamId.key())!.inboundNodes.has(node)
     }

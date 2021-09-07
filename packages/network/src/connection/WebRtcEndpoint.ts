@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import { Logger } from '../helpers/Logger'
-import { PeerInfo } from './PeerInfo'
+import { PeerId, PeerInfo } from './PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
@@ -120,7 +120,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     private createConnection(
-        targetPeerId: string,
+        targetPeerId: PeerId,
         routerId: string,
         deferredConnectionAttempt: DeferredConnectionAttempt | null
     ) {
@@ -266,7 +266,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    private replaceConnection(peerId: string, routerId: string, newConnectionId?: string): WebRtcConnection {
+    private replaceConnection(peerId: PeerId, routerId: string, newConnectionId?: string): WebRtcConnection {
         // Close old connection
         const conn = this.connections[peerId]
         let deferredConnectionAttempt = null
@@ -291,10 +291,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     async connect(
-        targetPeerId: string,
+        targetPeerId: PeerId,
         routerId: string,
         trackerInstructed = true
-    ): Promise<string> {
+    ): Promise<PeerId> {
         // Prevent new connections from being opened when WebRtcEndpoint has been closed
         if (this.stopped) {
             return Promise.reject(new WebRtcError('WebRtcEndpoint has been stopped'))
@@ -344,7 +344,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    async send(targetPeerId: string, message: string): Promise<void> {
+    async send(targetPeerId: PeerId, message: string): Promise<void> {
         if (!this.connections[targetPeerId]) {
             throw new WebRtcError(`Not connected to ${targetPeerId}.`)
         }
@@ -374,11 +374,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    close(receiverNodeId: string, reason: string): void {
-        const connection = this.connections[receiverNodeId]
+    close(receiverPeerId: PeerId, reason: string): void {
+        const connection = this.connections[receiverPeerId]
         if (connection) {
-            this.logger.debug('close connection to %s due to %s', NameDirectory.getName(receiverNodeId), reason)
-            delete this.connections[receiverNodeId]
+            this.logger.debug('close connection to %s due to %s', NameDirectory.getName(receiverPeerId), reason)
+            delete this.connections[receiverPeerId]
             connection.close()
         }
     }
@@ -398,11 +398,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         return this.peerInfo
     }
 
-    getNegotiatedMessageLayerProtocolVersionOnNode(peerId: string): number | undefined {
+    getNegotiatedMessageLayerProtocolVersionOnNode(peerId: PeerId): number | undefined {
         return this.negotiatedProtocolVersions.getNegotiatedProtocolVersions(peerId)?.messageLayerVersion
     }
 
-    getNegotiatedControlLayerProtocolVersionOnNode(peerId: string): number | undefined {
+    getNegotiatedControlLayerProtocolVersionOnNode(peerId: PeerId): number | undefined {
         return this.negotiatedProtocolVersions.getNegotiatedProtocolVersions(peerId)?.controlLayerVersion
     }
 
