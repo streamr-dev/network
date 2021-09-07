@@ -21,7 +21,7 @@ const eventPerType: { [key: number]: string } = {}
 eventPerType[TrackerLayer.TrackerMessage.TYPES.StatusMessage] = Event.NODE_STATUS_RECEIVED
 eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 
-export interface TrackerNode {
+export interface NodeToTracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: string) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: string) => void): this
     on(event: Event.NODE_STATUS_RECEIVED, listener: (msg: TrackerLayer.StatusMessage, nodeId: string) => void): this

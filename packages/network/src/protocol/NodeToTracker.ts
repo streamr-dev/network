@@ -24,7 +24,7 @@ eventPerType[TrackerLayer.TrackerMessage.TYPES.InstructionMessage] = Event.TRACK
 eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 eventPerType[TrackerLayer.TrackerMessage.TYPES.ErrorMessage] = Event.RTC_ERROR_RECEIVED
 
-export interface TrackerNode {
+export interface NodeToTracker {
     on(event: Event.CONNECTED_TO_TRACKER, listener: (trackerId: string) => void): this
     on(event: Event.TRACKER_DISCONNECTED, listener: (trackerId: string) => void): this
     on(event: Event.TRACKER_INSTRUCTION_RECEIVED, listener: (msg: TrackerLayer.InstructionMessage, trackerId: string) => void): this
@@ -34,7 +34,7 @@ export interface TrackerNode {
 
 export type UUID = string
 
-export class TrackerNode extends EventEmitter {
+export class NodeToTracker extends EventEmitter {
     private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
     private readonly logger: Logger
 
