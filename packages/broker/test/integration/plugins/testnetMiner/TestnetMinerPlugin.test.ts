@@ -90,7 +90,7 @@ describe('TestnetMinerPlugin', () => {
             wsPort: LEGACY_WEBSOCKET_PORT,
             extraPlugins: {
                 testnetMiner: {
-                    rewardStreamId,
+                    rewardStreamIds: [rewardStreamId],
                     claimServerUrl: `http://127.0.0.1:${CLAIM_SERVER_PORT}`,
                     stunServerHost: null,
                     maxClaimDelay: 100

@@ -10,8 +10,10 @@ import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { Location, Status, StatusStreams, StreamIdAndPartition, StreamKey } from '../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
+import { NodeId } from './Node'
 
-type NodeId = string
+export type TrackerId = string
+
 type StreamId = string
 
 export enum Event {
@@ -27,11 +29,10 @@ export interface TrackerOptions {
     metricsContext?: MetricsContext
 }
 
-// streamKey => overlayTopology, where streamKey = streamId::partition
-export type OverlayPerStream = { [key: string]: OverlayTopology }
+export type OverlayPerStream = Record<StreamKey,OverlayTopology>
 
 // nodeId => connected nodeId => rtt
-export type OverlayConnectionRtts = { [key: string]: { [key: string]: number } }
+export type OverlayConnectionRtts = Record<NodeId,Record<NodeId,number>>
 
 export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
@@ -45,7 +46,7 @@ export class Tracker extends EventEmitter {
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
-    private readonly extraMetadatas: { [key: string]: Record<string, unknown> }
+    private readonly extraMetadatas: Record<NodeId,Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
 
@@ -229,15 +230,15 @@ export class Tracker extends EventEmitter {
         return Object.keys(this.overlayPerStream)
     }
 
-    getAllNodeLocations(): Readonly<{[key: string]: Location}> {
+    getAllNodeLocations(): Readonly<Record<NodeId,Location>> {
         return this.locationManager.getAllNodeLocations()
     }
 
-    getAllExtraMetadatas(): Readonly<{ [key: string]: Record<string, unknown> }> {
+    getAllExtraMetadatas(): Readonly<Record<NodeId,Record<string, unknown>>> {
         return this.extraMetadatas
     }
 
-    getNodes(): ReadonlyArray<string> {
+    getNodes(): ReadonlyArray<NodeId> {
         return this.trackerServer.getNodeIds()
     }
 
@@ -245,7 +246,7 @@ export class Tracker extends EventEmitter {
         return this.locationManager.getNodeLocation(node)
     }
 
-    getOverlayConnectionRtts(): { [key: string]: { [key: string]: number } } {
+    getOverlayConnectionRtts(): OverlayConnectionRtts {
         return this.overlayConnectionRtts
     }
 

@@ -19,7 +19,7 @@ module.exports = function (config) {
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
             './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*).ts/',
 
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts',
+            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*).ts',
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
@@ -27,7 +27,7 @@ module.exports = function (config) {
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
             './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*).ts/': ['webpack'],
 
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*).ts': ['webpack'],
+            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*).ts': ['webpack'],
         },
         customLaunchers: {
             CustomElectron: {

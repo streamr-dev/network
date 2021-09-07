@@ -1,4 +1,4 @@
-import { Node, Event as NodeEvent, NodeOptions } from './logic/Node'
+import { Node, Event as NodeEvent, NodeOptions, NodeId } from './logic/Node'
 import { StreamIdAndPartition } from './identifiers'
 import { StreamMessage } from 'streamr-client-protocol'
 
@@ -37,11 +37,11 @@ export class NetworkNode extends Node {
         this.unsubscribeFromStream(new StreamIdAndPartition(streamId, streamPartition))
     }
 
-    getNeighborsForStream(streamId: string, streamPartition: number): ReadonlyArray<string> {
+    getNeighborsForStream(streamId: string, streamPartition: number): ReadonlyArray<NodeId> {
         return this.streams.getAllNodesForStream(new StreamIdAndPartition(streamId, streamPartition))
     }
 
-    getRtt(nodeId: string): number|undefined {
+    getRtt(nodeId: NodeId): number|undefined {
         return this.nodeToNode.getRtts()[nodeId]
     }
 }
