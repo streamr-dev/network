@@ -4,7 +4,7 @@ import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { RelayMessage, Status } from '../identifiers'
-import { PeerId, PeerInfo } from '../connection/PeerInfo'
+import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
 import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
