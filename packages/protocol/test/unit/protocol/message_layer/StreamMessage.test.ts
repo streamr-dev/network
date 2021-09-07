@@ -50,6 +50,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.signature, 'signature')
             assert.strictEqual(streamMessage.getSPID().streamId, streamMessage.getStreamId())
             assert.strictEqual(streamMessage.getSPID().streamPartition, streamMessage.getStreamPartition())
+            assert.strictEqual(streamMessage.getSPID(), streamMessage.spid)
         })
 
         it('create StreamMessage with minimum fields defined', () => {
@@ -189,6 +190,19 @@ describe('StreamMessage', () => {
                     prevMsgRef: null
                 })
             })
+        })
+    })
+
+    describe('clone', () => {
+        it('works', () => {
+            const streamMessage = new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                content: JSON.stringify(content),
+            })
+            const streamMessageClone = streamMessage.clone()
+            expect(streamMessageClone).not.toBe(streamMessage)
+            expect(streamMessageClone.toObject()).toEqual(streamMessage.toObject())
+            expect(streamMessageClone.serialize()).toEqual(streamMessage.serialize())
         })
     })
 
