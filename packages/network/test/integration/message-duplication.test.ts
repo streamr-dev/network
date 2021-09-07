@@ -4,7 +4,7 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
+import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from "../../src/logic/Node"
 
 const { StreamMessage, MessageID } = MessageLayer
@@ -62,7 +62,7 @@ describe('duplicate message detection and avoidance', () => {
 
         const allNodesConnnectedToTrackerPromise = Promise.all(otherNodes.map((node) => {
             // @ts-expect-error private field
-            return waitForEvent(node.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER)
+            return waitForEvent(node.nodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER)
         }))
         // eslint-disable-next-line no-restricted-syntax
         for (const node of otherNodes) {

@@ -3,7 +3,7 @@ import { runAndWaitForEvents, wait } from 'streamr-test-utils'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker, Tracker } from '../../src/composition'
-import { TrackerNode, Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
+import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
@@ -29,8 +29,8 @@ const formStatus = (counter1: number, counter2: number, nodes1: NodeId[], nodes2
 
 describe('tracker: counter filtering', () => {
     let tracker: Tracker
-    let trackerNode1: TrackerNode
-    let trackerNode2: TrackerNode
+    let nodeToTracker1: NodeToTracker
+    let nodeToTracker2: NodeToTracker
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -38,42 +38,42 @@ describe('tracker: counter filtering', () => {
             port: 30420,
             id: 'tracker'
         })
-        const peerInfo1 = PeerInfo.newNode('trackerNode1')
-        const peerInfo2 = PeerInfo.newNode('trackerNode2')
+        const peerInfo1 = PeerInfo.newNode('nodeToTracker1')
+        const peerInfo2 = PeerInfo.newNode('nodeToTracker2')
         const trackerPeerInfo = PeerInfo.newTracker('tracker')
         const wsClient1 = new NodeClientWsEndpoint(peerInfo1)
         const wsClient2 = new NodeClientWsEndpoint(peerInfo2)
-        trackerNode1 = new TrackerNode(wsClient1)
-        trackerNode2 = new TrackerNode(wsClient2)
+        nodeToTracker1 = new NodeToTracker(wsClient1)
+        nodeToTracker2 = new NodeToTracker(wsClient2)
 
         await runAndWaitForEvents([
-            () => { trackerNode1.connectToTracker(tracker.getUrl(), trackerPeerInfo) },
-            () => { trackerNode2.connectToTracker(tracker.getUrl(), trackerPeerInfo) }], [
-            [trackerNode1, TrackerNodeEvent.CONNECTED_TO_TRACKER],
-            [trackerNode2, TrackerNodeEvent.CONNECTED_TO_TRACKER]
+            () => { nodeToTracker1.connectToTracker(tracker.getUrl(), trackerPeerInfo) },
+            () => { nodeToTracker2.connectToTracker(tracker.getUrl(), trackerPeerInfo) }], [
+            [nodeToTracker1, NodeToTrackerEvent.CONNECTED_TO_TRACKER],
+            [nodeToTracker2, NodeToTrackerEvent.CONNECTED_TO_TRACKER]
         ])
 
         await runAndWaitForEvents([
-            () => {  trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status) },
-            () => { trackerNode2.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status) }], [
-            [trackerNode1, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED],
-            [trackerNode2, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED]
+            () => {  nodeToTracker1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status) },
+            () => { nodeToTracker2.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status) }], [
+            [nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
+            [nodeToTracker2, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED]
         ])
     })
 
     afterEach(async () => {
-        await trackerNode1.stop()
-        await trackerNode2.stop()
+        await nodeToTracker1.stop()
+        await nodeToTracker2.stop()
         await tracker.stop()
     })
 
     test('handles status messages with counters equal or more to current counter(s)', async () => {
         let numOfInstructions = 0
-        trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
+        nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
 
-        trackerNode1.sendStatus('tracker', formStatus(1, 666, [], [], false) as Status)
+        nodeToTracker1.sendStatus('tracker', formStatus(1, 666, [], [], false) as Status)
             .catch(() => {})
 
         await wait(WAIT_TIME)
@@ -82,11 +82,11 @@ describe('tracker: counter filtering', () => {
 
     test('ignores status messages with counters less than current counter(s)', async () => {
         let numOfInstructions = 0
-        trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
+        nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
 
-        trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status)
+        nodeToTracker1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status)
             .catch(() => {})
 
         await wait(WAIT_TIME)
@@ -95,11 +95,11 @@ describe('tracker: counter filtering', () => {
 
     test('partly handles status messages with mixed counters compared to current counters', async () => {
         let numOfInstructions = 0
-        trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
+        nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
 
-        trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
+        nodeToTracker1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
             .catch(() => {})
 
         await wait(WAIT_TIME)
@@ -110,7 +110,7 @@ describe('tracker: counter filtering', () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
 
         await runAndWaitForEvents(
-            () => { trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status) },
+            () => { nodeToTracker1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status) },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )
@@ -123,7 +123,7 @@ describe('tracker: counter filtering', () => {
 
         await runAndWaitForEvents(
             () => {
-                trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
+                nodeToTracker1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
             },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]

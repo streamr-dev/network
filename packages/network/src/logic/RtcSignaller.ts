@@ -1,4 +1,4 @@
-import { TrackerNode, Event as TrackerNodeEvent } from '../protocol/TrackerNode'
+import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from './RtcMessage'
 import { RelayMessage, RtcErrorMessage } from '../identifiers'
@@ -43,7 +43,7 @@ export interface ErrorOptions {
 
 export class RtcSignaller {
     private readonly peerInfo: PeerInfo
-    private readonly trackerNode: TrackerNode
+    private readonly nodeToTracker: NodeToTracker
     private offerListener: null | ((opts: OfferOptions) => void)
     private answerListener: null | ((opts: AnswerOptions) => void)
     private iceCandidateListener: null | ((opts: IceCandidateOptions) => void)
@@ -51,9 +51,9 @@ export class RtcSignaller {
     private errorListener: null | ((opts: ErrorOptions) => void)
     private readonly logger: Logger
 
-    constructor(peerInfo: PeerInfo, trackerNode: TrackerNode) {
+    constructor(peerInfo: PeerInfo, nodeToTracker: NodeToTracker) {
         this.peerInfo = peerInfo
-        this.trackerNode = trackerNode
+        this.nodeToTracker = nodeToTracker
         this.offerListener = null
         this.answerListener = null
         this.iceCandidateListener = null
@@ -61,7 +61,7 @@ export class RtcSignaller {
         this.errorListener = null
         this.logger = new Logger(module)
 
-        trackerNode.on(TrackerNodeEvent.RELAY_MESSAGE_RECEIVED, (relayMessage: RelayMessage, source: NodeId) => {
+        nodeToTracker.on(NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED, (relayMessage: RelayMessage, source: NodeId) => {
             const { originator, targetNode, subType } = relayMessage
             if (relayMessage.subType === RtcSubTypes.RTC_OFFER) {
                 this.offerListener!({
@@ -95,7 +95,7 @@ export class RtcSignaller {
                 this.logger.warn('unrecognized subtype %s with contents %o', subType, relayMessage)
             }
         })
-        trackerNode.on(TrackerNodeEvent.RTC_ERROR_RECEIVED, (message: RtcErrorMessage, source: TrackerId) => {
+        nodeToTracker.on(NodeToTrackerEvent.RTC_ERROR_RECEIVED, (message: RtcErrorMessage, source: TrackerId) => {
             this.errorListener!({
                 routerId: source,
                 targetNode: message.targetNode,
@@ -105,28 +105,28 @@ export class RtcSignaller {
     }
 
     sendRtcOffer(routerId: string, targetPeerId: PeerId, connectionId: string, description: string): void {
-        this.trackerNode.sendRtcOffer(routerId, targetPeerId, connectionId, this.peerInfo, description)
+        this.nodeToTracker.sendRtcOffer(routerId, targetPeerId, connectionId, this.peerInfo, description)
             .catch((err: Error) => {
                 this.logger.debug('failed to sendRtcOffer via %s due to %s', routerId, err) // TODO: better?
             })
     }
 
     sendRtcAnswer(routerId: string, targetPeerId: PeerId, connectionId: string, description: string): void {
-        this.trackerNode.sendRtcAnswer(routerId, targetPeerId, connectionId, this.peerInfo, description)
+        this.nodeToTracker.sendRtcAnswer(routerId, targetPeerId, connectionId, this.peerInfo, description)
             .catch((err: Error) => {
                 this.logger.debug('failed to sendRtcAnswer via %s due to %s', routerId, err) // TODO: better?
             })
     }
 
     sendRtcIceCandidate(routerId: string, targetPeerId: PeerId, connectionId: string, candidate: string, mid: string): void {
-        this.trackerNode.sendRtcIceCandidate(routerId, targetPeerId, connectionId, this.peerInfo, candidate, mid)
+        this.nodeToTracker.sendRtcIceCandidate(routerId, targetPeerId, connectionId, this.peerInfo, candidate, mid)
             .catch((err: Error) => {
                 this.logger.debug('failed to sendRtcIceCandidate via %s due to %s', routerId, err) // TODO: better?
             })
     }
 
     sendRtcConnect(routerId: string, targetPeerId: PeerId): void {
-        this.trackerNode.sendRtcConnect(routerId, targetPeerId, this.peerInfo)
+        this.nodeToTracker.sendRtcConnect(routerId, targetPeerId, this.peerInfo)
             .catch((err: Error) => {
                 this.logger.debug('failed to sendRtcConnect via %s due to %s', routerId, err) // TODO: better?
             })

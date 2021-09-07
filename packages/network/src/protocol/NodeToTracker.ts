@@ -4,7 +4,7 @@ import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { RelayMessage, Status } from '../identifiers'
-import { PeerId, PeerInfo } from '../connection/PeerInfo'
+import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
 import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
@@ -26,7 +26,7 @@ eventPerType[TrackerLayer.TrackerMessage.TYPES.InstructionMessage] = Event.TRACK
 eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 eventPerType[TrackerLayer.TrackerMessage.TYPES.ErrorMessage] = Event.RTC_ERROR_RECEIVED
 
-export interface TrackerNode {
+export interface NodeToTracker {
     on(event: Event.CONNECTED_TO_TRACKER, listener: (trackerId: TrackerId) => void): this
     on(event: Event.TRACKER_DISCONNECTED, listener: (trackerId: TrackerId) => void): this
     on(event: Event.TRACKER_INSTRUCTION_RECEIVED, listener: (msg: TrackerLayer.InstructionMessage, trackerId: TrackerId) => void): this
@@ -36,7 +36,7 @@ export interface TrackerNode {
 
 export type UUID = string
 
-export class TrackerNode extends EventEmitter {
+export class NodeToTracker extends EventEmitter {
     private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
     private readonly logger: Logger
 

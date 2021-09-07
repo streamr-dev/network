@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { MessageLayer, TrackerLayer, Utils } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
-import { TrackerNode, Event as TrackerNodeEvent } from '../protocol/TrackerNode'
+import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
 import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
@@ -33,7 +33,7 @@ export enum Event {
 export interface NodeOptions {
     protocols: {
         nodeToNode: NodeToNode
-        trackerNode: TrackerNode
+        nodeToTracker: NodeToTracker
     }
     peerInfo: PeerInfo
     trackers: Array<TrackerInfo>
@@ -62,7 +62,7 @@ export interface Node {
 
 export class Node extends EventEmitter {
     protected readonly nodeToNode: NodeToNode
-    private readonly trackerNode: TrackerNode
+    private readonly nodeToTracker: NodeToTracker
     private readonly peerInfo: PeerInfo
     private readonly connectToBootstrapTrackersInterval: number
     private readonly bufferTimeoutInMs: number
@@ -92,7 +92,7 @@ export class Node extends EventEmitter {
     constructor(opts: NodeOptions) {
         super()
 
-        if (!(opts.protocols.trackerNode instanceof TrackerNode) || !(opts.protocols.nodeToNode instanceof NodeToNode)) {
+        if (!(opts.protocols.nodeToTracker instanceof NodeToTracker) || !(opts.protocols.nodeToNode instanceof NodeToNode)) {
             throw new Error('Provided protocols are not correct')
         }
         if (!opts.trackers) {
@@ -100,7 +100,7 @@ export class Node extends EventEmitter {
         }
 
         this.nodeToNode = opts.protocols.nodeToNode
-        this.trackerNode = opts.protocols.trackerNode
+        this.nodeToTracker = opts.protocols.nodeToTracker
         this.peerInfo = opts.peerInfo
 
         this.connectToBootstrapTrackersInterval = opts.connectToBootstrapTrackersInterval || 5000
@@ -132,9 +132,9 @@ export class Node extends EventEmitter {
         )
         this.consecutiveDeliveryFailures = {}
 
-        this.trackerNode.on(TrackerNodeEvent.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
-        this.trackerNode.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))  // eslint-disable-line max-len
-        this.trackerNode.on(TrackerNodeEvent.TRACKER_DISCONNECTED, (trackerId) => this.onTrackerDisconnected(trackerId))
+        this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
+        this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))  // eslint-disable-line max-len
+        this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_DISCONNECTED, (trackerId) => this.onTrackerDisconnected(trackerId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
@@ -180,7 +180,7 @@ export class Node extends EventEmitter {
 
     onConnectedToTracker(tracker: TrackerId): void {
         this.logger.trace('connected to tracker %s', tracker)
-        const serverUrl = this.trackerNode.getServerUrlByTrackerId(tracker)
+        const serverUrl = this.nodeToTracker.getServerUrlByTrackerId(tracker)
         if (serverUrl !== undefined) {
             this.trackerBook[serverUrl] = tracker
             this.prepareAndSendMultipleStatuses(tracker)
@@ -403,7 +403,7 @@ export class Node extends EventEmitter {
 
         this.messageBuffer.clear()
         return Promise.all([
-            this.trackerNode.stop(),
+            this.nodeToTracker.stop(),
             this.nodeToNode.stop(),
         ])
     }
@@ -451,7 +451,7 @@ export class Node extends EventEmitter {
 
     private async sendStatus(tracker: TrackerId, status: Status) {
         try {
-            await this.trackerNode.sendStatus(tracker, status)
+            await this.nodeToTracker.sendStatus(tracker, status)
             this.logger.trace('sent status %j to tracker %s', status.streams, tracker)
         } catch (e) {
             this.logger.trace('failed to send status to tracker %s, reason: %s', tracker, e)
@@ -535,7 +535,7 @@ export class Node extends EventEmitter {
 
     private connectToBootstrapTrackers(): void {
         this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
-            this.trackerNode.connectToTracker(trackerInfo.ws, PeerInfo.newTracker(trackerInfo.id))
+            this.nodeToTracker.connectToTracker(trackerInfo.ws, PeerInfo.newTracker(trackerInfo.id))
                 .catch((err) => {
                     this.logger.warn('could not connect to tracker %s, reason: %j', trackerInfo.ws, err)
                 })
