@@ -7,10 +7,11 @@ import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/N
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
+import { NodeId } from '../logic/Node'
 
 const WAIT_TIME = 200
 
-const formStatus = (counter1: number, counter2: number, nodes1: string[], nodes2: string[], singleStream: boolean): Partial<Status> => ({
+const formStatus = (counter1: number, counter2: number, nodes1: NodeId[], nodes2: NodeId[], singleStream: boolean): Partial<Status> => ({
     streams: {
         'stream-1::0': {
             inboundNodes: nodes1,

@@ -1,10 +1,11 @@
 import { StreamIdAndPartition, StreamKey } from "../identifiers"
 import { TrackerLayer } from "streamr-client-protocol"
 import { Logger } from "../helpers/Logger"
+import { TrackerId } from './Tracker'
 
 type HandleFn = (
     instructionMessage: TrackerLayer.InstructionMessage,
-    trackerId: string,
+    trackerId: TrackerId,
     reattempt: boolean
 ) => Promise<void>
 
@@ -13,11 +14,10 @@ export class InstructionRetryManager {
     private readonly handleFn: HandleFn
     private readonly intervalInMs: number
     private readonly statusSendCounterLimit: number
-    private instructionRetryIntervals: { [key: string]: {
+    private instructionRetryIntervals: Record<StreamKey, {
         interval: NodeJS.Timeout,
         counter: number,
-        }
-    }
+    }>
     private stopped: boolean
 
     constructor(handleFn: HandleFn, intervalInMs: number) {
@@ -29,7 +29,7 @@ export class InstructionRetryManager {
         this.stopped = false
     }
 
-    add(instructionMessage: TrackerLayer.InstructionMessage, trackerId: string): void {
+    add(instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId): void {
         if (this.stopped) {
             return
         }
@@ -45,40 +45,40 @@ export class InstructionRetryManager {
         }
     }
 
-    async retryFunction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: string): Promise<void> {
+    async retryFunction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId): Promise<void> {
         if (this.stopped) {
             return
         }
-        const streamId = StreamIdAndPartition.fromMessage(instructionMessage).key()
+        const streamKey = StreamIdAndPartition.fromMessage(instructionMessage).key()
         try {
             // First and every nth instruction retries will always send status messages to tracker
-            await this.handleFn(instructionMessage, trackerId, this.instructionRetryIntervals[streamId].counter !== 0)
+            await this.handleFn(instructionMessage, trackerId, this.instructionRetryIntervals[streamKey].counter !== 0)
         } catch (err) {
             this.logger.warn('instruction retry threw %s', err)
         }
         // Check that stream has not been removed
-        if (this.instructionRetryIntervals[streamId]) {
-            if (this.instructionRetryIntervals[streamId].counter >= this.statusSendCounterLimit) {
-                this.instructionRetryIntervals[streamId].counter = 0
+        if (this.instructionRetryIntervals[streamKey]) {
+            if (this.instructionRetryIntervals[streamKey].counter >= this.statusSendCounterLimit) {
+                this.instructionRetryIntervals[streamKey].counter = 0
             } else {
-                this.instructionRetryIntervals[streamId].counter += 1
+                this.instructionRetryIntervals[streamKey].counter += 1
             }
 
-            clearTimeout(this.instructionRetryIntervals[streamId].interval)
-            this.instructionRetryIntervals[streamId].interval = setTimeout(() =>
+            clearTimeout(this.instructionRetryIntervals[streamKey].interval)
+            this.instructionRetryIntervals[streamKey].interval = setTimeout(() =>
                 this.retryFunction(instructionMessage, trackerId)
             , this.intervalInMs)
         }
     }
 
-    removeStreamId(streamId: StreamKey): void {
+    removeStream(streamKey: StreamKey): void {
         if (this.stopped) {
             return
         }
-        if (streamId in this.instructionRetryIntervals) {
-            clearTimeout(this.instructionRetryIntervals[streamId].interval)
-            delete this.instructionRetryIntervals[streamId]
-            this.logger.debug('stream %s successfully removed', streamId)
+        if (streamKey in this.instructionRetryIntervals) {
+            clearTimeout(this.instructionRetryIntervals[streamKey].interval)
+            delete this.instructionRetryIntervals[streamKey]
+            this.logger.debug('stream %s successfully removed', streamKey)
         }
     }
 

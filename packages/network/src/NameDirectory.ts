@@ -1,9 +1,11 @@
+import { PeerId } from './connection/PeerInfo'
+
 // Get human-readable names for Trackers and Brokers
 // Currently contains hardcoded names for all streamr-docker-dev entities
 // -> in the future each node receives the peer names from Tracker
 //    and we can remove the hardcoded values
 
-const NAMES: Record<string,string> = {
+const NAMES: Record<PeerId,string> = {
     '0xb9e7cEBF7b03AE26458E32a059488386b05798e8': 'T1',
     '0x0540A3e144cdD81F402e7772C76a5808B71d2d30': 'T2',
     '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2': 'T3',
@@ -17,7 +19,7 @@ export class NameDirectory {
     static MAX_FALLBACK_NAME_LENGTH = 8
 
     // if name is not known, creates a short name from the peerId
-    static getName(peerId: string): string {
+    static getName(peerId: PeerId): string {
         const name = NAMES[peerId]
         if (name !== undefined) {
             return name

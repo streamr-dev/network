@@ -1,5 +1,5 @@
 import { IMessageEvent, w3cwebsocket } from 'websocket'
-import { PeerInfo } from '../PeerInfo'
+import { PeerId, PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { DisconnectionReason } from "./AbstractWsEndpoint"
 import { BrowserClientWsConnection, BrowserWebSocketConnectionFactory } from './BrowserClientWsConnection'
@@ -14,8 +14,8 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         super(peerInfo, metricsContext, pingInterval)
     }
 
-    protected doConnect(serverUrl: string, serverPeerInfo: PeerInfo): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
+    protected doConnect(serverUrl: string, serverPeerInfo: PeerInfo): Promise<PeerId> {
+        return new Promise<PeerId>((resolve, reject) => {
             try {
                 const ws = new w3cwebsocket(serverUrl)
 
@@ -66,7 +66,7 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         return connection
     }
 
-    protected doHandshakeResponse(uuid: string, peerId: string, ws: w3cwebsocket): void {
+    protected doHandshakeResponse(uuid: string, _peerId: PeerId, ws: w3cwebsocket): void {
         ws.send(JSON.stringify({ uuid, peerId: this.peerInfo.peerId }))
     }
 
