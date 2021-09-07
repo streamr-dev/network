@@ -4,7 +4,6 @@ import { Location } from '../identifiers'
 export enum PeerType {
     Tracker = 'tracker',
     Node = 'node',
-    Storage = 'storage',
     Unknown = 'unknown'
 }
 
@@ -48,23 +47,6 @@ export class PeerInfo {
         return new PeerInfo(
             peerId,
             PeerType.Node,
-            controlLayerVersions || defaultControlLayerVersions,
-            messageLayerVersions || defaultMessageLayerVersions,
-            peerName,
-            location
-        )
-    }
-
-    static newStorage(
-        peerId: string,
-        peerName?: string | null | undefined,
-        controlLayerVersions?: number[] | undefined,
-        messageLayerVersions?: number[] | undefined,
-        location?: Location | null | undefined
-    ): PeerInfo  {
-        return new PeerInfo(
-            peerId,
-            PeerType.Storage,
             controlLayerVersions || defaultControlLayerVersions,
             messageLayerVersions || defaultMessageLayerVersions,
             peerName,
@@ -136,11 +118,7 @@ export class PeerInfo {
     }
 
     isNode(): boolean {
-        return this.peerType === PeerType.Node || this.isStorage()
-    }
-
-    isStorage(): boolean {
-        return this.peerType === PeerType.Storage
+        return this.peerType === PeerType.Node
     }
 
     toString(): string {
