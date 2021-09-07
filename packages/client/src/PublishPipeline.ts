@@ -122,9 +122,7 @@ export default class PublishPipeline implements Context, Stoppable {
             defer.reject(err)
         }
 
-        if (StreamMessage.isUnencrypted(streamMessage)) {
-            await this.encryption.encrypt(streamMessage).catch(onError)
-        }
+        await this.encryption.encrypt(streamMessage).catch(onError)
     }
 
     private async signMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
@@ -133,9 +131,7 @@ export default class PublishPipeline implements Context, Stoppable {
             defer.reject(err)
         }
 
-        if (StreamMessage.isUnsigned(streamMessage)) {
-            await this.signer.sign(streamMessage).catch(onError)
-        }
+        await this.signer.sign(streamMessage).catch(onError)
     }
 
     private async validateMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {

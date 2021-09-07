@@ -37,7 +37,7 @@ export enum EncryptionType {
     AES = 2
 }
 
-type StreamMessageOptions<T> = {
+export type StreamMessageOptions<T> = {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
     content: T | string
@@ -58,26 +58,35 @@ export type StreamMessageContainer<T = unknown> = {
     toStreamMessage: (messageId: MessageID, prevMsgRef: MessageRef | null) => StreamMessage<T>
 }
 
+/**
+ * Unsigned StreamMessage.
+ */
 export type StreamMessageUnsigned<T> = StreamMessage<T> & {
     signatureType: SignatureType.NONE
     signature: '' | null
 }
 
+/**
+ * Signed StreamMessage.
+ */
 export type StreamMessageSigned<T> = StreamMessage<T> & {
     signatureType: SignatureType.ETH | SignatureType.ETH_LEGACY
     signature: string
 }
 
-// encrypted messages should also be signed
-export type StreamMessageEncrypted<T> = StreamMessageSigned<T> & {
+/**
+ *  Encrypted StreamMessage.
+ */
+export type StreamMessageEncrypted<T> = StreamMessage<T> & {
     encryptionType: EncryptionType.RSA | EncryptionType.AES
     groupKeyId: string
     parsedContent: never
 }
-
+/**
+ * Unencrypted StreamMessage.
+ */
 export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
     encryptionType: EncryptionType.NONE
-    parsedContent: string
 }
 
 export default class StreamMessage<T = unknown> {
@@ -113,6 +122,9 @@ export default class StreamMessage<T = unknown> {
     serializedContent: string
     spid: SPID
 
+    /**
+     * Create a new StreamMessage identical to the passed-in streamMessage.
+     */
     clone(): StreamMessage<T> {
         const content = this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE
             ? this.getParsedContent()
@@ -416,24 +428,25 @@ export default class StreamMessage<T = unknown> {
         }
     }
 
-    static isUnsigned<T>(msg: StreamMessage<T>): msg is StreamMessageUnsigned<T> {
+    static isUnsigned<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnsigned<T> {
         return !this.isSigned(msg)
     }
 
-    static isSigned<T>(msg: StreamMessage<T>): msg is StreamMessageSigned<T> {
+    static isSigned<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageSigned<T> {
         return !!(msg && msg.signature && msg.signatureType !== SignatureType.NONE)
     }
 
-    static isEncrypted<T>(msg: StreamMessage<T>): msg is StreamMessageEncrypted<T> {
+    static isEncrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageEncrypted<T> {
         return !!(msg && msg.encryptionType !== EncryptionType.NONE)
     }
 
-    static isUnencrypted<T>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
+    static isUnencrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
         return !this.isEncrypted(msg)
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     static isStreamMessageContainer<T = unknown>(content: any): content is StreamMessageContainer<T> {
-        return content && typeof content === 'object' && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function'
+        return !!(content && typeof content === 'object' && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
     }
 
     toObject() {

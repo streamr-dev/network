@@ -23,11 +23,14 @@ export default class PublisherEncryption implements Stoppable {
     async encrypt(streamMessage: StreamMessage) {
         if (this.isStopped) { return }
 
-        if (!this.ethereum.canEncrypt()) {
+        if (StreamMessage.isEncrypted(streamMessage)) {
+            // already encrypted
             return
         }
 
-        const streamId = streamMessage.getStreamId()
+        if (!this.ethereum.canEncrypt()) {
+            return
+        }
 
         const { messageType } = streamMessage
         if (
@@ -39,17 +42,20 @@ export default class PublisherEncryption implements Stoppable {
             return
         }
 
+        if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE) {
+            return
+        }
+
+        const streamId = streamMessage.getStreamId()
         const stream = await this.streamEndpoints.getStream(streamId)
+
+        if (this.isStopped) { return }
 
         if (
             !stream.requireEncryptedData
             && !(await (this.keyExchange.hasAnyGroupKey(stream.id)))
         ) {
             // not needed
-            return
-        }
-
-        if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return
         }
 
