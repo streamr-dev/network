@@ -9,6 +9,5 @@
     "jest.config.js",
     "node_modules",
     "coverage"
-  ],
-  "include": ["contracts"]
+  ]
 }

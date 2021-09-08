@@ -9,6 +9,5 @@
         "node_modules",
         "test",
         "coverage"
-    ],
-    "include": ["contracts"]
+    ]
 }
