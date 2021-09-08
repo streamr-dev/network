@@ -102,7 +102,7 @@ class StreamrCached {
         const cacheOptions: Todo = client.options.cache
         this.getStream = CacheAsyncFn(client.getStream.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId]: any) {
+            cacheKey([maybeStreamId]) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return streamId
             }
@@ -110,7 +110,7 @@ class StreamrCached {
         this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
         this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]: any) {
+            cacheKey([maybeStreamId, ethAddress]) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return `${streamId}|${ethAddress}`
             }
@@ -118,7 +118,7 @@ class StreamrCached {
 
         this.isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]: any) {
+            cacheKey([maybeStreamId, ethAddress]) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return `${streamId}|${ethAddress}`
             }

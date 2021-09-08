@@ -1,4 +1,4 @@
-import { PeerInfo } from '../PeerInfo'
+import { PeerId, PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
 import { staticLogger, ServerWsConnection } from './ServerWsConnection'
@@ -77,7 +77,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         })
     }
 
-    acceptConnection(ws: WebSocket, duplexStream: Duplex, peerId: string, remoteAddress: string): void {
+    acceptConnection(ws: WebSocket, duplexStream: Duplex, peerId: PeerId, remoteAddress: string): void {
         const connection = new ServerWsConnection(
             ws,
             duplexStream,
@@ -117,7 +117,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         return this.serverUrl
     }
 
-    resolveAddress(peerId: string): string | undefined {
+    resolveAddress(peerId: PeerId): string | undefined {
         return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
     }
 

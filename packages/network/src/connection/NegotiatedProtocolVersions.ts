@@ -1,4 +1,4 @@
-import { PeerInfo } from "./PeerInfo"
+import { PeerId, PeerInfo } from "./PeerInfo"
 import { ControlLayer, MessageLayer } from "streamr-client-protocol"
 
 const defaultControlLayerVersions = ControlLayer.ControlMessage.getSupportedVersions()
@@ -9,7 +9,7 @@ type NegotiatedProtocolVersion = { controlLayerVersion: number, messageLayerVers
 export class NegotiatedProtocolVersions {
 
     private readonly peerInfo: PeerInfo
-    private readonly negotiatedProtocolVersions: { [key: string]: NegotiatedProtocolVersion }
+    private readonly negotiatedProtocolVersions: Record<PeerId,NegotiatedProtocolVersion>
     private readonly defaultProtocolVersions: NegotiatedProtocolVersion
     constructor(peerInfo: PeerInfo) {
         this.negotiatedProtocolVersions = Object.create(null)
@@ -20,7 +20,7 @@ export class NegotiatedProtocolVersions {
         }
     }
 
-    negotiateProtocolVersion(peerId: string, controlLayerVersions: number[], messageLayerVersions: number[]): void | never {
+    negotiateProtocolVersion(peerId: PeerId, controlLayerVersions: number[], messageLayerVersions: number[]): void | never {
         try {
             const [controlLayerVersion, messageLayerVersion] = this.validateProtocolVersions(controlLayerVersions, messageLayerVersions)
             this.negotiatedProtocolVersions[peerId] = {
@@ -32,11 +32,11 @@ export class NegotiatedProtocolVersions {
         }
     }
 
-    removeNegotiatedProtocolVersion(peerId: string): void {
+    removeNegotiatedProtocolVersion(peerId: PeerId): void {
         delete this.negotiatedProtocolVersions[peerId]
     }
 
-    getNegotiatedProtocolVersions(peerId: string): NegotiatedProtocolVersion | undefined {
+    getNegotiatedProtocolVersions(peerId: PeerId): NegotiatedProtocolVersion | undefined {
         return this.negotiatedProtocolVersions[peerId]
     }
 

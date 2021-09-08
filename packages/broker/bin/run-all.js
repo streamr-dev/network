@@ -99,9 +99,9 @@ const forkProcess = (processName, filePath, args, color) => {
     })
 }
 
-forkProcess('T1', './tracker.js', ['0xa4fc7b912ed4588080ac9f2044cb3d6cab961bcf0d96de6fa9e773860bf59e1c', 'T1', '--port=30301'], chalk.hex('#66CC66')) // 0xDE11165537ef6C01260ee89A850a281525A5b63F
-forkProcess('T2', './tracker.js', ['0x3b328103c0d043cd1b34f1203c0313eb70c98443444dfdf7125f2d4479b89eb9', 'T2', '--port=30302'], chalk.hex('#00FF66')) // 0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c
-forkProcess('T3', './tracker.js', ['0xf456bb2a958574416f4b9e1b1b642cb3092953aa6131aba6e36f7529d1137795', 'T3', '--port=30303'], chalk.hex('#66FFAA')) // 0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75
+forkProcess('T1', './tracker.js', ['0xe5abc5ee43b8830e7b0f98d03efff5d6cae574d52a43204528eab7b52cd6408d', 'T1', '--port=30301'], chalk.hex('#66CC66')) // 0xb9e7cEBF7b03AE26458E32a059488386b05798e8
+forkProcess('T2', './tracker.js', ['0x96de9d06f9e409119a2cd9b57dfc326f66d953a0418f3937b92c8930f930893c', 'T2', '--port=30302'], chalk.hex('#00FF66')) // 0x0540A3e144cdD81F402e7772C76a5808B71d2d30
+forkProcess('T3', './tracker.js', ['0x6117b7a7cb8f3c8d40e3b7e87823c11af7f401515bc4fdf2bfdda70f1b833027', 'T3', '--port=30303'], chalk.hex('#66FFAA')) // 0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2
 
 forkProcess('S1', './broker.js', ['../configs/development-1.env.json'], chalk.hex('#8888FF')) // 0xde1112f631486CfC759A50196853011528bC5FA0
 forkProcess('B1', './broker.js', ['../configs/development-2.env.json'], chalk.hex('#0088FF')) // 0xde222E8603FCf641F928E5F66a0CBf4de70d5352
