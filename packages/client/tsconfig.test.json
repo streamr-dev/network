@@ -22,5 +22,5 @@
         "contracts/**/*",
         "test/**/*"
     ],
-    "exclude": ["node_modules", "dist", "test/legacy/*", "src/dataunion/*", "test/memory/*", "test/integration/dataunion/*"]
+    "exclude": ["node_modules", "dist", "test/legacy/*", "test/memory/*"]
 }

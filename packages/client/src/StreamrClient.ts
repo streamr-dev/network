@@ -19,6 +19,7 @@ import { DestroySignal } from './DestroySignal'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
+import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 import NodeRegistry, { register as registerNodeRegistry } from './NodeRegistry'
 
@@ -69,6 +70,7 @@ export interface StreamrClient extends Ethereum,
     Methods<LoginEndpoints>,
     Methods<Publisher>,
     Methods<NodeRegistry>,
+    Methods<DataUnions>,
     Methods<GroupKeyStoreFactory>,
     // Omit sessionTokenPromise because TS complains:
     // Type 'undefined' is not assignable to type 'keyof Session'
@@ -93,6 +95,7 @@ class StreamrClientBase implements Context {
     publisher: Publisher
     subscriber: Subscriber
     resends: Resends
+    dataunions: DataUnions
     session: Session
     node: BrubeckNode
     groupKeyStore: GroupKeyStoreFactory
@@ -116,6 +119,7 @@ class StreamrClientBase implements Context {
         resendSubscriber: ResendSubscribe,
         groupKeyStore: GroupKeyStoreFactory,
         destroySignal: DestroySignal,
+        dataunions: DataUnions,
     ) { // eslint-disable-line function-paren-newline
         this.options = options!
         this.id = context.id
@@ -134,6 +138,7 @@ class StreamrClientBase implements Context {
         this.node = node!
         this.groupKeyStore = groupKeyStore
         this.destroySignal = destroySignal
+        this.dataunions = dataunions
         Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
@@ -145,6 +150,9 @@ class StreamrClientBase implements Context {
         Plugin(this, this.session)
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
+        Plugin(this, this.dataunions)
+
+        // override subscribe with resendSubscriber's subscribe+resend
         this.subscribe = resendSubscriber.subscribe.bind(resendSubscriber)
     }
 
@@ -254,6 +262,7 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<ResendSubscribe>(ResendSubscribe),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
+            c.resolve<DataUnions>(DataUnions),
         )
         this.container = c
     }
@@ -272,6 +281,7 @@ export const Dependencies = {
     Subscriber,
     GroupKeyStoreFactory,
     DestroySignal,
+    DataUnions,
 }
 
 export { ResendOptionsStrict as ResendOptions } from './Resends'
