@@ -1,4 +1,5 @@
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient, ConfigTest as defaultOptions } from 'streamr-client'
+process.title = 'node subscriber.js'
 const opts = JSON.parse(process.argv[2])
 
 const {
@@ -10,12 +11,12 @@ const groupKey = opts.groupKey ? JSON.parse(opts.groupKey) : undefined
 const resendOptions = opts.resendOptions === 'real-time' ? undefined : JSON.parse(opts.resendOptions)
 
 const options = {
-    restUrl: "http://localhost/api/v1",
-    url: "ws://localhost/api/v1/ws",
+    ...defaultOptions,
     auth: {
         privateKey: privateKey,
     },
 }
+
 if (groupKey) {
     options.groupKeys = {
         [streamId]: {

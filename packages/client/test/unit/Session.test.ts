@@ -5,7 +5,7 @@ import { container, DependencyContainer } from 'tsyringe'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
-import clientOptions from '../integration/config'
+import clientOptions from '../../src/ConfigTest'
 import { Todo } from '../../src/types'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
 

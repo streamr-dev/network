@@ -4,7 +4,7 @@ import { getPublishTestMessages, describeRepeats, fakePrivateKey, createTestStre
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 
-import config from '../integration/config'
+import config from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
 

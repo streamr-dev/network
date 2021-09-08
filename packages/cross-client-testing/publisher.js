@@ -1,4 +1,5 @@
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient, ConfigTest as defaultOptions } from 'streamr-client'
+process.title = 'node publisher.js'
 const opts = JSON.parse(process.argv[2])
 
 const {
@@ -18,10 +19,7 @@ process.on('beforeExit', () => {
 })
 
 const options = {
-    restUrl: "http://localhost/api/v1",
-    url: "ws://localhost/api/v1/ws",
-    autoDisconnect: false,
-    autoConnect: false,
+    ...defaultOptions,
     auth: {
         privateKey: privateKey,
     },
@@ -107,6 +105,8 @@ const publishMessage = async (address) => {
         console.info(`Disconnecting publisher...`)
         await client.disconnect()
         console.log(`Disconnected.`)
+        await wait(500)
+        process.exit(0)
     } else {
         setTimeout(() => publishMessage(address), interval)
     }

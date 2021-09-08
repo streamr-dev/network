@@ -10,7 +10,7 @@ import { counterId, CounterId, AggregatedError, Scaffold, instanceId } from '../
 import { Debug, format } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { StreamProperties } from '../src/Stream'
-import clientOptions from './integration/config'
+import clientOptions from '../src/ConfigTest'
 import { StreamrClient } from '../src/StreamrClient'
 
 import { startTracker, Tracker } from 'streamr-network'

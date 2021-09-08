@@ -7,9 +7,9 @@
     </Appenders>
     <Loggers>
         <Logger name="com.streamr.client" level="${env:LOG_LEVEL_JAVA_CLIENT:-warn}"/>
-        <Logger name="com.streamr.client_testing" level="${env:LOG_LEVEL_CLIENT_TESTING:-warn}" />
-        <Logger name="com.streamr.client_testing.SubscriberJS" level="${env:LOG_LEVEL_SUBSCRIBER_JS:-warn}" />
-        <Logger name="com.streamr.client_testing.PublisherThreadJS" level="${env:LOG_LEVEL_PUBLISHER_JS:-warn}" />
+        <Logger name="com.streamr.client_testing" level="${env:LOG_LEVEL_CLIENT_TESTING:-info}" />
+        <Logger name="com.streamr.client_testing.SubscriberJS" level="${env:LOG_LEVEL_SUBSCRIBER_JS:-info}" />
+        <Logger name="com.streamr.client_testing.PublisherThreadJS" level="${env:LOG_LEVEL_PUBLISHER_JS:-info}" />
         <Root level="${env:LOG_LEVEL_ROOT:-warn}" additivity="false">
             <AppenderRef ref="Console" />
         </Root>

@@ -3,7 +3,8 @@ const { Benchmark } = require('benchmark')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
-const clientOptions = require('../integration/config')
+
+const { ConfigTest: clientOptions } = StreamrClient
 
 // note this is not the number of messages, just the start number
 let count = 100000 // pedantic: use large initial number so payload size is similar

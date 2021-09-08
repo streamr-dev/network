@@ -15,6 +15,9 @@ export * from './StorageNode'
 export * from './Subscriber'
 export * from './LoginEndpoints'
 export * from './StreamEndpoints'
+import ConfigTest from './ConfigTest'
+
+export { ConfigTest }
 // export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'

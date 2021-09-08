@@ -1,8 +1,8 @@
 import set from 'lodash/set'
 import { arrayify, BytesLike } from '@ethersproject/bytes'
-import config from '../integration/config'
 
 import { StreamrClient } from '../../src/StreamrClient'
+import config from '../../src/ConfigTest'
 
 describe('Config', () => {
     describe('validate ethereum addresses', () => {
