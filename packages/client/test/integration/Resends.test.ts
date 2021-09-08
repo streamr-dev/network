@@ -10,10 +10,10 @@ import {
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/Resends'
+import { StorageNode } from '../../src/StorageNode'
 
 import clientOptions from './config'
 import { Stream } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
 
 /* eslint-disable no-await-in-loop */
 

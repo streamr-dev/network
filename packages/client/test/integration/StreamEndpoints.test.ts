@@ -167,8 +167,18 @@ function TestStreamEndpoints(getName: () => string) {
     })
 
     describe('getStreamLast', () => {
-        it('does not error', async () => {
-            const result = await client.getStreamLast(createdStream.id)
+        it('does error if has no storage assigned', async () => {
+            await expect(async () => {
+                await client.getStreamLast(createdStream.id)
+            }).rejects.toThrow()
+        })
+
+        it('does not error if has storage assigned', async () => {
+            const stream = await client.createStream({
+                id: createRelativeTestStreamId(module),
+            })
+            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+            const result = await client.getStreamLast(stream.id)
             expect(result).toEqual([])
         })
     })
@@ -261,12 +271,12 @@ function TestStreamEndpoints(getName: () => string) {
 
     describe('Storage node assignment', () => {
         it('add', async () => {
-            const storageNode = StorageNode.STREAMR_DOCKER_DEV
             const stream = await createTestStream(client, module)
+            const storageNode = StorageNode.STREAMR_DOCKER_DEV
             await stream.addToStorageNode(storageNode)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
-            expect(storageNodes[0].getAddress()).toBe(storageNode.getAddress())
+            expect(storageNodes[0].address).toBe(storageNode)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
             expect(storedStreamParts.some(
                 (sp) => (sp.streamId === stream.id) && (sp.streamPartition === 0)

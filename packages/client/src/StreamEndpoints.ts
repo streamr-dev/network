@@ -9,20 +9,17 @@ import { ContentType, EncryptionType, SignatureType } from 'streamr-client-proto
 import { StreamMessageType, SIDLike, SPID } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
-import { Context } from './utils/Context'
-import { Debug } from './utils/log'
+import { Context, ContextError } from './utils/Context'
 
 import { Stream, StreamOperation, StreamProperties } from './Stream'
 import { isKeyExchangeStream } from './encryption/KeyExchangeUtils'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
 import { EthereumAddress } from './types'
-import { StorageNode } from './StorageNode'
+import NodeRegistry, { NodeRegistryItem } from './NodeRegistry'
 import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
-
-const debug = Debug('StreamEndpoints')
 
 export const createStreamId = async (streamIdOrPath: string, ownerProvider?: () => Promise<EthereumAddress|undefined>) => {
     if (streamIdOrPath === undefined) {
@@ -113,7 +110,8 @@ export class StreamEndpoints implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Config.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
-        private readonly ethereum: StreamrEthereum
+        private readonly ethereum: StreamrEthereum,
+        private readonly nodeRegistry: NodeRegistry
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -138,6 +136,17 @@ export class StreamEndpoints implements Context {
 
         const json = await this.rest.get<StreamProperties>(['streams', streamId])
         return new Stream(json, this.container)
+    }
+
+    async getStorageNodes(sidLike: SIDLike): Promise<NodeRegistryItem[]> {
+        const { streamId } = SPID.parse(sidLike)
+        const json = await this.rest.get<{ storageNodeAddress: string}[] >(
+            ['streams', streamId, 'storageNodes']
+        )
+
+        const storageNodeAddresses = new Set(json.map(({ storageNodeAddress }) => storageNodeAddress))
+        const nodes = await this.nodeRegistry.getNodes()
+        return nodes.filter((node: any) => storageNodeAddresses.has(node.address))
     }
 
     /**
@@ -196,7 +205,7 @@ export class StreamEndpoints implements Context {
             // try create stream if NOT_FOUND + also supplying an id.
             if (props.id && err.errorCode === ErrorCode.NOT_FOUND) {
                 const stream = await this.createStream(props)
-                debug('Created stream: %s', props.id, stream.toObject())
+                this.debug('Created stream: %s %o', props.id, stream.toObject())
                 return stream
             }
 
@@ -262,18 +271,21 @@ export class StreamEndpoints implements Context {
         return json
     }
 
-    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject | undefined> {
-        const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
+    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject[]> {
+        const spid = SPID.parse(streamObjectOrId)
+        const { streamId, streamPartition = 0 } = spid
         this.debug('getStreamLast %o', {
             streamId,
             streamPartition,
             count,
         })
 
-        const stream = await this.getStream(streamId)
-        const nodes = await stream.getStreamNodes()
+        const nodes = await this.getStorageNodes(streamId)
+        if (!nodes.length) {
+            throw new ContextError(this, 'no storage assigned: %o', streamObjectOrId)
+        }
 
-        const json = await this.rest.get<StreamMessageAsObject>([
+        const json = await this.rest.get<StreamMessageAsObject[]>([
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
             query: { count },
@@ -283,8 +295,7 @@ export class StreamEndpoints implements Context {
         return json
     }
 
-    async getStreamPartsByStorageNode(node: StorageNode|EthereumAddress) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
+    async getStreamPartsByStorageNode(address: EthereumAddress) {
         type ItemType = { id: string, partitions: number}
         const json = await this.rest.get<ItemType[]>([
             'storageNodes', address, 'streams'

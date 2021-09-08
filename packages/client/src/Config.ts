@@ -69,7 +69,7 @@ const BRUBECK_CLIENT_DEFAULTS = {
         }
     },
     nodeRegistry: [{
-        address: StorageNode.STREAMR_GERMANY.getAddress(),
+        address: StorageNode.STREAMR_GERMANY,
         url: 'https://corea1.streamr.network:8001',
     }],
     network: {

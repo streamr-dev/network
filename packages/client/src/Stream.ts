@@ -15,6 +15,7 @@ import { Rest } from './Rest'
 import Resends from './Resends'
 import Publisher from './Publisher'
 import { BrubeckContainer } from './Container'
+import { StreamEndpoints } from './StreamEndpoints'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -111,14 +112,19 @@ class StreamrStream implements StreamMetadata {
     protected _rest: Rest
     protected _resends: Resends
     protected _publisher: Publisher
+    protected _streamEndpoints: StreamEndpoints
 
-    constructor(props: StreamProperties, @inject(BrubeckContainer) private _container: DependencyContainer) {
+    constructor(
+        props: StreamProperties,
+        @inject(BrubeckContainer) private _container: DependencyContainer
+    ) {
         Object.assign(this, props)
         this.id = props.id
         this.streamId = this.id
         this._rest = _container.resolve<Rest>(Rest)
         this._resends = _container.resolve<Resends>(Resends)
         this._publisher = _container.resolve<Publisher>(Publisher)
+        this._streamEndpoints = _container.resolve<StreamEndpoints>(StreamEndpoints)
     }
 
     async update() {
@@ -226,12 +232,10 @@ class StreamrStream implements StreamMetadata {
         await this.update()
     }
 
-    async addToStorageNode(node: StorageNode|EthereumAddress, waitOptions: {
+    async addToStorageNode(address: EthereumAddress, waitOptions: {
         timeout?: number,
         pollInterval?: number
     } = {}) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
-
         await this._rest.post(
             ['streams', this.id, 'storageNodes'],
             { address }
@@ -255,7 +259,7 @@ class StreamrStream implements StreamMetadata {
 
     private async isStreamStoredInStorageNode(streamId: string) {
         const sid: SID = SPID.parse(streamId)
-        const nodes = await this._resends.getStreamNodes(sid)
+        const nodes = await this._streamEndpoints.getStorageNodes(sid)
         if (!nodes.length) { return false }
         const url = `${nodes[0].url}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
         const response = await fetch(url)
@@ -268,23 +272,14 @@ class StreamrStream implements StreamMetadata {
         throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
-    async removeFromStorageNode(node: StorageNode|EthereumAddress) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
-
+    async removeFromStorageNode(address: EthereumAddress) {
         await this._rest.del<{ storageNodeAddress: string}[] >(
             ['streams', this.id, 'storageNodes', address]
         )
     }
 
-    async getStreamNodes() {
-        return this._resends.getStreamNodes(this.id)
-    }
-
     async getStorageNodes() {
-        const json = await this._rest.get<{ storageNodeAddress: string}[] >(
-            ['streams', this.id, 'storageNodes']
-        )
-        return json.map((item: any) => new StorageNode(item.storageNodeAddress))
+        return this._streamEndpoints.getStorageNodes(this.id)
     }
 
     async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string) {

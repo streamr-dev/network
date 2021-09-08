@@ -13,7 +13,6 @@ import { inspect } from './utils/log'
 
 import MessageStream, { MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
-import { StorageNode } from './StorageNode'
 import { authRequest } from './authFetch'
 
 import Session from './Session'
@@ -171,24 +170,10 @@ export default class Resend implements Context {
         throw new ContextError(this, `can not resend without valid resend options: ${inspect({ spid, options })}`)
     }
 
-    async getStreamNodes(sidLike: SIDLike) {
-        const sid = SPID.parse(sidLike)
-        // this method should probably live somewhere else
-        // like in the node registry or stream class
-        const stream = await this.streamEndpoints.getStream(sid.streamId)
-        const storageNodes: StorageNode[] = await stream.getStorageNodes()
-
-        const storageNodeAddresses = new Set(storageNodes.map((n) => n.getAddress()))
-
-        const nodes = await this.nodeRegistry.getNodes()
-
-        return nodes.filter((node: any) => storageNodeAddresses.has(node.address))
-    }
-
     private async fetchStream<T>(endpointSuffix: 'last' | 'range' | 'from', spid: SPID, query: QueryDict = {}) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, spid.key, query)
-        const nodes = await this.getStreamNodes(spid)
+        const nodes = await this.streamEndpoints.getStorageNodes(spid)
         if (!nodes.length) {
             throw new ContextError(this, `no storage assigned: ${inspect(spid)}`)
         }
