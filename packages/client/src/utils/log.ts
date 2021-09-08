@@ -24,7 +24,10 @@ if (typeof window === 'undefined') {
     // `debug('msg', obj)` should use same `inspectOpts` as `debug('msg %O', msg)`
     Debug.log = function log(...args) {
         // @ts-expect-error inspectOpts/useColors not in debug types
-        this.inspectOpts.colors = this.useColors // need this to get colours when no placeholder
+        if (this.inspectOpts.colors === undefined) {
+            // @ts-expect-error inspectOpts/useColors not in debug types
+            this.inspectOpts.colors = this.useColors // need this to get colours when no placeholder
+        }
         return process.stderr.write(util.formatWithOptions({
             // @ts-expect-error inspectOpts not in debug types
             ...this.inspectOpts,
@@ -38,9 +41,9 @@ if (typeof window === 'undefined') {
     })
 }
 
-const debug = Debug('Streamr')
+const streamrDebug = Debug('Streamr')
 
-const StreamrDebug = Object.assign(debug.extend.bind(debug), {
+const StreamrDebug = Object.assign(streamrDebug.extend.bind(streamrDebug), {
     enable: Debug.enable.bind(Debug),
     disable: Debug.disable.bind(Debug),
     humanize: Debug.humanize.bind(Debug) as (v: any) => string,

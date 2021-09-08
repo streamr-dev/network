@@ -1,4 +1,4 @@
-import { Debugger } from './log'
+import { Debugger, formatWithOptions } from './log'
 
 export const InjectContext = Symbol('Context')
 
@@ -9,8 +9,9 @@ export abstract class Context {
 
 export class ContextError extends Error {
     context: Context
-    constructor(context: Context, message: string = '') {
-        super(`${context.id}: ${message}`)
+    constructor(context: Context, message: string = '', ...args: any[]) {
+        // @ts-expect-error inspectOpts not in debug types
+        super(`${context.id}: ${formatWithOptions({ ...context.debug.inspectOpts, colors: false }, message, ...args)}`)
         this.context = context
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
