@@ -1,16 +1,11 @@
 /**
  * Derive partitions for StreamMessages.
  */
-import crypto from 'crypto'
-
+import { Utils } from 'streamr-client-protocol'
 import { CacheFn } from './utils'
 import { Config, CacheConfig } from './Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-
-function hash(stringToHash: string) {
-    return crypto.createHash('md5').update(stringToHash).digest()
-}
 
 export type PartitionKey = string | number
 
@@ -27,31 +22,21 @@ export default class StreamPartitioner {
     }
 
     public clear() {
-        this.hash.clear()
+        this.computePartitionCached.clear()
     }
 
-    protected hash = CacheFn(hash, this.cacheOptions)
-    protected computeStreamPartition(partitionCount: number, partitionKey: PartitionKey) {
+    protected computePartitionCached = CacheFn(Utils.keyToArrayIndex, this.cacheOptions)
+
+    protected computeStreamPartition(partitionCount: number, partitionKey: string | number) {
         if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {
             throw new Error(`partitionCount is not a safe positive integer! ${partitionCount}`)
         }
 
-        if (partitionCount === 1) {
-            // Fast common case
-            return 0
-        }
-
-        if (typeof partitionKey === 'number') {
-            return Math.abs(partitionKey) % partitionCount
-        }
-
-        if (!partitionKey) {
+        if (partitionKey == null) {
             // Fallback to random partition if no key
             return Math.floor(Math.random() * partitionCount)
         }
 
-        const buffer = this.hash(partitionKey)
-        const intHash = buffer.readInt32LE()
-        return Math.abs(intHash) % partitionCount
+        return this.computePartitionCached(partitionCount, partitionKey)
     }
 }
