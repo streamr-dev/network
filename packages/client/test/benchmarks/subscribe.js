@@ -27,7 +27,7 @@ async function setupClientAndStream(clientOpts, streamOpts) {
     await client.session.getSessionToken()
 
     const stream = await client.createStream({
-        id: `/test-stream-${client.id}`,
+        id: `/test-stream-subscribe/${process.pid}`,
         ...streamOpts,
     })
     return [client, stream]

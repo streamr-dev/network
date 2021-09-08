@@ -77,21 +77,21 @@ export type ResendRangeOptions = {
 export type ResendOptionsStrict = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
-    return options && 'last' in options && options.last != null
+    return options && typeof options === 'object' && 'last' in options && options.last != null
 }
 
 function isResendFrom<T extends ResendFromOptions>(options: any): options is T {
-    return options && 'from' in options && !('to' in options) && options.from != null
+    return options && typeof options === 'object' && 'from' in options && !('to' in options) && options.from != null
 }
 
 function isResendRange<T extends ResendRangeOptions>(options: any): options is T {
-    return options && 'from' in options && 'to' in options && options.to && options.from != null
+    return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
 export type ResendOptions = (SIDLike | { stream: SIDLike }) & (ResendOptionsStrict | { resend: ResendOptionsStrict })
 
 export function isResendOptions(options: any): options is ResendOptions {
-    if ('resend' in options && options.resend) {
+    if (options && typeof options === 'object' && 'resend' in options && options.resend) {
         return isResendOptions(options.resend)
     }
 
@@ -128,8 +128,10 @@ export default class Resend implements Context {
         options: ResendOptions,
         onMessage?: MessageStreamOnMessage<T>
     ): Promise<MessageStream<T>> {
-        const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
-        const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SIDLike
+        const resendOptions = (
+            (options && typeof options === 'object' && 'resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
+        )
+        const spidOptions = (options && typeof options === 'object' && 'stream' in options && options.stream ? options.stream : options) as SIDLike
         const spid = SPID.fromDefaults(spidOptions, { streamPartition: 0 })
 
         const sub = await this.resendMessages<T>(spid, resendOptions)

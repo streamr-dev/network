@@ -325,20 +325,25 @@ describeRepeats('resends', () => {
                 const onResent = jest.fn()
                 sub.onResent(onResent)
 
-                const receivedMsgs: any[] = []
                 // eslint-disable-next-line no-await-in-loop
                 published.push(...await publishTestMessages(2))
-                for await (const msg of sub) {
-                    receivedMsgs.push(msg)
-                    if (receivedMsgs.length === published.length) {
-                        await sub.return()
-                    }
-                }
+
+                const receivedMsgs = await sub.collect(published.length)
 
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(receivedMsgs).toEqual(published)
                 expect(client.count(stream.id)).toBe(0)
+            })
+
+            it('client.subscribe works as regular subscribe when just passing streamId as string', async () => {
+                const sub = await client.subscribe(stream.id)
+                expect(client.count(stream.id)).toBe(1)
+
+                published.push(...await publishTestMessages(2))
+
+                const received = await sub.collect(2)
+                expect(received).toEqual(published.slice(-2))
             })
 
             it('sees resends when no realtime', async () => {
@@ -399,11 +404,7 @@ describeRepeats('resends', () => {
 
                 await sub.return()
                 published.push(...await publishTestMessages(2))
-                const received = []
-                for await (const m of sub) {
-                    received.push(m)
-                }
-
+                const received = await sub.collect(published.length)
                 expect(received).toHaveLength(0)
                 expect(client.count(stream.id)).toBe(0)
             })

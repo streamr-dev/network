@@ -88,13 +88,7 @@ describeRepeats('Subscriber', () => {
 
             const published = await publishTestMessages(NUM_MESSAGES)
 
-            const received = []
-            for await (const m of sub) {
-                received.push(m.getParsedContent())
-                if (received.length === published.length) {
-                    break
-                }
-            }
+            const received = await sub.collectContent(published.length)
             expect(received).toEqual(published)
             expect(received).toHaveLength(NUM_MESSAGES)
         })
@@ -107,48 +101,19 @@ describeRepeats('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received = []
-            for await (const m of sub) {
-                received.push(m.getParsedContent())
-                if (received.length === published.length) {
-                    break
-                }
-            }
+            const received = await sub.collectContent(published.length)
             expect(received).toEqual(published)
         })
 
-        it('can subscribe to stream and get updates then auto unsubscribe', async () => {
+        it('works when passing streamId as string', async () => {
             const sub = await M.subscribe(stream.id)
             expect(M.count(stream.id)).toBe(1)
 
             const published = await publishTestMessages()
 
-            const received = []
-            for await (const m of sub) {
-                received.push(m.getParsedContent())
-                if (received.length === published.length) {
-                    break
-                }
-            }
+            const received = await sub.collectContent(published.length)
             expect(received).toEqual(published)
-        })
-
-        it('subscribes immediately', async () => {
-            const sub = await M.subscribe(stream.id)
-
-            expect(M.count(stream.id)).toBe(1)
-
-            const published = await publishTestMessages()
-
-            const received = []
-            for await (const m of sub) {
-                received.push(m.getParsedContent())
-                if (received.length === published.length) {
-                    break
-                }
-            }
-
-            expect(received).toEqual(published)
+            expect(M.count(stream.id)).toBe(0)
         })
 
         // it('errors if not connected', async () => {
