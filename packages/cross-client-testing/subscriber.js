@@ -35,11 +35,10 @@ client.connect().then(async () => {
         // to be added by SubscriberJS to the message queue for verification in test mode
         console.log(`Received: ${streamMessage.getPublisherId()}###${streamMessage.getSerializedContent()}`)
     }
-
-    const realtimeSub = await client.subscribe({ stream: streamId })
+    const options = { stream: streamId }
     if (resendOptions) {
-        const resendSub = await client.resend({ stream: streamId, resend: resendOptions })
-        await resendSub.consume(onMessage)
+        options.resend = resendOptions
     }
+    const realtimeSub = await client.subscribe(options)
     await realtimeSub.consume(onMessage)
 })
