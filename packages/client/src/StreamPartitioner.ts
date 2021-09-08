@@ -25,7 +25,12 @@ export default class StreamPartitioner {
         this.computePartitionCached.clear()
     }
 
-    protected computePartitionCached = CacheFn(Utils.keyToArrayIndex, this.cacheOptions)
+    protected computePartitionCached = CacheFn(Utils.keyToArrayIndex, {
+        ...this.cacheOptions,
+        cacheKey([partitionCount, partitionKey]) {
+            return `${partitionCount}-${partitionKey}`
+        }
+    })
 
     protected computeStreamPartition(partitionCount: number, partitionKey: string | number) {
         if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {

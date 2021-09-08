@@ -47,8 +47,8 @@ export default class MessageStream<
         return this
     }
 
-    async collectContent() {
-        const messages = await this.collect()
+    async collectContent(n?: number) {
+        const messages = await this.collect(n)
         return messages.map((streamMessage) => {
             if (streamMessage instanceof StreamMessage) {
                 return streamMessage.getParsedContent()

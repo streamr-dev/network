@@ -5,7 +5,7 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import {
-    getPublishTestMessages, getWaitForStorage, publishManyGenerator, describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId
+    getPublishTestMessages, getPublishTestStreamMessages, getWaitForStorage, publishManyGenerator, describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId
 } from '../utils'
 import { BrubeckClient } from '../../src/BrubeckClient'
 import { Defer } from '../../src/utils'
@@ -40,15 +40,7 @@ describeRepeats('StreamrClient', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
-            // disconnectDelay: 500,
-            // publishAutoDisconnectDelay: 250,
             maxRetries: 2,
-            // network: {
-            // trackers: [
-            // `ws://127.0.0.1:${trackerPort}`,
-            // ],
-            // ...opts.network,
-            // },
             ...opts,
         })
         return c
@@ -82,7 +74,7 @@ describeRepeats('StreamrClient', () => {
     const TIMEOUT = 30 * 1000
     const WAIT_TIME = 600
 
-    const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
+    const createStream = async ({ requireSignedData = true, ...opts }: any = {}) => {
         const name = uid('stream')
         const s = await client.createStream({
             id: createRelativeTestStreamId(module),
@@ -287,6 +279,35 @@ describeRepeats('StreamrClient', () => {
 
             await done
             expect(received).toEqual(published)
+        })
+
+        describe('parititioning', () => {
+            it('pub/sub with numeric partition key', async () => {
+                const NUM_PARTITIONS = 3
+                const NUM_MESSAGES = 3
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+                const eachPartition = Array(NUM_PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
+                const subs = await Promise.all(eachPartition.map((streamPartition) => {
+                    return client.subscribe<typeof Msg>({
+                        streamId: partitionStream.id,
+                        streamPartition,
+                    })
+                }))
+
+                const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+                    return publishTestStreamMessages(NUM_MESSAGES, { partitionKey: streamPartition })
+                }))
+
+                expect(await Promise.all(subs.map((s) => s.collect(NUM_MESSAGES)))).toEqual(pubs)
+                // check all published messages have appropriate partition
+                // i.e. [[0,0,0], [1,1,1], etc]
+                expect(pubs.map((msgs) => msgs.map((msg) => msg.getStreamPartition())))
+                    .toEqual(pubs.map((msgs, index) => msgs.map(() => index)))
+            })
         })
 
         it('destroying stops publish', async () => {
