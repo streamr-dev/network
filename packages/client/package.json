@@ -1,6 +1,6 @@
 {
   "name": "streamr-client",
-  "version": "6.0.0-alpha.1",
+  "version": "6.0.0-alpha.2",
   "description": "JavaScript client library for Streamr",
   "private": true,
   "repository": {
@@ -179,7 +179,7 @@
     "split2": "^3.2.2",
     "sqlite": "^4.0.23",
     "sqlite3": "^5.0.2",
-    "streamr-client-protocol": "^8.5.0-alpha.0",
+    "streamr-client-protocol": "^8.5.0-alpha.1",
     "streamr-network": "^28.2.0",
     "strict-event-emitter-types": "^2.0.0",
     "ts-toolbelt": "^9.6.0",
