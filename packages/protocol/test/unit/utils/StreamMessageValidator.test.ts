@@ -128,7 +128,7 @@ describe('StreamMessageValidator', () => {
     describe('validate(unknown message type)', () => {
         it('throws on unknown message type', async () => {
             msg.messageType = 666
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -159,7 +159,7 @@ describe('StreamMessageValidator', () => {
                 isSubscriber,
                 verify,
                 requireBrubeckValidation: true
-            }).validate(msg), (err) => {
+            }).validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
@@ -183,7 +183,7 @@ describe('StreamMessageValidator', () => {
             msg.signature = null
             msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
 
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
@@ -214,7 +214,7 @@ describe('StreamMessageValidator', () => {
                 isSubscriber,
                 verify,
                 requireBrubeckValidation: true
-            }).validate(msg), (err) => {
+            }).validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
@@ -235,7 +235,7 @@ describe('StreamMessageValidator', () => {
                 isSubscriber,
                 verify,
                 requireBrubeckValidation: true
-            }).validate(msg), (err) => {
+            }).validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
@@ -250,7 +250,7 @@ describe('StreamMessageValidator', () => {
             })
             msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
 
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
@@ -261,7 +261,7 @@ describe('StreamMessageValidator', () => {
         it('rejects invalid signatures', async () => {
             msg.signature = msg.signature!.replace('a', 'b')
 
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -270,7 +270,7 @@ describe('StreamMessageValidator', () => {
         it('rejects tampered content', async () => {
             msg.serializedContent = '{"attack":true}'
 
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -279,7 +279,7 @@ describe('StreamMessageValidator', () => {
         it('rejects tampered newGroupKey', async () => {
             msgWithNewGroupKey.newGroupKey!.groupKeyId = 'foo'
 
-            await assert.rejects(getValidator().validate(msgWithNewGroupKey), (err) => {
+            await assert.rejects(getValidator().validate(msgWithNewGroupKey), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -288,10 +288,13 @@ describe('StreamMessageValidator', () => {
         it('rejects messages from unpermitted publishers', async () => {
             isPublisher = sinon.stub().resolves(false)
 
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert((isPublisher as any).calledWith(msg.getPublisherId(), msg.getStreamId()), `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`)
+                assert(
+                    (isPublisher as any).calledWith(msg.getPublisherId(), msg.getStreamId()),
+                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`
+                )
                 return true
             })
         })
@@ -307,7 +310,7 @@ describe('StreamMessageValidator', () => {
             const testError = new Error('test error')
             getStream = sinon.stub().rejects(testError)
 
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err === testError)
                 return true
             })
@@ -316,7 +319,7 @@ describe('StreamMessageValidator', () => {
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
             isPublisher = sinon.stub().rejects(testError)
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err === testError)
                 return true
             })
@@ -325,7 +328,7 @@ describe('StreamMessageValidator', () => {
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
             verify = sinon.stub().throws(testError)
-            await assert.rejects(getValidator().validate(msg), (err) => {
+            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -341,7 +344,7 @@ describe('StreamMessageValidator', () => {
             groupKeyRequest.signature = null
             groupKeyRequest.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
 
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -350,7 +353,7 @@ describe('StreamMessageValidator', () => {
         it('rejects group key requests on unexpected streams', async () => {
             groupKeyRequest.getStreamId = sinon.stub().returns('foo')
 
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -359,7 +362,7 @@ describe('StreamMessageValidator', () => {
         it('rejects invalid signatures', async () => {
             groupKeyRequest.signature = groupKeyRequest.signature!.replace('a', 'b')
 
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -368,10 +371,13 @@ describe('StreamMessageValidator', () => {
         it('rejects messages to invalid publishers', async () => {
             isPublisher = sinon.stub().resolves(false)
 
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert((isPublisher as any).calledWith(publisher, 'streamId'), `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`)
+                assert(
+                    (isPublisher as any).calledWith(publisher, 'streamId'),
+                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`
+                )
                 return true
             })
         })
@@ -379,10 +385,13 @@ describe('StreamMessageValidator', () => {
         it('rejects messages from unpermitted subscribers', async () => {
             isSubscriber = sinon.stub().resolves(false)
 
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isSubscriber as any).calledOnce, 'isSubscriber not called!')
-                assert((isSubscriber as any).calledWith(subscriber, 'streamId'), `isPublisher called with wrong args: ${(isSubscriber as any).getCall(0).args}`)
+                assert(
+                    (isSubscriber as any).calledWith(subscriber, 'streamId'),
+                    `isPublisher called with wrong args: ${(isSubscriber as any).getCall(0).args}`
+                )
                 return true
             })
         })
@@ -390,7 +399,7 @@ describe('StreamMessageValidator', () => {
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
             isPublisher = sinon.stub().rejects(testError)
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err === testError)
                 return true
             })
@@ -399,7 +408,7 @@ describe('StreamMessageValidator', () => {
         it('rejects if isSubscriber rejects', async () => {
             const testError = new Error('test error')
             isSubscriber = sinon.stub().rejects(testError)
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err === testError)
                 return true
             })
@@ -408,7 +417,7 @@ describe('StreamMessageValidator', () => {
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
             verify = sinon.stub().throws(testError)
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -424,7 +433,7 @@ describe('StreamMessageValidator', () => {
             groupKeyResponse.signature = null
             groupKeyResponse.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
 
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -433,7 +442,7 @@ describe('StreamMessageValidator', () => {
         it('rejects invalid signatures', async () => {
             groupKeyResponse.signature = groupKeyResponse.signature!.replace('a', 'b')
 
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -442,7 +451,7 @@ describe('StreamMessageValidator', () => {
         it('rejects group key responses on unexpected streams', async () => {
             groupKeyResponse.getStreamId = sinon.stub().returns('foo')
 
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -451,10 +460,13 @@ describe('StreamMessageValidator', () => {
         it('rejects messages from invalid publishers', async () => {
             isPublisher = sinon.stub().resolves(false)
 
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert((isPublisher as any).calledWith(publisher, 'streamId'), `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`)
+                assert(
+                    (isPublisher as any).calledWith(publisher, 'streamId'),
+                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`
+                )
                 return true
             })
         })
@@ -462,10 +474,13 @@ describe('StreamMessageValidator', () => {
         it('rejects messages to unpermitted subscribers', async () => {
             isSubscriber = sinon.stub().resolves(false)
 
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isSubscriber as any).calledOnce, 'isSubscriber not called!')
-                assert((isSubscriber as any).calledWith(subscriber, 'streamId'), `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`)
+                assert(
+                    (isSubscriber as any).calledWith(subscriber, 'streamId'),
+                    `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`
+                )
                 return true
             })
         })
@@ -473,7 +488,7 @@ describe('StreamMessageValidator', () => {
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
             isPublisher = sinon.stub().rejects(testError)
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err === testError)
                 return true
             })
@@ -482,7 +497,7 @@ describe('StreamMessageValidator', () => {
         it('rejects if isSubscriber rejects', async () => {
             const testError = new Error('test error')
             isSubscriber = sinon.stub().rejects(testError)
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err === testError)
                 return true
             })
@@ -491,7 +506,7 @@ describe('StreamMessageValidator', () => {
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
             verify = sinon.stub().throws(testError)
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -507,7 +522,7 @@ describe('StreamMessageValidator', () => {
             groupKeyAnnounce.signature = null
             groupKeyAnnounce.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
 
-            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -516,7 +531,7 @@ describe('StreamMessageValidator', () => {
         it('rejects invalid signatures', async () => {
             groupKeyAnnounce.signature = groupKeyAnnounce.signature!.replace('a', 'b')
 
-            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -525,10 +540,13 @@ describe('StreamMessageValidator', () => {
         it('rejects messages from invalid publishers', async () => {
             isPublisher = sinon.stub().resolves(false)
 
-            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert((isPublisher as any).calledWith(publisher, 'streamId'), `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`)
+                assert(
+                    (isPublisher as any).calledWith(publisher, 'streamId'),
+                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`
+                )
                 return true
             })
         })
@@ -536,10 +554,13 @@ describe('StreamMessageValidator', () => {
         it('rejects messages to unpermitted subscribers', async () => {
             isSubscriber = sinon.stub().resolves(false)
 
-            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isSubscriber as any).calledOnce, 'isSubscriber not called!')
-                assert((isSubscriber as any).calledWith(subscriber, 'streamId'), `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`)
+                assert(
+                    (isSubscriber as any).calledWith(subscriber, 'streamId'),
+                    `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`
+                )
                 return true
             })
         })
@@ -547,7 +568,7 @@ describe('StreamMessageValidator', () => {
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
             isPublisher = sinon.stub().rejects(testError)
-            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err === testError)
                 return true
             })
@@ -556,7 +577,7 @@ describe('StreamMessageValidator', () => {
         it('rejects if isSubscriber rejects', async () => {
             const testError = new Error('test error')
             isSubscriber = sinon.stub().rejects(testError)
-            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err === testError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -565,7 +586,7 @@ describe('StreamMessageValidator', () => {
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
             verify = sinon.stub().throws(testError)
-            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err) => {
+            await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -611,7 +632,10 @@ describe('StreamMessageValidator', () => {
             await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert((isPublisher as any).calledWith(publisher, 'streamId'), `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`)
+                assert(
+                    (isPublisher as any).calledWith(publisher, 'streamId'),
+                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`,
+                )
                 return true
             })
         })
@@ -622,7 +646,10 @@ describe('StreamMessageValidator', () => {
             await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((isSubscriber as any).calledOnce, 'isSubscriber not called!')
-                assert((isSubscriber as any).calledWith(subscriber, 'streamId'), `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`)
+                assert(
+                    (isSubscriber as any).calledWith(subscriber, 'streamId'),
+                    `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`,
+                )
                 return true
             })
         })

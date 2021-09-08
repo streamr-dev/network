@@ -1,14 +1,13 @@
 import { Logger } from '../helpers/Logger'
 import { Location } from '../identifiers'
+import { NodeId } from '../logic/Node'
 
 function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)
 }
 
 export class LocationManager {
-    private readonly nodeLocations: {
-        [key: string]: Location // nodeId => Location
-    }
+    private readonly nodeLocations: Record<NodeId,Location>
     private readonly logger: Logger
 
     constructor() {
@@ -16,21 +15,21 @@ export class LocationManager {
         this.logger = new Logger(module)
     }
 
-    getAllNodeLocations(): Readonly<{[key: string]: Location}> {
+    getAllNodeLocations(): Readonly<Record<NodeId,Location>> {
         return this.nodeLocations
     }
 
-    getNodeLocation(nodeId: string): Location {
+    getNodeLocation(nodeId: NodeId): Location {
         return this.nodeLocations[nodeId]
     }
 
-    updateLocation({ nodeId, location }: { nodeId: string, location: Location | null, address: string }): void {
+    updateLocation({ nodeId, location }: { nodeId: NodeId, location: Location | null, address: string }): void {
         if (isValidNodeLocation(location)) {
             this.nodeLocations[nodeId] = location!
         }
     }
 
-    removeNode(nodeId: string): void {
+    removeNode(nodeId: NodeId): void {
         delete this.nodeLocations[nodeId]
     }
 }
