@@ -49,7 +49,7 @@ export default class Subscriber implements Context {
         if (this.subSessions.has(key)) {
             return this.getSubscriptionSession<T>(spid)!
         }
-
+        this.debug('creating new SubscriptionSession: %s', spid.key)
         const subSession = new SubscriptionSession<T>(this, spid, this.container)
         this.subSessions.set(key, subSession as SubscriptionSession<unknown>)
         subSession.onRetired(() => {

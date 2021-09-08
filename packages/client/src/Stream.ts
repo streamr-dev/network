@@ -7,7 +7,6 @@ import { SPID, SID } from 'streamr-client-protocol'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
-import { StorageNode } from './StorageNode'
 import { EthereumAddress } from './types'
 import { until } from './utils'
 

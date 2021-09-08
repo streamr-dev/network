@@ -26,7 +26,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     spid: SPID
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()
-    pendingRemoval: Set<Subscription<T>> = new Set()
+    pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
     isRetired: boolean = false
     isStopped = false
     pipeline
@@ -118,7 +118,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         node.subscribe(streamId, streamPartition)
     }
 
-    updateSubscriptions = (() => {
+    updateNodeSubscriptions = (() => {
         let node: NetworkNode | undefined
         return Scaffold([
             async () => {
@@ -132,6 +132,13 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
             },
         ], () => this.shouldBeSubscribed())
     })()
+
+    async updateSubscriptions() {
+        await this.updateNodeSubscriptions()
+        if (!this.shouldBeSubscribed()) {
+            await this.retire()
+        }
+    }
 
     shouldBeSubscribed() {
         return !this.isRetired && !this.isStopped && !!this.count()
@@ -190,11 +197,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
                 await sub.unsubscribe()
             }
         } finally {
-            try {
-                await this.updateSubscriptions()
-            } finally {
-                this.pendingRemoval.delete(sub)
-            }
+            await this.updateSubscriptions()
         }
     }
 

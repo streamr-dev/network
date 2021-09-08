@@ -579,6 +579,22 @@ describeRepeats('Subscriber', () => {
             expect(received).toHaveLength(0)
             expect(M.count(stream.id)).toBe(0)
         })
+
+        it('can unsubscribe then subscribe in parallel', async () => {
+            const [_, sub] = await Promise.all([
+                M.unsubscribe(stream.id),
+                M.subscribe(stream.id),
+            ])
+
+            expect(M.count(stream.id)).toBe(1)
+
+            const published = await publishTestMessages(3)
+
+            const received = await sub.collectContent(3)
+
+            expect(received).toEqual(published)
+            expect(M.count(stream.id)).toBe(0)
+        })
     })
 
     describe('mid-stream stop methods', () => {
