@@ -68,7 +68,7 @@
             "additionalProperties": false,
             "properties": {
                 "clusterAddress": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "clusterSize": {
                     "type": "number"
