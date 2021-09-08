@@ -156,13 +156,15 @@ function clearMatching(cache: Collection<unknown, unknown>, matchFn: (key: unkno
  * ```
  */
 
+export type CacheAsyncOptions = Partial<Parameters<typeof pMemoize>[1] & ConstructorParameters<typeof LRU>[0]>
+
 export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
     onEviction = () => {},
     ...opts
-} = {}) {
+}: CacheAsyncOptions = {}) {
     const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
         maxSize,
         maxAge,
@@ -198,12 +200,14 @@ export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
  * ```
  */
 
+export type CacheOptions = Partial<Parameters<typeof mem>[1] & ConstructorParameters<typeof LRU>[0]>
+
 export function CacheFn(fn: Parameters<typeof mem>[0], {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     onEviction = () => {},
     ...opts
-} = {}) {
+}: CacheOptions = {}) {
     const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
         maxSize,
         maxAge,
@@ -433,7 +437,7 @@ export function pOnce<Args extends any[], R>(
             inProgress = (async () => {
                 try {
                     value = await Promise.resolve(fn(...args)) as Awaited<R>
-                } catch (err) {
+                } catch (err: any) {
                     error = err
                 } finally {
                     inProgress = undefined
