@@ -23,7 +23,7 @@ const METRIC_LATEST_CODE = 'latestCode'
 const logger = new Logger(module)
 
 export interface TestnetMinerPluginConfig {
-    rewardStreamId: string
+    rewardStreamIds: string
     claimServerUrl: string
     maxClaimDelay: number
     stunServerHost: string|null
@@ -43,6 +43,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     dummyMessagesReceived: number
     rewardSubscriptionRetryRef: NodeJS.Timeout | null
     subscriptionRetryInterval: number
+    streamId: string
 
     constructor(options: PluginOptions) {
         super(options)
@@ -53,6 +54,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
+        this.streamId = this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)]
     }
 
     async start() {
@@ -84,7 +86,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private async subscriptionIntervalFn(): Promise<void> {
-        if (this.streamrClient && this.streamrClient.getSubscription(this.pluginConfig.rewardStreamId).length === 0) {
+        if (this.streamrClient && this.streamrClient.getSubscription(this.pluginConfig.rewardStreamIds).length === 0) {
             try {
                 await this.subscribe()
             } catch (err) {
@@ -95,7 +97,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private async subscribe(): Promise<void> {
-        await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
+        await this.streamrClient!.subscribe(this.streamId, (message: any) => {
             if (message.rewardCode) {
                 this.onRewardCodeReceived(message.rewardCode)
             } if (message.info) {
@@ -108,7 +110,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private getPeers(): Peer[] {
-        const neighbors = this.networkNode.getNeighborsForStream(this.pluginConfig.rewardStreamId, REWARD_STREAM_PARTITION)
+        const neighbors = this.networkNode.getNeighborsForStream(this.streamId, REWARD_STREAM_PARTITION)
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
             rtt: this.networkNode.getRtt(nodeId)
@@ -119,6 +121,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         const body = {
             rewardCode,
             nodeAddress: this.nodeId,
+            streamId: this.streamId,
             clientServerLatency: this.latestLatency,
             waitTime: delay,
             natType: this.natType,

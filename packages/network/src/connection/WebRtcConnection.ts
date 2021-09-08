@@ -2,13 +2,13 @@ import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { Logger } from '../helpers/Logger'
-import { PeerInfo } from './PeerInfo'
+import { PeerId, PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
 
 export interface ConstructorOptions {
-    selfId: string
-    targetPeerId: string
+    selfId: PeerId
+    targetPeerId: PeerId
     routerId: string
     stunUrls: string[]
     bufferThresholdLow?: number
@@ -44,7 +44,7 @@ interface Events {
 // i.e. no this.on('event')
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-export function isOffering(myId: string, theirId: string): boolean {
+export function isOffering(myId: PeerId, theirId: PeerId): boolean {
     return myId < theirId
 }
 
@@ -99,7 +99,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
     protected readonly id: string
     protected readonly maxMessageSize: number
-    protected readonly selfId: string
+    protected readonly selfId: PeerId
     protected readonly stunUrls: ReadonlyArray<string>
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
@@ -254,7 +254,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         return this.peerInfo
     }
 
-    getPeerId(): string {
+    getPeerId(): PeerId {
         return this.peerInfo.peerId
     }
 

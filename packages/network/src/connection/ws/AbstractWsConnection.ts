@@ -1,4 +1,4 @@
-import { PeerInfo } from '../PeerInfo'
+import { PeerId, PeerInfo } from '../PeerInfo'
 import {
     DisconnectionCode,
     DisconnectionReason,
@@ -76,7 +76,7 @@ export abstract class AbstractWsConnection {
         return this.rtt
     }
 
-    getPeerId(): string {
+    getPeerId(): PeerId {
         return this.getPeerInfo().peerId
     }
 
