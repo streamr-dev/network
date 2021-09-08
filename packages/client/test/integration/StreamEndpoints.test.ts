@@ -1,5 +1,5 @@
 import { ethers, Wallet } from 'ethers'
-import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { NotFoundError, ValidationError } from '../../src/authFetch'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'

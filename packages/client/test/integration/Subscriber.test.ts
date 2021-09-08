@@ -2,7 +2,7 @@
 import { wait } from 'streamr-test-utils'
 
 import { getPublishTestMessages, createTestStream, fakePrivateKey, describeRepeats, collect } from '../utils'
-import { BrubeckClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 // import Connection from '../../src/Connection'
 // import { StorageNode } from '../../src/stream/StorageNode'
@@ -21,13 +21,13 @@ const NUM_MESSAGES = 6
 describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
-    let client: BrubeckClient
+    let client: StreamrClient
     let stream: Stream
     let M: Subscriber
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     const createClient = (opts: any = {}) => {
-        const c = new BrubeckClient({
+        const c = new StreamrClient({
             ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),

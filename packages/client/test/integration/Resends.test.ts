@@ -8,7 +8,7 @@ import {
     getWaitForStorage,
     createTestStream
 } from '../utils'
-import { BrubeckClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/Resends'
 
 import clientOptions from './config'
@@ -23,7 +23,7 @@ const MAX_MESSAGES = 5
 describeRepeats('resends', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
-    let client: BrubeckClient
+    let client: StreamrClient
     let stream: Stream
     let published: StreamMessage[]
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -31,7 +31,7 @@ describeRepeats('resends', () => {
     let subscriber: Resend
 
     const createClient = (opts: any = {}) => {
-        const c = new BrubeckClient({
+        const c = new StreamrClient({
             ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),

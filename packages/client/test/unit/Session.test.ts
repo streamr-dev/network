@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import sinon from 'sinon'
 import { container, DependencyContainer } from 'tsyringe'
 
-import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
 import clientOptions from '../integration/config'

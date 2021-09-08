@@ -1,7 +1,7 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { BrubeckClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { BrubeckClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/Subscriber'
@@ -33,12 +33,12 @@ describeRepeats('GapFill', () => {
     let expectErrors = 0 // check no errors by default
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let onError = jest.fn()
-    let client: BrubeckClient
+    let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
 
     const createClient = (opts: any = {}) => {
-        const c = new BrubeckClient({
+        const c = new StreamrClient({
             ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),

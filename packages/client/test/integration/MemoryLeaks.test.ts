@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 import { getPublishTestMessages, fakePrivateKey, snapshot, LeaksDetector } from '../utils'
-import { BrubeckClient, initContainer, Dependencies } from '../../src/BrubeckClient'
+import { StreamrClient, initContainer, Dependencies } from '../../src/StreamrClient'
 import { container } from 'tsyringe'
 import Subscription from '../../src/Subscription'
 import { counterId, Defer } from '../../src/utils'
@@ -85,9 +85,9 @@ describe('MemoryLeaks', () => {
         })
     })
 
-    describe('BrubeckClient', () => {
+    describe('StreamrClient', () => {
         const createClient = (opts: any = {}) => {
-            const c = new BrubeckClient({
+            const c = new StreamrClient({
                 ...clientOptions,
                 auth: {
                     privateKey: fakePrivateKey(),
@@ -135,7 +135,7 @@ describe('MemoryLeaks', () => {
         })
 
         describe('stream', () => {
-            let client: BrubeckClient
+            let client: StreamrClient
 
             beforeEach(async () => {
                 client = createClient()

@@ -11,7 +11,7 @@ import { Debug, format } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { StreamProperties } from '../src/Stream'
 import clientOptions from './integration/config'
-import { BrubeckClient } from '../src/BrubeckClient'
+import { StreamrClient } from '../src/StreamrClient'
 
 import { startTracker, Tracker } from 'streamr-network'
 
@@ -135,7 +135,7 @@ export const createMockAddress = () => '0x000000000000000000000000000' + Date.no
 
 export function getRandomClient() {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`)
-    return new BrubeckClient({
+    return new StreamrClient({
         ...clientOptions,
         auth: {
             privateKey: wallet.privateKey
@@ -162,7 +162,7 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) 
 }
 
 // eslint-disable-next-line no-undef
-export const createTestStream = (streamrClient: BrubeckClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
     return streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
@@ -372,7 +372,7 @@ type PublishTestMessageOptions = PublishManyOpts & {
     afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 
-export function publishTestMessagesGenerator(client: BrubeckClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
+export function publishTestMessagesGenerator(client: StreamrClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
     const sid = SPID.parse(stream)
     const source = new Pipeline(publishManyGenerator(maxMessages, opts))
     if (opts.onSourcePipeline) {
@@ -386,7 +386,7 @@ export function publishTestMessagesGenerator(client: BrubeckClient, stream: SIDL
 
 }
 
-export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
+export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
     const sid = SPID.parse(stream)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const {
@@ -439,7 +439,7 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDL
     }
 }
 
-export function getPublishTestMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
+export function getPublishTestMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
     const sid = SPID.parse(stream)
     const publishTestStreamMessages = getPublishTestStreamMessages(client, sid, defaultOpts)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
@@ -448,7 +448,7 @@ export function getPublishTestMessages(client: BrubeckClient, stream: SIDLike, d
     }
 }
 
-export function getWaitForStorage(client: BrubeckClient, defaultOpts = {}) {
+export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     return async (lastPublished: StreamMessage, opts = {}) => {
         return client.publisher.waitForStorage(lastPublished, {
             ...defaultOpts,

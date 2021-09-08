@@ -4,7 +4,7 @@ import {
     describeRepeats, fakePrivateKey, Msg, Debug, addAfterFn, getPublishTestStreamMessages, publishTestMessagesGenerator, createTestStream
 } from '../utils'
 import { Defer } from '../../src/utils'
-import { BrubeckClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamOperation } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
@@ -12,7 +12,7 @@ import { StorageNode } from '../../src/StorageNode'
 
 import clientOptions from './config'
 
-const debug = Debug('BrubeckClient::test')
+const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
 const NUM_MESSAGES = 5
 
@@ -21,13 +21,13 @@ describeRepeats('decryption', () => {
     let expectErrors = 0 // check no errors by default
     let errors: Error[] = []
 
-    let publisher: BrubeckClient
-    let subscriber: BrubeckClient
+    let publisher: StreamrClient
+    let subscriber: StreamrClient
     let stream: Stream
     const addAfter = addAfterFn()
 
     const createClient = (opts: any = {}) => {
-        const c = new BrubeckClient({
+        const c = new StreamrClient({
             ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
@@ -47,7 +47,7 @@ describeRepeats('decryption', () => {
         return c
     }
 
-    async function cleanupClient(client?: BrubeckClient, msg = 'disconnecting after test') {
+    async function cleanupClient(client?: StreamrClient, msg = 'disconnecting after test') {
         await wait(0)
         if (client) {
             client.debug(msg)
@@ -55,7 +55,7 @@ describeRepeats('decryption', () => {
         }
     }
 
-    function checkEncryptionMessages(testClient: BrubeckClient) {
+    function checkEncryptionMessages(testClient: StreamrClient) {
         const onSendTest = Defer()
         testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
             // check encryption is as expected
@@ -125,7 +125,7 @@ describeRepeats('decryption', () => {
         ])
     }
 
-    async function grantSubscriberPermissions({ stream: s = stream, client: c = subscriber }: { stream?: Stream, client?: BrubeckClient } = {}) {
+    async function grantSubscriberPermissions({ stream: s = stream, client: c = subscriber }: { stream?: Stream, client?: StreamrClient } = {}) {
         const p1 = await s.grantPermission(StreamOperation.STREAM_GET, await c.getAddress())
         const p2 = await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
         return [p1, p2]
@@ -268,7 +268,7 @@ describeRepeats('decryption', () => {
 
                 let didFindStream2 = false
 
-                function checkEncryptionMessagesPerStream(testClient: BrubeckClient) {
+                function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                     const onSendTest = Defer()
                     testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                         // check encryption is as expected
@@ -615,7 +615,7 @@ await subscriber.unsubscribe(sub)
 
             let didFindStream2 = false
 
-            function checkEncryptionMessagesPerStream(testClient: BrubeckClient) {
+            function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                 const onSendTest = Defer()
                 testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() === stream2.id) {
@@ -677,7 +677,7 @@ await subscriber.unsubscribe(sub)
                 requireEncryptedData: false,
             })
 
-            function checkEncryptionMessagesPerStream(testClient: BrubeckClient) {
+            function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                 const onSendTest = Defer()
                 testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                     testClient.debug({ streamMessage })

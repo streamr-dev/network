@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import { ethers } from 'ethers'
 
-import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 
 import clientOptions from './config'
 import { fakePrivateKey } from '../utils'

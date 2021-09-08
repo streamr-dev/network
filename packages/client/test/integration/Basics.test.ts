@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 
 import { describeRepeats, uid, fakePrivateKey, Msg, publishManyGenerator } from '../utils'
-import { BrubeckClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 
 import clientOptions from './config'
 import { Stream } from '../../src/Stream'
@@ -16,11 +16,11 @@ describeRepeats('StreamrClient', () => {
     })
 
     let onError = jest.fn()
-    let client: BrubeckClient
+    let client: StreamrClient
     // const trackerPort = useTracker()
 
     const createClient = (opts: any = {}) => {
-        const c = new BrubeckClient({
+        const c = new StreamrClient({
             ...clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
