@@ -1,5 +1,4 @@
 import { inject, scoped, Lifecycle } from 'tsyringe'
-import { SPID } from 'streamr-client-protocol'
 
 import Ethereum from '../Ethereum'
 import { Rest } from '../Rest'
