@@ -7,9 +7,10 @@ import { InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerInfo } from '../connection/PeerInfo'
-import { Location, Status, StatusStreams, StreamIdAndPartition, StreamKey } from '../identifiers'
+import { Location, Status, StatusStreams, StreamKey } from '../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from './Node'
+import { InstructionSender } from './InstructionSender'
 
 export type TrackerId = string
 
@@ -19,13 +20,19 @@ export enum Event {
     NODE_CONNECTED = 'streamr:tracker:node-connected'
 }
 
+export interface TopologyStabilizationOptions {
+    debounceWait: number
+    maxWait: number
+}
+
 export interface TrackerOptions {
     maxNeighborsPerNode: number
     peerInfo: PeerInfo
     protocols: {
         trackerServer: TrackerServer
     }
-    metricsContext?: MetricsContext
+    metricsContext?: MetricsContext,
+    topologyStabilization?: TopologyStabilizationOptions
 }
 
 export type OverlayPerStream = Record<StreamKey,OverlayTopology>
@@ -45,6 +52,7 @@ export class Tracker extends EventEmitter {
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
+    private readonly instructionSender: InstructionSender
     private readonly extraMetadatas: Record<NodeId,Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
@@ -87,6 +95,8 @@ export class Tracker extends EventEmitter {
             .addRecordedMetric('processNodeStatus')
             .addRecordedMetric('instructionsSent')
             .addRecordedMetric('_removeNode')
+
+        this.instructionSender = new InstructionSender(opts.topologyStabilization, this.trackerServer, this.metrics)
     }
 
     onNodeConnected(node: NodeId): void {
@@ -180,21 +190,13 @@ export class Tracker extends EventEmitter {
             if (this.overlayPerStream[streamKey]) {
                 const instructions = this.overlayPerStream[streamKey].formInstructions(node, forceGenerate)
                 Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
-                    this.metrics.record('instructionsSent', 1)
                     const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamKey)
-                    try {
-                        await this.trackerServer.sendInstruction(
-                            nodeId,
-                            StreamIdAndPartition.fromKey(streamKey),
-                            newNeighbors,
-                            counterValue
-                        )
-                        this.logger.debug('Instruction %o sent to node %o',
-                            newNeighbors, { counterValue, streamKey, nodeId })
-                    } catch (err) {
-                        this.logger.error(`Failed to send instructions %o to node %o, reason: %s`,
-                            newNeighbors, { counterValue, streamKey, nodeId }, err)
-                    }
+                    await this.instructionSender.addInstruction({
+                        nodeId,
+                        streamKey,
+                        newNeighbors,
+                        counterValue
+                    })
                 })
             }
         })

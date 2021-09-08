@@ -15,12 +15,27 @@ program
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', '4')
     .option('--metrics <metrics>', 'output metrics to console', false)
     .option('--metricsInterval <metricsInterval>', 'metrics output interval (ms)', '5000')
+    .option('--topologyStabilizationDebounceWait <topologyStabilizationDebounceWait>', 'topologyStabilizationDebounceWait')
+    .option('--topologyStabilizationMaxWait <topologyStabilizationMaxWait>', 'topologyStabilizationMaxWait')
     .description('Run tracker with reporting')
     .parse(process.argv)
 
 const id = program.opts().id || `TR${program.opts().port}`
 const name = program.opts().trackerName || id
 const logger = new Logger(module)
+
+const getTopologyStabilization = () => {
+    const debounceWait = program.opts().topologyStabilizationDebounceWait
+    const maxWait = program.opts().topologyStabilizationMaxWait
+    if ((debounceWait !== undefined) || (maxWait !== undefined)) {
+        return {
+            debounceWait: parseInt(debounceWait),
+            maxWait: parseInt(maxWait)
+        }
+    } else {
+        return undefined
+    }
+}
 
 async function main() {
     const metricsContext = new MetricsContext(id)
@@ -31,7 +46,8 @@ async function main() {
             id,
             name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode, 10),
-            metricsContext
+            metricsContext,
+            topologyStabilization: getTopologyStabilization()
         })
 
         const trackerObj = {}
