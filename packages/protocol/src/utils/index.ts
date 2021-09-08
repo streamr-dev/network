@@ -7,6 +7,7 @@ export * from "./SPID"
 import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
 import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
+import { keyToArrayIndex } from "./HashUtil"
 
 export {
     TimestampUtil,
@@ -22,5 +23,6 @@ export {
     createStorageNodeRegistry,
     getStorageNodeRegistryFromContract,
     generateMnemonicFromAddress,
-    parseAddressFromNodeId
+    parseAddressFromNodeId,
+    keyToArrayIndex,
 }
