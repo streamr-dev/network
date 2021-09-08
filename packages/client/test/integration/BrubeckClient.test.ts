@@ -5,8 +5,17 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import {
-    getPublishTestMessages, getPublishTestStreamMessages, getWaitForStorage, publishManyGenerator, describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId
+    uid,
+    Msg,
+    getPublishTestMessages,
+    getPublishTestStreamMessages,
+    getWaitForStorage,
+    publishManyGenerator,
+    describeRepeats,
+    fakePrivateKey,
+    createRelativeTestStreamId
 } from '../utils'
+
 import { BrubeckClient } from '../../src/BrubeckClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
@@ -281,16 +290,19 @@ describeRepeats('StreamrClient', () => {
             expect(received).toEqual(published)
         })
 
-        describe('parititioning', () => {
+        describe('partitioning', () => {
             it('pub/sub with numeric partition key', async () => {
                 const NUM_PARTITIONS = 3
                 const NUM_MESSAGES = 3
+                // create a new stream with multiple partitions
                 const partitionStream = await createStream({
                     partitions: NUM_PARTITIONS
                 })
 
                 const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
                 const eachPartition = Array(NUM_PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
+
+                // subscribe to each partition
                 const subs = await Promise.all(eachPartition.map((streamPartition) => {
                     return client.subscribe<typeof Msg>({
                         streamId: partitionStream.id,
@@ -298,10 +310,12 @@ describeRepeats('StreamrClient', () => {
                     })
                 }))
 
+                // publish to each partition
                 const pubs = await Promise.all(eachPartition.map((streamPartition) => {
                     return publishTestStreamMessages(NUM_MESSAGES, { partitionKey: streamPartition })
                 }))
 
+                // check messages match
                 expect(await Promise.all(subs.map((s) => s.collect(NUM_MESSAGES)))).toEqual(pubs)
                 // check all published messages have appropriate partition
                 // i.e. [[0,0,0], [1,1,1], etc]
