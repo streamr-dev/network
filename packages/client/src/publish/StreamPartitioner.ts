@@ -7,7 +7,13 @@ function computePartition(partitionCount: number, partitionKey: string) {
 }
 
 export default function StreamPartitioner(cacheOptions: StreamrClientOptions['cache']) {
-    const cachedPartition = CacheFn(computePartition, cacheOptions)
+    const cachedPartition = CacheFn(computePartition, {
+        ...cacheOptions,
+        cacheKey([partitionCount, partitionKey]) {
+            return `${partitionCount}-${partitionKey}`
+        }
+    })
+
     function computeStreamPartition(partitionCount: number, partitionKey: string | number) {
         if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {
             throw new Error(`partitionCount is not a safe positive integer! ${partitionCount}`)
