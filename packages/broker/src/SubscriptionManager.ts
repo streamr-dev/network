@@ -1,5 +1,4 @@
 import { NetworkNode } from 'streamr-network'
-import { StreamrClient } from '../../client/dist/types/src'
 
 export class SubscriptionManager {
     streams = new Map<string, number>()
@@ -7,13 +6,13 @@ export class SubscriptionManager {
     constructor(public networkNode: NetworkNode) {
     }
 
-    subscribe(streamId: string, streamPartition = 0) {
+    subscribe(streamId: string, streamPartition = 0): void {
         const key = `${streamId}::${streamPartition}`
         this.streams.set(key, this.streams.get(key) || 0)
         this.networkNode.subscribe(streamId, streamPartition)
     }
 
-    unsubscribe(streamId: string, streamPartition = 0) {
+    unsubscribe(streamId: string, streamPartition = 0): void {
         const key = `${streamId}::${streamPartition}`
         this.streams.set(key, (this.streams.get(key) || 0) - 1)
 
