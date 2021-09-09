@@ -72,7 +72,8 @@ export class MetricsPublisher {
         const stream = await this.client.getOrCreateStream({
             id: this.getStreamId(periodLength)
         })
-
+        await stream.grantPermission('stream_get' as StreamOperation, undefined)
+        await stream.grantPermission('stream_subscribe' as StreamOperation, undefined)
         if (periodLength !== PERIOD_LENGTHS.FIVE_SECONDS) {
             // TODO: pretify this error handler
             // https://linear.app/streamr/issue/BACK-155/assign-a-stream-to-a-storage-node-when-it-has-already-been-assigned
@@ -92,8 +93,6 @@ export class MetricsPublisher {
                 }
             }
         }
-        await stream.grantPermission('stream_get' as StreamOperation, undefined)
-        await stream.grantPermission('stream_subscribe' as StreamOperation, undefined)
         return stream.id
     }
 
