@@ -22,9 +22,9 @@ const logger = new Logger(module)
 
 export class MetricsPublisher {
 
-    nodeAddress: string
-    client: StreamrClient
-    storageNodeAddress: string
+    private readonly nodeAddress: string
+    private readonly client: StreamrClient
+    private readonly storageNodeAddress: string
 
     constructor(nodeAddress: string, clientOptions: ClientOptions) {
         this.nodeAddress = nodeAddress
