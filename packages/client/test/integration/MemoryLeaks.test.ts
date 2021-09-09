@@ -252,12 +252,11 @@ describe('MemoryLeaks', () => {
                         received1.push(msg)
                         if (received1.length === SOME_MESSAGES) {
                             if (!sub1) { return }
-                            await sub1.unsubscribe()
+                            sub1.unsubscribe()
                             // unsub early
                             sub1Done.resolve(undefined)
                         }
                     })
-
                     const sub1LeakId = 'sub1 ' + sub1.id
                     leaksDetector.add(sub1LeakId, sub1)
 
