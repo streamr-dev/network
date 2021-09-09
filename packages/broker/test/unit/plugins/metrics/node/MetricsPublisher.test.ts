@@ -1,4 +1,4 @@
-import { Stream } from 'streamr-client'
+import { StreamrClient, ConfigTest, Stream } from 'streamr-client'
 import { MetricsPublisher } from '../../../../../src/plugins/metrics/node/MetricsPublisher'
 
 describe('MetricsPublisher', () => {
@@ -8,14 +8,15 @@ describe('MetricsPublisher', () => {
     beforeAll(() => {
         const nodeAddress = '0x1111111111111111111111111111111111111111'
         const storageNodeAddress = '0x2222222222222222222222222222222222222222'
-        publisher = new MetricsPublisher(nodeAddress, {
-            clientWsUrl: 'ws://websocket.mock',
-            storageNode: storageNodeAddress,
-            storageNodes: [{
+        const client = new StreamrClient({
+            ...ConfigTest,
+            nodeRegistry: [{
                 address: storageNodeAddress,
-                url: 'http://storage.mock'
+                url: 'http://storage.mock',
             }]
-        } as any)
+        })
+
+        publisher = new MetricsPublisher(nodeAddress, client, storageNodeAddress)
         mockStream = {
             addToStorageNode: jest.fn(),
             grantPermission: jest.fn()
