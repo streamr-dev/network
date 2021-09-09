@@ -1,5 +1,5 @@
 import sinon from 'sinon'
-import { NetworkNode, Protocol } from 'streamr-network'
+import { Protocol } from 'streamr-network'
 import { MetricsContext } from 'streamr-network'
 import { StreamrClient } from 'streamr-client'
 import { Publisher } from '../../src/Publisher'
@@ -16,7 +16,6 @@ function formMessage(timestamp: number) {
 }
 
 describe('Publisher', () => {
-    let networkNode: NetworkNode
     let client: StreamrClient
     let publisher: Publisher
 
@@ -44,7 +43,7 @@ describe('Publisher', () => {
 
         it('should call publish with correct values', async () => {
             await publisher.validateAndPublish(formMessage(135135135))
-            expect((networkNode.publish as any).calledWith(formMessage(135135135))).toBe(true)
+            expect((client.publisher.validateAndPublishStreamMessage as any).calledWith(formMessage(135135135))).toBe(true)
         })
     })
 })
