@@ -363,7 +363,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 const publishTestMessages = getPublishTestMessages(pubClient, stream, {
                     // delay: 500 + Math.random() * 1500,
                     waitForLast: true,
-                    waitForLastTimeout: 25000,
+                    waitForLastTimeout: 20000,
                     waitForLastCount: MAX_MESSAGES * publishers.length,
                     createMessage: ({ batchId }) => ({
                         batchId,
@@ -381,7 +381,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 } catch (err) {
                     return false
                 }
-            }, 15000).catch((err) => {
+            }, 25000).catch((err) => {
                 checkMessages(published, receivedMessagesMain)
                 checkMessages(published, receivedMessagesOther)
                 throw err
@@ -429,7 +429,7 @@ describeRepeats('PubSub with multiple clients', () => {
             await Promise.all(publishers.map(async (pubClient) => {
                 const waitForStorage = getWaitForStorage(pubClient, {
                     stream,
-                    timeout: 10000,
+                    timeout: 15000,
                     count: MAX_MESSAGES * publishers.length,
                 })
 
@@ -440,9 +440,9 @@ describeRepeats('PubSub with multiple clients', () => {
 
                 const publishTestMessages = getPublishTestMessages(pubClient, stream, {
                     waitForLast: true,
-                    waitForLastTimeout: 10000,
+                    waitForLastTimeout: 15000,
                     waitForLastCount: MAX_MESSAGES * publishers.length,
-                    delay: 500 + Math.random() * 1500,
+                    delay: 500 + Math.random() * 1000,
                     createMessage: (msg) => ({
                         ...msg,
                         publisherId,
@@ -453,7 +453,7 @@ describeRepeats('PubSub with multiple clients', () => {
                     // late subscribe to stream from other client instance
                     const lateSub = await otherClient.subscribe({
                         stream: stream.id,
-                        last: 100
+                        last: MAX_MESSAGES * publishers.length,
                     }, (msg, streamMessage) => {
                         const key = streamMessage.getPublisherId().toLowerCase()
                         const msgs = receivedMessagesOther[key] || []
@@ -564,7 +564,7 @@ describeRepeats('PubSub with multiple clients', () => {
             } catch (err) {
                 return false
             }
-        }, 20000).catch(() => {
+        }, 25000).catch(() => {
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
         })
@@ -614,16 +614,16 @@ describeRepeats('PubSub with multiple clients', () => {
         await Promise.all(publishers.map(async (pubClient) => {
             const waitForStorage = getWaitForStorage(pubClient, {
                 stream,
-                timeout: 10000,
+                timeout: 15000,
                 count: MAX_MESSAGES * publishers.length,
             })
 
             const publisherId = (await pubClient.getAddress()).toString().toLowerCase()
             const publishTestMessages = getPublishTestMessages(pubClient, stream, {
                 waitForLast: true,
-                waitForLastTimeout: 10000,
+                waitForLastTimeout: 15000,
                 waitForLastCount: MAX_MESSAGES * publishers.length,
-                delay: 500 + Math.random() * 1500,
+                delay: 500 + Math.random() * 1000,
             })
 
             async function addLateSubscriber() {
@@ -665,9 +665,9 @@ describeRepeats('PubSub with multiple clients', () => {
             } catch (err) {
                 return false
             }
-        }, 15000, 300).catch(() => {
+        }, 25000, 300).catch(() => {
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
         })
-    }, 60000)
+    }, 80000)
 })

@@ -182,7 +182,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
 
             this.debug('message not found, retrying... %o', {
                 msg: streamMessage.getParsedContent(),
-                last: last.map(({ content }: any) => content)
+                'last 3': last.slice(-3).map(({ content }: any) => content)
             })
 
             await wait(interval)

@@ -244,7 +244,7 @@ class StreamrStream implements StreamMetadata {
 
     async waitUntilStorageAssigned({
         timeout = 30000,
-        pollInterval = 200
+        pollInterval = 500
     }: {
         timeout?: number,
         pollInterval?: number

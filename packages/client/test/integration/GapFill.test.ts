@@ -46,7 +46,7 @@ describeRepeats('GapFill', () => {
             autoConnect: false,
             autoDisconnect: false,
             maxRetries: 2,
-            maxGapRequests: 10,
+            maxGapRequests: 20,
             gapFillTimeout: 500,
             retryResendAfter: 1000,
             ...opts,
@@ -66,7 +66,7 @@ describeRepeats('GapFill', () => {
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         client.debug('connecting before test <<')
-        publishTestMessages = getPublishTestStreamMessages(client, stream)
+        publishTestMessages = getPublishTestStreamMessages(client, stream, { waitForLast: true })
         return client
     }
 
