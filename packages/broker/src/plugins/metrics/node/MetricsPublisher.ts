@@ -64,7 +64,7 @@ export class MetricsPublisher {
     }
 
     async ensureStreamsCreated() {
-        await Promise.all(Object.keys(STREAM_ID_SUFFIXES).map((periodLength: any) => this.ensureStreamCreated(periodLength)))
+        await Promise.all(Object.keys(STREAM_ID_SUFFIXES).map((periodLengthAsString: string) => this.ensureStreamCreated(Number(periodLengthAsString))))
     }
 
     // TODO simplify error handling?
