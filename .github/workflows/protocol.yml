@@ -62,14 +62,6 @@ jobs:
       - name: test-unit
         run: npm run test-unit
 
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
-        with:
-          services-to-start: "parity-node0 parity-sidechain-node0"
-
-      - name: test-integration
-        run: npm run test-integration
-
   test-integration:
     name: Integration Test on Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -100,7 +92,7 @@ jobs:
 
   publish:
     needs: [test-unit, test-integration]
-    name: Publishing main using Node 14
+    name: Publishing main using Node 16
     runs-on: ubuntu-latest
 
     # run job only for tags and skip for cron
@@ -113,7 +105,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 16
           registry-url: https://registry.npmjs.org/
 
       - name: Cache Node.js modules
