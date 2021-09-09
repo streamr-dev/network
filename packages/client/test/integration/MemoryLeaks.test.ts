@@ -8,7 +8,7 @@ import { counterId, Defer } from '../../src/utils'
 import clientOptions from './config'
 
 const MAX_MESSAGES = 5
-const TIMEOUT = 60000
+const TIMEOUT = 120000
 describe('MemoryLeaks', () => {
     let leaksDetector: LeaksDetector
 
@@ -171,7 +171,7 @@ describe('MemoryLeaks', () => {
                 await client.destroy()
                 leaksDetector.add('stream', stream)
                 await wait(3000)
-            }, 25000)
+            }, TIMEOUT)
 
             describe('publish + subscribe', () => {
                 it('does not leak subscription', async () => {
@@ -186,7 +186,7 @@ describe('MemoryLeaks', () => {
                     })
 
                     await publishTestMessages(MAX_MESSAGES)
-                }, 25000)
+                }, TIMEOUT)
 
                 test('subscribe using async iterator', async () => {
                     const stream = await client.createStream({
@@ -208,7 +208,7 @@ describe('MemoryLeaks', () => {
                             break
                         }
                     }
-                }, 25000)
+                }, TIMEOUT)
 
                 test('subscribe using onMessage callback', async () => {
                     const stream = await client.createStream({
@@ -233,7 +233,7 @@ describe('MemoryLeaks', () => {
 
                     await publishTestMessages(MAX_MESSAGES)
                     await wait(1000)
-                }, 25000)
+                }, TIMEOUT)
 
                 test('subscriptions can be collected before all subscriptions removed', async () => {
                     // leaksDetector = new LeaksDetector()
@@ -285,7 +285,7 @@ describe('MemoryLeaks', () => {
                     expect(received2).toHaveLength(MAX_MESSAGES)
                     await sub2.unsubscribe()
                     await wait(1000)
-                }, 30000)
+                }, TIMEOUT)
             })
         })
     })
