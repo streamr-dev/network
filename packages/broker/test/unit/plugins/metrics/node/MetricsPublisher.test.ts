@@ -5,7 +5,7 @@ describe('MetricsPublisher', () => {
     let publisher: MetricsPublisher
     let mockStream: Stream
 
-    beforeAll(() => {
+    beforeEach(() => {
         const nodeAddress = '0x1111111111111111111111111111111111111111'
         const storageNodeAddress = '0x2222222222222222222222222222222222222222'
         publisher = new MetricsPublisher(nodeAddress, {
@@ -31,10 +31,23 @@ describe('MetricsPublisher', () => {
         return publisher.client
     }
 
-    it('ensure streams created: happy path', async () => {
-        await publisher.ensureStreamsCreated()
-        expect(getClient().getOrCreateStream).toBeCalledTimes(4)
-        expect(mockStream.addToStorageNode).toBeCalledTimes(3)
-        expect(mockStream.grantPermission).toBeCalledTimes(8)
+    describe('ensure streams created', () => {
+
+        it('happy path', async () => {
+            await publisher.ensureStreamsCreated()
+            expect(getClient().getOrCreateStream).toBeCalledTimes(4)
+            expect(mockStream.grantPermission).toBeCalledTimes(8)
+            expect(mockStream.addToStorageNode).toBeCalledTimes(3)
+        })
+
+        it('storage assignment fails', async () => {
+            mockStream.addToStorageNode = jest.fn().mockRejectedValue(new Error('mock-error'))
+            try {
+                await publisher.ensureStreamsCreated()
+            } catch (e) {}
+            expect(getClient().getOrCreateStream).toBeCalledTimes(4)
+            expect(mockStream.grantPermission).toBeCalledTimes(8)
+        })
+
     })
 })
