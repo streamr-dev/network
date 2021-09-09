@@ -20,7 +20,9 @@ const createClient = (opts: any = {}) => new StreamrClient({
     ...opts,
 })
 
-const MAX_MESSAGES = 6
+// this number should be at least 10, otherwise late subscribers might not join
+// in time to see any realtime messages
+const MAX_MESSAGES = 10
 
 describeRepeats('PubSub with multiple clients', () => {
     let stream: Stream
@@ -486,7 +488,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 } catch (err) {
                     return false
                 }
-            }, 15000, 300).catch((err) => {
+            }, 20000, 300).catch((err) => {
                 // convert timeout to actual error
                 checkMessages(published, receivedMessagesMain)
                 checkMessages(published, receivedMessagesOther)
