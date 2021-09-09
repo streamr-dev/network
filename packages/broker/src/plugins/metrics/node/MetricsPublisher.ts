@@ -58,7 +58,7 @@ export class MetricsPublisher {
         const streamId = this.getStreamId(periodLength)
         try {
             await this.client.publish(streamId, sample)
-        } catch (e) {
+        } catch (e: any) {
             logger.warn(`Unable to publish NodeMetrics: ${e.message}`)
         }
     }
@@ -78,7 +78,7 @@ export class MetricsPublisher {
             // https://linear.app/streamr/issue/BACK-155/assign-a-stream-to-a-storage-node-when-it-has-already-been-assigned
             try {
                 await stream.addToStorageNode(this.storageNodeAddress)
-            } catch (e) {
+            } catch (e: any) {
                 if (!e.body) { throw e }
                 let parsedBody
                 try {
