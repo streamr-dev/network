@@ -109,7 +109,7 @@ export const testnet2AutoMigrate = (config: any, configFilePath: string): Config
             fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2))
             return config
         } catch (err) {
-            console.warn('Testnet1 -> Testnet2 configuration failed', err)
+            console.warn('Testnet1 -> Testnet2 configuration migration failed', err)
             return config
         }
     }
