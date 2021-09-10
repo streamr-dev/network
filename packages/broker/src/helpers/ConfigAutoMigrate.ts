@@ -75,7 +75,7 @@ const TESTNET2_STREAM_IDS = [
     'streamr.eth/brubeck-testnet/rewards/25kpf4'
 ]
 
-const MigrateTrackerRegistry = (trackerRegistry: TrackerRegistryItem[]): TrackerRegistryItem[] => {
+const migrateTrackerRegistry = (trackerRegistry: TrackerRegistryItem[]): TrackerRegistryItem[] => {
     if (trackerRegistry.length === 1) {
         return TESTNET2_TRACKER_REGISTRY
     } else {
