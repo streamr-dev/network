@@ -1,10 +1,9 @@
 import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
-import { waitForEvent, eventsWithArgsToArray } from 'streamr-test-utils'
+import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
@@ -40,7 +39,7 @@ describe('multi trackers', () => {
         trackerTwo = await startTracker({
             host: '127.0.0.1',
             port: 49001,
-            id: 'trackerTwo'
+            id: 'trackerTwo',
         })
         trackerThree = await startTracker({
             host: '127.0.0.1',
@@ -54,11 +53,13 @@ describe('multi trackers', () => {
         const trackerAddresses = [trackerInfo1, trackerInfo2, trackerInfo3]
         nodeOne = createNetworkNode({
             id: 'nodeOne',
-            trackers: trackerAddresses
+            trackers: trackerAddresses,
+            trackerConnectionMaintenanceInterval: 100
         })
         nodeTwo = createNetworkNode({
             id: 'nodeTwo',
-            trackers: trackerAddresses
+            trackers: trackerAddresses,
+            trackerConnectionMaintenanceInterval: 100
         })
 
         await nodeOne.start()
@@ -79,14 +80,7 @@ describe('multi trackers', () => {
         // first stream, first tracker
         nodeOne.subscribe(FIRST_STREAM, 0)
 
-        await Promise.race([
-            // @ts-expect-error private field
-            waitForEvent(trackerOne.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerTwo.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerThree.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-        ])
+        await wait(500)
 
         expect(trackerOne.getStreams()).toContain(`${FIRST_STREAM}::0`)
         expect(trackerTwo.getStreams()).not.toContain(`${FIRST_STREAM}::0`)
@@ -95,14 +89,7 @@ describe('multi trackers', () => {
         // second stream, second tracker
         nodeOne.subscribe(SECOND_STREAM, 0)
 
-        await Promise.race([
-            // @ts-expect-error private field
-            waitForEvent(trackerOne.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerTwo.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerThree.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-        ])
+        await wait(500)
 
         expect(trackerOne.getStreams()).not.toContain(`${SECOND_STREAM}::0`)
         expect(trackerTwo.getStreams()).toContain(`${SECOND_STREAM}::0`)
@@ -111,14 +98,7 @@ describe('multi trackers', () => {
         // third stream, third tracker
         nodeOne.subscribe(THIRD_STREAM, 0)
 
-        await Promise.race([
-            // @ts-expect-error private field
-            waitForEvent(trackerOne.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerTwo.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-            // @ts-expect-error private field
-            waitForEvent(trackerThree.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
-        ])
+        await wait(500)
 
         expect(trackerOne.getStreams()).not.toContain(`${THIRD_STREAM}::0`)
         expect(trackerTwo.getStreams()).not.toContain(`${THIRD_STREAM}::0`)
@@ -140,10 +120,10 @@ describe('multi trackers', () => {
             waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
         ])
 
-        expect(nodeOneEvents).toHaveLength(4)
-        expect(nodeTwoEvents).toHaveLength(4)
-        expect(nodeTwoEvents[3][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
-        expect(nodeTwoEvents[3][2]).toEqual('trackerOne')
+        expect(nodeOneEvents).toHaveLength(2)
+        expect(nodeTwoEvents).toHaveLength(2)
+        expect(nodeTwoEvents[1][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
+        expect(nodeTwoEvents[1][2]).toEqual('trackerOne')
 
         // second stream, second tracker
         nodeOne.subscribe(SECOND_STREAM_2, 0)
@@ -159,10 +139,10 @@ describe('multi trackers', () => {
             waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
         ])
 
-        expect(nodeOneEvents).toHaveLength(1)
-        expect(nodeTwoEvents).toHaveLength(1)
-        expect(nodeTwoEvents[0][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
-        expect(nodeTwoEvents[0][2]).toEqual('trackerTwo')
+        expect(nodeOneEvents).toHaveLength(2)
+        expect(nodeTwoEvents).toHaveLength(2)
+        expect(nodeTwoEvents[1][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
+        expect(nodeTwoEvents[1][2]).toEqual('trackerTwo')
 
         // third stream, third tracker
         nodeOne.subscribe(THIRD_STREAM_2, 0)
@@ -178,10 +158,10 @@ describe('multi trackers', () => {
             waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
         ])
 
-        expect(nodeOneEvents).toHaveLength(1)
-        expect(nodeTwoEvents).toHaveLength(1)
-        expect(nodeTwoEvents[0][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
-        expect(nodeTwoEvents[0][2]).toEqual('trackerThree')
+        expect(nodeOneEvents).toHaveLength(2)
+        expect(nodeTwoEvents).toHaveLength(2)
+        expect(nodeTwoEvents[1][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
+        expect(nodeTwoEvents[1][2]).toEqual('trackerThree')
     })
 
     test('node ignores instructions from unexpected tracker', async () => {

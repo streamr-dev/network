@@ -53,9 +53,11 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     afterEach(async () => {
-        await nodeOne.stop()
-        await nodeTwo.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            nodeOne.stop(),
+            nodeTwo.stop(),
+            tracker.stop()
+        ])
     })
 
     it('tracker should receive status message from node', (done) => {
@@ -66,6 +68,7 @@ describe('check status message flow between tracker and two nodes', () => {
             done()
         })
 
+        nodeOne.subscribe('stream-id', 0)
         nodeOne.start()
     })
 
@@ -76,14 +79,16 @@ describe('check status message flow between tracker and two nodes', () => {
             expect(peerInfo).toEqual('node-2')
             done()
         })
+
+        nodeTwo.subscribe('stream-id', 0)
         nodeTwo.start()
     })
 
     it('tracker should receive from both nodes new statuses', (done) => {
+        nodeOne.subscribe('stream-id', 0)
+        nodeTwo.subscribe('stream-id', 0)
         nodeOne.start()
         nodeTwo.start()
-        nodeOne.subscribe(streamId, 0)
-        nodeTwo.subscribe(streamId, 0)
 
         let receivedTotal = 0
         let nodeOneStatusReceived = false
