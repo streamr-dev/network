@@ -13,7 +13,8 @@ const client = new StreamrClient({
 
  console.assert(!!NamedExports.Subscription, 'NamedExports should have Subscription')
 
-client.connect().then(() => {
+client.connect().then(async () => {
     console.info('success')
-    return client.disconnect()
+    await client.disconnect()
+    process.exit(0)
 })
