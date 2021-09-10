@@ -8,8 +8,7 @@ import Subscriber from '../../src/Subscriber'
 import Subscription from '../../src/Subscription'
 import { StorageNode } from '../../src/StorageNode'
 
-import { getPublishTestStreamMessages, createTestStream, fakePrivateKey, describeRepeats, Msg } from '../utils'
-import clientOptions from './config'
+import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../utils'
 
 const MAX_MESSAGES = 10
 
@@ -37,22 +36,12 @@ describeRepeats('GapFill', () => {
     let stream: Stream
     let subscriber: Subscriber
 
-    const createClient = (opts: any = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            maxGapRequests: 20,
-            gapFillTimeout: 500,
-            retryResendAfter: 1000,
-            ...opts,
-        })
-        return c
-    }
+    const createClient = getCreateClient({
+        maxRetries: 2,
+        maxGapRequests: 20,
+        gapFillTimeout: 500,
+        retryResendAfter: 1000,
+    })
 
     async function setupClient(opts: BrubeckClientConfig) {
         // eslint-disable-next-line require-atomic-updates
@@ -86,15 +75,6 @@ describeRepeats('GapFill', () => {
         await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('disconnecting after test >>')
-            await client.destroy()
-            client.debug('disconnecting after test <<')
-        }
     })
 
     let subs: Subscription<any>[] = []

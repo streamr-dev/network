@@ -1,7 +1,13 @@
 import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {
-    describeRepeats, fakePrivateKey, Msg, Debug, addAfterFn, getPublishTestStreamMessages, publishTestMessagesGenerator, createTestStream
+    describeRepeats,
+    Msg,
+    Debug,
+    getPublishTestStreamMessages,
+    publishTestMessagesGenerator,
+    createTestStream,
+    getCreateClient
 } from '../utils'
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -9,8 +15,6 @@ import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamOperation } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
 import { StorageNode } from '../../src/StorageNode'
-
-import clientOptions from './config'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -24,36 +28,8 @@ describeRepeats('decryption', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
-    const addAfter = addAfterFn()
 
-    const createClient = (opts: any = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            disconnectDelay: 1,
-            publishAutoDisconnectDelay: 50,
-            maxRetries: 2,
-            ...opts,
-        })
-
-        addAfter(() => (
-            cleanupClient(c)
-        ))
-
-        return c
-    }
-
-    async function cleanupClient(client?: StreamrClient, msg = 'disconnecting after test') {
-        await wait(0)
-        if (client) {
-            client.debug(msg)
-            await client.destroy()
-        }
-    }
+    const createClient = getCreateClient()
 
     function checkEncryptionMessages(testClient: StreamrClient) {
         const onSendTest = Defer()

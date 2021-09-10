@@ -1,24 +1,12 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { getPublishTestMessages, getWaitForStorage, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream } from '../utils'
+import {
+    getCreateClient, getPublishTestMessages, getWaitForStorage, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream
+} from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
 import { StorageNode } from '../../src/StorageNode'
 import { Stream, StreamOperation } from '../../src/Stream'
-
-import clientOptions from './config'
-
-const createClient = (opts: any = {}) => new StreamrClient({
-    ...clientOptions,
-    auth: {
-        privateKey: fakePrivateKey()
-    },
-    autoConnect: false,
-    autoDisconnect: false,
-    // disconnectDelay: 1,
-    // publishAutoDisconnectDelay: 1,
-    ...opts,
-})
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
@@ -31,6 +19,7 @@ describeRepeats('PubSub with multiple clients', () => {
     let privateKey: string
     let errors: Error[] = []
 
+    const createClient = getCreateClient()
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
@@ -49,16 +38,6 @@ describeRepeats('PubSub with multiple clients', () => {
     })
 
     afterEach(async () => {
-        if (mainClient) {
-            mainClient.debug('disconnecting after test')
-            await mainClient.destroy()
-        }
-
-        if (otherClient) {
-            otherClient.debug('disconnecting after test')
-            await otherClient.destroy()
-        }
-
         expect(errors).toEqual([])
     })
 
@@ -73,7 +52,6 @@ describeRepeats('PubSub with multiple clients', () => {
 
         addAfter(async () => {
             counterId.clear(publisherId) // prevent overflows in counter
-            await pubClient.destroy()
         })
 
         // pubClient.on('error', getOnError(errors))
@@ -96,10 +74,6 @@ describeRepeats('PubSub with multiple clients', () => {
             },
             ...opts,
         })
-
-        addAfter(async () => (
-            client.destroy()
-        ))
 
         // client.on('error', getOnError(errors))
         await client.session.getSessionToken()

@@ -1,12 +1,10 @@
 import { ethers, Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
+
 import { NotFoundError, ValidationError } from '../../src/authFetch'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
-
-import { uid, fakeAddress, createTestStream, createRelativeTestStreamId } from '../utils'
-
-import clientOptions from './config'
+import { clientOptions, uid, fakeAddress, createTestStream, createRelativeTestStreamId } from '../utils'
 
 /**
  * These tests should be run in sequential order!
@@ -17,16 +15,10 @@ function TestStreamEndpoints(getName: () => string) {
     let wallet: Wallet
     let createdStream: Stream
 
-    const createClient = (opts = {}) => new StreamrClient({
-        ...clientOptions,
-        autoConnect: false,
-        autoDisconnect: false,
-        ...opts,
-    } as any)
-
     beforeAll(() => {
         wallet = ethers.Wallet.createRandom()
-        client = createClient({
+        client = new StreamrClient({
+            ...clientOptions,
             auth: {
                 privateKey: wallet.privateKey,
             },

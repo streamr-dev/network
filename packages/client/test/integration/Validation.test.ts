@@ -1,9 +1,8 @@
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, fakePrivateKey, describeRepeats, createTestStream } from '../utils'
+import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/Subscriber'
 import Subscription from '../../src/Subscription'
@@ -16,19 +15,7 @@ describeRepeats('Validation', () => {
     let stream: Stream
     let subscriber: Subscriber
 
-    const createClient = (opts = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            ...opts,
-        })
-        return c
-    }
+    const createClient = getCreateClient()
 
     async function setupClient(opts: any) {
         // eslint-disable-next-line require-atomic-updates
@@ -50,15 +37,6 @@ describeRepeats('Validation', () => {
         expect(subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
         expect(client.getSubscriptions(stream.id)).toEqual([])
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('disconnecting after test >>')
-            await client.destroy()
-            client.debug('disconnecting after test <<')
-        }
     })
 
     let subs: Subscription[] = []

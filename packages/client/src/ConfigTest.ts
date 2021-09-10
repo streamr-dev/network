@@ -57,4 +57,5 @@ export default {
     },
     autoConnect: false,
     autoDisconnect: false,
+    maxRetries: 2,
 }

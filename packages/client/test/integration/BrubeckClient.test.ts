@@ -12,15 +12,14 @@ import {
     getWaitForStorage,
     publishManyGenerator,
     describeRepeats,
-    fakePrivateKey,
-    createRelativeTestStreamId
+    createRelativeTestStreamId,
+    getCreateClient,
 } from '../utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 // import Subscription from '../../src/brubeck/Subscription'
 import { StorageNode } from '../../src/StorageNode'
@@ -41,19 +40,7 @@ describeRepeats('StreamrClient', () => {
     let onError = jest.fn()
     let client: StreamrClient
 
-    const createClient = (opts: any = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            ...opts,
-        })
-        return c
-    }
+    const createClient = getCreateClient()
 
     beforeEach(() => {
         errors = []
@@ -67,16 +54,7 @@ describeRepeats('StreamrClient', () => {
         expect(errors).toHaveLength(expectErrors)
     })
 
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('destroying after test')
-            await client.destroy()
-        }
-    })
-
     let stream: Stream
-    // let waitForStorage: (...args: any[]) => Promise<void>
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     // These tests will take time, especially on Travis
@@ -113,15 +91,6 @@ describeRepeats('StreamrClient', () => {
         await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-
-        if (client) {
-            client.debug('destroying after test')
-            await client.destroy()
-        }
     })
 
     it('is stream publisher', async () => {

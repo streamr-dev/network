@@ -1,13 +1,10 @@
 // import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, createTestStream, fakePrivateKey, describeRepeats, collect } from '../utils'
+import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats, collect } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
-// import Connection from '../../src/Connection'
-// import { StorageNode } from '../../src/stream/StorageNode'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
 import Subscriber from '../../src/Subscriber'
@@ -26,19 +23,7 @@ describeRepeats('Subscriber', () => {
     let M: Subscriber
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
-    const createClient = (opts: any = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            ...opts,
-        })
-        return c
-    }
+    const createClient = getCreateClient()
 
     beforeEach(async () => {
         expectErrors = 0
@@ -70,15 +55,6 @@ describeRepeats('Subscriber', () => {
         await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('disconnecting after test >>')
-            await client.destroy()
-            client.debug('disconnecting after test <<')
-        }
     })
 
     describe('basics', () => {

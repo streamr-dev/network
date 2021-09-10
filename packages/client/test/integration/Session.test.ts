@@ -1,15 +1,7 @@
-import { StreamrClient } from '../../src/StreamrClient'
-import { fakePrivateKey } from '../utils'
-
-import clientOptions from './config'
+import { getCreateClient } from '../utils'
 
 describe('Session', () => {
-    const createClient = (opts = {}) => new StreamrClient({
-        ...clientOptions,
-        ...opts,
-        autoConnect: false,
-        autoDisconnect: false,
-    })
+    const createClient = getCreateClient()
 
     describe('Token retrievals', () => {
         it('fails if trying to use apiKey', async () => {
@@ -23,25 +15,13 @@ describe('Session', () => {
         })
 
         it('gets the token using private key', async () => {
-            const token = await createClient({
-                auth: {
-                    privateKey: fakePrivateKey(),
-                },
-            }).session.getSessionToken()
+            const token = await createClient().session.getSessionToken()
             expect(token).toBeTruthy()
         })
 
         it('can handle multiple client instances', async () => {
-            const client1 = createClient({
-                auth: {
-                    privateKey: fakePrivateKey(),
-                },
-            })
-            const client2 = createClient({
-                auth: {
-                    privateKey: fakePrivateKey(),
-                },
-            })
+            const client1 = createClient()
+            const client2 = createClient()
             const token1 = await client1.session.getSessionToken()
             const token2 = await client2.session.getSessionToken()
             expect(token1).not.toEqual(token2)

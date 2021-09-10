@@ -4,28 +4,15 @@ import { ethers } from 'ethers'
 
 import { StreamrClient } from '../../src/StreamrClient'
 
-import clientOptions from './config'
-import { fakePrivateKey } from '../utils'
+import { getCreateClient } from '../utils'
 
 describe('LoginEndpoints', () => {
     let client: StreamrClient
 
-    const createClient = (opts: any = {}) => new StreamrClient({
-        ...clientOptions,
-        auth: {
-            privateKey: fakePrivateKey()
-        },
-        autoConnect: false,
-        autoDisconnect: false,
-        ...opts,
-    })
+    const createClient = getCreateClient()
 
     beforeAll(() => {
         client = createClient()
-    })
-
-    afterAll(async () => {
-        await client.destroy()
     })
 
     describe('Challenge generation', () => {

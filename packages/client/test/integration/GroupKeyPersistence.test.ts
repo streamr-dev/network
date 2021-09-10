@@ -1,10 +1,8 @@
-import { describeRepeats, fakePrivateKey, getPublishTestStreamMessages, addAfterFn, createTestStream } from '../utils'
+import { describeRepeats, getCreateClient, fakePrivateKey, getPublishTestStreamMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { StorageNode } from '../../src/StorageNode'
-
-import clientOptions from './config'
 
 const TIMEOUT = 20 * 1000
 
@@ -12,31 +10,8 @@ describeRepeats('Group Key Persistence', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    const addAfter = addAfterFn()
 
-    const createClient = (opts = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            // @ts-expect-error
-            disconnectDelay: 1,
-            publishAutoDisconnectDelay: 50,
-            maxRetries: 2,
-            ...opts,
-        })
-
-        addAfter(async () => {
-            c.debug('disconnecting after test >>')
-            await c.destroy()
-            c.debug('disconnecting after test <<')
-        })
-
-        return c
-    }
+    const createClient = getCreateClient()
 
     let publisherPrivateKey: string
     let subscriberPrivateKey: string

@@ -2,8 +2,8 @@ import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
+    clientOptions,
     describeRepeats,
-    fakePrivateKey,
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream
@@ -12,7 +12,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/Resends'
 import { StorageNode } from '../../src/StorageNode'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 
 /* eslint-disable no-await-in-loop */
@@ -29,23 +28,8 @@ describeRepeats('resends', () => {
     let waitForStorage: (...args: any[]) => Promise<void>
     let subscriber: Resend
 
-    const createClient = (opts: any = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            publishAutoDisconnectDelay: 1000,
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            ...opts,
-        })
-        return c
-    }
-
     beforeAll(async () => {
-        client = createClient()
+        client = new StreamrClient(clientOptions)
         subscriber = client.resends
 
         // eslint-disable-next-line require-atomic-updates
@@ -81,17 +65,16 @@ describeRepeats('resends', () => {
         onError = jest.fn()
     })
 
+    afterAll(async () => {
+        if (client) {
+            await client.destroy()
+        }
+    })
+
     afterEach(async () => {
         await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
-    })
-
-    afterAll(async () => {
-        if (client) {
-            client.debug('disconnecting after test')
-            await client.destroy()
-        }
     })
 
     it('throws error if bad stream id', async () => {

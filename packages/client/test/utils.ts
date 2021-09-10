@@ -5,19 +5,20 @@ import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { PublishRequest, StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
+import { startTracker, Tracker } from 'streamr-network'
 
+import { StreamrClient } from '../src/StreamrClient'
 import { counterId, CounterId, AggregatedError, Scaffold, instanceId } from '../src/utils'
 import { Debug, format } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { StreamProperties } from '../src/Stream'
 import clientOptions from '../src/ConfigTest'
-import { StreamrClient } from '../src/StreamrClient'
-
-import { startTracker, Tracker } from 'streamr-network'
 
 import Signal from '../src/utils/Signal'
 import { PublishMetadata } from '../src/Publisher'
 import { Pipeline } from '../src/utils/Pipeline'
+
+export { clientOptions }
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -167,6 +168,31 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
         id: createRelativeTestStreamId(module),
         ...props
     })
+}
+
+export const getCreateClient = (defaultOpts = {}) => {
+    const addAfter = addAfterFn()
+
+    return function createClient(opts = {}) {
+        const c = new StreamrClient({
+            ...clientOptions,
+            auth: {
+                privateKey: fakePrivateKey(),
+            },
+            ...defaultOpts,
+            ...opts,
+        })
+
+        addAfter(async () => {
+            await wait(0)
+            if (!c) { return }
+            c.debug('disconnecting after test >>')
+            await c.destroy()
+            c.debug('disconnecting after test <<')
+        })
+
+        return c
+    }
 }
 
 /**

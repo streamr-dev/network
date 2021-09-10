@@ -1,9 +1,8 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, getWaitForStorage, createTestStream } from '../utils'
+import { uid, getCreateClient, getWaitForStorage, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 
 const Msg = (opts?: any) => ({
@@ -25,33 +24,13 @@ describe('Sequencing', () => {
     let client: StreamrClient
     let stream: Stream
 
-    const createClient = (opts = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            ...opts,
-        })
-        return c
-    }
+    const createClient = getCreateClient()
 
     beforeEach(async () => {
         client = createClient()
         await client.connect()
 
         stream = await createTestStream(client, module)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('disconnecting after test')
-            await client.destroy()
-        }
     })
 
     it('should sequence in order', async () => {

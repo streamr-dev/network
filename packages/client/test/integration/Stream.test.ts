@@ -1,34 +1,19 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { getPublishTestMessages, fakePrivateKey, createTestStream } from '../utils'
+import { getPublishTestMessages, getCreateClient, createTestStream } from '../utils'
 import { StorageNode } from '../../src/StorageNode'
-
-import clientOptions from './config'
-
-const createClient = (opts = {}) => new StreamrClient({
-    ...clientOptions,
-    auth: {
-        privateKey: fakePrivateKey(),
-    },
-    autoConnect: false,
-    autoDisconnect: false,
-    ...opts,
-})
 
 describe('Stream', () => {
     let client: StreamrClient
     let stream: Stream
 
+    const createClient = getCreateClient()
     beforeEach(async () => {
         client = createClient()
         await client.connect()
 
         stream = await createTestStream(client, module)
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
-    })
-
-    afterEach(async () => {
-        await client.destroy()
     })
 
     describe('detectFields()', () => {

@@ -8,6 +8,7 @@ import {
     uid,
     Msg,
     getPublishTestMessages,
+    getCreateClient,
     getPublishTestStreamMessages,
     getWaitForStorage,
     publishManyGenerator,
@@ -41,19 +42,7 @@ describeRepeats('StreamrClient', () => {
     let onError = jest.fn()
     let client: StreamrClient
 
-    const createClient = (opts: any = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            ...opts,
-        })
-        return c
-    }
+    const createClient = getCreateClient()
 
     beforeEach(() => {
         errors = []
@@ -65,14 +54,6 @@ describeRepeats('StreamrClient', () => {
         await wait(0)
         // ensure no unexpected errors
         expect(errors).toHaveLength(expectErrors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('destroying after test')
-            await client.destroy()
-        }
     })
 
     let stream: Stream
@@ -113,15 +94,6 @@ describeRepeats('StreamrClient', () => {
         await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-
-        if (client) {
-            client.debug('destroying after test')
-            await client.destroy()
-        }
     })
 
     it('is stream publisher', async () => {
