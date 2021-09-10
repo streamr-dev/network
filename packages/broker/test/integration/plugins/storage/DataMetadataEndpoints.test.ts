@@ -57,7 +57,7 @@ describe('DataMetadataEndpoints', () => {
             trackers: [trackerInfo]
         })
         client1 = createClient(wsPort1)
-        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
+        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     }, 10 * 1000)
 

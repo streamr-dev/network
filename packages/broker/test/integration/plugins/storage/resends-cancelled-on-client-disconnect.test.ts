@@ -83,11 +83,11 @@ describe('resend cancellation', () => {
             id: 'networkNode',
             trackers: [tracker.getUrl()],
         })
-        const storageNodeAddress = Wallet.createRandom().address
+        const storageNodeAccount = Wallet.createRandom()
         const storageNodeRegistry = StorageNodeRegistry.createInstance(
             { streamrUrl: `http://${STREAMR_DOCKER_DEV_HOST}`} as any,
             [{
-                address: storageNodeAddress,
+                address: storageNodeAccount.address,
                 url: `http://127.0.0.1:${mockServerPort}`
             }]
         )
@@ -103,9 +103,9 @@ describe('resend cancellation', () => {
             storageNodeRegistry,
             `http://${STREAMR_DOCKER_DEV_HOST}`
         )
-        const assignmentEventManager = new StorageAssignmentEventManager(wsPort, Wallet.createRandom())
+        const assignmentEventManager = new StorageAssignmentEventManager(wsPort, Wallet.createRandom(), storageNodeAccount)
         await assignmentEventManager.createStream()
-        await assignmentEventManager.addStreamToStorageNode(freshStream.id, storageNodeAddress, client)
+        await assignmentEventManager.addStreamToStorageNode(freshStream.id, storageNodeAccount.address, client)
     })
 
     afterEach(async () => {
