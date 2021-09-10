@@ -425,9 +425,9 @@ export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
  */
 
 export function pLimitFn<ArgsType extends unknown[], ReturnType>(
-    fn: (...args: ArgsType) => ReturnType,
+    fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>,
     limit = 1
-) {
+): ((...args: ArgsType) => Promise<ReturnType>) & { clear(): void } {
     const queue = pLimit(limit)
     return Object.assign((...args: ArgsType) => queue(() => fn(...args)), {
         clear() {
@@ -442,8 +442,8 @@ export function pLimitFn<ArgsType extends unknown[], ReturnType>(
  */
 
 export function pOne<ArgsType extends unknown[], ReturnType>(
-    fn: (...args: ArgsType) => ReturnType
-): (...args: ArgsType) => Promise<ReturnType> {
+    fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>,
+): ((...args: ArgsType) => Promise<ReturnType>) {
     const once = pOnce(fn)
     return async (...args: ArgsType): Promise<ReturnType> => {
         try {

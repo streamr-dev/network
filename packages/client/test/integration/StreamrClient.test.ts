@@ -13,7 +13,6 @@ import {
     getWaitForStorage,
     publishManyGenerator,
     describeRepeats,
-    fakePrivateKey,
     createRelativeTestStreamId
 } from '../utils'
 
@@ -21,9 +20,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
-// import Subscription from '../../src/brubeck/Subscription'
 import { StorageNode } from '../../src/StorageNode'
 
 const { StreamMessage } = MessageLayer
@@ -38,7 +35,6 @@ describeRepeats('StreamrClient', () => {
         errs.push(err)
     })
 
-    // const trackerPort = useTracker()
     let onError = jest.fn()
     let client: StreamrClient
 
@@ -57,7 +53,6 @@ describeRepeats('StreamrClient', () => {
     })
 
     let stream: Stream
-    // let waitForStorage: (...args: any[]) => Promise<void>
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     // These tests will take time, especially on Travis
