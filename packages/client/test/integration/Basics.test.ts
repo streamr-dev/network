@@ -3,7 +3,6 @@ import { wait } from 'streamr-test-utils'
 import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 
 describeRepeats('StreamrClient', () => {

@@ -1,5 +1,3 @@
-import { wait } from 'streamr-test-utils'
-
 import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
