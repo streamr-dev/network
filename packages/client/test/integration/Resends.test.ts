@@ -25,7 +25,6 @@ describeRepeats('resends', () => {
     let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
-    let published: StreamMessage[]
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
     let subscriber: Resend
@@ -177,6 +176,7 @@ describeRepeats('resends', () => {
     })
 
     describe('with resend data', () => {
+        let published: StreamMessage[]
         beforeEach(async () => {
             if (published && published.length) { return }
             // eslint-disable-next-line require-atomic-updates
