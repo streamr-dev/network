@@ -85,7 +85,7 @@ describe('broker: end-to-end', () => {
         client3 = createClient(wsPort3, user2.privateKey, {
             storageNode: storageNodeRegistry[0]
         })
-        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
+        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
 
         // Set up stream

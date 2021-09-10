@@ -159,17 +159,24 @@ export class StorageConfig {
     }
 
     onAssignmentEvent(content: { storageNode: string, stream: { id: string, partitions: number }, event: string }) {
-        if (content.storageNode != null && content.storageNode.toLowerCase() == this.clusterId.toLowerCase()) {
+        if (content.storageNode && content.storageNode.toLowerCase() == this.clusterId.toLowerCase()) {
+            logger.trace('Received storage assignment message: %o', content)
             const keys = new Set(
                 getKeysFromStream(content.stream.id, content.stream.partitions)
                     .filter ((key: StreamKey) => this.belongsToMeInCluster(key))
             )
+
+            logger.trace('Adding %d of %d partitions in stream %s to this instance', keys.size, content.stream.partitions, content.stream.id)
 
             if (content.event === 'STREAM_ADDED') {
                 this._addStreams(keys)
             } else if (content.event === 'STREAM_REMOVED') {
                 this._removeStreams(keys)
             }
+        } else if (!content.storageNode) {
+            logger.error('Received storage assignment message with no storageNode field present: %o', content)
+        } else {
+            logger.trace('Received storage assignment message for another storage node: %o', content)
         }
     }
 

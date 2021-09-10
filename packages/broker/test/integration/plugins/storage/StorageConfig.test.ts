@@ -74,7 +74,7 @@ describe('StorageConfig', () => {
             enableCassandra: false
         })
         client = createClient(WS_PORT, publisherAccount.privateKey)
-        assignmentEventManager = new StorageAssignmentEventManager(WS_PORT, engineAndEditorAccount)
+        assignmentEventManager = new StorageAssignmentEventManager(WS_PORT, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     })
 
