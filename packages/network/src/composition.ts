@@ -4,7 +4,7 @@ import { MetricsContext } from './helpers/MetricsContext'
 import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
-import { Tracker } from './logic/Tracker'
+import { TopologyStabilizationOptions, Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
 import { NodeToTracker } from './protocol/NodeToTracker'
@@ -45,7 +45,8 @@ export interface TrackerOptions extends AbstractNodeOptions {
     attachHttpEndpoints?: boolean
     maxNeighborsPerNode?: number
     privateKeyFileName?: string
-    certFileName?: string
+    certFileName?: string,
+    topologyStabilization?: TopologyStabilizationOptions
 }
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
@@ -56,7 +57,8 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
     stunUrls?: string[],
-    rttUpdateTimeout?: number
+    rttUpdateTimeout?: number,
+    trackerConnectionMaintenanceInterval?: number
 }
 
 export const startTracker = async ({
@@ -71,6 +73,7 @@ export const startTracker = async ({
     trackerPingInterval,
     privateKeyFileName,
     certFileName,
+    topologyStabilization
 }: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
     const httpServer = await startHttpServer(host, port, privateKeyFileName, certFileName)
@@ -83,6 +86,7 @@ export const startTracker = async ({
         },
         metricsContext,
         maxNeighborsPerNode,
+        topologyStabilization
     })
 
     if (attachHttpEndpoints) {
@@ -105,7 +109,8 @@ export const createNetworkNode = ({
     rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
-    stunUrls = ['stun:stun.l.google.com:19302']
+    stunUrls = ['stun:stun.l.google.com:19302'],
+    trackerConnectionMaintenanceInterval
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, trackerPingInterval)
@@ -135,6 +140,7 @@ export const createNetworkNode = ({
         },
         metricsContext,
         disconnectionWaitTime,
-        rttUpdateTimeout
+        rttUpdateTimeout,
+        trackerConnectionMaintenanceInterval
     })
 }

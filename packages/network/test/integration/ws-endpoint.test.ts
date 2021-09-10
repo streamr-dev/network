@@ -55,7 +55,7 @@ describe('ws-endpoint', () => {
 
     it('server and client form correct peerInfo on connection', async () => {
         const client = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
-        const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'))
+        const server = await startServerWsEndpoint('127.0.0.1', 30697, PeerInfo.newNode('server'))
 
         const e1 = waitForEvent(client, Event.PEER_CONNECTED)
         const e2 = waitForEvent(server, Event.PEER_CONNECTED)
