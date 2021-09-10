@@ -37,11 +37,6 @@ const getKeysFromStream = (streamId: string, partitions: number): StreamKey[] =>
     return keys
 }
 
-const belongsToMeInCluster = (key: StreamKey, clusterSize: number, myIndexInCluster: number) => {
-    const hashedIndex = Protocol.Utils.keyToArrayIndex(clusterSize, key.toString())
-    return hashedIndex === myIndexInCluster
-}
-
 export class StorageConfig {
 
     static ASSIGNMENT_EVENT_STREAM_ID_SUFFIX = '/storage-node-assignments'
@@ -110,7 +105,7 @@ export class StorageConfig {
         const streamKeys = new Set<StreamKey>(
             json.flatMap((stream: { id: string, partitions: number }) => ([
                 ...getKeysFromStream(stream.id, stream.partitions)
-            ])).filter ((key: StreamKey) => belongsToMeInCluster(key, this.clusterSize, this.myIndexInCluster))
+            ])).filter ((key: StreamKey) => this.belongsToMeInCluster(key))
         )
         this._setStreams(streamKeys)
     }
@@ -145,6 +140,11 @@ export class StorageConfig {
         })
     }
 
+    private belongsToMeInCluster(key: StreamKey): boolean {
+        const hashedIndex = Protocol.Utils.keyToArrayIndex(this.clusterSize, key.toString())
+        return hashedIndex === this.myIndexInCluster
+    }
+
     startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: Protocol.StreamMessage) => void {
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         const messageListener = (msg: Protocol.StreamMessage) => {
@@ -162,7 +162,7 @@ export class StorageConfig {
         if (content.storageNode != null && content.storageNode.toLowerCase() == this.clusterId.toLowerCase()) {
             const keys = new Set(
                 getKeysFromStream(content.stream.id, content.stream.partitions)
-                    .filter ((key: StreamKey) => belongsToMeInCluster(key, this.clusterSize, this.myIndexInCluster))
+                    .filter ((key: StreamKey) => this.belongsToMeInCluster(key))
             )
 
             if (content.event === 'STREAM_ADDED') {
