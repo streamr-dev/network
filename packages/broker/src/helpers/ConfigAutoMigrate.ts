@@ -100,7 +100,7 @@ export const testnet2AutoMigrate = (config: any, configFilePath: string): Config
             console.info('Backing up testnet1 config to ' + BACKUP_OLD_CONFIG_PATH)
             fs.writeFileSync(BACKUP_OLD_CONFIG_PATH, JSON.stringify(config, null, 2))
 
-            config['network']['trackers'] = MigrateTrackerRegistry(config['network']['trackers'] as TrackerRegistryItem[])
+            config['network']['trackers'] = migrateTrackerRegistry(config['network']['trackers'] as TrackerRegistryItem[])
             delete config['plugins']['testnetMiner']['rewardStreamId']
             config['plugins']['testnetMiner']['rewardStreamIds'] = TESTNET2_STREAM_IDS
             validateConfig(config.plugins.testnetMiner, schemaTestnet2)
