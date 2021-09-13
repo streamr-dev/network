@@ -85,6 +85,7 @@ export const testnet2AutoMigrate = (config: any, configFilePath: string): Config
     if (config.plugins.testnetMiner === undefined) {
         return config
     }
+    const backup = JSON.stringify(config, null, 2)
     try {
         validateConfig(config.plugins.testnetMiner, schemaTestnet2)
         return config
@@ -102,7 +103,7 @@ export const testnet2AutoMigrate = (config: any, configFilePath: string): Config
             const oldFileName = path.basename(configFilePath)
             const backupFilePath = path.join(directory, `testnet1-backup-${oldFileName}`)
             console.info('Backing up testnet1 config to ' + backupFilePath)
-            fs.writeFileSync(backupFilePath, JSON.stringify(config, null, 2))
+            fs.writeFileSync(backupFilePath, backup)
 
             config['network']['trackers'] = migrateTrackerRegistry(config['network']['trackers'] as TrackerRegistryItem[])
             delete config['plugins']['testnetMiner']['rewardStreamId']
