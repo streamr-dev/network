@@ -7,8 +7,6 @@ import schema from './config.schema.json'
 import schemaTestnet1 from '../plugins/testnetMiner/config.schema.testnet1.json'
 import schemaTestnet2 from '../plugins/testnetMiner/config.schema.json'
 
-const BACKUP_OLD_CONFIG_PATH = path.join(os.homedir(), '/.streamr/broker-config-testnet1-backup.json')
-
 const TESTNET2_TRACKER_REGISTRY = [
     {
         "id": "0xFBB6066c44bc8132bA794C73f58F391273E3bdA1",
@@ -101,8 +99,12 @@ export const testnet2AutoMigrate = (config: any, configFilePath: string): Config
             }
             validateConfig(config.plugins.testnetMiner, schemaTestnet1)
 
-            console.info('Backing up testnet1 config to ' + BACKUP_OLD_CONFIG_PATH)
-            fs.writeFileSync(BACKUP_OLD_CONFIG_PATH, JSON.stringify(config, null, 2))
+            const directory = path.dirname(configFilePath)
+            const oldFileName = path.basename(configFilePath)
+            const backupFilePath = path.join(directory, `testnet1-backup-${oldFileName}`)
+            console.info('Backing up testnet1 config to ' + backupFilePath)
+
+            fs.writeFileSync(backupFilePath, JSON.stringify(config, null, 2))
 
             config['network']['trackers'] = migrateTrackerRegistry(config['network']['trackers'] as TrackerRegistryItem[])
             delete config['plugins']['testnetMiner']['rewardStreamId']
