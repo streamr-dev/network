@@ -320,7 +320,7 @@ export class Node extends EventEmitter {
                 subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
-                this.logger.warn('failed to subscribe (or connect) to node, reason: %s', res.reason)
+                this.logger.info('failed to subscribe (or connect) to node, reason: %s', res.reason)
             }
         })
         if (!reattempt || failedInstructions) {
