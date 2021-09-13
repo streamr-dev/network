@@ -93,4 +93,21 @@ describe('ws-endpoint', () => {
             expect(close[1]).toContain('Handshake not received from connection behind UUID')
         })
     })
+
+    describe('Duplicate connections from same nodeId are closed', () => {
+        it('Duplicate connection is closed', async () => {
+            const client1 = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
+            const client2 = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
+
+            const server = await startServerWsEndpoint('127.0.0.1', 38482, PeerInfo.newNode('server'))
+
+            await client1.connect(server.getUrl(), PeerInfo.newTracker('server'))
+            await client2.connect(server.getUrl(), PeerInfo.newTracker('server'))
+            await waitForEvent(client2, Event.PEER_DISCONNECTED)
+
+            await client1.stop()
+            await client2.stop()
+            await server.stop()
+        })
+    })
 })
