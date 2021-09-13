@@ -49,6 +49,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly bufferThresholdHigh: number
     private readonly maxMessageSize
 
+    private statusReportTimer?: NodeJS.Timeout
+
     constructor(
         peerInfo: PeerInfo,
         stunUrls: string[],
@@ -117,6 +119,25 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             .addQueriedMetric('messageQueueSize', () => {
                 return Object.values(this.connections).reduce((total, c) => total + c.getQueueSize(), 0)
             })
+
+        this.startConnectionStatusReport()
+    }
+
+    private startConnectionStatusReport(): void {
+        const STATUS_REPORT_INTERVAL_MS = 5 * 60 * 1000
+        this.statusReportTimer = setInterval(() => {
+            let connectedPeerCount = 0
+            const pendingPeerIds = []
+            for (const peerId of Object.keys(this.connections)) {
+                const lastState = this.connections[peerId].getLastState()
+                if (lastState === 'open') {
+                    connectedPeerCount += 1
+                } else if (lastState === 'connecting') {
+                    pendingPeerIds.push(peerId)
+                }
+            }
+            this.logger.info(`Successfully connected to ${connectedPeerCount} peers. Still trying to connect to the following peers: [${pendingPeerIds.join(', ')}]`)
+        }, STATUS_REPORT_INTERVAL_MS)
     }
 
     private createConnection(
@@ -431,6 +452,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.rtcSignaller.setIceCandidateListener(() => {})
         this.rtcSignaller.setErrorListener(() => {})
         this.rtcSignaller.setConnectListener(() => {})
+        clearInterval(this.statusReportTimer!)
         this.removeAllListeners()
         Object.values(connections).forEach((connection) => connection.close())
         Object.values(messageQueues).forEach((queue) => queue.clear())
