@@ -13,7 +13,7 @@ export class TrackerConnector {
     private readonly logger: Logger
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
-    private connectionErrors: Map<TrackerId,boolean>
+    private unconnectables: Set<TrackerId>
 
     constructor(getStreams: () => ReadonlyArray<StreamIdAndPartition>, nodeToTracker: NodeToTracker, trackerRegistry: Utils.TrackerRegistry<TrackerInfo>, logger: Logger, maintenanceInterval: number) {
         this.getStreams = getStreams
@@ -21,7 +21,7 @@ export class TrackerConnector {
         this.trackerRegistry = trackerRegistry
         this.logger = logger
         this.maintenanceInterval = maintenanceInterval
-        this.connectionErrors = new Map()
+        this.unconnectables = new Set()
     }
 
     maintainConnections(): void {
@@ -33,12 +33,12 @@ export class TrackerConnector {
         this.trackerRegistry.getAllTrackers().forEach(({ id, ws }) => {
             if (activeTrackers.has(id)) {
                 this.nodeToTracker.connectToTracker(ws, PeerInfo.newTracker(id))
-                    .then(() => this.connectionErrors.delete(id))
+                    .then(() => this.unconnectables.delete(id))
                     .catch((err) => {
-                        if (this.connectionErrors.get(id) === undefined) {
+                        if (!this.unconnectables.has(id)) {
                             // TODO we could also store the previous error and check that the current error is the same?
                             // -> now it doesn't log anything if the connection error reason changes 
-                            this.connectionErrors.set(id, true)
+                            this.unconnectables.add(id)
                             this.logger.warn('could not connect to tracker %s, reason: %j', ws, err)
                         }
                     })
