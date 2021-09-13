@@ -1,14 +1,13 @@
 import WebSocket from 'ws'
-import { PeerInfo } from '../PeerInfo'
+import { PeerId, PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { AbstractWsConnection, ReadyState } from "./AbstractWsConnection"
 import { IMessageEvent, w3cwebsocket } from "websocket"
 
-export type PeerId = string
 export type ServerUrl = string
 export type SupportedWs = WebSocket | w3cwebsocket
-export type HandshakeValues = { uuid: string, peerId: string }
+export type HandshakeValues = { uuid: string, peerId: PeerId }
 
 export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
     createConnection(socket: SupportedWs, peerInfo: PeerInfo): C
@@ -18,7 +17,7 @@ export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
 export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> extends AbstractWsEndpoint<C> {
     protected readonly connectionsByServerUrl: Map<ServerUrl, C>
     protected readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
-    protected readonly pendingConnections: Map<ServerUrl, Promise<string>>
+    protected readonly pendingConnections: Map<ServerUrl, Promise<PeerId>>
     protected killTimeout?: NodeJS.Timeout
 
     constructor(
@@ -115,7 +114,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         serverPeerInfo: PeerInfo,
         serverUrl: string,
         message: IMessageEvent | string | Buffer | Buffer[],
-        resolve: (value: string | PromiseLike<string>) => void
+        resolve: (value: PeerId | PromiseLike<string>) => void
     ): void {
         try {
             const { uuid, peerId } = this.doHandshakeParse(message)
@@ -142,7 +141,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         reject(reason)
     }
 
-    protected ongoingConnectionError(serverPeerId: string, error: Error, connection: AbstractWsConnection): void {
+    protected ongoingConnectionError(serverPeerId: PeerId, error: Error, connection: AbstractWsConnection): void {
         this.metrics.record('webSocketError', 1)
         this.logger.trace('Connection to %s failed, error: %o', serverPeerId, error)
         connection.terminate()
@@ -151,7 +150,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     /**
      * Send a handshake response back to the server
      */
-    protected abstract doHandshakeResponse(uuid: string, peerId: string, ws: SupportedWs): void
+    protected abstract doHandshakeResponse(uuid: string, peerId: PeerId, ws: SupportedWs): void
 
     /**
      * Parse handshake message

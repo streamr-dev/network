@@ -4,10 +4,10 @@ import { MetricsContext } from './helpers/MetricsContext'
 import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
-import { Tracker } from './logic/Tracker'
+import { TopologyStabilizationOptions, Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
-import { TrackerNode } from './protocol/TrackerNode'
+import { NodeToTracker } from './protocol/NodeToTracker'
 import { RtcSignaller } from './logic/RtcSignaller'
 import { NodeToNode } from './protocol/NodeToNode'
 import { NetworkNode } from './NetworkNode'
@@ -17,6 +17,7 @@ import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersi
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import NodeWebRtcConnectionFactory from "./connection/NodeWebRtcConnection"
+import { NodeId } from './logic/Node'
 
 require('setimmediate')
 
@@ -31,7 +32,7 @@ export {
 }
 
 export interface AbstractNodeOptions {
-    id?: string
+    id?: NodeId
     name?: string
     location?: Location | null
     metricsContext?: MetricsContext
@@ -44,7 +45,8 @@ export interface TrackerOptions extends AbstractNodeOptions {
     attachHttpEndpoints?: boolean
     maxNeighborsPerNode?: number
     privateKeyFileName?: string
-    certFileName?: string
+    certFileName?: string,
+    topologyStabilization?: TopologyStabilizationOptions
 }
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
@@ -54,7 +56,9 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
-    stunUrls?: string[]
+    stunUrls?: string[],
+    rttUpdateTimeout?: number,
+    trackerConnectionMaintenanceInterval?: number
 }
 
 export const startTracker = async ({
@@ -69,6 +73,7 @@ export const startTracker = async ({
     trackerPingInterval,
     privateKeyFileName,
     certFileName,
+    topologyStabilization
 }: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
     const httpServer = await startHttpServer(host, port, privateKeyFileName, certFileName)
@@ -81,6 +86,7 @@ export const startTracker = async ({
         },
         metricsContext,
         maxNeighborsPerNode,
+        topologyStabilization
     })
 
     if (attachHttpEndpoints) {
@@ -100,15 +106,17 @@ export const createNetworkNode = ({
     trackerPingInterval,
     disconnectionWaitTime,
     newWebrtcConnectionTimeout,
+    rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
-    stunUrls = ['stun:stun.l.google.com:19302']
+    stunUrls = ['stun:stun.l.google.com:19302'],
+    trackerConnectionMaintenanceInterval
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, trackerPingInterval)
-    const trackerNode = new TrackerNode(endpoint)
+    const nodeToTracker = new NodeToTracker(endpoint)
 
-    const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
+    const webRtcSignaller = new RtcSignaller(peerInfo, nodeToTracker)
     const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
     const nodeToNode = new NodeToNode(new WebRtcEndpoint(
         peerInfo,
@@ -127,10 +135,12 @@ export const createNetworkNode = ({
         peerInfo,
         trackers,
         protocols: {
-            trackerNode,
+            nodeToTracker,
             nodeToNode
         },
         metricsContext,
-        disconnectionWaitTime
+        disconnectionWaitTime,
+        rttUpdateTimeout,
+        trackerConnectionMaintenanceInterval
     })
 }

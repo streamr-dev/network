@@ -5,7 +5,7 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/composition'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { TrackerNode } from '../../src/protocol/TrackerNode'
+import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { wait } from 'streamr-test-utils'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
@@ -13,8 +13,8 @@ import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnecti
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
-    let trackerNode1: TrackerNode
-    let trackerNode2: TrackerNode
+    let nodeToTracker1: NodeToTracker
+    let nodeToTracker2: NodeToTracker
     let ep1: WebRtcEndpoint
     let ep2: WebRtcEndpoint
 
@@ -28,19 +28,19 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         const peerInfo1 = PeerInfo.newNode('ep1')
         const peerInfo2 = PeerInfo.newNode('ep2')
 
-        // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
+        // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
         const wsEp1 = new NodeClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
         const wsEp2 = new NodeClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
-        trackerNode1 = new TrackerNode(wsEp1)
-        trackerNode2 = new TrackerNode(wsEp2)
-        await trackerNode1.connectToTracker(tracker.getUrl(), PeerInfo.newTracker('tracker'))
-        await trackerNode2.connectToTracker(tracker.getUrl(), PeerInfo.newTracker('tracker'))
+        nodeToTracker1 = new NodeToTracker(wsEp1)
+        nodeToTracker2 = new NodeToTracker(wsEp2)
+        await nodeToTracker1.connectToTracker(tracker.getUrl(), PeerInfo.newTracker('tracker'))
+        await nodeToTracker2.connectToTracker(tracker.getUrl(), PeerInfo.newTracker('tracker'))
 
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(
             peerInfo1,
             ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo1, trackerNode1),
+            new RtcSignaller(peerInfo1, nodeToTracker1),
             new MetricsContext('ep1'),
             new NegotiatedProtocolVersions(peerInfo1),
             NodeWebRtcConnectionFactory
@@ -48,7 +48,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         ep2 = new WebRtcEndpoint(
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo2, trackerNode2),
+            new RtcSignaller(peerInfo2, nodeToTracker2),
             new MetricsContext('ep'),
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory
@@ -59,8 +59,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
     afterEach(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            trackerNode1.stop(),
-            trackerNode2.stop(),
+            nodeToTracker1.stop(),
+            nodeToTracker2.stop(),
             ep1.stop(),
             ep2.stop()
         ])

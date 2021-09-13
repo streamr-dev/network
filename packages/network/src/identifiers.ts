@@ -1,4 +1,5 @@
 import { TrackerLayer, SmartContractRecord } from 'streamr-client-protocol'
+import { NodeId } from './logic/Node'
 import { RtcSubTypes } from './logic/RtcMessage'
 
 /**
@@ -50,17 +51,15 @@ export interface Location {
     city: string | null
 }
 
-export interface StatusStreams {
-    [key: string]: { // StreamKey
-        inboundNodes: string[]
-        outboundNodes: string[]
-        counter: number
-    }
-}
+export type StatusStreams = Record<StreamKey, {
+    inboundNodes: NodeId[]
+    outboundNodes: NodeId[]
+    counter: number
+}>
 
 export interface Status {
     streams: StatusStreams
-    rtts: Rtts
+    rtts: Rtts | null
     location: Location
     started: string
     singleStream: boolean // indicate whether this is a status update for only a single stream
@@ -107,7 +106,7 @@ export type RelayMessage = (
     ) & TrackerLayer.RelayMessage
 
 export interface RtcErrorMessage {
-    targetNode: string
+    targetNode: NodeId
     errorCode: string
 }
 

@@ -22,9 +22,9 @@ const logger = new Logger(module)
 
 export class MetricsPublisher {
 
-    nodeAddress: string
-    client: StreamrClient
-    storageNodeAddress: string
+    private readonly nodeAddress: string
+    private readonly client: StreamrClient
+    private readonly storageNodeAddress: string
 
     constructor(nodeAddress: string, clientOptions: ClientOptions) {
         this.nodeAddress = nodeAddress
@@ -58,39 +58,41 @@ export class MetricsPublisher {
         const streamId = this.getStreamId(periodLength)
         try {
             await this.client.publish(streamId, sample)
-        } catch (e) {
+        } catch (e: any) {
             logger.warn(`Unable to publish NodeMetrics: ${e.message}`)
         }
     }
 
     async ensureStreamsCreated() {
-        await Promise.all(Object.keys(STREAM_ID_SUFFIXES).map((periodLength: any) => this.ensureStreamCreated(periodLength)))
+        await Promise.all(Object.keys(STREAM_ID_SUFFIXES).map((periodLengthAsString: string) => this.ensureStreamCreated(Number(periodLengthAsString))))
     }
 
     // TODO simplify error handling?
-    private async ensureStreamCreated(periodLegth: number): Promise<string> {
+    private async ensureStreamCreated(periodLength: number): Promise<string> {
         const stream = await this.client.getOrCreateStream({
-            id: this.getStreamId(periodLegth)
+            id: this.getStreamId(periodLength)
         })
-        // TODO: pretify this error handler
-        // https://linear.app/streamr/issue/BACK-155/assign-a-stream-to-a-storage-node-when-it-has-already-been-assigned
-        try {
-            await stream.addToStorageNode(this.storageNodeAddress)
-        } catch (e) {
-            if (!e.body) { throw e }
-            let parsedBody
-            try {
-                parsedBody = JSON.parse(e.body)
-            } catch (jsonError) {
-                throw e // original error, not parsing one
-            }
-            // expected error when re-adding storage node
-            if (parsedBody.code !== 'DUPLICATE_NOT_ALLOWED') {
-                throw e
-            }
-        }
         await stream.grantPermission('stream_get' as StreamOperation, undefined)
         await stream.grantPermission('stream_subscribe' as StreamOperation, undefined)
+        if (periodLength !== PERIOD_LENGTHS.FIVE_SECONDS) {
+            // TODO: pretify this error handler
+            // https://linear.app/streamr/issue/BACK-155/assign-a-stream-to-a-storage-node-when-it-has-already-been-assigned
+            try {
+                await stream.addToStorageNode(this.storageNodeAddress)
+            } catch (e: any) {
+                if (!e.body) { throw e }
+                let parsedBody
+                try {
+                    parsedBody = JSON.parse(e.body)
+                } catch (jsonError) {
+                    throw e // original error, not parsing one
+                }
+                // expected error when re-adding storage node
+                if (parsedBody.code !== 'DUPLICATE_NOT_ALLOWED') {
+                    throw e
+                }
+            }
+        }
         return stream.id
     }
 
