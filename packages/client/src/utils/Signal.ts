@@ -1,5 +1,4 @@
 import { pOnce, pLimitFn, pOne } from './index'
-import AggregatedError from './AggregatedError'
 
 type SignalListener<T> = (t: T) => (unknown | Promise<unknown>)
 type SignalListenerWrap<T> = SignalListener<T> & {
@@ -7,11 +6,12 @@ type SignalListenerWrap<T> = SignalListener<T> & {
 }
 
 export enum TRIGGER_TYPE {
-  ONCE = 'ONCE',
-  ONE = 'ONE',
-  QUEUE = 'QUEUE',
-  PARALLEL = 'PARALLEL',
+    ONCE = 'ONCE',
+    ONE = 'ONE',
+    QUEUE = 'QUEUE',
+    PARALLEL = 'PARALLEL',
 }
+
 /**
  * Like an event emitter, but for a single event.  Listeners are executed
  * in-order, in an async sequence.  Any errors in listerns errors will be
@@ -105,7 +105,9 @@ export default class Signal<ValueType = void> {
     lastValue?: ValueType
     triggerCountValue = 0
 
-    constructor(private triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL) {
+    constructor(
+        private triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL
+    ) {
         switch (triggerType) {
             case TRIGGER_TYPE.ONCE: {
                 this.trigger = pOnce(this.trigger)
@@ -252,28 +254,21 @@ export default class Signal<ValueType = void> {
 
         this.triggerCountValue += 1
 
-        this.lastValue = value
+        // capture listeners
         const tasks = this.listeners.slice()
         if (this.triggerType === TRIGGER_TYPE.ONCE) {
-            // removes all listeners
+            this.lastValue = value
+            // remove all listeners
             this.end(this.lastValue!)
         }
 
         if (!tasks.length) { return }
-        let error: Error | undefined
-        await tasks.reduce(async (prev, task) => {
-            return prev.then(async () => {
-                // eslint-disable-next-line promise/always-return
-                try {
-                    await task(value)
-                } catch (err) {
-                    error = AggregatedError.from(error, err)
-                }
-            })
-        }, Promise.resolve())
 
-        if (error) {
-            throw error
-        }
+        // execute tasks in sequence
+        await tasks.reduce(async (prev, task) => {
+            // eslint-disable-next-line promise/always-return
+            await prev
+            await task(value)
+        }, Promise.resolve())
     }
 }

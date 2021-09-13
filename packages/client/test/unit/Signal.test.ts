@@ -38,7 +38,8 @@ describe('Signal', () => {
         const triggerTask = signal.trigger()
         triggerTask.catch(() => {})
         expect(onSignal).toHaveBeenCalledTimes(0)
-        await wait(0)
+        // one tick
+        await Promise.resolve()
         expect(onSignal).toHaveBeenCalledTimes(1)
         await triggerTask
         expect(onSignal).toHaveBeenCalledTimes(1)
@@ -101,6 +102,69 @@ describe('Signal', () => {
         expect(results).toEqual(expectedResults)
     })
 
+    it('throws trigger if handler errors', async () => {
+        const err = new Error('expected error')
+        const onSignal = jest.fn(() => {
+            throw err
+        })
+        const signal = Signal.create()
+        signal(onSignal)
+        await expect(async () => {
+            await signal.trigger()
+        }).rejects.toThrow(err)
+        expect(onSignal).toHaveBeenCalledTimes(1)
+    })
+
+    it('stops executing handlers if handler errors', async () => {
+        const handler1 = jest.fn()
+        const err = new Error('expected error')
+        const handler2 = jest.fn(() => {
+            throw err
+        })
+        const handler3 = jest.fn()
+        const signal = Signal.create()
+        signal(handler1)
+        signal(handler2)
+        signal(handler3)
+        await expect(async () => {
+            await signal.trigger()
+        }).rejects.toThrow(err)
+        expect(handler1).toHaveBeenCalledTimes(1)
+        expect(handler2).toHaveBeenCalledTimes(1)
+        expect(handler3).toHaveBeenCalledTimes(0)
+    })
+
+    it('can trigger again after error', async () => {
+        const handler1 = jest.fn()
+        const err = new Error('expected error')
+        let count = 0
+        const handler2 = jest.fn(() => {
+            count += 1
+            if (count === 1) {
+                throw err
+            }
+        })
+        const handler3 = jest.fn()
+        const signal = Signal.create()
+        signal(handler1)
+        signal(handler2)
+        signal(handler3)
+        await expect(async () => {
+            await signal.trigger()
+        }).rejects.toThrow(err)
+        expect(handler1).toHaveBeenCalledTimes(1)
+        expect(handler2).toHaveBeenCalledTimes(1)
+        expect(handler3).toHaveBeenCalledTimes(0)
+        await signal.trigger()
+        expect(handler1).toHaveBeenCalledTimes(2)
+        expect(handler2).toHaveBeenCalledTimes(2)
+        expect(handler3).toHaveBeenCalledTimes(1)
+        await signal.trigger()
+        expect(handler1).toHaveBeenCalledTimes(3)
+        expect(handler2).toHaveBeenCalledTimes(3)
+        expect(handler3).toHaveBeenCalledTimes(2)
+    })
+
     describe('Signal.queue', () => {
         it('waits until listeners finished before triggering again', async () => {
             const onSignalStarted = jest.fn()
@@ -117,7 +181,9 @@ describe('Signal', () => {
             const triggerTask2 = signal.trigger()
             triggerTask2.catch(() => {})
             expect(onSignalStarted).toHaveBeenCalledTimes(0)
-            await wait(0)
+            // queue takes 2 ticks
+            await Promise.resolve()
+            await Promise.resolve()
             expect(onSignalStarted).toHaveBeenCalledTimes(1)
             const triggerTask3 = signal.trigger()
             triggerTask3.catch(() => {})
@@ -171,11 +237,11 @@ describe('Signal', () => {
             const triggerTask2 = signal.trigger()
             triggerTask2.catch(() => {})
             expect(onSignalStarted).toHaveBeenCalledTimes(0)
-            await wait(0)
+            await Promise.resolve()
             expect(onSignalStarted).toHaveBeenCalledTimes(2)
             const triggerTask3 = signal.trigger()
             triggerTask3.catch(() => {})
-            await wait(0)
+            await Promise.resolve()
             expect(onSignalStarted).toHaveBeenCalledTimes(3)
             await triggerTask1
             expect(onSignalStarted).toHaveBeenCalledTimes(3)
@@ -230,11 +296,11 @@ describe('Signal', () => {
             const triggerTask2 = signal.trigger()
             triggerTask2.catch(() => {})
             expect(onSignalStarted).toHaveBeenCalledTimes(0)
-            await wait(0)
+            await Promise.resolve()
             expect(onSignalStarted).toHaveBeenCalledTimes(1)
             const triggerTask3 = signal.trigger()
             triggerTask3.catch(() => {})
-            await wait(0)
+            await Promise.resolve()
             expect(onSignalStarted).toHaveBeenCalledTimes(1)
             expect(onSignalFinished).toHaveBeenCalledTimes(0)
             await triggerTask1
@@ -260,6 +326,70 @@ describe('Signal', () => {
             await signal.trigger()
             await signal.trigger()
             await signal.trigger()
+            expect(onSignal).toHaveBeenCalledTimes(1)
+        })
+        it('only triggers once when executed in parallel', async () => {
+            const onSignal = jest.fn(async () => {
+                await wait(10)
+            })
+            const signal = Signal.once()
+            signal(onSignal)
+            await Promise.all([
+                signal.trigger(),
+                signal.trigger()
+            ])
+            await signal.trigger()
+            expect(onSignal).toHaveBeenCalledTimes(1)
+        })
+
+        it('resolves same value', async () => {
+            const value = { someValue: 1 }
+            type ValueType = typeof value
+            const otherValue: ValueType = { someValue: 2 }
+            const results: ValueType[] = []
+            const onSignal = jest.fn((v: ValueType) => {
+                results.push(v)
+            })
+            const signal = Signal.once<ValueType>()
+            signal(onSignal)
+            await Promise.all([
+                // test parallel
+                signal.trigger(value),
+                signal.trigger(otherValue),
+            ])
+            // test serial
+            await signal.trigger(value)
+            await signal.trigger(otherValue)
+            expect(results[0]).toBe(value)
+            expect(results).toHaveLength(1)
+            expect(onSignal).toHaveBeenCalledTimes(1)
+            // wait should give same value
+            const waitResult = await signal.wait()
+            expect(waitResult).toBe(value)
+            expect(onSignal).toHaveBeenCalledTimes(1)
+
+            // adding new handlers should fire them on next async tick
+            const results2: ValueType[] = []
+            const onSignal2 = jest.fn((v: ValueType) => {
+                results2.push(v)
+            })
+            signal(onSignal2)
+            await Promise.resolve()
+            expect(onSignal2).toHaveBeenCalledTimes(1)
+            expect(results2[0]).toBe(value)
+            expect(results2).toHaveLength(1)
+        })
+
+        it('keeps rejecting if errored', async () => {
+            const err = new Error('expected')
+            const onSignal = jest.fn(() => {
+                throw err
+            })
+            const signal = Signal.once()
+            signal(onSignal)
+            await expect(async () => signal.trigger()).rejects.toThrow(err)
+            await expect(async () => signal.trigger()).rejects.toThrow(err)
+            await expect(async () => signal.trigger()).rejects.toThrow(err)
             expect(onSignal).toHaveBeenCalledTimes(1)
         })
     })
