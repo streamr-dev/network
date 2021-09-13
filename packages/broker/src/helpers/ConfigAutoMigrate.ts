@@ -1,6 +1,5 @@
 import { Config, TrackerRegistryItem } from '../config'
 import fs from 'fs'
-import os from 'os'
 import path from 'path'
 import { validateConfig } from './validateConfig'
 import schema from './config.schema.json'
@@ -103,7 +102,6 @@ export const testnet2AutoMigrate = (config: any, configFilePath: string): Config
             const oldFileName = path.basename(configFilePath)
             const backupFilePath = path.join(directory, `testnet1-backup-${oldFileName}`)
             console.info('Backing up testnet1 config to ' + backupFilePath)
-
             fs.writeFileSync(backupFilePath, JSON.stringify(config, null, 2))
 
             config['network']['trackers'] = migrateTrackerRegistry(config['network']['trackers'] as TrackerRegistryItem[])
