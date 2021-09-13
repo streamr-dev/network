@@ -18,7 +18,7 @@
         "maxClaimDelay": {
             "type": "number",
             "description": "Maximum time for delaying the claim in milliseconds",
-            "default": 60000
+            "default": 120000
         },
         "stunServerHost": {
             "type": [
