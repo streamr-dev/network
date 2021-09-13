@@ -48,7 +48,7 @@ export class TrackerConnector {
         })
     }
 
-    start() {
+    start(): void {
         this.maintainConnections()
         this.maintenanceTimer = setInterval(
             this.maintainConnections.bind(this),
@@ -56,7 +56,7 @@ export class TrackerConnector {
         )
     }
 
-    stop() {
+    stop(): void {
         if (this.maintenanceTimer) {
             clearInterval(this.maintenanceTimer)
             this.maintenanceTimer = null
