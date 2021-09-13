@@ -147,7 +147,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/ping`)
             return Date.now() - startTime
         } catch (e) {
-            logger.warn('Ping error')
+            logger.info('Unable to analyze latency')
             return undefined
         }
     }
