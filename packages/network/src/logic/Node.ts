@@ -39,7 +39,6 @@ export interface NodeOptions {
     peerInfo: PeerInfo
     trackers: Array<TrackerInfo>
     metricsContext?: MetricsContext
-    connectToBootstrapTrackersInterval?: number
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
     disconnectionWaitTime?: number
@@ -66,7 +65,6 @@ export class Node extends EventEmitter {
     protected readonly nodeToNode: NodeToNode
     private readonly nodeToTracker: NodeToTracker
     private readonly peerInfo: PeerInfo
-    private readonly connectToBootstrapTrackersInterval: number
     private readonly bufferTimeoutInMs: number
     private readonly bufferMaxSize: number
     private readonly disconnectionWaitTime: number
@@ -105,7 +103,6 @@ export class Node extends EventEmitter {
         this.nodeToTracker = opts.protocols.nodeToTracker
         this.peerInfo = opts.peerInfo
 
-        this.connectToBootstrapTrackersInterval = opts.connectToBootstrapTrackersInterval || 5000
         this.bufferTimeoutInMs = opts.bufferTimeoutInMs || 60 * 1000
         this.bufferMaxSize = opts.bufferMaxSize || 10000
         this.disconnectionWaitTime = opts.disconnectionWaitTime || 30 * 1000
