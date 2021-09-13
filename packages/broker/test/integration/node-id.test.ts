@@ -3,7 +3,7 @@ import { startBroker, createClient, createTestStream } from '../utils'
 import { Broker } from '../../src/broker'
 import { StreamrClient, Stream, StreamOperation } from 'streamr-client'
 import { Wallet } from 'ethers'
-import {wait, waitForCondition} from "streamr-test-utils";
+import { waitForCondition } from "streamr-test-utils"
 
 const trackerPort = 12740
 const broker1WsPort = 12474
