@@ -84,6 +84,10 @@ const migrateTrackerRegistry = (trackerRegistry: TrackerRegistryItem[]): Tracker
 }
 
 export const testnet2AutoMigrate = (config: any, configFilePath: string): Config => {
+    // Skip auto-migration if testnetMiner plugin not enabled
+    if (config.plugins.testnetMiner === undefined) {
+        return config
+    }
     try {
         validateConfig(config.plugins.testnetMiner, schemaTestnet2)
         return config
