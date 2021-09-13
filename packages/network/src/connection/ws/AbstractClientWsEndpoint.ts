@@ -18,7 +18,6 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     protected readonly connectionsByServerUrl: Map<ServerUrl, C>
     protected readonly serverUrlByPeerId: Map<PeerId, ServerUrl>
     protected readonly pendingConnections: Map<ServerUrl, Promise<PeerId>>
-    protected killTimeout?: NodeJS.Timeout
 
     constructor(
         peerInfo: PeerInfo,
@@ -48,9 +47,6 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         this.getConnections().forEach((connection) => {
             connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
         })
-        if (this.killTimeout) {
-            clearTimeout(this.killTimeout)
-        }
     }
 
     connect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
