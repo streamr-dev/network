@@ -27,7 +27,6 @@ program
             }
         }
         let config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
-
         if (program.opts().streamrUrl) {
             config.streamrUrl = program.opts().streamrUrl
         }
