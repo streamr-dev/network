@@ -177,7 +177,9 @@ export default class Resend implements Context {
         debug('fetching resend %s %s %o', endpointSuffix, spid.key, query)
         const nodes = await this.streamEndpoints.getStorageNodes(spid)
         if (!nodes.length) {
-            throw new ContextError(this, `no storage assigned: ${inspect(spid)}`)
+            const err = new ContextError(this, `no storage assigned: ${inspect(spid)}`)
+            err.code = 'NO_STORAGE_NODES'
+            throw err
         }
 
         // just pick first node

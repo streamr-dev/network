@@ -70,23 +70,20 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         await this.onRetired.trigger()
     }
 
-    private onError(error: Error) {
-        this.debug('subsession error', error)
-        this.subscriptions.forEach(async (sub) => {
+    private async onError(error: Error) {
+        this.debug('subsession error', error, new Error('').stack)
+        await Promise.allSettled([...this.subscriptions].map(async (sub) => {
             await sub.pushError(error)
-        })
+        }))
+        this.debug('subsession error ok')
     }
 
     async* distributeMessage(src: AsyncGenerator<StreamMessage<T>>) {
-        try {
-            for await (const msg of src) {
-                this.subscriptions.forEach((sub) => (
-                    sub.push(msg)
-                ))
-                yield msg
-            }
-        } catch (err) {
-            this.onError(err)
+        for await (const msg of src) {
+            await Promise.all([...this.subscriptions].map(async (sub) => {
+                await sub.push(msg)
+            }))
+            yield msg
         }
     }
 
@@ -99,7 +96,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
             return
         }
 
-        this.pipeline.push(msg as StreamMessage<T>)
+        await this.pipeline.push(msg as StreamMessage<T>)
     }
 
     private async subscribe() {

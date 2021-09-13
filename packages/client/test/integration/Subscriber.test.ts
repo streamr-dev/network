@@ -12,8 +12,8 @@ import { Todo } from '../../src/types'
 
 // const { ControlMessage } = ControlLayer
 
-const MAX_ITEMS = 2
-const NUM_MESSAGES = 6
+const MAX_ITEMS = 3
+const NUM_MESSAGES = 8
 
 describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
@@ -189,6 +189,240 @@ describeRepeats('Subscriber', () => {
                     }
                 }).rejects.toThrow(err)
                 expect(received).toEqual(published.slice(0, MAX_ITEMS))
+            })
+
+            it('keeps other subscriptions running if one subscription errors', async () => {
+                const err = new Error('expected')
+                const sub1 = await M.subscribe(stream.id)
+                const sub2 = await M.subscribe(stream.id)
+
+                let count = 0
+                sub1.pipe(async function* ThrowError(s) {
+                    for await (const msg of s) {
+                        if (count === MAX_ITEMS) {
+                            sub1.debug('throwing...')
+                            throw err
+                        }
+                        count += 1
+                        yield msg
+                    }
+                })
+
+                const published = await publishTestMessages(NUM_MESSAGES, {
+                    timestamp: 111111,
+                })
+
+                await expect(async () => {
+                    await sub1.collectContent(NUM_MESSAGES)
+                }).rejects.toThrow()
+                const received = await sub2.collectContent(NUM_MESSAGES)
+                expect(received).toEqual(published)
+                expect(count).toEqual(MAX_ITEMS)
+            })
+
+            it('errors subscription iterator do not trigger onError', async () => {
+                const err = new Error('expected')
+                const sub1 = await M.subscribe(stream.id)
+
+                const onError1 = jest.fn()
+                sub1.onError(onError1)
+
+                let count = 0
+                const published = await publishTestMessages(NUM_MESSAGES, {
+                    timestamp: 111111,
+                })
+                const received1: any[] = []
+                await expect(async () => {
+                    for await (const msg of sub1) {
+                        if (count === MAX_ITEMS) {
+                            sub1.debug('throwing...')
+                            throw err
+                        }
+                        count += 1
+                        received1.push(msg.getParsedContent())
+                    }
+                }).rejects.toThrow(err)
+
+                expect(received1).toEqual(published.slice(0, MAX_ITEMS))
+                expect(onError1).toHaveBeenCalledTimes(0)
+            })
+
+            it('errors subscription onMessage callback do trigger onError', async () => {
+                const err = new Error('expected')
+                let count = 0
+                const received1: any[] = []
+                const sub1 = await M.subscribe(stream.id, (content) => {
+                    if (count === MAX_ITEMS) {
+                        sub1.debug('throwing...')
+                        throw err
+                    }
+                    count += 1
+                    received1.push(content)
+                })
+
+                const onError1 = jest.fn()
+                sub1.onError(onError1)
+
+                const published = await publishTestMessages(NUM_MESSAGES, {
+                    timestamp: 111111,
+                })
+
+                expect(received1).toEqual(published.slice(0, MAX_ITEMS))
+                expect(onError1).toHaveBeenCalledTimes(1)
+            })
+
+            it('errors in onMessage callback are not handled by other subscriptions', async () => {
+                const err = new Error('expected')
+                let count = 0
+                const received1: any[] = []
+                const sub1 = await M.subscribe(stream.id, (content) => {
+                    if (count === MAX_ITEMS) {
+                        sub1.debug('throwing...')
+                        throw err
+                    }
+                    count += 1
+                    received1.push(content)
+                })
+
+                const sub2 = await M.subscribe(stream.id)
+
+                const onError1 = jest.fn((error) => { throw error })
+                sub1.onError(onError1)
+                const onError2 = jest.fn((error) => { throw error })
+                sub2.onError(onError2)
+
+                const published = await publishTestMessages(NUM_MESSAGES, {
+                    timestamp: 111111,
+                })
+
+                const received = await sub2.collectContent(NUM_MESSAGES)
+                expect(received).toEqual(published)
+                expect(onError1).toHaveBeenCalledTimes(1)
+                expect(onError2).toHaveBeenCalledTimes(0)
+                expect(count).toEqual(MAX_ITEMS)
+                expect(M.count(stream.id)).toBe(0)
+            })
+
+            it('keeps other subscriptions running if pipeline has error but subscription onError ignores it', async () => {
+                const THROW_AFTER = MAX_ITEMS
+                const err = new Error('expected')
+                const sub1 = await M.subscribe(stream.id)
+                const sub2 = await M.subscribe(stream.id)
+
+                expect(sub1.context).toBe(sub2.context)
+                sub1.context.pipeline.forEachBefore((s, count) => {
+                    if (count === THROW_AFTER) {
+                        sub1.debug('throwing...', count, s)
+                        throw err
+                    }
+                })
+
+                const onMessage = jest.fn()
+                sub1.onMessage(onMessage)
+                sub1.onMessage((msg) => {
+                    received1.push(msg.getParsedContent())
+                })
+
+                const onSuppressError = jest.fn()
+                sub2.onError(onSuppressError)
+
+                const received1: any[] = []
+                const publishTask = publishTestMessages(NUM_MESSAGES, {
+                    timestamp: 111111,
+                })
+                publishTask.catch(() => {})
+
+                try {
+                    await expect(async () => {
+                        const received3 = await sub1.collectContent(NUM_MESSAGES)
+                        sub1.debug({ received3 })
+                    }).rejects.toThrow()
+                    const published = await publishTask
+                    const received2 = await sub2.collectContent(NUM_MESSAGES - 1)
+
+                    sub1.debug({ received1, received2 })
+                    expect(onSuppressError).toHaveBeenCalledTimes(1)
+                    expect(received1).toEqual(published.slice(0, THROW_AFTER))
+                    expect(received2).toEqual(published.filter((_msg, index) => index !== THROW_AFTER))
+                    // should get all messages but see a gap at message MAX_ITEMS
+                } finally {
+                    await publishTask
+                }
+            })
+
+            it('multiple publishers: keeps other subscriptions running if pipeline has error but subscription onError ignores it', async () => {
+                const THROW_AFTER = MAX_ITEMS
+                const sub1 = await M.subscribe(stream.id)
+                const sub2 = await M.subscribe(stream.id)
+
+                expect(sub1.context).toBe(sub2.context)
+                let msgChainId: string
+                let count1 = 0
+                let count2 = 0
+                sub1.context.pipeline.forEachBefore((s) => {
+                    const msgChain = s.getMsgChainId()
+                    if (msgChainId === undefined) {
+                        msgChainId = msgChain
+                    }
+                    try {
+                        if (count1 === THROW_AFTER || count2 === THROW_AFTER) {
+                            sub1.debug('throwing...', count1, count2, s)
+                            throw new Error('expected')
+                        }
+                    } finally {
+                        // count based on msgChain
+                        if (msgChainId === msgChain) {
+                            count1 += 1
+                        } else {
+                            count2 += 1
+                        }
+                    }
+                })
+
+                const onMessage = jest.fn()
+                sub1.onMessage(onMessage)
+                sub1.onMessage((msg) => {
+                    sub1.debug('msg', msg)
+                    received1.push(msg.getParsedContent())
+                })
+
+                const onSuppressError = jest.fn()
+                sub2.onError(onSuppressError)
+
+                const received1: any[] = []
+                const client2 = createClient({
+                    auth: client.options.auth,
+                })
+
+                const publishTestMessages2 = getPublishTestMessages(client2, stream)
+                const publishTask = publishTestMessages(NUM_MESSAGES, {
+                    timestamp: 111111,
+                })
+                publishTask.catch(() => {})
+                const publishTask2 = publishTestMessages2(NUM_MESSAGES, {
+                    timestamp: 222222,
+                })
+                publishTask2.catch(() => {})
+
+                try {
+                    await expect(async () => {
+                        await sub1.collectContent(NUM_MESSAGES)
+                    }).rejects.toThrow()
+                    const published1: any[] = await publishTask
+                    const published2: any[] = await publishTask2
+                    const received2 = await sub2.collectContent((NUM_MESSAGES * 2) - 2)
+
+                    expect(onSuppressError).toHaveBeenCalledTimes(2)
+                    // filter two msg chains
+                    const r1 = received2.filter(({ batchId }) => batchId === published1[0].batchId)
+                    const r2 = received2.filter(({ batchId }) => batchId === published2[0].batchId)
+                    // should get all messages but see a gap at message THROW_AFTER
+                    expect(r1).toEqual(published1.filter((opt: any) => opt.index !== THROW_AFTER))
+                    expect(r2).toEqual(published2.filter((opt: any) => opt.index !== THROW_AFTER))
+                } finally {
+                    await publishTask
+                    await publishTask2
+                }
             })
 
             /*
