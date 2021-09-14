@@ -68,7 +68,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         partitionKey
     }: PublishMetadata<T>): Promise<StreamMessage<T>> {
         const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-        const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
+        const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
 
         return this.pipeline.publish({
             streamId,

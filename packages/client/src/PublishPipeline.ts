@@ -50,7 +50,7 @@ export type PublishMetadata<T = unknown> = {
 export type PublishMetadataStrict<T = unknown> = PublishMetadata<T> & {
     timestamp: number
     streamId: string
-    partitionKey: number | string
+    partitionKey?: number | string
 }
 
 export type PublishQueueIn<T = unknown> = [PublishMetadataStrict<T>, Deferred<StreamMessage<T>>]

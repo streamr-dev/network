@@ -15,7 +15,7 @@ import StreamPartitioner from './StreamPartitioner'
 export type MessageCreateOptions<T = unknown> = {
     content: T,
     timestamp: number,
-    partitionKey: string | number
+    partitionKey?: string | number
     msgChainId?: string
 }
 
