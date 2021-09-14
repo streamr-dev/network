@@ -30,10 +30,10 @@ describe('NodeMetrics', () => {
             id: 'tracker-1'
         })
         client1 = createClient(tracker, Wallet.createRandom().privateKey, {
-            nodeRegistry: storageNodeRegistry,
+            storageNodeRegistry: storageNodeRegistry,
         })
         client2 = createClient(tracker, tmpAccount.privateKey, {
-            nodeRegistry: storageNodeRegistry,
+            storageNodeRegistry: storageNodeRegistry,
         })
         storageNode = await startBroker({
             name: 'storageNode',

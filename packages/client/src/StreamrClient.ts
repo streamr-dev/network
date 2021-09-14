@@ -21,7 +21,7 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
-import NodeRegistry, { register as registerNodeRegistry } from './NodeRegistry'
+import NodeRegistry, { register as registerNodeRegistry } from './StorageNodeRegistry'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -91,7 +91,7 @@ class StreamrClientBase implements Context {
     streamEndpoints: StreamEndpoints
     cached: StreamEndpointsCached
     ethereum: Ethereum
-    nodeRegistry
+    storageNodeRegistry
     publisher: Publisher
     subscriber: Subscriber
     resends: Resends
@@ -108,7 +108,7 @@ class StreamrClientBase implements Context {
         @inject(Config.Root) options: StrictBrubeckClientConfig,
         node: BrubeckNode,
         ethereum: Ethereum,
-        nodeRegistry: NodeRegistry,
+        storageNodeRegistry: NodeRegistry,
         session: Session,
         loginEndpoints: LoginEndpoints,
         streamEndpoints: StreamEndpoints,
@@ -128,7 +128,7 @@ class StreamrClientBase implements Context {
         this.loginEndpoints = loginEndpoints!
         this.streamEndpoints = streamEndpoints!
         this.ethereum = ethereum!
-        this.nodeRegistry = nodeRegistry!
+        this.storageNodeRegistry = storageNodeRegistry!
         this.publisher = publisher!
         this.cached = cached
         this.subscriber = subscriber!
@@ -142,7 +142,7 @@ class StreamrClientBase implements Context {
         Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
-        Plugin(this, this.nodeRegistry)
+        Plugin(this, this.storageNodeRegistry)
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
         Plugin(this, this.resends)
@@ -177,7 +177,7 @@ class StreamrClientBase implements Context {
             this.destroySignal.destroy().then(() => undefined),
             this.resends.stop(),
             this.publisher.stop(),
-            this.nodeRegistry.stop(),
+            this.storageNodeRegistry.stop(),
             this.subscriber.stop(),
         ]
 
@@ -220,7 +220,7 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
         [Config.Root, config],
         [Config.Auth, config.auth],
         [Config.Ethereum, config],
-        [Config.NodeRegistry, config.nodeRegistry],
+        [Config.NodeRegistry, config.storageNodeRegistry],
         [Config.Network, config.network],
         [Config.Connection, config],
         [Config.Subscribe, config],

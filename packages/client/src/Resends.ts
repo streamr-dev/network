@@ -16,7 +16,7 @@ import SubscribePipeline from './SubscribePipeline'
 import { authRequest } from './authFetch'
 
 import Session from './Session'
-import NodeRegistry from './NodeRegistry'
+import NodeRegistry from './StorageNodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
 
@@ -111,7 +111,7 @@ export default class Resend implements Context {
 
     constructor(
         context: Context,
-        private nodeRegistry: NodeRegistry,
+        private storageNodeRegistry: NodeRegistry,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
         private session: Session,
         @inject(BrubeckContainer) private container: DependencyContainer
@@ -267,6 +267,6 @@ export default class Resend implements Context {
     }
 
     async stop() {
-        await this.nodeRegistry.stop()
+        await this.storageNodeRegistry.stop()
     }
 }

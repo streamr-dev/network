@@ -10,7 +10,7 @@ describe('MetricsPublisher', () => {
         const storageNodeAddress = '0x2222222222222222222222222222222222222222'
         const client = new StreamrClient({
             ...ConfigTest,
-            nodeRegistry: [{
+            storageNodeRegistry: [{
                 address: storageNodeAddress,
                 url: 'http://storage.mock',
             }]

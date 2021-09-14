@@ -56,7 +56,7 @@ describe('DataMetadataEndpoints', () => {
             storageNodeConfig: { registry: storageNodeRegistry }
         })
         client1 = createClient(tracker, undefined, {
-            nodeRegistry: storageNodeRegistry,
+            storageNodeRegistry: storageNodeRegistry,
         })
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
         await assignmentEventManager.createStream()

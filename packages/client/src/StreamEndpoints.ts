@@ -16,7 +16,7 @@ import { isKeyExchangeStream } from './encryption/KeyExchangeUtils'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
 import { EthereumAddress } from './types'
-import NodeRegistry, { NodeRegistryItem } from './NodeRegistry'
+import NodeRegistry, { NodeRegistryItem } from './StorageNodeRegistry'
 import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
@@ -111,7 +111,7 @@ export class StreamEndpoints implements Context {
         @inject(Config.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
         private readonly ethereum: StreamrEthereum,
-        private readonly nodeRegistry: NodeRegistry
+        private readonly storageNodeRegistry: NodeRegistry
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -145,7 +145,7 @@ export class StreamEndpoints implements Context {
         )
 
         const storageNodeAddresses = new Set(json.map(({ storageNodeAddress }) => storageNodeAddress))
-        const nodes = await this.nodeRegistry.getNodes()
+        const nodes = await this.storageNodeRegistry.getNodes()
         return nodes.filter((node: any) => storageNodeAddresses.has(node.address))
     }
 

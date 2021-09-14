@@ -55,35 +55,35 @@ describe('Config', () => {
             expect(new StreamrClient()).toBeInstanceOf(StreamrClient)
         })
 
-        it('can override nodeRegistry & network.trackers arrays', () => {
+        it('can override storageNodeRegistry & network.trackers arrays', () => {
             const clientDefaults = new StreamrClient()
             const clientOverrides = new StreamrClient(config)
-            expect(clientOverrides.options.nodeRegistry).not.toEqual(clientDefaults.options.nodeRegistry)
-            expect(clientOverrides.options.nodeRegistry).toEqual(config.nodeRegistry)
+            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
+            expect(clientOverrides.options.storageNodeRegistry).toEqual(config.storageNodeRegistry)
             expect(clientOverrides.options.network.trackers).not.toEqual(clientDefaults.options.network.trackers)
             expect(clientOverrides.options.network.trackers).toEqual(config.network.trackers)
         })
 
-        it('can override nodeRegistry as contract', () => {
+        it('can override storageNodeRegistry as contract', () => {
             const clientDefaults = new StreamrClient()
             const clientOverrides = new StreamrClient({
-                nodeRegistry: {
+                storageNodeRegistry: {
                     contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
                     jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
                 },
             })
-            expect(clientOverrides.options.nodeRegistry).not.toEqual(clientDefaults.options.nodeRegistry)
+            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
         })
 
-        it('can override nodeRegistry as array of nodes', () => {
+        it('can override storageNodeRegistry as array of nodes', () => {
             const clientDefaults = new StreamrClient()
             const clientOverrides = new StreamrClient({
-                nodeRegistry: [{
+                storageNodeRegistry: [{
                     address: '0xde1112f631486CfC759A50196853011528bC5FA0',
                     url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
                 }],
             })
-            expect(clientOverrides.options.nodeRegistry).not.toEqual(clientDefaults.options.nodeRegistry)
+            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
         })
     })
 })
