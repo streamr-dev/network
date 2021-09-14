@@ -1,6 +1,6 @@
 {
   "name": "streamr-network",
-  "version": "28.2.0",
+  "version": "29.0.0",
   "description": "Minimal and extendable implementation of the Streamr Network network node.",
   "repository": {
     "type": "git",
@@ -53,7 +53,7 @@
     "node-datachannel": "^0.1.5",
     "pino": "^6.11.3",
     "setimmediate": "^1.0.5",
-    "streamr-client-protocol": "^8.4.1",
+    "streamr-client-protocol": "^9.0.0",
     "strict-event-emitter-types": "^2.0.0",
     "uuid": "^8.3.2",
     "websocket": "^1.0.34",
