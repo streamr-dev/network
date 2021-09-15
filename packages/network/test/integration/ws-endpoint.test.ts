@@ -103,7 +103,7 @@ describe('ws-endpoint', () => {
             const client1 = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
             const client2 = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
 
-            const server = await startServerWsEndpoint('127.0.0.1', 38482, PeerInfo.newNode('server'))
+            const server = await startServerWsEndpoint('127.0.0.1', 38483, PeerInfo.newNode('server'))
 
             await client1.connect(server.getUrl(), PeerInfo.newTracker('server'))
             await client2.connect(server.getUrl(), PeerInfo.newTracker('server'))

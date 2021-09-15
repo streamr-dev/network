@@ -9,6 +9,8 @@ import BrowserClientWsEndpoint from '../../src/connection/ws/BrowserClientWsEndp
 import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
+const trackerPort = 38482
+
 describe('ws-endpoint', () => {
     const endpoints: ServerWsEndpoint[] = []
 
@@ -69,7 +71,6 @@ describe('ws-endpoint', () => {
     })
 
     describe('test direct connections from simple websocket', () => {
-        const trackerPort = 38482
         let tracker: Tracker
 
         beforeEach(async () => {
@@ -99,7 +100,7 @@ describe('ws-endpoint', () => {
             const client1 = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
             const client2 = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
 
-            const server = await startServerWsEndpoint('127.0.0.1', 38482, PeerInfo.newNode('server'))
+            const server = await startServerWsEndpoint('127.0.0.1', trackerPort, PeerInfo.newNode('server'))
 
             await client1.connect(server.getUrl(), PeerInfo.newTracker('server'))
             await client2.connect(server.getUrl(), PeerInfo.newTracker('server'))
