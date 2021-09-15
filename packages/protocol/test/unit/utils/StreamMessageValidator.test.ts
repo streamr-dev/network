@@ -639,20 +639,6 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('rejects messages to unpermitted subscribers', async () => {
-            isSubscriber = sinon.stub().resolves(false)
-
-            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isSubscriber as any).calledOnce, 'isSubscriber not called!')
-                assert(
-                    (isSubscriber as any).calledWith(subscriber, 'streamId'),
-                    `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`,
-                )
-                return true
-            })
-        })
-
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
             isPublisher = sinon.stub().rejects(testError)
@@ -662,13 +648,10 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('rejects if isSubscriber rejects', async () => {
+        it('does not reject if isSubscriber rejects', async () => {
             const testError = new Error('test error')
             isSubscriber = sinon.stub().rejects(testError)
-            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
-                assert(err === testError)
-                return true
-            })
+            await getValidator().validate(groupKeyErrorResponse)
         })
 
         it('rejects with ValidationError if verify throws', async () => {
