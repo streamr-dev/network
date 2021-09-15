@@ -71,7 +71,6 @@ export class Node extends EventEmitter {
     private readonly bufferMaxSize: number
     private readonly disconnectionWaitTime: number
     private readonly nodeConnectTimeout: number
-    private readonly instructionRetryInterval: number
     private readonly started: string
 
     private readonly disconnectionTimers: Record<NodeId,NodeJS.Timeout>
@@ -104,7 +103,6 @@ export class Node extends EventEmitter {
         this.bufferMaxSize = opts.bufferMaxSize || 10000
         this.disconnectionWaitTime = opts.disconnectionWaitTime || 30 * 1000
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
-        this.instructionRetryInterval = opts.instructionRetryInterval || 3 * 60 * 1000
         this.started = new Date().toLocaleString()
 
         const metricsContext = opts.metricsContext || new MetricsContext('')
@@ -122,7 +120,7 @@ export class Node extends EventEmitter {
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
         this.instructionRetryManager = new InstructionRetryManager(
             this.handleTrackerInstruction.bind(this),
-            this.instructionRetryInterval
+            opts.instructionRetryInterval || 3 * 60 * 1000
         )
 
         this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
