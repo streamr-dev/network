@@ -18,6 +18,8 @@ import { DisconnectionReason } from "../connection/ws/AbstractWsEndpoint"
 import { TrackerId } from './Tracker'
 import { TrackerManager } from './TrackerManager'
 
+const logger = new Logger(module)
+
 export type NodeId = string
 
 export enum Event {
@@ -72,7 +74,6 @@ export class Node extends EventEmitter {
     private readonly instructionRetryInterval: number
     private readonly started: string
 
-    private readonly logger: Logger
     private readonly disconnectionTimers: Record<NodeId,NodeJS.Timeout>
     protected readonly streams: StreamManager
     private readonly trackerManager: TrackerManager
@@ -105,14 +106,13 @@ export class Node extends EventEmitter {
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.instructionRetryInterval = opts.instructionRetryInterval || 3 * 60 * 1000
         this.started = new Date().toLocaleString()
-        this.logger = new Logger(module)
 
         const metricsContext = opts.metricsContext || new MetricsContext('')
 
         this.streams = new StreamManager()
         this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.nodeToTracker, this.streams)
         this.messageBuffer = new MessageBuffer(this.bufferTimeoutInMs, this.bufferMaxSize, (streamId) => {
-            this.logger.trace(`failed to deliver buffered messages of stream ${streamId}`)
+            logger.trace(`failed to deliver buffered messages of stream ${streamId}`)
         })
         this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
 
@@ -163,7 +163,7 @@ export class Node extends EventEmitter {
     }
 
     start(): void {
-        this.logger.trace('started')
+        logger.trace('started')
         this.trackerManager.start()
     }
 
@@ -173,7 +173,7 @@ export class Node extends EventEmitter {
 
     subscribeToStreamIfHaveNotYet(streamId: StreamIdAndPartition, sendStatus = true): void {
         if (!this.streams.isSetUp(streamId)) {
-            this.logger.trace('add %s to streams', streamId)
+            logger.trace('add %s to streams', streamId)
             this.streams.setUpStream(streamId)
             this.trackerManager.onNewStream(streamId) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
@@ -183,7 +183,7 @@ export class Node extends EventEmitter {
     }
 
     unsubscribeFromStream(streamId: StreamIdAndPartition, sendStatus = true): void {
-        this.logger.trace('remove %s from streams', streamId)
+        logger.trace('remove %s from streams', streamId)
         this.streams.removeStream(streamId)
         this.instructionThrottler.removeStream(streamId.key())
         this.instructionRetryManager.removeStream(streamId.key())
@@ -206,12 +206,12 @@ export class Node extends EventEmitter {
         const expectedTrackerId = this.trackerManager.getTrackerId(streamId)
         if (trackerId !== expectedTrackerId) {
             this.metrics.record('unexpectedTrackerInstructions', 1)
-            this.logger.warn(`got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
+            logger.warn(`got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
             return
         }
 
         this.metrics.record('trackerInstructions', 1)
-        this.logger.trace('received instructions for %s, nodes to connect %o', streamId, nodeIds)
+        logger.trace('received instructions for %s, nodes to connect %o', streamId, nodeIds)
 
         this.subscribeToStreamIfHaveNotYet(streamId, false)
         const currentNodes = this.streams.getAllNodesForStream(streamId)
@@ -245,22 +245,20 @@ export class Node extends EventEmitter {
                 subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
-                this.logger.info('failed to subscribe (or connect) to node, reason: %s', res.reason)
+                logger.info('failed to subscribe (or connect) to node, reason: %s', res.reason)
             }
         })
         if (!reattempt || failedInstructions) {
             this.trackerManager.prepareAndSendStreamStatus(streamId)
         }
 
-        this.logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
+        logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
             subscribedNodeIds, unsubscribedNodeIds, streamId, counter)
 
         if (subscribedNodeIds.length !== nodeIds.length) {
-            this.logger.trace('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)',
-                streamId, counter)
+            logger.trace('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)', streamId, counter)
         } else {
-            this.logger.trace('Tracker instructions fulfilled (streamId=%s, counter=%d)',
-                streamId, counter)
+            logger.trace('Tracker instructions fulfilled (streamId=%s, counter=%d)', streamId, counter)
         }
     }
 
@@ -284,12 +282,12 @@ export class Node extends EventEmitter {
             )
         } catch (e) {
             if (e instanceof InvalidNumberingError) {
-                this.logger.trace('received from %s data %j with invalid numbering', source, streamMessage.messageId)
+                logger.trace('received from %s data %j with invalid numbering', source, streamMessage.messageId)
                 this.metrics.record('onDataReceived:invalidNumber', 1)
                 return
             }
             if (e instanceof GapMisMatchError) {
-                this.logger.warn('received from %s data %j with gap mismatch detected: %j',
+                logger.warn('received from %s data %j with gap mismatch detected: %j',
                     source, streamMessage.messageId, e)
                 this.metrics.record('onDataReceived:gapMismatch', 1)
                 return
@@ -301,10 +299,10 @@ export class Node extends EventEmitter {
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
         }
         if (isUnseen || this.seenButNotPropagatedSet.has(streamMessage)) {
-            this.logger.trace('received from %s data %j', source, streamMessage.messageId)
+            logger.trace('received from %s data %j', source, streamMessage.messageId)
             this.propagateMessage(streamMessage, source)
         } else {
-            this.logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
+            logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
             this.metrics.record('onDataReceived:ignoredDuplicate', 1)
         }
     }
@@ -318,9 +316,9 @@ export class Node extends EventEmitter {
         const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
 
         if (!subscribers.length) {
-            this.logger.debug('put back to buffer because could not propagate to %d nodes or more: %j',
+            logger.debug('put back to buffer because could not propagate to %d nodes or more: %j',
                 MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION, streamMessage.messageId)
-            this.logger.trace('streams: %j', this.streams)
+            logger.trace('streams: %j', this.streams)
             this.seenButNotPropagatedSet.add(streamMessage)
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
             return
@@ -331,7 +329,7 @@ export class Node extends EventEmitter {
                 this.consecutiveDeliveryFailures[subscriber] = 0
             } catch (e) {
                 const serializedMsgId = streamMessage.getMessageID().serialize()
-                this.logger.warn('failed to propagate %s (consecutiveFails=%d) to subscriber %s, reason: %s',
+                logger.warn('failed to propagate %s (consecutiveFails=%d) to subscriber %s, reason: %s',
                     serializedMsgId,
                     this.consecutiveDeliveryFailures[subscriber] || 0,
                     subscriber,
@@ -355,7 +353,7 @@ export class Node extends EventEmitter {
                 }
                 this.consecutiveDeliveryFailures[subscriber] += 1
                 if (this.consecutiveDeliveryFailures[subscriber] >= 100) {
-                    this.logger.warn(`disconnecting from ${subscriber} due to 100 consecutive delivery failures`)
+                    logger.warn(`disconnecting from ${subscriber} due to 100 consecutive delivery failures`)
                     this.onNodeDisconnected(subscriber) // force disconnect
                     this.consecutiveDeliveryFailures[subscriber] = 0
                 }
@@ -367,7 +365,7 @@ export class Node extends EventEmitter {
     }
 
     stop(): Promise<unknown> {
-        this.logger.trace('stopping')
+        logger.trace('stopping')
         
         this.instructionThrottler.stop()
         this.instructionRetryManager.stop()
@@ -415,7 +413,7 @@ export class Node extends EventEmitter {
 
     private unsubscribeFromStreamOnNode(node: NodeId, streamId: StreamIdAndPartition, sendStatus = true): void {
         this.streams.removeNodeFromStream(streamId, node)
-        this.logger.trace('node %s unsubscribed from stream %s', node, streamId)
+        logger.trace('node %s unsubscribed from stream %s', node, streamId)
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamId)
 
         if (!this.streams.isNodePresent(node)) {
@@ -423,7 +421,7 @@ export class Node extends EventEmitter {
             this.disconnectionTimers[node] = setTimeout(() => {
                 delete this.disconnectionTimers[node]
                 if (!this.streams.isNodePresent(node)) {
-                    this.logger.info('No shared streams with %s, disconnecting', NameDirectory.getName(node))
+                    logger.info('No shared streams with %s, disconnecting', NameDirectory.getName(node))
                     this.nodeToNode.disconnectFromNode(node, DisconnectionReason.NO_SHARED_STREAMS)
                 }
             }, this.disconnectionWaitTime)
@@ -436,7 +434,7 @@ export class Node extends EventEmitter {
     onNodeDisconnected(node: NodeId): void {
         this.metrics.record('onNodeDisconnect', 1)
         const streams = this.streams.removeNodeFromAllStreams(node)
-        this.logger.trace('removed all subscriptions of node %s', node)
+        logger.trace('removed all subscriptions of node %s', node)
         streams.forEach((s) => {
             this.trackerManager.prepareAndSendStreamStatus(s)
         })
@@ -444,7 +442,7 @@ export class Node extends EventEmitter {
     }
 
     onTrackerDisconnected(tracker: TrackerId): void {
-        this.logger.trace('disconnected from tracker %s', tracker)
+        logger.trace('disconnected from tracker %s', tracker)
     }
 
     private handleBufferedMessages(streamId: StreamIdAndPartition): void {
