@@ -1,4 +1,5 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
+import StreamMessageError from '../../errors/StreamMessageError'
 import ValidationError from '../../errors/ValidationError'
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import { validateIsNotEmptyString, validateIsString, validateIsType } from '../../utils/validations'
@@ -259,13 +260,12 @@ export default class StreamMessage<T = unknown> {
                 } catch (err: any) {
                     throw new InvalidJsonError(
                         this.getStreamId(),
-                        this.serializedContent!,
                         err,
                         this,
                     )
                 }
             } else {
-                throw new Error(`Unsupported contentType for getParsedContent: ${this.contentType}`)
+                throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
             }
         }
 
@@ -323,7 +323,7 @@ export default class StreamMessage<T = unknown> {
             return `${this.getStreamId()}${this.getTimestamp()}${this.getPublisherId().toLowerCase()}${this.getSerializedContent()}`
         }
 
-        throw new Error(`Unrecognized signature type: ${signatureType}`)
+        throw new ValidationError(`Unrecognized signature type: ${signatureType}`)
     }
 
     static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {

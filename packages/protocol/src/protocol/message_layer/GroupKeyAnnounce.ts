@@ -1,5 +1,4 @@
 import { validateIsArray } from '../../utils/validations'
-import ValidationError from '../../errors/ValidationError'
 
 import GroupKeyMessage from './GroupKeyMessage'
 import StreamMessage from './StreamMessage'
@@ -25,7 +24,7 @@ export default class GroupKeyAnnounce extends GroupKeyMessage {
         // Validate content of encryptedGroupKeys
         this.encryptedGroupKeys.forEach((it: EncryptedGroupKey) => {
             if (!(it instanceof EncryptedGroupKey)) {
-                throw new ValidationError(
+                throw new Error(
                     `Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`
                 )
             }
