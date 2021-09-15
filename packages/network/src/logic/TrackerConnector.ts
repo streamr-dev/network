@@ -4,10 +4,11 @@ import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
 import { TrackerId } from './Tracker'
+import { StreamManager } from './StreamManager'
 
 export class TrackerConnector {
 
-    private readonly getStreams: () => ReadonlyArray<StreamIdAndPartition>
+    private readonly streamManager: StreamManager
     private readonly nodeToTracker: NodeToTracker
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private readonly logger: Logger
@@ -15,8 +16,8 @@ export class TrackerConnector {
     private readonly maintenanceInterval: number
     private unconnectables: Set<TrackerId>
 
-    constructor(getStreams: () => ReadonlyArray<StreamIdAndPartition>, nodeToTracker: NodeToTracker, trackerRegistry: Utils.TrackerRegistry<TrackerInfo>, logger: Logger, maintenanceInterval: number) {
-        this.getStreams = getStreams
+    constructor(streamManager: StreamManager, nodeToTracker: NodeToTracker, trackerRegistry: Utils.TrackerRegistry<TrackerInfo>, logger: Logger, maintenanceInterval: number) {
+        this.streamManager = streamManager
         this.nodeToTracker = nodeToTracker
         this.trackerRegistry = trackerRegistry
         this.logger = logger
@@ -26,7 +27,7 @@ export class TrackerConnector {
 
     maintainConnections(): void {
         const activeTrackers = new Set<string>()
-        this.getStreams().forEach((s) => {
+        this.streamManager.getStreams().forEach((s) => {
             const trackerInfo = this.trackerRegistry.getTracker(s.id, s.partition)
             activeTrackers.add(trackerInfo.id)
         })
