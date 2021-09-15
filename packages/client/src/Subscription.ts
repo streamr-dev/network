@@ -36,8 +36,6 @@ export default class Subscription<T = unknown> extends MessageStream<T> implemen
         // this.debug('create', this.key, new Error('Subscription').stack)
     }
 
-    onError = Signal.create<Error>()
-
     count() {
         return this.context.count()
     }

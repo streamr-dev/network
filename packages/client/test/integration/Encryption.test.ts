@@ -584,6 +584,20 @@ await subscriber.unsubscribe(sub)
             }).rejects.toThrow('streamId')
         })
 
+        it('client.subscribe can not decrypt encrypted messages if does not know the group key', async () => {
+            const sub = await subscriber.subscribe({
+                stream: stream.id,
+            })
+
+            await publishTestMessages(3, {
+                timestamp: 1111111,
+            })
+
+            await expect(async () => {
+                await sub.collect(3)
+            }).rejects.toThrow()
+        })
+
         it('does encrypt messages in stream that does not require encryption but groupkey is set anyway', async () => {
             const stream2 = await createTestStream(publisher, module, {
                 requireEncryptedData: false,

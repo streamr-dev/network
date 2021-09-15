@@ -273,10 +273,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         const transforms = this.definition.getTransforms()
         // this.debug('transforms', transforms)
 
+        // each pipeline step creates a generator
+        // which is then passed into the next transform
+        // end result is output of last transform's generator
         const pipeline = transforms.reduce((prev: AsyncGenerator, transform) => {
-            // each pipeline step creates a generator
-            // which is then passed into the next transform
-            // end result is output of last transform's generator
             return transform(prev)
         }, this.definition.source)
 
@@ -295,14 +295,20 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     // AsyncGenerator implementation
 
     async throw(err: Error) {
-        await this.onBeforeFinally.trigger()
+        if (!this.onBeforeFinally.triggerCount) {
+            await this.onBeforeFinally.trigger()
+        }
+
         // eslint-disable-next-line promise/no-promise-in-callback
         await this.definition.source.throw(err).catch(() => {})
         return this.iterator.throw(err)
     }
 
     async return(v?: OutType) {
-        await this.onBeforeFinally.trigger()
+        if (!this.onBeforeFinally.triggerCount) {
+            await this.onBeforeFinally.trigger()
+        }
+
         await this.definition.source.return(undefined)
         return this.iterator.return(v)
     }

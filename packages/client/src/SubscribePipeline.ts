@@ -24,14 +24,12 @@ export default function SubscribePipeline<T = unknown>(
     container: DependencyContainer
 ): MessageStream<T> {
     const validate = new Validator(
+        context,
         container.resolve(StreamEndpointsCached),
-        container.resolve(Config.Subscribe)
+        container.resolve(Config.Subscribe),
+        container.resolve(Config.Cache)
     )
     const orderMessages = new OrderMessages<T>(container.resolve(Config.Subscribe), container.resolve(Context as any), container.resolve(Resends))
-    // const subscribeOptions = container.resolve<SubscribeConfig>(Config.Subscribe)
-    // const { key } = options as any
-    // const id = counterId('MessagePipeline') + key
-
     /* eslint-enable object-curly-newline */
 
     const seenErrors = new WeakSet()
@@ -70,8 +68,8 @@ export default function SubscribePipeline<T = unknown>(
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
-
     return messageStream
+        .onError(onError)
         // order messages (fill gaps)
         .pipe(orderMessages.transform(spid))
         // validate

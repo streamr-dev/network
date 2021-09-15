@@ -47,12 +47,6 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
             .onBeforeFinally(() => {
                 return this.retire()
             })
-            .onFinally(async () => {
-                this.debug('subsession pipeline done.')
-                await this.removeAll()
-            })
-
-        this.pipeline.onError(this.onError)
 
         // this.debug('create')
         setImmediate(() => {
@@ -66,16 +60,18 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     }
 
     private async retire() {
+        if (this.isRetired) {
+            return
+        }
+
         this.isRetired = true
         await this.onRetired.trigger()
     }
 
     private async onError(error: Error) {
-        this.debug('subsession error', error, new Error('').stack)
         await Promise.allSettled([...this.subscriptions].map(async (sub) => {
             await sub.pushError(error)
         }))
-        this.debug('subsession error ok')
     }
 
     async* distributeMessage(src: AsyncGenerator<StreamMessage<T>>) {
@@ -110,6 +106,9 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
 
     private async unsubscribe(node: NetworkNode) {
         this.debug('unsubscribe')
+        this.pipeline.end()
+        this.pipeline.return()
+        this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
         node.subscribe(streamId, streamPartition)
@@ -144,9 +143,9 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     async stop() {
         this.debug('stop')
         this.isStopped = true
-        await this.retire()
+        this.pipeline.end()
         this.pipeline.return()
-        await this.removeAll()
+        await this.retire()
     }
 
     has(sub: Subscription<T>): boolean {
@@ -172,6 +171,11 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
         this.debug('add', sub.id)
         this.subscriptions.add(sub)
+
+        sub.onBeforeFinally(() => {
+            return this.remove(sub)
+        })
+
         await this.updateSubscriptions()
     }
 
@@ -203,7 +207,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
      */
 
     async removeAll(): Promise<void> {
-        this.debug('removeAll')
+        this.debug('removeAll %d', this.count())
         await Promise.all([...this.subscriptions].map((sub) => (
             this.remove(sub)
         )))

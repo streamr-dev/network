@@ -60,9 +60,6 @@ export default class Subscriber implements Context {
 
     async addSubscription<T>(sub: Subscription<T>): Promise<Subscription<T>> {
         const { spid } = sub
-        sub.onFinally(() => {
-            return this.remove(sub)
-        })
         // get/create subscription session
         const subSession = this.getOrCreateSubscriptionSession<T>(spid)
 
