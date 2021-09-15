@@ -5,7 +5,6 @@
 import { SPID, SPIDKeyShape } from 'streamr-client-protocol'
 import MessageStream, { MessageStreamOnMessage } from './MessageStream'
 import SubscriptionSession from './SubscriptionSession'
-import Signal from './utils/Signal'
 
 export type SubscriptionOptions = {
   streamId: string,
