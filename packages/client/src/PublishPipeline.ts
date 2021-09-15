@@ -21,10 +21,10 @@ export class FailedToPublishError extends Error {
     streamId
     msg
     reason
-    constructor(streamId: string, msg: any, reason?: Error) {
-        super(`Failed to publish to stream ${streamId} due to: ${reason && reason.stack ? reason.stack : reason}. Message was: ${inspect(msg)}`)
+    constructor(streamId: string, data: PublishMetadata | StreamMessage, reason?: Error) {
+        super(`Failed to publish to stream ${streamId} due to: ${reason && reason.stack ? reason.stack : reason}.`)
         this.streamId = streamId
-        this.msg = msg
+        this.msg = data
         this.reason = reason
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)

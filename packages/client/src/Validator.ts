@@ -2,21 +2,17 @@
  * Validation Wrapper
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamMessage, GroupKeyErrorResponse, StreamMessageValidator, SigningUtil, ValidationError } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageValidator, SigningUtil, StreamMessageError } from 'streamr-client-protocol'
 
 import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
-import { inspect } from './utils/log'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { Config, SubscribeConfig, CacheConfig } from './Config'
 
-export class SignatureRequiredError extends ValidationError {
-    constructor(streamMessage?: StreamMessage, code?: string) {
-        super(`Client requires data to be signed. Message: ${inspect(streamMessage)}`, streamMessage, code)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
+export class SignatureRequiredError extends StreamMessageError {
+    constructor(streamMessage: StreamMessage, code?: string) {
+        super('Client requires data to be signed.', streamMessage, code)
     }
 }
 

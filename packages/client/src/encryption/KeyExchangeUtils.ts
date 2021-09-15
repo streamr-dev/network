@@ -1,5 +1,5 @@
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse, Errors
+    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
@@ -17,8 +17,6 @@ import { Stoppable } from '../utils/Stoppable'
 import { GroupKey, GroupKeyish } from './Encryption'
 
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
-
-export const { ValidationError } = Errors
 
 export function isKeyExchangeStream(id = '') {
     return id.startsWith(KEY_EXCHANGE_STREAM_PREFIX)

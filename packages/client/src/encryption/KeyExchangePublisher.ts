@@ -1,5 +1,5 @@
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyErrorResponse, Errors
+    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyErrorResponse, ValidationError
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
@@ -13,38 +13,9 @@ import { KeyExchangeStream } from './KeyExchangeUtils'
 
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 
-const { ValidationError } = Errors
-
 class InvalidGroupKeyRequestError extends ValidationError {
-    code: string
-    constructor(...args: ConstructorParameters<typeof ValidationError>) {
-        super(...args)
-        this.code = 'INVALID_GROUP_KEY_REQUEST'
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
-    }
-}
-
-async function catchKeyExchangeError(keyExchangeStream: KeyExchangeStream, streamMessage: StreamMessage, fn: (...args: any[]) => Promise<void>) {
-    try {
-        return await fn()
-    } catch (error) {
-        const subscriberId = streamMessage.getPublisherId()
-        if (!GroupKeyRequest.is(streamMessage)) {
-            // ignore weird message
-            return undefined
-        }
-
-        const msg = streamMessage.getParsedContent()
-        const { streamId, requestId, groupKeyIds } = GroupKeyRequest.fromArray(msg)
-        return keyExchangeStream.response(subscriberId, new GroupKeyErrorResponse({
-            requestId,
-            streamId,
-            errorCode: error.code || 'UNEXPECTED_ERROR',
-            errorMessage: error.message,
-            groupKeyIds
-        }))
+    constructor(msg: string) {
+        super(msg, 'INVALID_GROUP_KEY_REQUEST')
     }
 }
 
