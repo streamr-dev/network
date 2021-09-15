@@ -45,14 +45,17 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         }, this, container)
             .pipe(this.distributeMessage)
             .onBeforeFinally(() => {
+                if (!this.isStopped) {
+                    return this.stop()
+                }
                 return this.retire()
             })
 
         // this.debug('create')
         setImmediate(() => {
             // eslint-disable-next-line promise/catch-or-return
-            flow(this.pipeline).catch((err) => {
-                this.debug('flow error', err)
+            flow(this.pipeline).catch((_err) => {
+                // this.debug('flow error', err)
             }).finally(() => {
                 this.debug('end')
             })
@@ -122,8 +125,8 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
                 return async () => {
                     const prevNode = node
                     node = undefined
-                    await this.retire()
                     await this.unsubscribe(prevNode!)
+                    await this.stop()
                 }
             },
         ], () => this.shouldBeSubscribed())
@@ -131,8 +134,8 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
 
     async updateSubscriptions() {
         await this.updateNodeSubscriptions()
-        if (!this.shouldBeSubscribed()) {
-            await this.retire()
+        if (!this.shouldBeSubscribed() && !this.isStopped) {
+            await this.stop()
         }
     }
 
@@ -144,8 +147,8 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.debug('stop')
         this.isStopped = true
         this.pipeline.end()
-        this.pipeline.return()
         await this.retire()
+        await this.pipeline.return()
     }
 
     has(sub: Subscription<T>): boolean {

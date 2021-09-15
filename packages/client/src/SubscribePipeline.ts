@@ -2,7 +2,7 @@
  * Subscription message processing pipeline
  */
 
-import { SPID } from 'streamr-client-protocol'
+import { SPID, StreamMessage, StreamMessageError, GroupKeyErrorResponse } from 'streamr-client-protocol'
 
 import OrderMessages from './OrderMessages'
 import MessageStream from './MessageStream'
@@ -13,6 +13,7 @@ import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
 import { Context } from './utils/Context'
 import { Config } from './Config'
 import Resends from './Resends'
+import { DestroySignal } from './DestroySignal'
 import { DependencyContainer } from 'tsyringe'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 
@@ -53,6 +54,7 @@ export default function SubscribePipeline<T = unknown>(
         context,
         container.resolve(StreamEndpointsCached),
         container.resolve(SubscriberKeyExchange),
+        container.resolve(DestroySignal),
         {
             ...options,
             onError: async (err, streamMessage) => {
@@ -72,6 +74,16 @@ export default function SubscribePipeline<T = unknown>(
         .onError(onError)
         // order messages (fill gaps)
         .pipe(orderMessages.transform(spid))
+        // convert group key error responses into errors
+        // (only for subscribe pipeline, not publish pipeline)
+        .forEach((streamMessage) => {
+            if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+                const errMsg = streamMessage as StreamMessage<any>
+                const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
+                const err = new StreamMessageError(`GroupKeyErrorResponse: ${res.errorMessage}`, streamMessage, res.errorCode)
+                throw err
+            }
+        })
         // validate
         .forEach(async (streamMessage) => {
             await validate.validate(streamMessage)

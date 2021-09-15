@@ -440,38 +440,31 @@ describeRepeats('decryption', () => {
 
                 expect(received.map((s) => s.getParsedContent())).toEqual(published.slice(-2))
             }, TIMEOUT * 2)
-            /*
-               it.skip('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
-            // Publish encrypted messages with different keys
-            await publisher.rotateGroupKey(stream.id)
-            publisher.publisher.publishQueue.forEach(async () => {
-            await publisher.rotateGroupKey(stream.id)
-            })
-            const published = await publishTestMessages(5, {
-waitForLast: true,
-})
 
-await grantSubscriberPermissions()
-// subscribe with resend without knowing the historical keys
-const sub = await subscriber.subscribe({
-stream: stream.id,
-resend: {
-last: 2,
-},
-})
+            it('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
+                // Publish encrypted messages with different keys
+                await publisher.rotateGroupKey(stream.id)
+                publisher.publisher.publishQueue.forEach(async () => {
+                    await publisher.rotateGroupKey(stream.id)
+                })
+                const published = await publishTestMessages(5, {
+                    waitForLast: true,
+                })
 
-const received = []
-for await (const msg of sub) {
-received.push(msg.getParsedContent())
-if (received.length === 2) {
-break
-}
-}
+                await grantSubscriberPermissions()
+                // subscribe with resend without knowing the historical keys
+                const sub = await subscriber.subscribe({
+                    stream: stream.id,
+                    resend: {
+                        last: 2,
+                    },
+                })
 
-expect(received).toEqual(published.slice(-2))
-await subscriber.unsubscribe(sub)
-}, TIMEOUT * 2)
-             */
+                const received = sub.collectContent(2)
+
+                expect(received).toEqual(published.slice(-2))
+                await subscriber.unsubscribe(sub)
+            }, TIMEOUT * 2)
 
             describe('error handling', () => {
                 let sub: Subscription<any>
@@ -736,7 +729,7 @@ await subscriber.unsubscribe(sub)
             await onEncryptionMessageErr
         }, TIMEOUT * 2)
     })
-    /*
+
     describe('revoking permissions', () => {
         async function testRevokeDuringSubscribe({
             maxMessages = 6,
@@ -755,14 +748,14 @@ await subscriber.unsubscribe(sub)
             // Publisher then keep publishing messages with the new key.
             // The subscriber should error on the next message, and unsubscribe
             // due to permission change.
-            // check that subscriber only got messages from before permission revoked
+            // check that subscriber got just the messages from before permission revoked
             // and subscriber errored with something about group key or
             // permissions
 
             await publisher.rotateGroupKey(stream.id)
 
-            await stream.grantPermission(StreamOperation.STREAM_GET, await subscriber.getPublisherId())
-            const subPermission = await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getPublisherId())
+            await stream.grantPermission(StreamOperation.STREAM_GET, await subscriber.getAddress())
+            const subPermission = await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
 
             const sub = await subscriber.subscribe({
                 stream: stream.id,
@@ -774,7 +767,7 @@ await subscriber.unsubscribe(sub)
                 throw err // this should trigger unsub
             })
 
-            sub.on('error', onSubError)
+            sub.onError(onSubError)
 
             const received: any[] = []
             // Publish after subscribed
@@ -793,6 +786,7 @@ await subscriber.unsubscribe(sub)
                     }
                 }
             })
+            publishTask.catch(() => {})
 
             subscriber.debug('\n\n1\n\n')
             let t!: ReturnType<typeof setTimeout>
@@ -800,14 +794,14 @@ await subscriber.unsubscribe(sub)
             try {
                 await expect(async () => {
                     for await (const m of sub) {
-                        subscriber.debug('got', m.getParsedContent())
-                        received.push(m.getParsedContent())
+                        received.push(m)
+                        subscriber.debug('RECEIVED %d of %d', received.length, maxMessages)
                         if (received.length === revokeAfter) {
                             gotMessages.resolve(undefined)
                             clearTimeout(t)
                             t = setTimeout(() => {
                                 timedOut()
-                                sub.cancel()
+                                sub.cancel().catch(() => {})
                             }, 6000)
                         }
 
@@ -821,18 +815,20 @@ await subscriber.unsubscribe(sub)
                 clearTimeout(t)
                 // run in finally to ensure publish promise finishes before
                 // continuing no matter the result of the expect call above
-                const published = await publishTask
+                const published = await publishTask.catch((err) => {
+                    publisher.debug('catch', err)
+                    return []
+                })
 
+                expect(timedOut).toHaveBeenCalledTimes(0)
                 expect(received).toEqual([
                     ...published.slice(0, revokeAfter),
                 ])
 
                 expect(onSubError).toHaveBeenCalledTimes(1)
-                expect(timedOut).toHaveBeenCalledTimes(0)
             }
         }
-
-        describe('low cache maxAge', () => {
+        describe('very low cache maxAge', () => {
             beforeEach(async () => {
                 await setupPublisherSubscriberClients({
                     cache: {
@@ -844,7 +840,26 @@ await subscriber.unsubscribe(sub)
                 await setupStream()
             })
             it('fails gracefully if permission revoked after first message', async () => {
-                await testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 1 })
+                await testRevokeDuringSubscribe({ maxMessages: 3, revokeAfter: 1 })
+            })
+            it('fails gracefully if permission revoked after some messages', async () => {
+                await testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 3 })
+            })
+        })
+
+        describe('low cache maxAge', () => {
+            beforeEach(async () => {
+                await setupPublisherSubscriberClients({
+                    cache: {
+                        maxAge: 2000,
+                    }
+                })
+            })
+            beforeEach(async () => {
+                await setupStream()
+            })
+            it('fails gracefully if permission revoked after first message', async () => {
+                await testRevokeDuringSubscribe({ maxMessages: 3, revokeAfter: 1 })
             })
             it('fails gracefully if permission revoked after some messages', async () => {
                 await testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 3 })
@@ -873,5 +888,4 @@ await subscriber.unsubscribe(sub)
             })
         })
     })
-    */
 })

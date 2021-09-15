@@ -39,10 +39,36 @@ export class PublisherKeyExchange implements Context {
         this.onKeyExchangeMessage = this.onKeyExchangeMessage.bind(this)
     }
 
+    getWrapError(streamMessage: StreamMessage) {
+        return async (error: ValidationError) => {
+            try {
+                const subscriberId = streamMessage.getPublisherId()
+                if (!GroupKeyRequest.is(streamMessage)) {
+                    // ignore weird message
+                    return undefined
+                }
+
+                const msg = streamMessage.getParsedContent()
+                const { streamId, requestId, groupKeyIds } = GroupKeyRequest.fromArray(msg)
+                const response = new GroupKeyErrorResponse({
+                    requestId,
+                    streamId,
+                    errorCode: error.code ?? 'UNEXPECTED_ERROR',
+                    errorMessage: error.message,
+                    groupKeyIds
+                })
+                return await this.keyExchangeStream.response(subscriberId, response)
+            } catch (err) {
+                this.debug('unexpected error responding with error', err)
+                return undefined
+            }
+        }
+    }
+
     private async onKeyExchangeMessage(streamMessage?: StreamMessage) {
         if (!streamMessage) { return }
-
-        await catchKeyExchangeError(this.keyExchangeStream, streamMessage, async () => {
+        const wrapError = this.getWrapError(streamMessage)
+        try {
             if (!GroupKeyRequest.is(streamMessage)) {
                 return
             }
@@ -75,19 +101,15 @@ export class PublisherKeyExchange implements Context {
                 encryptedGroupKeys,
             })
 
-            this.keyExchangeStream.response(subscriberId, response)
-        }).catch(async (err: Error | StreamMessageProcessingError) => {
+            await this.keyExchangeStream.response(subscriberId, response)
+        } catch (err: any) {
             if (!('streamMessage' in err)) {
-                this.debug('error', err)
+                this.debug('unexpected', err)
                 return // do nothing, supress.
             }
 
-            // wrap error and translate into ErrorResponse.
-            await catchKeyExchangeError(this.keyExchangeStream, err.streamMessage, () => { // eslint-disable-line promise/no-promise-in-callback
-                // rethrow so catchKeyExchangeError handles it
-                throw new InvalidGroupKeyRequestError(err.message)
-            })
-        })
+            await wrapError(err)
+        }
     }
 
     private async subscribe() {
@@ -100,7 +122,19 @@ export class PublisherKeyExchange implements Context {
             return undefined
         }
 
-        sub.consume(this.onKeyExchangeMessage)
+        sub.consume(this.onKeyExchangeMessage).catch(() => {})
+        sub.onError(async (err: Error | StreamMessageProcessingError) => {
+            if (!('streamMessage' in err)) {
+                this.debug('unexpected', err)
+                return // do nothing, supress.
+            }
+
+            // eslint-disable-next-line promise/no-promise-in-callback
+            await this.getWrapError(err.streamMessage)(new InvalidGroupKeyRequestError(err.message)).catch((error) => {
+                this.debug('unexpected error sending error', error)
+            })
+
+        })
 
         return sub
     }
@@ -111,16 +145,24 @@ export class PublisherKeyExchange implements Context {
 
     async rotateGroupKey(streamId: string) {
         if (!this.enabled) { return }
-        const groupKeyStore = await this.getGroupKeyStore(streamId)
-        await groupKeyStore.rotateGroupKey()
+        try {
+            const groupKeyStore = await this.getGroupKeyStore(streamId)
+            await groupKeyStore.rotateGroupKey()
+        } finally {
+            this.streamEndpoints.clearStream(streamId)
+        }
     }
 
     async setNextGroupKey(streamId: string, groupKey: GroupKey) {
         if (!this.enabled) { return }
-        const groupKeyStore = await this.getGroupKeyStore(streamId)
-        if (!this.enabled) { return }
+        try {
+            const groupKeyStore = await this.getGroupKeyStore(streamId)
+            if (!this.enabled) { return }
 
-        await groupKeyStore.setNextGroupKey(groupKey)
+            await groupKeyStore.setNextGroupKey(groupKey)
+        } finally {
+            this.streamEndpoints.clearStream(streamId)
+        }
     }
 
     async useGroupKey(streamId: string) {
@@ -138,12 +180,16 @@ export class PublisherKeyExchange implements Context {
     }
 
     async rekey(streamId: string) {
-        if (!this.enabled) { return }
-        const groupKeyStore = await this.getGroupKeyStore(streamId)
-        if (!this.enabled) { return }
-        await groupKeyStore.rekey()
-        if (!this.enabled) { return }
-        await this.getSubscription()
+        try {
+            if (!this.enabled) { return }
+            const groupKeyStore = await this.getGroupKeyStore(streamId)
+            if (!this.enabled) { return }
+            await groupKeyStore.rekey()
+            if (!this.enabled) { return }
+            await this.getSubscription()
+        } finally {
+            this.streamEndpoints.clearStream(streamId)
+        }
     }
 
     async start() {

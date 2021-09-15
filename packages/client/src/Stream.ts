@@ -15,6 +15,7 @@ import Resends from './Resends'
 import Publisher from './Publisher'
 import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
+import { StreamEndpointsCached } from './StreamEndpointsCached'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -112,6 +113,7 @@ class StreamrStream implements StreamMetadata {
     protected _resends: Resends
     protected _publisher: Publisher
     protected _streamEndpoints: StreamEndpoints
+    protected _streamEndpointsCached: StreamEndpointsCached
 
     constructor(
         props: StreamProperties,
@@ -124,14 +126,19 @@ class StreamrStream implements StreamMetadata {
         this._resends = _container.resolve<Resends>(Resends)
         this._publisher = _container.resolve<Publisher>(Publisher)
         this._streamEndpoints = _container.resolve<StreamEndpoints>(StreamEndpoints)
+        this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
     }
 
     async update() {
-        const json = await this._rest.put<StreamProperties>(
-            ['streams', this.id],
-            this.toObject(),
-        )
-        return json ? new StreamrStream(json, this._container) : undefined
+        try {
+            const json = await this._rest.put<StreamProperties>(
+                ['streams', this.id],
+                this.toObject(),
+            )
+            return json ? new StreamrStream(json, this._container) : undefined
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     toObject() {
@@ -145,9 +152,13 @@ class StreamrStream implements StreamMetadata {
     }
 
     async delete() {
-        await this._rest.del(
-            ['streams', this.id],
-        )
+        try {
+            await this._rest.del(
+                ['streams', this.id],
+            )
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async getPermissions() {
@@ -190,17 +201,24 @@ class StreamrStream implements StreamMetadata {
         } else {
             permissionObject.anonymous = true
         }
-
-        return this._rest.post<StreamPermision>(
-            ['streams', this.id, 'permissions'],
-            permissionObject
-        )
+        try {
+            return this._rest.post<StreamPermision>(
+                ['streams', this.id, 'permissions'],
+                permissionObject
+            )
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async revokePermission(permissionId: number) {
-        return this._rest.del<StreamPermision>(
-            ['streams', this.id, 'permissions', String(permissionId)],
-        )
+        try {
+            return this._rest.del<StreamPermision>(
+                ['streams', this.id, 'permissions', String(permissionId)],
+            )
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async detectFields() {

@@ -6,6 +6,7 @@ import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 import { pOnce, Defer, instanceId } from '../utils'
 import { EthereumAddress } from '../types'
 import { Context } from '../utils/Context'
+import { DestroySignal } from '../DestroySignal'
 
 import Subscriber from '../Subscriber'
 import Publisher from '../Publisher'
@@ -59,10 +60,11 @@ function waitForSubMessage(
             task.reject(err)
         }
     }
-    sub.consume(onMessage)
     task.finally(async () => {
         await sub.unsubscribe()
     }).catch(() => {}) // important: prevent unchained finally cleanup causing unhandled rejection
+    sub.consume(onMessage).catch((err) => task.reject(err))
+    sub.onError(task.reject)
     return task
 }
 
@@ -79,6 +81,7 @@ export class KeyExchangeStream implements Context, Stoppable {
         private ethereum: Ethereum,
         private session: Session,
         private subscriber: Subscriber,
+        private destroySignal: DestroySignal,
         @inject(delay(() => Publisher)) private publisher: Publisher
     ) {
         this.id = instanceId(this)
@@ -92,7 +95,12 @@ export class KeyExchangeStream implements Context, Stoppable {
         const publisherId = await this.ethereum.getAddress()
         const streamId = getKeyExchangeStreamId(publisherId)
         const sub = await this.subscriber.subscribe(streamId)
-        sub.onFinally(() => {
+        const onDestroy = () => {
+            return sub.unsubscribe()
+        }
+        this.destroySignal.onDestroy.listen(onDestroy)
+        sub.onBeforeFinally(() => {
+            this.destroySignal.onDestroy.unlisten(onDestroy)
             this.subscribe.reset()
         })
         return sub
@@ -114,7 +122,7 @@ export class KeyExchangeStream implements Context, Stoppable {
             if (this.isStopped || !sub) { return undefined }
             responseTask = waitForSubMessage(sub, (content, streamMessage) => {
                 const { messageType } = streamMessage
-                if (!(messageType === GROUP_KEY_RESPONSE || messageType === GROUP_KEY_ERROR_RESPONSE)) {
+                if (messageType !== GROUP_KEY_RESPONSE && messageType !== GROUP_KEY_ERROR_RESPONSE) {
                     return false
                 }
 
@@ -125,13 +133,26 @@ export class KeyExchangeStream implements Context, Stoppable {
 
             await this.publisher.publish(streamId, request)
 
+            if (this.isStopped) {
+                responseTask.resolve(undefined)
+                return undefined
+            }
+            this.destroySignal.onDestroy.listen(responseTask.resolve)
+
             return await responseTask
+        } catch (err) {
+            if (responseTask) {
+                responseTask.reject(err)
+            }
+            throw err
         } finally {
+            if (responseTask) {
+                this.destroySignal.onDestroy.unlisten(responseTask.resolve)
+            }
+            this.subscribe.reset()
             if (sub) {
                 await sub.unsubscribe()
             }
-
-            this.subscribe.reset()
             await responseTask
         }
     }

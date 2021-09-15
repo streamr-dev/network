@@ -255,7 +255,9 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 await this.definition.source.return(undefined)
             }
         } finally {
-            await this.onBeforeFinally.trigger()
+            if (!this.onBeforeFinally.triggerCount) {
+                await this.onBeforeFinally.trigger()
+            }
             await this.onFinally.trigger(error)
             this.definition.clearTransforms()
         }

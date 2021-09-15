@@ -7,6 +7,7 @@ import EncryptionUtil, { UnableToDecryptError } from './encryption/Encryption'
 import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { Context } from './utils/Context'
+import { DestroySignal } from './DestroySignal'
 import { Stoppable } from './utils/Stoppable'
 import { instanceId } from './utils'
 
@@ -27,11 +28,17 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
         context: Context,
         private streamEndpoints: StreamEndpointsCached,
         private keyExchange: SubscriberKeyExchange,
+        private destroySignal: DestroySignal,
         private options: DecryptWithExchangeOptions<T>,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.decrypt = this.decrypt.bind(this)
+        this.destroySignal.onDestroy(async () => {
+            if (!this.isStopped) {
+                await this.stop()
+            }
+        })
     }
 
     private async onError(err: Error, streamMessage?: StreamMessage<T>) {
@@ -65,17 +72,16 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
                 ].join(' '), streamMessage)
             }
 
+            if (this.isStopped) { return }
             EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
             await this.keyExchange.addNewKey(streamMessage)
         } catch (err) {
+            if (this.isStopped) { return }
             this.debug('Decrypt Error', err)
             // clear cached permissions if cannot decrypt, likely permissions need updating
             this.streamEndpoints.clearStream(streamMessage.getStreamId())
             await this.onError(err, streamMessage)
         }
-    }
-    async start() {
-        this.isStopped = false
     }
 
     async stop() {

@@ -67,14 +67,6 @@ export default class Validator extends StreamMessageValidator implements Stoppab
     orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {
         if (this.isStopped) { return }
         const { options } = this
-        if (msg.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
-            const errMsg = msg as StreamMessage<any>
-            const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
-            const err = new ValidationError(`GroupKeyErrorResponse: ${res.errorMessage}`, msg)
-            err.streamMessage = msg
-            err.code = res.errorCode
-            throw err
-        }
 
         // Check special cases controlled by the verifySignatures policy
         if (options.verifySignatures === 'never' && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
