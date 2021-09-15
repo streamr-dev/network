@@ -162,7 +162,7 @@ export class Connection extends EventEmitter {
         } catch (e) {
             // no need to check this error
         } finally {
-            logger.warn('connection %s was terminated, reason: %s', this.id, reason)
+            logger.info('connection %s was terminated, reason: %s', this.id, reason)
             this.dead = true
             this.emit('close')
         }

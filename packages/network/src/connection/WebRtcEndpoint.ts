@@ -130,7 +130,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             const pendingPeerIds = []
             for (const peerId of Object.keys(this.connections)) {
                 const lastState = this.connections[peerId].getLastState()
-                if (lastState === 'open') {
+                if (lastState === 'connected') {
                     connectedPeerCount += 1
                 } else if (lastState === 'connecting') {
                     pendingPeerIds.push(peerId)
