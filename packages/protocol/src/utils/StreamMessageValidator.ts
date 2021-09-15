@@ -239,14 +239,17 @@ export default class StreamMessageValidator {
             )
         }
 
-        const recipient = streamMessage.getStreamId().substring(KEY_EXCHANGE_STREAM_PREFIX.length)
-        // Check that the recipient of the request is a valid subscriber of the stream
-        const recipientIsSubscriber = await this.isSubscriber(recipient, groupKeyMessage.streamId)
-        if (!recipientIsSubscriber) {
-            throw new StreamMessageError(
-                `${recipient} is not a subscriber on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
-                streamMessage
-            )
+        if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+            // permit publishers to send error responses to invalid subscribers
+            const recipient = streamMessage.getStreamId().substring(KEY_EXCHANGE_STREAM_PREFIX.length)
+            // Check that the recipient of the request is a valid subscriber of the stream
+            const recipientIsSubscriber = await this.isSubscriber(recipient, groupKeyMessage.streamId)
+            if (!recipientIsSubscriber) {
+                throw new StreamMessageError(
+                    `${recipient} is not a subscriber on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
+                    streamMessage
+                )
+            }
         }
     }
 
