@@ -79,12 +79,14 @@ export class TrackerManager {
         this.sendStatus(streamId, trackerId)
     }
 
-    private getTrackerId(streamId: StreamIdAndPartition): TrackerId {
-        return this.trackerRegistry.getTracker(streamId.id, streamId.partition).id
-    }
-
     onNewStream(streamId: StreamIdAndPartition): void {
         this.trackerConnector.onNewStream(streamId)
+    }
+
+    onUnsubscribeFromStream(streamId: StreamIdAndPartition): void {
+        const key = streamId.key()
+        this.instructionThrottler.removeStream(key)
+        this.instructionRetryManager.removeStream(key)
     }
 
     start(): void {
@@ -181,9 +183,7 @@ export class TrackerManager {
         }
     }
 
-    onUnsubscribeFromStream(streamId: StreamIdAndPartition): void {
-        const key = streamId.key()
-        this.instructionThrottler.removeStream(key)
-        this.instructionRetryManager.removeStream(key)
+    private getTrackerId(streamId: StreamIdAndPartition): TrackerId {
+        return this.trackerRegistry.getTracker(streamId.id, streamId.partition).id
     }
 }
