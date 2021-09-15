@@ -148,6 +148,12 @@ export class StreamManager {
         return result
     }
 
+    // efficient way to access streams
+    getStreamKeys(): IterableIterator<StreamKey> {
+        return this.streams.keys()
+    }
+
+    // TODO: rename to getStreamKeysAsSortedArray (or remove sort functionality altogether)
     getStreamsAsKeys(): ReadonlyArray<StreamKey> {
         return [...this.streams.keys()].sort()
     }

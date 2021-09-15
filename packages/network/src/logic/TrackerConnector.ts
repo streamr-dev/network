@@ -26,13 +26,8 @@ export class TrackerConnector {
     }
 
     maintainConnections(): void {
-        const activeTrackers = new Set<string>()
-        this.streamManager.getStreams().forEach((s) => {
-            const trackerInfo = this.trackerRegistry.getTracker(s.id, s.partition)
-            activeTrackers.add(trackerInfo.id)
-        })
         this.trackerRegistry.getAllTrackers().forEach(({ id, ws }) => {
-            if (activeTrackers.has(id)) {
+            if (this.isActiveTracker(id)) {
                 this.nodeToTracker.connectToTracker(ws, PeerInfo.newTracker(id))
                     .then(() => this.unconnectables.delete(id))
                     .catch((err) => {
@@ -62,5 +57,15 @@ export class TrackerConnector {
             clearInterval(this.maintenanceTimer)
             this.maintenanceTimer = null
         }
+    }
+
+    private isActiveTracker(trackerId: TrackerId): boolean {
+        for (const streamKey of this.streamManager.getStreamKeys()) {
+            const { id: streamId, partition } = StreamIdAndPartition.fromKey(streamKey)
+            if (this.trackerRegistry.getTracker(streamId, partition).id === trackerId) {
+                return true
+            }
+        }
+        return false
     }
 }
