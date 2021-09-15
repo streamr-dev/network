@@ -1,7 +1,8 @@
+import { TrackerLayer } from 'streamr-client-protocol'
 import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
 import { TrackerId } from './Tracker'
 import { TrackerConnector } from './TrackerConnector'
-import { NodeToTracker } from '../protocol/NodeToTracker'
+import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { StreamManager } from './StreamManager'
 import { Logger } from '../helpers/Logger'
 import { NodeOptions } from './Node'
@@ -23,20 +24,31 @@ export class TrackerManager {
     constructor(
         formStatus: FormStatusFn,
         opts: NodeOptions,
-        nodeToTracker: NodeToTracker,
         streamManager: StreamManager,
+        onTrackerInstructionReceived: (trackerId: TrackerId, instructionMessage: TrackerLayer.InstructionMessage) => void
     ) {
         this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
+        this.formStatus = formStatus
+        this.nodeToTracker =  opts.protocols.nodeToTracker
+        this.streamManager = streamManager
+        this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.trackerConnector = new TrackerConnector(
             streamManager,
-            nodeToTracker,
+            this.nodeToTracker,
             this.trackerRegistry,
             opts.trackerConnectionMaintenanceInterval ?? 5000
         )
-        this.formStatus = formStatus
-        this.nodeToTracker = nodeToTracker
-        this.streamManager = streamManager
-        this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
+
+        this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => {
+            logger.trace('connected to tracker %s', trackerId)
+            this.prepareAndSendMultipleStatuses(trackerId)
+        })
+        this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => {
+            onTrackerInstructionReceived(trackerId, streamMessage)
+        })
+        this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_DISCONNECTED, (trackerId) => {
+            logger.trace('disconnected from tracker %s', trackerId)
+        })
     }
 
     prepareAndSendStreamStatus(streamId: StreamIdAndPartition): void {
@@ -55,11 +67,6 @@ export class TrackerManager {
         return this.trackerRegistry.getTracker(streamId.id, streamId.partition).id
     }
 
-    onConnectedToTracker(trackerId: TrackerId): void {
-        logger.trace('connected to tracker %s', trackerId)
-        this.prepareAndSendMultipleStatuses(trackerId)
-    }
-
     onNewStream(streamId: StreamIdAndPartition): void {
         this.trackerConnector.onNewStream(streamId)
     }
@@ -68,9 +75,10 @@ export class TrackerManager {
         this.trackerConnector.start()
     }
 
-    stop(): void {
+    async stop(): Promise<void> {
         this.trackerConnector.stop()
         Object.values(this.rttUpdateTimeoutsOnTrackers).forEach((timeout) => clearTimeout(timeout))
+        await this.nodeToTracker.stop()
     }
 
     private getStreamsForTracker(trackerId: TrackerId): Array<StreamIdAndPartition> {

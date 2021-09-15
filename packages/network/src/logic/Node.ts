@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { MessageLayer, TrackerLayer } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
-import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
+import { NodeToTracker } from '../protocol/NodeToTracker'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
 import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
@@ -65,7 +65,6 @@ export interface Node {
 
 export class Node extends EventEmitter {
     protected readonly nodeToNode: NodeToNode
-    private readonly nodeToTracker: NodeToTracker
     private readonly peerInfo: PeerInfo
     private readonly bufferTimeoutInMs: number
     private readonly bufferMaxSize: number
@@ -96,7 +95,6 @@ export class Node extends EventEmitter {
         }
 
         this.nodeToNode = opts.protocols.nodeToNode
-        this.nodeToTracker = opts.protocols.nodeToTracker
         this.peerInfo = opts.peerInfo
 
         this.bufferTimeoutInMs = opts.bufferTimeoutInMs || 60 * 1000
@@ -108,7 +106,7 @@ export class Node extends EventEmitter {
         const metricsContext = opts.metricsContext || new MetricsContext('')
 
         this.streams = new StreamManager()
-        this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.nodeToTracker, this.streams)
+        this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.streams, (trackerId, streamMessage) => this.onTrackerInstructionReceived(trackerId, streamMessage))
         this.messageBuffer = new MessageBuffer(this.bufferTimeoutInMs, this.bufferMaxSize, (streamId) => {
             logger.trace(`failed to deliver buffered messages of stream ${streamId}`)
         })
@@ -123,9 +121,6 @@ export class Node extends EventEmitter {
             opts.instructionRetryInterval || 3 * 60 * 1000
         )
 
-        this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
-        this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))  // eslint-disable-line max-len
-        this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_DISCONNECTED, (trackerId) => this.onTrackerDisconnected(trackerId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
@@ -163,10 +158,6 @@ export class Node extends EventEmitter {
     start(): void {
         logger.trace('started')
         this.trackerManager.start()
-    }
-
-    onConnectedToTracker(tracker: TrackerId): void {
-        this.trackerManager.onConnectedToTracker(tracker)
     }
 
     subscribeToStreamIfHaveNotYet(streamId: StreamIdAndPartition, sendStatus = true): void {
@@ -362,12 +353,12 @@ export class Node extends EventEmitter {
         this.emit(Event.MESSAGE_PROPAGATED, streamMessage)
     }
 
-    stop(): Promise<unknown> {
+    async stop(): Promise<void> {
         logger.trace('stopping')
         
         this.instructionThrottler.stop()
         this.instructionRetryManager.stop()
-        this.trackerManager.stop()
+        await this.trackerManager.stop()
 
         if (this.handleBufferedMessagesTimeoutRef) {
             clearTimeout(this.handleBufferedMessagesTimeoutRef)
@@ -377,10 +368,7 @@ export class Node extends EventEmitter {
         Object.values(this.disconnectionTimers).forEach((timeout) => clearTimeout(timeout))
 
         this.messageBuffer.clear()
-        return Promise.all([
-            this.nodeToTracker.stop(),
-            this.nodeToNode.stop(),
-        ])
+        this.nodeToNode.stop()
     }
 
     private formStatus(streamId: StreamIdAndPartition, includeRtt: boolean): Status {
@@ -437,10 +425,6 @@ export class Node extends EventEmitter {
             this.trackerManager.prepareAndSendStreamStatus(s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
-    }
-
-    onTrackerDisconnected(tracker: TrackerId): void {
-        logger.trace('disconnected from tracker %s', tracker)
     }
 
     private handleBufferedMessages(streamId: StreamIdAndPartition): void {
