@@ -77,14 +77,14 @@ export class TrackerManager {
         this.sendStatus(streamId, trackerId)
     }
 
-    prepareAndSendMultipleStatuses(trackerId: TrackerId): void {
+    private prepareAndSendMultipleStatuses(trackerId: TrackerId): void {
         const relevantStreams = this.getStreamsForTracker(trackerId)
         relevantStreams.forEach((streamId) => {
             this.sendStatus(streamId, trackerId)
         })
     }
 
-    getTrackerId(streamId: StreamIdAndPartition): TrackerId {
+    private getTrackerId(streamId: StreamIdAndPartition): TrackerId {
         return this.trackerRegistry.getTracker(streamId.id, streamId.partition).id
     }
 
