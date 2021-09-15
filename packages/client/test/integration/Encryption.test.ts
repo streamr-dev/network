@@ -460,10 +460,9 @@ describeRepeats('decryption', () => {
                     },
                 })
 
-                const received = sub.collectContent(2)
+                const received = await sub.collectContent(2)
 
                 expect(received).toEqual(published.slice(-2))
-                await subscriber.unsubscribe(sub)
             }, TIMEOUT * 2)
 
             describe('error handling', () => {
