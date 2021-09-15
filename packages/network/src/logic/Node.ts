@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { MessageLayer, TrackerLayer } from 'streamr-client-protocol'
+import { MessageLayer } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { MessageBuffer } from '../helpers/MessageBuffer'
@@ -8,11 +8,9 @@ import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamManager } from './StreamManager'
-import { InstructionThrottler } from './InstructionThrottler'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
-import { InstructionRetryManager } from "./InstructionRetryManager"
 import { NameDirectory } from '../NameDirectory'
 import { DisconnectionReason } from "../connection/ws/AbstractWsEndpoint"
 import { TrackerId } from './Tracker'
@@ -77,8 +75,6 @@ export class Node extends EventEmitter {
     private readonly trackerManager: TrackerManager
     private readonly messageBuffer: MessageBuffer<[MessageLayer.StreamMessage, string | null]>
     private readonly seenButNotPropagatedSet: SeenButNotPropagatedSet
-    private readonly instructionThrottler: InstructionThrottler
-    private readonly instructionRetryManager: InstructionRetryManager
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metrics: Metrics
     private handleBufferedMessagesTimeoutRef?: NodeJS.Timeout | null
@@ -104,22 +100,34 @@ export class Node extends EventEmitter {
         this.started = new Date().toLocaleString()
 
         const metricsContext = opts.metricsContext || new MetricsContext('')
+        this.metrics = metricsContext.create('node')
+            .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
+            .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
+            .addRecordedMetric('unexpectedTrackerInstructions')
+            .addRecordedMetric('trackerInstructions')
+            .addRecordedMetric('onDataReceived')
+            .addRecordedMetric('onDataReceived:invalidNumbering')
+            .addRecordedMetric('onDataReceived:gapMismatch')
+            .addRecordedMetric('onDataReceived:ignoredDuplicate')
+            .addRecordedMetric('propagateMessage')
+            .addRecordedMetric('onSubscribeRequest')
+            .addRecordedMetric('onUnsubscribeRequest')
+            .addRecordedMetric('onNodeDisconnect')
+            .addFixedMetric('latency')
 
         this.streams = new StreamManager()
-        this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.streams, (trackerId, streamMessage) => this.onTrackerInstructionReceived(trackerId, streamMessage))
+        this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.streams, this.metrics, {
+            subscribeToStreamIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
+            subscribeToStreamsOnNode: this.subscribeToStreamsOnNode.bind(this),
+            unsubscribeFromStreamOnNode: this.unsubscribeFromStreamOnNode.bind(this)
+        })
         this.messageBuffer = new MessageBuffer(this.bufferTimeoutInMs, this.bufferMaxSize, (streamId) => {
             logger.trace(`failed to deliver buffered messages of stream ${streamId}`)
         })
         this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
 
         this.disconnectionTimers = {}
-
         this.consecutiveDeliveryFailures = {}
-        this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
-        this.instructionRetryManager = new InstructionRetryManager(
-            this.handleTrackerInstruction.bind(this),
-            opts.instructionRetryInterval || 3 * 60 * 1000
-        )
 
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
@@ -138,21 +146,6 @@ export class Node extends EventEmitter {
 
             this.metrics.set('latency', avgLatency)
         })
-
-        this.metrics = metricsContext.create('node')
-            .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
-            .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
-            .addRecordedMetric('unexpectedTrackerInstructions')
-            .addRecordedMetric('trackerInstructions')
-            .addRecordedMetric('onDataReceived')
-            .addRecordedMetric('onDataReceived:invalidNumbering')
-            .addRecordedMetric('onDataReceived:gapMismatch')
-            .addRecordedMetric('onDataReceived:ignoredDuplicate')
-            .addRecordedMetric('propagateMessage')
-            .addRecordedMetric('onSubscribeRequest')
-            .addRecordedMetric('onUnsubscribeRequest')
-            .addRecordedMetric('onNodeDisconnect')
-            .addFixedMetric('latency')
     }
 
     start(): void {
@@ -174,40 +167,14 @@ export class Node extends EventEmitter {
     unsubscribeFromStream(streamId: StreamIdAndPartition, sendStatus = true): void {
         logger.trace('remove %s from streams', streamId)
         this.streams.removeStream(streamId)
-        this.instructionThrottler.removeStream(streamId.key())
-        this.instructionRetryManager.removeStream(streamId.key())
+        this.trackerManager.onUnsubscribeFromStream(streamId)
         if (sendStatus) {
             this.trackerManager.prepareAndSendStreamStatus(streamId)
         }
     }
 
-    onTrackerInstructionReceived(trackerId: TrackerId, instructionMessage: TrackerLayer.InstructionMessage): void {
-        this.instructionThrottler.add(instructionMessage, trackerId)
-    }
-
-    async handleTrackerInstruction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId, reattempt = false): Promise<void> {
-        const streamId = StreamIdAndPartition.fromMessage(instructionMessage)
-        const { nodeIds, counter } = instructionMessage
-
-        this.instructionRetryManager.add(instructionMessage, trackerId)
-
-        // Check that tracker matches expected tracker
-        const expectedTrackerId = this.trackerManager.getTrackerId(streamId)
-        if (trackerId !== expectedTrackerId) {
-            this.metrics.record('unexpectedTrackerInstructions', 1)
-            logger.warn(`got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
-            return
-        }
-
-        this.metrics.record('trackerInstructions', 1)
-        logger.trace('received instructions for %s, nodes to connect %o', streamId, nodeIds)
-
-        this.subscribeToStreamIfHaveNotYet(streamId, false)
-        const currentNodes = this.streams.getAllNodesForStream(streamId)
-        const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
-
+    subscribeToStreamsOnNode(nodeIds: NodeId[], streamId: StreamIdAndPartition, trackerId: TrackerId, reattempt: boolean): Promise<PromiseSettledResult<NodeId>[]> {
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            
             await promiseTimeout(this.nodeConnectTimeout, 
                 this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
             
@@ -215,40 +182,7 @@ export class Node extends EventEmitter {
             this.subscribeToStreamOnNode(nodeId, streamId, false)
             return nodeId
         })
-
-        nodesToUnsubscribeFrom.forEach((nodeId) => {
-            this.unsubscribeFromStreamOnNode(nodeId, streamId, false)
-        })
-
-        const results = await Promise.allSettled(subscribePromises)
-        if (this.streams.isSetUp(streamId)) {
-            this.streams.updateCounter(streamId, counter)
-        }
-
-        // Log success / failures
-        const subscribedNodeIds: NodeId[] = []
-        const unsubscribedNodeIds: NodeId[] = []
-        let failedInstructions = false
-        results.forEach((res) => {
-            if (res.status === 'fulfilled') {
-                subscribedNodeIds.push(res.value)
-            } else {
-                failedInstructions = true
-                logger.info('failed to subscribe (or connect) to node, reason: %s', res.reason)
-            }
-        })
-        if (!reattempt || failedInstructions) {
-            this.trackerManager.prepareAndSendStreamStatus(streamId)
-        }
-
-        logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
-            subscribedNodeIds, unsubscribedNodeIds, streamId, counter)
-
-        if (subscribedNodeIds.length !== nodeIds.length) {
-            logger.trace('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)', streamId, counter)
-        } else {
-            logger.trace('Tracker instructions fulfilled (streamId=%s, counter=%d)', streamId, counter)
-        }
+        return Promise.allSettled(subscribePromises)
     }
 
     onDataReceived(streamMessage: MessageLayer.StreamMessage, source: NodeId | null = null): void | never {
@@ -355,9 +289,7 @@ export class Node extends EventEmitter {
 
     async stop(): Promise<void> {
         logger.trace('stopping')
-        
-        this.instructionThrottler.stop()
-        this.instructionRetryManager.stop()
+    
         await this.trackerManager.stop()
 
         if (this.handleBufferedMessagesTimeoutRef) {

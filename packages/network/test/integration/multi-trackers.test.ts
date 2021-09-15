@@ -175,7 +175,8 @@ describe('multi trackers', () => {
             ],
             counter: 0
         })
-        await nodeOne.handleTrackerInstruction(unexpectedInstruction, 'trackerOne')
+        // @ts-expect-error private field
+        await nodeOne.trackerManager.handleTrackerInstruction(unexpectedInstruction, 'trackerOne')
         expect(nodeOne.getStreams()).not.toContain('stream-2::0')
     })
 })
