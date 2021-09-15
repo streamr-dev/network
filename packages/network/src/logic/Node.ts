@@ -159,7 +159,7 @@ export class Node extends EventEmitter {
             this.streams.setUpStream(streamId)
             this.trackerManager.onNewStream(streamId) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
-                this.trackerManager.prepareAndSendStreamStatus(streamId)
+                this.trackerManager.sendStreamStatus(streamId)
             }
         }
     }
@@ -169,7 +169,7 @@ export class Node extends EventEmitter {
         this.streams.removeStream(streamId)
         this.trackerManager.onUnsubscribeFromStream(streamId)
         if (sendStatus) {
-            this.trackerManager.prepareAndSendStreamStatus(streamId)
+            this.trackerManager.sendStreamStatus(streamId)
         }
     }
 
@@ -319,7 +319,7 @@ export class Node extends EventEmitter {
         this.streams.addOutboundNode(streamId, node)
         this.handleBufferedMessages(streamId)
         if (sendStatus) {
-            this.trackerManager.prepareAndSendStreamStatus(streamId)
+            this.trackerManager.sendStreamStatus(streamId)
         }
         this.emit(Event.NODE_SUBSCRIBED, node, streamId)
         return node
@@ -345,7 +345,7 @@ export class Node extends EventEmitter {
             }, this.disconnectionWaitTime)
         }
         if (sendStatus) {
-            this.trackerManager.prepareAndSendStreamStatus(streamId)
+            this.trackerManager.sendStreamStatus(streamId)
         }
     }
 
@@ -354,7 +354,7 @@ export class Node extends EventEmitter {
         const streams = this.streams.removeNodeFromAllStreams(node)
         logger.trace('removed all subscriptions of node %s', node)
         streams.forEach((s) => {
-            this.trackerManager.prepareAndSendStreamStatus(s)
+            this.trackerManager.sendStreamStatus(s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }

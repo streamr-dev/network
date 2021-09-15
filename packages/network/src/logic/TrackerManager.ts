@@ -62,7 +62,9 @@ export class TrackerManager {
 
         this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => {
             logger.trace('connected to tracker %s', trackerId)
-            this.prepareAndSendMultipleStatuses(trackerId)
+            this.getStreamsForTracker(trackerId).forEach((streamId) => {
+                this.sendStatus(streamId, trackerId)
+            })
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (instructionMessage, trackerId) => {
             this.instructionThrottler.add(instructionMessage, trackerId)
@@ -72,16 +74,9 @@ export class TrackerManager {
         })
     }
 
-    prepareAndSendStreamStatus(streamId: StreamIdAndPartition): void {
+    sendStreamStatus(streamId: StreamIdAndPartition): void {
         const trackerId = this.getTrackerId(streamId)
         this.sendStatus(streamId, trackerId)
-    }
-
-    private prepareAndSendMultipleStatuses(trackerId: TrackerId): void {
-        const relevantStreams = this.getStreamsForTracker(trackerId)
-        relevantStreams.forEach((streamId) => {
-            this.sendStatus(streamId, trackerId)
-        })
     }
 
     private getTrackerId(streamId: StreamIdAndPartition): TrackerId {
@@ -173,7 +168,7 @@ export class TrackerManager {
             }
         })
         if (!reattempt || failedInstructions) {
-            this.prepareAndSendStreamStatus(streamId)
+            this.sendStreamStatus(streamId)
         }
 
         logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
