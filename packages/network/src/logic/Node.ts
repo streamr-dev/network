@@ -61,14 +61,20 @@ export interface Node {
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, streamId: StreamIdAndPartition) => void): this
 }
 
+type FormStatusFn = (streamId: StreamIdAndPartition, includeRtt: boolean) => Status
+
 class TrackerManager {
-    private readonly rttUpdateTimeoutsOnTrackers: { [key: string]: NodeJS.Timeout } = {} // trackerId => timeout
+    private readonly rttUpdateTimeoutsOnTrackers: Record<TrackerId, NodeJS.Timeout> = {}
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private readonly trackerConnector: TrackerConnector
+    private readonly formStatus: FormStatusFn
+    private readonly nodeToTracker: NodeToTracker
+    private readonly streamManager: StreamManager
     private readonly logger: Logger
     private readonly rttUpdateInterval: number
 
     constructor(
+        formStatus: FormStatusFn,
         opts: NodeOptions,
         logger: Logger,
         nodeToTracker: NodeToTracker,
@@ -82,27 +88,34 @@ class TrackerManager {
             logger,
             opts.trackerConnectionMaintenanceInterval ?? 5000
         )
+        this.formStatus = formStatus
+        this.nodeToTracker = nodeToTracker
+        this.streamManager = streamManager
         this.logger = logger
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
+    }
+
+    prepareAndSendStreamStatus(streamId: StreamIdAndPartition): void {
+        const trackerId = this.getTrackerId(streamId)
+        const status = this.getStreamStatus(streamId, trackerId)
+        this.sendStatus(trackerId, status)
+    }
+
+    prepareAndSendMultipleStatuses(trackerId: TrackerId, streams?: StreamIdAndPartition[]): void {
+        const listOfStatus = this.getMultipleStatus(trackerId, streams)
+        listOfStatus.forEach((status) => {
+            this.sendStatus(trackerId, status)
+        })
     }
 
     getTrackerId(streamId: StreamIdAndPartition): TrackerId {
         return this.trackerRegistry.getTracker(streamId.id, streamId.partition).id
     }
 
-    checkRttTimeout(trackerId: TrackerId): boolean {
-        if (!(trackerId in this.rttUpdateTimeoutsOnTrackers)) {
-            this.rttUpdateTimeoutsOnTrackers[trackerId] = setTimeout(() => {
-                this.logger.trace(`RTT timeout to ${trackerId} triggered, RTTs to connections will be updated with the next status message`)
-                delete this.rttUpdateTimeoutsOnTrackers[trackerId]
-            }, this.rttUpdateInterval)
-            return true
-        }
-        return false
-    }
-
-    onConnectedToTracker(_serverUrl: string, _trackerId: TrackerId): void {
-        // TODO: does something appear here later perhaps?
+    onConnectedToTracker(trackerId: TrackerId): void {
+        // TODO: add guard for connectivity if deemed necessary
+        this.logger.trace('connected to tracker %s', trackerId)
+        this.prepareAndSendMultipleStatuses(trackerId)
     }
 
     onNewStream(_streamId: StreamIdAndPartition): void {
@@ -117,6 +130,38 @@ class TrackerManager {
     stop(): void {
         this.trackerConnector.stop()
         Object.values(this.rttUpdateTimeoutsOnTrackers).forEach((timeout) => clearTimeout(timeout))
+    }
+
+    // Gets statuses of all streams assigned to a tracker by default
+    private getMultipleStatus(tracker: TrackerId, explicitStreams?: StreamIdAndPartition[]): Status[] {
+        const streams = explicitStreams || this.streamManager.getStreams()
+        return streams
+            .filter((streamId) => this.getTrackerId(streamId) === tracker) // TODO: is this check necessary? internal business
+            .map((streamId) => this.getStreamStatus(streamId, tracker))
+    }
+
+    private getStreamStatus(streamId: StreamIdAndPartition, trackerId: TrackerId): Status {
+        return this.formStatus(streamId, this.shouldIncludeRttInfo(trackerId))
+    }
+
+    private shouldIncludeRttInfo(trackerId: TrackerId): boolean {
+        if (!(trackerId in this.rttUpdateTimeoutsOnTrackers)) {
+            this.rttUpdateTimeoutsOnTrackers[trackerId] = setTimeout(() => {
+                this.logger.trace(`RTT timeout to ${trackerId} triggered, RTTs to connections will be updated with the next status message`)
+                delete this.rttUpdateTimeoutsOnTrackers[trackerId]
+            }, this.rttUpdateInterval)
+            return true
+        }
+        return false
+    }
+
+    private async sendStatus(tracker: TrackerId, status: Status) {
+        try {
+            await this.nodeToTracker.sendStatus(tracker, status)
+            this.logger.trace('sent status %j to tracker %s', status.streams, tracker)
+        } catch (e) {
+            this.logger.trace('failed to send status to tracker %s, reason: %s', tracker, e)
+        }
     }
 }
 
@@ -169,7 +214,7 @@ export class Node extends EventEmitter {
         const metricsContext = opts.metricsContext || new MetricsContext('')
 
         this.streams = new StreamManager()
-        this.trackerManager = new TrackerManager(opts, this.logger, this.nodeToTracker, this.streams)
+        this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.logger, this.nodeToTracker, this.streams)
         this.messageBuffer = new MessageBuffer(this.bufferTimeoutInMs, this.bufferMaxSize, (streamId) => {
             this.logger.trace(`failed to deliver buffered messages of stream ${streamId}`)
         })
@@ -227,14 +272,7 @@ export class Node extends EventEmitter {
     }
 
     onConnectedToTracker(tracker: TrackerId): void {
-        this.logger.trace('connected to tracker %s', tracker)
-        const serverUrl = this.nodeToTracker.getServerUrlByTrackerId(tracker)
-        if (serverUrl !== undefined) {
-            this.trackerManager.onConnectedToTracker(serverUrl, tracker)
-            this.prepareAndSendMultipleStatuses(tracker)
-        } else {
-            this.logger.warn('onConnectedToTracker: unknown tracker %s', tracker)
-        }
+        this.trackerManager.onConnectedToTracker(tracker)
     }
 
     subscribeToStreamIfHaveNotYet(streamId: StreamIdAndPartition, sendStatus = true): void {
@@ -243,7 +281,7 @@ export class Node extends EventEmitter {
             this.streams.setUpStream(streamId)
             this.trackerManager.onNewStream(streamId) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
-                this.prepareAndSendStreamStatus(streamId)
+                this.trackerManager.prepareAndSendStreamStatus(streamId)
             }
         }
     }
@@ -254,7 +292,7 @@ export class Node extends EventEmitter {
         this.instructionThrottler.removeStream(streamId.key())
         this.instructionRetryManager.removeStream(streamId.key())
         if (sendStatus) {
-            this.prepareAndSendStreamStatus(streamId)
+            this.trackerManager.prepareAndSendStreamStatus(streamId)
         }
     }
 
@@ -315,7 +353,7 @@ export class Node extends EventEmitter {
             }
         })
         if (!reattempt || failedInstructions) {
-            this.prepareAndSendStreamStatus(streamId)
+            this.trackerManager.prepareAndSendStreamStatus(streamId)
         }
 
         this.logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
@@ -453,46 +491,14 @@ export class Node extends EventEmitter {
         ])
     }
 
-    // Gets statuses of all streams assigned to a tracker by default
-    private getMultipleStatusMessages(tracker: TrackerId, explicitStreams?: StreamIdAndPartition[]): Status[] {
-        const streams = explicitStreams || this.streams.getStreams()
-        const statusMessages = streams
-            .filter((streamId) => this.trackerManager.getTrackerId(streamId) === tracker)
-            .map((streamId) => this.getStreamStatus(streamId, tracker))
-        return statusMessages
-    }
-
-    private getStreamStatus(streamId: StreamIdAndPartition, trackerId: TrackerId): Status {
-        const rtts = this.trackerManager.checkRttTimeout(trackerId) ? this.nodeToNode.getRtts() : null
+    private formStatus(streamId: StreamIdAndPartition, includeRtt: boolean): Status {
         return {
             streams: this.streams.getStreamState(streamId),
             started: this.started,
-            rtts,
+            rtts: includeRtt ? this.nodeToNode.getRtts() : null,
             location: this.peerInfo.location,
             singleStream: true,
             extra: this.extraMetadata
-        }
-    }
-
-    private prepareAndSendStreamStatus(streamId: StreamIdAndPartition): void {
-        const trackerId = this.trackerManager.getTrackerId(streamId)
-        const status = this.getStreamStatus(streamId, trackerId)
-        this.sendStatus(trackerId, status)
-    }
-
-    private prepareAndSendMultipleStatuses(tracker: TrackerId, streams?: StreamIdAndPartition[]): void {
-        const statusMessages = this.getMultipleStatusMessages(tracker, streams)
-        statusMessages.forEach((status) => {
-            this.sendStatus(tracker, status)
-        })
-    }
-
-    private async sendStatus(tracker: TrackerId, status: Status) {
-        try {
-            await this.nodeToTracker.sendStatus(tracker, status)
-            this.logger.trace('sent status %j to tracker %s', status.streams, tracker)
-        } catch (e) {
-            this.logger.trace('failed to send status to tracker %s, reason: %s', tracker, e)
         }
     }
 
@@ -501,7 +507,7 @@ export class Node extends EventEmitter {
         this.streams.addOutboundNode(streamId, node)
         this.handleBufferedMessages(streamId)
         if (sendStatus) {
-            this.prepareAndSendStreamStatus(streamId)
+            this.trackerManager.prepareAndSendStreamStatus(streamId)
         }
         this.emit(Event.NODE_SUBSCRIBED, node, streamId)
         return node
@@ -527,7 +533,7 @@ export class Node extends EventEmitter {
             }, this.disconnectionWaitTime)
         }
         if (sendStatus) {
-            this.prepareAndSendStreamStatus(streamId)
+            this.trackerManager.prepareAndSendStreamStatus(streamId)
         }
     }
 
@@ -537,7 +543,7 @@ export class Node extends EventEmitter {
         this.logger.trace('removed all subscriptions of node %s', node)
         const trackers = new Set(streams.map((streamId) => this.trackerManager.getTrackerId(streamId))) // TODO: streams could grow to be quite large if lots of shared streams with neihgbor
         trackers.forEach((trackerId) => {
-            this.prepareAndSendMultipleStatuses(trackerId, streams)
+            this.trackerManager.prepareAndSendMultipleStatuses(trackerId, streams)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }
