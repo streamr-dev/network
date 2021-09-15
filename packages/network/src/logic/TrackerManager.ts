@@ -43,14 +43,13 @@ export class TrackerManager {
 
     prepareAndSendStreamStatus(streamId: StreamIdAndPartition): void {
         const trackerId = this.getTrackerId(streamId)
-        const status = this.getStreamStatus(streamId, trackerId)
-        this.sendStatus(trackerId, status)
+        this.sendStatus(streamId, trackerId)
     }
 
-    prepareAndSendMultipleStatuses(trackerId: TrackerId, streams?: StreamIdAndPartition[]): void {
-        const listOfStatus = this.getMultipleStatus(trackerId, streams)
-        listOfStatus.forEach((status) => {
-            this.sendStatus(trackerId, status)
+    prepareAndSendMultipleStatuses(trackerId: TrackerId): void {
+        const relevantStreams = this.getStreamsForTracker(trackerId)
+        relevantStreams.forEach((streamId) => {
+            this.sendStatus(streamId, trackerId)
         })
     }
 
@@ -59,7 +58,6 @@ export class TrackerManager {
     }
 
     onConnectedToTracker(trackerId: TrackerId): void {
-        // TODO: add guard for connectivity if deemed necessary
         this.logger.trace('connected to tracker %s', trackerId)
         this.prepareAndSendMultipleStatuses(trackerId)
     }
@@ -77,16 +75,9 @@ export class TrackerManager {
         Object.values(this.rttUpdateTimeoutsOnTrackers).forEach((timeout) => clearTimeout(timeout))
     }
 
-    // Gets statuses of all streams assigned to a tracker by default
-    private getMultipleStatus(tracker: TrackerId, explicitStreams?: StreamIdAndPartition[]): Status[] {
-        const streams = explicitStreams || this.streamManager.getStreams()
-        return streams
-            .filter((streamId) => this.getTrackerId(streamId) === tracker) // TODO: is this check necessary? internal business
-            .map((streamId) => this.getStreamStatus(streamId, tracker))
-    }
-
-    private getStreamStatus(streamId: StreamIdAndPartition, trackerId: TrackerId): Status {
-        return this.formStatus(streamId, this.shouldIncludeRttInfo(trackerId))
+    private getStreamsForTracker(trackerId: TrackerId): Array<StreamIdAndPartition> {
+        return [...this.streamManager.getStreamKeys()].map((key) => StreamIdAndPartition.fromKey(key))
+            .filter((streamId) => this.getTrackerId(streamId) === trackerId)
     }
 
     private shouldIncludeRttInfo(trackerId: TrackerId): boolean {
@@ -100,12 +91,13 @@ export class TrackerManager {
         return false
     }
 
-    private async sendStatus(tracker: TrackerId, status: Status) {
+    private async sendStatus(streamId: StreamIdAndPartition, trackerId: TrackerId) {
+        const status = this.formStatus(streamId, this.shouldIncludeRttInfo(trackerId))
         try {
-            await this.nodeToTracker.sendStatus(tracker, status)
-            this.logger.trace('sent status %j to tracker %s', status.streams, tracker)
+            await this.nodeToTracker.sendStatus(trackerId, status)
+            this.logger.trace('sent status %j to tracker %s', status.streams, trackerId)
         } catch (e) {
-            this.logger.trace('failed to send status to tracker %s, reason: %s', tracker, e)
+            this.logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
         }
     }
 }

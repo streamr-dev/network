@@ -243,7 +243,7 @@ describe('tracker endpoint', () => {
     it('/nodes/node-1/streams', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/nodes/node-1/streams/`)
         expect(status).toEqual(200)
-        expect(jsonResult).toEqual([
+        expect(jsonResult).toIncludeSameMembers([
             {
                 "partition": 0,
                 "streamId": "sandbox/test/stream-3",
@@ -258,7 +258,7 @@ describe('tracker endpoint', () => {
                 "partition": 0,
                 "streamId": "stream-2",
                 "topologySize": 1
-            }
+            },
         ])
     })
 

@@ -437,9 +437,8 @@ export class Node extends EventEmitter {
         this.metrics.record('onNodeDisconnect', 1)
         const streams = this.streams.removeNodeFromAllStreams(node)
         this.logger.trace('removed all subscriptions of node %s', node)
-        const trackers = new Set(streams.map((streamId) => this.trackerManager.getTrackerId(streamId))) // TODO: streams could grow to be quite large if lots of shared streams with neihgbor
-        trackers.forEach((trackerId) => {
-            this.trackerManager.prepareAndSendMultipleStatuses(trackerId, streams)
+        streams.forEach((s) => {
+            this.trackerManager.prepareAndSendStreamStatus(s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }

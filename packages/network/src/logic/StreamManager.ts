@@ -130,6 +130,7 @@ export class StreamManager {
         })
     }
 
+    // TODO: rename to getSortedStreams() (or remove sort functionality altogether)
     getStreams(): ReadonlyArray<StreamIdAndPartition> {
         return this.getStreamsAsKeys().map((key) => StreamIdAndPartition.fromKey(key))
     }
