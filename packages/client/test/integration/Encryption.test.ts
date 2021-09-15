@@ -462,7 +462,7 @@ describeRepeats('decryption', () => {
 
                 const received = await sub.collectContent(2)
 
-                expect(received).toEqual(published.slice(-2))
+                expect(received).toEqual(published.slice(-2).map((s) => s.getParsedContent()))
             }, TIMEOUT * 2)
 
             describe('error handling', () => {
