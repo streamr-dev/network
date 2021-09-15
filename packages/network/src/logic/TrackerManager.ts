@@ -7,6 +7,8 @@ import { Logger } from '../helpers/Logger'
 import { NodeOptions } from './Node'
 import { Utils } from 'streamr-client-protocol'
 
+const logger = new Logger(module)
+
 type FormStatusFn = (streamId: StreamIdAndPartition, includeRtt: boolean) => Status
 
 export class TrackerManager {
@@ -16,13 +18,11 @@ export class TrackerManager {
     private readonly formStatus: FormStatusFn
     private readonly nodeToTracker: NodeToTracker
     private readonly streamManager: StreamManager
-    private readonly logger: Logger
     private readonly rttUpdateInterval: number
 
     constructor(
         formStatus: FormStatusFn,
         opts: NodeOptions,
-        logger: Logger,
         nodeToTracker: NodeToTracker,
         streamManager: StreamManager,
     ) {
@@ -31,13 +31,11 @@ export class TrackerManager {
             streamManager,
             nodeToTracker,
             this.trackerRegistry,
-            logger,
             opts.trackerConnectionMaintenanceInterval ?? 5000
         )
         this.formStatus = formStatus
         this.nodeToTracker = nodeToTracker
         this.streamManager = streamManager
-        this.logger = logger
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
     }
 
@@ -58,7 +56,7 @@ export class TrackerManager {
     }
 
     onConnectedToTracker(trackerId: TrackerId): void {
-        this.logger.trace('connected to tracker %s', trackerId)
+        logger.trace('connected to tracker %s', trackerId)
         this.prepareAndSendMultipleStatuses(trackerId)
     }
 
@@ -83,7 +81,7 @@ export class TrackerManager {
     private shouldIncludeRttInfo(trackerId: TrackerId): boolean {
         if (!(trackerId in this.rttUpdateTimeoutsOnTrackers)) {
             this.rttUpdateTimeoutsOnTrackers[trackerId] = setTimeout(() => {
-                this.logger.trace(`RTT timeout to ${trackerId} triggered, RTTs to connections will be updated with the next status message`)
+                logger.trace(`RTT timeout to ${trackerId} triggered, RTTs to connections will be updated with the next status message`)
                 delete this.rttUpdateTimeoutsOnTrackers[trackerId]
             }, this.rttUpdateInterval)
             return true
@@ -95,9 +93,9 @@ export class TrackerManager {
         const status = this.formStatus(streamId, this.shouldIncludeRttInfo(trackerId))
         try {
             await this.nodeToTracker.sendStatus(trackerId, status)
-            this.logger.trace('sent status %j to tracker %s', status.streams, trackerId)
+            logger.trace('sent status %j to tracker %s', status.streams, trackerId)
         } catch (e) {
-            this.logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
+            logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
         }
     }
 }

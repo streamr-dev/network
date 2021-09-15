@@ -6,21 +6,21 @@ import { PeerInfo } from '../connection/PeerInfo'
 import { TrackerId } from './Tracker'
 import { StreamManager } from './StreamManager'
 
+const logger = new Logger(module)
+
 export class TrackerConnector {
 
     private readonly streamManager: StreamManager
     private readonly nodeToTracker: NodeToTracker
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
-    private readonly logger: Logger
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
     private unconnectables: Set<TrackerId>
 
-    constructor(streamManager: StreamManager, nodeToTracker: NodeToTracker, trackerRegistry: Utils.TrackerRegistry<TrackerInfo>, logger: Logger, maintenanceInterval: number) {
+    constructor(streamManager: StreamManager, nodeToTracker: NodeToTracker, trackerRegistry: Utils.TrackerRegistry<TrackerInfo>, maintenanceInterval: number) {
         this.streamManager = streamManager
         this.nodeToTracker = nodeToTracker
         this.trackerRegistry = trackerRegistry
-        this.logger = logger
         this.maintenanceInterval = maintenanceInterval
         this.unconnectables = new Set()
     }
@@ -35,7 +35,7 @@ export class TrackerConnector {
         })
     }
 
-    onNewStream(streamId: StreamIdAndPartition) {
+    onNewStream(streamId: StreamIdAndPartition): void {
         const trackerInfo = this.trackerRegistry.getTracker(streamId.id, streamId.partition)
         this.connectTo(trackerInfo)
     }
@@ -63,7 +63,7 @@ export class TrackerConnector {
                     // TODO we could also store the previous error and check that the current error is the same?
                     // -> now it doesn't log anything if the connection error reason changes
                     this.unconnectables.add(id)
-                    this.logger.warn('could not connect to tracker %s, reason: %j', ws, err)
+                    logger.warn('could not connect to tracker %s, reason: %j', ws, err)
                 }
             })
     }

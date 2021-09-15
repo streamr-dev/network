@@ -110,7 +110,7 @@ export class Node extends EventEmitter {
         const metricsContext = opts.metricsContext || new MetricsContext('')
 
         this.streams = new StreamManager()
-        this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.logger, this.nodeToTracker, this.streams)
+        this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.nodeToTracker, this.streams)
         this.messageBuffer = new MessageBuffer(this.bufferTimeoutInMs, this.bufferMaxSize, (streamId) => {
             this.logger.trace(`failed to deliver buffered messages of stream ${streamId}`)
         })
