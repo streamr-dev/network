@@ -26,22 +26,18 @@ export class TrackerConnector {
     }
 
     maintainConnections(): void {
-        this.trackerRegistry.getAllTrackers().forEach(({ id, ws }) => {
-            if (this.isActiveTracker(id)) {
-                this.nodeToTracker.connectToTracker(ws, PeerInfo.newTracker(id))
-                    .then(() => this.unconnectables.delete(id))
-                    .catch((err) => {
-                        if (!this.unconnectables.has(id)) {
-                            // TODO we could also store the previous error and check that the current error is the same?
-                            // -> now it doesn't log anything if the connection error reason changes 
-                            this.unconnectables.add(id)
-                            this.logger.warn('could not connect to tracker %s, reason: %j', ws, err)
-                        }
-                    })
+        this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
+            if (this.isActiveTracker(trackerInfo.id)) {
+                this.connectTo(trackerInfo)
             } else {
-                this.nodeToTracker.disconnectFromTracker(id)
+                this.nodeToTracker.disconnectFromTracker(trackerInfo.id)
             }
         })
+    }
+
+    onNewStream(streamId: StreamIdAndPartition) {
+        const trackerInfo = this.trackerRegistry.getTracker(streamId.id, streamId.partition)
+        this.connectTo(trackerInfo)
     }
 
     start(): void {
@@ -57,6 +53,19 @@ export class TrackerConnector {
             clearInterval(this.maintenanceTimer)
             this.maintenanceTimer = null
         }
+    }
+
+    private connectTo({ id, ws }: TrackerInfo): void {
+        this.nodeToTracker.connectToTracker(ws, PeerInfo.newTracker(id))
+            .then(() => this.unconnectables.delete(id))
+            .catch((err) => {
+                if (!this.unconnectables.has(id)) {
+                    // TODO we could also store the previous error and check that the current error is the same?
+                    // -> now it doesn't log anything if the connection error reason changes
+                    this.unconnectables.add(id)
+                    this.logger.warn('could not connect to tracker %s, reason: %j', ws, err)
+                }
+            })
     }
 
     private isActiveTracker(trackerId: TrackerId): boolean {
