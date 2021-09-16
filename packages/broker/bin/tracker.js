@@ -12,6 +12,7 @@ program
     .usage('<ethereumPrivateKey> <trackerName>')
     .option('--port <port>', 'port', 30300)
     .option('--ip <ip>', 'ip', '0.0.0.0')
+    .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
     .option('--attachHttpEndpoints', 'attach http endpoints')
     .option('--privateKeyFileName <privateKeyFileName>', 'private key filename', undefined)
@@ -30,6 +31,10 @@ const wallet = new ethers.Wallet(privateKey)
 const address = wallet ? wallet.address : null
 const id = address || `tracker-${program.opts().port}`
 const name = trackerName || address
+const listenConfig = program.opts().unixSocket ? program.opts().unixSocket : {
+    hostname: program.opts().ip,
+    port: program.opts().port
+}
 
 const getTopologyStabilization = () => {
     const debounceWait = program.opts().topologyStabilizationDebounceWait
@@ -47,8 +52,7 @@ const getTopologyStabilization = () => {
 async function main() {
     try {
         await startTracker({
-            host: program.opts().ip,
-            port: Number.parseInt(program.opts().port),
+            listenConfig,
             id,
             name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode),
@@ -60,7 +64,7 @@ async function main() {
 
         const trackerObj = {}
         const fields = [
-            'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName', 'attachHttpEndpoints']
+            'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName', 'attachHttpEndpoints', 'unixSocket']
         fields.forEach((prop) => {
             trackerObj[prop] = program.opts()[prop]
         })
