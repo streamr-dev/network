@@ -8,6 +8,11 @@ import { StreamManager } from './StreamManager'
 
 const logger = new Logger(module)
 
+enum ConnectionState {
+    SUCCESS,
+    ERROR
+}
+
 export class TrackerConnector {
 
     private readonly streamManager: StreamManager
@@ -15,14 +20,14 @@ export class TrackerConnector {
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
-    private unconnectables: Set<TrackerId>
+    private connectionStates: Map<TrackerId,ConnectionState>
 
     constructor(streamManager: StreamManager, nodeToTracker: NodeToTracker, trackerRegistry: Utils.TrackerRegistry<TrackerInfo>, maintenanceInterval: number) {
         this.streamManager = streamManager
         this.nodeToTracker = nodeToTracker
         this.trackerRegistry = trackerRegistry
         this.maintenanceInterval = maintenanceInterval
-        this.unconnectables = new Set()
+        this.connectionStates = new Map()
     }
 
     maintainConnections(): void {
@@ -57,13 +62,18 @@ export class TrackerConnector {
 
     private connectTo({ id, ws }: TrackerInfo): void {
         this.nodeToTracker.connectToTracker(ws, PeerInfo.newTracker(id))
-            .then(() => this.unconnectables.delete(id))
+            .then(() => {
+                if (this.connectionStates.get(id) !== ConnectionState.SUCCESS) {
+                    logger.info('Connected to tracker %s', id)
+                    this.connectionStates.set(id, ConnectionState.SUCCESS)
+                }
+            })
             .catch((err) => {
-                if (!this.unconnectables.has(id)) {
+                if (this.connectionStates.get(id) !== ConnectionState.ERROR) {
                     // TODO we could also store the previous error and check that the current error is the same?
                     // -> now it doesn't log anything if the connection error reason changes
-                    this.unconnectables.add(id)
-                    logger.warn('could not connect to tracker %s, reason: %j', ws, err)
+                    this.connectionStates.set(id, ConnectionState.ERROR)
+                    logger.warn('Could not connect to tracker %s, reason: %s', id, err.message)
                 }
             })
     }
