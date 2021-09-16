@@ -16,7 +16,7 @@ describe('ServerWsEndpoint', () => {
         }
     })
 
-    test('works with unix sockets', async () => {
+    test('WS connection can established with unix sockets', async () => {
         if (typeof _streamr_electron_test !== 'undefined') {
             return
         }
@@ -25,7 +25,6 @@ describe('ServerWsEndpoint', () => {
             listenConfig,
         )
         serverWsEndpoint = new ServerWsEndpoint(listenConfig, false, httpsServer, PeerInfo.newTracker('tracker'))
-        console.log(serverWsEndpoint.getUrl())
         const webSocketClient = new WebSocket(
             serverWsEndpoint.getUrl(),
             {rejectUnauthorized: false}
@@ -38,9 +37,9 @@ describe('ServerWsEndpoint', () => {
                 webSocketClient.close()
             }
         })
-        webSocketClient.onerror = (error) => {
+        webSocketClient.on("error", (error) => {
             throw error
-        }
+        })
         await waitForCondition(() => webSocketClient.readyState === webSocketClient.CLOSED)
     })
 })
