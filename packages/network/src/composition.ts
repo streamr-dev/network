@@ -3,7 +3,7 @@ import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
 import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
-import { ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
+import { HttpServerConfig, ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
 import { TopologyStabilizationOptions, Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
@@ -40,8 +40,7 @@ export interface AbstractNodeOptions {
 }
 
 export interface TrackerOptions extends AbstractNodeOptions {
-    host: string
-    port: number
+    listenConfig: HttpServerConfig
     attachHttpEndpoints?: boolean
     maxNeighborsPerNode?: number
     privateKeyFileName?: string
@@ -62,8 +61,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
 }
 
 export const startTracker = async ({
-    host,
-    port,
+    listenConfig,
     id = uuidv4(),
     name,
     location,
@@ -76,8 +74,8 @@ export const startTracker = async ({
     topologyStabilization
 }: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
-    const httpServer = await startHttpServer(host, port, privateKeyFileName, certFileName)
-    const endpoint = new ServerWsEndpoint(host, port, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, trackerPingInterval)
+    const httpServer = await startHttpServer(listenConfig, privateKeyFileName, certFileName)
+    const endpoint = new ServerWsEndpoint(listenConfig, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, trackerPingInterval)
 
     const tracker = new Tracker({
         peerInfo,

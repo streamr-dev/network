@@ -17,8 +17,10 @@ describe('message propagation in network', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 33300,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 33300
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }

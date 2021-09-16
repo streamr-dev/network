@@ -21,8 +21,10 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 28660,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 28660
+            },
             id: 'tracker'
         })
         const trackerPeerInfo = PeerInfo.newTracker('tracker')

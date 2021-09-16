@@ -20,13 +20,17 @@ describe('WebRTC multisignaller test', () => {
 
     beforeEach(async () => {
         tracker1 = await startTracker({
-            host: '127.0.0.1',
-            port: 28715,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 28715
+            },
             id: 'tracker1'
         })
         tracker2 = await startTracker({
-            host: '127.0.0.1',
-            port: 28716,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 28716
+            },
             id: 'tracker2'
         })
 

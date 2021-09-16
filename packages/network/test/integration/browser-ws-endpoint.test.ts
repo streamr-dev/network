@@ -75,8 +75,10 @@ describe('ws-endpoint', () => {
 
         beforeEach(async () => {
             tracker = await startTracker({
-                host: '127.0.0.1',
-                port: trackerPort,
+                listenConfig: {
+                    hostname: '127.0.0.1',
+                    port: trackerPort
+                },
                 id: 'tracker'
             })
             // @ts-expect-error TODO: do this proper way (pass via constructor)

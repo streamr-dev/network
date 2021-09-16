@@ -10,13 +10,20 @@ import { once } from 'events'
 import { v4 } from 'uuid'
 import { Duplex } from "stream"
 
+type HostPort = {
+    hostname: string,
+    port: number
+}
+type UnixSocket = string
+
+export type HttpServerConfig = HostPort | UnixSocket
+
 export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     private readonly serverUrl: string
     private readonly httpServer: http.Server | https.Server
     private readonly wss: WebSocket.Server
     constructor(
-        host: string,
-        port: number,
+        listenConfig: HttpServerConfig,
         sslEnabled: boolean,
         httpServer: http.Server | https.Server,
         peerInfo: PeerInfo,
@@ -26,7 +33,12 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         super(peerInfo, metricsContext, pingInterval)
 
         this.httpServer = httpServer
-        this.serverUrl = `${sslEnabled ? 'wss' : 'ws'}://${host}:${port}`
+        const protocol = sslEnabled ? 'wss' : 'ws'
+        if (typeof listenConfig !== "string") {
+            this.serverUrl = `${protocol}://${listenConfig.hostname}:${listenConfig.port}`
+        } else {
+            this.serverUrl = `${protocol}+unix://${listenConfig}`
+        }
         this.wss = this.startWsServer()
     }
 
@@ -160,8 +172,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 }
 
 export async function startHttpServer(
-    host: string | null,
-    port: number,
+    config: HttpServerConfig,
     privateKeyFileName: string | undefined = undefined,
     certFileName: string | undefined = undefined
 ): Promise<http.Server | https.Server> {
@@ -177,9 +188,8 @@ export async function startHttpServer(
     } else {
         throw new Error('must supply both privateKeyFileName and certFileName or neither')
     }
-
-    httpServer.listen(port)
+    httpServer.listen(config)
     await once(httpServer, 'listening')
-    staticLogger.trace(`started on port %s`, port)
+    staticLogger.trace(`listening on %s`, config)
     return httpServer
 }

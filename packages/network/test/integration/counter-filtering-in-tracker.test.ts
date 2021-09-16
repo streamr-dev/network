@@ -34,8 +34,10 @@ describe('tracker: counter filtering', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30420,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 30420
+            },
             id: 'tracker'
         })
         const peerInfo1 = PeerInfo.newNode('nodeToTracker1')

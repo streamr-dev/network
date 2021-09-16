@@ -12,6 +12,7 @@ program
     .option('--trackerName <trackerName>', 'Human readable name', undefined)
     .option('--port <port>', 'port', '27777')
     .option('--ip <ip>', 'ip', '0.0.0.0')
+    .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', '4')
     .option('--metrics <metrics>', 'output metrics to console', false)
     .option('--metricsInterval <metricsInterval>', 'metrics output interval (ms)', '5000')
@@ -23,6 +24,10 @@ program
 const id = program.opts().id || `TR${program.opts().port}`
 const name = program.opts().trackerName || id
 const logger = new Logger(module)
+const listenConfig = program.opts().unixSocket ? program.opts().unixSocket : {
+    hostname: program.opts().ip,
+    port: program.opts().port
+}
 
 const getTopologyStabilization = () => {
     const debounceWait = program.opts().topologyStabilizationDebounceWait
@@ -41,8 +46,7 @@ async function main() {
     const metricsContext = new MetricsContext(id)
     try {
         await startTracker({
-            host: program.opts().ip,
-            port: Number.parseInt(program.opts().port, 10),
+            listenConfig,
             id,
             name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode, 10),

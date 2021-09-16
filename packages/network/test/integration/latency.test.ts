@@ -12,8 +12,10 @@ describe('latency metrics', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 32910,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 32910
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }

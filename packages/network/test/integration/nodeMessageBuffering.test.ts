@@ -18,8 +18,10 @@ describe('message buffering of Node', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30320,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 30320
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }

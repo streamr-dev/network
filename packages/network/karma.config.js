@@ -17,7 +17,7 @@ module.exports = function (config) {
             './karma-setup.js',
             './test/browser/BrowserWebRtcConnection.test.ts',
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
-            './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*).ts/',
+            './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*|UnixSocketWsServer*).ts/',
 
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*).ts',
         ],
@@ -25,7 +25,7 @@ module.exports = function (config) {
             './karma-setup.js': ['webpack'],
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
-            './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*).ts/': ['webpack'],
+            './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*|UnixSocketWsServer*).ts/': ['webpack'],
 
             './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*).ts': ['webpack'],
         },

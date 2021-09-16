@@ -28,8 +28,10 @@ describe('delivery of messages in protocol layer', () => {
     let tracker: Tracker
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 28515,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 28515
+            },
             id: 'tracker'
         })
         const peerInfo1 = PeerInfo.newNode('node1')

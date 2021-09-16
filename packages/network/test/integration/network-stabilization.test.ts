@@ -26,8 +26,10 @@ describe('check network stabilization', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 39000,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: 39000
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
