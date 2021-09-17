@@ -126,7 +126,7 @@ export class NodeToNode extends EventEmitter {
         return [controlLayerVersion, messageLayerVersion]
     }
 
-    getAllConnectionNodeIds(): PeerId[] {
+    getAllConnectionNodeIds(): NodeId[] {
         return this.endpoint.getAllConnectionNodeIds()
     }
 }
