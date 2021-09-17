@@ -40,8 +40,10 @@ describe('broker: end-to-end', () => {
             url: `http://127.0.0.1:${httpPort}`
         }]
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker-1'
         })
         storageNode = await startBroker({

@@ -21,8 +21,10 @@ describe('node id: with generateSessionId enabled', () => {
     beforeEach(async () => {
         sharedWallet = Wallet.createRandom()
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listenConfig: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker-1'
         })
         broker1 = await startBroker({
