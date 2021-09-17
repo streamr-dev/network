@@ -174,6 +174,7 @@ export class Node extends EventEmitter {
     start(): void {
         this.logger.trace('started')
         this.trackerConnector.start()
+        clearInterval(this.connectionCleanUpInterval!)
         this.connectionCleanUpInterval = this.startConnectionCleanUpInterval(2 * 60 * 1000)
     }
 
