@@ -172,6 +172,45 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     }
 }
 
+function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket) {
+    httpServer.on('error', (err: any) => {
+        // rethrow if unexpected error
+        if (!err.message.includes('EADDRINUSE')) { throw err }
+
+        staticLogger.info('socket in use, trying to recover: %s', config)
+        staticLogger.trace('checking if socket in use by another server')
+        const clientSocket = new net.Socket()
+        // socket will automatically close on error
+        clientSocket.on('error', (err: any) => {
+            // rethrow if unexpected error
+            if (!err.message.includes('ECONNREFUSED')) {
+                throw err
+            }
+
+            // No other server listening
+            try {
+                staticLogger.trace('cleaning unused socket: %s', config)
+                fs.unlinkSync(config)
+            } catch (unlinkErr) {
+                // ignore error if somehow file was already removed
+                if (unlinkErr.code !== 'ENOENT') {
+                    throw unlinkErr
+                }
+            }
+
+            // retry listening
+            httpServer.listen(config)
+        })
+
+        clientSocket.once('connect', () => {
+            // bad news if we are able to connect
+            staticLogger.error('Another server already running on socket: %s', config)
+            process.exit(1)
+        })
+        clientSocket.connect({ path: config })
+    })
+}
+
 export async function startHttpServer(
     config: HttpServerConfig,
     privateKeyFileName: string | undefined = undefined,
@@ -190,27 +229,8 @@ export async function startHttpServer(
         throw new Error('must supply both privateKeyFileName and certFileName or neither')
     }
     // clean up Unix Socket
-    if (typeof config === "string") {
-        httpServer.on('error', (err) => {
-            if (err.message.includes('EADDRINUSE')) {
-                staticLogger.info("socket already in use, checking if it is used by another server")
-                const clientSocket = new net.Socket()
-                clientSocket.on('error', function(err) {
-                    if (err.message.includes('ECONNREFUSED')) {  // No other server listening
-                        staticLogger.info("cleaning unused socket")
-                        fs.unlinkSync(config)
-                        httpServer.listen(config, function() {
-                            staticLogger.info('server recovered')
-                            return httpServer
-                        })
-                    }
-                })
-                clientSocket.connect({path: config},function() {
-                    staticLogger.trace('Server is already running in ' + config)
-                    process.exit()
-                })
-            }
-        })
+    if (typeof config === 'string') {
+        cleanSocket(httpServer, config)
     }
     try {
         httpServer.listen(config)

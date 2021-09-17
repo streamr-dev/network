@@ -3,9 +3,6 @@ import { PeerInfo } from "../../src/connection/PeerInfo"
 import WebSocket from "ws"
 import { waitForCondition } from "streamr-test-utils"
 
-// eslint-disable-next-line no-underscore-dangle
-declare let _streamr_electron_test: any
-
 describe('ServerWsEndpoint', () => {
     let serverWsEndpoint: ServerWsEndpoint | undefined = undefined
 
@@ -17,9 +14,6 @@ describe('ServerWsEndpoint', () => {
     })
 
     test('WS connection can established with unix sockets', async () => {
-        if (typeof _streamr_electron_test !== 'undefined') {
-            return
-        }
         const listen = "/tmp/server1.sock"
         const httpsServer = await startHttpServer(
             listen,
