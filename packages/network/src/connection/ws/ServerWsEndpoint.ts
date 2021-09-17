@@ -3,6 +3,7 @@ import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
 import { staticLogger, ServerWsConnection } from './ServerWsConnection'
 import fs from 'fs'
+import net from 'net'
 import https from 'https'
 import http from 'http'
 import WebSocket from 'ws'
@@ -188,8 +189,42 @@ export async function startHttpServer(
     } else {
         throw new Error('must supply both privateKeyFileName and certFileName or neither')
     }
-    httpServer.listen(config)
-    await once(httpServer, 'listening')
-    staticLogger.trace(`listening on %s`, config)
+    // clean up Unix Socket
+    if (typeof config === "string") {
+        httpServer.on('error', (err) => {
+            if (err.message.includes('EADDRINUSE')) {
+                staticLogger.info("socket already in use, checking if it is used by another server")
+                const clientSocket = new net.Socket()
+                clientSocket.on('error', function(err) {
+                    if (err.message.includes('ECONNREFUSED')) {  // No other server listening
+                        staticLogger.info("cleaning unused socket")
+                        fs.unlinkSync(config)
+                        httpServer.listen(config, function() {
+                            staticLogger.info('server recovered')
+                            return httpServer
+                        })
+                    }
+                })
+                clientSocket.connect({path: config},function() {
+                    staticLogger.trace('Server is already running in ' + config)
+                    process.exit()
+                })
+            }
+        })
+    }
+    try {
+        httpServer.listen(config)
+        await once(httpServer, 'listening')
+        staticLogger.info(`listening on %s`, JSON.stringify(config))
+    } catch (err) {
+        // Kill process if started on host/port, else wait for Unix Socket to be cleaned up
+        if (typeof config !== "string") {
+            staticLogger.error(err)
+            process.exit(1)
+        } else {
+            await once(httpServer, 'listening')
+            staticLogger.info(`listening on %s`, JSON.stringify(config))
+        }
+    }
     return httpServer
 }
