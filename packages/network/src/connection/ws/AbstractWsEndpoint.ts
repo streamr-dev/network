@@ -18,16 +18,14 @@ export enum DisconnectionCode {
     GRACEFUL_SHUTDOWN = 1000,
     FAILED_HANDSHAKE = 4000,
     DEAD_CONNECTION = 4001,
-    DUPLICATE_SOCKET = 4002,
-    PINGPONG_TIMEOUT
+    DUPLICATE_SOCKET = 4002
 }
 
 export enum DisconnectionReason {
     GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
     DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
     NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
-    DEAD_CONNECTION = 'dead connection',
-    PINGPONG_TIMEOUT = 'streamr:endpoint:pingpong-timeout'
+    DEAD_CONNECTION = 'dead connection'
 }
 
 export class UnknownPeerError extends Error {
