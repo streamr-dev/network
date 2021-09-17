@@ -1,9 +1,9 @@
 import WebSocket from 'ws'
-import { PeerInfo } from '../PeerInfo'
+import { PeerId, PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
-import { DisconnectionReason } from "./AbstractWsEndpoint"
+import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
-import { AbstractClientWsEndpoint, HandshakeValues, PeerId, ServerUrl } from "./AbstractClientWsEndpoint"
+import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from "./AbstractClientWsEndpoint"
 
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> {
     constructor(
@@ -15,7 +15,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
     }
 
     protected doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
-        return new Promise<string>((resolve, reject) => {
+        return new Promise<PeerId>((resolve, reject) => {
             try {
                 const ws = new WebSocket(`${serverUrl}/ws`)
 
@@ -54,6 +54,9 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         })
         ws.once('close', (code: number, reason: string): void => {
             this.onClose(connection, code, reason as DisconnectionReason)
+            if (code === DisconnectionCode.DUPLICATE_SOCKET) {
+                this.logger.warn('Connection refused: Duplicate nodeId detected, are you running multiple nodes with the same private key?')
+            }
         })
 
         ws.on('error', (err) => {
@@ -63,7 +66,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         return connection
     }
 
-    protected doHandshakeResponse(uuid: string, peerId: string, ws: WebSocket): void {
+    protected doHandshakeResponse(uuid: string, peerId: PeerId, ws: WebSocket): void {
         ws.send(JSON.stringify({ uuid, peerId: this.peerInfo.peerId }))
     }
 

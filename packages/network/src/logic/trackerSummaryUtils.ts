@@ -1,7 +1,8 @@
 import { StreamIdAndPartition } from '../identifiers'
+import { NodeId } from './Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
 
-type OverLayWithRtts = { [key: string]: { [key: string]: { neighborId: string, rtt: number | null }[] } }
+type OverLayWithRtts = { [key: string]: Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] > }
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
 
 export function getTopology(
@@ -38,24 +39,29 @@ export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: str
     return streamSizes
 }
 
-export function getNodeConnections(nodes: readonly string[], overlayPerStream: OverlayPerStream): { [key: string]: Set<string> } {
-    const result: { [key: string]: Set<string> } = {}
+export function getNodeConnections(nodes: readonly NodeId[], overlayPerStream: OverlayPerStream): Record<NodeId,Set<NodeId>> {
+    const result: Record<NodeId,Set<NodeId>> = {}
     nodes.forEach((node) => {
-        result[node] = new Set<string>()
+        result[node] = new Set<NodeId>()
     })
-    nodes.forEach((node) => {
-        Object.values(overlayPerStream).forEach((overlayTopology) => {
-            result[node] = new Set([...result[node], ...overlayTopology.getNeighbors(node)])
+    Object.values(overlayPerStream).forEach((overlayTopology) => {
+        Object.entries(overlayTopology.getNodes()).forEach(([nodeId, neighbors]) => {
+            neighbors.forEach((neighborNode) => {
+                if (!(nodeId in result)) {
+                    result[nodeId] = new Set<NodeId>()
+                }
+                result[nodeId].add(neighborNode)
+            })
         })
     })
     return result
 }
 
 export function addRttsToNodeConnections(
-    nodeId: string,
-    neighbors: Array<string>,
+    nodeId: NodeId,
+    neighbors: Array<NodeId>,
     connectionRtts: OverlayConnectionRtts
-): { [key: string]: { neighborId: string, rtt: number | null }[] } {
+): Record<NodeId,{ neighborId: NodeId, rtt: number | null }[]> {
     return {
         [nodeId]: neighbors.map((neighborId) => {
             return {
@@ -68,7 +74,7 @@ export function addRttsToNodeConnections(
 
 export function findStreamsForNode(
     overlayPerStream: OverlayPerStream,
-    nodeId: string
+    nodeId: NodeId
 ): Array<{ streamId: string, partition: number, topologySize: number}> {
     return Object.entries(overlayPerStream)
         .filter(([_, overlayTopology]) => overlayTopology.hasNode(nodeId))
@@ -83,10 +89,10 @@ export function findStreamsForNode(
 }
 
 function getNodeToNodeConnectionRtts(
-    nodeOne: string,
-    nodeTwo: string,
-    nodeOneRtts: { [key: string]: number },
-    nodeTwoRtts: { [key: string]: number }
+    nodeOne: NodeId,
+    nodeTwo: NodeId,
+    nodeOneRtts: Record<NodeId,number>,
+    nodeTwoRtts: Record<NodeId,number>
 ): number | null {
     try {
         return nodeOneRtts[nodeTwo] || nodeTwoRtts[nodeOne] || null

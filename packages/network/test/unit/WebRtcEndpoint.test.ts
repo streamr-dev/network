@@ -1,5 +1,5 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { TrackerNode } from '../../src/protocol/TrackerNode'
+import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { waitForCondition, waitForEvent, wait, runAndWaitForEvents } from 'streamr-test-utils'
@@ -12,8 +12,8 @@ import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
-    let trackerNode1: TrackerNode
-    let trackerNode2: TrackerNode
+    let nodeToTracker1: NodeToTracker
+    let nodeToTracker2: NodeToTracker
     let endpoint1: WebRtcEndpoint
     let endpoint2: WebRtcEndpoint
 
@@ -30,14 +30,14 @@ describe('WebRtcEndpoint', () => {
             const trackerPeerInfo = PeerInfo.newTracker('tracker')
             const ep1 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-1'))
             const ep2 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
-            trackerNode1 = new TrackerNode(ep1)
-            trackerNode2 = new TrackerNode(ep2)
+            nodeToTracker1 = new NodeToTracker(ep1)
+            nodeToTracker2 = new NodeToTracker(ep2)
             await Promise.all([
-                trackerNode1.connectToTracker(tracker.getUrl(), trackerPeerInfo),
+                nodeToTracker1.connectToTracker(tracker.getUrl(), trackerPeerInfo),
                 waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
             ])
             await Promise.all([
-                trackerNode2.connectToTracker(tracker.getUrl(), trackerPeerInfo),
+                nodeToTracker2.connectToTracker(tracker.getUrl(), trackerPeerInfo),
                 waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
             ])
 
@@ -46,7 +46,7 @@ describe('WebRtcEndpoint', () => {
             endpoint1 = new WebRtcEndpoint(
                 peerInfo1,
                 ["stun:stun.l.google.com:19302"],
-                new RtcSignaller(peerInfo1, trackerNode1),
+                new RtcSignaller(peerInfo1, nodeToTracker1),
                 new MetricsContext(''),
                 new NegotiatedProtocolVersions(peerInfo1),
                 factory
@@ -54,7 +54,7 @@ describe('WebRtcEndpoint', () => {
             endpoint2 = new WebRtcEndpoint(
                 peerInfo2,
                 ["stun:stun.l.google.com:19302"],
-                new RtcSignaller(peerInfo2, trackerNode2),
+                new RtcSignaller(peerInfo2, nodeToTracker2),
                 new MetricsContext(''),
                 new NegotiatedProtocolVersions(peerInfo2),
                 factory
@@ -64,8 +64,8 @@ describe('WebRtcEndpoint', () => {
         afterEach(async () => {
             await Promise.allSettled([
                 tracker.stop(),
-                trackerNode1.stop(),
-                trackerNode2.stop(),
+                nodeToTracker1.stop(),
+                nodeToTracker2.stop(),
                 endpoint1.stop(),
                 endpoint2.stop()
             ])

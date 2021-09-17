@@ -3,44 +3,44 @@ import { TrackerLayer } from 'streamr-client-protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
+import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 
 const { ErrorMessage, RelayMessage } = TrackerLayer
 
 describe('RtcSignaller', () => {
     let peerInfo: PeerInfo
-    let trackerNodeMock: any
+    let nodeToTrackerMock: any
     let rtcSignaller: RtcSignaller
 
     beforeEach(() => {
         peerInfo = PeerInfo.newNode('node')
-        trackerNodeMock = new EventEmitter()
-        rtcSignaller = new RtcSignaller(peerInfo, trackerNodeMock)
+        nodeToTrackerMock = new EventEmitter()
+        rtcSignaller = new RtcSignaller(peerInfo, nodeToTrackerMock)
     })
 
-    it('invoking onConnectionNeeded delegates to sendRtcConnect on trackerNode', () => {
-        trackerNodeMock.sendRtcConnect = jest.fn().mockResolvedValue(true)
+    it('invoking onConnectionNeeded delegates to sendRtcConnect on nodeToTracker', () => {
+        nodeToTrackerMock.sendRtcConnect = jest.fn().mockResolvedValue(true)
         rtcSignaller.sendRtcConnect('router', 'targetNode')
-        expect(trackerNodeMock.sendRtcConnect).toHaveBeenCalledWith('router', 'targetNode', peerInfo)
+        expect(nodeToTrackerMock.sendRtcConnect).toHaveBeenCalledWith('router', 'targetNode', peerInfo)
     })
 
-    it('invoking sendRtcIceCandidate delegates to sendRtcIceCandidate on trackerNode', () => {
-        trackerNodeMock.sendRtcIceCandidate = jest.fn().mockResolvedValue(true)
+    it('invoking sendRtcIceCandidate delegates to sendRtcIceCandidate on nodeToTracker', () => {
+        nodeToTrackerMock.sendRtcIceCandidate = jest.fn().mockResolvedValue(true)
         rtcSignaller.sendRtcIceCandidate('router', 'targetNode', 'connectionid', 'candidate', 'mid')
-        expect(trackerNodeMock.sendRtcIceCandidate).toHaveBeenCalledWith('router', 'targetNode', 'connectionid', peerInfo, 'candidate', 'mid')
+        expect(nodeToTrackerMock.sendRtcIceCandidate).toHaveBeenCalledWith('router', 'targetNode', 'connectionid', peerInfo, 'candidate', 'mid')
     })
 
-    it('invoking sendRtcOffer delegates to sendRtcOffer on trackerNode', () => {
-        trackerNodeMock.sendRtcOffer = jest.fn().mockResolvedValue(true)
+    it('invoking sendRtcOffer delegates to sendRtcOffer on nodeToTracker', () => {
+        nodeToTrackerMock.sendRtcOffer = jest.fn().mockResolvedValue(true)
         rtcSignaller.sendRtcOffer('router', 'targetNode', 'connectionid', 'description')
-        expect(trackerNodeMock.sendRtcOffer).toHaveBeenCalledWith('router', 'targetNode', 'connectionid', peerInfo, 'description')
+        expect(nodeToTrackerMock.sendRtcOffer).toHaveBeenCalledWith('router', 'targetNode', 'connectionid', peerInfo, 'description')
     })
 
-    it('connectListener invoked when trackerNode emits rtcConnect message', () => {
+    it('connectListener invoked when nodeToTracker emits rtcConnect message', () => {
         const cbFn = jest.fn()
         rtcSignaller.setConnectListener(cbFn)
-        trackerNodeMock.emit(
-            TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
+        nodeToTrackerMock.emit(
+            NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
@@ -57,11 +57,11 @@ describe('RtcSignaller', () => {
         })
     })
 
-    it('offerListener invoked when trackerNode emits rtcOffer message', () => {
+    it('offerListener invoked when nodeToTracker emits rtcOffer message', () => {
         const cbFn = jest.fn()
         rtcSignaller.setOfferListener(cbFn)
-        trackerNodeMock.emit(
-            TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
+        nodeToTrackerMock.emit(
+            NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
@@ -80,11 +80,11 @@ describe('RtcSignaller', () => {
         })
     })
 
-    it('answerListener invoked when trackerNode emits rtcAnswer message', () => {
+    it('answerListener invoked when nodeToTracker emits rtcAnswer message', () => {
         const cbFn = jest.fn()
         rtcSignaller.setAnswerListener(cbFn)
-        trackerNodeMock.emit(
-            TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
+        nodeToTrackerMock.emit(
+            NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
@@ -103,11 +103,11 @@ describe('RtcSignaller', () => {
         })
     })
 
-    it('iceCandidateListener invoked when trackerNode emits iceCandidate message', () => {
+    it('iceCandidateListener invoked when nodeToTracker emits iceCandidate message', () => {
         const cbFn = jest.fn()
         rtcSignaller.setIceCandidateListener(cbFn)
-        trackerNodeMock.emit(
-            TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
+        nodeToTrackerMock.emit(
+            NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
@@ -128,11 +128,11 @@ describe('RtcSignaller', () => {
         })
     })
 
-    it('errorListener invoked when trackerNode emits RTC_ERROR_RECEIVED', () => {
+    it('errorListener invoked when nodeToTracker emits RTC_ERROR_RECEIVED', () => {
         const cbFn = jest.fn()
         rtcSignaller.setErrorListener(cbFn)
-        trackerNodeMock.emit(
-            TrackerNodeEvent.RTC_ERROR_RECEIVED,
+        nodeToTrackerMock.emit(
+            NodeToTrackerEvent.RTC_ERROR_RECEIVED,
             new ErrorMessage({
                 requestId: '',
                 targetNode: 'unknownTargetNode',

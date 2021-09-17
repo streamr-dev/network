@@ -12,6 +12,8 @@ import { Logger } from './Logger'
 import { Tracker } from '../logic/Tracker'
 import http from 'http'
 import https from 'https'
+import morgan from 'morgan'
+import compression from 'compression'
 
 const staticLogger = new Logger(module)
 
@@ -70,6 +72,8 @@ export function trackerHttpEndpoints(
 ): void {
     const app = express()
     app.use(cors())
+    app.use(compression())
+    app.use(morgan(process.env.CUSTOM_MORGAN_FORMAT ?? ':method :url :status :response-time ms - :res[content-length] - :remote-addr'))
     httpServer.on('request', app)
 
     app.get('/topology/', (req: express.Request, res: express.Response) => {

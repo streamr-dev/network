@@ -37,71 +37,76 @@ describe('check status message flow between tracker and two nodes', () => {
         nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
-            pingInterval: 100
+            peerPingInterval: 100,
+            trackerPingInterval: 100,
+            rttUpdateTimeout: 10
         })
         
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             location,
-            pingInterval: 100
+            peerPingInterval: 100,
+            trackerPingInterval: 100,
+            rttUpdateTimeout: 10
         })
     })
 
     afterEach(async () => {
-        await nodeOne.stop()
-        await nodeTwo.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            nodeOne.stop(),
+            nodeTwo.stop(),
+            tracker.stop()
+        ])
     })
 
     it('tracker should receive status message from node', (done) => {
+        nodeOne.subscribe(streamId, 0)
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-1')
-            // @ts-expect-error private field
-            expect(statusMessage.status).toEqual(nodeOne.getFullStatus(TRACKER_ID))
             done()
         })
 
+        nodeOne.subscribe('stream-id', 0)
         nodeOne.start()
     })
 
     it('tracker should receive status from second node', (done) => {
+        nodeTwo.subscribe(streamId, 0)
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-2')
-            // @ts-expect-error private field
-            expect(statusMessage.status).toEqual(nodeTwo.getFullStatus(TRACKER_ID))
             done()
         })
+
+        nodeTwo.subscribe('stream-id', 0)
         nodeTwo.start()
     })
 
     it('tracker should receive from both nodes new statuses', (done) => {
+        nodeOne.subscribe('stream-id', 0)
+        nodeTwo.subscribe('stream-id', 0)
         nodeOne.start()
         nodeTwo.start()
 
         let receivedTotal = 0
-        let nodeOneStatus: any = null
-        let nodeTwoStatus: any = null
+        let nodeOneStatusReceived = false
+        let nodeTwoStatusReceived = false
 
         // @ts-expect-error private field
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            if (nodeId === 'node-1') {
-                nodeOneStatus = statusMessage.status
+            if (nodeId === 'node-1' && !nodeOneStatusReceived) {
+                nodeOneStatusReceived = true
                 receivedTotal += 1
             }
 
-            if (nodeId === 'node-2') {
-                nodeTwoStatus = statusMessage.status
+            if (nodeId === 'node-2' && !nodeTwoStatusReceived) {
+                nodeTwoStatusReceived = true
                 receivedTotal += 1
             }
 
             if (receivedTotal === 2) {
-                // @ts-expect-error private field
-                expect(nodeOneStatus).toEqual(nodeOne.getFullStatus())
-                // @ts-expect-error private field
-                expect(nodeTwoStatus).toEqual(nodeTwo.getFullStatus())
                 done()
             }
         })

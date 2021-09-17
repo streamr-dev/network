@@ -16,6 +16,8 @@ program
     .option('--attachHttpEndpoints', 'attach http endpoints')
     .option('--privateKeyFileName <privateKeyFileName>', 'private key filename', undefined)
     .option('--certFileName <certFileName>', 'cert filename', undefined)
+    .option('--topologyStabilizationDebounceWait <topologyStabilizationDebounceWait>', 'topologyStabilizationDebounceWait')
+    .option('--topologyStabilizationMaxWait <topologyStabilizationMaxWait>', 'topologyStabilizationMaxWait')
     .description('Run tracker with reporting')
     .parse(process.argv)
 
@@ -29,6 +31,19 @@ const address = wallet ? wallet.address : null
 const id = address || `tracker-${program.opts().port}`
 const name = trackerName || address
 
+const getTopologyStabilization = () => {
+    const debounceWait = program.opts().topologyStabilizationDebounceWait
+    const maxWait = program.opts().topologyStabilizationMaxWait
+    if ((debounceWait !== undefined) || (maxWait !== undefined)) {
+        return {
+            debounceWait: parseInt(debounceWait),
+            maxWait: parseInt(maxWait)
+        }
+    } else {
+        return undefined
+    }
+}
+
 async function main() {
     try {
         await startTracker({
@@ -39,7 +54,8 @@ async function main() {
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode),
             attachHttpEndpoints: program.opts().attachHttpEndpoints,
             privateKeyFileName: program.opts().privateKeyFileName,
-            certFileName: program.opts().certFileName
+            certFileName: program.opts().certFileName,
+            topologyStabilization: getTopologyStabilization()
         })
 
         const trackerObj = {}

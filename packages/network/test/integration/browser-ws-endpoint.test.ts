@@ -9,6 +9,8 @@ import BrowserClientWsEndpoint from '../../src/connection/ws/BrowserClientWsEndp
 import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
+const trackerPort = 38482
+
 describe('ws-endpoint', () => {
     const endpoints: ServerWsEndpoint[] = []
 
@@ -69,7 +71,6 @@ describe('ws-endpoint', () => {
     })
 
     describe('test direct connections from simple websocket', () => {
-        const trackerPort = 38482
         let tracker: Tracker
 
         beforeEach(async () => {
@@ -78,6 +79,8 @@ describe('ws-endpoint', () => {
                 port: trackerPort,
                 id: 'tracker'
             })
+            // @ts-expect-error TODO: do this proper way (pass via constructor)
+            tracker.trackerServer.endpoint.handshakeTimer = 3000
         })
 
         afterEach(async () => {
@@ -89,6 +92,23 @@ describe('ws-endpoint', () => {
             const close = await waitForEvent(ws, 'close')
             expect(close[0]).toEqual(DisconnectionCode.FAILED_HANDSHAKE)
             expect(close[1]).toContain('Handshake not received from connection behind UUID')
+        })
+    })
+
+    describe('Duplicate connections from same nodeId are closed', () => {
+        it('Duplicate connection is closed', async () => {
+            const client1 = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
+            const client2 = new BrowserClientWsEndpoint(PeerInfo.newNode('client'))
+
+            const server = await startServerWsEndpoint('127.0.0.1', trackerPort, PeerInfo.newNode('server'))
+
+            await client1.connect(server.getUrl(), PeerInfo.newTracker('server'))
+            await client2.connect(server.getUrl(), PeerInfo.newTracker('server'))
+            await waitForEvent(client2, Event.PEER_DISCONNECTED)
+
+            await client1.stop()
+            await client2.stop()
+            await server.stop()
         })
     })
 })
