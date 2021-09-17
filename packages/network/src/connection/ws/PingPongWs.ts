@@ -1,6 +1,7 @@
-import { Logger } from "../../helpers/Logger"
-import { Rtts } from "../../identifiers"
-import { AbstractWsConnection } from "./AbstractWsConnection"
+import {Logger} from "../../helpers/Logger"
+import {Rtts} from "../../identifiers"
+import {AbstractWsConnection} from "./AbstractWsConnection"
+import {DisconnectionCode, DisconnectionReason} from "./AbstractWsEndpoint";
 
 export type GetConnections = () => Array<AbstractWsConnection>
 
@@ -34,7 +35,7 @@ export class PingPongWs {
         this.getConnections().forEach((connection) => {
             if (!connection.getRespondedPong()) {
                 logger.warn(`terminate connection to %s because didn't receive pong`, connection.getPeerId())
-                connection.terminate()
+                connection.close(DisconnectionCode.PINGPONG_TIMEOUT, DisconnectionReason.PINGPONG_TIMEOUT)
             } else {
                 try {
                     connection.ping()

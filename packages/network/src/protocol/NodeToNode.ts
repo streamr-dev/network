@@ -3,7 +3,7 @@ import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/IWebRtcEndpoint'
-import { PeerInfo } from '../connection/PeerInfo'
+import {PeerId, PeerInfo} from '../connection/PeerInfo'
 import { Rtts } from "../identifiers"
 import { NodeId } from '../logic/Node'
 
@@ -124,5 +124,9 @@ export class NodeToNode extends EventEmitter {
         const controlLayerVersion = this.endpoint.getNegotiatedControlLayerProtocolVersionOnNode(nodeId)
             || this.endpoint.getDefaultControlLayerProtocolVersion()
         return [controlLayerVersion, messageLayerVersion]
+    }
+
+    getAllConnectionNodeIds(): PeerId[] {
+        return this.endpoint.getAllConnectionNodeIds()
     }
 }
