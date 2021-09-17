@@ -3,7 +3,7 @@ import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/IWebRtcEndpoint'
-import {PeerId, PeerInfo} from '../connection/PeerInfo'
+import { PeerInfo } from '../connection/PeerInfo'
 import { Rtts } from "../identifiers"
 import { NodeId } from '../logic/Node'
 
