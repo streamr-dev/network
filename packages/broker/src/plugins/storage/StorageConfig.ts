@@ -97,7 +97,14 @@ export class StorageConfig {
 
     async refresh(): Promise<void> {
         const res = await fetch(`${this.apiUrl}/storageNodes/${this.nodeId}/streams`)
+        if (!res.ok) {
+            throw new Error(`Refresh failed: ${res.status} ${await res.text()}`)
+        }
         const json = await res.json()
+        if (!Array.isArray(json)) {
+            throw new Error(`Invalid response. Refresh failed: ${json}`)
+        }
+
         const streamKeys = new Set<StreamKey>(json.flatMap((stream: { id: string, partitions: number }) => ([
             ...getKeysFromStream(stream.id, stream.partitions)
         ])))
