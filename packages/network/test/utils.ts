@@ -9,10 +9,10 @@ export const startServerWsEndpoint = async (
     metricsContext?: MetricsContext,
     pingInterval?: number | undefined
 ): Promise<ServerWsEndpoint> => {
-    const listenConfig = {
+    const listen = {
         hostname: host,
         port: port
     }
-    const httpServer = await startHttpServer(listenConfig, undefined, undefined)
-    return  new ServerWsEndpoint(listenConfig, false, httpServer, peerInfo, metricsContext, pingInterval)
+    const httpServer = await startHttpServer(listen, undefined, undefined)
+    return  new ServerWsEndpoint(listen, false, httpServer, peerInfo, metricsContext, pingInterval)
 }

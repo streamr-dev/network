@@ -52,7 +52,7 @@ describe('StorageConfig', () => {
     beforeEach(async () => {
         const engineAndEditorAccount = Wallet.createRandom()
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: NODE_HOST,
                 port: TRACKER_PORT
             },

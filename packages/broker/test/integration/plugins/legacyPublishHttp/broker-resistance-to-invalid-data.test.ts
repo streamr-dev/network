@@ -14,7 +14,7 @@ describe('broker resistance to invalid data', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },

@@ -34,7 +34,7 @@ describe('tracker: counter filtering', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 30420
             },

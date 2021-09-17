@@ -24,9 +24,9 @@ program
 const id = program.opts().id || `TR${program.opts().port}`
 const name = program.opts().trackerName || id
 const logger = new Logger(module)
-const listenConfig = program.opts().unixSocket ? program.opts().unixSocket : {
+const listen = program.opts().unixSocket ? program.opts().unixSocket : {
     hostname: program.opts().ip,
-    port: program.opts().port
+    port: Number.parseInt(program.opts().port, 10)
 }
 
 const getTopologyStabilization = () => {
@@ -46,7 +46,7 @@ async function main() {
     const metricsContext = new MetricsContext(id)
     try {
         await startTracker({
-            listenConfig,
+            listen,
             id,
             name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode, 10),

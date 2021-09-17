@@ -19,7 +19,7 @@ describe('Check tracker instructions to node', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 30950
             },

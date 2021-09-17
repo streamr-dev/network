@@ -32,21 +32,21 @@ describe('multi trackers', () => {
 
     beforeEach(async () => {
         trackerOne = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 49000
             },
             id: 'trackerOne'
         })
         trackerTwo = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 49001
             },
             id: 'trackerTwo',
         })
         trackerThree = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 49002
             },

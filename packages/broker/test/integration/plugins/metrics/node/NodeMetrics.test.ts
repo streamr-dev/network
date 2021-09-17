@@ -28,7 +28,7 @@ describe('NodeMetrics', () => {
             storageNode: storageNodeRegistry[0]
         })
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },

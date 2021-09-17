@@ -22,7 +22,7 @@ describe('ping-pong test between broker and clients', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },

@@ -80,7 +80,7 @@ describe('TestnetMinerPlugin', () => {
         await claimServer.start()
         tracker = await startTracker({
             id: 'tracker',
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: TRACKER_PORT
             },

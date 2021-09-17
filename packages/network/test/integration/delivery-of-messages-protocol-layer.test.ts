@@ -28,7 +28,7 @@ describe('delivery of messages in protocol layer', () => {
     let tracker: Tracker
     beforeAll(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 28515
             },

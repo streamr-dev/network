@@ -26,7 +26,7 @@ describe('Node-to-Node protocol version negotiation', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 28680
             },

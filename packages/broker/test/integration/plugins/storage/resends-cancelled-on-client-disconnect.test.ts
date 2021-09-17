@@ -75,7 +75,7 @@ describe('resend cancellation', () => {
         freshStream = await createTestStream(client, module)
         metricsContext = new MetricsContext(null as any)
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },

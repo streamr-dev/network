@@ -24,7 +24,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     private readonly httpServer: http.Server | https.Server
     private readonly wss: WebSocket.Server
     constructor(
-        listenConfig: HttpServerConfig,
+        listen: HttpServerConfig,
         sslEnabled: boolean,
         httpServer: http.Server | https.Server,
         peerInfo: PeerInfo,
@@ -35,10 +35,10 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 
         this.httpServer = httpServer
         const protocol = sslEnabled ? 'wss' : 'ws'
-        if (typeof listenConfig !== "string") {
-            this.serverUrl = `${protocol}://${listenConfig.hostname}:${listenConfig.port}`
+        if (typeof listen !== "string") {
+            this.serverUrl = `${protocol}://${listen.hostname}:${listen.port}`
         } else {
-            this.serverUrl = `${protocol}+unix://${listenConfig}`
+            this.serverUrl = `${protocol}+unix://${listen}`
         }
         this.wss = this.startWsServer()
     }

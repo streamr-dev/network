@@ -21,7 +21,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
 
     beforeAll(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 28660
             },

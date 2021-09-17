@@ -17,7 +17,7 @@ describe('message propagation in network', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 33300
             },

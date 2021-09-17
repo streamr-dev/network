@@ -20,11 +20,11 @@ describe('ServerWsEndpoint', () => {
         if (typeof _streamr_electron_test !== 'undefined') {
             return
         }
-        const listenConfig = "/tmp/server1.sock"
+        const listen = "/tmp/server1.sock"
         const httpsServer = await startHttpServer(
-            listenConfig,
+            listen,
         )
-        serverWsEndpoint = new ServerWsEndpoint(listenConfig, false, httpsServer, PeerInfo.newTracker('tracker'))
+        serverWsEndpoint = new ServerWsEndpoint(listen, false, httpsServer, PeerInfo.newTracker('tracker'))
         const webSocketClient = new WebSocket(
             serverWsEndpoint.getUrl(),
             {rejectUnauthorized: false}

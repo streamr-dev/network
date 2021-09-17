@@ -31,9 +31,9 @@ const wallet = new ethers.Wallet(privateKey)
 const address = wallet ? wallet.address : null
 const id = address || `tracker-${program.opts().port}`
 const name = trackerName || address
-const listenConfig = program.opts().unixSocket ? program.opts().unixSocket : {
+const listen = program.opts().unixSocket ? program.opts().unixSocket : {
     hostname: program.opts().ip,
-    port: program.opts().port
+    port: Number.parseInt(program.opts().port, 10)
 }
 
 const getTopologyStabilization = () => {
@@ -52,7 +52,7 @@ const getTopologyStabilization = () => {
 async function main() {
     try {
         await startTracker({
-            listenConfig,
+            listen,
             id,
             name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode),

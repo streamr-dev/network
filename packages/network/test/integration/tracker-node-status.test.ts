@@ -28,7 +28,7 @@ describe('check status message flow between tracker and two nodes', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 30750
             },

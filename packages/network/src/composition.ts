@@ -40,7 +40,7 @@ export interface AbstractNodeOptions {
 }
 
 export interface TrackerOptions extends AbstractNodeOptions {
-    listenConfig: HttpServerConfig
+    listen: HttpServerConfig
     attachHttpEndpoints?: boolean
     maxNeighborsPerNode?: number
     privateKeyFileName?: string
@@ -61,7 +61,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
 }
 
 export const startTracker = async ({
-    listenConfig,
+    listen,
     id = uuidv4(),
     name,
     location,
@@ -74,8 +74,8 @@ export const startTracker = async ({
     topologyStabilization
 }: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
-    const httpServer = await startHttpServer(listenConfig, privateKeyFileName, certFileName)
-    const endpoint = new ServerWsEndpoint(listenConfig, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, trackerPingInterval)
+    const httpServer = await startHttpServer(listen, privateKeyFileName, certFileName)
+    const endpoint = new ServerWsEndpoint(listen, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, trackerPingInterval)
 
     const tracker = new Tracker({
         peerInfo,

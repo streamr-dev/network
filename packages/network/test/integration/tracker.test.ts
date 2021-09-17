@@ -14,7 +14,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            listenConfig: {
+            listen: {
                 hostname: '127.0.0.1',
                 port: 32400
             },
