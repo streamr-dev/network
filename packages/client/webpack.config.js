@@ -125,7 +125,10 @@ module.exports = (env, argv) => {
                     openAnalyzer: false,
                     generateStatsFile: true,
                 }),
-            ] : [])
+            ] : []),
+            new webpack.EnvironmentPlugin({
+                WEB_BUILD: true,
+            }),
         ]
     })
 
