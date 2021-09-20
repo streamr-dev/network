@@ -38,7 +38,7 @@ export default class Signal<ValueType = void> {
      *  See example above.
      */
     static create<ValueType = void>(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL) {
-        const signal = new Signal<ValueType>(triggerType)
+        const signal = new this<ValueType>(triggerType)
         function listen(): Promise<ValueType>
         function listen<ReturnType>(this: ReturnType, cb: SignalListener<ValueType>): ReturnType
         function listen<ReturnType>(this: ReturnType, cb?: SignalListener<ValueType>) {
@@ -108,6 +108,7 @@ export default class Signal<ValueType = void> {
     constructor(
         private triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL
     ) {
+        this.trigger = Function.prototype.bind.call(this.trigger, this)
         switch (triggerType) {
             case TRIGGER_TYPE.ONCE: {
                 this.trigger = pOnce(this.trigger)
@@ -142,7 +143,6 @@ export default class Signal<ValueType = void> {
         const [value] = args
         this.lastValue = value
         this.isEnded = true
-        this.listeners.length = 0
     }
 
     /**
@@ -243,10 +243,10 @@ export default class Signal<ValueType = void> {
     /**
      * Trigger the signal with optional value, like emitter.emit.
      */
-    trigger = async (
+    async trigger(
         // TS nonsense to allow trigger() when ValueType is undefined/void
         ...args: [ValueType] extends [undefined] ? any[] : [ValueType]
-    ): Promise<void> => {
+    ): Promise<void> {
         const [value] = args
         if (this.isEnded) {
             return
@@ -259,6 +259,7 @@ export default class Signal<ValueType = void> {
         if (this.triggerType === TRIGGER_TYPE.ONCE) {
             this.lastValue = value
             // remove all listeners
+            this.listeners.length = 0
             this.end(this.lastValue!)
         }
 
@@ -270,5 +271,48 @@ export default class Signal<ValueType = void> {
             await prev
             await task(value)
         }, Promise.resolve())
+    }
+}
+
+/**
+ * Special Signal for Errors.
+ * Trigger this Signal to decide whether to suppress or throw err.
+ * Suppress error if listeners don't rethrow
+ * Throws on trigger if no listeners.
+ * Won't trigger listeners for same Error instance more than once.
+ */
+export class ErrorSignal<ValueType extends Error = Error> extends Signal<ValueType> {
+    protected seenErrors = new WeakSet<Error>()
+    protected ignoredErrors = new WeakSet<Error>()
+
+    async trigger(err: ValueType) {
+        // don't double-handle errors
+        if (this.ignoredErrors.has(err)) {
+            return
+        }
+
+        if (this.seenErrors.has(err)) {
+            // if we've seen this error, just throw
+            throw err
+        }
+
+        this.seenErrors.add(err)
+
+        const hadNoListeners = this.countListeners() === 0
+        try {
+            await super.trigger(err)
+            // rethrow if no listeners
+            if (hadNoListeners) {
+                throw err
+            }
+
+            // suppress error
+            this.ignoredErrors.add(err)
+        } catch (nextErr) {
+            // don't double handle if different error thrown
+            // by onError trigger
+            this.seenErrors.add(nextErr)
+            throw nextErr
+        }
     }
 }

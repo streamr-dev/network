@@ -4,7 +4,7 @@ import { iteratorFinally } from './iterators'
 import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions } from './PushBuffer'
 import { ContextError, Context } from './Context'
 import * as G from './GeneratorUtils'
-import Signal from './Signal'
+import Signal, { ErrorSignal } from './Signal'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 export type FinallyFn = ((err?: Error) => void | Promise<void>)
@@ -98,7 +98,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         this.definition = definition || new PipelineDefinition<InType, OutType>(this, source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)
-        this.handleError = this.handleError.bind(this)
     }
 
     /**
@@ -173,64 +172,30 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     onMessage = Signal.create<OutType>()
 
-    onError = Signal.create<Error>()
-
-    protected seenErrors = new WeakSet<Error>()
-    protected ignoredErrors = new WeakSet<Error>()
-
-    async handleError(err: Error) {
-        // don't double-handle errors
-        if (this.ignoredErrors.has(err)) { return }
-
-        // i.e. same handler used for pipeline step errors
-        // and pipeline end errors. pipeline step errors
-        // will become pipeline end errors if not handled
-        // thus will hit this function twice.
-        if (!this.seenErrors.has(err)) {
-            const hadNoListeners = this.onError.countListeners() === 0
-            this.seenErrors.add(err)
-            try {
-                await this.onError.trigger(err)
-                if (hadNoListeners) {
-                    throw err
-                }
-                this.ignoredErrors.add(err)
-            } catch (nextErr) {
-                // don't double handle if different error thrown
-                // by onError trigger
-                this.seenErrors.add(nextErr)
-                throw nextErr
-            }
-
-            return
-        }
-
-        // if we've seen this error, just throw
-        throw err
-    }
+    onError = ErrorSignal.create<Error>()
 
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>) {
-        return this.pipe((src) => G.map(src, fn, this.handleError))
+        return this.pipe((src) => G.map(src, fn, this.onError.trigger))
     }
 
     mapBefore(fn: G.GeneratorMap<InType, InType>) {
-        return this.pipeBefore((src) => G.map(src, fn, this.handleError))
+        return this.pipeBefore((src) => G.map(src, fn, this.onError.trigger))
     }
 
     forEach(fn: G.GeneratorForEach<OutType>) {
-        return this.pipe((src) => G.forEach(src, fn, this.handleError))
+        return this.pipe((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
     filter(fn: G.GeneratorFilter<OutType>) {
-        return this.pipe((src) => G.filter(src, fn, this.handleError))
+        return this.pipe((src) => G.filter(src, fn, this.onError.trigger))
     }
 
     reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType) {
-        return this.pipe((src) => G.reduce(src, fn, initialValue, this.handleError))
+        return this.pipe((src) => G.reduce(src, fn, initialValue, this.onError.trigger))
     }
 
     forEachBefore(fn: G.GeneratorForEach<InType>) {
-        return this.pipeBefore((src) => G.forEach(src, fn, this.handleError))
+        return this.pipeBefore((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
     filterBefore(fn: G.GeneratorFilter<InType>) {
@@ -238,11 +203,11 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {
-        return G.consume(this, fn, this.handleError)
+        return G.consume(this, fn, this.onError.trigger)
     }
 
     collect(n?: number) {
-        return G.collect(this, n, this.handleError)
+        return G.collect(this, n, this.onError.trigger)
     }
 
     flow() {
@@ -260,7 +225,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         try {
             try {
                 if (error) {
-                    await this.handleError(error)
+                    await this.onError.trigger(error)
                 }
             } finally {
                 await this.definition.source.return(undefined)
@@ -297,7 +262,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 yield msg
             }
         } catch (err) {
-            await this.handleError(err)
+            await this.onError.trigger(err)
         } finally {
             await this.onBeforeFinally.trigger()
         }
@@ -405,7 +370,7 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
 
     async pushError(err: Error) {
         try {
-            await this.handleError(err)
+            await this.onError.trigger(err)
         } catch (error) {
             await this.push(error)
         }
