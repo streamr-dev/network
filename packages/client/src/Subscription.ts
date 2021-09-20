@@ -3,7 +3,7 @@
  * Primary interface for consuming StreamMessages.
  */
 import { SPID, SPIDKeyShape } from 'streamr-client-protocol'
-import MessageStream, { MessageStreamOnMessage } from './MessageStream'
+import MessageStream, { MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
 import SubscriptionSession from './SubscriptionSession'
 
 export type SubscriptionOptions = {
@@ -22,8 +22,8 @@ export default class Subscription<T = unknown> extends MessageStream<T> implemen
     streamPartition
     key
 
-    constructor(subSession: SubscriptionSession<T>) {
-        super(subSession)
+    constructor(subSession: SubscriptionSession<T>, options: MessageStreamOptions) {
+        super(subSession, options)
         this.context = subSession
         this.spid = subSession.spid
         this.streamId = this.spid.streamId
