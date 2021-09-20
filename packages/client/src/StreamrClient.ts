@@ -22,42 +22,9 @@ import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 import NodeRegistry, { register as registerNodeRegistry } from './StorageNodeRegistry'
+import { Methods, Plugin } from './utils/Plugin'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
-
-/**
- * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
- */
-function Plugin(targetInstance: any, srcInstance: any) {
-    const descriptors = Object.entries({
-        ...Object.getOwnPropertyDescriptors(srcInstance.constructor.prototype),
-        ...Object.getOwnPropertyDescriptors(srcInstance)
-    })
-    descriptors.forEach(([name, { value }]) => {
-        if (typeof value !== 'function') { return }
-
-        if (name in targetInstance) {
-            return // do nothing if already has property
-        }
-
-        // eslint-disable-next-line no-param-reassign
-        targetInstance[name] = (...args: any) => {
-            return srcInstance[name].call(srcInstance, ...args)
-        }
-    })
-    return srcInstance
-}
-
-// Get property names which have a Function-typed value i.e. a method
-type MethodNames<T> = {
-    // undefined extends T[K] to handle optional properties
-    [K in keyof T]: (
-        (undefined extends T[K] ? never : T[K]) extends Function ? K : never
-    )
-}[keyof T]
-
-// Pick only methods of T
-type Methods<T> = Pick<T, MethodNames<T>>
 
 // these are mixed in via Plugin function above
 // use MethodNames to only grab methods
