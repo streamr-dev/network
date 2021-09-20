@@ -24,9 +24,10 @@
               // "test/integration/NodeEndpoints.test.ts",
               // "test/integration/Encryption.test.ts",
               // "test/integration/MultipleClients.test.js",
-              "test/integration/BrubeckClient.test.ts",
-              "-t",
-              "decodes resent messages correctly"
+              "test/integration/StreamrClientResends.test.js",
+              // "test/integration/BrubeckClient.test.ts",
+              // "-t",
+              // "resend last"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",

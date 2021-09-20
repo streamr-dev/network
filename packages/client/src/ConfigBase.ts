@@ -157,9 +157,9 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     binanceAdapterAddress: '0x0c1aF6edA561fbDA48E9A7B1Dd46D216F31A97cC',
     binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
     withdrawServerUrl: 'https://streamr.com:3000',
-    streamRegistrySidechainAddress: '0x00E680d549FE53a627a3db86a6F88fA2471CFfAa',
-    nodeRegistrySidechainAddress: '0xA90CeCcA042312b8f2e8B924C04Ce62516CBF7b2',
-    streamStorageRegistrySidechainAddress: '0xAf71Ee871ff1a374F88D6Ff01Cd618cE85127e78',
+    streamRegistrySidechainAddress: '0xCcc2CD65bbF6B2f62cEc8116A4d36CE043f13352',
+    nodeRegistrySidechainAddress: '0xB73189CeBCc870bE6f9aa16764bbB3665e4B49B6',
+    streamStorageRegistrySidechainAddress: '0x3C841B9Aa08166e9B864972930703e878d25804B',
     ensCacheSidechainAddress: '',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
