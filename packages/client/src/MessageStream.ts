@@ -36,13 +36,7 @@ export default class MessageStream<
                 }
             })
         }
-
-        setImmediate(() => {
-            // consume if not already doing so
-            if (!this.isIterating) {
-                this.consume().catch(() => {}) // prevent unhandled
-            }
-        })
+        this.flow()
 
         return this
     }

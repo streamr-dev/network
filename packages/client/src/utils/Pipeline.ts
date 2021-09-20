@@ -245,6 +245,17 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return G.collect(this, n, this.handleError)
     }
 
+    flow() {
+        setImmediate(() => {
+            // consume if not already doing so
+            if (!this.isIterating) {
+                this.consume().catch(() => {}) // prevent unhandled
+            }
+        })
+
+        return this
+    }
+
     private async cleanup(error?: Error) {
         try {
             try {
