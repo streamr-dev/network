@@ -144,34 +144,6 @@ class StreamrStream implements StreamMetadata {
         return result as StreamProperties
     }
 
-    async detectFields() {
-        // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend({
-            streamId: this.id,
-            resend: {
-                last: 1,
-            },
-        })
-
-        const receivedMsgs = await sub.collectContent()
-
-        if (!receivedMsgs.length) { return }
-
-        const [lastMessage] = receivedMsgs
-
-        const fields = Object.entries(lastMessage).map(([name, value]) => {
-            const type = getFieldType(value)
-            return !!type && {
-                name,
-                type,
-            }
-        }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
-
-        // Save field config back to the stream
-        this.config.fields = fields
-        await this.update()
-    }
-
     async delete() {
         await this._streamRegistry.deleteStream(this.id)
     }
@@ -206,6 +178,34 @@ class StreamrStream implements StreamMetadata {
 
     async revokePermission(operation: StreamOperation, recipientId: EthereumAddress) {
         await this._streamRegistry.revokePermission(this.id, operation, recipientId.toLowerCase())
+    }
+
+    async detectFields() {
+        // Get last message of the stream to be used for field detecting
+        const sub = await this._resends.resend({
+            streamId: this.id,
+            resend: {
+                last: 1,
+            },
+        })
+
+        const receivedMsgs = await sub.collectContent()
+
+        if (!receivedMsgs.length) { return }
+
+        const [lastMessage] = receivedMsgs
+
+        const fields = Object.entries(lastMessage).map(([name, value]) => {
+            const type = getFieldType(value)
+            return !!type && {
+                name,
+                type,
+            }
+        }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
+
+        // Save field config back to the stream
+        this.config.fields = fields
+        await this.update()
     }
 
     async revokePublicPermission(operation: StreamOperation) {

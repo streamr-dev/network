@@ -9,7 +9,7 @@ import StreamStorageRegistryArtifact from './ethereumArtifacts/StreamStorageRegi
 import fetch from 'node-fetch'
 import { StorageNode } from './StorageNode'
 import { StreamQueryResult } from './StreamRegistry'
-import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
+import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
