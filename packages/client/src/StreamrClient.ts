@@ -149,9 +149,6 @@ class StreamrCached {
     }
 }
 
-// use process id in node uid
-const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
-
 /**
  * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
  */
@@ -192,6 +189,10 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     // TODO annotate connection parameter as internal parameter if possible?
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
+
+        // Use process id in node uid.
+        const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+
         this.id = counterId(`${this.constructor.name}-${uid}${options.id || ''}`)
         this.debug = Debug(this.id)
 
