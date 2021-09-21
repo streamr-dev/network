@@ -5,15 +5,22 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import {
-    getPublishTestMessages, getWaitForStorage, publishManyGenerator, describeRepeats, uid, fakePrivateKey, Msg, createRelativeTestStreamId, until
+    uid,
+    Msg,
+    getPublishTestMessages,
+    getCreateClient,
+    getPublishTestStreamMessages,
+    getWaitForStorage,
+    publishManyGenerator,
+    describeRepeats,
+    createRelativeTestStreamId
 } from '../utils'
-import { BrubeckClient } from '../../src/BrubeckClient'
+
+import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
-// import Subscription from '../../src/brubeck/Subscription'
 import { StorageNode } from '../../src/StorageNode'
 import { AddressZero } from '@ethersproject/constants'
 
@@ -31,31 +38,10 @@ describeRepeats('StreamrClient', () => {
         errs.push(err)
     })
 
-    // const trackerPort = useTracker()
     let onError = jest.fn()
-    let client: BrubeckClient
+    let client: StreamrClient
 
-    const createClient = (opts: any = {}) => {
-        const c = new BrubeckClient({
-            ...clientOptions,
-            // auth: {
-//                 privateKey: fakePrivateKey(),
-//            },
-            autoConnect: false,
-            autoDisconnect: false,
-            // disconnectDelay: 500,
-            // publishAutoDisconnectDelay: 250,
-            maxRetries: 2,
-            // network: {
-            // trackers: [
-            // `ws://127.0.0.1:${trackerPort}`,
-            // ],
-            // ...opts.network,
-            // },
-            ...opts,
-        })
-        return c
-    }
+    const createClient = getCreateClient()
 
     beforeEach(() => {
         errors = []
@@ -69,23 +55,14 @@ describeRepeats('StreamrClient', () => {
         expect(errors).toHaveLength(expectErrors)
     })
 
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('destroying after test')
-            await client.destroy()
-        }
-    })
-
     let stream: Stream
-    // let waitForStorage: (...args: any[]) => Promise<void>
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     // These tests will take time, especially on Travis
     const TIMEOUT = 30 * 1000
     const WAIT_TIME = 600
 
-    const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
+    const createStream = async ({ requireSignedData = true, ...opts }: any = {}) => {
         const name = uid('stream')
         const s = await client.createStream({
             id: createRelativeTestStreamId(module),
@@ -112,15 +89,6 @@ describeRepeats('StreamrClient', () => {
         await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-
-        if (client) {
-            client.debug('destroying after test')
-            await client.destroy()
-        }
     })
 
     it('is stream publisher', async () => {
@@ -153,18 +121,18 @@ describeRepeats('StreamrClient', () => {
 
         describe('subscribe/unsubscribe', () => {
             beforeEach(() => {
-                expect(client.subscriber.getAllSubscriptions()).toHaveLength(0)
+                expect(client.getAllSubscriptions()).toHaveLength(0)
             })
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
-                const subTask = client.subscriber.subscribe<{ test: string }>({
+                const subTask = client.subscribe<{ test: string }>({
                     streamId: stream.id,
                 }, () => {})
                 expect(client.subscriber.getSubscriptions()).toHaveLength(1) // has subscription immediately
 
                 const sub = await subTask
 
-                expect(client.subscriber.getSubscriptions()).toHaveLength(1)
+                expect(client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
                 expect(client.subscriber.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
@@ -174,24 +142,29 @@ describeRepeats('StreamrClient', () => {
                     streamId: stream.id,
                 }, () => {})
 
-                expect(client.subscriber.getSubscriptions()).toHaveLength(1)
+                expect(client.getSubscriptions()).toHaveLength(1)
 
                 const unsubTask = client.unsubscribe(stream)
 
-                expect(client.subscriber.getSubscriptions()).toHaveLength(0) // lost subscription immediately
+                expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                 await unsubTask
                 await subTask
                 await wait(WAIT_TIME)
             }, TIMEOUT)
         })
 
-        it('client.subscribe (realtime)', async () => {
-            const id = Date.now()
+        it('client.subscribe (realtime) with onMessage signal', async () => {
             const done = Defer()
-            await client.subscribe({
+            const msg = Msg()
+
+            const sub = await client.subscribe<typeof msg>({
                 streamId: stream.id,
-            }, done.wrap(async (parsedContent, streamMessage) => {
-                expect(parsedContent.id).toBe(id)
+            })
+
+            sub.onMessage(done.wrap(async (streamMessage) => {
+                sub.unsubscribe()
+                const parsedContent = streamMessage.getParsedContent()
+                expect(parsedContent).toEqual(msg)
 
                 // Check signature stuff
                 expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
@@ -200,16 +173,34 @@ describeRepeats('StreamrClient', () => {
             }))
 
             // Publish after subscribed
-            await client.publish(stream, {
-                id,
-            })
+            await client.publish(stream, msg)
+            await sub.consume()
+            await done
+        })
+
+        it('client.subscribe (realtime) with onMessage callback', async () => {
+            const done = Defer()
+            const msg = Msg()
+            await client.subscribe<typeof msg>({
+                streamId: stream.id,
+            }, done.wrap(async (parsedContent, streamMessage) => {
+                expect(parsedContent).toEqual(msg)
+
+                // Check signature stuff
+                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(streamMessage.getPublisherId()).toBeTruthy()
+                expect(streamMessage.signature).toBeTruthy()
+            }))
+
+            // Publish after subscribed
+            await client.publish(stream, msg)
             await done
         })
 
         it('client.subscribe with onMessage & collect', async () => {
             const onMessageMsgs: any[] = []
             const done = Defer()
-            const sub = await client.subscribe({
+            const sub = await client.subscribe<typeof Msg>({
                 streamId: stream.id,
             }, async (msg) => {
                 onMessageMsgs.push(msg)
@@ -224,10 +215,29 @@ describeRepeats('StreamrClient', () => {
             expect(onMessageMsgs).toEqual(published)
         })
 
+        it('client.subscribe with onMessage callback that throws', async () => {
+            const onMessageMsgs: any[] = []
+            const err = new Error('expected error')
+            const sub = await client.subscribe<typeof Msg>({
+                streamId: stream.id,
+            }, async (msg) => {
+                onMessageMsgs.push(msg)
+
+                if (onMessageMsgs.length === MAX_MESSAGES) {
+                    sub.return()
+                }
+                throw err
+            })
+
+            const published = await publishTestMessages(MAX_MESSAGES)
+            await sub.onFinally()
+            expect(onMessageMsgs).toEqual(published.slice(0, 1))
+        })
+
         it('publish and subscribe a sequence of messages', async () => {
             const done = Defer()
-            const received: any[] = []
-            const sub = await client.subscribe({
+            const received: typeof Msg[] = []
+            const sub = await client.subscribe<typeof Msg>({
                 streamId: stream.id,
             }, done.wrapError((parsedContent, streamMessage) => {
                 received.push(parsedContent)
@@ -245,6 +255,171 @@ describeRepeats('StreamrClient', () => {
 
             await done
             expect(received).toEqual(published)
+        })
+
+        describe('partitioning', () => {
+            it('pub with no partition key selects random partition', async () => {
+                const NUM_PARTITIONS = 3
+                const NUM_MESSAGES = 3
+                // create a new stream with multiple partitions
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+
+                const published1 = await publishTestStreamMessages(NUM_MESSAGES)
+                const published2 = await publishTestStreamMessages(NUM_MESSAGES)
+                expect(published1).toHaveLength(NUM_MESSAGES)
+                expect(published2).toHaveLength(NUM_MESSAGES)
+                const selectedPartition = published1[0].getStreamPartition()
+                // should use same partition
+                expect(published1.map((s) => s.getStreamPartition())).toEqual(published1.map(() => selectedPartition))
+                expect(published2.map((s) => s.getStreamPartition())).toEqual(published1.map(() => selectedPartition))
+
+                // clear message creator cache and retry should get another
+                // partition unless we're really unlucky and get 100 of the
+                // same partition in a row.
+                const foundPartitions: boolean[] = Array(NUM_PARTITIONS).fill(false)
+                for (let i = 0; i < 100; i++) {
+                    // @ts-expect-error private
+                    client.publisher.pipeline.messageCreator.streamPartitioner.clear()
+                    // eslint-disable-next-line no-await-in-loop
+                    const published3 = await publishTestStreamMessages(1)
+                    expect(published3).toHaveLength(1)
+                    const foundPartition = published3[0].getStreamPartition()
+                    foundPartitions[foundPartition] = true
+                    if (foundPartitions.every((v) => v)) {
+                        break
+                    }
+                }
+
+                expect(foundPartitions).toEqual(Array(NUM_PARTITIONS).fill(true))
+            })
+
+            it('publishing to different streams should get different random partitions', async () => {
+                const NUM_PARTITIONS = 3
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+                const partitionStream2 = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+                const publishTestStreamMessages2 = getPublishTestStreamMessages(client, partitionStream2)
+
+                // publishing to different streams should get different random partitions
+                // clear message creator cache and retry should get another
+                let gotDifferentPartitions = false
+                for (let i = 0; i < 100; i++) {
+                    // @ts-expect-error private
+                    client.publisher.pipeline.messageCreator.streamPartitioner.clear()
+                    // eslint-disable-next-line no-await-in-loop
+                    const [published1, published2] = await Promise.all([
+                        publishTestStreamMessages(1),
+                        publishTestStreamMessages2(1)
+                    ])
+                    const foundPartition1 = published1[0].getStreamPartition()
+                    const foundPartition2 = published2[0].getStreamPartition()
+                    if (foundPartition1 !== foundPartition2) {
+                        gotDifferentPartitions = true
+                        break
+                    }
+                }
+
+                expect(gotDifferentPartitions).toBe(true)
+            })
+
+            it('pub with string partition key can map to full partition range', async () => {
+                const NUM_PARTITIONS = 3
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+
+                // get many partitions with random keys
+                // should eventually map to all partitions
+                const foundPartitions: boolean[] = Array(NUM_PARTITIONS).fill(false)
+                for (let i = 0; i < 100; i++) {
+                    // eslint-disable-next-line no-await-in-loop
+                    const published3 = await publishTestStreamMessages(1, {
+                        partitionKey: String(i),
+                    })
+                    expect(published3).toHaveLength(1)
+                    const foundPartition = published3[0].getStreamPartition()
+                    foundPartitions[foundPartition] = true
+                    if (foundPartitions.every((v) => v)) {
+                        break
+                    }
+                }
+
+                expect(foundPartitions).toEqual(Array(NUM_PARTITIONS).fill(true))
+            })
+
+            it('pub with same string partition key always publishes to same partition', async () => {
+                const NUM_PARTITIONS = 6
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+                const partitionKey = String(Math.random())
+                const published = await publishTestStreamMessages(1, {
+                    partitionKey
+                })
+
+                // publish many times with same key
+                // should always be the same
+                // even if cache is cleared
+                const targetPartition = published[0].getStreamPartition()
+                const foundPartitions: number[] = []
+                for (let i = 0; i < 50; i++) {
+                    // @ts-expect-error private
+                    client.publisher.pipeline.messageCreator.streamPartitioner.clear()
+                    // eslint-disable-next-line no-await-in-loop
+                    const published2 = await publishTestStreamMessages(1, {
+                        partitionKey,
+                    })
+                    expect(published2).toHaveLength(1)
+                    foundPartitions.push(published2[0].getStreamPartition())
+                }
+
+                expect(foundPartitions).toEqual(foundPartitions.map(() => targetPartition))
+            })
+
+            it('pub/sub with numeric partition key publishes to that key', async () => {
+                const NUM_PARTITIONS = 3
+                const NUM_MESSAGES = 3
+                // create a new stream with multiple partitions
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+                const eachPartition = Array(NUM_PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
+
+                // subscribe to each partition
+                const subs = await Promise.all(eachPartition.map((streamPartition) => {
+                    return client.subscribe<typeof Msg>({
+                        streamId: partitionStream.id,
+                        streamPartition,
+                    })
+                }))
+
+                // publish to each partition
+                const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+                    return publishTestStreamMessages(NUM_MESSAGES, { partitionKey: streamPartition })
+                }))
+
+                // check messages match
+                expect(await Promise.all(subs.map((s) => s.collect(NUM_MESSAGES)))).toEqual(pubs)
+                // check all published messages have appropriate partition
+                // i.e. [[0,0,0], [1,1,1], etc]
+                expect(pubs.map((msgs) => msgs.map((msg) => msg.getStreamPartition())))
+                    .toEqual(pubs.map((msgs, index) => msgs.map(() => index)))
+            })
         })
 
         it('destroying stops publish', async () => {
@@ -287,7 +462,7 @@ describeRepeats('StreamrClient', () => {
                 await publishTask
             }).rejects.toThrow('publish')
             expect(received.map((s) => s.getParsedContent())).toEqual(published.slice(0, 3))
-            expect(onMessage).toHaveBeenCalledTimes(4)
+            expect(onMessage).toHaveBeenCalledTimes(3)
         })
 
         it('destroying resolves publish promises', async () => {
@@ -351,6 +526,7 @@ describeRepeats('StreamrClient', () => {
             const messages = await sub.collect(1)
             expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
         })
+
         it('decodes resent messages correctly', async () => {
             const node = await client.setNode(clientOptions.storageNode.url)
             await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
@@ -368,9 +544,9 @@ describeRepeats('StreamrClient', () => {
                     last: 3,
                 },
             })
-            const messages = await sub.collect()
-            expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
-        }, 60000)
+            const messages = await sub.collectContent()
+            expect(messages).toEqual([publishedMessage])
+        }, 20000)
     })
 })
 

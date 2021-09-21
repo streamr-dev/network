@@ -1,8 +1,12 @@
+/**
+ * Makes OrderingUtil more compatible with use in pipeline.
+ */
 import { injectable } from 'tsyringe'
 import { OrderingUtil, StreamMessage, SPID } from 'streamr-client-protocol'
 
 import { PushBuffer } from './utils/PushBuffer'
 import { Context } from './utils/Context'
+import Signal from './utils/Signal'
 import { instanceId } from './utils'
 
 import Resends from './Resends'
@@ -13,12 +17,11 @@ import { SubscribeConfig } from './Config'
  * Wraps OrderingUtil into a PushBuffer.
  * Implements gap filling
  */
-
 @injectable()
 export default class OrderMessages<T> implements Context {
     id
     debug
-    isStopped = false
+    stopSignal = Signal.once<void>()
 
     constructor(
         private options: SubscribeConfig,
@@ -27,6 +30,10 @@ export default class OrderMessages<T> implements Context {
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
+    }
+
+    stop() {
+        return this.stopSignal.trigger()
     }
 
     transform(spid: SPID, overrideOptions?: Partial<SubscribeConfig>) {
@@ -98,6 +105,10 @@ export default class OrderMessages<T> implements Context {
                     }
                 }
             }, gapFillTimeout, retryResendAfter, enabled ? maxGapRequests : 0)
+
+            this.stopSignal(() => {
+                done = true
+            })
 
             let inputClosed = false
 

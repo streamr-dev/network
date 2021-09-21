@@ -1,4 +1,5 @@
 import pino from 'pino'
+import pinoPretty from 'pino-pretty'
 import path from 'path'
 import _ from 'lodash'
 
@@ -26,6 +27,11 @@ export class Logger {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
             level: process.env.LOG_LEVEL || 'info',
+            // explicitly pass prettifier, otherwise pino may try to lazy require it,
+            // which can fail when under jest+typescript, due to some CJS/ESM
+            // incompatibility leading to throwing an error like:
+            // "prettyFactory is not a function"
+            prettifier: process.env.NODE_ENV === 'production' ? undefined : pinoPretty,
             prettyPrint: process.env.NODE_ENV === 'production' ? false : {
                 colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
                 translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',

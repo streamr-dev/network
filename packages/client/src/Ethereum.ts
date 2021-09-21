@@ -1,3 +1,6 @@
+/**
+ * Config and utilities for interating with identity & Ethereum chain.
+ */
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
 import { ExternalProvider, getDefaultProvider, JsonRpcProvider, Provider, Web3Provider } from '@ethersproject/providers'

@@ -2,13 +2,13 @@ import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { Logger } from '../helpers/Logger'
-import { PeerInfo } from './PeerInfo'
+import { PeerId, PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
 
 export interface ConstructorOptions {
-    selfId: string
-    targetPeerId: string
+    selfId: PeerId
+    targetPeerId: PeerId
     routerId: string
     stunUrls: string[]
     bufferThresholdLow?: number
@@ -36,6 +36,7 @@ interface Events {
     error: (err: Error) => void
     bufferLow: () => void
     bufferHigh: () => void
+    failed: () => void // connection never opened
 }
 
 // reminder: only use Connection emitter for external handlers
@@ -43,7 +44,7 @@ interface Events {
 // i.e. no this.on('event')
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-export function isOffering(myId: string, theirId: string): boolean {
+export function isOffering(myId: PeerId, theirId: PeerId): boolean {
     return myId < theirId
 }
 
@@ -94,10 +95,11 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     private pingAttempts = 0
     private rtt: number | null
     private rttStart: number | null
+    private hasOpened = false
 
     protected readonly id: string
     protected readonly maxMessageSize: number
-    protected readonly selfId: string
+    protected readonly selfId: PeerId
     protected readonly stunUrls: ReadonlyArray<string>
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
@@ -113,7 +115,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
-        pingInterval = 2 * 1000,
+        pingInterval = 5 * 1000,
         flushRetryTimeout = 500,
         maxMessageSize = 1048576,
     }: ConstructorOptions) {
@@ -160,7 +162,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.doConnect()
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
-            this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
     }
@@ -213,6 +214,9 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
 
         if (err) {
+            if (!this.hasOpened) {
+                this.emit('failed')
+            }
             this.emitClose(err)
             return
         }
@@ -249,7 +253,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         return this.peerInfo
     }
 
-    getPeerId(): string {
+    getPeerId(): PeerId {
         return this.peerInfo.peerId
     }
 
@@ -424,6 +428,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.deferredConnectionAttempt = null
             def.resolve(this.peerInfo.peerId)
         }
+        this.hasOpened = true
         this.setFlushRef()
         this.emit('open')
     }
@@ -475,7 +480,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         clearTimeout(this.connectionTimeoutRef!)
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
-            this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
     }

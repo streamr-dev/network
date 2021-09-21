@@ -1,9 +1,15 @@
+/**
+ * Wrapper around PushPipeline specific to StreamMessages.
+ * Subscriptions are MessageStreams.
+ * Not all MessageStreams are Subscriptions.
+ */
 import { PushPipeline, PipelineTransform } from './utils/Pipeline'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 import { StreamMessage } from 'streamr-client-protocol'
 import * as G from './utils/GeneratorUtils'
 
+export type MessageStreamOnMessage<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 /**
  * @category Important
  */
@@ -18,15 +24,36 @@ export default class MessageStream<
         this.debug = context.debug.extend(this.id)
     }
 
-    async collectContent() {
-        const messages = await this.collect()
-        return messages.map((m) => {
-            // @ts-expect-error ugh
-            if (m && typeof m === 'object' && typeof m.getParsedContent === 'function') {
-                // @ts-expect-error ugh
-                return m.getParsedContent()
+    /**
+     * Attach a legacy onMessage handler and consume if necessary.
+     * onMessage is passed parsed content as first arument, and streamMessage as second argument.
+     */
+    useLegacyOnMessageHandler(onMessage?: MessageStreamOnMessage<T>): this {
+        if (onMessage) {
+            this.onMessage(async (streamMessage) => {
+                if (streamMessage instanceof StreamMessage) {
+                    await onMessage(streamMessage.getParsedContent(), streamMessage)
+                }
+            })
+        }
+
+        setImmediate(() => {
+            // consume if not already doing so
+            if (!this.isIterating) {
+                this.consume().catch(() => {}) // prevent unhandled
             }
-            return m
+        })
+
+        return this
+    }
+
+    async collectContent(n?: number) {
+        const messages = await this.collect(n)
+        return messages.map((streamMessage) => {
+            if (streamMessage instanceof StreamMessage) {
+                return streamMessage.getParsedContent()
+            }
+            return streamMessage
         })
     }
 

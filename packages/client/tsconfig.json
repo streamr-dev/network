@@ -13,5 +13,5 @@
         "contracts/**/*",
         "test/**/*"
     ],
-    "exclude": ["node_modules", "dist", "src/dataunion/*"]
+    "exclude": ["node_modules", "dist"]
 }

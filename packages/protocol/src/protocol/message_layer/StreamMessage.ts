@@ -1,4 +1,5 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
+import StreamMessageError from '../../errors/StreamMessageError'
 import ValidationError from '../../errors/ValidationError'
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import { validateIsNotEmptyString, validateIsString, validateIsType } from '../../utils/validations'
@@ -37,7 +38,7 @@ export enum EncryptionType {
     AES = 2
 }
 
-type StreamMessageOptions<T> = {
+export type StreamMessageOptions<T> = {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
     content: T | string
@@ -50,40 +51,46 @@ type StreamMessageOptions<T> = {
     signature?: string | null
 }
 
-export type MessageValue = unknown | null | string | number | boolean | MessageContent | MessageContent[]
-export type MessageContent = {
-  [key: string]: MessageValue
-} | MessageValue[] | any // TODO
-
+/**
+ * Any object that contains a toStreamMessage interface.
+ * e.g. GroupKeyMessage
+ */
 export type StreamMessageContainer<T = unknown> = {
     toStreamMessage: (messageId: MessageID, prevMsgRef: MessageRef | null) => StreamMessage<T>
 }
 
-export type PublishContent<T extends MessageContent | unknown = unknown> = MessageContent | StreamMessageContainer<T>
-
+/**
+ * Unsigned StreamMessage.
+ */
 export type StreamMessageUnsigned<T> = StreamMessage<T> & {
     signatureType: SignatureType.NONE
     signature: '' | null
 }
 
+/**
+ * Signed StreamMessage.
+ */
 export type StreamMessageSigned<T> = StreamMessage<T> & {
     signatureType: SignatureType.ETH | SignatureType.ETH_LEGACY
     signature: string
 }
 
-// encrypted messages should also be signed
-export type StreamMessageEncrypted<T> = StreamMessageSigned<T> & {
+/**
+ *  Encrypted StreamMessage.
+ */
+export type StreamMessageEncrypted<T> = StreamMessage<T> & {
     encryptionType: EncryptionType.RSA | EncryptionType.AES
     groupKeyId: string
     parsedContent: never
 }
-
+/**
+ * Unencrypted StreamMessage.
+ */
 export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
     encryptionType: EncryptionType.NONE
-    parsedContent: string
 }
 
-export default class StreamMessage<T extends MessageContent | unknown = unknown> {
+export default class StreamMessage<T = unknown> {
     static LATEST_VERSION = LATEST_VERSION
 
     // TODO can we remove these static field and use the enum object directly?
@@ -116,6 +123,9 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
     serializedContent: string
     spid: SPID
 
+    /**
+     * Create a new StreamMessage identical to the passed-in streamMessage.
+     */
     clone(): StreamMessage<T> {
         const content = this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE
             ? this.getParsedContent()
@@ -247,16 +257,15 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
             if (this.contentType === StreamMessage.CONTENT_TYPES.JSON) {
                 try {
                     this.parsedContent = JSON.parse(this.serializedContent!)
-                } catch (err) {
+                } catch (err: any) {
                     throw new InvalidJsonError(
                         this.getStreamId(),
-                        this.serializedContent!,
                         err,
                         this,
                     )
                 }
             } else {
-                throw new Error(`Unsupported contentType for getParsedContent: ${this.contentType}`)
+                throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
             }
         }
 
@@ -314,7 +323,7 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
             return `${this.getStreamId()}${this.getTimestamp()}${this.getPublisherId().toLowerCase()}${this.getSerializedContent()}`
         }
 
-        throw new Error(`Unrecognized signature type: ${signatureType}`)
+        throw new ValidationError(`Unrecognized signature type: ${signatureType}`)
     }
 
     static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {
@@ -419,24 +428,25 @@ export default class StreamMessage<T extends MessageContent | unknown = unknown>
         }
     }
 
-    static isUnsigned<T>(msg: StreamMessage<T>): msg is StreamMessageUnsigned<T> {
+    static isUnsigned<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnsigned<T> {
         return !this.isSigned(msg)
     }
 
-    static isSigned<T>(msg: StreamMessage<T>): msg is StreamMessageSigned<T> {
+    static isSigned<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageSigned<T> {
         return !!(msg && msg.signature && msg.signatureType !== SignatureType.NONE)
     }
 
-    static isEncrypted<T>(msg: StreamMessage<T>): msg is StreamMessageEncrypted<T> {
+    static isEncrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageEncrypted<T> {
         return !!(msg && msg.encryptionType !== EncryptionType.NONE)
     }
 
-    static isUnencrypted<T>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
+    static isUnencrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
         return !this.isEncrypted(msg)
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     static isStreamMessageContainer<T = unknown>(content: any): content is StreamMessageContainer<T> {
-        return content && typeof content === 'object' && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function'
+        return !!(content && typeof content === 'object' && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
     }
 
     toObject() {

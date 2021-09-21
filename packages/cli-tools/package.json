@@ -33,13 +33,13 @@
     "easy-table": "^1.1.1",
     "ethers": "^5.3.1",
     "event-stream": "^4.0.1",
-    "streamr-client": "^5.4.4"
+    "streamr-client": "^6.0.0-alpha.6"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^27.0.1",
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
     "eslint": "^7.29.0",

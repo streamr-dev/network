@@ -1,17 +1,18 @@
+/**
+ * Public Resends API
+ */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { SPID, SIDLike, MessageRef, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import split2 from 'split2'
 import { Transform } from 'stream'
 
-import { instanceId } from './utils'
+import { instanceId, counterId } from './utils'
 import { Context, ContextError } from './utils/Context'
 import { inspect } from './utils/log'
 
-import MessageStream from './MessageStream'
-import { SubscriptionOnMessage } from './Subscription'
+import MessageStream, { MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
-import { StorageNode } from './StorageNode'
 import { authRequest } from './authFetch'
 
 import { NodeRegistry } from './NodeRegistry'
@@ -73,18 +74,34 @@ export type ResendRangeOptions = {
     publisherId?: string
 }
 
-export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
+export type ResendOptionsStrict = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
-    return options && 'last' in options && options.last != null
+    return options && typeof options === 'object' && 'last' in options && options.last != null
 }
 
 function isResendFrom<T extends ResendFromOptions>(options: any): options is T {
-    return options && 'from' in options && !('to' in options) && options.from != null
+    return options && typeof options === 'object' && 'from' in options && !('to' in options) && options.from != null
 }
 
 function isResendRange<T extends ResendRangeOptions>(options: any): options is T {
-    return options && 'from' in options && 'to' in options && options.to && options.from != null
+    return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
+}
+
+export type ResendOptions = (SIDLike | { stream: SIDLike }) & (ResendOptionsStrict | { resend: ResendOptionsStrict })
+
+export function isResendOptions(options: any): options is ResendOptions {
+    if (options && typeof options === 'object' && 'resend' in options && options.resend) {
+        return isResendOptions(options.resend)
+    }
+
+    if (!options || typeof options !== 'object') { return false }
+
+    return !!(
+        isResendLast(options)
+        || isResendFrom(options)
+        || isResendRange(options)
+    )
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -108,27 +125,25 @@ export default class Resend implements Context {
      */
 
     async resend<T>(
-        options: (SIDLike | { stream: SIDLike }) & (ResendOptions | { resend: ResendOptions }),
-        onMessage?: SubscriptionOnMessage<T>
+        options: ResendOptions,
+        onMessage?: MessageStreamOnMessage<T>
     ): Promise<MessageStream<T>> {
-        const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptions
-        const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SIDLike
+        const resendOptions = (
+            (options && typeof options === 'object' && 'resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
+        )
+        const spidOptions = (options && typeof options === 'object' && 'stream' in options && options.stream ? options.stream : options) as SIDLike
         const spid = SPID.fromDefaults(spidOptions, { streamPartition: 0 })
 
         const sub = await this.resendMessages<T>(spid, resendOptions)
 
         if (onMessage) {
-            setImmediate(() => {
-                sub.consume(async (streamMessage) => {
-                    await onMessage(streamMessage.getParsedContent(), streamMessage)
-                })
-            })
+            sub.useLegacyOnMessageHandler(onMessage)
         }
 
         return sub
     }
 
-    resendMessages<T>(spid: SPID, options: ResendOptions): Promise<MessageStream<T>> {
+    resendMessages<T>(spid: SPID, options: ResendOptionsStrict): Promise<MessageStream<T>> {
         if (isResendLast(options)) {
             return this.last<T>(spid, {
                 count: options.last,
@@ -157,44 +172,54 @@ export default class Resend implements Context {
         throw new ContextError(this, `can not resend without valid resend options: ${inspect({ spid, options })}`)
     }
 
-    async getStreamNodes(sidLike: SIDLike) {
-        const sid = SPID.parse(sidLike)
-        // this method should probably live somewhere else
-        // like in the node registry or stream class
-        const stream = await this.streamRegistry.getStream(sid.streamId)
-        // const storageNodes: StorageNode[] = await stream.getStorageNodes()
-        return stream.getStorageNodes()
-
-        // const storageNodeAddresses = new Set(storageNodes.map((n) => n.getAddress()))
-
-        // const nodes = await this.nodeRegistry.getAllStorageNodes()
-
-        // return nodes.filter((node: any) => storageNodeAddresses.has(node._address))
-    }
-
     private async fetchStream<T>(endpointSuffix: 'last' | 'range' | 'from', spid: SPID, query: QueryDict = {}) {
-        const nodes = await this.getStreamNodes(spid)
+        const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
+        debug('fetching resend %s %s %o', endpointSuffix, spid.key, query)
+        const nodes = await this.streamEndpoints.getStorageNodes(spid)
         if (!nodes.length) {
-            throw new ContextError(this, `no storage assigned: ${inspect(spid)}`)
+            const err = new ContextError(this, `no storage assigned: ${inspect(spid)}`)
+            err.code = 'NO_STORAGE_NODES'
+            throw err
         }
 
         // just pick first node
         // TODO: handle multiple nodes
         const url = createUrl(`${nodes[0].url}/api/v1`, endpointSuffix, spid, query)
-        const messageStream = SubscribePipeline<T>(spid, {}, this.container.resolve<Context>(Context as any), this.container)
+        const messageStream = SubscribePipeline<T>(
+            new MessageStream<T>(this),
+            spid,
+            {},
+            this.container.resolve<Context>(Context as any),
+            this.container
+        )
+
+        let count = 0
+        messageStream.forEach(() => {
+            count += 1
+        })
+
         messageStream.pull((async function* readStream(this: Resend) {
-            const dataStream = await fetchStream(url)
+            let dataStream
             try {
+                dataStream = await fetchStream(url, this.session)
                 yield* dataStream
             } finally {
-                this.debug('destroy')
-                dataStream.destroy()
+                debug('resent %s messages.', count)
+                if (dataStream) {
+                    dataStream.destroy()
+                }
             }
         }.bind(this)()))
         return messageStream
     }
 
     async last<T>(spid: SPID, { count }: { count: number }): Promise<MessageStream<T>> {
+        if (count <= 0) {
+            const emptyStream = new MessageStream<T>(this)
+            emptyStream.endWrite()
+            return emptyStream
+        }
+
         return this.fetchStream('last', spid, {
             count,
         })
@@ -231,7 +256,7 @@ export default class Resend implements Context {
         publisherId?: string,
         msgChainId?: string
     }): Promise<MessageStream<T>> {
-        return this.fetchStream('from', spid, {
+        return this.fetchStream('range', spid, {
             fromTimestamp,
             fromSequenceNumber,
             toTimestamp,
@@ -242,6 +267,6 @@ export default class Resend implements Context {
     }
 
     async stop() {
-        await this.nodeRegistry.stop()
+        await this.storageNodeRegistry.stop()
     }
 }

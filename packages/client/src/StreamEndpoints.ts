@@ -1,3 +1,6 @@
+/**
+ * Public Stream meta APIs.
+ */
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
 import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
@@ -6,8 +9,7 @@ import { ContentType, EncryptionType, SignatureType } from 'streamr-client-proto
 import { StreamMessageType, SIDLike, SPID } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
-import { Context } from './utils/Context'
-import { Debug } from './utils/log'
+import { Context, ContextError } from './utils/Context'
 
 import { Stream, StreamOperation } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
@@ -19,8 +21,6 @@ import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
 import { StorageNode } from './StorageNode'
 import { NodeRegistry } from './NodeRegistry'
-
-const debug = Debug('StreamEndpoints')
 
 export const createStreamId = async (streamIdOrPath: string, ownerProvider?: () => Promise<EthereumAddress|undefined>) => {
     if (streamIdOrPath === undefined) {
@@ -127,6 +127,17 @@ export class StreamEndpoints implements Context {
         return this.streamRegistry.getStream(streamId)
     }
 
+    async getStorageNodes(sidLike: SIDLike): Promise<NodeRegistryItem[]> {
+        const { streamId } = SPID.parse(sidLike)
+        const json = await this.rest.get<{ storageNodeAddress: string}[] >(
+            ['streams', streamId, 'storageNodes']
+        )
+
+        const storageNodeAddresses = new Set(json.map(({ storageNodeAddress }) => storageNodeAddress))
+        const nodes = await this.storageNodeRegistry.getNodes()
+        return nodes.filter((node: any) => storageNodeAddresses.has(node.address))
+    }
+
     /**
      * @category Important
      */
@@ -155,23 +166,19 @@ export class StreamEndpoints implements Context {
         // Try looking up the stream by id or name, whichever is defined
         try {
             if (props.id) {
-                const stream = await this.streamRegistry.getStream(props.id)
+                return await this.getStream(props.id)
+            }
+            return await this.getStreamByName(props.name!)
+        } catch (err: any) {
+            // try create stream if NOT_FOUND + also supplying an id.
+            if (props.id && err.errorCode === ErrorCode.NOT_FOUND) {
+                const stream = await this.createStream(props)
+                this.debug('Created stream: %s %o', props.id, stream.toObject())
                 return stream
             }
 
-            if (props.name) {
-                const stream = await this.getStreamByName(props.name)
-                return stream
-            }
-        } catch (err: any) {
-            if (err.errorCode !== ErrorCode.NOT_FOUND) {
-                this.debug('stream with id %s or name %s not found, creating it', props.id, props.name)
-            }
+            throw err
         }
-        const id = props.id || (await this.ethereum.getAddress()) + '/'
-        const stream = await this.streamRegistry.createStream({ ...props, id })
-        debug('Created stream: %s (%s)', props.name, stream.id)
-        return stream
     }
 
     async getStreamPublishers(streamId: string) {
@@ -212,29 +219,36 @@ export class StreamEndpoints implements Context {
     //     return json
     // }
 
-    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject> {
-        const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
+    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject[]> {
+        const spid = SPID.parse(streamObjectOrId)
+        const { streamId, streamPartition = 0 } = spid
         this.debug('getStreamLast %o', {
             streamId,
             streamPartition,
             count,
         })
+
         const stream = await this.streamRegistry.getStream(streamId)
         const nodes = await stream.getStorageNodes()
-        if (nodes.length === 0) { throw new NotFoundError('Stream: name=' + streamId + ' has no storage nodes!') }
-        const storageNode = nodes[Math.floor(Math.random() * nodes.length)]
-        const json = await this.rest.get<StreamMessageAsObject>(storageNode.url, [
+        if (!nodes.length) {
+            throw new ContextError(this, 'no storage assigned: %o', streamObjectOrId)
+        }
+
+        const json = await this.rest.get<StreamMessageAsObject[]>([
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
-            query: { count }
+            query: { count },
+            restUrl: nodes[0] ? nodes[0].url + '/api/v1' : undefined,
         })
 
         return json
     }
 
-    async getStreamPartsByStorageNode(node: StorageNode|EthereumAddress) {
-        const storageNode = (node instanceof StorageNode) ? node : await this.nodeRegistry.getStorageNode(node)
-        const streams = await this.nodeRegistry.getStoredStreamsOf(storageNode.getAddress())
+    async getStreamPartsByStorageNode(address: EthereumAddress) {
+        type ItemType = { id: string, partitions: number}
+        const json = await this.rest.get<ItemType[]>([
+            'storageNodes', address, 'streams'
+        ])
 
         const result: SPID[] = []
         streams.forEach((stream: Stream) => {

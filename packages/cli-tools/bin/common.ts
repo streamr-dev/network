@@ -5,7 +5,6 @@ import { StreamrClientOptions } from 'streamr-client'
 export interface EnvironmentOptions {
     dev?: boolean
     stg?: boolean
-    wsUrl?: string
     httpUrl?: string
 }
 
@@ -34,7 +33,7 @@ export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: nu
 }
 
 export function formStreamrOptionsWithEnv(
-    { dev, stg, privateKey }: EnvironmentOptions & AuthenticationOptions
+    { dev, stg, httpUrl, privateKey }: EnvironmentOptions & AuthenticationOptions
 ): StreamrClientOptions {
     const options: StreamrClientOptions = {}
 
@@ -44,11 +43,18 @@ export function formStreamrOptionsWithEnv(
     }
 
     if (dev) {
-        options.storageNode = {
+        options.restUrl = 'http://localhost/api/v1'
+        options.storageNodeRegistry = [{
             // "broker-node-storage-1" on Docker environment
             address: '0xde1112f631486CfC759A50196853011528bC5FA0',
             url: 'http://10.200.10.1:8891'
-        }
+        }]
+    } else if (stg) {
+        options.restUrl = 'https://staging.streamr.com/api/v1/'
+    }
+
+    if (httpUrl) {
+        options.restUrl = httpUrl
     }
 
     if (privateKey) {

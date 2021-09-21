@@ -1,14 +1,9 @@
 import { ethers, Wallet } from 'ethers'
-import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
+
 import { NotFoundError, ValidationError } from '../../src/authFetch'
 import { Stream, StreamOperation, StreamProperties } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
-
-import { uid, fakeAddress, createTestStream } from '../utils'
-
-import clientOptions from './config'
-import { until } from '../utils'
-import debug from 'debug'
 
 jest.setTimeout(30000)
 
@@ -33,17 +28,14 @@ function TestStreamEndpoints(getName: () => string) {
     let createdStream: Stream
     let storageNode: StorageNode
 
-    const createClient = (opts = {}) => new StreamrClient({
-        ...clientOptions,
-        autoConnect: false,
-        autoDisconnect: false,
-        ...opts,
-    } as any)
-
     beforeAll(() => {
-        const key = clientOptions.auth.privateKey
-        wallet = new Wallet(key)
-        client = createClient({})
+        wallet = ethers.Wallet.createRandom()
+        client = new StreamrClient({
+            ...clientOptions,
+            auth: {
+                privateKey: wallet.privateKey,
+            },
+        })
     })
 
     beforeAll(async () => {
@@ -244,8 +236,18 @@ function TestStreamEndpoints(getName: () => string) {
     })
 
     describe('getStreamLast', () => {
-        it('does not error', async () => {
-            const result = await client.getStreamLast(createdStream.id)
+        it('does error if has no storage assigned', async () => {
+            await expect(async () => {
+                await client.getStreamLast(createdStream.id)
+            }).rejects.toThrow()
+        })
+
+        it('does not error if has storage assigned', async () => {
+            const stream = await client.createStream({
+                id: createRelativeTestStreamId(module),
+            })
+            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+            const result = await client.getStreamLast(stream.id)
             expect(result).toEqual([])
         })
     })
@@ -401,7 +403,7 @@ function TestStreamEndpoints(getName: () => string) {
             await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
-            expect(storageNodes[0].getAddress()).toBe(storageNode.getAddress())
+            expect(storageNodes[0].address).toBe(storageNode)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
             return expect(storedStreamParts.some(
                 (sp) => (sp.streamId === stream.id) && (sp.streamPartition === 0)

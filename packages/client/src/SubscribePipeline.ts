@@ -1,4 +1,8 @@
-import { MessageContent, SPID } from 'streamr-client-protocol'
+/**
+ * Subscription message processing pipeline
+ */
+
+import { SPID, StreamMessage, StreamMessageError, GroupKeyErrorResponse } from 'streamr-client-protocol'
 
 import OrderMessages from './OrderMessages'
 import MessageStream from './MessageStream'
@@ -9,28 +13,24 @@ import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
 import { Context } from './utils/Context'
 import { Config } from './Config'
 import Resends from './Resends'
+import { DestroySignal } from './DestroySignal'
 import { DependencyContainer } from 'tsyringe'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 
-/**
- * Subscription message processing pipeline
- */
-
-export default function SubscribePipeline<T extends MessageContent | unknown>(
+export default function SubscribePipeline<T = unknown>(
+    messageStream: MessageStream<T>,
     spid: SPID,
     options: DecryptWithExchangeOptions<T>,
     context: Context,
     container: DependencyContainer
 ): MessageStream<T> {
     const validate = new Validator(
+        context,
         container.resolve(StreamEndpointsCached),
-        container.resolve(Config.Subscribe)
+        container.resolve(Config.Subscribe),
+        container.resolve(Config.Cache)
     )
     const orderMessages = new OrderMessages<T>(container.resolve(Config.Subscribe), container.resolve(Context as any), container.resolve(Resends))
-    // const subscribeOptions = container.resolve<SubscribeConfig>(Config.Subscribe)
-    // const { key } = options as any
-    // const id = counterId('MessagePipeline') + key
-
     /* eslint-enable object-curly-newline */
 
     const seenErrors = new WeakSet()
@@ -54,6 +54,7 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
         context,
         container.resolve(StreamEndpointsCached),
         container.resolve(SubscriberKeyExchange),
+        container.resolve(DestroySignal),
         {
             ...options,
             onError: async (err, streamMessage) => {
@@ -69,55 +70,39 @@ export default function SubscribePipeline<T extends MessageContent | unknown>(
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
-
-    return new MessageStream<T>(context)
-        // take messages
-        .pipe(async function* PrintMessages(src) {
-            for await (const streamMessage of src) {
-                yield streamMessage
-            }
-        })
+    return messageStream
+        .onError(onError)
         // order messages (fill gaps)
         .pipe(orderMessages.transform(spid))
-        // validate
-        .pipe(async function* ValidateMessages(src) {
-            for await (const streamMessage of src) {
-                try {
-                    await validate.validate(streamMessage)
-                } catch (err) {
-                    ignoreMessages.add(streamMessage)
-                    await onError(err)
-                }
-                yield streamMessage
+        // convert group key error responses into errors
+        // (only for subscribe pipeline, not publish pipeline)
+        .forEach((streamMessage) => {
+            if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+                const errMsg = streamMessage as StreamMessage<any>
+                const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
+                const err = new StreamMessageError(`GroupKeyErrorResponse: ${res.errorMessage}`, streamMessage, res.errorCode)
+                throw err
             }
         })
+        // validate
+        .forEach(async (streamMessage) => {
+            await validate.validate(streamMessage)
+        })
         // decrypt
-        .pipe(decrypt.decrypt)
+        .forEach(decrypt.decrypt)
         // parse content
-        .pipe(async function* ParseMessages(src) {
-            for await (const streamMessage of src) {
-                try {
-                    streamMessage.getParsedContent()
-                } catch (err) {
-                    ignoreMessages.add(streamMessage)
-                    await onError(err)
-                }
-                yield streamMessage
-            }
+        .forEach(async (streamMessage) => {
+            streamMessage.getParsedContent()
         })
         // re-order messages (ignore gaps)
         .pipe(orderMessages.transform(spid, { gapFill: false }))
         // ignore any failed messages
-        .pipe(async function* IgnoreMessages(src) {
-            for await (const streamMessage of src) {
-                if (ignoreMessages.has(streamMessage)) {
-                    continue
-                }
-                yield streamMessage
-            }
+        .filter(async (streamMessage) => {
+            return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally(async () => {
             const tasks = [
+                orderMessages.stop(),
                 decrypt.stop(),
                 validate.stop(),
             ]

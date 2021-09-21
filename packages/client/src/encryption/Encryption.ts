@@ -5,39 +5,26 @@ import { promisify } from 'util'
 // this is shimmed out for actual browser build allows us to run tests in node against browser API
 import { Crypto } from 'node-webcrypto-ossl'
 import { arrayify, hexlify } from '@ethersproject/bytes'
-import { StreamMessage, EncryptedGroupKey } from 'streamr-client-protocol'
+import { StreamMessage, EncryptedGroupKey, StreamMessageError, ValidationError } from 'streamr-client-protocol'
 
 import { uuid } from '../utils'
 import { inspect } from '../utils/log'
 
-export class StreamMessageProcessingError extends Error {
-    streamMessage: StreamMessage
+export class StreamMessageProcessingError extends StreamMessageError {
     constructor(message = '', streamMessage: StreamMessage) {
-        super(`Could not process. ${message}\n${inspect(streamMessage)}`)
-        this.streamMessage = streamMessage
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
+        super(`Could not process. ${message}`, streamMessage)
     }
 }
 
 export class UnableToDecryptError extends StreamMessageProcessingError {
     constructor(message = '', streamMessage: StreamMessage) {
         super(`Unable to decrypt. ${message}`, streamMessage)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
     }
 }
 
-class InvalidGroupKeyError extends Error {
-    groupKey: GroupKey | any
-    constructor(message: string, groupKey?: any) {
+class InvalidGroupKeyError extends ValidationError {
+    constructor(message: string, public groupKey?: any) {
         super(message)
-        this.groupKey = groupKey
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
     }
 }
 
@@ -160,7 +147,7 @@ class GroupKey {
 
     static from(maybeGroupKey: GroupKeyish) {
         if (!maybeGroupKey || typeof maybeGroupKey !== 'object') {
-            throw new InvalidGroupKeyError(`Group key must be object ${inspect(maybeGroupKey)}`)
+            throw new InvalidGroupKeyError('Group key must be object', maybeGroupKey)
         }
 
         if (maybeGroupKey instanceof GroupKey) {
@@ -177,7 +164,7 @@ class GroupKey {
         } catch (err) {
             if (err instanceof InvalidGroupKeyError) {
                 // wrap err with logging of original object
-                throw new InvalidGroupKeyError(`${err.stack}. From: ${inspect(maybeGroupKey)}`)
+                throw new InvalidGroupKeyError(`${err.stack}:`, maybeGroupKey)
             }
             throw err
         }
@@ -442,6 +429,10 @@ export default class EncryptionUtil extends EncryptionUtilBase {
             publicExponent: new Uint8Array([1, 0, 1]), // 65537
             hash: 'SHA-256'
         }, true, ['encrypt', 'decrypt'])
+        if (!(publicKey && privateKey)) {
+            // TS says this is possible.
+            throw new Error('could not generate keys')
+        }
 
         const [exportedPrivate, exportedPublic] = await Promise.all([
             exportCryptoKey(privateKey, {

@@ -3,6 +3,7 @@ import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 's
 import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
+import { Tracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { StorageConfig } from '../src/plugins/storage/StorageConfig'
@@ -28,15 +29,12 @@ export function formConfig({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    streamrWsUrl = `ws://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
-    reporting = false
 }: Todo): Config {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['legacyPublishHttp'] = {}
-        plugins['metrics'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -88,28 +86,11 @@ export function formConfig({
             stun: null,
             turn : null
         },
-        reporting: reporting || {
-            streamr: null,
-            intervalInSeconds: 0,
-            perNodeMetrics: {
-                enabled: false,
-                wsUrl: null,
-                httpUrl: null,
-                storageNode: null,
-                intervals:{
-                    sec: 0,
-                    min: 0,
-                    hour: 0,
-                    day: 0
-                }
-            }
-        },
         streamrUrl,
-        streamrWsUrl,
         streamrAddress,
         storageNodeConfig,
         httpServer: {
-            port: httpPort ? httpPort : 8080,
+            port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,
             certFileName: null
         },
@@ -140,7 +121,7 @@ export function fastPrivateKey() {
 export const createMockUser = () => Wallet.createRandom()
 
 export function createClient(
-    wsPort: number,
+    tracker: Tracker,
     privateKey = fastPrivateKey(),
     clientOptions?: StreamrClientOptions
 ): StreamrClient {
@@ -148,8 +129,10 @@ export function createClient(
         auth: {
             privateKey
         },
-        url: getWsUrl(wsPort),
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+        network: {
+            trackers: [tracker.getConfigRecord()]
+        },
         ...clientOptions,
     })
 }
@@ -169,9 +152,9 @@ export class StorageAssignmentEventManager {
     client: StreamrClient
     eventStream?: Stream
 
-    constructor(wsPort: number, engineAndEditorAccount: Wallet) {
+    constructor(tracker: Tracker, engineAndEditorAccount: Wallet) {
         this.engineAndEditorAccount = engineAndEditorAccount
-        this.client = createClient(wsPort, engineAndEditorAccount.privateKey)
+        this.client = createClient(tracker, engineAndEditorAccount.privateKey)
     }
 
     async createStream() {
@@ -215,7 +198,7 @@ export const waitForStreamPersistedInStorageNode = async (streamId: string, part
         const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
     }
-    await waitForCondition(() => isPersistent(), undefined, 1000)
+    await waitForCondition(() => isPersistent(), 20000, 500)
 }
 
 const getTestName = (module: NodeModule) => {
@@ -242,8 +225,8 @@ export class Queue<T> {
         this.items.push(item)
     }
 
-    async pop(): Promise<T> {
-        await waitForCondition(() => this.items.length > 0)
+    async pop(timeout?: number): Promise<T> {
+        await waitForCondition(() => this.items.length > 0, timeout)
         return this.items.shift()!
     }
 }

@@ -4,17 +4,15 @@ import {
     StreamMessage, MessageID, MessageRef, GroupKeyMessage, GroupKeyErrorResponse
 } from '../../../../src/index'
 
-import { ErrorCode } from '../../../../src/protocol/message_layer/GroupKeyErrorResponse'
-
 // Message definitions
 const message = new GroupKeyErrorResponse({
     requestId: 'requestId',
     streamId: 'streamId',
-    errorCode: ErrorCode.PLACEHOLDER,
+    errorCode: 'ErrorCode',
     errorMessage: 'errorMessage',
     groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
 })
-const serializedMessage = JSON.stringify(['requestId', 'streamId', 'PLACEHOLDER', 'errorMessage', ['groupKeyId1', 'groupKeyId2']])
+const serializedMessage = JSON.stringify(['requestId', 'streamId', 'ErrorCode', 'errorMessage', ['groupKeyId1', 'groupKeyId2']])
 
 const streamMessage = new StreamMessage({
     messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),

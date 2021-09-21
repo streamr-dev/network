@@ -9,6 +9,7 @@
  */
 
 import { format } from 'util'
+import ValidationError from '../errors/ValidationError'
 
 type RequiredKeys<T, Keys extends keyof T> = Omit<T, Keys> & Required<Pick<T, Keys>>
 
@@ -39,14 +40,9 @@ export type SID = { streamId: string, streamPartition?: number }
 
 export type SIDLike = string | SID
 
-class SPIDValidationError extends Error {
-    data: Partial<SPIDLike>
-    constructor(msg: string, data: Partial<SPIDLike>) {
-        super(format(msg, data))
-        this.data = data
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
+class SPIDValidationError extends ValidationError {
+    constructor(msg: string, public data: Partial<SPIDLike>, ...args: any[]) {
+        super(format(msg, data, ...args))
     }
 }
 
@@ -202,9 +198,9 @@ export class SPID implements SPIDKeyShape {
         try {
             // constructor can handle partial input but we want external interface to check for it.
             return new SPID(streamId!, streamPartition!)
-        } catch (err) {
+        } catch (err: any) {
             // TODO: add more conversions?
-            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err.message} %o`, spidLike)
+            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err && err.message} %o`, spidLike)
         }
     }
 

@@ -3,6 +3,7 @@ import { startBroker, createClient, createTestStream } from '../utils'
 import { Broker } from '../../src/broker'
 import { StreamrClient, Stream, StreamOperation } from 'streamr-client'
 import { Wallet } from 'ethers'
+import { waitForCondition } from "streamr-test-utils"
 
 const trackerPort = 12740
 const broker1WsPort = 12474
@@ -43,8 +44,8 @@ describe('node id: with generateSessionId enabled', () => {
             wsPort: broker2WsPort
         })
 
-        client1 = createClient(broker1WsPort)
-        client2 = createClient(broker2WsPort)
+        client1 = createClient(tracker)
+        client2 = createClient(tracker)
 
         stream = await createTestStream(client1, module)
         stream.grantPermission(StreamOperation.STREAM_GET, undefined)
@@ -68,14 +69,14 @@ describe('node id: with generateSessionId enabled', () => {
             tracker.stop(),
             broker1.stop(),
             broker2.stop(),
-            client1.disconnect(),
-            client2.disconnect()
+            client1.destroy(),
+            client2.destroy()
         ])
     })
 
-    it('two brokers with same privateKey are assigned separate node ids', () => {
+    it('two brokers with same privateKey are assigned separate node ids', async () => {
+        await waitForCondition(() => tracker.getNodes().length === 2)
         const actual = tracker.getNodes()
-        expect(actual).toHaveLength(2)
         expect(actual[0]).not.toEqual(actual[1])
         expect(actual[0].startsWith(sharedWallet.address)).toEqual(true)
         expect(actual[1].startsWith(sharedWallet.address)).toEqual(true)

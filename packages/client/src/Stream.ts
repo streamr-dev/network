@@ -2,7 +2,6 @@ import { MessageContent } from 'streamr-client-protocol'
 import { DependencyContainer } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
-import { StorageNode } from './StorageNode'
 import { EthereumAddress } from './types'
 
 import { Rest } from './Rest'
@@ -13,6 +12,9 @@ import { StreamMetadata } from '../../protocol/dist/src/utils/StreamMessageValid
 import { StreamRegistry } from './StreamRegistry'
 import Ethereum from './Ethereum'
 import { NodeRegistry } from './NodeRegistry'
+import { BrubeckContainer } from './Container'
+import { StreamEndpoints } from './StreamEndpoints'
+import { StreamEndpointsCached } from './StreamEndpointsCached'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -101,15 +103,18 @@ class StreamrStream implements StreamMetadata {
     requireSignedData!: boolean
     storageDays?: number
     inactivityThresholdHours?: number
-    _rest: Rest
-    _resends: Resends
-    _publisher: Publisher
-    _streamRegistry: StreamRegistry
-    _nodeRegistry: NodeRegistry
-    _ethereuem: Ethereum
+    protected _rest: Rest
+    protected _resends: Resends
+    protected _publisher: Publisher
+    protected _streamEndpoints: StreamEndpoints
+    protected _streamEndpointsCached: StreamEndpointsCached
+    protected _streamRegistry: StreamRegistry
+    protected _nodeRegistry: NodeRegistry
+    protected _ethereuem: Ethereum
 
     constructor(
-        props: StreamProperties, private container: DependencyContainer
+        props: StreamProperties,
+        @inject(BrubeckContainer) private _container: DependencyContainer
     ) {
         Object.assign(this, props)
         this.id = props.id
@@ -117,6 +122,8 @@ class StreamrStream implements StreamMetadata {
         this._rest = container.resolve<Rest>(Rest)
         this._resends = container.resolve<Resends>(Resends)
         this._publisher = container.resolve<Publisher>(Publisher)
+        this._streamEndpoints = _container.resolve<StreamEndpoints>(StreamEndpoints)
+        this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
         this._streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this._nodeRegistry = container.resolve<NodeRegistry>(NodeRegistry)
         this._nodeRegistry = container.resolve<NodeRegistry>(NodeRegistry)
@@ -130,10 +137,9 @@ class StreamrStream implements StreamMetadata {
     toObject() : StreamProperties {
         const result = {}
         Object.keys(this).forEach((key) => {
-            if (!key.startsWith('_')) {
-                // @ts-expect-error
-                result[key] = this[key]
-            }
+            if (key.startsWith('_') || typeof key === 'function') { return }
+            // @ts-expect-error
+            result[key] = this[key]
         })
         return result as StreamProperties
     }
@@ -147,7 +153,7 @@ class StreamrStream implements StreamMetadata {
             },
         })
 
-        const receivedMsgs = await sub.collect()
+        const receivedMsgs = await sub.collectContent()
 
         if (!receivedMsgs.length) { return }
 
@@ -225,7 +231,7 @@ class StreamrStream implements StreamMetadata {
         return this._nodeRegistry.getStorageNodesOf(this.id)
     }
 
-    async publish<T extends MessageContent>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
+    async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
         return this._publisher.publish(this.id, content, timestamp, partitionKey)
     }
 

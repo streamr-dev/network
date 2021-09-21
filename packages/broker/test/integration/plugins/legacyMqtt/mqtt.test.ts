@@ -1,6 +1,6 @@
 import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startTracker } from 'streamr-network'
+import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../../../../src/types'
 import { Broker } from '../../../broker'
@@ -21,7 +21,7 @@ const broker2Key = '0xd2672dce1578d6b75a58e11fa96c978b3b500750be287fc4e7f1e894eb
 const broker3Key = '0xa417da20e3afeb69544585c6b44b95ad4d987f38cf257f4a53eab415cc12334f'
 
 describe('mqtt: end-to-end', () => {
-    let tracker: Todo
+    let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
     let broker3: Broker
@@ -67,9 +67,9 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     beforeEach(async () => {
-        client1 = createClient(wsPort1, privateKey)
-        client2 = createClient(wsPort2, privateKey)
-        client3 = createClient(wsPort3, privateKey)
+        client1 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
+        client3 = createClient(tracker, privateKey)
 
         mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
@@ -82,9 +82,9 @@ describe('mqtt: end-to-end', () => {
         await tracker.stop()
 
         await Promise.all([
-            client1.disconnect(),
-            client2.disconnect(),
-            client3.disconnect(),
+            client1.destroy(),
+            client2.destroy(),
+            client3.destroy(),
         ])
 
         await Promise.all([
@@ -254,7 +254,7 @@ describe('mqtt: end-to-end', () => {
             client4Messages.push(JSON.parse(message.toString()))
         })
 
-        await Promise.all([
+        const subs = await Promise.all([
             client1.subscribe({
                 stream: freshStream1.id
             }, (message) => {
@@ -271,6 +271,8 @@ describe('mqtt: end-to-end', () => {
                 client3Messages.push(message)
             })
         ])
+
+        await Promise.all(subs.map((sub) => sub.waitForNeighbours()))
 
         await client1.publish(freshStream1.id, {
             key: 1

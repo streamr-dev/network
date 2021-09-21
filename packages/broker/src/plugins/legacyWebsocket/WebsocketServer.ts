@@ -268,7 +268,7 @@ export class WebsocketServer extends EventEmitter {
 
     private pingConnections() {
         function logAndForceClose(connection: Connection, reason: string | Error): void {
-            logger.error(`Failed to ping connection: ${connection.id}, reason ${reason}`)
+            logger.info(`Failed to ping connection: ${connection.id}, reason ${reason}`)
             connection.forceClose(reason.toString())
         }
 
@@ -282,7 +282,7 @@ export class WebsocketServer extends EventEmitter {
             try {
                 connection.ping()
             } catch (e) {
-                logger.error(`Failed to ping connection: ${connection.id}, error ${e}`)
+                logger.info(`Failed to ping connection: ${connection.id}, error ${e}`)
                 logAndForceClose(connection, 'failed to ping')
             }
         })

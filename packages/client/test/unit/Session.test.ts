@@ -2,10 +2,10 @@ import 'reflect-metadata'
 import sinon from 'sinon'
 import { container, DependencyContainer } from 'tsyringe'
 
-import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
-import clientOptions from '../integration/config'
+import clientOptions from '../../src/ConfigTest'
 import { Todo } from '../../src/types'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
 
@@ -65,12 +65,12 @@ describe('Session', () => {
             expect(sessionToken).toBe(clientNone.options.auth.sessionToken)
         })
 
-        it('should return undefined with no authentication', async () => {
+        it('should return empty string with no authentication', async () => {
             const clientNone = createClient({
                 auth: {},
             })
             const sessionToken = await clientNone.session.getSessionToken()
-            expect(sessionToken).toBe(undefined)
+            expect(sessionToken).toBe('')
         })
 
         it('login function should throw if only session token provided', async () => {

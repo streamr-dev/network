@@ -50,6 +50,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.signature, 'signature')
             assert.strictEqual(streamMessage.getSPID().streamId, streamMessage.getStreamId())
             assert.strictEqual(streamMessage.getSPID().streamPartition, streamMessage.getStreamPartition())
+            assert.strictEqual(streamMessage.getSPID(), streamMessage.spid)
         })
 
         it('create StreamMessage with minimum fields defined', () => {
@@ -82,6 +83,41 @@ describe('StreamMessage', () => {
             })
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
+        })
+
+        it('can detect signed/encrypted etc', () => {
+            const streamMessage = new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                content: JSON.stringify(content),
+            })
+            expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
+            expect(StreamMessage.isUnencrypted(streamMessage)).toBe(true)
+            expect(StreamMessage.isSigned(streamMessage)).toBe(false)
+            expect(StreamMessage.isUnsigned(streamMessage)).toBe(true)
+
+            const signedMessage = new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                content: JSON.stringify(content),
+                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+                signature: 'something'
+            })
+
+            expect(StreamMessage.isEncrypted(signedMessage)).toBe(false)
+            expect(StreamMessage.isUnencrypted(signedMessage)).toBe(true)
+            expect(StreamMessage.isSigned(signedMessage)).toBe(true)
+            expect(StreamMessage.isUnsigned(signedMessage)).toBe(false)
+            const encryptedMessage = new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                content: JSON.stringify(content),
+                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+                signature: 'something',
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            })
+
+            expect(StreamMessage.isEncrypted(encryptedMessage)).toBe(true)
+            expect(StreamMessage.isUnencrypted(encryptedMessage)).toBe(false)
+            expect(StreamMessage.isSigned(encryptedMessage)).toBe(true)
+            expect(StreamMessage.isUnsigned(encryptedMessage)).toBe(false)
         })
 
         it('should throw if required fields are not defined', () => {
@@ -192,6 +228,19 @@ describe('StreamMessage', () => {
         })
     })
 
+    describe('clone', () => {
+        it('works', () => {
+            const streamMessage = new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                content: JSON.stringify(content),
+            })
+            const streamMessageClone = streamMessage.clone()
+            expect(streamMessageClone).not.toBe(streamMessage)
+            expect(streamMessageClone.toObject()).toEqual(streamMessage.toObject())
+            expect(streamMessageClone.serialize()).toEqual(streamMessage.serialize())
+        })
+    })
+
     describe('serialization', () => {
         let serializer: Serializer<StreamMessage>
         const VERSION = StreamMessage.LATEST_VERSION + 100
@@ -247,7 +296,7 @@ describe('StreamMessage', () => {
             })
 
             it('should throw on unsupported version', () => {
-                assert.throws(() => m.serialize(999), (err) => {
+                assert.throws(() => m.serialize(999), (err: UnsupportedVersionError) => {
                     assert(err instanceof UnsupportedVersionError)
                     assert.strictEqual(err.version, 999)
                     return true
@@ -266,7 +315,7 @@ describe('StreamMessage', () => {
 
             it('should throw on unsupported version', () => {
                 const arr = [999]
-                assert.throws(() => StreamMessage.deserialize(JSON.stringify(arr)), (err) => {
+                assert.throws(() => StreamMessage.deserialize(JSON.stringify(arr)), (err: UnsupportedVersionError) => {
                     assert(err instanceof UnsupportedVersionError)
                     assert.strictEqual(err.version, 999)
                     return true

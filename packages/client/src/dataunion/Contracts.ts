@@ -10,7 +10,7 @@ import { binanceAdapterABI, dataUnionMainnetABI, dataUnionSidechainABI, factoryM
 import { until } from '../utils'
 import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
-import { StreamrClient } from '../StreamrClient'
+import DataUnionAPI from './index'
 
 const log = Debug('Contracts')
 
@@ -21,7 +21,6 @@ function validateAddress(name: string, address: EthereumAddress) {
 }
 
 export default class Contracts {
-
     ethereum: StreamrEthereum
     factoryMainnetAddress: EthereumAddress
     factorySidechainAddress: EthereumAddress
@@ -31,7 +30,7 @@ export default class Contracts {
     binanceSmartChainAMBAddress: EthereumAddress
     cachedSidechainAmb?: Todo
 
-    constructor(client: StreamrClient) {
+    constructor(client: DataUnionAPI) {
         this.ethereum = client.ethereum
         this.factoryMainnetAddress = client.options.dataUnion.factoryMainnetAddress
         this.factorySidechainAddress = client.options.dataUnion.factorySidechainAddress
@@ -300,6 +299,5 @@ export default class Contracts {
         // @ts-expect-error
         dataUnion.sidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, sidechainProvider)
         return dataUnion
-
     }
 }

@@ -1,41 +1,26 @@
-import { wait } from 'streamr-test-utils'
+import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../utils'
+import { StreamrClient } from '../../src/StreamrClient'
 
-import { getPublishTestMessages, fakePrivateKey, describeRepeats, createTestStream } from '../utils'
-import { BrubeckClient as StreamrClient } from '../../src/BrubeckClient'
-
-import clientOptions from './config'
+import { Stream } from '../../src/Stream'
+import Subscriber from '../../src/Subscriber'
+import Subscription from '../../src/Subscription'
 
 const MAX_MESSAGES = 10
 
 describeRepeats('Validation', () => {
-    let expectErrors = 0 // check no errors by default
-    let publishTestMessages
-    let onError = jest.fn()
-    let client
-    let stream
-    let subscriber
+    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
+    let client: StreamrClient
+    let stream: Stream
+    let subscriber: Subscriber
 
-    const createClient = (opts = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            // auth: {
-//                 privateKey: fakePrivateKey(),
-//            },
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            ...opts,
-        })
-        c.onError = jest.fn()
-        return c
-    }
+    const createClient = getCreateClient()
 
-    async function setupClient(opts) {
+    async function setupClient(opts: any) {
         // eslint-disable-next-line require-atomic-updates
         client = createClient(opts)
         subscriber = client.subscriber
         client.debug('connecting before test >>')
-        await client.session.getSessionToken()
+        await client.getSessionToken()
         stream = await createTestStream(client, module, {
             requireSignedData: client.options.publishWithSignature !== 'never'
         })
@@ -45,11 +30,6 @@ describeRepeats('Validation', () => {
         return client
     }
 
-    beforeEach(async () => {
-        expectErrors = 0
-        onError = jest.fn()
-    })
-
     afterEach(() => {
         if (!subscriber) { return }
         expect(subscriber.count(stream.id)).toBe(0)
@@ -57,25 +37,7 @@ describeRepeats('Validation', () => {
         expect(client.getSubscriptions(stream.id)).toEqual([])
     })
 
-    afterEach(async () => {
-        await wait()
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
-        if (client) {
-            expect(client.onError).toHaveBeenCalledTimes(expectErrors)
-        }
-    })
-
-    afterEach(async () => {
-        await wait()
-        if (client) {
-            client.debug('disconnecting after test >>')
-            await client.disconnect()
-            client.debug('disconnecting after test <<')
-        }
-    })
-
-    let subs = []
+    let subs: Subscription[] = []
 
     beforeEach(async () => {
         const existingSubs = subs
@@ -97,7 +59,7 @@ describeRepeats('Validation', () => {
         it('subscribe fails gracefully when signature bad', async () => {
             const sub = await client.subscribe(stream.id)
 
-            const errs = []
+            const errs: Error[] = []
             const onSubError = jest.fn((err) => {
                 errs.push(err)
             })
@@ -116,7 +78,7 @@ describeRepeats('Validation', () => {
                 timestamp: 111111,
             })
 
-            let t
+            let t!: ReturnType<typeof setTimeout>
             const received = []
             for await (const m of sub) {
                 received.push(m.getParsedContent())
@@ -165,7 +127,7 @@ describeRepeats('Validation', () => {
         it('subscribe fails gracefully when content bad', async () => {
             await client.connect()
             const sub = await client.subscribe(stream.id)
-            const errs = []
+            const errs: Error[] = []
             const onSubError = jest.fn((err) => {
                 errs.push(err)
             })
@@ -178,7 +140,8 @@ describeRepeats('Validation', () => {
                     // eslint-disable-next-line no-param-reassign
                     msg.serializedContent = '{ badcontent'
                     msg.parsedContent = undefined
-                    msg.signature = undefined
+                    msg.signature = null
+                    // @ts-expect-error signer is private
                     await client.publisher.pipeline.signer.sign(msg)
                     return msg
                 }
@@ -186,7 +149,6 @@ describeRepeats('Validation', () => {
             })
 
             const published = await publishTestMessages(MAX_MESSAGES, {
-                stream,
                 timestamp: 1111111,
             })
 

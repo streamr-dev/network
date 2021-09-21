@@ -3,10 +3,8 @@ import { validateIsArray, validateIsString } from '../../utils/validations'
 import StreamMessage from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
 
-export enum ErrorCode {
-    // TODO define the values, remove PLACEHOLDER
-    PLACEHOLDER = 'PLACEHOLDER'
-}
+// TODO define as enum
+export type ErrorCode = string
 
 export interface Options {
     requestId: string

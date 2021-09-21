@@ -384,6 +384,101 @@ describe('Pipeline', () => {
                 expect(received).toEqual(expected)
             })
 
+            it('can suppress error with onError handler that does not rethrow', async () => {
+                const err = new Error('expected')
+                const onError = jest.fn()
+
+                const p = new Pipeline(generate())
+                    .pipe(async function* Step1(s) {
+                        yield* s
+                    })
+                    .pipe(async function* Step2(s) {
+                        yield* s
+                        throw err
+                    })
+                    .onFinally(onFinally)
+                    .onError(onError)
+
+                const received: number[] = []
+                for await (const msg of p) {
+                    received.push(msg)
+                }
+
+                expect(received).toEqual(expected)
+                expect(onError).toHaveBeenCalledTimes(1)
+            })
+
+            it('waits for onError before continuing', async () => {
+                const err = new Error('expected')
+                let receivedBefore: number[] = []
+                let receivedAfter: number[] = []
+                const onError = jest.fn(async () => {
+                    receivedBefore = received.slice()
+                    await wait(500)
+                    receivedAfter = received.slice()
+                })
+
+                const p = new Pipeline(generate())
+                    .forEach(async (_v, index) => {
+                        if (index === 2) {
+                            throw err
+                        }
+                    })
+                    .onFinally(onFinally)
+                    .onError(onError)
+
+                const received: number[] = []
+                for await (const msg of p) {
+                    received.push(msg)
+                }
+
+                expect(received).toEqual(expected.filter((_v, index) => index !== 2))
+                expect(onError).toHaveBeenCalledTimes(1)
+                expect(receivedBefore).toEqual(expected.slice(0, 2))
+                expect(receivedAfter).toEqual(expected.slice(0, 2))
+            })
+
+            it('can suppress error in iterator function with onError handler', async () => {
+                let err = new Error('expected -1')
+                let count = 0
+                const onError = jest.fn((error) => {
+                    count += 1
+                    p.debug('onError', count)
+                    if (count === 3) {
+                        p.debug('throwing last')
+                        throw error
+                    }
+                })
+
+                const p = new Pipeline(generate())
+                    .pipe(async function* Step1(s) {
+                        yield* s
+                    })
+                    .forEach(async (_msg, index) => {
+                        if (index >= expected.length - 3) {
+                            err = new Error(`expected ${index}`)
+                            throw err
+                        }
+                    })
+                    .onFinally(onFinally)
+                    .onError(onError)
+
+                const received: number[] = []
+                const task = (async () => {
+                    for await (const msg of p) {
+                        received.push(msg)
+                    }
+                })()
+                await task.catch(() => {})
+
+                await expect(async () => {
+                    await task
+                }).rejects.toThrow(err)
+
+                expect(onError).toHaveBeenCalledTimes(3)
+                expect(received).toEqual(expected.slice(0, -3))
+            })
+
             it('works with PullBuffer inputs', async () => {
                 const onFinallyInnerAfter = jest.fn()
                 const onFinallyInner = jest.fn(async () => {

@@ -1,18 +1,18 @@
+/**
+ * Validation Wrapper
+ */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamMessage, GroupKeyErrorResponse, StreamMessageValidator, SigningUtil, ValidationError } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageValidator, SigningUtil, StreamMessageError } from 'streamr-client-protocol'
 
-import { pOrderedResolve, CacheAsyncFn } from './utils'
-import { inspect } from './utils/log'
+import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
 import { Stoppable } from './utils/Stoppable'
+import { Context } from './utils/Context'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { Config, SubscribeConfig } from './Config'
+import { Config, SubscribeConfig, CacheConfig } from './Config'
 
-export class SignatureRequiredError extends ValidationError {
-    constructor(streamMessage?: StreamMessage, code?: string) {
-        super(`Client requires data to be signed. Message: ${inspect(streamMessage)}`, streamMessage, code)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
+export class SignatureRequiredError extends StreamMessageError {
+    constructor(streamMessage: StreamMessage, code?: string) {
+        super('Client requires data to be signed.', streamMessage, code)
     }
 }
 
@@ -22,44 +22,51 @@ export class SignatureRequiredError extends ValidationError {
  * Handles caching remote calls
  */
 @scoped(Lifecycle.ContainerScoped)
-export default class Validator extends StreamMessageValidator implements Stoppable {
+export default class Validator extends StreamMessageValidator implements Stoppable, Context {
+    id
+    debug
     isStopped = false
     private doValidation: StreamMessageValidator['validate']
     constructor(
+        context: Context,
         streamEndpoints: StreamEndpointsCached,
-        @inject(Config.Subscribe) private options: SubscribeConfig
+        @inject(Config.Subscribe) private options: SubscribeConfig,
+        @inject(Config.Cache) private cacheOptions: CacheConfig,
     ) {
         super({
-            getStream: streamEndpoints.getStream.bind(streamEndpoints),
-            async isPublisher(publisherId, _streamId) {
-                return streamEndpoints.isStreamPublisher(_streamId, publisherId)
+            getStream: (streamId: string) => {
+                return streamEndpoints.getStream(streamId)
             },
-            async isSubscriber(ethAddress, _streamId) {
-                return streamEndpoints.isStreamSubscriber(_streamId, ethAddress)
+            isPublisher: (publisherId: string, streamId: string) => {
+                return streamEndpoints.isStreamPublisher(streamId, publisherId)
             },
-            verify: CacheAsyncFn(SigningUtil.verify.bind(SigningUtil), {
-                // forcibly use small cache otherwise keeps n serialized messages in memory
-                maxSize: 100,
-                maxAge: 10000,
-                cachePromiseRejection: true,
-                cacheKey: (args) => args.join('|'),
-            })
+            isSubscriber: (ethAddress: string, streamId: string) => {
+                return streamEndpoints.isStreamSubscriber(streamId, ethAddress)
+            },
+            verify: (address: string, payload: string, signature: string) => {
+                return this.cachedVerify(address, payload, signature)
+            }
         })
+
+        this.id = instanceId(this)
+        this.debug = context.debug.extend(this.id)
         this.doValidation = super.validate.bind(this)
     }
 
+    private cachedVerify = CacheAsyncFn(async (address: string, payload: string, signature: string) => {
+        if (this.isStopped) { return true }
+        return SigningUtil.verify(address, payload, signature)
+    }, {
+        // forcibly use small cache otherwise keeps n serialized messages in memory
+        ...this.cacheOptions,
+        maxSize: 100,
+        cachePromiseRejection: true,
+        cacheKey: (args) => args.join('|'),
+    })
+
     orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {
         if (this.isStopped) { return }
-
         const { options } = this
-        if (msg.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
-            const errMsg = msg as StreamMessage<any>
-            const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
-            const err = new ValidationError(`GroupKeyErrorResponse: ${res.errorMessage}`, msg)
-            err.streamMessage = msg
-            err.code = res.errorCode
-            throw err
-        }
 
         // Check special cases controlled by the verifySignatures policy
         if (options.verifySignatures === 'never' && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
@@ -72,7 +79,9 @@ export default class Validator extends StreamMessageValidator implements Stoppab
 
         // In all other cases validate using the validator
         // will throw with appropriate validation failure
-        await this.doValidation(msg).catch((err) => {
+        await this.doValidation(msg).catch((err: any) => {
+            if (this.isStopped) { return }
+
             if (!err.streamMessage) {
                 err.streamMessage = msg // eslint-disable-line no-param-reassign
             }
@@ -81,11 +90,13 @@ export default class Validator extends StreamMessageValidator implements Stoppab
     })
 
     async validate(msg: StreamMessage) {
+        if (this.isStopped) { return }
         await this.orderedValidate(msg)
     }
 
     stop() {
         this.isStopped = true
+        this.cachedVerify.clear()
         this.orderedValidate.clear()
     }
 }

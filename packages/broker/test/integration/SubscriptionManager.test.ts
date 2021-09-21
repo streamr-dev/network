@@ -1,9 +1,8 @@
 import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startTracker } from 'streamr-network'
+import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
-import { Todo } from '../types'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
 
 const httpPort1 = 13381
@@ -15,7 +14,7 @@ const mqttPort1 = 13551
 const mqttPort2 = 13552
 
 describe('SubscriptionManager', () => {
-    let tracker: Todo
+    let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
     const privateKey = fastPrivateKey()
@@ -52,8 +51,8 @@ describe('SubscriptionManager', () => {
 
         await wait(2000)
 
-        client1 = createClient(wsPort1, privateKey)
-        client2 = createClient(wsPort2, privateKey)
+        client1 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
 
         mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
@@ -65,8 +64,8 @@ describe('SubscriptionManager', () => {
     afterEach(async () => {
         await mqttClient1.end(true)
         await mqttClient2.end(true)
-        await client1.disconnect()
-        await client2.disconnect()
+        await client1.destroy()
+        await client2.destroy()
         await broker1.stop()
         await broker2.stop()
         await tracker.stop()
@@ -85,13 +84,8 @@ describe('SubscriptionManager', () => {
         expect(broker1.getStreams()).toEqual([freshStream1.id + '::0'])
         expect(broker2.getStreams()).toEqual([freshStream2.id + '::0'])
 
-        const subFreshStream2 = await client1.subscribe({
-            stream: freshStream2.id
-        }, () => {})
-
-        await client2.subscribe({
-            stream: freshStream1.id
-        }, () => {})
+        await mqttClient1.subscribe(freshStream2.id)
+        await mqttClient2.subscribe(freshStream1.id)
 
         await waitForCondition(() => broker1.getStreams().length === 2)
         await waitForCondition(() => broker2.getStreams().length === 2)
@@ -99,22 +93,17 @@ describe('SubscriptionManager', () => {
         expect(broker1.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
         expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
 
-        const subFreshStream1 = await client1.subscribe({
-            stream: freshStream1.id
-        }, () => {})
+        // client boots own node, so broker streams should not change
+        await client1.subscribe(freshStream1, () => {})
+        // subscribing twice should do nothing to count
+        await mqttClient1.subscribe(freshStream2.id)
+
+        await wait(500) // give some time for client1 to subscribe.
 
         expect(broker1.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
         expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
 
         await mqttClient1.unsubscribe(freshStream1.id)
-
-        await waitForCondition(() => broker1.getStreams().length === 2)
-        await waitForCondition(() => broker2.getStreams().length === 2)
-
-        expect(broker1.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
-        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
-
-        await client1.unsubscribe(subFreshStream1)
 
         await waitForCondition(() => broker1.getStreams().length === 1)
         await waitForCondition(() => broker2.getStreams().length === 2)
@@ -122,7 +111,7 @@ describe('SubscriptionManager', () => {
         expect(broker1.getStreams()).toEqual([freshStream2.id + '::0'])
         expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
 
-        await client1.unsubscribe(subFreshStream2)
+        await mqttClient1.unsubscribe(freshStream2.id)
 
         await waitForCondition(() => broker1.getStreams().length === 0)
         await waitForCondition(() => broker2.getStreams().length === 2)

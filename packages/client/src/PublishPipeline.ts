@@ -1,4 +1,7 @@
-import { StreamMessage, MessageContent } from 'streamr-client-protocol'
+/**
+ * Organises async Publish steps into a Pipeline
+ */
+import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from './utils/log'
@@ -18,10 +21,10 @@ export class FailedToPublishError extends Error {
     streamId
     msg
     reason
-    constructor(streamId: string, msg: any, reason?: Error) {
-        super(`Failed to publish to stream ${streamId} due to: ${reason && reason.stack ? reason.stack : reason}. Message was: ${inspect(msg)}`)
+    constructor(streamId: string, data: PublishMetadata | StreamMessage, reason?: Error) {
+        super(`Failed to publish to stream ${streamId} due to: ${reason && reason.stack ? reason.stack : reason}.`)
         this.streamId = streamId
-        this.msg = msg
+        this.msg = data
         this.reason = reason
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
@@ -37,17 +40,17 @@ export class FailedToPublishError extends Error {
     }
 }
 
-export type PublishMetadata<T extends MessageContent | unknown = unknown> = {
+export type PublishMetadata<T = unknown> = {
     content: T
     timestamp?: string | number | Date
     sequenceNumber?: number
     partitionKey?: string | number
 }
 
-export type PublishMetadataStrict<T extends MessageContent | unknown = unknown> = PublishMetadata<T> & {
+export type PublishMetadataStrict<T = unknown> = PublishMetadata<T> & {
     timestamp: number
     streamId: string
-    partitionKey: number | string
+    partitionKey?: number | string
 }
 
 export type PublishQueueIn<T = unknown> = [PublishMetadataStrict<T>, Deferred<StreamMessage<T>>]
@@ -93,6 +96,11 @@ export default class PublishPipeline implements Context, Stoppable {
     }
 
     private filterResolved = ([_streamMessage, defer]: PublishQueueOut): boolean => {
+        if (this.isStopped && !defer.isResolved()) {
+            defer.reject(new ContextError(this, 'Pipeline Stopped. Client probably disconnected'))
+            return false
+        }
+
         return !defer.isResolved()
     }
 
@@ -114,9 +122,7 @@ export default class PublishPipeline implements Context, Stoppable {
             defer.reject(err)
         }
 
-        if (StreamMessage.isUnencrypted(streamMessage)) {
-            await this.encryption.encrypt(streamMessage).catch(onError)
-        }
+        await this.encryption.encrypt(streamMessage).catch(onError)
     }
 
     private async signMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
@@ -125,9 +131,7 @@ export default class PublishPipeline implements Context, Stoppable {
             defer.reject(err)
         }
 
-        if (StreamMessage.isUnsigned(streamMessage)) {
-            await this.signer.sign(streamMessage).catch(onError)
-        }
+        await this.signer.sign(streamMessage).catch(onError)
     }
 
     private async validateMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
@@ -159,9 +163,7 @@ export default class PublishPipeline implements Context, Stoppable {
 
         this.isStarted = true
 
-        this.publishQueue.consume(() => {
-            this.debug('consume')
-        }).catch(this.debug.bind(this.debug))
+        this.publishQueue.consume().catch(this.debug.bind(this.debug))
     }
 
     check(): void {
@@ -201,15 +203,22 @@ export default class PublishPipeline implements Context, Stoppable {
     }
 
     async stop(): Promise<void> {
-        this.isStopped = true
-        const inProgress = new Set(this.inProgress)
-        this.inProgress.clear()
-        inProgress.forEach((defer) => {
-            defer.reject(new ContextError(this, 'Pipeline Stopped. Client probably disconnected'))
-        })
-        await Promise.allSettled([
-            this.encryption.stop(),
-            this.messageCreator.stop(),
-        ])
+        this.debug('stop >>')
+        try {
+            this.isStopped = true
+            const inProgress = new Set(this.inProgress)
+            this.inProgress.clear()
+            inProgress.forEach((defer) => {
+                defer.reject(new ContextError(this, 'Pipeline Stopped. Client probably disconnected'))
+            })
+            this.publishQueue.return()
+            this.streamMessageQueue.return()
+            await Promise.allSettled([
+                this.encryption.stop(),
+                this.messageCreator.stop(),
+            ])
+        } finally {
+            this.debug('stop <<')
+        }
     }
 }

@@ -1,12 +1,14 @@
 import { DependencyContainer, inject } from 'tsyringe'
 
-import { MessageContent, StreamMessage, SPID } from 'streamr-client-protocol'
+import { StreamMessage, SPID } from 'streamr-client-protocol'
 import { NetworkNode } from 'streamr-network'
 
-import { Scaffold, instanceId } from './utils'
+import { Scaffold, instanceId, until } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
+import Signal from './utils/Signal'
 import { flow } from './utils/PushBuffer'
+import MessageStream from './MessageStream'
 
 import Subscription from './Subscription'
 import SubscribePipeline from './SubscribePipeline'
@@ -14,21 +16,22 @@ import { BrubeckContainer } from './Container'
 import BrubeckNode from './BrubeckNode'
 
 /**
- * Sends Subscribe/Unsubscribe requests as needed.
- * Adds connection handles as needed.
+ * Manages adding & removing subscriptions to node as needed.
+ * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
-export default class SubscriptionSession<T extends MessageContent | unknown> implements Context, Stoppable {
+export default class SubscriptionSession<T> implements Context, Stoppable {
     id
     debug
     spid: SPID
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()
-    pendingRemoval: Set<Subscription<T>> = new Set()
-    active = false
+    pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
+    isRetired: boolean = false
     isStopped = false
     pipeline
     node
+    onRetired = Signal.once<void>()
 
     constructor(context: Context, spid: SPID, @inject(BrubeckContainer) container: DependencyContainer) {
         this.id = instanceId(this)
@@ -37,53 +40,54 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
         this.onError = this.onError.bind(this)
-        this.pipeline = SubscribePipeline<T>(this.spid, {
+        this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.spid, {
             onError: this.onError,
         }, this, container)
             .pipe(this.distributeMessage)
-            .onFinally(() => (
-                this.removeAll()
-            ))
+            .onBeforeFinally(() => {
+                if (!this.isStopped) {
+                    return this.stop()
+                }
+                return this.retire()
+            })
 
         // this.debug('create')
         setImmediate(() => {
             // eslint-disable-next-line promise/catch-or-return
-            flow(this.pipeline).catch((err) => {
-                this.debug('flow error', err)
+            flow(this.pipeline).catch((_err) => {
+                // this.debug('flow error', err)
             }).finally(() => {
                 this.debug('end')
             })
         })
     }
 
-    private onError(error: Error) {
-        this.debug('subsession error', error)
-        this.subscriptions.forEach(async (sub) => {
-            try {
-                await sub.onError.trigger(error)
-            } catch (err) {
-                await sub.push(err)
-            }
-        })
+    private async retire() {
+        if (this.isRetired) {
+            return
+        }
+
+        this.isRetired = true
+        await this.onRetired.trigger()
+    }
+
+    private async onError(error: Error) {
+        await Promise.allSettled([...this.subscriptions].map(async (sub) => {
+            await sub.pushError(error)
+        }))
     }
 
     async* distributeMessage(src: AsyncGenerator<StreamMessage<T>>) {
-        try {
-            for await (const msg of src) {
-                this.subscriptions.forEach((sub) => (
-                    sub.push(msg)
-                ))
-                yield msg
-            }
-        } catch (err) {
-            this.subscriptions.forEach((sub) => (
-                sub.push(err)
-            ))
+        for await (const msg of src) {
+            await Promise.all([...this.subscriptions].map(async (sub) => {
+                await sub.push(msg)
+            }))
+            yield msg
         }
     }
 
     private onMessageInput = async (msg: StreamMessage) => {
-        if (!msg || this.isStopped || !this.active) {
+        if (!msg || this.isStopped || this.isRetired) {
             return
         }
 
@@ -91,12 +95,11 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
             return
         }
 
-        this.pipeline.push(msg as StreamMessage<T>)
+        await this.pipeline.push(msg as StreamMessage<T>)
     }
 
     private async subscribe() {
         this.debug('subscribe')
-        this.active = true
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
@@ -106,32 +109,61 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
 
     private async unsubscribe(node: NetworkNode) {
         this.debug('unsubscribe')
-        this.active = false
+        this.pipeline.end()
+        this.pipeline.return()
+        this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
         node.subscribe(streamId, streamPartition)
     }
 
-    updateSubscriptions = Scaffold([
-        async () => {
-            let node: NetworkNode | undefined = await this.subscribe()
-            return async () => {
-                const prevNode = node
-                node = undefined
-                await this.unsubscribe(prevNode!)
-            }
+    updateNodeSubscriptions = (() => {
+        let node: NetworkNode | undefined
+        return Scaffold([
+            async () => {
+                node = await this.subscribe()
+                return async () => {
+                    const prevNode = node
+                    node = undefined
+                    await this.unsubscribe(prevNode!)
+                    await this.stop()
+                }
+            },
+        ], () => this.shouldBeSubscribed())
+    })()
+
+    async updateSubscriptions() {
+        await this.updateNodeSubscriptions()
+        if (!this.shouldBeSubscribed() && !this.isStopped) {
+            await this.stop()
         }
-    ], () => !this.isStopped && !!this.count())
+    }
+
+    shouldBeSubscribed() {
+        return !this.isRetired && !this.isStopped && !!this.count()
+    }
 
     async stop() {
         this.debug('stop')
         this.isStopped = true
-        this.pipeline.return()
-        await this.removeAll()
+        this.pipeline.end()
+        await this.retire()
+        await this.pipeline.return()
     }
 
     has(sub: Subscription<T>): boolean {
         return this.subscriptions.has(sub)
+    }
+
+    async waitForNeighbours(numNeighbours = 1, timeout = 10000) {
+        const { streamId, streamPartition } = this.spid
+
+        return until(async () => {
+            if (!this.shouldBeSubscribed()) { return true } // abort
+            const node = await this.node.getNode()
+            if (!this.shouldBeSubscribed()) { return true } // abort
+            return node.getNeighborsForStream(streamId, streamPartition).length >= numNeighbours
+        }, timeout)
     }
 
     /**
@@ -140,7 +172,13 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
 
     async add(sub: Subscription<T>): Promise<void> {
         if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
+        this.debug('add', sub.id)
         this.subscriptions.add(sub)
+
+        sub.onBeforeFinally(() => {
+            return this.remove(sub)
+        })
+
         await this.updateSubscriptions()
     }
 
@@ -149,10 +187,11 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
      */
 
     async remove(sub: Subscription<T>): Promise<void> {
-        this.debug('remove')
         if (!sub || this.pendingRemoval.has(sub) || !this.subscriptions.has(sub)) {
             return
         }
+
+        this.debug('remove', sub.id)
 
         this.pendingRemoval.add(sub)
         this.subscriptions.delete(sub)
@@ -162,11 +201,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
                 await sub.unsubscribe()
             }
         } finally {
-            try {
-                await this.updateSubscriptions()
-            } finally {
-                this.pendingRemoval.delete(sub)
-            }
+            await this.updateSubscriptions()
         }
     }
 
@@ -175,6 +210,7 @@ export default class SubscriptionSession<T extends MessageContent | unknown> imp
      */
 
     async removeAll(): Promise<void> {
+        this.debug('removeAll %d', this.count())
         await Promise.all([...this.subscriptions].map((sub) => (
             this.remove(sub)
         )))

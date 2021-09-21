@@ -1,3 +1,6 @@
+/**
+ * More ergonomic wrapper around fetch/authFetch
+ */
 import { Lifecycle, scoped, inject, DependencyContainer } from 'tsyringe'
 
 import { Debugger } from './utils/log'
@@ -14,6 +17,7 @@ export type FetchOptions = {
     options?: any,
     requireNewToken?: boolean
     debug?: Debugger
+    restUrl?: string
 }
 
 export type UrlParts = (string | number)[]

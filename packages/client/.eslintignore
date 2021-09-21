@@ -4,13 +4,10 @@ coverage/**
 dist/**
 test/legacy/**
 src/shim/**
-src/dataunion/**
 test/unit/StubbedStreamrClient.js
 streamr-docker-dev/**
 vendor/**
 test/exports/**
 docs/**
 oldsrc/**
-test/integration/dataunion/**
-test/integration/dataunion/*
 test/memory/*

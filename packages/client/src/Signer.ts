@@ -1,5 +1,8 @@
+/**
+ * StreamMessage Signing in-place.
+ */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamMessageUnsigned, StreamMessageSigned, SignatureType, SigningUtil } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageSigned, SignatureType, SigningUtil } from 'streamr-client-protocol'
 import { Web3Provider } from '@ethersproject/providers'
 import { Bytes } from '@ethersproject/bytes'
 
@@ -42,11 +45,16 @@ export default class Signer {
     }
 
     async sign<T>(
-        streamMessage: StreamMessageUnsigned<T>,
+        streamMessage: StreamMessage<T>,
         signatureType: SignatureType = SignatureType.ETH
     ): Promise<StreamMessageSigned<T>> {
         if (!streamMessage) {
             throw new Error('streamMessage required as part of the data to sign.')
+        }
+
+        if (StreamMessage.isSigned(streamMessage)) {
+            // already signed
+            return streamMessage
         }
 
         if (typeof streamMessage.getTimestamp !== 'function' || !streamMessage.getTimestamp()) {

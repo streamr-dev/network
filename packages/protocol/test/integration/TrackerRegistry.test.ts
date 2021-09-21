@@ -101,14 +101,14 @@ describe('TrackerRegistry', () => {
                 ws: 'ws://10.200.10.1:30301'
             })
             expect(trackerRegistry.getTracker('stream-2')).toEqual({
-                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
-                http: 'http://10.200.10.1:30302',
-                ws: 'ws://10.200.10.1:30302'
-            })
-            expect(trackerRegistry.getTracker('stream-3')).toEqual({
                 id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
                 http: 'http://10.200.10.1:30303',
                 ws: 'ws://10.200.10.1:30303'
+            })
+            expect(trackerRegistry.getTracker('stream-3')).toEqual({
+                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
+                http: 'http://10.200.10.1:30302',
+                ws: 'ws://10.200.10.1:30302'
             })
         })
     })

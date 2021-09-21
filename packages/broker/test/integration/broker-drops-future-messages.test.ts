@@ -1,10 +1,9 @@
 import url from 'url'
 import WebSocket from 'ws'
 import fetch from 'node-fetch'
-import { startTracker, Protocol } from 'streamr-network'
+import { startTracker, Protocol, Tracker } from 'streamr-network'
 import { startBroker, createClient, createTestStream } from '../utils'
 import StreamrClient from 'streamr-client'
-import { Todo } from '../types'
 import { Broker } from '../broker'
 
 const { ControlLayer } = Protocol
@@ -33,7 +32,7 @@ function buildMsg(
 }
 
 describe('broker drops future messages', () => {
-    let tracker: Todo
+    let tracker: Tracker
     let broker: Broker
     let streamId: string
     let client: StreamrClient
@@ -54,16 +53,16 @@ describe('broker drops future messages', () => {
             legacyMqttPort: mqttPort
         })
 
-        client = createClient(wsPort)
+        client = createClient(tracker)
         const freshStream = await createTestStream(client, module)
         streamId = freshStream.id
-        token = await client.session.getSessionToken()
+        token = await client.getSessionToken()
     })
 
     afterEach(async () => {
         await broker.stop()
         await tracker.stop()
-        await client.disconnect()
+        await client.destroy()
     })
 
     test('pushing message with too future timestamp to HTTP plugin returns 400 error & does not crash broker', async () => {

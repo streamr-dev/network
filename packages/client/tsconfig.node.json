@@ -22,6 +22,5 @@
         "src/**/*",
         "vendor/**/*",
         "contracts/**/*"
-    ],
-    "exclude": ["src/dataunion/*"]
+    ]
 }

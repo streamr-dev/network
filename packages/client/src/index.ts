@@ -5,15 +5,18 @@
  * @module StreamrClient
  */
 
-import { BrubeckClient } from './BrubeckClient'
+import { StreamrClient } from './StreamrClient'
 
-export * from './BrubeckClient'
+export * from './StreamrClient'
 export * from './Config'
 export * from './Stream'
 export * from './encryption/Encryption'
 export * from './StorageNode'
 export * from './Subscriber'
 export * from './StreamEndpoints'
+import ConfigTest from './ConfigTest'
+
+export { ConfigTest }
 // export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'
@@ -28,6 +31,6 @@ export { Contract } from '@ethersproject/contracts'
 export { BytesLike, Bytes } from '@ethersproject/bytes'
 export { ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 
-export default BrubeckClient
+export default StreamrClient
 
 // Note awful export wrappers in index-commonjs.js & index-esm.mjs

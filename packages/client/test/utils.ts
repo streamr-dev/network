@@ -5,19 +5,20 @@ import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { PublishRequest, StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
+import { startTracker, Tracker } from 'streamr-network'
 
-import { counterId, CounterId, AggregatedError, Scaffold } from '../src/utils'
+import { StreamrClient } from '../src/StreamrClient'
+import { counterId, CounterId, AggregatedError, Scaffold, instanceId } from '../src/utils'
 import { Debug, format } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { StreamProperties } from '../src/Stream'
-import clientOptions from './integration/config'
-import { BrubeckClient } from '../src/BrubeckClient'
-
-import { startTracker, Tracker } from 'streamr-network'
+import clientOptions from '../src/ConfigTest'
 
 import Signal from '../src/utils/Signal'
 import { PublishMetadata } from '../src/Publisher'
 import { Pipeline } from '../src/utils/Pipeline'
+
+export { clientOptions }
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -135,7 +136,7 @@ export const createMockAddress = () => '0x000000000000000000000000000' + Date.no
 
 export function getRandomClient() {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`)
-    return new BrubeckClient({
+    return new StreamrClient({
         ...clientOptions,
         auth: {
             privateKey: wallet.privateKey
@@ -162,13 +163,38 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) 
 }
 
 // eslint-disable-next-line no-undef
-export const createTestStream = async (streamrClient: BrubeckClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
     })
     await until(async () => { return streamrClient.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
     return stream
+}
+
+export const getCreateClient = (defaultOpts = {}) => {
+    const addAfter = addAfterFn()
+
+    return function createClient(opts = {}) {
+        const c = new StreamrClient({
+            ...clientOptions,
+            auth: {
+                privateKey: fakePrivateKey(),
+            },
+            ...defaultOpts,
+            ...opts,
+        })
+
+        addAfter(async () => {
+            await wait(0)
+            if (!c) { return }
+            c.debug('disconnecting after test >>')
+            await c.destroy()
+            c.debug('disconnecting after test <<')
+        })
+
+        return c
+    }
 }
 
 /**
@@ -182,76 +208,146 @@ export function snapshot() {
     return value
 }
 
-const testUtilsCounter = CounterId('test/utils')
-
 export class LeaksDetector {
     leakDetectors: Map<string, LeakDetector> = new Map()
-    private counter = CounterId(testUtilsCounter(this.constructor.name))
+    ignoredValues = new WeakSet()
+    id = instanceId(this)
+    debug = testDebug(this.id)
+
+    // temporary whitelist leaks in network code
+    ignoredKeys = new Set([
+        '/cachedNode',
+    ])
+
+    private counter = CounterId(this.id)
 
     add(name: string, obj: any) {
         if (!obj || typeof obj !== 'object') { return }
-        this.leakDetectors.set(this.counter(name), new LeakDetector(obj))
+
+        if (this.ignoredValues.has(obj)) { return }
+
+        this.leakDetectors.set(name, new LeakDetector(obj))
     }
 
-    addAll(id: string, obj: object, seen = new Set(), depth = 0) {
+    ignore(obj: any) {
         if (!obj || typeof obj !== 'object') { return }
+        this.ignoredValues.add(obj)
+    }
 
-        if (id.includes('cachedNode-peerInfo-controlLayerVersions') || id.includes('cachedNode-peerInfo-messageLayerVersions')) {
-            // temporary whitelist some leak in network code
-            return
+    ignoreAll(obj: any) {
+        if (!obj || typeof obj !== 'object') { return }
+        const seen = new Set()
+        this.walk([], obj, (_path, value) => {
+            if (seen.has(value)) { return false }
+            seen.add(value)
+            this.ignore(value)
+            return undefined
+        })
+    }
+
+    idToPaths = new Map<string, Set<string>>() // ids to paths
+    objectToId = new WeakMap<object, string>() // single id for value
+
+    getID(path: string[], value: any) {
+        if (this.objectToId.has(value)) {
+            return this.objectToId.get(value)
         }
 
-        if (depth > 5) { return }
+        let id = (() => {
+            if (value.id) { return value.id }
+            const pathString = path.join('/')
+            const constructor = value.constructor?.name
+            const type = constructor === 'Object' ? undefined : constructor
+            return pathString + (type ? `-${type}` : '')
+        })()
 
-        if (seen.has(obj)) { return }
-        seen.add(obj)
-        this.add(id, obj)
+        id = this.counter(id)
+        this.objectToId.set(value, id)
+        return id
+    }
+
+    protected walk(
+        path: string[],
+        obj: object,
+        fn: (path: string[], obj: object, depth: number) => false | void,
+        depth = 0
+    ) {
+        if (!obj || typeof obj !== 'object') { return }
+
+        if (depth > 10) { return }
+
+        const doContinue = fn(path, obj, depth)
+
+        if (doContinue === false) { return }
+
         if (Array.isArray(obj)) {
             obj.forEach((value, key) => {
-                const childId = value.id || `${id}-${key}`
-                this.addAll(childId, value, seen, depth + 1)
+                this.walk([...path, `${key}`], value, fn, depth + 1)
             })
             return
         }
 
-        Object.entries(obj).forEach(([key, value]) => {
-            if (!value || typeof value !== 'object') { return }
+        for (const [key, value] of Object.entries(obj)) {
+            if (!value || typeof value !== 'object') { continue }
 
-            if (seen.has(value) || key.startsWith('_')) { return }
+            this.walk([...path, `${key}`], value, fn, depth + 1)
+        }
+    }
 
-            // skip tsyringe containers, root parent will never be gc'ed.
-            if (value.constructor && value.constructor.name === 'InternalDependencyContainer') {
-                return
+    addAll(rootId: string, obj: object) {
+        const seen = new Set()
+        this.walk([rootId], obj, (path, value) => {
+            if (this.ignoredValues.has(value)) { return false }
+            const pathString = path.join('/')
+            for (const key of this.ignoredKeys) {
+                if (pathString.includes(key)) { return false } // stop walking
             }
 
-            const childId = value.id || `${id}-${key}`
-            this.addAll(childId, value, seen, depth + 1)
+            const id = this.getID(path, value)
+            const paths = this.idToPaths.get(id) || new Set()
+            paths.add(pathString)
+            this.idToPaths.set(id, paths)
+            if (!seen.has(value)) {
+                seen.add(value)
+                this.add(id, value)
+            }
+            return undefined
         })
     }
 
-    async getLeaks(): Promise<string[]> {
+    async getLeaks() {
+        this.debug('checking for leaks with %d items >>', this.leakDetectors.size)
         await wait(10) // wait a moment for gc to run?
         const outstanding = new Set<string>()
-        const results = await Promise.all([...this.leakDetectors.entries()].map(async ([key, d]) => {
+        const results = (await Promise.all([...this.leakDetectors.entries()].map(async ([key, d]) => {
             outstanding.add(key)
             const isLeaking = await d.isLeaking()
             outstanding.delete(key)
             return isLeaking ? key : undefined
-        }))
-        return results.filter((key) => key != null) as string[]
+        }))).filter(Boolean) as string[]
+
+        const leaks = results.reduce((o, id) => Object.assign(o, {
+            [id]: [...(this.idToPaths.get(id) || [])],
+        }), {})
+
+        this.debug('checking for leaks with %d items <<', this.leakDetectors.size)
+        this.debug('%d leaks.', results.length)
+        return leaks
     }
 
     async checkNoLeaks() {
         const leaks = await this.getLeaks()
-        if (leaks.length) {
-            throw new Error(format('Leaking %d of %d items: %o', leaks.length, this.leakDetectors.size, leaks))
+        const numLeaks = Object.keys(leaks).length
+        if (numLeaks) {
+            throw new Error(format('Leaking %d of %d items: %o', numLeaks, this.leakDetectors.size, leaks))
         }
     }
 
     async checkNoLeaksFor(id: string) {
         const leaks = await this.getLeaks()
-        if (leaks.includes(id)) {
-            throw new Error(format('Leaking %d of %d items, including id %s: %o', leaks.length, this.leakDetectors.size, id, leaks))
+        const numLeaks = Object.keys(leaks).length
+        if (Object.keys(leaks).includes(id)) {
+            throw new Error(format('Leaking %d of %d items, including id %s: %o', numLeaks, this.leakDetectors.size, id, leaks))
         }
     }
 
@@ -264,6 +360,7 @@ type PublishManyOpts = Partial<{
     delay: number,
     timestamp: number | (() => number)
     sequenceNumber: number | (() => number)
+    partitionKey: number | string | (() => number | string)
     createMessage: (content: any) => any
 }>
 
@@ -271,15 +368,18 @@ export async function* publishManyGenerator(
     total: number = 5,
     opts: PublishManyOpts = {}
 ): AsyncGenerator<PublishMetadata<any>> {
-    const { delay = 10, sequenceNumber, timestamp, createMessage = Msg } = opts
+    const { delay = 10, sequenceNumber, timestamp, partitionKey, createMessage = Msg } = opts
     const batchId = counterId('publishMany')
     for (let i = 0; i < total; i++) {
         yield {
             timestamp: typeof timestamp === 'function' ? timestamp() : timestamp,
             sequenceNumber: typeof sequenceNumber === 'function' ? sequenceNumber() : sequenceNumber,
+            partitionKey: typeof partitionKey === 'function' ? partitionKey() : partitionKey,
             content: createMessage({
                 batchId,
-                value: `${i + 1} of ${total}`
+                value: `${i + 1} of ${total}`,
+                index: i,
+                total,
             })
         }
 
@@ -300,7 +400,7 @@ type PublishTestMessageOptions = PublishManyOpts & {
     afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 
-export function publishTestMessagesGenerator(client: BrubeckClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
+export function publishTestMessagesGenerator(client: StreamrClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
     const sid = SPID.parse(stream)
     const source = new Pipeline(publishManyGenerator(maxMessages, opts))
     if (opts.onSourcePipeline) {
@@ -314,7 +414,7 @@ export function publishTestMessagesGenerator(client: BrubeckClient, stream: SIDL
 
 }
 
-export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
+export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
     const sid = SPID.parse(stream)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const {
@@ -327,6 +427,11 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDL
             ...defaultOpts,
             ...opts,
         }
+
+        const contents = new WeakMap()
+        client.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
+            contents.set(streamMessage, streamMessage.serializedContent)
+        })
         const publishStream = publishTestMessagesGenerator(client, sid, maxMessages, options)
         if (opts.onPublishPipeline) {
             opts.onPublishPipeline.trigger(publishStream)
@@ -343,20 +448,26 @@ export function getPublishTestStreamMessages(client: BrubeckClient, stream: SIDL
                 break
             }
         }
-        streamMessages.forEach((s) => s.getParsedContent())
-        if (!waitForLast) {
-            return streamMessages
+
+        if (waitForLast) {
+            await getWaitForStorage(client, {
+                count: waitForLastCount,
+                timeout: waitForLastTimeout,
+            })(streamMessages[streamMessages.length - 1])
         }
 
-        await getWaitForStorage(client, {
-            count: waitForLastCount,
-            timeout: waitForLastTimeout,
-        })(streamMessages[streamMessages.length - 1])
-        return streamMessages
+        return streamMessages.map((streamMessage) => {
+            const targetStreamMessage = streamMessage.clone()
+            targetStreamMessage.serializedContent = contents.get(streamMessage)
+            targetStreamMessage.encryptionType = 0
+            targetStreamMessage.parsedContent = null
+            targetStreamMessage.getParsedContent()
+            return targetStreamMessage
+        })
     }
 }
 
-export function getPublishTestMessages(client: BrubeckClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
+export function getPublishTestMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
     const sid = SPID.parse(stream)
     const publishTestStreamMessages = getPublishTestStreamMessages(client, sid, defaultOpts)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
@@ -365,7 +476,7 @@ export function getPublishTestMessages(client: BrubeckClient, stream: SIDLike, d
     }
 }
 
-export function getWaitForStorage(client: BrubeckClient, defaultOpts = {}) {
+export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     return async (lastPublished: StreamMessage, opts = {}) => {
         return client.publisher.waitForStorage(lastPublished, {
             ...defaultOpts,

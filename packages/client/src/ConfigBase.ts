@@ -1,17 +1,18 @@
 /**
  * @module StreamrClientConfig
+ *
+ * Old Client Config
+ * New Brubeck Configuration in Config.ts.
+ * TODO: Disolve ConfigBase.
  */
 
-import qs from 'qs'
-// import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 import { BigNumber } from '@ethersproject/bignumber'
 import { isAddress } from '@ethersproject/address'
 import has from 'lodash/has'
 import get from 'lodash/get'
+import cloneDeep from 'lodash/cloneDeep'
 
 import { EthereumAddress, Todo } from './types'
-import { getVersionString } from './utils'
-import { StorageNode } from './StorageNode'
 
 import { AuthConfig, EthereumConfig } from './Ethereum'
 import { EncryptionConfig } from './encryption/KeyExchangeUtils'
@@ -82,10 +83,6 @@ export type StrictStreamrClientConfig = {
     ensCacheSidechainAddress: EthereumAddress,
     keyExchange: Todo
     dataUnion: DataUnionConfig
-    storageNode: {
-        address: EthereumAddress
-        url: string
-    },
     cache: CacheConfig,
 } & (
     EthereumConfig
@@ -169,10 +166,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',
         templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
     },
-    storageNode: {
-        address: StorageNode.STREAMR_GERMANY.getAddress(),
-        url: 'https://corea1.streamr.network:8001'
-    },
     cache: {
         maxSize: 10000,
         maxAge: 30 * 60 * 1000, // 30 minutes
@@ -180,8 +173,9 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 }
 
 /** @internal */
-export default function ClientConfig(opts: StreamrClientConfig = {}) {
-
+export default function ClientConfig(inputOptions: StreamrClientConfig = {}) {
+    const opts = cloneDeep(inputOptions)
+    const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
     // validate all Ethereum addresses which are required in StrictStreamrClientConfig: if user
     // overrides a setting, which has a default value, it must be a non-null valid Ethereum address
     // TODO could also validate
@@ -199,37 +193,18 @@ export default function ClientConfig(opts: StreamrClientConfig = {}) {
     ])
 
     const options: StrictStreamrClientConfig = {
-        ...STREAM_CLIENT_DEFAULTS,
+        ...defaults,
         ...opts,
         dataUnion: {
-            ...STREAM_CLIENT_DEFAULTS.dataUnion,
+            ...defaults.dataUnion,
             ...opts.dataUnion
         },
         cache: {
-            ...STREAM_CLIENT_DEFAULTS.cache,
+            ...defaults.cache,
             ...opts.cache,
         }
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
-
-    // const parts = options.url!.split('?')
-    // if (parts.length === 1) { // there is no query string
-    //     const controlLayer = `controlLayerVersion=${ControlMessage.LATEST_VERSION}`
-    //     const messageLayer = `messageLayerVersion=${StreamMessage.LATEST_VERSION}`
-    //     options.url = `${options.url}?${controlLayer}&${messageLayer}`
-    // } else {
-    //     const queryObj = qs.parse(parts[1])
-    //     if (!queryObj.controlLayerVersion) {
-    //         options.url = `${options.url}&controlLayerVersion=1`
-    //     }
-
-    //     if (!queryObj.messageLayerVersion) {
-    //         options.url = `${options.url}&messageLayerVersion=31`
-    //     }
-    // }
-
-    // always add streamrClient version
-    // options.url = `${options.url}&streamrClient=${getVersionString()}`
 
     // Backwards compatibility for option 'authKey' => 'apiKey'
     // @ts-expect-error

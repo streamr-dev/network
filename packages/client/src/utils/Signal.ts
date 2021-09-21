@@ -1,9 +1,15 @@
-import { pOnce, pOne } from './index'
-import AggregatedError from './AggregatedError'
+import { pOnce, pLimitFn, pOne } from './index'
 
-type SignalListener<T> = (t: T) => void | Promise<void>
+type SignalListener<T> = (t: T) => (unknown | Promise<unknown>)
 type SignalListenerWrap<T> = SignalListener<T> & {
     listener: SignalListener<T>
+}
+
+export enum TRIGGER_TYPE {
+    ONCE = 'ONCE',
+    ONE = 'ONE',
+    QUEUE = 'QUEUE',
+    PARALLEL = 'PARALLEL',
 }
 
 /**
@@ -26,47 +32,107 @@ type SignalListenerWrap<T> = SignalListener<T> & {
  * ```
  */
 export default class Signal<ValueType = void> {
+    static TRIGGER_TYPE = TRIGGER_TYPE
     /**
      *  Create a Signal's listen function with signal utility methods attached.
      *  See example above.
      */
-    static create<ValueType, ReturnType>(returnValue: ReturnType, once?: boolean) {
-        const signal = new Signal<ValueType>(once)
-        return Object.assign((cb: SignalListener<ValueType>) => {
+    static create<ValueType = void>(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL) {
+        const signal = new Signal<ValueType>(triggerType)
+        function listen(): Promise<ValueType>
+        function listen<ReturnType>(this: ReturnType, cb: SignalListener<ValueType>): ReturnType
+        function listen<ReturnType>(this: ReturnType, cb?: SignalListener<ValueType>) {
+            if (!cb) {
+                return signal.listen()
+            }
+
             signal.listen(cb)
-            return returnValue
-        }, {
-            triggerCount() {
-                return signal.triggerCount
-            },
+            return this
+        }
+
+        return Object.assign(listen, {
+            triggerCount: signal.triggerCount.bind(signal),
             once: signal.once.bind(signal),
             wait: signal.wait.bind(signal),
             trigger: signal.trigger,
             unlisten: signal.unlisten.bind(signal),
             listen: signal.listen.bind(signal),
             unlistenAll: signal.unlistenAll.bind(signal),
+            countListeners: signal.countListeners.bind(signal),
             end: signal.end,
+            [Symbol.asyncIterator]: signal[Symbol.asyncIterator].bind(signal)
         })
     }
 
     /**
-     * Will only trigger once.
-     * Adding listeners after already fired will fire listener immediately.
-     * Calling trigger after already triggered is a noop.
+     * Will only trigger once.  Adding listeners after already fired will fire
+     * listener immediately.  Calling trigger after already triggered is a
+     * noop.
      */
-    static once<ValueType, ReturnType>(returnValue: ReturnType) {
-        return this.create<ValueType, ReturnType>(returnValue, true)
+    static once<ValueType = void>() {
+        return this.create<ValueType>(TRIGGER_TYPE.ONCE)
+    }
+
+    /**
+     * Only one pending trigger call at a time.  Calling trigger again while
+     * listeners are pending will not trigger listeners again, and will resolve
+     * when listeners are resolved.
+     */
+    static one<ValueType = void>() {
+        return this.create<ValueType>(TRIGGER_TYPE.ONE)
+    }
+
+    /**
+     * Only one pending trigger call at a time, but calling trigger again while
+     * listeners are pending will enqueue the trigger until after listeners are
+     * resolved.
+     */
+    static queue<ValueType = void>() {
+        return this.create<ValueType>(TRIGGER_TYPE.QUEUE)
+    }
+
+    /**
+     * Trigger does not wait for pending trigger calls at all.
+     * Listener functions are still executed in async series,
+     * but multiple triggers can be active in parallel.
+     */
+    static parallel<ValueType = void>() {
+        return this.create<ValueType>(TRIGGER_TYPE.PARALLEL)
     }
 
     listeners: (SignalListener<ValueType> | SignalListenerWrap<ValueType>)[] = []
     isEnded = false
     lastValue?: ValueType
-    triggerCount = 0
+    triggerCountValue = 0
 
-    constructor(private isOnce = false) {
-        if (isOnce) {
-            this.trigger = pOnce(this.trigger)
+    constructor(
+        private triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL
+    ) {
+        switch (triggerType) {
+            case TRIGGER_TYPE.ONCE: {
+                this.trigger = pOnce(this.trigger)
+                break
+            }
+            case TRIGGER_TYPE.QUEUE: {
+                this.trigger = pLimitFn(this.trigger)
+                break
+            }
+            case TRIGGER_TYPE.ONE: {
+                this.trigger = pOne(this.trigger)
+                break
+            }
+            case TRIGGER_TYPE.PARALLEL: {
+                // no special handling
+                break
+            }
+            default: {
+                throw new Error(`unknown trigger type: ${triggerType}`)
+            }
         }
+    }
+
+    triggerCount() {
+        return this.triggerCountValue
     }
 
     /**
@@ -82,7 +148,7 @@ export default class Signal<ValueType = void> {
     /**
      * Promise that resolves on next trigger.
      */
-    wait() {
+    wait(): Promise<ValueType> {
         return new Promise((resolve) => {
             this.once(resolve)
         })
@@ -91,7 +157,21 @@ export default class Signal<ValueType = void> {
     /**
      * Attach a callback listener to this Signal.
      */
-    listen(cb: SignalListener<ValueType>) {
+    listen(): Promise<ValueType>
+    listen(cb: SignalListener<ValueType>): Signal<ValueType>
+    listen(cb?: SignalListener<ValueType>): Signal<ValueType> | Promise<ValueType> {
+        if (!cb) {
+            if (this.isEnded) {
+                return this.trigger(this.lastValue!).then(() => {
+                    return this.lastValue!
+                })
+            }
+
+            return new Promise((resolve) => {
+                this.once(resolve)
+            })
+        }
+
         if (this.isEnded) {
             // wait for any outstanding, ended so can't re-trigger
             // eslint-disable-next-line promise/no-callback-in-promise
@@ -103,7 +183,17 @@ export default class Signal<ValueType = void> {
         return this
     }
 
-    once(cb: SignalListener<ValueType>) {
+    countListeners() {
+        return this.listeners.length
+    }
+
+    once(): Promise<ValueType>
+    once(cb: SignalListener<ValueType>): this
+    once(cb?: SignalListener<ValueType>): this | Promise<ValueType> {
+        if (!cb) {
+            return this.listen()
+        }
+
         if (this.isEnded) {
             // wait for any outstanding, ended so can't re-trigger
             // eslint-disable-next-line promise/no-callback-in-promise
@@ -120,6 +210,13 @@ export default class Signal<ValueType = void> {
 
         this.listeners.push(wrappedListener)
         return this
+    }
+
+    async* [Symbol.asyncIterator]() {
+        while (!this.isEnded) {
+            // eslint-disable-next-line no-await-in-loop
+            yield await this.listen()
+        }
     }
 
     /**
@@ -146,7 +243,7 @@ export default class Signal<ValueType = void> {
     /**
      * Trigger the signal with optional value, like emitter.emit.
      */
-    trigger = pOne(async (
+    trigger = async (
         // TS nonsense to allow trigger() when ValueType is undefined/void
         ...args: [ValueType] extends [undefined] ? any[] : [ValueType]
     ): Promise<void> => {
@@ -155,30 +252,23 @@ export default class Signal<ValueType = void> {
             return
         }
 
-        this.triggerCount += 1
+        this.triggerCountValue += 1
 
-        this.lastValue = value
+        // capture listeners
         const tasks = this.listeners.slice()
-        if (this.isOnce) {
-            // removes all listeners
+        if (this.triggerType === TRIGGER_TYPE.ONCE) {
+            this.lastValue = value
+            // remove all listeners
             this.end(this.lastValue!)
         }
 
         if (!tasks.length) { return }
-        let error: Error | undefined
-        await tasks.reduce(async (prev, task) => {
-            return prev.then(async () => {
-                // eslint-disable-next-line promise/always-return
-                try {
-                    await task(value)
-                } catch (err) {
-                    error = AggregatedError.from(error, err)
-                }
-            })
-        }, Promise.resolve())
 
-        if (error) {
-            throw error
-        }
-    })
+        // execute tasks in sequence
+        await tasks.reduce(async (prev, task) => {
+            // eslint-disable-next-line promise/always-return
+            await prev
+            await task(value)
+        }, Promise.resolve())
+    }
 }

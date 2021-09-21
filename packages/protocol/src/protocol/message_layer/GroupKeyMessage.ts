@@ -1,7 +1,7 @@
 import { validateIsString } from '../../utils/validations'
 import MessageID from './MessageID'
 import MessageRef from './MessageRef'
-
+import ValidationError from '../../errors/ValidationError'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
 
 // TODO refactor deserialization to separate class (Serializer<GroupKeyMessage>)
@@ -31,7 +31,7 @@ export default abstract class GroupKeyMessage {
 
     static deserialize(serialized: string, messageType: StreamMessageType): GroupKeyMessage {
         if (!GroupKeyMessage.classByMessageType[messageType]) {
-            throw new Error(`Unknown MessageType: ${messageType}`)
+            throw new ValidationError(`Unknown MessageType: ${messageType}`)
         }
         return GroupKeyMessage.classByMessageType[messageType].fromArray(JSON.parse(serialized))
     }

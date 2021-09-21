@@ -1,4 +1,4 @@
-import { PeerInfo } from '../PeerInfo'
+import { PeerId, PeerInfo } from '../PeerInfo'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
 import { staticLogger, ServerWsConnection } from './ServerWsConnection'
@@ -54,12 +54,24 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 decodeStrings: false
             })
 
+            let otherNodeIdForLogging = 'unknown (no handshake)'
+
             duplexStream.on('data', async (data: WebSocket.Data) => {
                 try {
                     const { uuid, peerId } = JSON.parse(data.toString())
                     if (uuid === handshakeUUID && peerId) {
+                        otherNodeIdForLogging = peerId
                         this.clearHandshake(uuid)
-                        this.acceptConnection(ws, duplexStream, peerId, request.socket.remoteAddress as string)
+
+                        // Check that a client with the same peerId has not already connected to the server.
+                        if (!this.getConnectionByPeerId(peerId)) {
+                            this.acceptConnection(ws, duplexStream, peerId, this.resolveIP(request))
+                        } else {
+                            this.metrics.record('open:duplicateSocket', 1)
+                            const failedMessage = `Connection for node: ${peerId} has already been established, rejecting duplicate`
+                            ws.close(DisconnectionCode.DUPLICATE_SOCKET, failedMessage)
+                            this.logger.warn(failedMessage)
+                        }
                     } else {
                         this.logger.trace('Expected a handshake message got: ' + data.toString())
                     }
@@ -69,12 +81,12 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             })
 
             ws.on('error', (err) => {
-                this.logger.warn('socket for "%s" emitted error: %s', this.peerInfo.peerId, err)
+                this.logger.warn('socket for "%s" emitted error: %s', otherNodeIdForLogging, err)
             })
         })
     }
 
-    acceptConnection(ws: WebSocket, duplexStream: Duplex, peerId: string, remoteAddress: string): void {
+    acceptConnection(ws: WebSocket, duplexStream: Duplex, peerId: PeerId, remoteAddress: string): void {
         const connection = new ServerWsConnection(
             ws,
             duplexStream,
@@ -114,7 +126,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         return this.serverUrl
     }
 
-    resolveAddress(peerId: string): string | undefined {
+    resolveAddress(peerId: PeerId): string | undefined {
         return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
     }
 
@@ -136,6 +148,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 })
             })
         })
+    }
+
+    private resolveIP(request: http.IncomingMessage): string {
+        // Accept X-Forwarded-For header on connections from the local machine
+        if (request.socket.remoteAddress?.endsWith('127.0.0.1')) {
+            return (request.headers['x-forwarded-for'] || request.socket.remoteAddress) as string
+        }
+        return request.socket.remoteAddress as string
     }
 }
 

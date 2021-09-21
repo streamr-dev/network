@@ -1,9 +1,8 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, until, uid, Msg, publishManyGenerator } from '../utils'
-import { BrubeckClient } from '../../src/BrubeckClient'
+import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator } from '../utils'
+import { StreamrClient } from '../../src/StreamrClient'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
 
 jest.setTimeout(15000)
@@ -18,29 +17,9 @@ describeRepeats('StreamrClient', () => {
     })
 
     let onError = jest.fn()
-    let client: BrubeckClient
-    // const trackerPort = useTracker()
+    let client: StreamrClient
 
-    const createClient = (opts: any = {}) => {
-        const c = new BrubeckClient({
-            ...clientOptions,
-            // auth: {
-            //     privateKey: fakePrivateKey(),
-            // },
-            autoConnect: false,
-            autoDisconnect: false,
-            maxRetries: 2,
-            ...opts,
-            // network: {
-            // trackers: [
-            // `ws://127.0.0.1:${trackerPort}`,
-            // ],
-            // ...opts.network,
-            // },
-        })
-        c.debug('created client')
-        return c
-    }
+    const createClient = getCreateClient()
 
     beforeEach(() => {
         errors = []
@@ -54,14 +33,6 @@ describeRepeats('StreamrClient', () => {
         expect(errors).toHaveLength(expectErrors)
     })
 
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('disconnecting after test')
-            await client.destroy()
-        }
-    })
-
     let stream: Stream
 
     const createStream = async ({ ...opts } = {}) => {
@@ -71,9 +42,6 @@ describeRepeats('StreamrClient', () => {
             partitions: 1,
             ...opts,
         })
-        await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
-
-        // await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         expect(s.id).toBeTruthy()
         return s
@@ -85,21 +53,6 @@ describeRepeats('StreamrClient', () => {
         stream = await createStream()
         client.debug('create stream <<')
         expect(onError).toHaveBeenCalledTimes(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-
-        if (client) {
-            client.debug('disconnecting after test')
-            await client.destroy()
-        }
     })
 
     describe('Pub/Sub', () => {
