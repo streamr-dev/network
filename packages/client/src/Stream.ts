@@ -1,5 +1,4 @@
-import { MessageContent } from 'streamr-client-protocol'
-import { DependencyContainer } from 'tsyringe'
+import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
 import { EthereumAddress } from './types'
@@ -15,6 +14,7 @@ import { NodeRegistry } from './NodeRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StorageNode } from './StorageNode'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -119,15 +119,15 @@ class StreamrStream implements StreamMetadata {
         Object.assign(this, props)
         this.id = props.id
         this.streamId = this.id
-        this._rest = container.resolve<Rest>(Rest)
-        this._resends = container.resolve<Resends>(Resends)
-        this._publisher = container.resolve<Publisher>(Publisher)
+        this._rest = _container.resolve<Rest>(Rest)
+        this._resends = _container.resolve<Resends>(Resends)
+        this._publisher = _container.resolve<Publisher>(Publisher)
         this._streamEndpoints = _container.resolve<StreamEndpoints>(StreamEndpoints)
         this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
-        this._streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
-        this._nodeRegistry = container.resolve<NodeRegistry>(NodeRegistry)
-        this._nodeRegistry = container.resolve<NodeRegistry>(NodeRegistry)
-        this._ethereuem = container.resolve<Ethereum>(Ethereum)
+        this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
+        this._nodeRegistry = _container.resolve<NodeRegistry>(NodeRegistry)
+        this._nodeRegistry = _container.resolve<NodeRegistry>(NodeRegistry)
+        this._ethereuem = _container.resolve<Ethereum>(Ethereum)
     }
 
     async update() {

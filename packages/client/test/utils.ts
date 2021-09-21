@@ -163,14 +163,14 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) 
 }
 
 // eslint-disable-next-line no-undef
-export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
-    const stream = await streamrClient.createStream({
-        id: createRelativeTestStreamId(module),
-        ...props
-    })
-    await until(async () => { return streamrClient.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
-    return stream
-}
+// export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+//     const stream = await streamrClient.createStream({
+//         id: createRelativeTestStreamId(module),
+//         ...props
+//     })
+//     await until(async () => { return streamrClient.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
+//     return stream
+// }
 
 export const getCreateClient = (defaultOpts = {}) => {
     const addAfter = addAfterFn()
@@ -178,9 +178,9 @@ export const getCreateClient = (defaultOpts = {}) => {
     return function createClient(opts = {}) {
         const c = new StreamrClient({
             ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
+            // auth: {
+            //     privateKey: fakePrivateKey(),
+            // },
             ...defaultOpts,
             ...opts,
         })

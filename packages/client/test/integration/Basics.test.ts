@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator } from '../utils'
+import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
@@ -42,6 +42,9 @@ describeRepeats('StreamrClient', () => {
             partitions: 1,
             ...opts,
         })
+        await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
+
+        // await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         expect(s.id).toBeTruthy()
         return s

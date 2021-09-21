@@ -33,7 +33,7 @@ export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: nu
 }
 
 export function formStreamrOptionsWithEnv(
-    { dev, stg, httpUrl, privateKey }: EnvironmentOptions & AuthenticationOptions
+    { dev, stg, privateKey }: EnvironmentOptions & AuthenticationOptions
 ): StreamrClientOptions {
     const options: StreamrClientOptions = {}
 
@@ -43,20 +43,11 @@ export function formStreamrOptionsWithEnv(
     }
 
     if (dev) {
-        options.restUrl = 'http://localhost/api/v1'
-        options.storageNodeRegistry = [{
-            // "broker-node-storage-1" on Docker environment
-            address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-            url: 'http://10.200.10.1:8891'
-        }]
-    } else if (stg) {
-        options.restUrl = 'https://staging.streamr.com/api/v1/'
+        options.nodeRegistry = {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            jsonRpcProvider: 'http://127.0.0.1:8546',
+        }
     }
-
-    if (httpUrl) {
-        options.restUrl = httpUrl
-    }
-
     if (privateKey) {
         options.auth = {
             privateKey
@@ -77,7 +68,7 @@ export function createFnParseInt(name: string): (s: string) => number {
     }
 }
 
-export const getStreamId = (streamIdOrPath: string|undefined, options: any) => {
+export const getStreamId = (streamIdOrPath: string|undefined, options: any): string | undefined => {
     if (streamIdOrPath === undefined) {
         return undefined
     }

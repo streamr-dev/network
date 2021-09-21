@@ -15,9 +15,11 @@ import Ethereum from './Ethereum'
 import { DestroySignal } from './DestroySignal'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
+import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
+import ResendSubscribe from './ResendSubscribe'
 
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
@@ -143,6 +145,9 @@ class StreamrClientBase implements Context {
         Plugin(this, this.dataunions)
         Plugin(this, this.streamRegistry)
         Plugin(this, this.nodeRegistry)
+
+        // override subscribe with resendSubscriber's subscribe+resend
+        this.subscribe = resendSubscriber.subscribe.bind(resendSubscriber)
     }
 
     connect = pOnce(async () => {
@@ -208,7 +213,7 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
         [Config.Root, config],
         [Config.Auth, config.auth],
         [Config.Ethereum, config],
-        [Config.NodeRegistry, config.storageNodeRegistry],
+        [Config.NodeRegistry, config.nodeRegistry],
         [Config.Network, config.network],
         [Config.Connection, config],
         [Config.Subscribe, config],
@@ -221,7 +226,7 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
         c.register(token, { useValue })
     })
 
-    registerNodeRegistry(c)
+    // registerNodeRegistry(c)
     return {
         config,
         childContainer: c,
@@ -247,9 +252,9 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<ResendSubscribe>(ResendSubscribe),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
+            c.resolve<DataUnions>(DataUnions),
             c.resolve<StreamRegistry>(StreamRegistry),
             c.resolve<NodeRegistry>(NodeRegistry),
-            c.resolve<DataUnions>(DataUnions),
         )
         this.container = c
     }
@@ -260,8 +265,6 @@ export const Dependencies = {
     BrubeckNode,
     NodeRegistry,
     StreamRegistry,
-    Session,
-    LoginEndpoints,
     StreamEndpoints,
     StreamEndpointsCached,
     Resends,
