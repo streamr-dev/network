@@ -20,8 +20,10 @@ describe('WebRtcEndpoint: back pressure handling', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 28710,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 28710
+            },
             id: 'tracker'
         })
 

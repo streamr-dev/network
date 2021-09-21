@@ -17,8 +17,10 @@ describe('Signalling error scenarios', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 35115,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 35115
+            },
             id: 'tracker',
             trackerPingInterval: 3000
         })

@@ -26,6 +26,7 @@ const fallbacks = (env) => {
         'fs': require.resolve('browserify-fs'),
         '/src/logic/LocationManager.ts': false,
         'module': false,
+        'net': false,
     }
     if (env === 'production') {
         return Object.assign(fallbacks, {
@@ -33,7 +34,6 @@ const fallbacks = (env) => {
             'https': false,
             'express': false,
             'ws': false,
-            'net': false,
         })
     }
     return fallbacks

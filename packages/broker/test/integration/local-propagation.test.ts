@@ -24,8 +24,10 @@ describe('local propagation', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker-1'
         })
 

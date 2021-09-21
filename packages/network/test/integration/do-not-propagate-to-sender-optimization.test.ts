@@ -19,8 +19,10 @@ describe('optimization: do not propagate to sender', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30410,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30410
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
