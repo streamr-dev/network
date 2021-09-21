@@ -43,7 +43,7 @@ export function formStreamrOptionsWithEnv(
     }
 
     if (dev) {
-        options.nodeRegistry = {
+        options.storageNodeRegistry = {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
             jsonRpcProvider: 'http://127.0.0.1:8546',
         }

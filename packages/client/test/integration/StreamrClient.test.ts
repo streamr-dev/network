@@ -13,16 +13,17 @@ import {
     getWaitForStorage,
     publishManyGenerator,
     describeRepeats,
-    createRelativeTestStreamId
+    createRelativeTestStreamId,
+    until
 } from '../utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
 
+import clientOptions from './config'
 import { Stream } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
-import { AddressZero } from '@ethersproject/constants'
+// import Subscription from '../../src/brubeck/Subscription'
 
 jest.setTimeout(60000)
 

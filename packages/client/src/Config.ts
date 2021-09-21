@@ -13,7 +13,7 @@ import { InspectOptions } from 'util'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Partial<NetworkNodeOptions>
-    nodeRegistry?: NodeRegistryOptions
+    storageNodeRegistry?: NodeRegistryOptions
     debug?: Partial<DebugConfig>
 }
 
@@ -28,7 +28,7 @@ export type DebugConfig = {
 
 export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
     network: NetworkNodeOptions
-    nodeRegistry: NodeRegistryOptions
+    storageNodeRegistry: NodeRegistryOptions
     debug: DebugConfig
 }
 
@@ -67,7 +67,7 @@ const BRUBECK_CLIENT_DEFAULTS = {
             maxStringLength: 512
         }
     },
-    nodeRegistry: {
+    storageNodeRegistry: {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         jsonRpcProvider: 'http://127.0.0.1:8546',
     },

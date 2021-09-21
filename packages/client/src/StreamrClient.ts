@@ -213,7 +213,7 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
         [Config.Root, config],
         [Config.Auth, config.auth],
         [Config.Ethereum, config],
-        [Config.NodeRegistry, config.nodeRegistry],
+        [Config.NodeRegistry, config.storageNodeRegistry],
         [Config.Network, config.network],
         [Config.Connection, config],
         [Config.Subscribe, config],
