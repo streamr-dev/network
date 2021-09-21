@@ -149,6 +149,13 @@ class StreamrCached {
     }
 }
 
+let uid: string = process.pid != null
+    // Use process id in node uid.
+    ? `${process.pid}`
+    // Fall back to `uuid()` later (see the constructor). Doing it here will break browser projects
+    // that utilize server-side rendering (no `window` while build's target is `web`).
+    : ''
+
 /**
  * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
  */
@@ -190,8 +197,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
 
-        // Use process id in node uid.
-        const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+        uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
         this.id = counterId(`${this.constructor.name}-${uid}${options.id || ''}`)
         this.debug = Debug(this.id)
