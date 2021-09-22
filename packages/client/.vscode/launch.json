@@ -20,14 +20,14 @@
               "--no-cache",
               "--detectOpenHandles",
               // "test/integration/Stream.test.ts",
-              "test/integration/StreamEndpoints.test.ts",
+              // "test/integration/StreamEndpoints.test.ts",
               // "test/integration/NodeEndpoints.test.ts",
               // "test/integration/Encryption.test.ts",
-              // "test/integration/MultipleClients.test.js",
+              "test/integration/MultipleClients.test.ts",
               // "test/integration/StreamrClientResends.test.js",
               // "test/integration/StreamrClient.test.ts",
               "-t",
-              "Storage node assignment"
+              "works with multiple publishers on one stream with late subscriber"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",

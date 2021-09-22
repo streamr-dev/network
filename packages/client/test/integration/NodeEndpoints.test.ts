@@ -15,6 +15,7 @@ const log = debug('StreamrClient::NodeEndpointsIntegrationTest')
  */
 
 let client: StreamrClient
+let storageNodeClient: StreamrClient
 let createdStream: Stream
 let createdNode: StorageNode
 let nodeAddress: EthereumAddress
@@ -34,7 +35,10 @@ beforeAll(async () => {
     client = createClient({ auth: {
         privateKey: key
     } })
-    nodeAddress = await client.getAddress()
+    storageNodeClient = createClient({ auth: {
+        privateKey: config.storageNode.privatekey
+    } })
+    nodeAddress = config.storageNode.address.toLowerCase()
     createdStream = await createTestStream(client, module, {})
     return until(async () => {
         try {
@@ -48,7 +52,8 @@ beforeAll(async () => {
 
 describe('createNode', () => {
     it('creates a node ', async () => {
-        createdNode = await client.setNode(nodeUrl)
+
+        createdNode = await storageNodeClient.setNode(nodeUrl)
         await until(async () => {
             try {
                 return (await client.getStorageNode(nodeAddress)) !== null
@@ -119,7 +124,7 @@ describe('createNode', () => {
     })
 
     it('delete a node ', async () => {
-        await client.removeNode()
+        await storageNodeClient.removeNode()
         await until(async () => {
             try {
                 const res = await client.getStorageNode(nodeAddress)

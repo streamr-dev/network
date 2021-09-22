@@ -44,7 +44,8 @@ export default {
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     },
     storageNode: {
-        address: '0xde1112f631486CfC759A50196853011528bC5FA0',
+        privatekey: '0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285',
+        address: '0x505D48552Ac17FfD0845FFA3783C2799fd4aaD78',
         url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
     },
     // storageNodeRegistry: [{
