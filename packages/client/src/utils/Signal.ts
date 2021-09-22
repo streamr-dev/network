@@ -1,7 +1,8 @@
 import { pOnce, pLimitFn, pOne } from './index'
+import { Plugin } from './Plugin'
 
-type SignalListener<T> = (t: T) => (unknown | Promise<unknown>)
-type SignalListenerWrap<T> = SignalListener<T> & {
+type SignalListener<T extends any[]> = (...args: T) => (unknown | Promise<unknown>)
+type SignalListenerWrap<T extends any[]> = SignalListener<T> & {
     listener: SignalListener<T>
 }
 
@@ -31,37 +32,16 @@ export enum TRIGGER_TYPE {
  * await msgs.push(new Message())
  * ```
  */
-export default class Signal<ValueType = void> {
+
+export default class Signal<ArgsType extends any[] = []> {
     static TRIGGER_TYPE = TRIGGER_TYPE
     /**
      *  Create a Signal's listen function with signal utility methods attached.
      *  See example above.
      */
-    static create<ValueType = void>(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL) {
-        const signal = new this<ValueType>(triggerType)
-        function listen(): Promise<ValueType>
-        function listen<ReturnType>(this: ReturnType, cb: SignalListener<ValueType>): ReturnType
-        function listen<ReturnType>(this: ReturnType, cb?: SignalListener<ValueType>) {
-            if (!cb) {
-                return signal.listen()
-            }
-
-            signal.listen(cb)
-            return this
-        }
-
-        return Object.assign(listen, {
-            triggerCount: signal.triggerCount.bind(signal),
-            once: signal.once.bind(signal),
-            wait: signal.wait.bind(signal),
-            trigger: signal.trigger,
-            unlisten: signal.unlisten.bind(signal),
-            listen: signal.listen.bind(signal),
-            unlistenAll: signal.unlistenAll.bind(signal),
-            countListeners: signal.countListeners.bind(signal),
-            end: signal.end,
-            [Symbol.asyncIterator]: signal[Symbol.asyncIterator].bind(signal)
-        })
+    static create<ArgsType extends any[] = []>(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL) {
+        const signal = new this<ArgsType>(triggerType)
+        return Plugin(signal.getListenAsMethod(), signal)
     }
 
     /**
@@ -69,8 +49,8 @@ export default class Signal<ValueType = void> {
      * listener immediately.  Calling trigger after already triggered is a
      * noop.
      */
-    static once<ValueType = void>() {
-        return this.create<ValueType>(TRIGGER_TYPE.ONCE)
+    static once<ArgsType extends any[] = []>() {
+        return this.create<ArgsType>(TRIGGER_TYPE.ONCE)
     }
 
     /**
@@ -78,8 +58,8 @@ export default class Signal<ValueType = void> {
      * listeners are pending will not trigger listeners again, and will resolve
      * when listeners are resolved.
      */
-    static one<ValueType = void>() {
-        return this.create<ValueType>(TRIGGER_TYPE.ONE)
+    static one<ArgsType extends any[] = []>() {
+        return this.create<ArgsType>(TRIGGER_TYPE.ONE)
     }
 
     /**
@@ -87,8 +67,8 @@ export default class Signal<ValueType = void> {
      * listeners are pending will enqueue the trigger until after listeners are
      * resolved.
      */
-    static queue<ValueType = void>() {
-        return this.create<ValueType>(TRIGGER_TYPE.QUEUE)
+    static queue<ArgsType extends any[] = []>() {
+        return this.create<ArgsType>(TRIGGER_TYPE.QUEUE)
     }
 
     /**
@@ -96,13 +76,12 @@ export default class Signal<ValueType = void> {
      * Listener functions are still executed in async series,
      * but multiple triggers can be active in parallel.
      */
-    static parallel<ValueType = void>() {
-        return this.create<ValueType>(TRIGGER_TYPE.PARALLEL)
+    static parallel<ArgsType extends any[] = []>() {
+        return this.create<ArgsType>(TRIGGER_TYPE.PARALLEL)
     }
 
-    listeners: (SignalListener<ValueType> | SignalListenerWrap<ValueType>)[] = []
+    listeners: (SignalListener<ArgsType> | SignalListenerWrap<ArgsType>)[] = []
     isEnded = false
-    lastValue?: ValueType
     triggerCountValue = 0
 
     constructor(
@@ -136,46 +115,55 @@ export default class Signal<ValueType = void> {
         return this.triggerCountValue
     }
 
+    lastValue: ArgsType | undefined
+
     /**
      * No more events.
      */
-    end = (...args: [ValueType] extends [undefined] ? any[] : [ValueType]) => {
-        const [value] = args
-        this.lastValue = value
+    end = (...args: ArgsType) => {
+        this.lastValue = args
         this.isEnded = true
     }
 
     /**
      * Promise that resolves on next trigger.
      */
-    wait(): Promise<ValueType> {
+    wait(): Promise<ArgsType[0]> {
         return new Promise((resolve) => {
-            this.once(resolve)
+            this.once((...args) => resolve(args[0]))
         })
+    }
+
+    async getLastValue() {
+        if (this.currentTask) {
+            await this.currentTask
+        }
+
+        if (!this.lastValue) {
+            throw new Error('Signal ended with no value')
+        }
+
+        return this.lastValue
     }
 
     /**
      * Attach a callback listener to this Signal.
      */
-    listen(): Promise<ValueType>
-    listen(cb: SignalListener<ValueType>): Signal<ValueType>
-    listen(cb?: SignalListener<ValueType>): Signal<ValueType> | Promise<ValueType> {
+    listen(): Promise<ArgsType[0]>
+    listen(cb: SignalListener<ArgsType>): this
+    listen(cb?: SignalListener<ArgsType>): this | Promise<ArgsType[0]> {
         if (!cb) {
-            if (this.isEnded) {
-                return this.trigger(this.lastValue!).then(() => {
-                    return this.lastValue!
-                })
-            }
-
             return new Promise((resolve) => {
-                this.once(resolve)
+                this.once((...args) => {
+                    resolve(args[0])
+                })
             })
         }
 
         if (this.isEnded) {
             // wait for any outstanding, ended so can't re-trigger
             // eslint-disable-next-line promise/no-callback-in-promise
-            this.trigger(this.lastValue!).then(() => cb(this.lastValue!)).catch(() => {})
+            this.getLastValue().then((args) => cb(...args)).catch(() => {})
             return this
         }
 
@@ -183,49 +171,31 @@ export default class Signal<ValueType = void> {
         return this
     }
 
-    countListeners() {
-        return this.listeners.length
-    }
-
-    once(): Promise<ValueType>
-    once(cb: SignalListener<ValueType>): this
-    once(cb?: SignalListener<ValueType>): this | Promise<ValueType> {
+    once(): Promise<ArgsType[0]>
+    once(cb: SignalListener<ArgsType>): this
+    once(cb?: SignalListener<ArgsType>): this | Promise<ArgsType[0]> {
         if (!cb) {
             return this.listen()
         }
 
-        if (this.isEnded) {
-            // wait for any outstanding, ended so can't re-trigger
-            // eslint-disable-next-line promise/no-callback-in-promise
-            this.trigger(this.lastValue!).then(() => cb(this.lastValue!)).catch(() => {})
-            return this
-        }
-
-        const wrappedListener: SignalListenerWrap<ValueType> = Object.assign((v: ValueType) => {
+        const wrappedListener: SignalListenerWrap<ArgsType> = Object.assign((...args: ArgsType) => {
             this.unlisten(cb)
-            return cb(v)
+            return cb(...args)
         }, {
             listener: cb
         })
 
-        this.listeners.push(wrappedListener)
-        return this
+        return this.listen(wrappedListener)
     }
 
-    async* [Symbol.asyncIterator]() {
-        while (!this.isEnded) {
-            // eslint-disable-next-line no-await-in-loop
-            yield await this.listen()
-        }
+    countListeners() {
+        return this.listeners.length
     }
 
     /**
      * Remove a callback listener from this Signal.
      */
-    unlisten(cb: SignalListener<ValueType>) {
-        if (this.isEnded) {
-            return this
-        }
+    unlisten(cb: SignalListener<ArgsType>) {
         const index = this.listeners.findIndex((listener) => {
             return listener === cb || ('listener' in listener && listener.listener === cb)
         })
@@ -240,14 +210,24 @@ export default class Signal<ValueType = void> {
         this.listeners.length = 0
     }
 
-    /**
-     * Trigger the signal with optional value, like emitter.emit.
-     */
-    async trigger(
-        // TS nonsense to allow trigger() when ValueType is undefined/void
-        ...args: [ValueType] extends [undefined] ? any[] : [ValueType]
+    getListenAsMethod() {
+        const signal = this
+        function listenAsMethod(): Promise<ArgsType[0]>
+        function listenAsMethod<ReturnType>(this: ReturnType, cb: SignalListener<ArgsType>): ReturnType
+        function listenAsMethod<ReturnType>(this: ReturnType, cb?: SignalListener<ArgsType>) {
+            if (!cb) {
+                return signal.listen()
+            }
+
+            signal.listen(cb)
+            return this
+        }
+        return listenAsMethod
+    }
+
+    protected async execTrigger(
+        ...args: ArgsType
     ): Promise<void> {
-        const [value] = args
         if (this.isEnded) {
             return
         }
@@ -257,10 +237,9 @@ export default class Signal<ValueType = void> {
         // capture listeners
         const tasks = this.listeners.slice()
         if (this.triggerType === TRIGGER_TYPE.ONCE) {
-            this.lastValue = value
             // remove all listeners
             this.listeners.length = 0
-            this.end(this.lastValue!)
+            this.end(...args)
         }
 
         if (!tasks.length) { return }
@@ -269,8 +248,34 @@ export default class Signal<ValueType = void> {
         await tasks.reduce(async (prev, task) => {
             // eslint-disable-next-line promise/always-return
             await prev
-            await task(value)
+            await task(...args)
         }, Promise.resolve())
+    }
+
+    currentTask: Promise<void> | undefined
+
+    /**
+     * Trigger the signal with optional value, like emitter.emit.
+     */
+    async trigger(
+        ...args: ArgsType
+    ): Promise<void> {
+        const task = this.execTrigger(...args)
+        this.currentTask = task
+        try {
+            return await this.currentTask
+        } finally {
+            if (this.currentTask === task) {
+                this.currentTask = undefined
+            }
+        }
+    }
+
+    async* [Symbol.asyncIterator]() {
+        while (!this.isEnded) {
+            // eslint-disable-next-line no-await-in-loop
+            yield await this.listen()
+        }
     }
 }
 
@@ -281,11 +286,13 @@ export default class Signal<ValueType = void> {
  * Throws on trigger if no listeners.
  * Won't trigger listeners for same Error instance more than once.
  */
-export class ErrorSignal<ValueType extends Error = Error> extends Signal<ValueType> {
+export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<ArgsType> {
     protected seenErrors = new WeakSet<Error>()
     protected ignoredErrors = new WeakSet<Error>()
+    private minListeners = 0
 
-    async trigger(err: ValueType) {
+    async trigger(...args: ArgsType) {
+        const err = args[0]
         // don't double-handle errors
         if (this.ignoredErrors.has(err)) {
             return
@@ -298,11 +305,11 @@ export class ErrorSignal<ValueType extends Error = Error> extends Signal<ValueTy
 
         this.seenErrors.add(err)
 
-        const hadNoListeners = this.countListeners() === 0
+        const hadMinListeners = !!(this.countListeners() >= this.minListeners)
         try {
-            await super.trigger(err)
+            await super.trigger(...args)
             // rethrow if no listeners
-            if (hadNoListeners) {
+            if (!hadMinListeners) {
                 throw err
             }
 

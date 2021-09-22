@@ -31,7 +31,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     isStopped = false
     pipeline
     node
-    onRetired = Signal.once<void>()
+    onRetired = Signal.once()
 
     constructor(context: Context, spid: SPID, @inject(BrubeckContainer) container: DependencyContainer) {
         this.id = instanceId(this)

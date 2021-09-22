@@ -1,4 +1,5 @@
 import { AnyInstance } from './index'
+
 /**
  * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
  */
@@ -8,9 +9,16 @@ export function Plugin<
     // eslint-disable-next-line
     ResultType extends (TargetType & Methods<SrcType>),
 >(targetInstance: TargetType, srcInstance: SrcType): ResultType {
-    const descriptors = Object.entries({
-        ...Object.getOwnPropertyDescriptors(srcInstance.constructor.prototype),
-        ...Object.getOwnPropertyDescriptors(srcInstance)
+    const protoDescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(srcInstance))
+    const ownDescriptors = Object.getOwnPropertyDescriptors(srcInstance)
+    // have to iterate over set of ownKeys otherwise we miss Symbol properties
+    const keys = new Set([
+        ...Reflect.ownKeys(protoDescriptors),
+        ...Reflect.ownKeys(ownDescriptors)
+    ])
+    const descriptors: [string | symbol, PropertyDescriptor][] = [...keys].map((key) => {
+        // @ts-expect-error key can be a symbol, that's ok.
+        return [key, key in ownDescriptors ? ownDescriptors[key] : protoDescriptors[key]]
     })
 
     return descriptors.reduce((target: ResultType, [key, { value }]) => {

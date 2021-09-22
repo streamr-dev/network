@@ -157,22 +157,23 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      * Triggers once when pipeline ends.
      * Usage: `pipeline.onFinally(callback)`
      */
-    onFinally = Signal.once<Error | void>()
+    onFinally = Signal.once<[Error | void]>()
 
     /**
      * Triggers once when pipeline is about to end.
      */
-    onBeforeFinally = Signal.once<void>()
+    onBeforeFinally = Signal.once()
 
     /**
      * Triggers once when pipeline starts flowing.
      * Usage: `pipeline.onStart(callback)`
      */
-    onStart = Signal.once<void>()
+    onStart = Signal.once()
 
-    onMessage = Signal.create<OutType>()
+    onMessage = Signal.create<[OutType]>()
 
-    onError = ErrorSignal.create<Error>()
+    // eslint-disable-next-line func-call-spacing, no-spaced-func
+    onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
 
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>) {
         return this.pipe((src) => G.map(src, fn, this.onError.trigger))
@@ -199,7 +200,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     filterBefore(fn: G.GeneratorFilter<InType>) {
-        return this.pipeBefore((src) => G.filter(src, fn))
+        return this.pipeBefore((src) => G.filter(src, fn, this.onError.trigger))
     }
 
     async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {

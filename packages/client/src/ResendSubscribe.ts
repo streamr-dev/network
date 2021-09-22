@@ -38,7 +38,7 @@ export class ResendSubscription<T> extends Subscription<T> {
                 await resentMsgs.return()
             })
             yield* resentMsgs
-            sub.onResent.trigger(undefined)
+            sub.onResent.trigger()
             yield* src
         })
         this.pipe(orderMessages.transform(subSession.spid))

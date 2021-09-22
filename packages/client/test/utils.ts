@@ -393,8 +393,8 @@ type PublishTestMessageOptions = PublishManyOpts & {
     waitForLastCount?: number
     waitForLastTimeout?: number,
     retainMessages?: boolean
-    onSourcePipeline?: Signal<Pipeline<PublishMetadata<any>>>
-    onPublishPipeline?: Signal<Pipeline<StreamMessage>>
+    onSourcePipeline?: Signal<[Pipeline<PublishMetadata<any>>]>
+    onPublishPipeline?: Signal<[Pipeline<StreamMessage>]>
     afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 

@@ -84,7 +84,7 @@ describe('Signal', () => {
     })
 
     it('provides async iterator', async () => {
-        const signal = Signal.create<number>()
+        const signal = Signal.create<[number]>()
         setTimeout(async () => {
             await signal.trigger(1)
             await signal.trigger(2)
@@ -201,7 +201,7 @@ describe('Signal', () => {
         })
 
         it('has async iterator that supports parallel triggers', async () => {
-            const signal = Signal.queue<number>()
+            const signal = Signal.queue<[number]>()
             setTimeout(async () => {
                 signal.trigger(1)
                 signal.trigger(2)
@@ -253,7 +253,7 @@ describe('Signal', () => {
         })
 
         it('has async iterator that does not support parallel triggers', async () => {
-            const signal = Signal.parallel<number>()
+            const signal = Signal.parallel<[number]>()
             setTimeout(async () => {
                 signal.trigger(1)
                 signal.trigger(2)
@@ -350,7 +350,7 @@ describe('Signal', () => {
             const onSignal = jest.fn((v: ValueType) => {
                 results.push(v)
             })
-            const signal = Signal.once<ValueType>()
+            const signal = Signal.once<[ValueType]>()
             signal(onSignal)
             await Promise.all([
                 // test parallel

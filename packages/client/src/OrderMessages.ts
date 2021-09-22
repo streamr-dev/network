@@ -21,7 +21,7 @@ import { SubscribeConfig } from './Config'
 export default class OrderMessages<T> implements Context {
     id
     debug
-    stopSignal = Signal.once<void>()
+    stopSignal = Signal.once()
 
     constructor(
         private options: SubscribeConfig,
