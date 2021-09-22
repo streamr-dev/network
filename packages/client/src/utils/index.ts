@@ -93,6 +93,7 @@ export const counterId = CounterId()
 export type AnyInstance = {
     constructor: {
         name: string
+        prototype: null | AnyInstance
     }
 }
 

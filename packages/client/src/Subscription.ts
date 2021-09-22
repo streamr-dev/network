@@ -22,7 +22,7 @@ export default class Subscription<T = unknown> extends MessageStream<T> implemen
     streamPartition
     key
 
-    constructor(subSession: SubscriptionSession<T>, options: MessageStreamOptions) {
+    constructor(subSession: SubscriptionSession<T>, options?: MessageStreamOptions) {
         super(subSession, options)
         this.context = subSession
         this.spid = subSession.spid
