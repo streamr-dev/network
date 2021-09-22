@@ -25,8 +25,10 @@ describe('NodeMetrics', () => {
         }]
         nodeAddress = tmpAccount.address
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker-1'
         })
         client1 = createClient(tracker, Wallet.createRandom().privateKey, {

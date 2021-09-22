@@ -36,8 +36,10 @@ describe('DataMetadataEndpoints', () => {
             url: `http://127.0.0.1:${httpPort1}`
         }]
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker-DataMetadataEndpoints'
         })
         const engineAndEditorAccount = Wallet.createRandom()

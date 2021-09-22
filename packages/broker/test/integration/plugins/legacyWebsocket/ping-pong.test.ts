@@ -22,8 +22,10 @@ describe.skip('ping-pong test between broker and clients', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker'
         })
         client1 = createClient(tracker)

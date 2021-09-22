@@ -14,8 +14,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 32400,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 32400
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }

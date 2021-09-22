@@ -29,8 +29,10 @@ describe('MQTT error handling', () => {
 
         // eslint-disable-next-line require-atomic-updates
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker'
         })
     })

@@ -73,8 +73,10 @@ describe('TestnetMinerPlugin', () => {
     beforeAll(async () => {
         tracker = await startTracker({
             id: 'tracker',
-            host: '127.0.0.1',
-            port: TRACKER_PORT,
+            listen: {
+                hostname: '127.0.0.1',
+                port: TRACKER_PORT
+            },
         })
         client = createClient(tracker, rewardPublisherPrivateKey)
         const rewardStream = await createRewardStream(client)

@@ -24,7 +24,12 @@ import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 import NodeRegistry, { register as registerNodeRegistry } from './StorageNodeRegistry'
 import { Methods, Plugin } from './utils/Plugin'
 
-const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+let uid: string = process.pid != null
+    // Use process id in node uid.
+    ? `${process.pid}`
+    // Fall back to `uuid()` later (see initContainer). Doing it here will break browser projects
+    // that utilize server-side rendering (no `window` while build's target is `web`).
+    : ''
 
 // these are mixed in via Plugin function above
 // use MethodNames to only grab methods
@@ -131,6 +136,7 @@ class StreamrClientBase implements Context {
 export function initContainer(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
     const c = parentContainer.createChildContainer()
     const config = BrubeckConfig(options)
+  uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
     // @ts-expect-error not in types

@@ -32,18 +32,24 @@ describe('multi trackers', () => {
 
     beforeEach(async () => {
         trackerOne = await startTracker({
-            host: '127.0.0.1',
-            port: 49000,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 49000
+            },
             id: 'trackerOne'
         })
         trackerTwo = await startTracker({
-            host: '127.0.0.1',
-            port: 49001,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 49001
+            },
             id: 'trackerTwo',
         })
         trackerThree = await startTracker({
-            host: '127.0.0.1',
-            port: 49002,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 49002
+            },
             id: 'trackerThree'
         })
         const trackerInfo1 = { id: 'trackerOne', ws: trackerOne.getUrl(), http: trackerOne.getUrl() }
