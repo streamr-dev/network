@@ -9,15 +9,15 @@ export type TrackerRecord = {
     ws: string
 }
 
-export class TrackerRegistry<T extends TrackerRecord = TrackerRecord> {
-    private readonly records: T[]
+export class TrackerRegistry {
+    private readonly records: TrackerRecord[]
 
-    constructor(records: T[]) {
+    constructor(records: TrackerRecord[]) {
         this.records = records
         this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(streamId: string, partition = 0): T {
+    getTracker(streamId: string, partition = 0): TrackerRecord {
         if (typeof streamId !== 'string' || streamId.indexOf('::') >= 0) {
             throw new Error(`invalid id: ${streamId}`)
         }
@@ -31,7 +31,7 @@ export class TrackerRegistry<T extends TrackerRecord = TrackerRecord> {
         return this.records[index]
     }
 
-    getAllTrackers(): T[] {
+    getAllTrackers(): TrackerRecord[] {
         return this.records
     }
 }
@@ -45,11 +45,11 @@ async function fetchTrackers(config: SmartContractConfig) {
     return await contract.getNodes()
 }
 
-export function createTrackerRegistry<T extends TrackerRecord = TrackerRecord>(servers: T[]): TrackerRegistry<T> {
+export function createTrackerRegistry(servers: TrackerRecord[]): TrackerRegistry {
     return new TrackerRegistry(servers)
 }
 
-export async function getTrackerRegistryFromContract(config: SmartContractConfig): Promise<TrackerRegistry<TrackerRecord>> {
+export async function getTrackerRegistryFromContract(config: SmartContractConfig): Promise<TrackerRegistry> {
     const trackers = await fetchTrackers(config)
     const records: TrackerRecord[] = []
     for (let i = 0; i < trackers.length; ++i) {
