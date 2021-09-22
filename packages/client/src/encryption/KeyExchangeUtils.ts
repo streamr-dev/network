@@ -3,7 +3,7 @@ import {
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
-import { pOnce, Defer, instanceId } from '../utils'
+import { pOnce, Defer, instanceId, Deferred } from '../utils'
 import { EthereumAddress } from '../types'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
@@ -49,8 +49,8 @@ type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
 function waitForSubMessage(
     sub: Subscription<unknown>,
     matchFn: MessageMatch
-): ReturnType<typeof Defer> & Promise<StreamMessage | undefined> {
-    const task = Defer<StreamMessage | undefined>()
+): Deferred<StreamMessage> {
+    const task = Defer<StreamMessage>()
     const onMessage = (streamMessage: StreamMessage) => {
         try {
             if (matchFn(streamMessage.getContent(), streamMessage)) {
@@ -115,7 +115,14 @@ export class KeyExchangeStream implements Context, Stoppable {
 
         const streamId = getKeyExchangeStreamId(publisherId)
 
-        let responseTask
+        let responseTask: Deferred<StreamMessage<unknown>> | undefined
+        const onDestroy = () => {
+            if (responseTask) {
+                responseTask.resolve(undefined)
+            }
+        }
+
+        this.destroySignal.onDestroy.listen(onDestroy)
         let sub: Subscription<unknown> | undefined
         try {
             sub = await this.createSubscription()
@@ -137,7 +144,6 @@ export class KeyExchangeStream implements Context, Stoppable {
                 responseTask.resolve(undefined)
                 return undefined
             }
-            this.destroySignal.onDestroy.listen(responseTask.resolve)
 
             return await responseTask
         } catch (err) {
@@ -146,9 +152,7 @@ export class KeyExchangeStream implements Context, Stoppable {
             }
             throw err
         } finally {
-            if (responseTask) {
-                this.destroySignal.onDestroy.unlisten(responseTask.resolve)
-            }
+            this.destroySignal.onDestroy.unlisten(onDestroy)
             this.subscribe.reset()
             if (sub) {
                 await sub.unsubscribe()
