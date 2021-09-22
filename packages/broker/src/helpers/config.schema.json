@@ -226,7 +226,7 @@
               "type": "array",
               "description": "List of storageNode HTTP URLs to connect to",
               "items": {
-                "$ref": "#/definitions/storageNodeRegistryItem"
+                "$ref": "#/definitions/storageNodeRecord"
               }
             },
             {
@@ -264,7 +264,7 @@
       "minimum": 0,
       "maximum": 65353
     },
-    "storageNodeRegistryItem": {
+    "storageNodeRecord": {
       "type": "object",
       "required": [
         "address",
@@ -277,7 +277,7 @@
         },
         "url": {
           "type": "string"
-        }  
+        }
       }
     },
     "smartContractConfig": {
