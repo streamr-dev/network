@@ -1,5 +1,5 @@
 import { Utils } from 'streamr-client-protocol'
-import { StreamIdAndPartition, TrackerRecord } from '../identifiers'
+import { StreamIdAndPartition } from '../identifiers'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
