@@ -5,10 +5,9 @@ import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { PublishRequest, StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
-import { startTracker, Tracker } from 'streamr-network'
 
 import { StreamrClient } from '../src/StreamrClient'
-import { counterId, CounterId, AggregatedError, Scaffold, instanceId } from '../src/utils'
+import { counterId, CounterId, AggregatedError, instanceId } from '../src/utils'
 import { Debug, format } from '../src/utils/log'
 import { MaybeAsync } from '../src/types'
 import { StreamProperties } from '../src/Stream'
@@ -481,42 +480,4 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
             ...opts,
         })
     }
-}
-
-function initTracker() {
-    const trackerPort = 30304 + (process.pid % 1000)
-    let counter = 0
-    let tracker: Tracker
-    const update = Scaffold([
-        async () => {
-            tracker = await startTracker({
-                host: '127.0.0.1',
-                port: trackerPort,
-                id: `tracker${trackerPort}`
-            })
-
-            return async () => {
-                await tracker.stop()
-            }
-        }
-    ], () => counter > 0)
-
-    return {
-        trackerPort,
-        async up() {
-            counter += 1
-            return update()
-        },
-        async down() {
-            counter = Math.max(0, counter - 1)
-            return update()
-        }
-    }
-}
-
-export function useTracker() {
-    const { up, down, trackerPort } = initTracker()
-    beforeEach(up)
-    afterEach(down)
-    return trackerPort
 }
