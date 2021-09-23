@@ -86,6 +86,7 @@ export class Node extends EventEmitter {
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly rttUpdateTimeoutsOnTrackers: { [key: string]: NodeJS.Timeout } // trackerId => timeout
     private readonly metrics: Metrics
+    private connectionCleanUpInterval: NodeJS.Timeout | null
     private handleBufferedMessagesTimeoutRef?: NodeJS.Timeout | null
     protected extraMetadata: Record<string, unknown> = {}
 
@@ -131,6 +132,7 @@ export class Node extends EventEmitter {
         )
         this.consecutiveDeliveryFailures = {}
         this.trackerConnector = new TrackerConnector(() => this.streams.getStreams(), this.nodeToTracker, this.trackerRegistry, this.logger, opts.trackerConnectionMaintenanceInterval ?? 5000)
+        this.connectionCleanUpInterval = null
 
         this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))  // eslint-disable-line max-len
@@ -172,6 +174,8 @@ export class Node extends EventEmitter {
     start(): void {
         this.logger.trace('started')
         this.trackerConnector.start()
+        clearInterval(this.connectionCleanUpInterval!)
+        this.connectionCleanUpInterval = this.startConnectionCleanUpInterval(2 * 60 * 1000)
     }
 
     onConnectedToTracker(tracker: TrackerId): void {
@@ -392,6 +396,11 @@ export class Node extends EventEmitter {
             this.handleBufferedMessagesTimeoutRef = null
         }
 
+        if (this.connectionCleanUpInterval) {
+            clearInterval(this.connectionCleanUpInterval)
+            this.connectionCleanUpInterval = null
+        }
+
         Object.values(this.disconnectionTimers).forEach((timeout) => clearTimeout(timeout))
         Object.values(this.rttUpdateTimeoutsOnTrackers).forEach((timeout) => clearTimeout(timeout))
 
@@ -532,6 +541,19 @@ export class Node extends EventEmitter {
             clearTimeout(this.disconnectionTimers[nodeId])
             delete this.disconnectionTimers[nodeId]
         }
+    }
+
+    private startConnectionCleanUpInterval(interval: number): NodeJS.Timeout {
+        return setInterval(() => {
+            const peerIds = this.nodeToNode.getAllConnectionNodeIds()
+            const unusedConnections = peerIds.filter((peer) => !this.isNodePresent(peer))
+            if (unusedConnections.length > 0) {
+                this.logger.debug(`Disconnecting from ${unusedConnections.length} unused connections`)
+                unusedConnections.forEach((peerId) => {
+                    this.nodeToNode.disconnectFromNode(peerId, 'Unused connection')
+                })
+            }
+        }, interval)
     }
 
     getStreams(): ReadonlyArray<string> {

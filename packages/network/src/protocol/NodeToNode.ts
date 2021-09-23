@@ -125,4 +125,8 @@ export class NodeToNode extends EventEmitter {
             || this.endpoint.getDefaultControlLayerProtocolVersion()
         return [controlLayerVersion, messageLayerVersion]
     }
+
+    getAllConnectionNodeIds(): NodeId[] {
+        return this.endpoint.getAllConnectionNodeIds()
+    }
 }
