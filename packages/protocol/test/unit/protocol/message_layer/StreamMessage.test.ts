@@ -239,6 +239,26 @@ describe('StreamMessage', () => {
             expect(streamMessageClone.toObject()).toEqual(streamMessage.toObject())
             expect(streamMessageClone.serialize()).toEqual(streamMessage.serialize())
         })
+
+        it('works with encrypted messages', () => {
+            const encryptedMessage = new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                content: JSON.stringify(content),
+                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+                signature: 'something',
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+                prevMsgRef: new MessageRef(1564046332168, 5),
+            })
+            const streamMessageClone = encryptedMessage.clone()
+            expect(streamMessageClone).not.toBe(encryptedMessage)
+            expect(streamMessageClone.messageId).not.toBe(encryptedMessage.messageId)
+            expect(streamMessageClone.prevMsgRef).not.toBe(encryptedMessage.prevMsgRef)
+            expect(encryptedMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
+            expect(streamMessageClone.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
+            expect(streamMessageClone.encryptionType).toEqual(encryptedMessage.encryptionType)
+            expect(streamMessageClone.toObject()).toEqual(encryptedMessage.toObject())
+            expect(streamMessageClone.serialize()).toEqual(encryptedMessage.serialize())
+        })
     })
 
     describe('serialization', () => {

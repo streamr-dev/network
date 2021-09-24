@@ -132,8 +132,8 @@ export default class StreamMessage<T = unknown> {
             : this.getSerializedContent()
 
         return new StreamMessage({
-            messageId: this.messageId,
-            prevMsgRef: this.prevMsgRef,
+            messageId: this.messageId.clone(),
+            prevMsgRef: this.prevMsgRef ? this.prevMsgRef.clone() : null,
             content,
             messageType: this.messageType,
             contentType: this.contentType,
