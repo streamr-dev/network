@@ -9,9 +9,12 @@ import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import { ConnectionInfo } from '@ethersproject/web'
 import { BytesLike } from '@ethersproject/bytes'
+import { NonceManager } from '@ethersproject/experimental'
 
 import { EthereumAddress } from './types'
 import { Config } from './Config'
+import { AutoNonceWallet } from './AutoNonceWallet'
+// import { AutoNonceWallet } from './AutoNonceWallet'
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
 type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
@@ -78,6 +81,7 @@ export default class StreamrEthereum {
     _getAddress?: () => Promise<string>
     _getSigner?: () => Signer
     _getSidechainSigner?: () => Promise<Signer>
+    sideChainSigner?: Signer
 
     constructor(
         @inject(Config.Auth) authConfig: AllAuthConfig,
@@ -88,7 +92,10 @@ export default class StreamrEthereum {
             const address = getAddress(computeAddress(key))
             this._getAddress = async () => address
             this._getSigner = () => new Wallet(key, this.getMainnetProvider())
-            this._getSidechainSigner = async () => new Wallet(key, this.getSidechainProvider())
+            this.sideChainSigner = new AutoNonceWallet(key, this.getSidechainProvider())
+            this._getSidechainSigner = async () => {
+                return this.sideChainSigner!
+            }
         } else if ('ethereum' in authConfig && authConfig.ethereum) {
             const { ethereum } = authConfig
             this._getAddress = async () => {
@@ -122,6 +129,7 @@ export default class StreamrEthereum {
                     )
                 }
                 const metamaskSigner = metamaskProvider.getSigner()
+                this.sideChainSigner = metamaskSigner
                 return metamaskSigner
             }
             // TODO: handle events

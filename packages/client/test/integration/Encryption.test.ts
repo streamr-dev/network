@@ -7,18 +7,20 @@ import {
     getPublishTestStreamMessages,
     publishTestMessagesGenerator,
     createTestStream,
-    getCreateClient
+    getCreateClient,
+    clientOptions
 } from '../utils'
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamOperation } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
-import { StorageNode } from '../../src/StorageNode'
 
 const debug = Debug('StreamrClient::test')
-const TIMEOUT = 15 * 1000
+const TIMEOUT = 20 * 1000
 const NUM_MESSAGES = 5
+
+jest.setTimeout(600000)
 
 describeRepeats('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -66,18 +68,22 @@ describeRepeats('decryption', () => {
     async function setupClient(opts?: any) {
         const client = createClient(opts)
         await Promise.all([
-            client.session.getSessionToken(),
             client.connect(),
         ])
         return client
     }
 
     async function setupStream() {
+        const storageNodeClient = createClient({ auth: {
+            privateKey: clientOptions.storageNode.privatekey
+        } })
+        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
+
         stream = await createTestStream(publisher, module, {
             requireEncryptedData: true,
         })
 
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+        await stream.addToStorageNode(storageNode)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
@@ -102,23 +108,23 @@ describeRepeats('decryption', () => {
     }
 
     async function grantSubscriberPermissions({ stream: s = stream, client: c = subscriber }: { stream?: Stream, client?: StreamrClient } = {}) {
-        const p1 = await s.grantPermission(StreamOperation.STREAM_GET, await c.getAddress())
         const p2 = await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
-        return [p1, p2]
+        return [p2]
     }
 
     describe('using default config', () => {
+        beforeAll(async () => {
+            await setupPublisherSubscriberClients()
+            await setupStream()
+            await grantSubscriberPermissions()
+        })
         beforeEach(async () => {
             await setupPublisherSubscriberClients()
         })
 
-        beforeEach(async () => {
-            await setupStream()
-        })
-
         describe('subscriber has permissions', () => {
             beforeEach(async () => {
-                await grantSubscriberPermissions()
+                await setupPublisherSubscriberClients()
             })
 
             it('client.subscribe can decrypt encrypted messages if it knows the group key', async () => {
@@ -299,9 +305,11 @@ describeRepeats('decryption', () => {
                 const groupKey = GroupKey.generate()
                 await publisher.setNextGroupKey(stream.id, groupKey)
 
+                // await testSub(stream)
+                // await testSub(stream2)
                 const tasks = [
                     testSub(stream),
-                    testSub(stream2),
+                    testSub(stream2)
                 ]
                 await Promise.allSettled(tasks)
                 await Promise.all(tasks)
@@ -528,7 +536,7 @@ describeRepeats('decryption', () => {
                     ])
 
                     expect(subscriber.getAllSubscriptions()).toHaveLength(0)
-                    expect(onSubError).toHaveBeenCalledTimes(1)
+                    return expect(onSubError).toHaveBeenCalledTimes(1)
                 })
 
                 it('throws if onError does rethrow', async () => {
@@ -563,14 +571,14 @@ describeRepeats('decryption', () => {
         })
 
         it('errors if rotating group key for no stream', async () => {
-            await expect(async () => (
+            return expect(async () => (
                 // @ts-expect-error
                 publisher.rotateGroupKey()
             )).rejects.toThrow('streamId')
         })
 
         it('errors if setting group key for no stream', async () => {
-            await expect(async () => {
+            return expect(async () => {
                 // @ts-expect-error
                 await publisher.setNextGroupKey(undefined, GroupKey.generate())
             }).rejects.toThrow('streamId')
@@ -585,7 +593,7 @@ describeRepeats('decryption', () => {
                 timestamp: 1111111,
             })
 
-            await expect(async () => {
+            return expect(async () => {
                 await sub.collect(3)
             }).rejects.toThrow()
         })
@@ -651,7 +659,7 @@ describeRepeats('decryption', () => {
             ])
             onEncryptionMessageErr.resolve(undefined)
             await onEncryptionMessageErr
-            expect(didFindStream2).toBeTruthy()
+            return expect(didFindStream2).toBeTruthy()
         }, TIMEOUT * 2)
 
         it('sets group key per-stream', async () => {
@@ -725,7 +733,7 @@ describeRepeats('decryption', () => {
             await Promise.allSettled(tasks)
             await Promise.all(tasks)
             onEncryptionMessageErr.resolve(undefined)
-            await onEncryptionMessageErr
+            return onEncryptionMessageErr
         }, TIMEOUT * 2)
     })
 
@@ -753,8 +761,7 @@ describeRepeats('decryption', () => {
 
             await publisher.rotateGroupKey(stream.id)
 
-            await stream.grantPermission(StreamOperation.STREAM_GET, await subscriber.getAddress())
-            const subPermission = await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
+            await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
 
             const sub = await subscriber.subscribe({
                 stream: stream.id,
@@ -780,7 +787,7 @@ describeRepeats('decryption', () => {
                     publisher.debug('PUBLISHED %d of %d', count, maxMessages)
                     if (count === revokeAfter) {
                         await gotMessages
-                        await stream.revokePermission(subPermission.id)
+                        await stream.revokePermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
                         await publisher.rekey(stream.id)
                     }
                 }
@@ -835,14 +842,14 @@ describeRepeats('decryption', () => {
                     }
                 })
             })
-            beforeEach(async () => {
+            beforeAll(async () => {
                 await setupStream()
             })
             it('fails gracefully if permission revoked after first message', async () => {
-                await testRevokeDuringSubscribe({ maxMessages: 3, revokeAfter: 1 })
+                return testRevokeDuringSubscribe({ maxMessages: 3, revokeAfter: 1 })
             })
             it('fails gracefully if permission revoked after some messages', async () => {
-                await testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 3 })
+                return testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 3 })
             })
         })
 
@@ -854,14 +861,14 @@ describeRepeats('decryption', () => {
                     }
                 })
             })
-            beforeEach(async () => {
+            beforeAll(async () => {
                 await setupStream()
             })
             it('fails gracefully if permission revoked after first message', async () => {
-                await testRevokeDuringSubscribe({ maxMessages: 3, revokeAfter: 1 })
+                return testRevokeDuringSubscribe({ maxMessages: 3, revokeAfter: 1 })
             })
             it('fails gracefully if permission revoked after some messages', async () => {
-                await testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 3 })
+                return testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 3 })
             })
         })
 
@@ -874,12 +881,12 @@ describeRepeats('decryption', () => {
                 })
             })
 
-            beforeEach(async () => {
+            beforeAll(async () => {
                 await setupStream()
             })
 
             it('fails gracefully if permission revoked after first message', async () => {
-                await testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 1 })
+                return testRevokeDuringSubscribe({ maxMessages: 6, revokeAfter: 1 })
             })
 
             it('fails gracefully if permission revoked after some messages', async () => {
