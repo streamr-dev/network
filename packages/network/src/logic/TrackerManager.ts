@@ -59,6 +59,8 @@ export class TrackerManager {
         this.streamManager = streamManager
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.metrics = metrics
+            .addRecordedMetric('unexpectedTrackerInstructions')
+            .addRecordedMetric('trackerInstructions')
         this.subscriber = subscriber
         this.trackerConnector = new TrackerConnector(
             streamManager,

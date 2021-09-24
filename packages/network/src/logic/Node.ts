@@ -93,8 +93,6 @@ export class Node extends EventEmitter {
         this.metrics = metricsContext.create('node')
             .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
             .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
-            .addRecordedMetric('unexpectedTrackerInstructions')
-            .addRecordedMetric('trackerInstructions')
             .addRecordedMetric('onDataReceived')
             .addRecordedMetric('onDataReceived:invalidNumbering')
             .addRecordedMetric('onDataReceived:gapMismatch')
