@@ -5,7 +5,7 @@ import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { StreamManager } from './StreamManager'
 import { Logger } from '../helpers/Logger'
-import { NodeId, NodeOptions } from './Node'
+import { NodeId } from './Node'
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { Metrics } from '../helpers/MetricsContext'
@@ -25,6 +25,13 @@ interface Subscriber {
     unsubscribeFromStreamOnNode: (node: NodeId, streamId: StreamIdAndPartition, sendStatus?: boolean) => void
 }
 
+export interface TrackerManagerOptions {
+    trackers: Array<TrackerInfo>
+    rttUpdateTimeout?: number
+    trackerConnectionMaintenanceInterval?: number
+    instructionRetryInterval?: number
+}
+
 export class TrackerManager {
     private readonly rttUpdateTimeoutsOnTrackers: Record<TrackerId, NodeJS.Timeout> = {}
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
@@ -39,15 +46,16 @@ export class TrackerManager {
     private readonly subscriber: Subscriber
 
     constructor(
+        nodeToTracker: NodeToTracker,
         formStatus: FormStatusFn,
-        opts: NodeOptions,
+        opts: TrackerManagerOptions,
         streamManager: StreamManager,
         metrics: Metrics,
         subscriber: Subscriber
     ) {
         this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
         this.formStatus = formStatus
-        this.nodeToTracker =  opts.protocols.nodeToTracker
+        this.nodeToTracker =  nodeToTracker
         this.streamManager = streamManager
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.metrics = metrics

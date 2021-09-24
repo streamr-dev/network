@@ -4,7 +4,7 @@ import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
-import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
+import { Status, StreamIdAndPartition } from '../identifiers'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamManager } from './StreamManager'
@@ -14,7 +14,7 @@ import { PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 import { DisconnectionReason } from "../connection/ws/AbstractWsEndpoint"
 import { TrackerId } from './Tracker'
-import { TrackerManager } from './TrackerManager'
+import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 
 const logger = new Logger(module)
 
@@ -31,21 +31,17 @@ export enum Event {
     NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed'
 }
 
-export interface NodeOptions {
+export interface NodeOptions extends TrackerManagerOptions {
     protocols: {
         nodeToNode: NodeToNode
         nodeToTracker: NodeToTracker
     }
     peerInfo: PeerInfo
-    trackers: Array<TrackerInfo>
     metricsContext?: MetricsContext
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
     disconnectionWaitTime?: number
     nodeConnectTimeout?: number
-    instructionRetryInterval?: number
-    rttUpdateTimeout?: number
-    trackerConnectionMaintenanceInterval?: number
 }
 
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
@@ -84,13 +80,6 @@ export class Node extends EventEmitter {
     constructor(opts: NodeOptions) {
         super()
 
-        if (!(opts.protocols.nodeToTracker instanceof NodeToTracker) || !(opts.protocols.nodeToNode instanceof NodeToNode)) {
-            throw new Error('Provided protocols are not correct')
-        }
-        if (!opts.trackers) {
-            throw new Error('No trackers given')
-        }
-
         this.nodeToNode = opts.protocols.nodeToNode
         this.peerInfo = opts.peerInfo
 
@@ -117,7 +106,7 @@ export class Node extends EventEmitter {
             .addFixedMetric('latency')
 
         this.streams = new StreamManager()
-        this.trackerManager = new TrackerManager(this.formStatus.bind(this), opts, this.streams, this.metrics, {
+        this.trackerManager = new TrackerManager(opts.protocols.nodeToTracker, this.formStatus.bind(this), opts, this.streams, this.metrics, {
             subscribeToStreamIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
             subscribeToStreamsOnNode: this.subscribeToStreamsOnNode.bind(this),
             unsubscribeFromStreamOnNode: this.unsubscribeFromStreamOnNode.bind(this)
