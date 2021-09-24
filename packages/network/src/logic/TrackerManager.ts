@@ -117,7 +117,8 @@ export class TrackerManager {
     }
 
     private getStreamsForTracker(trackerId: TrackerId): Array<StreamIdAndPartition> {
-        return [...this.streamManager.getStreamKeys()].map((key) => StreamIdAndPartition.fromKey(key))
+        return [...this.streamManager.getStreamKeys()]
+            .map((key) => StreamIdAndPartition.fromKey(key))
             .filter((streamId) => this.getTrackerId(streamId) === trackerId)
     }
 
@@ -132,7 +133,7 @@ export class TrackerManager {
         return false
     }
 
-    private async sendStatus(streamId: StreamIdAndPartition, trackerId: TrackerId) {
+    private async sendStatus(streamId: StreamIdAndPartition, trackerId: TrackerId): Promise<void> {
         const status = this.formStatus(streamId, this.shouldIncludeRttInfo(trackerId))
         try {
             await this.nodeToTracker.sendStatus(trackerId, status)
