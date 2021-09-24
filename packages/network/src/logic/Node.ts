@@ -177,7 +177,12 @@ export class Node extends EventEmitter {
         }
     }
 
-    subscribeToStreamsOnNode(nodeIds: NodeId[], streamId: StreamIdAndPartition, trackerId: TrackerId, reattempt: boolean): Promise<PromiseSettledResult<NodeId>[]> {
+    subscribeToStreamsOnNode(
+        nodeIds: NodeId[],
+        streamId: StreamIdAndPartition,
+        trackerId: TrackerId,
+        reattempt: boolean
+    ): Promise<PromiseSettledResult<NodeId>[]> {
         const subscribePromises = nodeIds.map(async (nodeId) => {
             await promiseTimeout(this.nodeConnectTimeout, 
                 this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
@@ -387,7 +392,7 @@ export class Node extends EventEmitter {
             const peerIds = this.nodeToNode.getAllConnectionNodeIds()
             const unusedConnections = peerIds.filter((peer) => !this.isNodePresent(peer))
             if (unusedConnections.length > 0) {
-                this.logger.debug(`Disconnecting from ${unusedConnections.length} unused connections`)
+                logger.debug(`Disconnecting from ${unusedConnections.length} unused connections`)
                 unusedConnections.forEach((peerId) => {
                     this.nodeToNode.disconnectFromNode(peerId, 'Unused connection')
                 })

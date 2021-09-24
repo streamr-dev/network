@@ -22,7 +22,12 @@ export class TrackerConnector {
     private readonly maintenanceInterval: number
     private connectionStates: Map<TrackerId,ConnectionState>
 
-    constructor(streamManager: StreamManager, nodeToTracker: NodeToTracker, trackerRegistry: Utils.TrackerRegistry<TrackerInfo>, maintenanceInterval: number) {
+    constructor(
+        streamManager: StreamManager,
+        nodeToTracker: NodeToTracker,
+        trackerRegistry: Utils.TrackerRegistry<TrackerInfo>,
+        maintenanceInterval: number
+    ) {
         this.streamManager = streamManager
         this.nodeToTracker = nodeToTracker
         this.trackerRegistry = trackerRegistry
@@ -67,6 +72,7 @@ export class TrackerConnector {
                     logger.info('Connected to tracker %s', id)
                     this.connectionStates.set(id, ConnectionState.SUCCESS)
                 }
+                return
             })
             .catch((err) => {
                 if (this.connectionStates.get(id) !== ConnectionState.ERROR) {

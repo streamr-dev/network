@@ -16,7 +16,12 @@ type FormStatusFn = (streamId: StreamIdAndPartition, includeRtt: boolean) => Sta
 
 interface Subscriber {
     subscribeToStreamIfHaveNotYet: (streamId: StreamIdAndPartition, sendStatus?: boolean) => void
-    subscribeToStreamsOnNode: (nodeIds: NodeId[], streamId: StreamIdAndPartition, trackerId: TrackerId, reattempt: boolean) => Promise<PromiseSettledResult<NodeId>[]>,
+    subscribeToStreamsOnNode: (
+        nodeIds: NodeId[],
+        streamId: StreamIdAndPartition,
+        trackerId: TrackerId,
+        reattempt: boolean
+    ) => Promise<PromiseSettledResult<NodeId>[]>,
     unsubscribeFromStreamOnNode: (node: NodeId, streamId: StreamIdAndPartition, sendStatus?: boolean) => void
 }
 
@@ -127,7 +132,11 @@ export class TrackerManager {
         }
     }
 
-    private async handleTrackerInstruction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId, reattempt = false): Promise<void> {
+    private async handleTrackerInstruction(
+        instructionMessage: TrackerLayer.InstructionMessage,
+        trackerId: TrackerId,
+        reattempt = false
+    ): Promise<void> {
         const streamId = StreamIdAndPartition.fromMessage(instructionMessage)
         const { nodeIds, counter } = instructionMessage
 
