@@ -4,7 +4,7 @@ import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
-import { Status, StreamIdAndPartition } from '../identifiers'
+import { StreamIdAndPartition } from '../identifiers'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamManager } from './StreamManager'
@@ -104,11 +104,23 @@ export class Node extends EventEmitter {
             .addFixedMetric('latency')
 
         this.streams = new StreamManager()
-        this.trackerManager = new TrackerManager(opts.protocols.nodeToTracker, this.formStatus.bind(this), opts, this.streams, this.metrics, {
-            subscribeToStreamIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
-            subscribeToStreamsOnNode: this.subscribeToStreamsOnNode.bind(this),
-            unsubscribeFromStreamOnNode: this.unsubscribeFromStreamOnNode.bind(this)
-        })
+        this.trackerManager = new TrackerManager(
+            opts.protocols.nodeToTracker,
+            opts,
+            this.streams,
+            this.metrics,
+            (includeRtt) => ({
+                started: this.started,
+                location: this.peerInfo.location,
+                extra: this.extraMetadata,
+                rtts: includeRtt ? this.nodeToNode.getRtts() : null
+            }),
+            {
+                subscribeToStreamIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
+                subscribeToStreamsOnNode: this.subscribeToStreamsOnNode.bind(this),
+                unsubscribeFromStreamOnNode: this.unsubscribeFromStreamOnNode.bind(this)
+            }
+        )
         this.messageBuffer = new MessageBuffer(this.bufferTimeoutInMs, this.bufferMaxSize, (streamId) => {
             logger.trace(`failed to deliver buffered messages of stream ${streamId}`)
         })
@@ -302,17 +314,6 @@ export class Node extends EventEmitter {
 
         this.messageBuffer.clear()
         this.nodeToNode.stop()
-    }
-
-    private formStatus(streamId: StreamIdAndPartition, includeRtt: boolean): Status {
-        return {
-            streams: this.streams.getStreamState(streamId),
-            started: this.started,
-            rtts: includeRtt ? this.nodeToNode.getRtts() : null,
-            location: this.peerInfo.location,
-            singleStream: true,
-            extra: this.extraMetadata
-        }
     }
 
     private subscribeToStreamOnNode(node: NodeId, streamId: StreamIdAndPartition, sendStatus = true): NodeId {

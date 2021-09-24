@@ -1,5 +1,5 @@
 import { TrackerLayer, Utils } from 'streamr-client-protocol'
-import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
+import { Location, Rtts, StreamIdAndPartition, TrackerInfo } from '../identifiers'
 import { TrackerId } from './Tracker'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
@@ -12,7 +12,12 @@ import { Metrics } from '../helpers/MetricsContext'
 
 const logger = new Logger(module)
 
-type FormStatusFn = (streamId: StreamIdAndPartition, includeRtt: boolean) => Status
+interface NodeDescriptor {
+    started: string
+    location: Location
+    extra: Record<string, unknown>
+    rtts: Readonly<Rtts> | null
+}
 
 interface Subscriber {
     subscribeToStreamIfHaveNotYet: (streamId: StreamIdAndPartition, sendStatus?: boolean) => void
@@ -25,6 +30,8 @@ interface Subscriber {
     unsubscribeFromStreamOnNode: (node: NodeId, streamId: StreamIdAndPartition, sendStatus?: boolean) => void
 }
 
+type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
+
 export interface TrackerManagerOptions {
     trackers: Array<TrackerInfo>
     rttUpdateTimeout?: number
@@ -36,32 +43,32 @@ export class TrackerManager {
     private readonly rttUpdateTimeoutsOnTrackers: Record<TrackerId, NodeJS.Timeout> = {}
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private readonly trackerConnector: TrackerConnector
-    private readonly formStatus: FormStatusFn
     private readonly nodeToTracker: NodeToTracker
     private readonly streamManager: StreamManager
     private readonly rttUpdateInterval: number
     private readonly instructionThrottler: InstructionThrottler
     private readonly instructionRetryManager: InstructionRetryManager
     private readonly metrics: Metrics
+    private readonly getNodeDescriptor: GetNodeDescriptor
     private readonly subscriber: Subscriber
 
     constructor(
         nodeToTracker: NodeToTracker,
-        formStatus: FormStatusFn,
         opts: TrackerManagerOptions,
         streamManager: StreamManager,
         metrics: Metrics,
+        getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
     ) {
-        this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
-        this.formStatus = formStatus
         this.nodeToTracker =  nodeToTracker
         this.streamManager = streamManager
-        this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
+        this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
         this.metrics = metrics
             .addRecordedMetric('unexpectedTrackerInstructions')
             .addRecordedMetric('trackerInstructions')
+        this.getNodeDescriptor = getNodeDescriptor
         this.subscriber = subscriber
+        this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.trackerConnector = new TrackerConnector(
             streamManager,
             this.nodeToTracker,
@@ -134,7 +141,12 @@ export class TrackerManager {
     }
 
     private async sendStatus(streamId: StreamIdAndPartition, trackerId: TrackerId): Promise<void> {
-        const status = this.formStatus(streamId, this.shouldIncludeRttInfo(trackerId))
+        const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
+        const status = {
+            streams: this.streamManager.getStreamState(streamId),
+            singleStream: true,
+            ...nodeDescriptor
+        }
         try {
             await this.nodeToTracker.sendStatus(trackerId, status)
             logger.trace('sent status %j to tracker %s', status.streams, trackerId)
