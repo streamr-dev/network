@@ -1,6 +1,6 @@
 {
   "name": "streamr-test-utils",
-  "version": "1.3.3",
+  "version": "2.0.0",
   "description": "a collection of Node.js utilities for dealing with asynchronous behavior in jest/mocha tests",
   "main": "./dist/utils.js",
   "types": "./dist/utils.d.ts",
@@ -22,7 +22,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:streamr-dev/streamr-test-utils.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/test-utils"
   },
   "author": "Streamr <contact@streamr.com>",
   "license": "Apache-2.0",

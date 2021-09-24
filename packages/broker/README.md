@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://streamr.network">
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
+  </a>
+</p>
+
 # streamr-broker
 
 Main executable for running a broker node in Streamr Network.
@@ -9,6 +15,7 @@ The broker node extends the minimal network node provided by the
 
 ## Table of Contents
 - [Install](#install)
+- [Configure](#configure)
 - [Run](#run)
 - [Develop](#develop)
 - [Release](#release)
@@ -22,6 +29,10 @@ To install streamr-broker:
 ```bash
 npm install streamr-broker --global
 ```
+
+## Configure
+
+To enable the features you want, configure some [plugins](plugins.md).
 
 ## Run
 It is convenient to run a broker node as part of the full Streamr stack. Check out

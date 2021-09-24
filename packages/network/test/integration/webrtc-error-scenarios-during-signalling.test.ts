@@ -4,7 +4,7 @@ import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
+import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 
 /**
  * Tests for error scenarios during signalling
@@ -17,22 +17,28 @@ describe('Signalling error scenarios', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 35115,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: 35115
+            },
+            id: 'tracker',
+            trackerPingInterval: 3000
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getUrl()],
-            disconnectionWaitTime: 2000,
-            newWebrtcConnectionTimeout: 4000
+            trackers: [trackerInfo],
+            disconnectionWaitTime: 4000,
+            newWebrtcConnectionTimeout: 8000,
+            trackerPingInterval: 3000
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getUrl()],
-            disconnectionWaitTime: 2000,
-            newWebrtcConnectionTimeout: 4000
+            trackers: [trackerInfo],
+            disconnectionWaitTime: 4000,
+            newWebrtcConnectionTimeout: 8000,
+            trackerPingInterval: 3000
         })
 
         nodeOne.start()
@@ -50,7 +56,7 @@ describe('Signalling error scenarios', () => {
     it('connection recovers after timeout if one endpoint closes during signalling', async () => {
         await runAndWaitForEvents([ ()=> { nodeOne.subscribe(streamId, 0) }, () => { nodeTwo.subscribe(streamId, 0) } ],
             // @ts-expect-error private field
-            [nodeTwo.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED]
+            [nodeTwo.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED]
         )
 
         // @ts-expect-error private field
@@ -69,9 +75,9 @@ describe('Signalling error scenarios', () => {
         
         await runAndWaitForEvents([ () => { nodeOne.subscribe(streamId, 0)}, () => { nodeTwo.subscribe(streamId, 0) } ], [
             // @ts-expect-error private field
-            [ nodeTwo.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED],
+            [ nodeTwo.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED],
             // @ts-expect-error private field
-            [nodeOne.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED]
+            [nodeOne.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED]
         ])
 
         await runAndWaitForEvents([
@@ -107,26 +113,26 @@ describe('Signalling error scenarios', () => {
 
         await runAndWaitForEvents([ () => { nodeOne.subscribe('stream-id', 0) }, () => { nodeTwo.subscribe('stream-id', 0) }] , [
             // @ts-expect-error private field
-            [nodeOne.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED],
+            [nodeOne.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED],
             // @ts-expect-error private field
-            [nodeTwo.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED]
+            [nodeTwo.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED]
         ])
 
         await runAndWaitForEvents([ 
             // @ts-expect-error private field
-            () => { nodeOne.trackerNode.endpoint.close('tracker') },
+            () => { nodeOne.nodeToTracker.endpoint.close('tracker') },
             // @ts-expect-error private field
-            () => { nodeTwo.trackerNode.endpoint.close('tracker') }], [
+            () => { nodeTwo.nodeToTracker.endpoint.close('tracker') }], [
             // @ts-expect-error private field
-            [ nodeOne.trackerNode, TrackerNodeEvent.TRACKER_DISCONNECTED ],
+            [ nodeOne.nodeToTracker, NodeToTrackerEvent.TRACKER_DISCONNECTED ],
             // @ts-expect-error private field
-            [ nodeTwo.trackerNode, TrackerNodeEvent.TRACKER_DISCONNECTED ],
+            [ nodeTwo.nodeToTracker, NodeToTrackerEvent.TRACKER_DISCONNECTED ],
             // @ts-expect-error private field
-            [ nodeOne.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER ],
+            [ nodeOne.nodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER ],
             // @ts-expect-error private field
-            [ nodeTwo.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER ],
-        ])
-    })
+            [ nodeTwo.nodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER ],
+        ], 15000)
+    }, 20000)
 
     it('nodes recover if one signaller connection fails during signalling', async () => {
 
@@ -134,23 +140,23 @@ describe('Signalling error scenarios', () => {
             () => { nodeOne.subscribe('stream-id', 0) },
             () => { nodeTwo.subscribe('stream-id', 0) } ], [
             // @ts-expect-error private field
-            [ nodeOne.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED ],
+            [ nodeOne.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED ],
             // @ts-expect-error private field
-            [ nodeTwo.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED ]
+            [ nodeTwo.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED ]
         ], 9997)
 
         // @ts-expect-error private field
-        await runAndWaitForEvents( () => {  nodeOne.trackerNode.endpoint.close('tracker') }, [
+        await runAndWaitForEvents( () => {  nodeOne.nodeToTracker.endpoint.close('tracker') }, [
             // @ts-expect-error private field
-            [nodeOne.trackerNode, TrackerNodeEvent.TRACKER_DISCONNECTED ],
+            [nodeOne.nodeToTracker, NodeToTrackerEvent.TRACKER_DISCONNECTED ],
             // @ts-expect-error private field
-            [nodeOne.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER],
-            [nodeOne, NodeEvent.NODE_CONNECTED, 10001],
-            [nodeTwo, NodeEvent.NODE_CONNECTED, 9998]
-        ], 9996)
+            [nodeOne.nodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER],
+            [nodeOne, NodeEvent.NODE_CONNECTED, 15000],
+            [nodeTwo, NodeEvent.NODE_CONNECTED, 15000]
+        ], 20000)
         // @ts-expect-error private field
         expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual(['node-2'])
         // @ts-expect-error private field
         expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
-    }, 20000)
+    }, 30000)
 })

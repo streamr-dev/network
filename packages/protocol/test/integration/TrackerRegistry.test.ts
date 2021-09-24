@@ -10,7 +10,7 @@ describe('TrackerRegistry', () => {
                 contractAddress: 'address', jsonRpcProvider
             })
         } catch (e) {
-            expect(e.toString()).toContain('Error: network does not support ENS')
+            expect(e.toString()).toContain('ENS')
             done()
         }
     })
@@ -45,14 +45,17 @@ describe('TrackerRegistry', () => {
 
             expect(trackerRegistry.getAllTrackers()).toStrictEqual([
                 {
+                    id: '0xb9e7cEBF7b03AE26458E32a059488386b05798e8',
                     http: 'http://10.200.10.1:30301',
                     ws: 'ws://10.200.10.1:30301'
                 },
                 {
+                    id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
                     http: 'http://10.200.10.1:30302',
                     ws: 'ws://10.200.10.1:30302'
                 },
                 {
+                    id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
                     http: 'http://10.200.10.1:30303',
                     ws: 'ws://10.200.10.1:30303'
                 }
@@ -102,16 +105,19 @@ describe('TrackerRegistry', () => {
 
             // 1->1, 2->2, 3->3 coincidence
             expect(trackerRegistry.getTracker('stream-1')).toEqual({
+                id: '0xb9e7cEBF7b03AE26458E32a059488386b05798e8',
                 http: 'http://10.200.10.1:30301',
                 ws: 'ws://10.200.10.1:30301'
             })
             expect(trackerRegistry.getTracker('stream-2')).toEqual({
-                http: 'http://10.200.10.1:30302',
-                ws: 'ws://10.200.10.1:30302'
-            })
-            expect(trackerRegistry.getTracker('stream-3')).toEqual({
+                id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
                 http: 'http://10.200.10.1:30303',
                 ws: 'ws://10.200.10.1:30303'
+            })
+            expect(trackerRegistry.getTracker('stream-3')).toEqual({
+                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
+                http: 'http://10.200.10.1:30302',
+                ws: 'ws://10.200.10.1:30302'
             })
         })
     })
@@ -119,19 +125,23 @@ describe('TrackerRegistry', () => {
     describe('createTrackerRegistry', () => {
         test('creates tracker registry', () => {
             const trackerRegistry = createTrackerRegistry([{
+                id: '',
                 http: 'http://10.200.10.1:30301',
                 ws: 'ws://10.200.10.1:30301'
             }, {
+                id: '',
                 http: 'http://10.200.10.1:30302',
                 ws: 'ws://10.200.10.1:30302'
             }])
 
             expect(trackerRegistry.getAllTrackers()).toStrictEqual([
                 {
+                    id: '',
                     http: 'http://10.200.10.1:30301',
                     ws: 'ws://10.200.10.1:30301'
                 },
                 {
+                    id: '',
                     http: 'http://10.200.10.1:30302',
                     ws: 'ws://10.200.10.1:30302'
                 }

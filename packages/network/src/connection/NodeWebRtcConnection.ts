@@ -66,7 +66,7 @@ function DataChannelEmitter(dataChannel: DataChannel) {
     return emitter
 }
 
-export const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)
     },
@@ -74,6 +74,8 @@ export const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freez
         nodeDataChannel.cleanup()
     }
 })
+
+export default NodeWebRtcConnectionFactory
 
 export class NodeWebRtcConnection extends WebRtcConnection {
     private readonly logger: Logger

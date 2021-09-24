@@ -7,8 +7,11 @@ import { RelayMessage, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
-import { ClientWsEndpoint } from "../connection/ws/ClientWsEndpoint"
-import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
+import { DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
+import { AbstractClientWsEndpoint } from "../connection/ws/AbstractClientWsEndpoint"
+import { AbstractWsConnection } from "../connection/ws/AbstractWsConnection"
+import { NodeId } from '../logic/Node'
+import { TrackerId } from '../logic/Tracker'
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
@@ -23,22 +26,22 @@ eventPerType[TrackerLayer.TrackerMessage.TYPES.InstructionMessage] = Event.TRACK
 eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 eventPerType[TrackerLayer.TrackerMessage.TYPES.ErrorMessage] = Event.RTC_ERROR_RECEIVED
 
-export interface TrackerNode {
-    on(event: Event.CONNECTED_TO_TRACKER, listener: (trackerId: string) => void): this
-    on(event: Event.TRACKER_DISCONNECTED, listener: (trackerId: string) => void): this
-    on(event: Event.TRACKER_INSTRUCTION_RECEIVED, listener: (msg: TrackerLayer.InstructionMessage, trackerId: string) => void): this
-    on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: RelayMessage, trackerId: string) => void): this
-    on(event: Event.RTC_ERROR_RECEIVED, listener: (msg: TrackerLayer.ErrorMessage, trackerId: string) => void): this
+export interface NodeToTracker {
+    on(event: Event.CONNECTED_TO_TRACKER, listener: (trackerId: TrackerId) => void): this
+    on(event: Event.TRACKER_DISCONNECTED, listener: (trackerId: TrackerId) => void): this
+    on(event: Event.TRACKER_INSTRUCTION_RECEIVED, listener: (msg: TrackerLayer.InstructionMessage, trackerId: TrackerId) => void): this
+    on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: RelayMessage, trackerId: TrackerId) => void): this
+    on(event: Event.RTC_ERROR_RECEIVED, listener: (msg: TrackerLayer.ErrorMessage, trackerId: TrackerId) => void): this
 }
 
 export type UUID = string
 
-export class TrackerNode extends EventEmitter {
-    private readonly endpoint: ClientWsEndpoint
+export class NodeToTracker extends EventEmitter {
+    private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
     private readonly logger: Logger
 
     // ServerWsEndpoint
-    constructor(endpoint: ClientWsEndpoint) {
+    constructor(endpoint: AbstractClientWsEndpoint<AbstractWsConnection>) {
         super()
         this.endpoint = endpoint
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
@@ -47,7 +50,7 @@ export class TrackerNode extends EventEmitter {
         this.logger = new Logger(module)
     }
 
-    async sendStatus(trackerId: string, status: Status): Promise<UUID> {
+    async sendStatus(trackerId: TrackerId, status: Status): Promise<UUID> {
         const requestId = uuidv4()
         await this.send(trackerId, new TrackerLayer.StatusMessage({
             requestId,
@@ -57,8 +60,8 @@ export class TrackerNode extends EventEmitter {
     }
 
     async sendRtcOffer(
-        trackerId: string,
-        targetNode: string, 
+        trackerId: TrackerId,
+        targetNode: NodeId, 
         connectionId: string,
         originatorInfo: PeerInfo, 
         description: string
@@ -78,8 +81,8 @@ export class TrackerNode extends EventEmitter {
     }
 
     async sendRtcAnswer(
-        trackerId: string,
-        targetNode: string, 
+        trackerId: TrackerId,
+        targetNode: NodeId, 
         connectionId: string,
         originatorInfo: PeerInfo, 
         description: string
@@ -99,8 +102,8 @@ export class TrackerNode extends EventEmitter {
     }
 
     async sendRtcIceCandidate(
-        trackerId: string,
-        targetNode: string, 
+        trackerId: TrackerId,
+        targetNode: NodeId, 
         connectionId: string,
         originatorInfo: PeerInfo,
         candidate: string, 
@@ -121,7 +124,7 @@ export class TrackerNode extends EventEmitter {
         return requestId
     }
 
-    async sendRtcConnect(trackerId: string, targetNode: string, originatorInfo: PeerInfo): Promise<UUID> {
+    async sendRtcConnect(trackerId: TrackerId, targetNode: NodeId, originatorInfo: PeerInfo): Promise<UUID> {
         const requestId = uuidv4()
         await this.send(trackerId, new TrackerLayer.RelayMessage({
             requestId,
@@ -133,11 +136,11 @@ export class TrackerNode extends EventEmitter {
         return requestId
     }
 
-    async send<T>(receiverNodeId: string, message: T & TrackerLayer.TrackerMessage): Promise<void> {
-        await this.endpoint.send(receiverNodeId, message.serialize())
+    async send<T>(receiverTrackerId: TrackerId, message: T & TrackerLayer.TrackerMessage): Promise<void> {
+        await this.endpoint.send(receiverTrackerId, message.serialize())
     }
 
-    getServerUrlByTrackerId(trackerId: string): string | undefined {
+    getServerUrlByTrackerId(trackerId: TrackerId): string | undefined {
         return this.endpoint.getServerUrlByPeerId(trackerId)
     }
 
@@ -156,8 +159,12 @@ export class TrackerNode extends EventEmitter {
         }
     }
 
-    connectToTracker(trackerAddress: string): Promise<string> {
-        return this.endpoint.connect(trackerAddress)
+    connectToTracker(trackerAddress: string, trackerPeerInfo: PeerInfo): Promise<TrackerId> {
+        return this.endpoint.connect(trackerAddress, trackerPeerInfo)
+    }
+
+    disconnectFromTracker(trackerId: string): void {
+        this.endpoint.close(trackerId, 1000, DisconnectionReason.NO_SHARED_STREAMS)
     }
 
     onPeerConnected(peerInfo: PeerInfo): void {

@@ -22,16 +22,19 @@ describe('ping-pong test between broker and clients', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker'
         })
     })
 
     beforeEach(async () => {
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: '' }
         networkNode = createNetworkNode({
             id: 'networkNode',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
         networkNode.start()
         metricsContext = new MetricsContext(null as any)

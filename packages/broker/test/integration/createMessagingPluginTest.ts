@@ -57,9 +57,11 @@ export const createMessagingPluginTest = <T>(
 
         beforeAll(async () => {
             tracker = await startTracker({
-                id: 'tracker',
-                host: '127.0.0.1',
-                port: ports.tracker,
+                id: 'tracker-1',
+                listen: {
+                    hostname: '127.0.0.1',
+                    port: ports.tracker
+                },
             })
             broker = await startBroker({
                 name: 'broker',
@@ -81,7 +83,7 @@ export const createMessagingPluginTest = <T>(
 
         afterAll(async () => {
             await Promise.allSettled([
-                broker.close(),
+                broker.stop(),
                 tracker.stop()
             ])
         })

@@ -1,10 +1,10 @@
 import { EventEmitter } from "events"
 import { Logger } from "../../helpers/Logger"
-import { PeerInfo } from "../PeerInfo"
+import { PeerId, PeerInfo } from "../PeerInfo"
 import { Metrics, MetricsContext } from "../../helpers/MetricsContext"
 import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
-import { WsConnection } from './WsConnection'
+import { AbstractWsConnection } from './AbstractWsConnection'
 
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
@@ -16,8 +16,9 @@ export enum Event {
 
 export enum DisconnectionCode {
     GRACEFUL_SHUTDOWN = 1000,
-    MISSING_REQUIRED_PARAMETER = 1002,
-    DEAD_CONNECTION = 1003,
+    FAILED_HANDSHAKE = 4000,
+    DEAD_CONNECTION = 4001,
+    DUPLICATE_SOCKET = 4002
 }
 
 export enum DisconnectionReason {
@@ -37,26 +38,29 @@ export class UnknownPeerError extends Error {
     }
 }
 
-export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEmitter {
+export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends EventEmitter {
     private readonly pingPongWs: PingPongWs
-    private readonly connectionById: Map<string, C> = new Map<string, C>()
+    private readonly connectionById: Map<PeerId, C> = new Map<PeerId, C>()
+    private stopped = false
 
+    protected handshakeTimeoutRefs: Record<PeerId,NodeJS.Timeout>
     protected readonly metrics: Metrics
     protected readonly peerInfo: PeerInfo
     protected readonly logger: Logger
-
-    public static PEER_ID_HEADER = 'streamr-peer-id'
+    protected readonly handshakeTimer: number
 
     protected constructor(
         peerInfo: PeerInfo,
         metricsContext: MetricsContext = new MetricsContext(peerInfo.peerId),
-        pingInterval = 5 * 1000
+        pingInterval = 60 * 1000
     ) {
         super()
 
         this.peerInfo = peerInfo
         this.logger = new Logger(module)
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
+        this.handshakeTimeoutRefs = {}
+        this.handshakeTimer = 15 * 1000
 
         this.metrics = metricsContext.create('WsEndpoint')
             .addRecordedMetric('inSpeed')
@@ -81,7 +85,10 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
             })
     }
 
-    async send(recipientId: string, message: string): Promise<void> {
+    async send(recipientId: PeerId, message: string): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
             try {
@@ -89,7 +96,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
                 await connection.send(message)
             } catch (err) {
                 this.metrics.record('sendFailed', 1)
-                this.logger.warn('sending to %s failed, reason %s', recipientId, err)
+                this.logger.debug('sending to %s failed, reason %s', recipientId, err)
                 connection.terminate()
                 throw err
             }
@@ -105,7 +112,7 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
         }
     }
 
-    close(recipientId: string, code: DisconnectionCode, reason: DisconnectionReason): void {
+    close(recipientId: PeerId, code: DisconnectionCode, reason: DisconnectionReason): void {
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
             this.metrics.record('close', 1)
@@ -119,7 +126,12 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     }
 
     stop(): Promise<void> {
+        this.stopped = true
         this.pingPongWs.stop()
+        Object.keys(this.handshakeTimeoutRefs).map((id) => {
+            this.clearHandshake(id)
+        })
+        this.handshakeTimeoutRefs = {}
         return this.doStop()
     }
 
@@ -127,12 +139,19 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
         return this.pingPongWs.getRtts()
     }
 
-    getPeers(): ReadonlyMap<string, C> {
+    getPeers(): ReadonlyMap<PeerId, C> {
         return this.connectionById
     }
 
     getPeerInfos(): PeerInfo[] {
         return this.getConnections().map((connection) => connection.getPeerInfo())
+    }
+
+    clearHandshake(id: PeerId): void {
+        if (this.handshakeTimeoutRefs[id]) {
+            clearTimeout(this.handshakeTimeoutRefs[id])
+            delete this.handshakeTimeoutRefs[id]
+        }
     }
 
     /**
@@ -149,6 +168,9 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
      * Implementer should invoke this whenever a new connection is formed
      */
     protected onNewConnection(connection: C): void {
+        if (this.stopped) {
+            return
+        }
         const peerInfo = connection.getPeerInfo()
         connection.setBackPressureHandlers(
             () =>  {
@@ -167,7 +189,10 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
     /**
      * Implementer should invoke this whenever a message is received.
      */
-    protected onReceive(connection: WsConnection, message: string): void {
+    protected onReceive(connection: AbstractWsConnection, message: string): void {
+        if (this.stopped) {
+            return
+        }
         this.metrics.record('inSpeed', message.length)
         this.metrics.record('msgSpeed', 1)
         this.metrics.record('msgInSpeed', 1)
@@ -179,10 +204,6 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
      * Implementer should invoke this whenever a connection is closed.
      */
     protected onClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void {
-        if (reason === DisconnectionReason.DUPLICATE_SOCKET) {
-            this.metrics.record('open:duplicateSocket', 1)
-        }
-
         this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
         this.connectionById.delete(connection.getPeerId())
@@ -193,11 +214,11 @@ export abstract class AbstractWsEndpoint<C extends WsConnection> extends EventEm
         }
     }
 
-    protected getConnections(): Array<C> {
+    protected getConnections(): C[] {
         return [...this.connectionById.values()]
     }
 
-    protected getConnectionByPeerId(peerId: string): C | undefined {
+    protected getConnectionByPeerId(peerId: PeerId): C | undefined {
         return this.connectionById.get(peerId)
     }
 

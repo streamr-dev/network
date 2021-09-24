@@ -1,17 +1,17 @@
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
-import { ClientWsEndpoint } from '../../src/connection/ws/ClientWsEndpoint'
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
 describe('WsEndpoint: back pressure handling', () => {
-    let epClient: ClientWsEndpoint
+    let epClient: NodeClientWsEndpoint
     let epServer: ServerWsEndpoint
-
+    const serverPeerInfo = PeerInfo.newTracker('epServer')
     beforeEach(async () => {
-        epClient = new ClientWsEndpoint(PeerInfo.newNode('epClient'))
-        epServer = await startServerWsEndpoint('127.0.0.1', 43975, PeerInfo.newTracker('epServer'))
-        await epClient.connect('ws://127.0.0.1:43975')
+        epClient = new NodeClientWsEndpoint(PeerInfo.newNode('epClient'))
+        epServer = await startServerWsEndpoint('127.0.0.1', 43975, serverPeerInfo)
+        await epClient.connect('ws://127.0.0.1:43975', serverPeerInfo)
     })
 
     afterEach(async () => {
@@ -29,7 +29,7 @@ describe('WsEndpoint: back pressure handling', () => {
             done()
         })
         while (!hitHighBackPressure) {
-            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff').catch(() => {})
         }
     })
 
@@ -49,7 +49,7 @@ describe('WsEndpoint: back pressure handling', () => {
             })
         })
         while (!hitHighBackPressure) {
-            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff')
+            epClient.send('epServer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccdddddddddddeeeeeeeeffffff').catch(() => {})
         }
     })
 })

@@ -1,22 +1,25 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
-import { Location } from './identifiers'
+import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
-import { ServerWsEndpoint, startWebSocketServer } from './connection/ws/ServerWsEndpoint'
-import { Tracker } from './logic/Tracker'
+import { HttpServerConfig, ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
+import { TopologyStabilizationOptions, Tracker } from './logic/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
-import { TrackerNode } from './protocol/TrackerNode'
+import { NodeToTracker } from './protocol/NodeToTracker'
 import { RtcSignaller } from './logic/RtcSignaller'
 import { NodeToNode } from './protocol/NodeToNode'
 import { NetworkNode } from './NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
-import { ClientWsEndpoint } from './connection/ws/ClientWsEndpoint'
+import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
-import { NodeWebRtcConnectionFactory } from "./connection/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from "./connection/NodeWebRtcConnection"
+import { NodeId } from './logic/Node'
+
+require('setimmediate')
 
 export {
     Location,
@@ -29,47 +32,50 @@ export {
 }
 
 export interface AbstractNodeOptions {
-    id?: string
+    id?: NodeId
     name?: string
     location?: Location | null
     metricsContext?: MetricsContext
-    pingInterval?: number
+    trackerPingInterval?: number
 }
 
 export interface TrackerOptions extends AbstractNodeOptions {
-    host: string
-    port: number
+    listen: HttpServerConfig
     attachHttpEndpoints?: boolean
     maxNeighborsPerNode?: number
     privateKeyFileName?: string
-    certFileName?: string
+    certFileName?: string,
+    topologyStabilization?: TopologyStabilizationOptions
 }
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
-    trackers: string[],
+    trackers: TrackerInfo[],
     disconnectionWaitTime?: number,
+    peerPingInterval?: number
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
-    stunUrls?: string[]
+    stunUrls?: string[],
+    rttUpdateTimeout?: number,
+    trackerConnectionMaintenanceInterval?: number
 }
 
 export const startTracker = async ({
-    host,
-    port,
+    listen,
     id = uuidv4(),
     name,
     location,
     attachHttpEndpoints = true,
     maxNeighborsPerNode = 4,
     metricsContext = new MetricsContext(id),
-    pingInterval,
+    trackerPingInterval,
     privateKeyFileName,
     certFileName,
+    topologyStabilization
 }: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
-    const [wss, listenSocket] = await startWebSocketServer(host, port, privateKeyFileName, certFileName)
-    const endpoint = new ServerWsEndpoint(host, port, privateKeyFileName !== undefined, wss, listenSocket, peerInfo, metricsContext, pingInterval)
+    const httpServer = await startHttpServer(listen, privateKeyFileName, certFileName)
+    const endpoint = new ServerWsEndpoint(listen, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, trackerPingInterval)
 
     const tracker = new Tracker({
         peerInfo,
@@ -78,10 +84,11 @@ export const startTracker = async ({
         },
         metricsContext,
         maxNeighborsPerNode,
+        topologyStabilization
     })
 
     if (attachHttpEndpoints) {
-        trackerHttpEndpoints(wss, tracker, metricsContext)
+        trackerHttpEndpoints(httpServer, tracker, metricsContext)
     }
 
     return tracker
@@ -93,18 +100,21 @@ export const createNetworkNode = ({
     location,
     trackers,
     metricsContext = new MetricsContext(id),
-    pingInterval,
+    peerPingInterval,
+    trackerPingInterval,
     disconnectionWaitTime,
     newWebrtcConnectionTimeout,
+    rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
-    stunUrls = ['stun:stun.l.google.com:19302']
+    stunUrls = ['stun:stun.l.google.com:19302'],
+    trackerConnectionMaintenanceInterval
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
-    const endpoint = new ClientWsEndpoint(peerInfo, metricsContext, pingInterval)
-    const trackerNode = new TrackerNode(endpoint)
+    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, trackerPingInterval)
+    const nodeToTracker = new NodeToTracker(endpoint)
 
-    const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
+    const webRtcSignaller = new RtcSignaller(peerInfo, nodeToTracker)
     const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
     const nodeToNode = new NodeToNode(new WebRtcEndpoint(
         peerInfo,
@@ -114,18 +124,21 @@ export const createNetworkNode = ({
         negotiatedProtocolVersions,
         NodeWebRtcConnectionFactory,
         newWebrtcConnectionTimeout,
-        pingInterval,
+        peerPingInterval,
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
     ))
+
     return new NetworkNode({
         peerInfo,
         trackers,
         protocols: {
-            trackerNode,
+            nodeToTracker,
             nodeToNode
         },
         metricsContext,
-        disconnectionWaitTime
+        disconnectionWaitTime,
+        rttUpdateTimeout,
+        trackerConnectionMaintenanceInterval
     })
 }

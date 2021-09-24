@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import { Logger } from '../helpers/Logger'
-import { PeerInfo } from './PeerInfo'
+import { PeerId, PeerInfo } from './PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
@@ -49,6 +49,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly bufferThresholdHigh: number
     private readonly maxMessageSize
 
+    private statusReportTimer?: NodeJS.Timeout
+
     constructor(
         peerInfo: PeerInfo,
         stunUrls: string[],
@@ -57,7 +59,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         negotiatedProtocolVersions: NegotiatedProtocolVersions,
         connectionFactory: WebRtcConnectionFactory,
         newConnectionTimeout = 15000,
-        pingInterval = 2 * 1000,
+        pingInterval = 5 * 1000,
         webrtcDatachannelBufferThresholdLow = 2 ** 15,
         webrtcDatachannelBufferThresholdHigh = 2 ** 17,
         maxMessageSize = 1048576
@@ -106,6 +108,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             .addRecordedMetric('open')
             .addRecordedMetric('close')
             .addRecordedMetric('sendFailed')
+            .addRecordedMetric('failedConnection')
             .addQueriedMetric('connections', () => Object.keys(this.connections).length)
             .addQueriedMetric('pendingConnections', () => {
                 return Object.values(this.connections).filter((c) => !c.isOpen()).length
@@ -116,10 +119,29 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             .addQueriedMetric('messageQueueSize', () => {
                 return Object.values(this.connections).reduce((total, c) => total + c.getQueueSize(), 0)
             })
+
+        this.startConnectionStatusReport()
+    }
+
+    private startConnectionStatusReport(): void {
+        const STATUS_REPORT_INTERVAL_MS = 5 * 60 * 1000
+        this.statusReportTimer = setInterval(() => {
+            let connectedPeerCount = 0
+            const pendingPeerIds = []
+            for (const peerId of Object.keys(this.connections)) {
+                const lastState = this.connections[peerId].getLastState()
+                if (lastState === 'connected') {
+                    connectedPeerCount += 1
+                } else if (lastState === 'connecting') {
+                    pendingPeerIds.push(peerId)
+                }
+            }
+            this.logger.info(`Successfully connected to ${connectedPeerCount} peers. Still trying to connect to the following peers: [${pendingPeerIds.join(', ')}]`)
+        }, STATUS_REPORT_INTERVAL_MS)
     }
 
     private createConnection(
-        targetPeerId: string,
+        targetPeerId: PeerId,
         routerId: string,
         deferredConnectionAttempt: DeferredConnectionAttempt | null
     ) {
@@ -181,6 +203,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
         connection.on('bufferHigh', () => {
             this.emit(Event.HIGH_BACK_PRESSURE, connection.getPeerInfo())
+        })
+        connection.on('failed', () => {
+            this.metrics.record('failedConnection', 1)
         })
         
         return connection
@@ -262,7 +287,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    private replaceConnection(peerId: string, routerId: string, newConnectionId?: string): WebRtcConnection {
+    private replaceConnection(peerId: PeerId, routerId: string, newConnectionId?: string): WebRtcConnection {
         // Close old connection
         const conn = this.connections[peerId]
         let deferredConnectionAttempt = null
@@ -287,10 +312,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     async connect(
-        targetPeerId: string,
+        targetPeerId: PeerId,
         routerId: string,
         trackerInstructed = true
-    ): Promise<string> {
+    ): Promise<PeerId> {
         // Prevent new connections from being opened when WebRtcEndpoint has been closed
         if (this.stopped) {
             return Promise.reject(new WebRtcError('WebRtcEndpoint has been stopped'))
@@ -340,7 +365,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    async send(targetPeerId: string, message: string): Promise<void> {
+    async send(targetPeerId: PeerId, message: string): Promise<void> {
         if (!this.connections[targetPeerId]) {
             throw new WebRtcError(`Not connected to ${targetPeerId}.`)
         }
@@ -370,11 +395,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    close(receiverNodeId: string, reason: string): void {
-        const connection = this.connections[receiverNodeId]
+    close(receiverPeerId: PeerId, reason: string): void {
+        const connection = this.connections[receiverPeerId]
         if (connection) {
-            this.logger.debug('close connection to %s due to %s', NameDirectory.getName(receiverNodeId), reason)
-            delete this.connections[receiverNodeId]
+            this.logger.debug('close connection to %s due to %s', NameDirectory.getName(receiverPeerId), reason)
+            delete this.connections[receiverPeerId]
             connection.close()
         }
     }
@@ -394,11 +419,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         return this.peerInfo
     }
 
-    getNegotiatedMessageLayerProtocolVersionOnNode(peerId: string): number | undefined {
+    getNegotiatedMessageLayerProtocolVersionOnNode(peerId: PeerId): number | undefined {
         return this.negotiatedProtocolVersions.getNegotiatedProtocolVersions(peerId)?.messageLayerVersion
     }
 
-    getNegotiatedControlLayerProtocolVersionOnNode(peerId: string): number | undefined {
+    getNegotiatedControlLayerProtocolVersionOnNode(peerId: PeerId): number | undefined {
         return this.negotiatedProtocolVersions.getNegotiatedProtocolVersions(peerId)?.controlLayerVersion
     }
 
@@ -427,9 +452,14 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.rtcSignaller.setIceCandidateListener(() => {})
         this.rtcSignaller.setErrorListener(() => {})
         this.rtcSignaller.setConnectListener(() => {})
+        clearInterval(this.statusReportTimer!)
         this.removeAllListeners()
         Object.values(connections).forEach((connection) => connection.close())
         Object.values(messageQueues).forEach((queue) => queue.clear())
         this.connectionFactory.cleanUp()
+    }
+
+    getAllConnectionNodeIds(): PeerId[] {
+        return Object.keys(this.connections)
     }
 }

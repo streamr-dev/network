@@ -1,4 +1,4 @@
-import { PeerInfo } from '../PeerInfo'
+import { PeerId, PeerInfo } from '../PeerInfo'
 import {
     DisconnectionCode,
     DisconnectionReason,
@@ -8,7 +8,9 @@ import { Logger } from '../../helpers/Logger'
 export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 export const LOW_BACK_PRESSURE = 1024 * 1024
 
-export abstract class WsConnection {
+export type ReadyState = 0 | 1 | 2 | 3
+
+export abstract class AbstractWsConnection {
     private readonly peerInfo: PeerInfo
     private readonly logger: Logger
     private respondedPong = true
@@ -74,7 +76,7 @@ export abstract class WsConnection {
         return this.rtt
     }
 
-    getPeerId(): string {
+    getPeerId(): PeerId {
         return this.getPeerInfo().peerId
     }
 
@@ -82,5 +84,6 @@ export abstract class WsConnection {
     abstract getBufferedAmount(): number
     abstract send(message: string): Promise<void>
     abstract terminate(): void
+    abstract getReadyState(): ReadyState
     abstract close(code: DisconnectionCode, reason: DisconnectionReason): void
 }

@@ -6,7 +6,8 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streamr-dev/streamr-client-testing.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/cross-client-testing"
   },
   "keywords": [],
   "type": "module",

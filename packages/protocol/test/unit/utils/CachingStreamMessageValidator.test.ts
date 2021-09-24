@@ -108,7 +108,7 @@ describe('CachingStreamMessageValidator', () => {
     it('does not swallow rejections', async () => {
         const testError = new Error('test error')
         isPublisher = sinon.stub().rejects(testError)
-        await assert.rejects(getValidator().validate(msg), (err) => {
+        await assert.rejects(getValidator().validate(msg), (err: Error) => {
             assert(err === testError)
             return true
         })

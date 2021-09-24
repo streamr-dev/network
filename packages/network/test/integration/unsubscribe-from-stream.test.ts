@@ -16,18 +16,22 @@ describe('node unsubscribing from a stream', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30450,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30450
+            },
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+
         nodeA = createNetworkNode({
             id: 'a',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
         nodeB = createNetworkNode({
             id: 'b',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
 

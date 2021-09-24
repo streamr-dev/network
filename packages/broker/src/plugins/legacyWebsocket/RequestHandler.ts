@@ -67,7 +67,7 @@ export class RequestHandler {
     }
 
     handleRequest(connection: Connection, request: Protocol.ControlLayer.ControlMessage): Promise<any> {
-        logger.info(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
+        logger.debug(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
         switch (request.type) {
             case ControlLayer.ControlMessage.TYPES.SubscribeRequest:
                 return this.subscribe(connection, request as SubscribeRequest)

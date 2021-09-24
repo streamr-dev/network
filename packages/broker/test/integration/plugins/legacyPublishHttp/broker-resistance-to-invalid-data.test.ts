@@ -14,8 +14,10 @@ describe('broker resistance to invalid data', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker'
         })
         broker = await startBroker({
@@ -34,7 +36,7 @@ describe('broker resistance to invalid data', () => {
     })
 
     afterEach(async () => {
-        await broker.close()
+        await broker.stop()
         await tracker.stop()
     })
 

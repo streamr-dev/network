@@ -5,64 +5,62 @@
   "type": "object",
   "required": [
     "plugins",
-    "httpServer",
     "ethereumPrivateKey",
-    "network",
-    "reporting",
-    "streamrUrl",
-    "streamrAddress",
-    "storageNodeConfig"
+    "network"
   ],
   "additionalProperties": false,
   "properties": {
     "plugins": {
       "type": "object",
       "description": "Pluging configurations",
-      "required": [],
       "additionalProperties": true
     },
     "httpServer": {
       "type": [
-        "object",
-        "null"
+        "object"
       ],
       "description": "HTTP server configuration",
-      "required": [
-        "port"
-      ],
+      "default": {},
       "additionalProperties": false,
       "properties": {
         "port": {
           "$ref": "#/definitions/port",
-          "description": "Port to start HTTP server on"
+          "description": "Port to start HTTP server on",
+          "default": 7171
         },
         "certFileName": {
           "type": [
             "string",
             "null"
           ],
-          "description": "Path of certificate file to use for SSL"
+          "description": "Path of certificate file to use for SSL",
+          "default": null
         },
         "privateKeyFileName": {
           "type": [
             "string",
             "null"
           ],
-          "description": "Path of private key file to use for SSL"
+          "description": "Path of private key file to use for SSL",
+          "default": null
         }
       }
     },
     "ethereumPrivateKey": {
       "type": "string",
       "description": "Ethereum private key to establish broker identity",
-      "pattern": "^0x[a-f0-9]{64}$"
+      "pattern": "^(0x)?[a-f0-9]{64}$"
+    },
+    "generateSessionId": {
+      "type": "boolean",
+      "description": "Whether to generate a session id that gets attached to node id (or not). Disable for consistent node id.",
+      "default": true
     },
     "network": {
       "type": "object",
       "description": "Network node settings",
       "required": [
         "name",
-        "trackers",
         "location"
       ],
       "additionalProperties": false,
@@ -72,12 +70,40 @@
           "description": "Human-readable name for network node"
         },
         "trackers": {
+          "default": [
+            {
+              "id": "0x7b9ad7B9E377dFd17fb4fF8F946956BDa1572849",
+              "ws": "wss://corea1.streamr.network:30300",
+              "http": "https://corea1.streamr.network:30300"
+            },
+            {
+              "id": "0xeC3471C25f47FD62D181Af7fd5cB82D4520E26BC",
+              "ws": "wss://corea2.streamr.network:30300",
+              "http": "https://corea2.streamr.network:30300"
+            }
+          ],
           "oneOf": [
             {
               "type": "array",
-              "description": "List of tracker WebSocket URLs to connect to",
+              "description": "List of tracker ids and HTTP/WebSocket URLs to connect to",
               "items": {
-                "type": "string"
+                "type": "object",
+                "required": [
+                  "id",
+                  "ws",
+                  "http"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "ws": {
+                    "type": "string"
+                  },
+                  "http": {
+                    "type": "string"
+                  }
+                }
               }
             },
             {
@@ -88,6 +114,7 @@
         },
         "location": {
           "description": "Location of node",
+          "default": null,
           "oneOf": [
             {
               "type": "null",
@@ -130,106 +157,64 @@
               }
             }
           ]
-        }
-      }
-    },
-    "reporting": {
-      "type": "object",
-      "description": "Configuration for reporting, metrics gathering, error gathering etc.",
-      "required": [
-        "intervalInSeconds",
-        "streamr",
-        "perNodeMetrics"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "intervalInSeconds": {
-          "type": "integer",
-          "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
-          "minimum": 0
         },
-        "streamr": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Report metrics to Streamr stream",
-            "required": [
-              "streamId"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "streamId": {
-                "type": "string",
-                "description": "Stream identifier"
-              }
-            }
-        },
-        "perNodeMetrics" : {
+        "stun": {
           "type": [
-            "object",
+            "string",
             "null"
           ],
-          "description": "Specific configuration for the metrics on each node",
-          "required": [
-            "enabled",
-            "wsUrl",
-            "httpUrl",
-            "intervals",
-            "storageNode"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "enabled" : {
-              "type" : "boolean"
-            },
-            "wsUrl" : {
-              "type" : [
-                "string",
-                "null"
-              ]
-            },
-            "httpUrl": {
-              "type" : [
-                "string",
-                "null"
-              ]
-            },
-            "intervals": {
-              "type":[
-                "object",
-                "null"
-              ],
+          "description": "Address of a STUN server for NAT traversal with ICE, port included"
+        },
+        "turn": {
+          "description": "Address of a TURN server if direct connections cannot be established between hosts behind NATs, port included",
+          "oneOf": [
+            {
+              "type": "null",
+              "description": "TURN-server undefined"
+            }, {
+              "type": "object",
               "required": [
-                "sec",
-                "min",
-                "hour",
-                "day"
-              ]
-            },
-            "storageNode":{
-              "type": [
-                "string",
-                "null"
-              ]
+                "url",
+                "username",
+                "password"
+              ],
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              }
             }
-          }
+          ]
         }
       }
     },
     "streamrUrl": {
       "type": "string",
       "description": "Base URL of Core (E&E) API to use",
+      "default": "https://streamr.network",
       "format": "uri"
     },
     "streamrAddress": {
       "type": "string",
       "description": "Ethereum address Core (E&E)",
+      "default": "0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a",
       "pattern": "^0x[a-fA-F0-9]{40}$"
     },
     "storageNodeConfig": {
       "type": "object",
       "description": "Storage node settings",
+      "default": {
+        "registry": [{
+          "address": "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
+          "url": "https://corea1.streamr.network:8001"
+        }]
+      },
       "required": [
         "registry"
       ],
@@ -258,6 +243,7 @@
         "null"
       ],
       "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
+      "default": null,
       "required": [
         "keys"
       ],

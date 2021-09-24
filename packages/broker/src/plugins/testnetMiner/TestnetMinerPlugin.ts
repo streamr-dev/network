@@ -1,13 +1,13 @@
-import { Wallet } from 'ethers'
 import fetchNatType from 'nat-type-identifier'
 import { Logger } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
+import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Metrics } from '../../../../network/dist/helpers/MetricsContext'
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
 import { fetchOrThrow } from '../../helpers/fetch'
+import { version as CURRENT_VERSION } from '../../../package.json'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
@@ -23,7 +23,7 @@ const METRIC_LATEST_CODE = 'latestCode'
 const logger = new Logger(module)
 
 export interface TestnetMinerPluginConfig {
-    rewardStreamId: string
+    rewardStreamIds: string
     claimServerUrl: string
     maxClaimDelay: number
     stunServerHost: string|null
@@ -39,16 +39,22 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     latestLatency?: number
     latencyPoller?: { stop: () => void }
     natType?: string
-    nodeAddress: string
     metrics: Metrics
+    dummyMessagesReceived: number
+    rewardSubscriptionRetryRef: NodeJS.Timeout | null
+    subscriptionRetryInterval: number
+    streamId: string
 
     constructor(options: PluginOptions) {
         super(options)
         if (this.streamrClient === undefined) {
             throw new Error('StreamrClient is not available')
         }
-        this.nodeAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
         this.metrics = this.metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
+        this.dummyMessagesReceived = 0
+        this.rewardSubscriptionRetryRef = null
+        this.subscriptionRetryInterval = 3 * 60 * 1000
+        this.streamId = this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)]
     }
 
     async start() {
@@ -58,9 +64,15 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         if (this.pluginConfig.stunServerHost !== null) {
             this.natType = await this.getNatType()
         }
-        await this.streamrClient!.subscribe(this.pluginConfig.rewardStreamId, (message: any) => {
-            this.onRewardCodeReceived(message.rewardCode)
+        this.networkNode.setExtraMetadata({
+            natType: this.natType || null,
+            brokerVersion: CURRENT_VERSION,
         })
+
+        await this.subscribe()
+
+        this.rewardSubscriptionRetryRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
+
         logger.info('Testnet miner plugin started')
     }
 
@@ -73,8 +85,32 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         await this.claimRewardCode(rewardCode, peers, delay)
     }
 
+    private async subscriptionIntervalFn(): Promise<void> {
+        if (this.streamrClient && this.streamrClient.getSubscription(this.streamId).length === 0) {
+            try {
+                await this.subscribe()
+            } catch (err) {
+                logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
+            }
+        }
+        this.rewardSubscriptionRetryRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
+    }
+
+    private async subscribe(): Promise<void> {
+        await this.streamrClient!.subscribe(this.streamId, (message: any) => {
+            if (message.rewardCode) {
+                this.onRewardCodeReceived(message.rewardCode)
+            } if (message.info) {
+                logger.info(message.info)
+            } else {
+                logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
+                this.dummyMessagesReceived += 1
+            }
+        })
+    }
+
     private getPeers(): Peer[] {
-        const neighbors = this.networkNode.getNeighborsForStream(this.pluginConfig.rewardStreamId, REWARD_STREAM_PARTITION)
+        const neighbors = this.networkNode.getNeighborsForStream(this.streamId, REWARD_STREAM_PARTITION)
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
             rtt: this.networkNode.getRtt(nodeId)
@@ -84,7 +120,8 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     private async claimRewardCode(rewardCode: string, peers: Peer[], delay: number): Promise<void> {
         const body = {
             rewardCode,
-            nodeAddress: this.nodeAddress,
+            nodeAddress: this.nodeId,
+            streamId: this.streamId,
             clientServerLatency: this.latestLatency,
             waitTime: delay,
             natType: this.natType,
@@ -110,7 +147,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/ping`)
             return Date.now() - startTime
         } catch (e) {
-            logger.warn('Ping error')
+            logger.info('Unable to analyze latency')
             return undefined
         }
     }
@@ -133,6 +170,10 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
 
     async stop() {
         this.latencyPoller?.stop()
+        if (this.rewardSubscriptionRetryRef) {
+            clearTimeout(this.rewardSubscriptionRetryRef)
+            this.rewardSubscriptionRetryRef = null
+        }
     }
 
     getConfigSchema() {

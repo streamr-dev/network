@@ -26,17 +26,20 @@ describe('check network stabilization', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 39000,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 39000
+            },
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {
             // eslint-disable-next-line no-await-in-loop
             const node = createNetworkNode({
                 id: `node-${i}`,
-                trackers: [tracker.getUrl()]
+                trackers: [trackerInfo]
             })
             node.subscribe('stream', 0)
             nodes.push(node)

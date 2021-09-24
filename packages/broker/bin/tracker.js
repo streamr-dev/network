@@ -12,10 +12,13 @@ program
     .usage('<ethereumPrivateKey> <trackerName>')
     .option('--port <port>', 'port', 30300)
     .option('--ip <ip>', 'ip', '0.0.0.0')
+    .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
     .option('--attachHttpEndpoints', 'attach http endpoints')
     .option('--privateKeyFileName <privateKeyFileName>', 'private key filename', undefined)
     .option('--certFileName <certFileName>', 'cert filename', undefined)
+    .option('--topologyStabilizationDebounceWait <topologyStabilizationDebounceWait>', 'topologyStabilizationDebounceWait')
+    .option('--topologyStabilizationMaxWait <topologyStabilizationMaxWait>', 'topologyStabilizationMaxWait')
     .description('Run tracker with reporting')
     .parse(process.argv)
 
@@ -28,23 +31,40 @@ const wallet = new ethers.Wallet(privateKey)
 const address = wallet ? wallet.address : null
 const id = address || `tracker-${program.opts().port}`
 const name = trackerName || address
+const listen = program.opts().unixSocket ? program.opts().unixSocket : {
+    hostname: program.opts().ip,
+    port: Number.parseInt(program.opts().port, 10)
+}
+
+const getTopologyStabilization = () => {
+    const debounceWait = program.opts().topologyStabilizationDebounceWait
+    const maxWait = program.opts().topologyStabilizationMaxWait
+    if ((debounceWait !== undefined) || (maxWait !== undefined)) {
+        return {
+            debounceWait: parseInt(debounceWait),
+            maxWait: parseInt(maxWait)
+        }
+    } else {
+        return undefined
+    }
+}
 
 async function main() {
     try {
         await startTracker({
-            host: program.opts().ip,
-            port: Number.parseInt(program.opts().port),
+            listen,
             id,
             name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode),
             attachHttpEndpoints: program.opts().attachHttpEndpoints,
             privateKeyFileName: program.opts().privateKeyFileName,
-            certFileName: program.opts().certFileName
+            certFileName: program.opts().certFileName,
+            topologyStabilization: getTopologyStabilization()
         })
 
         const trackerObj = {}
         const fields = [
-            'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName', 'attachHttpEndpoints']
+            'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName', 'attachHttpEndpoints', 'unixSocket']
         fields.forEach((prop) => {
             trackerObj[prop] = program.opts()[prop]
         })

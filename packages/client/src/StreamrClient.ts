@@ -102,7 +102,7 @@ class StreamrCached {
         const cacheOptions: Todo = client.options.cache
         this.getStream = CacheAsyncFn(client.getStream.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId]: any) {
+            cacheKey([maybeStreamId]) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return streamId
             }
@@ -110,7 +110,7 @@ class StreamrCached {
         this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
         this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]: any) {
+            cacheKey([maybeStreamId, ethAddress]) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return `${streamId}|${ethAddress}`
             }
@@ -118,7 +118,7 @@ class StreamrCached {
 
         this.isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]: any) {
+            cacheKey([maybeStreamId, ethAddress]) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return `${streamId}|${ethAddress}`
             }
@@ -149,8 +149,12 @@ class StreamrCached {
     }
 }
 
-// use process id in node uid
-const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+let uid: string = process.pid != null
+    // Use process id in node uid.
+    ? `${process.pid}`
+    // Fall back to `uuid()` later (see the constructor). Doing it here will break browser projects
+    // that utilize server-side rendering (no `window` while build's target is `web`).
+    : ''
 
 /**
  * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
@@ -192,6 +196,9 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     // TODO annotate connection parameter as internal parameter if possible?
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
+
+        uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+
         this.id = counterId(`${this.constructor.name}-${uid}${options.id || ''}`)
         this.debug = Debug(this.id)
 

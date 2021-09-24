@@ -80,6 +80,9 @@ export class Connection extends EventEmitter {
             this.emit('lowBackPressure')
             this.highBackPressure = false
         })
+        duplexStream.on('error', (err) => { // important to have handler here to avoid thrown error
+            logger.warn('socket "%s" error %s', this.id, err)
+        })
     }
 
     getBufferedAmount(): number {
@@ -159,7 +162,7 @@ export class Connection extends EventEmitter {
         } catch (e) {
             // no need to check this error
         } finally {
-            logger.warn('connection %s was terminated, reason: %s', this.id, reason)
+            logger.info('connection %s was terminated, reason: %s', this.id, reason)
             this.dead = true
             this.emit('close')
         }

@@ -1,0 +1,51 @@
+<html>
+<head>
+    <title>Test Network Node in Chrome Browser</title>
+    <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
+    <script src="../../dist/streamr-network.js"></script>
+    <script>
+        const { Protocol } = StreamrNetwork
+        const { MessageLayer } = Protocol
+        const { StreamMessage, MessageID, MessageRef } = MessageLayer
+
+        let lastTimestamp = null
+        let sequenceNumber = 0
+        const messageChainId = 'message-chain-id'
+
+        const id = 'browser-node-test'
+
+        const startNode = async (streamId) => {
+            const testNode = StreamrNetwork.createNetworkNode({
+                id,
+                trackers: [ { id: 'tracker', ws: 'ws://127.0.0.1:27777' } ],
+                stunUrls: []
+            })
+            await testNode.start(streamId)
+            testNode.subscribe(streamId, 0)
+            testNode.addMessageListener((message) => {
+                console.log(message)
+            })
+
+            setInterval(() => {
+                const timestamp = Date.now()
+                const msg = 'Hello world from Browser-Node, ' + new Date().toLocaleString()
+                const streamMessage = new StreamMessage({
+                    messageId: new MessageID('stream-0', 0, timestamp, sequenceNumber, id, messageChainId),
+                    prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
+                    content: {
+                        msg,
+                        noise: 'browser',
+                        sequenceNumber
+                    },
+                })
+                testNode.publish(streamMessage)
+                sequenceNumber += 1
+                lastTimestamp = timestamp
+            }, 5000)
+        }
+
+        startNode('stream-0')
+
+    </script>
+</head>
+</html>

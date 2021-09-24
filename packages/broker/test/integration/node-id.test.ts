@@ -3,12 +3,13 @@ import { startBroker, createClient, createTestStream } from '../utils'
 import { Broker } from '../../src/broker'
 import { StreamrClient, Stream, StreamOperation } from 'streamr-client'
 import { Wallet } from 'ethers'
+import { waitForCondition } from "streamr-test-utils"
 
 const trackerPort = 12740
 const broker1WsPort = 12474
 const broker2WsPort = 12477
 
-describe('node id', () => {
+describe('node id: with generateSessionId enabled', () => {
     let sharedWallet: Wallet
     let tracker: Tracker
     let broker1: Broker
@@ -20,13 +21,16 @@ describe('node id', () => {
     beforeEach(async () => {
         sharedWallet = Wallet.createRandom()
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
+            id: 'tracker-1'
         })
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: sharedWallet.privateKey,
+            generateSessionId: true,
             networkPort: 12471,
             trackerPort,
             httpPort: 12473,
@@ -35,6 +39,7 @@ describe('node id', () => {
         broker2 = await startBroker({
             name: 'broker2',
             privateKey: sharedWallet.privateKey,
+            generateSessionId: true,
             networkPort: 12475,
             trackerPort,
             httpPort: 12476,
@@ -64,16 +69,16 @@ describe('node id', () => {
     afterEach(async () => {
         await Promise.all([
             tracker.stop(),
-            broker1.close(),
-            broker2.close(),
+            broker1.stop(),
+            broker2.stop(),
             client1.disconnect(),
             client2.disconnect()
         ])
     })
 
-    it('two brokers with same privateKey are assigned separate node ids', () => {
+    it('two brokers with same privateKey are assigned separate node ids', async () => {
+        await waitForCondition(() => tracker.getNodes().length === 2)
         const actual = tracker.getNodes()
-        expect(actual).toHaveLength(2)
         expect(actual[0]).not.toEqual(actual[1])
         expect(actual[0].startsWith(sharedWallet.address)).toEqual(true)
         expect(actual[1].startsWith(sharedWallet.address)).toEqual(true)

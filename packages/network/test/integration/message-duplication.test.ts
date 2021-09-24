@@ -1,8 +1,10 @@
 import { NetworkNode } from '../../src/NetworkNode'
 import { Tracker } from '../../src/logic/Tracker'
-import { StreamMessage, MessageID } from 'streamr-client-protocol'
+import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 import { createNetworkNode, startTracker } from '../../src/composition'
+
+const { StreamMessage, MessageID } = MessageLayer
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
@@ -15,13 +17,16 @@ describe('duplicate message detection and avoidance', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30350,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30350
+            },
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
         contactNode = createNetworkNode({
             id: 'node-0',
-            trackers: [tracker.getUrl()],
+            trackers: [trackerInfo],
             stunUrls: []
         })
         contactNode.start()
@@ -29,27 +34,27 @@ describe('duplicate message detection and avoidance', () => {
         otherNodes = [
             createNetworkNode({
                 id: 'node-1',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
             createNetworkNode({
                 id: 'node-2',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
             createNetworkNode({
                 id: 'node-3',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
             createNetworkNode({
                 id: 'node-4',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
             createNetworkNode({
                 id: 'node-5',
-                trackers: [tracker.getUrl()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
         ]

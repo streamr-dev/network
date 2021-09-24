@@ -29,6 +29,19 @@ export type MessageFilter = (streamMessage: Protocol.StreamMessage) => boolean
 
 const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => bucket.getId())
 
+// NET-329
+interface ResendDebugInfo {
+    streamId: string, 
+    partition?: number,
+    limit?: number,
+    fromTimestamp?: number,
+    toTimestamp?: number,
+    fromSequenceNo?: number | null, 
+    toSequenceNo?: number | null,
+    publisherId?: string | null,
+    msgChainId?: string | null
+}
+
 export class Storage extends EventEmitter {
 
     opts: Todo
@@ -111,7 +124,7 @@ export class Storage extends EventEmitter {
             prepare: true, fetchSize: 1
         }
 
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId, partition, limit})
 
         const makeLastQuery = async (bucketIds: BucketId[]) => {
             try {
@@ -245,7 +258,7 @@ export class Storage extends EventEmitter {
     }
 
     private fetchFromTimestamp(streamId: string, partition: number, fromTimestamp: number) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId, partition, fromTimestamp})
 
         const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
@@ -285,7 +298,7 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number | null,
         publisherId?: string | null
     ) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId, partition, fromTimestamp, fromSequenceNo, publisherId})
 
         const query1 = [
             'SELECT payload FROM stream_data',
@@ -333,7 +346,7 @@ export class Storage extends EventEmitter {
     }
 
     private fetchBetweenTimestamps(streamId: string, partition: number, fromTimestamp: number, toTimestamp: number) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({streamId, partition, fromTimestamp, toTimestamp})
 
         const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
@@ -376,7 +389,16 @@ export class Storage extends EventEmitter {
         publisherId?: string|null,
         msgChainId?: string|null
     ) {
-        const resultStream = this.createResultStream()
+        const resultStream = this.createResultStream({
+            streamId,
+            partition,
+            fromTimestamp,
+            fromSequenceNo,
+            toTimestamp,
+            toSequenceNo,
+            publisherId,
+            msgChainId,
+        })
 
         const query1 = [
             'SELECT payload FROM stream_data',
@@ -442,13 +464,18 @@ export class Storage extends EventEmitter {
         }) as Readable
     }
 
-    private parseRow(row: Todo) {
+    private parseRow(row: Todo, debugInfo: ResendDebugInfo): Protocol.StreamMessage | null {
+        if (row.payload === null) {
+            logger.error(`Found message with NULL payload on cassandra; debug info: ${JSON.stringify(debugInfo)}`)
+            return null
+        }
+
         const streamMessage = Protocol.StreamMessage.deserialize(row.payload.toString())
         this.emit('read', streamMessage)
         return streamMessage
     }
 
-    private createResultStream() {
+    private createResultStream(debugInfo: ResendDebugInfo) {
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         let last = Date.now()
         return new Transform({
@@ -456,7 +483,10 @@ export class Storage extends EventEmitter {
             objectMode: true,
             transform(row: Todo, _: Todo, done: Todo) {
                 const now = Date.now()
-                this.push(self.parseRow(row))
+                const message = self.parseRow(row, debugInfo)
+                if (message !== null) {
+                    this.push(message)
+                }
                 // To avoid blocking main thread for too long, after every 100ms
                 // pause & resume the cassandraStream to give other events in the event
                 // queue a chance to be handled.
@@ -577,7 +607,7 @@ export class Storage extends EventEmitter {
         let { count } = res.rows[0]
 
         // Cassandra's integer has overflown, calculate fetching row by row
-        if (count < 0){
+        if (count < 0) {
             count = 0
 
             const query = 'SELECT size FROM bucket WHERE stream_id=? AND partition=?'
@@ -590,7 +620,7 @@ export class Storage extends EventEmitter {
                 prepare: true
             })
 
-            for (let i = 0; i < res.rows.length; i++){
+            for (let i = 0; i < res.rows.length; i++) {
                 count += res.rows[i].size
             }
         }

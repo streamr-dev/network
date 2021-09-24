@@ -17,7 +17,6 @@ debug.inspectOpts = {
 // add global support for pretty millisecond formatting with %n
 Debug.formatters.n = (v) => {
     if (v == null || Number.isNaN(v)) { return String(v) }
-    // @ts-expect-error humanize not in debug types
     return Debug.humanize(v)
 }
 
@@ -43,8 +42,7 @@ if (typeof window === 'undefined') {
 const StreamrDebug = Object.assign(debug.extend.bind(debug), {
     enable: Debug.enable.bind(Debug),
     disable: Debug.disable.bind(Debug),
-    // @ts-expect-error humanize not in debug types
-    humanize: Debug.humanize.bind(Debug),
+    humanize: Debug.humanize.bind(Debug) as (v: any) => string,
 })
 
 export type Debugger = ReturnType<typeof StreamrDebug>

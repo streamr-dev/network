@@ -4,7 +4,7 @@ import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
-import { startBroker as createBroker } from '../src/broker'
+import { Broker, createBroker } from '../src/broker'
 import { StorageConfig } from '../src/plugins/storage/StorageConfig'
 import { Todo } from '../src/types'
 import { Config } from '../src/config'
@@ -16,6 +16,8 @@ export function formConfig({
     name,
     trackerPort,
     privateKey,
+    trackerId = 'tracker-1',
+    generateSessionId = false,
     httpPort = null,
     wsPort = null,
     legacyMqttPort = null,
@@ -28,12 +30,10 @@ export function formConfig({
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
-    reporting = false
 }: Todo): Config {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['legacyPublishHttp'] = {}
-        plugins['metrics'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -66,50 +66,43 @@ export function formConfig({
 
     return {
         ethereumPrivateKey: privateKey,
+        generateSessionId,
         network: {
             name,
             trackers: [
-                `ws://127.0.0.1:${trackerPort}`
+                {
+                    id: trackerId,
+                    ws: `ws://127.0.0.1:${trackerPort}`,
+                    http: `http://127.0.0.1:${trackerPort}`
+                }
             ],
             location: {
                 latitude: 60.19,
                 longitude: 24.95,
                 country: 'Finland',
                 city: 'Helsinki'
-            }
-        },
-        reporting: reporting || {
-            streamr: null,
-            intervalInSeconds: 0,
-            perNodeMetrics: {
-                enabled: false,
-                wsUrl: null,
-                httpUrl: null,
-                storageNode: null,
-                intervals:{
-                    sec: 0,
-                    min: 0,
-                    hour: 0,
-                    day: 0
-                }
-            }
+            },
+            stun: null,
+            turn : null
         },
         streamrUrl,
         streamrAddress,
         storageNodeConfig,
-        httpServer: httpPort ? {
-            port: httpPort,
+        httpServer: {
+            port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,
             certFileName: null
-        } : null,
+        },
         apiAuthentication,
         plugins
     }
 }
 
-export function startBroker(...args: Todo[]) {
+export const startBroker = async (...args: Todo[]): Promise<Broker> => {
     // @ts-expect-error
-    return createBroker(formConfig(...args))
+    const broker = await createBroker(formConfig(...args))
+    await broker.start()
+    return broker
 }
 
 export function getWsUrl(port: number, ssl = false) {
@@ -229,8 +222,8 @@ export class Queue<T> {
         this.items.push(item)
     }
 
-    async pop(): Promise<T> {
-        await waitForCondition(() => this.items.length > 0)
+    async pop(timeout?: number): Promise<T> {
+        await waitForCondition(() => this.items.length > 0, timeout)
         return this.items.shift()!
     }
 }

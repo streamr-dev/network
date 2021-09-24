@@ -21,5 +21,7 @@ module.exports = {
     testTimeout: 15000,
 
     // This option allows use of a custom test runner
-    testRunner: 'jest-circus/runner'
+    testRunner: 'jest-circus/runner',
+
+    testPathIgnorePatterns: ["/browser/", "/node_modules/"]
 }

@@ -36,13 +36,16 @@ describe('DataMetadataEndpoints', () => {
     beforeAll(async () => {
         const engineAndEditorAccount = Wallet.createRandom()
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: '' }
         publisherNode = createNetworkNode({
             id: 'publisherNode',
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
         publisherNode.start()
         storageNode = await startBroker({
@@ -53,7 +56,7 @@ describe('DataMetadataEndpoints', () => {
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [tracker.getUrl()]
+            trackers: [trackerInfo]
         })
         client1 = createClient(wsPort1)
         assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
@@ -64,7 +67,7 @@ describe('DataMetadataEndpoints', () => {
         await tracker.stop()
         await client1.ensureDisconnected()
         await publisherNode.stop()
-        await storageNode.close()
+        await storageNode.stop()
         await assignmentEventManager.close()
     })
 
