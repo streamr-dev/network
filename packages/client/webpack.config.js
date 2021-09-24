@@ -90,6 +90,7 @@ module.exports = (env, argv) => {
             // which is wrong for browser builds.
             // see: https://github.com/webpack/webpack/issues/706#issuecomment-438007763
             libraryExport: 'StreamrClient', // This fixes the above.
+            globalObject: 'globalThis',
         },
         resolve: {
             modules: [

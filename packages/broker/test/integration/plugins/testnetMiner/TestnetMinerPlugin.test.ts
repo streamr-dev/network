@@ -80,8 +80,10 @@ describe('TestnetMinerPlugin', () => {
         await claimServer.start()
         tracker = await startTracker({
             id: 'tracker',
-            host: '127.0.0.1',
-            port: TRACKER_PORT,
+            listen: {
+                hostname: '127.0.0.1',
+                port: TRACKER_PORT
+            },
         })
         brokerWallet = Wallet.createRandom()
         broker = await startBroker({

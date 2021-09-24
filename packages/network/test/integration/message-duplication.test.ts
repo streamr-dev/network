@@ -19,8 +19,10 @@ describe('duplicate message detection and avoidance', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30350,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30350
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }

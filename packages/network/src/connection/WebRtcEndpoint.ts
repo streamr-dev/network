@@ -458,4 +458,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         Object.values(messageQueues).forEach((queue) => queue.clear())
         this.connectionFactory.cleanUp()
     }
+
+    getAllConnectionNodeIds(): PeerId[] {
+        return Object.keys(this.connections)
+    }
 }

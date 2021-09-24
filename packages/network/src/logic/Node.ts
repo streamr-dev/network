@@ -77,6 +77,7 @@ export class Node extends EventEmitter {
     private readonly seenButNotPropagatedSet: SeenButNotPropagatedSet
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metrics: Metrics
+    private connectionCleanUpInterval: NodeJS.Timeout | null
     private handleBufferedMessagesTimeoutRef?: NodeJS.Timeout | null
     protected extraMetadata: Record<string, unknown> = {}
 
@@ -128,6 +129,7 @@ export class Node extends EventEmitter {
 
         this.disconnectionTimers = {}
         this.consecutiveDeliveryFailures = {}
+        this.connectionCleanUpInterval = null
 
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
@@ -151,6 +153,8 @@ export class Node extends EventEmitter {
     start(): void {
         logger.trace('started')
         this.trackerManager.start()
+        clearInterval(this.connectionCleanUpInterval!)
+        this.connectionCleanUpInterval = this.startConnectionCleanUpInterval(2 * 60 * 1000)
     }
 
     subscribeToStreamIfHaveNotYet(streamId: StreamIdAndPartition, sendStatus = true): void {
@@ -289,12 +293,17 @@ export class Node extends EventEmitter {
 
     async stop(): Promise<void> {
         logger.trace('stopping')
-    
+
         await this.trackerManager.stop()
 
         if (this.handleBufferedMessagesTimeoutRef) {
             clearTimeout(this.handleBufferedMessagesTimeoutRef)
             this.handleBufferedMessagesTimeoutRef = null
+        }
+
+        if (this.connectionCleanUpInterval) {
+            clearInterval(this.connectionCleanUpInterval)
+            this.connectionCleanUpInterval = null
         }
 
         Object.values(this.disconnectionTimers).forEach((timeout) => clearTimeout(timeout))
@@ -371,6 +380,19 @@ export class Node extends EventEmitter {
             clearTimeout(this.disconnectionTimers[nodeId])
             delete this.disconnectionTimers[nodeId]
         }
+    }
+
+    private startConnectionCleanUpInterval(interval: number): NodeJS.Timeout {
+        return setInterval(() => {
+            const peerIds = this.nodeToNode.getAllConnectionNodeIds()
+            const unusedConnections = peerIds.filter((peer) => !this.isNodePresent(peer))
+            if (unusedConnections.length > 0) {
+                this.logger.debug(`Disconnecting from ${unusedConnections.length} unused connections`)
+                unusedConnections.forEach((peerId) => {
+                    this.nodeToNode.disconnectFromNode(peerId, 'Unused connection')
+                })
+            }
+        }, interval)
     }
 
     getStreams(): ReadonlyArray<string> {

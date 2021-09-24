@@ -29,4 +29,5 @@ export interface IWebRtcEndpoint {
     getNegotiatedControlLayerProtocolVersionOnNode(peerId: PeerId): number | undefined
     getDefaultMessageLayerProtocolVersion(): number
     getDefaultControlLayerProtocolVersion(): number
+    getAllConnectionNodeIds(): PeerId[]
 }
