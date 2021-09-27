@@ -1,5 +1,5 @@
-import { Status, StatusStreams, StreamKey } from '../identifiers'
-import { NodeId } from './Node'
+import { Status, StatusStreams, StreamKey } from '../../identifiers'
+import { NodeId } from '../node/Node'
 
 type Counters = Record<NodeId,Record<StreamKey,number>>
 

@@ -1,10 +1,10 @@
 import { MetricsContext, startTracker } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
+import { Tracker, Event as TrackerEvent } from '../../src/logic/tracker/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { waitForEvent } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
-import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"

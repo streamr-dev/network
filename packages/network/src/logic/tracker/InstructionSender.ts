@@ -1,9 +1,9 @@
 import _ from 'lodash'
-import { Logger } from '../helpers/Logger'
-import { Metrics } from '../helpers/MetricsContext'
-import { StreamIdAndPartition, StreamKey } from '../identifiers'
-import { TrackerServer } from '../protocol/TrackerServer'
-import { NodeId } from './Node'
+import { Logger } from '../../helpers/Logger'
+import { Metrics } from '../../helpers/MetricsContext'
+import { StreamIdAndPartition, StreamKey } from '../../identifiers'
+import { TrackerServer } from '../../protocol/TrackerServer'
+import { NodeId } from '../node/Node'
 import { TopologyStabilizationOptions } from './Tracker'
 
 /**

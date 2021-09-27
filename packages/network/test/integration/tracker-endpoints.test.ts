@@ -1,5 +1,5 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import http from 'http'
 
 import { waitForCondition } from 'streamr-test-utils'

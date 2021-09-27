@@ -1,4 +1,4 @@
-import { NetworkNode } from '../../src/NetworkNode'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker, Tracker } from '../../src/composition'

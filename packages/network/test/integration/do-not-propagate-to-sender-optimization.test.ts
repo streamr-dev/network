@@ -1,5 +1,5 @@
-import { NetworkNode } from '../../src/NetworkNode'
-import { Tracker } from '../../src/logic/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 

@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { OverlayTopology } from '../../src/logic/OverlayTopology'
+import { OverlayTopology } from '../../src/logic/tracker/OverlayTopology'
 
 const NODE_DEGREE = 4
 const NUM_OF_NODES = 4000

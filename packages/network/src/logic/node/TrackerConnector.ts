@@ -1,9 +1,9 @@
 import { Utils } from 'streamr-client-protocol'
-import { StreamIdAndPartition, TrackerInfo } from '../identifiers'
-import { NodeToTracker } from '../protocol/NodeToTracker'
-import { Logger } from '../helpers/Logger'
-import { PeerInfo } from '../connection/PeerInfo'
-import { TrackerId } from './Tracker'
+import { StreamIdAndPartition, TrackerInfo } from '../../identifiers'
+import { NodeToTracker } from '../../protocol/NodeToTracker'
+import { Logger } from '../../helpers/Logger'
+import { PeerInfo } from '../../connection/PeerInfo'
+import { TrackerId } from '../tracker/Tracker'
 import { StreamManager } from './StreamManager'
 
 const logger = new Logger(module)

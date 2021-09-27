@@ -5,9 +5,9 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker, Tracker } from '../../src/composition'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { getTopology } from '../../src/logic/trackerSummaryUtils'
+import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { NodeId } from '../logic/Node'
+import { NodeId } from '../logic/node/Node'
 
 const WAIT_TIME = 200
 

@@ -1,4 +1,4 @@
-import { StreamIdAndPartition, StreamKey } from '../identifiers'
+import { StreamIdAndPartition, StreamKey } from '../../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { MessageLayer } from 'streamr-client-protocol'
 import { NodeId } from './Node'

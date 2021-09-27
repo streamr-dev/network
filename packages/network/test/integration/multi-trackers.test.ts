@@ -1,11 +1,11 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { Event as NodeEvent } from '../../src/logic/Node'
+import { Event as NodeEvent } from '../../src/logic/node/Node'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
 const FIRST_STREAM = 'stream-1' // assigned to trackerOne (arbitrarily by hashing algo)

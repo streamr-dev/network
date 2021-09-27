@@ -1,7 +1,7 @@
 import { lookup, Lookup } from 'geoip-lite'
-import { Logger } from '../helpers/Logger'
-import { Location } from '../identifiers'
-import { NodeId } from './Node'
+import { Logger } from '../../helpers/Logger'
+import { Location } from '../../identifiers'
+import { NodeId } from '../node/Node'
 
 function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)

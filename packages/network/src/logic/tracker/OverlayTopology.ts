@@ -1,4 +1,4 @@
-import { NodeId } from './Node'
+import { NodeId } from '../node/Node'
 
 // From: https://gist.github.com/guilhermepontes/17ae0cc71fa2b13ea8c20c94c5c35dc4
 const shuffleArray = <T>(arr: Array<T>): Array<T> => arr

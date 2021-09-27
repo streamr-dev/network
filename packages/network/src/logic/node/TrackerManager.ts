@@ -1,14 +1,14 @@
 import { TrackerLayer, Utils } from 'streamr-client-protocol'
-import { Location, Rtts, StreamIdAndPartition, TrackerInfo } from '../identifiers'
-import { TrackerId } from './Tracker'
+import { Location, Rtts, StreamIdAndPartition, TrackerInfo } from '../../identifiers'
+import { TrackerId } from '../tracker/Tracker'
 import { TrackerConnector } from './TrackerConnector'
-import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
+import { NodeToTracker, Event as NodeToTrackerEvent } from '../../protocol/NodeToTracker'
 import { StreamManager } from './StreamManager'
-import { Logger } from '../helpers/Logger'
+import { Logger } from '../../helpers/Logger'
 import { NodeId } from './Node'
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
-import { Metrics } from '../helpers/MetricsContext'
+import { Metrics } from '../../helpers/MetricsContext'
 
 const logger = new Logger(module)
 
