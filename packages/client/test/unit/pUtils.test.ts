@@ -152,6 +152,81 @@ describe('CacheAsyncFn', () => {
         // @ts-expect-error wrong match argument type
         cachedFn2.clearMatching((_d: string) => true)
     })
+
+    it('does memoize consecutive calls', async () => {
+        let i = 0
+        const fn = async () => {
+            i += 1
+            return i
+        }
+        const memoized = CacheAsyncFn(fn)
+        const firstCall = memoized()
+        const secondCall = memoized()
+
+        expect(await Promise.all([firstCall, secondCall])).toEqual([1, 1])
+        //expect(fn).toHaveBeenCalledTimes(1)
+    })
+
+    it('can not be executed in parallel', async () => {
+        const taskId1 = '0xbe406f5e1b7e951cd8e42ab28598671e5b73c3dd/test/75712/Encryption-0'
+        const taskId2 = 'd/e/f'
+        const calledWith: string[] = []
+        const fn = jest.fn(async (key: string) => {
+            calledWith.push(key)
+            await wait(100)
+            return key
+        })
+
+        const cachedFn = CacheAsyncFn(fn, {
+            maxSize: 10000,
+            maxAge: 1800000,
+            cacheKey: ([v]) => {
+                return v
+            }
+        })
+        const task = Promise.all([
+            cachedFn(taskId1),
+            cachedFn(taskId2),
+            cachedFn(taskId1),
+            cachedFn(taskId2),
+        ])
+        task.catch(() => {})
+        setImmediate(() => {
+            cachedFn(taskId1)
+            cachedFn(taskId1)
+            cachedFn(taskId2)
+            cachedFn(taskId2)
+        })
+        process.nextTick(() => {
+            cachedFn(taskId1)
+            cachedFn(taskId2)
+            cachedFn(taskId1)
+            cachedFn(taskId2)
+        })
+        setTimeout(() => {
+            cachedFn(taskId1)
+            cachedFn(taskId1)
+            cachedFn(taskId2)
+            cachedFn(taskId2)
+        })
+        await wait(10)
+        cachedFn(taskId2)
+        cachedFn(taskId2)
+        cachedFn(taskId1)
+        cachedFn(taskId1)
+        await Promise.all([
+            cachedFn(taskId1),
+            cachedFn(taskId2),
+            cachedFn(taskId1),
+            cachedFn(taskId2),
+        ])
+        await task
+        expect(fn).toHaveBeenCalledTimes(2)
+        expect(calledWith).toEqual([taskId1, taskId2])
+        await wait(200)
+        expect(fn).toHaveBeenCalledTimes(2)
+        expect(calledWith).toEqual([taskId1, taskId2])
+    })
 })
 
 describe('cacheFn', () => {
