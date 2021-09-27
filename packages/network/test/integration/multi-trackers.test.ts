@@ -117,9 +117,9 @@ describe('multi trackers', () => {
         nodeTwo.subscribe(FIRST_STREAM_2, 0)
 
         // @ts-expect-error private field
-        let nodeOneEvents = eventsWithArgsToArray(nodeOne.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        let nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
-        let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
@@ -136,9 +136,9 @@ describe('multi trackers', () => {
         nodeTwo.subscribe(SECOND_STREAM_2, 0)
 
         // @ts-expect-error private field
-        nodeOneEvents = eventsWithArgsToArray(nodeOne.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
-        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
@@ -155,9 +155,9 @@ describe('multi trackers', () => {
         nodeTwo.subscribe(THIRD_STREAM_2, 0)
 
         // @ts-expect-error private field
-        nodeOneEvents = eventsWithArgsToArray(nodeOne.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
-        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
@@ -181,7 +181,8 @@ describe('multi trackers', () => {
             ],
             counter: 0
         })
-        await nodeOne.handleTrackerInstruction(unexpectedInstruction, 'trackerOne')
+        // @ts-expect-error private field
+        await nodeOne.trackerManager.handleTrackerInstruction(unexpectedInstruction, 'trackerOne')
         expect(nodeOne.getStreams()).not.toContain('stream-2::0')
     })
 })
