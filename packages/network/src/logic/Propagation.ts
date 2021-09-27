@@ -89,8 +89,11 @@ const DEFAULT_MAX_CONCURRENT_MESSAGES = 10000
 const DEFAULT_TTL = 15 * 1000
 
 /**
- * Implements the message propagation logic of a node. Given a message it will attempt to propagate it to
- * `minPropagationTargets` neighbors within `ttl` milliseconds of receiving it.
+ * Implements the message propagation logic of a node. Given a message the logic will (re-)attempt propagate it to
+ * `minPropagationTargets` neighbors until it either succeeds or time-to-live `ttl` milliseconds have passed.
+ *
+ * Setting `minPropagationTargets = 0` effectively disables any propagation reattempts. A message will then be
+ * propagated exactly once, to neighbors that are present at that moment, in a fire-and-forget manner.
  */
 export class Propagation {
     private readonly getNeighbors: GetNeighborsFn
