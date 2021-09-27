@@ -70,11 +70,11 @@ export class InstructionSender {
         this.metrics = metrics
     }
 
-    addInstruction(instruction: Instruction) {
+    addInstruction(instruction: Instruction): void {
         this.getOrCreateBuffer(instruction.streamKey).addInstruction(instruction)
     }
 
-    getOrCreateBuffer(streamKey: StreamKey) {
+    getOrCreateBuffer(streamKey: StreamKey): StreamInstructionBuffer {
         const existingBuffer = this.streamBuffers.get(streamKey)
         if (existingBuffer !== undefined) {
             return existingBuffer

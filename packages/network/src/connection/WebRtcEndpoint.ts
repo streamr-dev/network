@@ -136,7 +136,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                     pendingPeerIds.push(peerId)
                 }
             }
-            this.logger.info(`Successfully connected to ${connectedPeerCount} peers. Still trying to connect to the following peers: [${pendingPeerIds.join(', ')}]`)
+            this.logger.info(`Successfully connected to %d peers. Still trying to connect to the following peers: [%s]`,
+                connectedPeerCount, pendingPeerIds.join(', '))
         }, STATUS_REPORT_INTERVAL_MS)
     }
 
