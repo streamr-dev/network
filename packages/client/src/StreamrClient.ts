@@ -136,7 +136,7 @@ class StreamrClientBase implements Context {
 export function initContainer(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
     const c = parentContainer.createChildContainer()
     const config = BrubeckConfig(options)
-  uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+    uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
     // @ts-expect-error not in types
