@@ -12,7 +12,7 @@ import {
     OfferOptions,
     IceCandidateOptions,
     RtcSignaller
-} from '../logic/RtcSignaller'
+} from '../logic/node/RtcSignaller'
 import { Rtts } from '../identifiers'
 import { MessageQueue } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'

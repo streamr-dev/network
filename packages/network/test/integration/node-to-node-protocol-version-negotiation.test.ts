@@ -1,8 +1,8 @@
 import { Event as wrtcEvent } from '../../src/connection/IWebRtcEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
-import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { Tracker } from '../../src/logic/Tracker'
+import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { startTracker } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"

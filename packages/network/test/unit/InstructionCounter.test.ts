@@ -1,5 +1,5 @@
 import { Status } from '../../src/identifiers'
-import { InstructionCounter } from '../../src/logic/InstructionCounter'
+import { InstructionCounter } from '../../src/logic/tracker/InstructionCounter'
 
 describe('InstructionCounter', () => {
     let instructionCounter: InstructionCounter

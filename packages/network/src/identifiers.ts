@@ -1,6 +1,5 @@
-import { TrackerLayer, SmartContractRecord } from 'streamr-client-protocol'
-import { NodeId } from './logic/Node'
-import { RtcSubTypes } from './logic/RtcMessage'
+import { SmartContractRecord, TrackerLayer } from 'streamr-client-protocol'
+import { NodeId } from './logic/node/Node'
 
 /**
  * Uniquely identifies a stream
@@ -64,6 +63,13 @@ export interface Status {
     started: string
     singleStream: boolean // indicate whether this is a status update for only a single stream
     extra: Record<string, unknown>
+}
+
+export enum RtcSubTypes {
+    ICE_CANDIDATE = 'iceCandidate',
+    RTC_OFFER = 'rtcOffer',
+    RTC_ANSWER = 'rtcAnswer',
+    RTC_CONNECT = 'rtcConnect',
 }
 
 export type RtcIceCandidateMessage = {

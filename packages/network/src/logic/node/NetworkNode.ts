@@ -1,5 +1,5 @@
-import { Node, Event as NodeEvent, NodeOptions, NodeId } from './logic/Node'
-import { StreamIdAndPartition } from './identifiers'
+import { Node, Event as NodeEvent, NodeOptions, NodeId } from './Node'
+import { StreamIdAndPartition } from '../../identifiers'
 import { MessageLayer } from 'streamr-client-protocol'
 
 /*
