@@ -1,9 +1,9 @@
 import _ from 'lodash'
-import { Logger } from '../helpers/Logger'
-import { Metrics } from '../helpers/MetricsContext'
-import { StreamIdAndPartition, StreamKey } from '../identifiers'
-import { TrackerServer } from '../protocol/TrackerServer'
-import { NodeId } from './Node'
+import { Logger } from '../../helpers/Logger'
+import { Metrics } from '../../helpers/MetricsContext'
+import { StreamIdAndPartition, StreamKey } from '../../identifiers'
+import { TrackerServer } from '../../protocol/TrackerServer'
+import { NodeId } from '../node/Node'
 import { TopologyStabilizationOptions } from './Tracker'
 
 /**
@@ -70,11 +70,11 @@ export class InstructionSender {
         this.metrics = metrics
     }
 
-    addInstruction(instruction: Instruction) {
+    addInstruction(instruction: Instruction): void {
         this.getOrCreateBuffer(instruction.streamKey).addInstruction(instruction)
     }
 
-    getOrCreateBuffer(streamKey: StreamKey) {
+    getOrCreateBuffer(streamKey: StreamKey): StreamInstructionBuffer {
         const existingBuffer = this.streamBuffers.get(streamKey)
         if (existingBuffer !== undefined) {
             return existingBuffer

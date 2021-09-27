@@ -1,4 +1,4 @@
-import { StreamIdAndPartition, StreamKey } from '../identifiers'
+import { StreamIdAndPartition, StreamKey } from '../../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { MessageLayer } from 'streamr-client-protocol'
 import { NodeId } from './Node'
@@ -130,6 +130,7 @@ export class StreamManager {
         })
     }
 
+    // TODO: rename to getSortedStreams() (or remove sort functionality altogether)
     getStreams(): ReadonlyArray<StreamIdAndPartition> {
         return this.getStreamsAsKeys().map((key) => StreamIdAndPartition.fromKey(key))
     }
@@ -148,6 +149,12 @@ export class StreamManager {
         return result
     }
 
+    // efficient way to access streams
+    getStreamKeys(): IterableIterator<StreamKey> {
+        return this.streams.keys()
+    }
+
+    // TODO: rename to getStreamKeysAsSortedArray (or remove sort functionality altogether)
     getStreamsAsKeys(): ReadonlyArray<StreamKey> {
         return [...this.streams.keys()].sort()
     }

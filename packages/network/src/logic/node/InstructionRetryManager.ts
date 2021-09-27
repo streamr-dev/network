@@ -1,7 +1,7 @@
-import { StreamIdAndPartition, StreamKey } from "../identifiers"
+import { StreamIdAndPartition, StreamKey } from "../../identifiers"
 import { TrackerLayer } from "streamr-client-protocol"
-import { Logger } from "../helpers/Logger"
-import { TrackerId } from './Tracker'
+import { Logger } from "../../helpers/Logger"
+import { TrackerId } from '../tracker/Tracker'
 
 type HandleFn = (
     instructionMessage: TrackerLayer.InstructionMessage,

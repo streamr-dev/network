@@ -1,5 +1,5 @@
-import { StreamIdAndPartition } from '../identifiers'
-import { NodeId } from './Node'
+import { StreamIdAndPartition } from '../../identifiers'
+import { NodeId } from '../node/Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
 
 type OverLayWithRtts = { [key: string]: Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] > }

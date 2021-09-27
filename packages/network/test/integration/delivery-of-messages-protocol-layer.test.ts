@@ -6,7 +6,7 @@ import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToN
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { TrackerServer, Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { RtcSignaller } from "../../src/logic/RtcSignaller"
+import { RtcSignaller } from "../../src/logic/node/RtcSignaller"
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"

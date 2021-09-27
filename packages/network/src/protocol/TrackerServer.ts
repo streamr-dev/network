@@ -2,14 +2,13 @@ import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
 import { TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
-import { decode } from '../helpers/MessageEncoder'
-import { StreamIdAndPartition } from '../identifiers'
+import { decode } from './utils'
+import { RtcSubTypes, StreamIdAndPartition } from '../identifiers'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
-import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
 import { ServerWsEndpoint } from "../connection/ws/ServerWsEndpoint"
 import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
-import { NodeId } from '../logic/Node'
+import { NodeId } from '../logic/node/Node'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',

@@ -4,20 +4,20 @@ import { MetricsContext } from './helpers/MetricsContext'
 import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { HttpServerConfig, ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
-import { TopologyStabilizationOptions, Tracker } from './logic/Tracker'
+import { TopologyStabilizationOptions, Tracker } from './logic/tracker/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
-import { trackerHttpEndpoints } from './helpers/trackerHttpEndpoints'
+import { trackerHttpEndpoints } from './logic/tracker/trackerHttpEndpoints'
 import { NodeToTracker } from './protocol/NodeToTracker'
-import { RtcSignaller } from './logic/RtcSignaller'
+import { RtcSignaller } from './logic/node/RtcSignaller'
 import { NodeToNode } from './protocol/NodeToNode'
-import { NetworkNode } from './NetworkNode'
+import { NetworkNode } from './logic/node/NetworkNode'
 import { Logger } from './helpers/Logger'
 import { NameDirectory } from './NameDirectory'
 import { NegotiatedProtocolVersions } from "./connection/NegotiatedProtocolVersions"
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import NodeWebRtcConnectionFactory from "./connection/NodeWebRtcConnection"
-import { NodeId } from './logic/Node'
+import { NodeId } from './logic/node/Node'
 
 require('setimmediate')
 

@@ -1,6 +1,6 @@
 import { MessageID, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from './Node'
-import { StreamIdAndPartition, StreamKey } from '../identifiers'
+import { StreamIdAndPartition, StreamKey } from '../../identifiers'
 import LRUCache from 'lru-cache'
 
 interface PropagationTask {

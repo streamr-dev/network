@@ -1,10 +1,10 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { wait, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { Event as NodeEvent } from '../../src/logic/Node'
+import { Event as NodeEvent } from '../../src/logic/node/Node'
 
 /**
  * This test verifies that tracker receives status messages from nodes with list of inBound and outBound connections

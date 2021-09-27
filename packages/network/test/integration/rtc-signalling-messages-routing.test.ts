@@ -1,13 +1,13 @@
-import { Tracker } from '../../src/logic/Tracker'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { RtcSubTypes } from '../../src/logic/RtcMessage'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { startTracker } from '../../src/composition'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
+import { RtcSubTypes } from '../../src/identifiers'
 
 const { RelayMessage, ErrorMessage } = TrackerLayer
 
