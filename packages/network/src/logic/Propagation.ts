@@ -88,6 +88,10 @@ type ConstructorOptions = {
 const DEFAULT_MAX_CONCURRENT_MESSAGES = 10000
 const DEFAULT_TTL = 15 * 1000
 
+/**
+ * Implements the message propagation logic of a node. Given a message it will attempt to propagate it to
+ * `minPropagationTargets` neighbors within `ttl` milliseconds of receiving it.
+ */
 export class Propagation {
     private readonly getNeighbors: GetNeighborsFn
     private readonly sendToNeighbor: SendToNeighborFn
