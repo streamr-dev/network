@@ -1,21 +1,81 @@
 import { MessageID, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from './Node'
 import { StreamIdAndPartition, StreamKey } from '../identifiers'
-import { Logger } from '../helpers/Logger'
-
-type GetNeighborsFn = (stream: StreamIdAndPartition) => ReadonlyArray<NodeId>
-
-type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => Promise<unknown>
-
-const DEFAULT_MAX_CONCURRENT_MESSAGES = 10000
-const DEFAULT_TTL = 15 * 1000
+import LRUCache from 'lru-cache'
 
 interface PropagationTask {
     message: StreamMessage
     source: NodeId | null
     handledNeighbors: Set<NodeId>
-    ttlTimeout: NodeJS.Timeout
 }
+
+/**
+ * Data structure that (attempts to) store propagation tasks efficiently in-memory for the needs of
+ * message propagation.
+ *
+ * Special properties:
+ *  - A maximum of `maxConcurrentMessages` messages will be held.
+ *      - Upon reaching the limit, each task added will remove a stale task.
+ *      - The choice of stale task is FIFO (first item added to data structure will be removed first).
+ *   - Ability to look up a set of tasks based on `StreamIdAndPartition`.
+ */
+class PropagationTasksDataStructure {
+    private readonly streamLookup = new Map<StreamKey, Set<MessageID>>()
+    private readonly tasks: LRUCache<MessageID, PropagationTask>
+
+    constructor(ttl: number, maxConcurrentMessages: number) {
+        this.tasks = new LRUCache({
+            max: maxConcurrentMessages,
+            maxAge: ttl,
+            noDisposeOnSet: true,  // don't invoke dispose cb when overwriting key
+            updateAgeOnGet: false, // make stale item removal effectively FIFO
+            dispose: (messageId) => {
+                const stream = StreamIdAndPartition.fromMessage(messageId)
+                const messageIdsForStream = this.streamLookup.get(stream.key())
+                if (messageIdsForStream) {
+                    messageIdsForStream.delete(messageId)
+                    if (messageIdsForStream.size === 0) {
+                        this.streamLookup.delete(stream.key())
+                    }
+                }
+            }
+        })
+    }
+
+    add(task: PropagationTask): void {
+        const messageId = task.message.messageId
+        const stream = StreamIdAndPartition.fromMessage(messageId)
+        if (!this.streamLookup.has(stream.key())) {
+            this.streamLookup.set(stream.key(), new Set<MessageID>())
+        }
+        this.streamLookup.get(stream.key())!.add(messageId)
+        this.tasks.set(messageId, task)
+    }
+
+    delete(task: PropagationTask): void {
+        const messageId = task.message.messageId
+        this.tasks.del(messageId)
+    }
+
+    get(stream: StreamIdAndPartition): Array<PropagationTask> {
+        const messageIds = this.streamLookup.get(stream.key())
+        const tasks: Array<PropagationTask> = []
+        if (messageIds) {
+            messageIds.forEach((messageId) => {
+                const task = this.tasks.get(messageId)
+                if (task) {
+                    tasks.push(task)
+                }
+            })
+        }
+        return tasks
+    }
+
+}
+
+type GetNeighborsFn = (stream: StreamIdAndPartition) => ReadonlyArray<NodeId>
+
+type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => Promise<unknown>
 
 type ConstructorOptions = {
     getNeighbors: GetNeighborsFn
@@ -25,20 +85,14 @@ type ConstructorOptions = {
     maxConcurrentMessages?: number
 }
 
-const logger = new Logger(module)
-
-function logPropagation(messageId: MessageID, neighbors: Set<NodeId>): void {
-    logger.trace('StreamMessage{%j} was propagated to %j', messageId.toArray(), [...neighbors])
-}
+const DEFAULT_MAX_CONCURRENT_MESSAGES = 10000
+const DEFAULT_TTL = 15 * 1000
 
 export class Propagation {
-    private readonly tasks = new Map<StreamKey, Map<MessageID, PropagationTask>>()
     private readonly getNeighbors: GetNeighborsFn
     private readonly sendToNeighbor: SendToNeighborFn
     private readonly minPropagationTargets: number
-    private readonly ttl: number
-    private readonly maxConcurrentMessages: number
-    private totalTasks = 0
+    private readonly tasks: PropagationTasksDataStructure
 
     constructor({
         getNeighbors,
@@ -50,8 +104,7 @@ export class Propagation {
         this.getNeighbors = getNeighbors
         this.sendToNeighbor = sendToNeighbor
         this.minPropagationTargets = minPropagationTargets
-        this.ttl = ttl
-        this.maxConcurrentMessages = maxConcurrentMessages
+        this.tasks = new PropagationTasksDataStructure(ttl, maxConcurrentMessages)
     }
 
     feedUnseenMessage(message: StreamMessage, source: NodeId | null): void {
@@ -67,63 +120,29 @@ export class Propagation {
             } catch (_e) {}
         })
 
-        if (handledNeighbors.size < this.minPropagationTargets && this.totalTasks < this.maxConcurrentMessages) {
-            if (!this.tasks.has(stream.key())) {
-                this.tasks.set(stream.key(), new Map<MessageID, PropagationTask>())
-            }
-            this.tasks.get(stream.key())!.set(messageId, {
+        if (handledNeighbors.size < this.minPropagationTargets) {
+            this.tasks.add({
                 message,
                 source,
-                handledNeighbors,
-                ttlTimeout: setTimeout(() => {
-                    this.delete(messageId)
-                }, this.ttl)
+                handledNeighbors
             })
-            this.totalTasks += 1
-        } else {
-            logPropagation(messageId, handledNeighbors)
         }
     }
 
     onNeighborJoined(neighborId: NodeId, stream: StreamIdAndPartition): void {
-        const tasksOfStream = this.tasks.get(stream.key())
+        const tasksOfStream = this.tasks.get(stream)
         if (tasksOfStream) {
-            tasksOfStream.forEach(async (task, messageId) => {
+            tasksOfStream.forEach(async (task) => {
                 if (!task.handledNeighbors.has(neighborId) && neighborId !== task.source) {
                     try {
                         await this.sendToNeighbor(neighborId, task.message)
                         task.handledNeighbors.add(neighborId)
                     } catch (_e) {}
                     if (task.handledNeighbors.size >= this.minPropagationTargets) {
-                        this.delete(messageId)
+                        this.tasks.delete(task)
                     }
                 }
             })
-        }
-    }
-
-    stop(): void {
-        this.tasks.forEach((streamTasks) => {
-            for (const messageId of streamTasks.keys()) {
-                this.delete(messageId)
-            }
-        })
-    }
-
-    private delete(messageId: MessageID): void {
-        const stream = StreamIdAndPartition.fromMessage(messageId)
-        const streamTasks = this.tasks.get(stream.key())
-        if (streamTasks) {
-            const task = streamTasks.get(messageId)
-            if (task) {
-                clearTimeout(task.ttlTimeout)
-                this.tasks.get(stream.key())!.delete(messageId)
-                this.totalTasks -= 1
-                logPropagation(messageId, task.handledNeighbors)
-            }
-            if (streamTasks.size === 0) {
-                this.tasks.delete(stream.key())
-            }
         }
     }
 }

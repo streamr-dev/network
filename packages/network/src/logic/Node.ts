@@ -352,7 +352,6 @@ export class Node extends EventEmitter {
     stop(): Promise<unknown> {
         this.logger.trace('stopping')
 
-        this.propagation.stop()
         this.instructionThrottler.stop()
 
         this.instructionRetryManager.stop()
