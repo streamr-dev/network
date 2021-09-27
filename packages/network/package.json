@@ -52,7 +52,7 @@
     "lodash": "^4.17.21",
     "lru-cache": "^6.0.0",
     "morgan": "^1.10.0",
-    "node-datachannel": "^0.1.5",
+    "node-datachannel": "^0.1.10",
     "pino": "^6.11.3",
     "setimmediate": "^1.0.5",
     "streamr-client-protocol": "^9.0.0",
