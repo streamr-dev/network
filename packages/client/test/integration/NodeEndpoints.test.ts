@@ -2,7 +2,7 @@ import debug from 'debug'
 import { EthereumAddress, NotFoundError, StorageNode, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
-import { createTestStream } from '../utils'
+import { createTestStream, getCreateClient } from '../utils'
 // import { id } from '@ethersproject/hash'
 
 import config from './config'
@@ -19,14 +19,8 @@ let storageNodeClient: StreamrClient
 let createdStream: Stream
 let createdNode: StorageNode
 let nodeAddress: EthereumAddress
-const nodeUrl = 'http://a.a'
 
-const createClient = (opts = {}) => new StreamrClient({
-    ...config,
-    autoConnect: false,
-    autoDisconnect: false,
-    ...opts,
-} as any)
+const createClient = getCreateClient()
 
 beforeAll(async () => {
     const key = config.auth.privateKey
@@ -53,7 +47,7 @@ beforeAll(async () => {
 describe('createNode', () => {
     it('creates a node ', async () => {
 
-        createdNode = await storageNodeClient.setNode(nodeUrl)
+        createdNode = await storageNodeClient.setNode(config.storageNode.url)
         await until(async () => {
             try {
                 return (await client.getStorageNode(nodeAddress)) !== null
@@ -63,7 +57,7 @@ describe('createNode', () => {
             }
         }, 100000, 1000)
         expect(createdNode.getAddress()).toEqual(nodeAddress)
-        return expect(createdNode.url).toEqual(nodeUrl)
+        return expect(createdNode.url).toEqual(config.storageNode.url)
     })
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode', async () => {

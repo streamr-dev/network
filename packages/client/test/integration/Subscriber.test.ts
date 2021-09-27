@@ -14,6 +14,7 @@ import { Todo } from '../../src/types'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
+jest.setTimeout(60000)
 
 describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
@@ -37,7 +38,6 @@ describeRepeats('Subscriber', () => {
         client.debug('connecting before test >>')
         await Promise.all([
             client.connect(),
-            client.getSessionToken(),
         ])
         stream = await createTestStream(client, module)
         client.debug('connecting before test <<')

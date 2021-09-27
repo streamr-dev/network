@@ -8,7 +8,7 @@ import { counterId } from '../../src/utils'
 // import { StorageNode } from '../../src/StorageNode'
 import { Stream, StreamOperation } from '../../src/Stream'
 
-jest.setTimeout(3000000)
+jest.setTimeout(240000)
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
@@ -24,20 +24,30 @@ describeRepeats('PubSub with multiple clients', () => {
     const addAfter = addAfterFn()
 
     beforeAll(async () => {
-        errors = []
         privateKey = clientOptions.auth.privateKey
-
         mainClient = createClient({
             id: 'main',
             auth: {
                 privateKey
             }
         })
-        // mainClient.on('error', getOnError(errors))
+        const storageNodeClient = createClient({ auth: {
+            privateKey: clientOptions.storageNode.privatekey
+        } })
         stream = await createTestStream(mainClient, module)
-        const storageNode = await mainClient.setNode(clientOptions.storageNode.url)
+        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
         await stream.addToStorageNode(storageNode.getAddress())
         await until(async () => { return mainClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
+    })
+
+    beforeEach(async () => {
+        errors = []
+        mainClient = createClient({
+            id: 'main',
+            auth: {
+                privateKey
+            }
+        })
     })
 
     afterEach(async () => {

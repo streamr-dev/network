@@ -6,11 +6,11 @@ import { BrubeckClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/Subscriber'
 import Subscription from '../../src/Subscription'
-import { StorageNode } from '../../src/StorageNode'
 
-import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../utils'
+import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg, clientOptions } from '../utils'
 
 const MAX_MESSAGES = 10
+jest.setTimeout(60000)
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
     let count = 0
@@ -48,11 +48,14 @@ describeRepeats('GapFill', () => {
         client = createClient(opts)
         subscriber = client.subscriber
         client.debug('connecting before test >>')
-        await client.getSessionToken()
         stream = await createTestStream(client, module, {
             requireSignedData: true
         })
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+        const storageNodeClient = createClient({ auth: {
+            privateKey: clientOptions.storageNode.privatekey
+        } })
+        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
+        await stream.addToStorageNode(storageNode)
 
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream, { waitForLast: true })
@@ -124,7 +127,7 @@ describeRepeats('GapFill', () => {
                 // message pipeline is processed as soon as messages arrive,
                 // not when sub starts iterating
                 expect(calledResend).toHaveBeenCalled()
-            }, 35000)
+            })
 
             it('can fill gap of multiple messages', async () => {
                 const sub = await client.subscribe(stream.id)
@@ -145,7 +148,7 @@ describeRepeats('GapFill', () => {
                     }
                 }
                 expect(received).toEqual(published)
-            }, 35000)
+            })
 
             it('can fill multiple gaps', async () => {
                 const sub = await client.subscribe(stream.id)
@@ -167,7 +170,7 @@ describeRepeats('GapFill', () => {
                     }
                 }
                 expect(received).toEqual(published)
-            }, 35000)
+            })
         })
 
         describe('resend', () => {
@@ -198,7 +201,7 @@ describeRepeats('GapFill', () => {
                     // should not need to explicitly end
                 }
                 expect(received).toEqual(published)
-            }, 60000)
+            })
 
             it('can fill gaps in resends even if gap cannot be filled (ignores missing)', async () => {
                 let ts = 0
@@ -234,7 +237,7 @@ describeRepeats('GapFill', () => {
                     // should not need to explicitly end
                 }
                 expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-            }, 60000)
+            })
 
             it('rejects resend if no storage assigned', async () => {
                 // new stream, assign to storage node not called
@@ -248,7 +251,7 @@ describeRepeats('GapFill', () => {
                         last: MAX_MESSAGES,
                     })
                 }).rejects.toThrow('storage')
-            }, 25000)
+            })
         })
     })
 
@@ -291,7 +294,7 @@ describeRepeats('GapFill', () => {
             const published = await publishedTask
             expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
             expect(calledResend).toHaveBeenCalledTimes(0)
-        }, 30000)
+        })
 
         it('calls gapfill max maxGapRequests times', async () => {
             await setupClient({
@@ -333,7 +336,7 @@ describeRepeats('GapFill', () => {
             }
             expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
             expect(calledResend).toHaveBeenCalledTimes(3)
-        }, 40000)
+        })
     })
 })
 

@@ -33,7 +33,7 @@ export function getKeyExchangeStreamId(address: EthereumAddress) {
     if (isKeyExchangeStream(address)) {
         return address // prevent ever double-handling
     }
-    return `${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`
+    return `${address}/${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`
 }
 
 export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKeyId, GroupKey> {

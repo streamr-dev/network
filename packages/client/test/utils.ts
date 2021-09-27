@@ -159,7 +159,8 @@ const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4
 
 // eslint-disable-next-line no-undef
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) => {
-    return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
+    return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}/${Date.now()}/`, '-')
+    // return '/blubb4'
 }
 
 // eslint-disable-next-line no-undef

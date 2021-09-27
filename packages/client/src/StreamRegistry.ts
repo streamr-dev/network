@@ -116,7 +116,7 @@ export class StreamRegistry implements Context {
                 share: permissions?.share || false
             }
         } catch (err) {
-            console.log(err);
+            console.log(err)
             throw err
         }
     }

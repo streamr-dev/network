@@ -4,7 +4,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { NotFoundError } from '../../src/authFetch'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
-import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId } from '../utils'
+import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getCreateClient } from '../utils'
 
 import debug from 'debug'
 
@@ -37,7 +37,10 @@ function TestStreamEndpoints(getName: () => string) {
             requireSignedData: true,
             requireEncryptedData: false,
         })
-        storageNode = await client.setNode(clientOptions.storageNode.url)
+        const storageNodeClient = createClient({ auth: {
+            privateKey: clientOptions.storageNode.privatekey
+        } })
+        storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
         // await createdStream.addToStorageNode(storageNode.getAddress())
         // await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, storageNode.getAddress()) }, 100000, 1000)
     })
@@ -63,7 +66,7 @@ function TestStreamEndpoints(getName: () => string) {
                 id: newId,
             })
             await until(async () => { return client.streamExistsOnTheGraph(newId) }, 100000, 1000)
-            return expect(newStream.id).toEqual(newId)
+            expect(newStream.id).toEqual(newId)
         })
 
         it('valid path', async () => {
@@ -73,11 +76,11 @@ function TestStreamEndpoints(getName: () => string) {
                 id: newPath,
             })
             await until(async () => { return client.streamExistsOnTheGraph(expectedId) }, 100000, 1000)
-            return expect(newStream.id).toEqual(expectedId)
+            expect(newStream.id).toEqual(expectedId)
         })
 
-        it('invalid id', () => {
-            return expect(() => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow()
+        it('invalid id', async () => {
+            await expect(async () => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow()
         })
     })
 
@@ -85,7 +88,7 @@ function TestStreamEndpoints(getName: () => string) {
         it('get an existing Stream', async () => {
             const stream = await createTestStream(client, module)
             const existingStream = await client.getStream(stream.id)
-            return expect(existingStream.id).toEqual(stream.id)
+            expect(existingStream.id).toEqual(stream.id)
         })
 
         it('get a non-existing Stream', async () => {
@@ -102,7 +105,7 @@ function TestStreamEndpoints(getName: () => string) {
             await until(async () => { return client.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
             // await new Promise((resolve) => setTimeout(resolve, 5000))
             const existingStream = await client.getStreamByName(stream.name)
-            return expect(existingStream.id).toEqual(stream.id)
+            expect(existingStream.id).toEqual(stream.id)
         })
 
         it('get a non-existing Stream', async () => {

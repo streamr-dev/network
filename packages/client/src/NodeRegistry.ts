@@ -257,7 +257,7 @@ export class NodeRegistry {
                 id,
                 metadata,
                 lastSeen,
-                storedStreams {
+                storedStreams (first:1000) {
                     id,
                     metadata,
                 }

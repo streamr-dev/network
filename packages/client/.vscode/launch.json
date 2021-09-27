@@ -22,12 +22,13 @@
               // "test/integration/Stream.test.ts",
               // "test/integration/StreamEndpoints.test.ts",
               // "test/integration/NodeEndpoints.test.ts",
-              // "test/integration/Encryption.test.ts",
-              "test/integration/MultipleClients.test.ts",
+              "test/integration/Encryption.test.ts",
+              // "test/integration/MultipleClients.test.ts",
+              // "test/integration/Resends.test.ts",
               // "test/integration/StreamrClientResends.test.js",
               // "test/integration/StreamrClient.test.ts",
               "-t",
-              "works with multiple publishers on one stream with late subscriber"
+              "does encrypt messages in stream that does not require encryption but groupkey is set anyway"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",

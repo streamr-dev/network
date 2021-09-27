@@ -7,18 +7,20 @@ import {
     getPublishTestStreamMessages,
     publishTestMessagesGenerator,
     createTestStream,
-    getCreateClient
+    getCreateClient,
+    clientOptions
 } from '../utils'
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamOperation } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
-import { StorageNode } from '../../src/StorageNode'
 
 const debug = Debug('StreamrClient::test')
-const TIMEOUT = 15 * 1000
+const TIMEOUT = 20 * 1000
 const NUM_MESSAGES = 5
+
+jest.setTimeout(30000)
 
 describeRepeats('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -66,18 +68,22 @@ describeRepeats('decryption', () => {
     async function setupClient(opts?: any) {
         const client = createClient(opts)
         await Promise.all([
-            client.session.getSessionToken(),
             client.connect(),
         ])
         return client
     }
 
     async function setupStream() {
+        const storageNodeClient = createClient({ auth: {
+            privateKey: clientOptions.storageNode.privatekey
+        } })
+        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
+
         stream = await createTestStream(publisher, module, {
             requireEncryptedData: true,
         })
 
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+        await stream.addToStorageNode(storageNode)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
@@ -96,15 +102,14 @@ describeRepeats('decryption', () => {
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
-            setupClient({ id: 'publisher', ...opts }),
-            setupClient({ id: 'subscriber', ...opts }),
+            setupClient({ id: 'publisher', ...opts, auth: { privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' } }),
+            setupClient({ id: 'subscriber', ...opts, auth: { privateKey: '0xd7609ae3a29375768fac8bc0f8c2f6ac81c5f2ffca2b981e6cf15460f01efe14' } }),
         ])
     }
 
     async function grantSubscriberPermissions({ stream: s = stream, client: c = subscriber }: { stream?: Stream, client?: StreamrClient } = {}) {
-        const p1 = await s.grantPermission(StreamOperation.STREAM_GET, await c.getAddress())
         const p2 = await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
-        return [p1, p2]
+        return [p2]
     }
 
     describe('using default config', () => {
@@ -299,12 +304,14 @@ describeRepeats('decryption', () => {
                 const groupKey = GroupKey.generate()
                 await publisher.setNextGroupKey(stream.id, groupKey)
 
-                const tasks = [
-                    testSub(stream),
-                    testSub(stream2),
-                ]
-                await Promise.allSettled(tasks)
-                await Promise.all(tasks)
+                await testSub(stream)
+                await testSub(stream2)
+                // const tasks = [
+                //    testSub(stream),
+                //    testSub(stream2)
+                // ]
+                // await Promise.allSettled(tasks)
+                // await Promise.all(tasks)
                 onEncryptionMessageErr.resolve(undefined)
                 await onEncryptionMessageErr
                 expect(didFindStream2).toBeTruthy()
@@ -645,10 +652,8 @@ describeRepeats('decryption', () => {
             const groupKey = GroupKey.generate()
             await publisher.setNextGroupKey(stream.id, groupKey)
 
-            await Promise.all([
-                testSub(stream),
-                testSub(stream2),
-            ])
+            await testSub(stream)
+            await testSub(stream2)
             onEncryptionMessageErr.resolve(undefined)
             await onEncryptionMessageErr
             expect(didFindStream2).toBeTruthy()
@@ -753,8 +758,7 @@ describeRepeats('decryption', () => {
 
             await publisher.rotateGroupKey(stream.id)
 
-            await stream.grantPermission(StreamOperation.STREAM_GET, await subscriber.getAddress())
-            const subPermission = await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
+            await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
 
             const sub = await subscriber.subscribe({
                 stream: stream.id,
@@ -780,7 +784,7 @@ describeRepeats('decryption', () => {
                     publisher.debug('PUBLISHED %d of %d', count, maxMessages)
                     if (count === revokeAfter) {
                         await gotMessages
-                        await stream.revokePermission(subPermission.id)
+                        await stream.revokePermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
                         await publisher.rekey(stream.id)
                     }
                 }

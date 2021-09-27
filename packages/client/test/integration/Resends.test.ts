@@ -6,18 +6,23 @@ import {
     describeRepeats,
     getPublishTestStreamMessages,
     getWaitForStorage,
-    createTestStream
+    createTestStream,
+    getCreateClient,
+    until
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/Resends'
-import { StorageNode } from '../../src/StorageNode'
 
 import { Stream } from '../../src/Stream'
 
 /* eslint-disable no-await-in-loop */
 
-const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 20000 : 10000
+const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 60000 : 10000
 const MAX_MESSAGES = 5
+
+const createClient = getCreateClient()
+
+jest.setTimeout(60000)
 
 describeRepeats('resends', () => {
     let expectErrors = 0 // check no errors by default
@@ -36,7 +41,6 @@ describeRepeats('resends', () => {
         client.debug('connecting before all tests >>')
         await Promise.all([
             client.connect(),
-            client.getSessionToken(),
         ])
         client.debug('connecting before all tests <<')
     })
@@ -46,9 +50,12 @@ describeRepeats('resends', () => {
         stream = await createTestStream(client, module)
         client.debug('createStream <<')
         client.debug('addToStorageNode >>')
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
-            timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
-        })
+        const storageNodeClient = createClient({ auth: {
+            privateKey: clientOptions.storageNode.privatekey
+        } })
+        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
+        await stream.addToStorageNode(storageNode.getAddress())
+        await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
         client.debug('addToStorageNode <<')
 
         publishTestMessages = getPublishTestStreamMessages(client, stream)
