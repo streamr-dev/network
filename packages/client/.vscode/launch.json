@@ -22,13 +22,15 @@
               // "test/integration/Stream.test.ts",
               // "test/integration/StreamEndpoints.test.ts",
               // "test/integration/NodeEndpoints.test.ts",
-              "test/integration/Encryption.test.ts",
+              // "test/integration/GapFill.test.ts",
+              "test/integration/GroupKeyPersistence.test.ts",
+              // "test/integration/Encryption.test.ts",
               // "test/integration/MultipleClients.test.ts",
               // "test/integration/Resends.test.ts",
               // "test/integration/StreamrClientResends.test.js",
               // "test/integration/StreamrClient.test.ts",
               "-t",
-              "does encrypt messages in stream that does not require encryption but groupkey is set anyway"
+              "publisher does not complain about group key when many concurrent publishes"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",

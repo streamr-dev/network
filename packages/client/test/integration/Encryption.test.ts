@@ -17,10 +17,10 @@ import { Stream, StreamOperation } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
 
 const debug = Debug('StreamrClient::test')
-const TIMEOUT = 40 * 1000
+const TIMEOUT = 60 * 1000
 const NUM_MESSAGES = 5
 
-jest.setTimeout(60000)
+jest.setTimeout(120000)
 
 describeRepeats('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -84,6 +84,14 @@ describeRepeats('decryption', () => {
         })
 
         await stream.addToStorageNode(storageNode)
+        await until(async () => {
+            try {
+                return (await storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()))
+            } catch (err) {
+                debug('stream still not added to node %o', err)
+                return false
+            }
+        }, 100000, 1000)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }

@@ -10,6 +10,8 @@ import debug from 'debug'
 
 jest.setTimeout(30000)
 
+const createClient = getCreateClient()
+
 /**
  * These tests should be run in sequential order!
  */
