@@ -15,10 +15,6 @@ type IDecrypt<T> = {
     decrypt: (streamMessage: StreamMessage<T>) => Promise<void>
 }
 
-export type DecryptWithExchangeOptions<T> = {
-    onError?: (err: Error, streamMessage?: StreamMessage<T>) => Promise<void> | void
-}
-
 export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
     id
     debug
@@ -29,7 +25,6 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
         private streamEndpoints: StreamEndpointsCached,
         private keyExchange: SubscriberKeyExchange,
         private destroySignal: DestroySignal,
-        private options: DecryptWithExchangeOptions<T>,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -39,12 +34,6 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
                 await this.stop()
             }
         })
-    }
-
-    private async onError(err: Error, streamMessage?: StreamMessage<T>) {
-        if (this.options.onError) {
-            await this.options.onError(err, streamMessage)
-        }
     }
 
     async decrypt(streamMessage: StreamMessage<T>) {
@@ -80,11 +69,12 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
             this.debug('Decrypt Error', err)
             // clear cached permissions if cannot decrypt, likely permissions need updating
             this.streamEndpoints.clearStream(streamMessage.getStreamId())
-            await this.onError(err, streamMessage)
+            throw err
         }
     }
 
     async stop() {
+        this.debug('stop')
         this.isStopped = true
     }
 }

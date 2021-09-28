@@ -188,7 +188,6 @@ export default class Resend implements Context {
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
             spid,
-            {},
             this.container.resolve<Context>(Context as any),
             this.container
         )

@@ -8,7 +8,7 @@ import OrderMessages from './OrderMessages'
 import MessageStream from './MessageStream'
 
 import Validator from './Validator'
-import { Decrypt, DecryptWithExchangeOptions } from './Decrypt'
+import { Decrypt } from './Decrypt'
 import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
 import { Context } from './utils/Context'
 import { Config } from './Config'
@@ -20,7 +20,6 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 export default function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
     spid: SPID,
-    options: DecryptWithExchangeOptions<T>,
     context: Context,
     container: DependencyContainer
 ): MessageStream<T> {
@@ -30,24 +29,32 @@ export default function SubscribePipeline<T = unknown>(
         container.resolve(Config.Subscribe),
         container.resolve(Config.Cache)
     )
-    const orderMessages = new OrderMessages<T>(container.resolve(Config.Subscribe), container.resolve(Context as any), container.resolve(Resends))
+    const orderMessages = new OrderMessages<T>(
+        container.resolve(Config.Subscribe),
+        container.resolve(Context as any),
+        container.resolve(Resends)
+    )
     /* eslint-enable object-curly-newline */
 
     const seenErrors = new WeakSet()
-    const onErrorFn = (error: Error) => {
-        if (options.onError) {
-            return options.onError(error)
-        }
-        throw error
-    }
 
-    const onError = async (err: Error) => {
+    const onError = async (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
         // don't handle same error multiple times
-        if (seenErrors.has(err)) {
+        if (seenErrors.has(error)) {
             return
         }
-        seenErrors.add(err)
-        await onErrorFn(err)
+        context.debug('onError', error)
+        seenErrors.add(error)
+
+        if (streamMessage) {
+            ignoreMessages.add(streamMessage)
+        }
+
+        if (error && 'streamMessage' in error && error.streamMessage) {
+            ignoreMessages.add(error.streamMessage)
+        }
+
+        throw error
     }
 
     const decrypt = new Decrypt<T>(
@@ -55,15 +62,6 @@ export default function SubscribePipeline<T = unknown>(
         container.resolve(StreamEndpointsCached),
         container.resolve(SubscriberKeyExchange),
         container.resolve(DestroySignal),
-        {
-            ...options,
-            onError: async (err, streamMessage) => {
-                if (streamMessage) {
-                    ignoreMessages.add(streamMessage)
-                }
-                await onError(err)
-            },
-        }
     )
 
     // collect messages that fail validation/parsing, do not push out of pipeline
@@ -101,11 +99,13 @@ export default function SubscribePipeline<T = unknown>(
             return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally(async () => {
+            context.debug('onBeforeFinally >>')
             const tasks = [
                 orderMessages.stop(),
                 decrypt.stop(),
                 validate.stop(),
             ]
             await Promise.allSettled(tasks)
+            context.debug('onBeforeFinally <<')
         })
 }

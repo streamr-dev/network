@@ -85,7 +85,7 @@ export default class Signal<ArgsType extends any[] = []> {
     triggerCountValue = 0
 
     constructor(
-        private triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL
+        protected triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL
     ) {
         this.trigger = Function.prototype.bind.call(this.trigger, this)
         switch (triggerType) {
@@ -289,7 +289,42 @@ export default class Signal<ArgsType extends any[] = []> {
 export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<ArgsType> {
     protected seenErrors = new WeakSet<Error>()
     protected ignoredErrors = new WeakSet<Error>()
-    private minListeners = 0
+    private minListeners = 1
+
+    protected async execTrigger(
+        ...args: ArgsType
+    ): Promise<void> {
+        if (this.isEnded) {
+            return
+        }
+
+        this.triggerCountValue += 1
+
+        // capture listeners
+        const tasks = this.listeners.slice()
+        if (this.triggerType === TRIGGER_TYPE.ONCE) {
+            // remove all listeners
+            this.listeners.length = 0
+            this.end(...args)
+        }
+
+        if (!tasks.length) { return }
+
+        // execute tasks in sequence
+        await tasks.reduce(async (prev, task) => {
+            // eslint-disable-next-line promise/always-return
+            // pass previous error to next
+            try {
+                await prev
+            } catch (err) {
+                // @ts-expect-error
+                await task(err)
+                return
+            }
+
+            await task(...args)
+        }, Promise.resolve())
+    }
 
     async trigger(...args: ArgsType) {
         const err = args[0]

@@ -7,7 +7,6 @@ import { Scaffold, instanceId, until } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
 import Signal from './utils/Signal'
-import { flow } from './utils/PushBuffer'
 import MessageStream from './MessageStream'
 
 import Subscription from './Subscription'
@@ -40,26 +39,15 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
         this.onError = this.onError.bind(this)
-        this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.spid, {
-            onError: this.onError,
-        }, this, container)
+        this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.spid, this, container)
+            .onError(this.onError)
             .pipe(this.distributeMessage)
-            .onBeforeFinally(() => {
+            .onBeforeFinally(async () => {
                 if (!this.isStopped) {
-                    return this.stop()
+                    await this.stop()
                 }
-                return this.retire()
             })
-
-        // this.debug('create')
-        setImmediate(() => {
-            // eslint-disable-next-line promise/catch-or-return
-            flow(this.pipeline).catch((_err) => {
-                // this.debug('flow error', err)
-            }).finally(() => {
-                this.debug('end')
-            })
-        })
+        this.pipeline.flow()
     }
 
     private async retire() {
