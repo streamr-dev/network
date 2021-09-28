@@ -17,7 +17,6 @@ const Msg = (bytes) => {
     }
 }
 
-
 function createClient(opts) {
     return new StreamrClient({
         ...clientOptions,
@@ -40,14 +39,14 @@ async function setupClientAndStream(clientOpts, streamOpts) {
 
 const BATCH_SIZES = [
     1024,
-    //2048,
-    //4096,
+    // 2048,
+    // 4096,
 ]
 
 const PAYLOAD_SIZES = [
-    //32, // 32b
+    // 32, // 32b
     1024, // 1kb
-    //128 * 1024, // 128 kb
+    // 128 * 1024, // 128 kb
 ]
 
 const TOTAL_MESSAGES = BATCH_SIZES[BATCH_SIZES.length - 1]

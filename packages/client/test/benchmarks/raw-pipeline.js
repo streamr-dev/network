@@ -57,20 +57,20 @@ async function setupClientAndStream(clientOpts, streamOpts) {
 }
 
 const BATCH_SIZES = [
-    //4,
-    //128,
+    // 4,
+    // 128,
     1024,
-    //2048,
-    //4096,
+    // 2048,
+    // 4096,
 ]
 
 const PAYLOAD_SIZES = [
     32, // 32b
     256, // 0.25kb
     1024, // 1kb
-    //2 * 1024, // 2kb
-    //16 * 1024, // 16 kb
-    //128 * 1024, // 128 kb
+    // 2 * 1024, // 2kb
+    // 16 * 1024, // 16 kb
+    // 128 * 1024, // 128 kb
 ]
 
 const TOTAL_MESSAGES = BATCH_SIZES[BATCH_SIZES.length - 1]

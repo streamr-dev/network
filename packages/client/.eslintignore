@@ -8,6 +8,7 @@ test/unit/StubbedStreamrClient.js
 streamr-docker-dev/**
 vendor/**
 test/exports/**
+test/benchmarks/**
 docs/**
 oldsrc/**
 test/memory/*
