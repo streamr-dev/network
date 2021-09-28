@@ -30,7 +30,6 @@ updates:
       timezone: Europe/Helsinki
     commit-message:
       prefix: build
-      include: scope
     labels:
       - build
     reviewers:
