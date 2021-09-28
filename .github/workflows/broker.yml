@@ -144,7 +144,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Docker meta
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v2.2.1
+        uses: docker/metadata-action@v3.5.0
         with:
           images: streamr/broker-node
           tags: |
@@ -152,8 +152,6 @@ jobs:
             type=ref,event=branch
             type=semver,pattern=v{{version}}
             type=raw,value=dev
-          flavor: |
-            latest=auto
       - name: Setup qemu
         uses: docker/setup-qemu-action@v1.2.0
         with:
