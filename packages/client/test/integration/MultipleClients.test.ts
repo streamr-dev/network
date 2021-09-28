@@ -23,7 +23,7 @@ describeRepeats('PubSub with multiple clients', () => {
     const createClient = getCreateClient()
     const addAfter = addAfterFn()
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         privateKey = clientOptions.auth.privateKey
         mainClient = createClient({
             id: 'main',
@@ -40,16 +40,6 @@ describeRepeats('PubSub with multiple clients', () => {
         await until(async () => { return mainClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
     })
 
-    beforeEach(async () => {
-        errors = []
-        mainClient = createClient({
-            id: 'main',
-            auth: {
-                privateKey
-            }
-        })
-    })
-
     afterEach(async () => {
         expect(errors).toEqual([])
     })
@@ -59,7 +49,7 @@ describeRepeats('PubSub with multiple clients', () => {
             // auth: {
             //                 privateKey: fakePrivateKey(),
             //            },
-            ...opts,
+            ...opts, auth: { privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }
         })
         const publisherId = (await pubClient.getAddress()).toLowerCase()
 
@@ -80,10 +70,8 @@ describeRepeats('PubSub with multiple clients', () => {
     async function createSubscriber(opts = {}) {
         const client = createClient({
             id: 'subscriber',
-            auth: {
-                privateKey
-            },
             ...opts,
+            auth: { privateKey: '0xd7609ae3a29375768fac8bc0f8c2f6ac81c5f2ffca2b981e6cf15460f01efe14' }
         })
 
         // client.on('error', getOnError(errors))
@@ -483,7 +471,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
         otherClient = createClient({
             auth: {
-                privateKey
+                privateKey: '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
             }
         })
         // otherClient.on('error', getOnError(errors))
@@ -557,7 +545,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
         otherClient = createClient({
             auth: {
-                privateKey
+                privateKey: '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
             }
         })
         // otherClient.on('error', getOnError(errors))

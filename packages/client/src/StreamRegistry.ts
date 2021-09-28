@@ -22,6 +22,7 @@ import { EthereumAddress } from './types'
 import { StreamListQuery } from './StreamEndpoints'
 
 // const { ValidationError } = Errors
+const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
 
 // const fetch = require('node-fetch');
 const log = debug('StreamrClient::StreamRegistry')
@@ -295,6 +296,9 @@ export class StreamRegistry implements Context {
 
     async getStream(streamId: string): Promise<Stream> {
         log('Getting stream %s', streamId)
+        if (streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)) {
+            return new Stream({ id: streamId, partitions: 1 }, this.container)
+        }
         const response = await this.sendStreamQuery(StreamRegistry.buildGetSingleStreamQuery(streamId)) as { stream: StreamPermissionsQueryResult }
         if (!response.stream) { throw new NotFoundError('Stream not found: id=' + streamId) }
         const { id, metadata } = response.stream

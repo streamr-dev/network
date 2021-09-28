@@ -10,17 +10,17 @@ import {
     getCreateClient,
     clientOptions
 } from '../utils'
-import { Defer } from '../../src/utils'
+import { Defer, until } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamOperation } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
 
 const debug = Debug('StreamrClient::test')
-const TIMEOUT = 20 * 1000
+const TIMEOUT = 40 * 1000
 const NUM_MESSAGES = 5
 
-jest.setTimeout(30000)
+jest.setTimeout(60000)
 
 describeRepeats('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -109,6 +109,13 @@ describeRepeats('decryption', () => {
 
     async function grantSubscriberPermissions({ stream: s = stream, client: c = subscriber }: { stream?: Stream, client?: StreamrClient } = {}) {
         const p2 = await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
+        await until(async () => {
+            try {
+                return await s.hasPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
+            } catch (err) {
+                return false
+            }
+        }, 100000, 1000)
         return [p2]
     }
 
@@ -723,12 +730,8 @@ describeRepeats('decryption', () => {
             const groupKey2 = GroupKey.generate()
             await publisher.setNextGroupKey(stream2.id, groupKey2)
 
-            const tasks = [
-                testSub(stream),
-                testSub(stream2)
-            ]
-            await Promise.allSettled(tasks)
-            await Promise.all(tasks)
+            await testSub(stream)
+            await testSub(stream2)
             onEncryptionMessageErr.resolve(undefined)
             await onEncryptionMessageErr
         }, TIMEOUT * 2)
