@@ -49,7 +49,7 @@ async function setupClientAndStream(clientOpts, streamOpts) {
     await client.session.getSessionToken()
 
     const stream = await client.createStream({
-        id: `/test-stream-resend/${process.pid}`,
+        id: `/test-stream-raw/${process.pid}`,
         ...streamOpts,
     })
     await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
@@ -57,6 +57,7 @@ async function setupClientAndStream(clientOpts, streamOpts) {
 }
 
 const BATCH_SIZES = [
+    //4,
     //128,
     1024,
     //2048,
@@ -86,7 +87,7 @@ async function run() {
         node.unsubscribe = () => {}
         const startTime = Date.now()
         try {
-            log('publishing %d %s messages to %s >>', batchSize, bytes(payloadBytes), stream.id)
+            log('publishing %d %s%s messages to %s… >>', batchSize, bytes(payloadBytes), stream.requireEncryptedData ? ' encrypted' : '', stream.id.slice(0, 6))
             const published = await client.collectMessages(client.publishFrom(stream, (async function* Generate() {
                 for (let i = 0; i < batchSize; i++) {
                     yield Msg(payloadBytes)
@@ -94,7 +95,7 @@ async function run() {
             }())), batchSize)
             return published
         } finally {
-            log('publishing %d %s messages to %s: %dms <<', batchSize, bytes(payloadBytes), stream.id, Date.now() - startTime)
+            log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.requireEncryptedData ? ' encrypted' : '', stream.id.slice(0, 6), Date.now() - startTime)
         }
     }
 
@@ -103,7 +104,8 @@ async function run() {
         try {
             for (const streamMessage of streamMessages) {
                 // clone because pipeline mutates messages
-                node.emit('streamr:node:unseen-message-received', streamMessage.clone())
+                const msg = streamMessage.clone()
+                node.emit('streamr:node:unseen-message-received', msg)
             }
         } catch (err) {
             log('mockSubMessages error', err)
