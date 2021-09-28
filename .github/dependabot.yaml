@@ -1,0 +1,38 @@
+---
+#
+# https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates
+# https://dependabot.com/docs/config-file/validator/
+#
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    open-pull-requests-limit: 5
+    schedule:
+      interval: daily
+      time: "08:00"
+      timezone: Europe/Helsinki
+    commit-message:
+      prefix: ci
+      include: scope
+    labels:
+      - ci
+    reviewers:
+      - kare
+    assignees:
+      - kare
+  - package-ecosystem: docker
+    directory: /
+    open-pull-requests-limit: 5
+    schedule:
+      interval: daily
+      time: "08:00"
+      timezone: Europe/Helsinki
+    commit-message:
+      prefix: build
+    labels:
+      - build
+    reviewers:
+      - kare
+    assignees:
+      - kare
