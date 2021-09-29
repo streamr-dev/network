@@ -1,5 +1,7 @@
-import { Status, StatusStreams, StreamKey } from '../../identifiers'
+import { Status, StreamKey } from '../../identifiers'
 import { NodeId } from '../node/Node'
+
+export const COUNTER_UNSUBSCRIBE = -1
 
 type Counters = Record<NodeId,Record<StreamKey,number>>
 
@@ -14,15 +16,9 @@ export class InstructionCounter {
         return this.counters[nodeId][streamKey]
     }
 
-    filterStatus(status: Status, source: NodeId): StatusStreams {
-        const filteredStreams: StatusStreams = {}
-        Object.entries(status.streams).forEach(([streamKey, entry]) => {
-            const currentCounter = this.getAndSetIfNecessary(source, streamKey)
-            if (entry.counter >= currentCounter || entry.counter === -1) {
-                filteredStreams[streamKey] = entry
-            }
-        })
-        return filteredStreams
+    isMostRecent(status: Status, source: NodeId): boolean {
+        const currentCounter = this.getAndSetIfNecessary(source, status.stream.streamKey)
+        return (status.stream.counter >= currentCounter || status.stream.counter === COUNTER_UNSUBSCRIBE)
     }
 
     removeNode(nodeId: NodeId): void {

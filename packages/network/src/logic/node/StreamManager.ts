@@ -1,13 +1,8 @@
-import { StreamIdAndPartition, StreamKey } from '../../identifiers'
+import { StreamIdAndPartition, StreamKey, StreamStatus } from '../../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { MessageLayer } from 'streamr-client-protocol'
 import { NodeId } from './Node'
-
-interface StreamStateRepresentation {
-    inboundNodes: Array<NodeId>
-    outboundNodes: Array<NodeId>
-    counter: number
-}
+import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
 
 interface StreamState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
@@ -82,23 +77,23 @@ export class StreamManager {
         outboundNodes.delete(node)
     }
 
-    getStreamState(streamId: StreamIdAndPartition): { [key: string]: StreamStateRepresentation } {
+    getStreamStatus(streamId: StreamIdAndPartition): StreamStatus {
         const streamState = this.streams.get(streamId.key())
-        const result: { [key: string]: StreamStateRepresentation } = {}
-        if (!streamState) {
-            result[streamId.key()] = {
+        if (streamState !== undefined) {
+            return {
+                streamKey: streamId.key(),
+                inboundNodes: [...streamState.inboundNodes],
+                outboundNodes: [...streamState.outboundNodes],
+                counter: streamState.counter
+            }
+        } else {
+            return {
+                streamKey: streamId.key(),
                 inboundNodes: new Array<NodeId>(),
                 outboundNodes: new Array<NodeId>(),
-                counter: -1 // -1 signals unsubscribe
+                counter: COUNTER_UNSUBSCRIBE
             }
-            return result
         }
-        result[streamId.key()] = {
-            inboundNodes: [...streamState.inboundNodes],
-            outboundNodes: [...streamState.outboundNodes],
-            counter: streamState.counter
-        }
-        return result
     }
 
     removeNodeFromAllStreams(node: NodeId): StreamIdAndPartition[] {
@@ -133,20 +128,6 @@ export class StreamManager {
     // TODO: rename to getSortedStreams() (or remove sort functionality altogether)
     getStreams(): ReadonlyArray<StreamIdAndPartition> {
         return this.getStreamsAsKeys().map((key) => StreamIdAndPartition.fromKey(key))
-    }
-
-    getStreamsWithConnections(filterFn: (streamKey: string) => boolean): { [key: string]: StreamStateRepresentation } {
-        const result: { [key: string]: StreamStateRepresentation } = {}
-        this.streams.forEach(({ inboundNodes, outboundNodes, counter }, streamKey) => {
-            if (filterFn(streamKey)) {
-                result[streamKey] = {
-                    inboundNodes: [...inboundNodes],
-                    outboundNodes: [...outboundNodes],
-                    counter
-                }
-            }
-        })
-        return result
     }
 
     // efficient way to access streams

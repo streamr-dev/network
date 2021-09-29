@@ -50,18 +50,18 @@ export interface Location {
     city: string | null
 }
 
-export type StatusStreams = Record<StreamKey, {
+export interface StreamStatus {
+    streamKey: StreamKey
     inboundNodes: NodeId[]
     outboundNodes: NodeId[]
-    counter: number
-}>
+    counter: number // TODO this field could be a field of "Status" interface, not this interface?
+}
 
 export interface Status {
-    streams: StatusStreams
+    stream: StreamStatus
     rtts: Rtts | null
     location: Location
     started: string
-    singleStream: boolean // indicate whether this is a status update for only a single stream
     extra: Record<string, unknown>
 }
 
