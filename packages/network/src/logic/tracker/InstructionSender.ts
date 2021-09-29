@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import io from '@pm2/io'
 import { Logger } from '../../helpers/Logger'
 import { Metrics } from '../../helpers/MetricsContext'
 import { StreamIdAndPartition, StreamKey } from '../../identifiers'
@@ -63,11 +64,15 @@ export class InstructionSender {
     private readonly topologyStabilization: TopologyStabilizationOptions
     private readonly trackerServer: TrackerServer
     private readonly metrics: Metrics
+    private readonly pm2Meter: any
 
     constructor(topologyStabilization: TopologyStabilizationOptions|undefined, trackerServer: TrackerServer, metrics: Metrics) {
         this.topologyStabilization = topologyStabilization ?? DEFAULT_TOPOLOGY_STABILIZATION
         this.trackerServer = trackerServer
         this.metrics = metrics
+        this.pm2Meter = io.meter({
+            name: 'instructions/sec'
+        })
     }
 
     addInstruction(instruction: Instruction): void {
@@ -92,6 +97,7 @@ export class InstructionSender {
         for (const instruction of buffer!.getInstructions()) {
             const { nodeId, streamKey, newNeighbors, counterValue } = instruction
             this.metrics.record('instructionsSent', 1)
+            this.pm2Meter.mark()
             try {
                 await this.trackerServer.sendInstruction(
                     nodeId,
