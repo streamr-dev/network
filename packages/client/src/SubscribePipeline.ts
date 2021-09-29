@@ -49,16 +49,7 @@ export default function SubscribePipeline<T = unknown>(
 
     /* eslint-enable object-curly-newline */
 
-    const seenErrors = new WeakSet()
-
     const onError = async (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
-        // don't handle same error multiple times
-        if (seenErrors.has(error)) {
-            return
-        }
-        context.debug('onError', error)
-        seenErrors.add(error)
-
         if (streamMessage) {
             ignoreMessages.add(streamMessage)
         }

@@ -119,43 +119,145 @@ describeRepeats('resends', () => {
             const receivedMsgs = await sub.collect()
             expect(receivedMsgs).toHaveLength(0)
         })
-        /*
-        it('resendSubscribe with nothing to resend', async () => {
-            emptyStream = await createTestStream(client.client, module)
-            await emptyStream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
-            const sub = await subscriber.resendSubscribe({
-                streamId: emptyStream.id,
-                last: 5,
+        describe('resendSubscribe', () => {
+            it('sees realtime when no resend', async () => {
+                const stream2 = await createTestStream(client, module)
+                await stream2.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
+                    timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
+                })
+
+                const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2)
+
+                const sub = await client.resendSubscribe({
+                    streamId: stream2.id,
+                    last: 100,
+                })
+
+                const onResent = jest.fn(() => {
+                    expect(receivedMsgs).toEqual([])
+                })
+
+                sub.onResent(onResent)
+                const publishedStream2 = await publishTestMessagesStream2(3)
+
+                const receivedMsgs: any[] = []
+                for await (const msg of sub) {
+                    receivedMsgs.push(msg)
+                    if (receivedMsgs.length === publishedStream2.length) {
+                        break
+                    }
+                }
+
+                expect(receivedMsgs).toHaveLength(publishedStream2.length)
+                expect(receivedMsgs).toEqual(publishedStream2)
+                expect(onResent).toHaveBeenCalledTimes(1)
+                expect(client.count(stream2.id)).toBe(0)
             })
 
-            const onResent = jest.fn()
-            sub.on('resent', onResent)
+            it('handles errors in resend', async () => {
+                const stream2 = await createTestStream(client, module)
+                await stream2.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
+                    timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
+                })
 
-            expect(subscriber.count(emptyStream.id)).toBe(1)
-            const msg = Msg()
-            // eslint-disable-next-line no-await-in-loop
-            await client.publish(emptyStream.id, msg)
+                const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2)
 
-            const received = []
-            let t!: ReturnType<typeof setTimeout>
-            try {
-                for await (const m of sub) {
-                    received.push(m.getParsedContent())
-                    clearTimeout(t)
-                    t = testSetTimeout(() => {
-                        sub.cancel()
-                    }, 250)
+                const sub = await client.resendSubscribe({
+                    streamId: stream2.id,
+                    last: 100,
+                })
+
+                const receivedMsgs: any[] = []
+
+                const onResent = jest.fn(() => {
+                    expect(receivedMsgs).toEqual([])
+                })
+
+                const mockFn = jest.spyOn(sub, 'getResent')
+                const err = new Error('expected')
+                mockFn.mockRejectedValueOnce(err)
+                sub.onResent(onResent)
+
+                await publishTestMessagesStream2(3)
+                await expect(async () => {
+                    await sub.collect(5)
+                }).rejects.toThrow(err)
+
+                expect(client.count(stream2.id)).toBe(0)
+                expect(onResent).toHaveBeenCalledTimes(1)
+            })
+
+            it('can ignore errors in resend', async () => {
+                const stream2 = await createTestStream(client, module)
+                await stream2.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
+                    timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
+                })
+
+                const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2)
+
+                const sub = await client.resendSubscribe({
+                    streamId: stream2.id,
+                    last: 100,
+                })
+
+                const onResent = jest.fn(() => {})
+
+                const mockFn = jest.spyOn(sub, 'getResent')
+                const err = new Error('expected')
+                mockFn.mockRejectedValueOnce(err)
+                sub.onResent(onResent)
+                const onSubError = jest.fn(() => {})
+                sub.onError(onSubError) // suppress
+
+                const published = await publishTestMessagesStream2(3)
+                const receivedMsgs = await sub.collect(3)
+
+                expect(receivedMsgs).toEqual(published)
+                expect(client.count(stream2.id)).toBe(0)
+                expect(onResent).toHaveBeenCalledTimes(1)
+                expect(onSubError).toHaveBeenCalledTimes(1)
+            })
+
+            it('sees realtime when no storage assigned', async () => {
+                const stream2 = await createTestStream(client, module)
+
+                const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2)
+
+                const sub = await client.resendSubscribe({
+                    streamId: stream2.id,
+                    last: 100,
+                })
+
+                sub.onError((err: any) => {
+                    if (err.code === 'NO_STORAGE_NODES') { return }
+
+                    throw err
+                })
+
+                const publishedStream2 = await publishTestMessagesStream2(3)
+
+                const receivedMsgs: any[] = []
+
+                const onResent = jest.fn(() => {
+                    expect(receivedMsgs).toEqual([])
+                })
+
+                sub.onResent(onResent)
+
+                for await (const msg of sub) {
+                    receivedMsgs.push(msg)
+                    if (receivedMsgs.length === publishedStream2.length) {
+                        break
+                    }
                 }
-            } finally {
-                clearTimeout(t)
-            }
 
-            expect(onResent).toHaveBeenCalledTimes(1)
-            expect(received).toEqual([msg])
-            expect(subscriber.count(emptyStream.id)).toBe(0)
+                expect(receivedMsgs).toHaveLength(publishedStream2.length)
+                expect(receivedMsgs).toEqual(publishedStream2)
+                expect(onResent).toHaveBeenCalledTimes(1)
+                expect(client.count(stream.id)).toBe(0)
+            })
         })
-        */
     })
 
     describe('with resend data', () => {

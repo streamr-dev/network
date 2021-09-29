@@ -61,7 +61,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
 
     private async onError(error: Error) {
         await Promise.allSettled([...this.subscriptions].map(async (sub) => {
-            await sub.pushError(error)
+            await sub.handleError(error)
         }))
     }
 
@@ -179,7 +179,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
             return
         }
 
-        this.debug('remove', sub.id)
+        this.debug('remove >>', sub.id)
 
         this.pendingRemoval.add(sub)
         this.subscriptions.delete(sub)
@@ -190,6 +190,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
             }
         } finally {
             await this.updateSubscriptions()
+            this.debug('remove <<', sub.id)
         }
     }
 

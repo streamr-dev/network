@@ -53,6 +53,7 @@ describe('Pipeline', () => {
             })
 
         for await (const msg of p3) {
+            // do not remove the expect-error, that's the assertion.
             // @ts-expect-error incorrect iteration type, should be string
             const v: number = msg
             expect(typeof v).toEqual('string')

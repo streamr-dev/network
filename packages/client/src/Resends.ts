@@ -30,16 +30,20 @@ async function fetchStream(url: string, session: Session, opts = {}, abortContro
         signal: abortController.signal,
         ...opts,
     })
-
-    const stream: Transform = response.body.pipe(split2((message: string) => {
-        return StreamMessage.deserialize(message)
-    }))
-    stream.once('close', () => {
+    try {
+        const stream: Transform = response.body.pipe(split2((message: string) => {
+            return StreamMessage.deserialize(message)
+        }))
+        stream.once('close', () => {
+            abortController.abort()
+        })
+        return Object.assign(stream, {
+            startTime,
+        })
+    } catch (err) {
         abortController.abort()
-    })
-    return Object.assign(stream, {
-        startTime,
-    })
+        throw err
+    }
 }
 
 const createUrl = (baseUrl: string, endpointSuffix: string, spid: SPID, query: QueryDict = {}) => {

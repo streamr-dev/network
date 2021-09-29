@@ -90,6 +90,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     id
     protected iterator: AsyncGenerator<OutType>
     isIterating = false
+    isCleaningUp = false
     definition: PipelineDefinition<InType, OutType>
 
     constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
@@ -98,6 +99,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         this.definition = definition || new PipelineDefinition<InType, OutType>(this, source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)
+        this.handleError = this.handleError.bind(this)
     }
 
     /**
@@ -163,39 +165,39 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
 
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>) {
-        return this.pipe((src) => G.map(src, fn, this.onError.trigger))
+        return this.pipe((src) => G.map(src, fn, this.handleError))
     }
 
     mapBefore(fn: G.GeneratorMap<InType, InType>) {
-        return this.pipeBefore((src) => G.map(src, fn, this.onError.trigger))
+        return this.pipeBefore((src) => G.map(src, fn, this.handleError))
     }
 
     forEach(fn: G.GeneratorForEach<OutType>) {
-        return this.pipe((src) => G.forEach(src, fn, this.onError.trigger))
+        return this.pipe((src) => G.forEach(src, fn, this.handleError))
     }
 
     filter(fn: G.GeneratorFilter<OutType>) {
-        return this.pipe((src) => G.filter(src, fn, this.onError.trigger))
+        return this.pipe((src) => G.filter(src, fn, this.handleError))
     }
 
     reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType) {
-        return this.pipe((src) => G.reduce(src, fn, initialValue, this.onError.trigger))
+        return this.pipe((src) => G.reduce(src, fn, initialValue, this.handleError))
     }
 
     forEachBefore(fn: G.GeneratorForEach<InType>) {
-        return this.pipeBefore((src) => G.forEach(src, fn, this.onError.trigger))
+        return this.pipeBefore((src) => G.forEach(src, fn, this.handleError))
     }
 
     filterBefore(fn: G.GeneratorFilter<InType>) {
-        return this.pipeBefore((src) => G.filter(src, fn, this.onError.trigger))
+        return this.pipeBefore((src) => G.filter(src, fn, this.handleError))
     }
 
     async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {
-        return G.consume(this, fn, this.onError.trigger)
+        return G.consume(this, fn, this.handleError)
     }
 
     collect(n?: number) {
-        return G.collect(this, n, this.onError.trigger)
+        return G.collect(this, n, this.handleError)
     }
 
     flow() {
@@ -210,6 +212,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     private async cleanup(error?: Error) {
+        this.isCleaningUp = true
         try {
             try {
                 if (error) {
@@ -223,6 +226,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
             await this.onFinally.trigger(error)
             this.definition.clearTransforms()
         }
+    }
+
+    async handleError(err: Error) {
+        await this.onError.trigger(err)
     }
 
     private async* iterate() {
@@ -249,16 +256,25 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 await this.onMessage.trigger(msg)
                 yield msg
             }
+            this.isCleaningUp = true
         } catch (err) {
-            await this.onError.trigger(err)
+            this.isCleaningUp = true
+            await this.handleError(err)
         } finally {
-            await this.onBeforeFinally.trigger()
+            this.isCleaningUp = true
+            if (!this.onBeforeFinally.triggerCount) {
+                await this.onBeforeFinally.trigger()
+            }
         }
     }
 
     // AsyncGenerator implementation
 
     async throw(err: Error) {
+        if (this.isCleaningUp) {
+            throw err
+        }
+
         if (!this.onBeforeFinally.triggerCount) {
             await this.onBeforeFinally.trigger()
         }
@@ -269,6 +285,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     async return(v?: OutType) {
+        if (this.isCleaningUp) {
+            return Promise.resolve({ done: true, value: v } as IteratorReturnResult<OutType>)
+        }
+
         if (!this.onBeforeFinally.triggerCount) {
             await this.onBeforeFinally.trigger()
         }
@@ -356,10 +376,14 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         return this.source.push(item)
     }
 
-    async pushError(err: Error) {
+    async handleError(err: Error) {
         try {
             await this.onError.trigger(err)
         } catch (error) {
+            if (this.isCleaningUp) {
+                throw error
+            }
+
             await this.push(error)
         }
     }

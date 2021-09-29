@@ -7,7 +7,7 @@ import { instanceId } from './utils'
 import { Context } from './utils/Context'
 import SubscriptionSession from './SubscriptionSession'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
-import { SPID, SIDLike } from 'streamr-client-protocol'
+import { SPID, SIDLike, StreamMessage } from 'streamr-client-protocol'
 import Subscriber, { SubscribeOptions } from './Subscriber'
 import { BrubeckContainer } from './Container'
 import { Config } from './Config'
@@ -17,36 +17,51 @@ import Signal from './utils/Signal'
 
 export class ResendSubscription<T> extends Subscription<T> {
     onResent = Signal.once()
+    private orderMessages
     constructor(
         subSession: SubscriptionSession<T>,
-        resends: Resends,
-        options: ResendOptionsStrict,
+        private resends: Resends,
+        private resendOptions: ResendOptionsStrict,
         container: DependencyContainer
     ) {
         super(subSession)
-        const sub = this
-        const orderMessages = new OrderMessages<T>(
+        this.resendThenRealtime = this.resendThenRealtime.bind(this)
+        this.orderMessages = new OrderMessages<T>(
             container.resolve(Config.Subscribe),
-            container.resolve(Context as any),
+            this,
             container.resolve(Resends),
             subSession.spid,
         )
-        this.pipe(async function* ResendThenRealtime(src) {
-            const resentMsgs = await resends.resend<T>({
-                ...sub.spid.toObject(),
-                resend: options,
-            })
-            sub.onBeforeFinally(async () => {
-                orderMessages.stop()
-                resentMsgs.end()
-                sub.end()
-                await resentMsgs.return()
-            })
-            yield* resentMsgs
-            sub.onResent.trigger()
-            yield* src
+        this.pipe(this.resendThenRealtime)
+        this.pipe(this.orderMessages.transform())
+        this.onBeforeFinally(async () => {
+            this.orderMessages.stop()
         })
-        this.pipe(orderMessages.transform())
+    }
+
+    async getResent() {
+        const resentMsgs = await this.resends.resend<T>({
+            ...this.spid.toObject(),
+            resend: this.resendOptions,
+        })
+
+        this.onBeforeFinally(async () => {
+            resentMsgs.end()
+            await resentMsgs.return()
+        })
+
+        return resentMsgs
+    }
+
+    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>) {
+        try {
+            yield* await this.getResent()
+        } catch (err) {
+            await this.handleError(err)
+        }
+
+        await this.onResent.trigger()
+        yield* src
     }
 }
 
