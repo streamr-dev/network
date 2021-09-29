@@ -56,13 +56,7 @@ describeRepeats('GapFill', () => {
         } })
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
         await stream.addToStorageNode(storageNode)
-        await until(async () => {
-            try {
-                return (await storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()))
-            } catch (err) {
-                return false
-            }
-        }, 100000, 1000)
+        await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
 
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream, { waitForLast: true })

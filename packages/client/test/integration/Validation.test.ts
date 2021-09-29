@@ -6,6 +6,7 @@ import Subscriber from '../../src/Subscriber'
 import Subscription from '../../src/Subscription'
 
 const MAX_MESSAGES = 10
+jest.setTimeout(30000)
 
 describeRepeats('Validation', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
@@ -20,11 +21,9 @@ describeRepeats('Validation', () => {
         client = createClient(opts)
         subscriber = client.subscriber
         client.debug('connecting before test >>')
-        await client.getSessionToken()
         stream = await createTestStream(client, module, {
             requireSignedData: client.options.publishWithSignature !== 'never'
         })
-
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)
         return client
@@ -110,7 +109,7 @@ describeRepeats('Validation', () => {
             expect(errs).toHaveLength(1)
             errs.forEach((err) => {
                 expect(err).toBeInstanceOf(Error)
-                expect(err.message).toMatch('signature')
+                expect(err.message).toMatch('Signature')
             })
         }, 10000)
     })

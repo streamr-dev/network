@@ -42,6 +42,8 @@ export type SubscribeConfig = {
 }
 
 export type ConnectionConfig = {
+    /** Core HTTP API calls go here */
+    restUrl: string
     /** Some TheGraph instance, that indexes the streamr registries */
     theGraphUrl: string
     /** Automatically connect on first subscribe */
@@ -114,6 +116,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 
     // Streamr Core options
+    restUrl: 'https://streamr.network/api/v1',
     theGraphUrl: 'http://127.0.0.1:8000/subgraphs/name/githubname/subgraphname',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
 

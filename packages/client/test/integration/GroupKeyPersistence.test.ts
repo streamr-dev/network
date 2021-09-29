@@ -35,13 +35,7 @@ describeRepeats('Group Key Persistence', () => {
             } })
             const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
             await stream.addToStorageNode(storageNode)
-            await until(async () => {
-                try {
-                    return (await storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()))
-                } catch (err) {
-                    return false
-                }
-            }, 100000, 1000)
+            await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
 
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
@@ -86,13 +80,8 @@ describeRepeats('Group Key Persistence', () => {
                 } })
                 const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
                 await stream.addToStorageNode(storageNode)
-                await until(async () => {
-                    try {
-                        return (await storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()))
-                    } catch (err) {
-                        return false
-                    }
-                }, 100000, 1000)
+                await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
+
                 published = await publishTestMessages(5, {
                     waitForLast: true,
                 })
@@ -332,13 +321,8 @@ describeRepeats('Group Key Persistence', () => {
                     })
                     await stream.addToStorageNode(storageNode)
                     // eslint-disable-next-line no-loop-func
-                    await until(async () => {
-                        try {
-                            return (await storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()))
-                        } catch (err) {
-                            return false
-                        }
-                    }, 100000, 1000)
+                    await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) },
+                        100000, 1000)
                     // return s
                     streams.push(s)
                 }

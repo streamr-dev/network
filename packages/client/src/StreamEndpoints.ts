@@ -220,11 +220,13 @@ export class StreamEndpoints implements Context {
         const nodes = await stream.getStorageNodes()
         if (nodes.length === 0) { throw new NotFoundError('Stream: name=' + streamId + ' has no storage nodes!') }
         const storageNode = nodes[Math.floor(Math.random() * nodes.length)]
-        const json = await this.rest.get<StreamMessageAsObject>(storageNode.url, [
+        const json = await this.rest.get<StreamMessageAsObject>([
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
-            query: { count }
-        })
+            query: { count },
+            useSession: false
+        },
+        storageNode.url)
 
         return json
     }
@@ -255,13 +257,13 @@ export class StreamEndpoints implements Context {
 
         // Send data to the stream
         await this.rest.post(
-            nodeUrl,
             ['streams', streamId, 'data'],
             data,
             {
                 ...requestOptions,
                 agent: keepAlive ? getKeepAliveAgentForUrl(nodeUrl) : undefined,
-            }
+            },
+            nodeUrl
         )
     }
 }

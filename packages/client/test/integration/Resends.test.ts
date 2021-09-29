@@ -17,7 +17,8 @@ import { Stream } from '../../src/Stream'
 
 /* eslint-disable no-await-in-loop */
 
-const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 60000 : 10000
+// const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 60000 : 10000
+const WAIT_FOR_STORAGE_TIMEOUT = 60000
 const MAX_MESSAGES = 5
 
 const createClient = getCreateClient()
@@ -56,6 +57,9 @@ describeRepeats('resends', () => {
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
         await stream.addToStorageNode(storageNode.getAddress())
         await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
+        // wait until storagenode actually picks up new info and stores streamdata
+        client.debug('waiting for storagenode to poll new info')
+        await new Promise((resolve) => setTimeout(resolve, 11000))
         client.debug('addToStorageNode <<')
 
         publishTestMessages = getPublishTestStreamMessages(client, stream)

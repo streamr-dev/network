@@ -84,14 +84,7 @@ describeRepeats('decryption', () => {
         })
 
         await stream.addToStorageNode(storageNode)
-        await until(async () => {
-            try {
-                return (await storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()))
-            } catch (err) {
-                debug('stream still not added to node %o', err)
-                return false
-            }
-        }, 100000, 1000)
+        await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }

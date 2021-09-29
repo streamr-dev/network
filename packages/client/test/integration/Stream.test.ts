@@ -1,7 +1,8 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { getPublishTestMessages, getCreateClient, createTestStream } from '../utils'
-import { StorageNode } from '../../src/StorageNode'
+import { getPublishTestMessages, getCreateClient, createTestStream, until, clientOptions } from '../utils'
+
+jest.setTimeout(30000)
 
 describe('Stream', () => {
     let client: StreamrClient
@@ -13,9 +14,12 @@ describe('Stream', () => {
         await client.connect()
 
         stream = await createTestStream(client, module)
-        const node = await client.setNode(clientOptions.storageNode.url)
-        await stream.addToStorageNode(node.getAddress())
-        await until(async () => { return client.isStreamStoredInStorageNode(stream.id, node.getAddress()) }, 100000, 1000)
+        const storageNodeClient = createClient({ auth: {
+            privateKey: clientOptions.storageNode.privatekey
+        } })
+        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
+        await stream.addToStorageNode(storageNode)
+        await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
     })
 
     describe('detectFields()', () => {

@@ -87,8 +87,8 @@ describe('createNode', () => {
 
     it('getAllStorageNodes', async () => {
         const storageNodes: StorageNode[] = await client.getAllStorageNodes()
-        expect(storageNodes.length).toEqual(1)
-        return expect(storageNodes[0].getAddress()).toEqual(nodeAddress.toLowerCase())
+        expect(storageNodes.length).toBeGreaterThan(0)
+        return expect(storageNodes.map((node) => { return node.getAddress() })).toContain(nodeAddress.toLowerCase())
     })
 
     it('removeStreamFromStorageNode', async () => {

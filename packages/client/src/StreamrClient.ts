@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+import './utils/PatchTsyringe'
 import { container, DependencyContainer, inject } from 'tsyringe'
 import Debug from 'debug'
 
@@ -12,9 +13,11 @@ import Subscriber from './Subscriber'
 import Resends from './Resends'
 import BrubeckNode from './BrubeckNode'
 import Ethereum from './Ethereum'
+import Session from './Session'
 import { DestroySignal } from './DestroySignal'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 import { NodeRegistry } from './NodeRegistry'
@@ -66,6 +69,7 @@ export interface StreamrClient extends Ethereum,
     Methods<StreamRegistry>,
     // connect/pOnce in BrubeckNode are pOnce, we override them anyway
     Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
+    Methods<LoginEndpoints>,
     Methods<Publisher>,
     Methods<NodeRegistry>,
     Methods<DataUnions>,
@@ -73,7 +77,7 @@ export interface StreamrClient extends Ethereum,
     // Omit sessionTokenPromise because TS complains:
     // Type 'undefined' is not assignable to type 'keyof Session'
     // MethodNames's [K in keyof T] doesn't work if K is optional?
-    // Methods<Omit<Session, 'sessionTokenPromise'>>,
+    Methods<Omit<Session, 'sessionTokenPromise'>>,
     Methods<Resends> {
 }
 
@@ -84,6 +88,7 @@ class StreamrClientBase implements Context {
     debug
     container: DependencyContainer
     options: StrictBrubeckClientConfig
+    loginEndpoints: LoginEndpoints
     resendSubscriber: ResendSubscribe
     streamEndpoints: StreamEndpoints
     cached: StreamEndpointsCached
@@ -92,6 +97,7 @@ class StreamrClientBase implements Context {
     subscriber: Subscriber
     resends: Resends
     dataunions: DataUnions
+    session: Session
     node: BrubeckNode
     groupKeyStore: GroupKeyStoreFactory
     subscribe
@@ -105,6 +111,8 @@ class StreamrClientBase implements Context {
         @inject(Config.Root) options: StrictBrubeckClientConfig,
         node: BrubeckNode,
         ethereum: Ethereum,
+        session: Session,
+        loginEndpoints: LoginEndpoints,
         streamEndpoints: StreamEndpoints,
         cached: StreamEndpointsCached,
         resends: Resends,
@@ -121,6 +129,7 @@ class StreamrClientBase implements Context {
         this.id = context.id
         this.debug = context.debug
         this.container = rootContainer
+        this.loginEndpoints = loginEndpoints!
         this.streamEndpoints = streamEndpoints!
         this.ethereum = ethereum!
         this.publisher = publisher!
@@ -128,18 +137,21 @@ class StreamrClientBase implements Context {
         this.subscriber = subscriber!
         this.resendSubscriber = resendSubscriber!
         this.resends = resends!
+        this.session = session!
         this.node = node!
         this.groupKeyStore = groupKeyStore
         this.destroySignal = destroySignal
         this.dataunions = dataunions
         this.streamRegistry = streamRegistry
         this.nodeRegistry = nodeRegistry
+        Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
         Plugin(this, this.resends)
         Plugin(this, this.resendSubscriber)
+        Plugin(this, this.session)
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
         Plugin(this, this.dataunions)
@@ -244,6 +256,8 @@ export class StreamrClient extends StreamrClientBase {
             config,
             c.resolve<BrubeckNode>(BrubeckNode),
             c.resolve<Ethereum>(Ethereum),
+            c.resolve<Session>(Session),
+            c.resolve<LoginEndpoints>(LoginEndpoints),
             c.resolve<StreamEndpoints>(StreamEndpoints),
             c.resolve<StreamEndpointsCached>(StreamEndpointsCached),
             c.resolve<Resends>(Resends),
@@ -264,7 +278,8 @@ export const Dependencies = {
     Context,
     BrubeckNode,
     NodeRegistry,
-    StreamRegistry,
+    Session,
+    LoginEndpoints,
     StreamEndpoints,
     StreamEndpointsCached,
     Resends,

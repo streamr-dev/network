@@ -9,6 +9,7 @@ import { ConnectionConfig, Config } from './Config'
 import authFetch, { authRequest } from './authFetch'
 import { Context } from './utils/Context'
 
+import Session from './Session'
 import { BrubeckContainer } from './Container'
 
 export type FetchOptions = {
@@ -40,39 +41,45 @@ export class Rest implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    static getUrl(baseUrl:string, urlParts: UrlParts, query = {}) {
-        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl + '/api/v1/')
+    getUrl(urlParts: UrlParts, query = {}, restUrl = this.options.restUrl) {
+        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), restUrl + '/')
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
         return url
     }
 
-    fetch<T extends object>(baseUrl: string, urlParts: UrlParts, {
-        query, useSession = true, options, requireNewToken = false, debug = this.debug
+    get session() {
+        return this.container.resolve<Session>(Session)
+    }
+
+    fetch<T extends object>(urlParts: UrlParts, {
+        query, useSession = true, options, requireNewToken = false, debug = this.debug, restUrl
     }: FetchOptions) {
-        const url = Rest.getUrl(baseUrl, urlParts, query)
+        const url = this.getUrl(urlParts, query, restUrl)
         return authFetch<T>(
             url.toString(),
+            useSession ? this.session : undefined,
             options,
             requireNewToken,
             debug,
         )
     }
 
-    request<T extends object>(baseUrl:string, urlParts: UrlParts, {
-        query, useSession = true, options, requireNewToken = false, debug = this.debug
+    request<T extends object>(urlParts: UrlParts, {
+        query, useSession = true, options, requireNewToken = false, debug = this.debug, restUrl
     }: FetchOptions) {
-        const url = Rest.getUrl(baseUrl, urlParts, query)
+        const url = this.getUrl(urlParts, query, restUrl)
         return authRequest<T>(
             url.toString(),
+            useSession ? this.session : undefined,
             options,
             requireNewToken,
             debug,
         )
     }
 
-    post<T extends object>(baseUrl: string, urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
-        return this.fetch<T>(baseUrl, urlParts, {
+    post<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}, restUrl?: string) {
+        return this.fetch<T>(urlParts, {
             ...options,
             options: {
                 ...options?.options,
@@ -82,22 +89,24 @@ export class Rest implements Context {
                 },
                 method: 'POST',
                 body: serialize(body),
-            }
+            },
+            restUrl
         })
     }
 
-    get<T extends object>(baseUrl: string, urlParts: UrlParts, options: FetchOptions = {}) {
-        return this.fetch<T>(baseUrl, urlParts, {
+    get<T extends object>(urlParts: UrlParts, options: FetchOptions = {}, restUrl?: string) {
+        return this.fetch<T>(urlParts, {
             ...options,
             options: {
                 ...options.options,
                 method: 'GET',
-            }
+            },
+            restUrl
         })
     }
 
-    put<T extends object>(baseUrl: string, urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
-        return this.fetch<T>(baseUrl, urlParts, {
+    put<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}, restUrl?: string) {
+        return this.fetch<T>(urlParts, {
             ...options,
             options: {
                 ...options.options,
@@ -107,12 +116,13 @@ export class Rest implements Context {
                 },
                 method: 'PUT',
                 body: serialize(body),
-            }
+            },
+            restUrl
         })
     }
 
-    del<T extends object>(baseUrl: string, urlParts: UrlParts, options: FetchOptions = {}) {
-        return this.fetch<T>(baseUrl, urlParts, {
+    del<T extends object>(urlParts: UrlParts, options: FetchOptions = {}) {
+        return this.fetch<T>(urlParts, {
             ...options,
             options: {
                 ...options.options,
@@ -121,9 +131,9 @@ export class Rest implements Context {
         })
     }
 
-    async stream(baseUrl:string, urlParts: UrlParts, options: FetchOptions = {}, abortController = new AbortController()) {
+    async stream(urlParts: UrlParts, options: FetchOptions = {}, abortController = new AbortController()) {
         const startTime = Date.now()
-        const response = await this.request(baseUrl, urlParts, {
+        const response = await this.request(urlParts, {
             ...options,
             options: {
                 signal: abortController.signal,

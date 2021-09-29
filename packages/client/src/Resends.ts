@@ -26,7 +26,7 @@ type QueryDict = Record<string, string | number | boolean | null | undefined>
 
 async function fetchStream(url: string, opts = {}, abortController = new AbortController()) {
     const startTime = Date.now()
-    const response = await authRequest(url, {
+    const response = await authRequest(url, undefined, {
         signal: abortController.signal,
         ...opts,
     })

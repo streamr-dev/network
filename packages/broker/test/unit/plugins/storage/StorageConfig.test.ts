@@ -1,12 +1,19 @@
 /* eslint-disable no-underscore-dangle, object-curly-newline */
+import StreamrClient from 'streamr-client'
 import { StorageConfig, StorageConfigListener } from '../../../../src/plugins/storage/StorageConfig'
+import { fastPrivateKey } from '../../../utils'
 
 describe('StorageConfig', () => {
     let config: StorageConfig
     let listener: StorageConfigListener
 
     beforeEach(() => {
-        config = new StorageConfig('nodeId', 'http://api-url.com/path')
+        const client = new StreamrClient({
+            auth: {
+                privateKey: fastPrivateKey()
+            }
+        })
+        config = new StorageConfig('nodeId', client)
         // @ts-expect-error private
         config._setStreams(new Set(['existing1::0', 'existing2::0', 'existing2::1', 'existing3::0']))
         listener = {

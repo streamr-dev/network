@@ -5,6 +5,8 @@ import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
 
+jest.setTimeout(30000)
+
 const Msg = (opts?: any) => ({
     value: uid('msg'),
     ...opts,
