@@ -41,8 +41,9 @@ export class Rest implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    getUrl(urlParts: UrlParts, query = {}, restUrl = this.options.restUrl) {
-        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), restUrl + '/')
+    getUrl(urlParts: UrlParts, query = {}, restUrl?: string) {
+        const baseUrl = restUrl ? restUrl + '/api/v1/' : this.options.restUrl
+        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl)
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
         return url
