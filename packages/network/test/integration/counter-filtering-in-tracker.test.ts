@@ -11,7 +11,7 @@ import { NodeId } from '../logic/node/Node'
 
 const WAIT_TIME = 2000
 
-const formStatus = (counter1: number, counter2: number, nodes1: NodeId[], nodes2: NodeId[]): Partial<Status> => ({
+const formStatus = (counter1: number, nodes1: NodeId[]): Partial<Status> => ({
     stream: {
         streamKey: 'stream-1::0',
         inboundNodes: nodes1,
@@ -50,8 +50,8 @@ describe('tracker: instruction counter filtering', () => {
         ])
 
         await runAndWaitForEvents([
-            () => { nodeToTracker1.sendStatus('tracker', formStatus(0, 0, [], []) as Status) },
-            () => { nodeToTracker2.sendStatus('tracker', formStatus(0, 0, [], []) as Status) }
+            () => { nodeToTracker1.sendStatus('tracker', formStatus(0, []) as Status) },
+            () => { nodeToTracker2.sendStatus('tracker', formStatus(0, []) as Status) }
         ], [
             [nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
             [nodeToTracker2, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED]
@@ -67,8 +67,8 @@ describe('tracker: instruction counter filtering', () => {
     test('handles status messages with counters equal or more to current counter(s)', async () => {
         await runAndWaitForEvents(
             () => {
-                nodeToTracker1.sendStatus('tracker', formStatus(1, 666, [], []) as Status)
-                .catch(() => {})
+                nodeToTracker1.sendStatus('tracker', formStatus(1, []) as Status)
+                    .catch(() => {})
             },
             [nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
             WAIT_TIME
@@ -80,7 +80,7 @@ describe('tracker: instruction counter filtering', () => {
         nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
-        nodeToTracker1.sendStatus('tracker', formStatus(0, 0, [], []) as Status)
+        nodeToTracker1.sendStatus('tracker', formStatus(0, []) as Status)
             .catch(() => {})
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(0)
@@ -91,7 +91,7 @@ describe('tracker: instruction counter filtering', () => {
         nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
-        nodeToTracker1.sendStatus('tracker', formStatus(1, 0, [], []) as Status)
+        nodeToTracker1.sendStatus('tracker', formStatus(1, []) as Status)
             .catch(() => {})
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(1)
@@ -100,7 +100,7 @@ describe('tracker: instruction counter filtering', () => {
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
         await runAndWaitForEvents(
-            () => { nodeToTracker1.sendStatus('tracker', formStatus(0, 0, [], []) as Status) },
+            () => { nodeToTracker1.sendStatus('tracker', formStatus(0, []) as Status) },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )
@@ -111,7 +111,7 @@ describe('tracker: instruction counter filtering', () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
         await runAndWaitForEvents(
             () => {
-                nodeToTracker1.sendStatus('tracker', formStatus(1, 0, [], []) as Status)
+                nodeToTracker1.sendStatus('tracker', formStatus(1, []) as Status)
             },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
