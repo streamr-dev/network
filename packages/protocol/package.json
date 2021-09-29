@@ -1,6 +1,6 @@
 {
   "name": "streamr-client-protocol",
-  "version": "9.1.0-brubeck.0",
+  "version": "9.1.0-brubeck.1",
   "description": "JavaScript classes implementing the Streamr client-to-node protocol",
   "repository": {
     "type": "git",
