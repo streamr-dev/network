@@ -39,7 +39,6 @@ export class NodeToTracker extends EventEmitter {
     private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
     private readonly logger: Logger
 
-    // ServerWsEndpoint
     constructor(endpoint: AbstractClientWsEndpoint<AbstractWsConnection>) {
         super()
         this.endpoint = endpoint

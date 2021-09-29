@@ -143,13 +143,12 @@ export class TrackerManager {
     private async sendStatus(streamId: StreamIdAndPartition, trackerId: TrackerId): Promise<void> {
         const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
         const status = {
-            streams: this.streamManager.getStreamState(streamId),
-            singleStream: true,
+            stream: this.streamManager.getStreamStatus(streamId),
             ...nodeDescriptor
         }
         try {
             await this.nodeToTracker.sendStatus(trackerId, status)
-            logger.trace('sent status %j to tracker %s', status.streams, trackerId)
+            logger.trace('sent status %j to tracker %s', status.stream, trackerId)
         } catch (e) {
             logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
         }
