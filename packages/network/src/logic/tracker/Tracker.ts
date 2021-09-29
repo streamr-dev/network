@@ -1,3 +1,4 @@
+import io from '@pm2/io'
 import { EventEmitter } from 'events'
 import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
@@ -57,6 +58,7 @@ export class Tracker extends EventEmitter {
     private readonly extraMetadatas: Record<NodeId,Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
+    private readonly statusMeter: any
 
     constructor(opts: TrackerOptions) {
         super()
@@ -97,6 +99,10 @@ export class Tracker extends EventEmitter {
             .addRecordedMetric('instructionsSent')
             .addRecordedMetric('_removeNode')
 
+        this.statusMeter = io.meter({
+            name: 'statuses/sec'
+        })
+
         this.instructionSender = new InstructionSender(opts.topologyStabilization, this.trackerServer, this.metrics)
     }
 
@@ -112,6 +118,7 @@ export class Tracker extends EventEmitter {
 
     processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
         this.metrics.record('processNodeStatus', 1)
+        this.statusMeter.mark()
         const status = statusMessage.status as Status
         const { stream, rtts, location, extra } = status
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
