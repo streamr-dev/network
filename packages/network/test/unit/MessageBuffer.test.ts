@@ -1,4 +1,4 @@
-import { MessageBuffer } from '../../src/helpers/MessageBuffer'
+import { MessageBuffer } from '../../src/logic/node/MessageBuffer'
 
 describe('MessageBuffer', () => {
 

@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.0
+        uses: styfle/cancel-workflow-action@0.9.1
         with:
           all_but_latest: true
           access_token: ${{ github.token }}
@@ -44,7 +44,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -74,7 +74,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -118,7 +118,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -139,7 +139,7 @@ jobs:
         run: npm run $TEST_NAME
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v1
+        uses: jwalton/gh-docker-logs@v2.0.1
         with:
           dest: 'packages/client/logs'
       - name: Upload logs to GitHub
@@ -164,7 +164,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -204,7 +204,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}

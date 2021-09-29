@@ -24,7 +24,7 @@ const externals = (env) => {
 const fallbacks = (env) => {
     const fallbacks = {
         'fs': require.resolve('browserify-fs'),
-        '/src/logic/LocationManager.ts': false,
+        '/src/logic/tracker/LocationManager.ts': false,
         'module': false,
         'net': false,
     }
@@ -42,7 +42,7 @@ const fallbacks = (env) => {
 const aliases = (env) => {
     const aliases = {
         'process': 'process/browser',
-        [path.resolve(__dirname, 'src/logic/LocationManager.ts')]:
+        [path.resolve(__dirname, 'src/logic/tracker/LocationManager.ts')]:
             path.resolve(__dirname, 'src/browser/LocationManager.ts'),
         [path.resolve(__dirname, 'src/connection/NodeWebRtcConnection.ts')]:
             path.resolve(__dirname, 'src/connection/BrowserWebRtcConnection.ts'),

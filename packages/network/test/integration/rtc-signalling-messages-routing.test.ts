@@ -1,13 +1,13 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { waitForEvent } from 'streamr-test-utils'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { RtcSubTypes } from '../../src/logic/RtcMessage'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { startTracker } from '../../src/composition'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
+import { RtcSubTypes } from '../../src/identifiers'
 
 const { RelayMessage, ErrorMessage } = TrackerLayer
 
@@ -54,16 +54,21 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     })
 
     it('Offer messages are delivered', async () => {
-        const requestId = await originatorNodeToTracker.sendRtcOffer(
-            'tracker',
-            'target',
-            'connectionid',
-            PeerInfo.newNode('originator'),
-            'description'
+        let requestId: string|undefined
+        const [rtcOffers]: any[] = await runAndWaitForEvents(
+            async () => {
+                requestId = await originatorNodeToTracker.sendRtcOffer(
+                    'tracker',
+                    'target',
+                    'connectionid',
+                    PeerInfo.newNode('originator'),
+                    'description'
+                )
+            },
+            [targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED]
         )
-        const [rtcOffer] = await waitForEvent(targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED)
-        expect(rtcOffer).toEqual(new RelayMessage({
-            requestId,
+        expect(rtcOffers[0]).toEqual(new RelayMessage({
+            requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
             subType: RtcSubTypes.RTC_OFFER,

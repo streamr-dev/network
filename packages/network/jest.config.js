@@ -24,5 +24,7 @@ module.exports = {
     // This option allows use of a custom test runner
     testRunner: 'jest-circus/runner',
 
-    testPathIgnorePatterns: ["/browser/", "/node_modules/"]
+    testPathIgnorePatterns: ["/browser/", "/node_modules/"],
+
+    setupFilesAfterEnv: ["jest-extended"],
 }

@@ -1,15 +1,15 @@
 import express from 'express'
 import cors from 'cors'
-import { MetricsContext } from './MetricsContext'
+import { MetricsContext } from '../../helpers/MetricsContext'
 import {
     addRttsToNodeConnections,
     findStreamsForNode,
     getNodeConnections,
     getTopology,
     getStreamSizes
-} from '../logic/trackerSummaryUtils'
-import { Logger } from './Logger'
-import { Tracker } from '../logic/Tracker'
+} from './trackerSummaryUtils'
+import { Logger } from '../../helpers/Logger'
+import { Tracker } from './Tracker'
 import http from 'http'
 import https from 'https'
 import morgan from 'morgan'

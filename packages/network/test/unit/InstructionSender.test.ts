@@ -1,4 +1,4 @@
-import { Instruction, InstructionSender } from '../../src/logic/InstructionSender'
+import { Instruction, InstructionSender } from '../../src/logic/tracker/InstructionSender'
 import { StreamKey } from '../../src/identifiers'
 
 const MOCK_STREAM_1 = 'stream-id::1'

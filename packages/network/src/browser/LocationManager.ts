@@ -1,6 +1,6 @@
 import { Logger } from '../helpers/Logger'
 import { Location } from '../identifiers'
-import { NodeId } from '../logic/Node'
+import { NodeId } from '../logic/node/Node'
 
 function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)

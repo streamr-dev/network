@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.8.0
+        uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
   cross-client-testing:
@@ -71,7 +71,7 @@ jobs:
         run: |
           npm ci
           npm run bootstrap-pkg @streamr/cross-client-testing
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v2
         with:
           java-version: '8'
       - name: Start Streamr Docker Stack
@@ -87,7 +87,7 @@ jobs:
           command: cd packages/cross-client-testing && DEBUG='' make run
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v1
+        uses: jwalton/gh-docker-logs@v2.0.1
         with:
           dest: 'packages/cross-client-testing/logs'
       - name: Upload logs to GitHub

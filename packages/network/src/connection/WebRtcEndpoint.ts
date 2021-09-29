@@ -12,7 +12,7 @@ import {
     OfferOptions,
     IceCandidateOptions,
     RtcSignaller
-} from '../logic/RtcSignaller'
+} from '../logic/node/RtcSignaller'
 import { Rtts } from '../identifiers'
 import { MessageQueue } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
@@ -136,7 +136,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                     pendingPeerIds.push(peerId)
                 }
             }
-            this.logger.info(`Successfully connected to ${connectedPeerCount} peers. Still trying to connect to the following peers: [${pendingPeerIds.join(', ')}]`)
+            this.logger.info(`Successfully connected to %d peers. Still trying to connect to the following peers: [%s]`,
+                connectedPeerCount, pendingPeerIds.join(', '))
         }, STATUS_REPORT_INTERVAL_MS)
     }
 
@@ -457,5 +458,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         Object.values(connections).forEach((connection) => connection.close())
         Object.values(messageQueues).forEach((queue) => queue.clear())
         this.connectionFactory.cleanUp()
+    }
+
+    getAllConnectionNodeIds(): PeerId[] {
+        return Object.keys(this.connections)
     }
 }

@@ -1,6 +1,6 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
-import { SeenButNotPropagatedSet } from '../../src/helpers/SeenButNotPropagatedSet'
+import { SeenButNotPropagatedSet } from '../../src/logic/node/SeenButNotPropagatedSet'
 
 const { MessageIDStrict } = MessageLayer
 
