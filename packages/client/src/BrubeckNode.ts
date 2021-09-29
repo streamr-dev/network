@@ -3,7 +3,7 @@
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode } from 'streamr-network'
-import { pOnce, uuid, instanceId, counterId } from './utils'
+import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { Config } from './Config'
 import { StreamMessage } from 'streamr-client-protocol'
@@ -47,7 +47,7 @@ export default class BrubeckNode implements Context {
 
         this.debug('initNode')
         const address = await this.ethereum.getAddress()
-        const nodeId = counterId(`${address}-${uid}`)
+        const nodeId = `${address}#${uuid()}`
 
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
