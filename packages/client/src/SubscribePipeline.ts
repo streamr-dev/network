@@ -29,11 +29,24 @@ export default function SubscribePipeline<T = unknown>(
         container.resolve(Config.Subscribe),
         container.resolve(Config.Cache)
     )
-    const orderMessages = new OrderMessages<T>(
+
+    const gapFillMessages = new OrderMessages<T>(
         container.resolve(Config.Subscribe),
         container.resolve(Context as any),
-        container.resolve(Resends)
+        container.resolve(Resends),
+        spid,
     )
+
+    const orderMessages = new OrderMessages<T>(
+        {
+            ...container.resolve(Config.Subscribe),
+            gapFill: false,
+        },
+        container.resolve(Context as any),
+        container.resolve(Resends),
+        spid,
+    )
+
     /* eslint-enable object-curly-newline */
 
     const seenErrors = new WeakSet()
@@ -71,7 +84,7 @@ export default function SubscribePipeline<T = unknown>(
     return messageStream
         .onError(onError)
         // order messages (fill gaps)
-        .pipe(orderMessages.transform(spid))
+        .pipe(gapFillMessages.transform())
         // convert group key error responses into errors
         // (only for subscribe pipeline, not publish pipeline)
         .forEach((streamMessage) => {
@@ -93,19 +106,18 @@ export default function SubscribePipeline<T = unknown>(
             streamMessage.getParsedContent()
         })
         // re-order messages (ignore gaps)
-        .pipe(orderMessages.transform(spid, { gapFill: false }))
+        .pipe(orderMessages.transform())
         // ignore any failed messages
         .filter(async (streamMessage) => {
             return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally(async () => {
-            context.debug('onBeforeFinally >>')
             const tasks = [
                 orderMessages.stop(),
+                gapFillMessages.stop(),
                 decrypt.stop(),
                 validate.stop(),
             ]
             await Promise.allSettled(tasks)
-            context.debug('onBeforeFinally <<')
         })
 }

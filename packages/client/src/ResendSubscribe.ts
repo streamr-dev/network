@@ -25,7 +25,12 @@ export class ResendSubscription<T> extends Subscription<T> {
     ) {
         super(subSession)
         const sub = this
-        const orderMessages = new OrderMessages<T>(container.resolve(Config.Subscribe), container.resolve(Context as any), container.resolve(Resends))
+        const orderMessages = new OrderMessages<T>(
+            container.resolve(Config.Subscribe),
+            container.resolve(Context as any),
+            container.resolve(Resends),
+            subSession.spid,
+        )
         this.pipe(async function* ResendThenRealtime(src) {
             const resentMsgs = await resends.resend<T>({
                 ...sub.spid.toObject(),
@@ -41,7 +46,7 @@ export class ResendSubscription<T> extends Subscription<T> {
             sub.onResent.trigger()
             yield* src
         })
-        this.pipe(orderMessages.transform(subSession.spid))
+        this.pipe(orderMessages.transform())
     }
 }
 
