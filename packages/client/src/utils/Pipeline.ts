@@ -140,19 +140,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         })
     }
 
-    bufferInto(buffer: PushBuffer<OutType>) {
-        return this.pipe(async function* ToBuffer(src) {
-            G.consume(src, async (value) => { // eslint-disable-line promise/catch-or-return
-                await buffer.push(value)
-            }).catch((err) => {
-                return buffer.push(err)
-            }).finally(() => {
-                buffer.endWrite()
-            })
-            yield* buffer
-        })
-    }
-
     /**
      * Triggers once when pipeline ends.
      * Usage: `pipeline.onFinally(callback)`
