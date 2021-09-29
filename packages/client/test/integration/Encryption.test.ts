@@ -58,9 +58,6 @@ describeRepeats('decryption', () => {
         await wait(0)
         // ensure no unexpected errors
         expect(errors).toHaveLength(expectErrors)
-        // if (publisher) {
-        // expect(publisher.onError).toHaveBeenCalledTimes(expectErrors)
-        // }
     })
 
     async function setupClient(opts?: any) {

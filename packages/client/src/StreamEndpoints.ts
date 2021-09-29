@@ -56,9 +56,11 @@ export interface StreamListQuery {
 }
 
 export interface StreamValidationInfo {
-    partitions: number,
+    id: string
+    partitions: number
     requireSignedData: boolean
     requireEncryptedData: boolean
+    storageDays: number
 }
 
 export interface StreamMessageAsObject { // TODO this could be in streamr-protocol
@@ -264,9 +266,19 @@ export class StreamEndpoints implements Context {
     }
 
     async getStreamValidationInfo(streamId: string) {
+        const isKeyExchange = isKeyExchangeStream(streamId)
         this.debug('getStreamValidationInfo %o', {
             streamId,
+            isKeyExchangeStream: isKeyExchange,
         })
+
+        if (isKeyExchange) {
+            return new Stream({
+                id: streamId,
+                partitions: 1,
+            }, this.container)
+        }
+
         const json = await this.rest.get<StreamValidationInfo>(['streams', streamId, 'validation'])
         return json
     }

@@ -47,7 +47,7 @@ export default class PublisherEncryption implements Stoppable {
         }
 
         const streamId = streamMessage.getStreamId()
-        const stream = await this.streamEndpoints.getStream(streamId)
+        const stream = await this.streamEndpoints.getStreamValidationInfo(streamId)
 
         if (this.isStopped) { return }
 
@@ -59,7 +59,7 @@ export default class PublisherEncryption implements Stoppable {
             return
         }
 
-        const [groupKey, nextGroupKey] = await this.keyExchange.useGroupKey(streamId)
+        const [groupKey, nextGroupKey] = await this.keyExchange.useGroupKey(stream.id)
         if (this.isStopped) { return }
 
         if (!groupKey) {

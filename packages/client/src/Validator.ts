@@ -35,7 +35,7 @@ export default class Validator extends StreamMessageValidator implements Stoppab
     ) {
         super({
             getStream: (streamId: string) => {
-                return streamEndpoints.getStream(streamId)
+                return streamEndpoints.getStreamValidationInfo(streamId)
             },
             isPublisher: (publisherId: string, streamId: string) => {
                 return streamEndpoints.isStreamPublisher(streamId, publisherId)
