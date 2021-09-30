@@ -38,7 +38,7 @@ export interface StorageNodeRegistryItem {
 }
 
 export interface StorageNodeConfig {
-    registry: StorageNodeRegistryItem[] | NetworkSmartContract
+    registry: NetworkSmartContract
 }
 
 export interface Config {

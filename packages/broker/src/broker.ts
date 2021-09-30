@@ -101,7 +101,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             stunUrls: getStunTurnUrls(config)
         }
     })
-    const storageNodes = await streamrClient.getAllStorageNodes()
     const publisher = new Publisher(streamrClient, metricsContext)
     const networkNode = await streamrClient.getNode()
     const subscriptionManager = new SubscriptionManager(networkNode)

@@ -28,20 +28,21 @@ describe('AuthenticationMiddleware', () => {
         middlewareInstance = authenticator(streamFetcherStub)
     })
 
-    describe('given no authorization token', () => {
-        it('delegates streamId to streamFetcher#authenticate without session token', () => {
-            streamFetcherStub.authenticate = sinon.stub()
-            streamFetcherStub.authenticate.returns(Promise.resolve({}))
+    // to get stream no session is needed any more, streamFetcher is getting streams from chain
+    // describe('given no authorization token', () => {
+    //     it('delegates streamId to streamFetcher#authenticate without session token', () => {
+    //         streamFetcherStub.authenticate = sinon.stub()
+    //         streamFetcherStub.authenticate.returns(Promise.resolve({}))
 
-            middlewareInstance(request, response, next)
+    //         middlewareInstance(request, response, next)
 
-            sinon.assert.calledOnce(streamFetcherStub.authenticate)
-            sinon.assert.calledWithExactly(
-                streamFetcherStub.authenticate,
-                'streamId', undefined, 'stream_subscribe',
-            )
-        })
-    })
+    //         sinon.assert.calledOnce(streamFetcherStub.authenticate)
+    //         sinon.assert.calledWithExactly(
+    //             streamFetcherStub.authenticate,
+    //             'streamId', undefined, 'stream_subscribe',
+    //         )
+    //     })
+    // })
 
     it('responds 400 and error message if authorization header malformed', () => {
         streamFetcherStub.authenticate = sinon.stub()
@@ -67,32 +68,33 @@ describe('AuthenticationMiddleware', () => {
             }
         })
 
-        it('delegates streamId and session token to streamFetcher#authenticate', () => {
-            streamFetcherStub.authenticate = sinon.stub()
-            streamFetcherStub.authenticate.returns(Promise.resolve({}))
+        // to get stream no session is needed any more, streamFetcher is getting streams from chain
+        // it('delegates streamId and session token to streamFetcher#authenticate', () => {
+        //     streamFetcherStub.authenticate = sinon.stub()
+        //     streamFetcherStub.authenticate.returns(Promise.resolve({}))
 
-            middlewareInstance(request, response, next)
+        //     middlewareInstance(request, response, next)
 
-            sinon.assert.calledOnce(streamFetcherStub.authenticate)
-            sinon.assert.calledWithExactly(
-                streamFetcherStub.authenticate,
-                'streamId', 'session-token', 'stream_subscribe',
-            )
-        })
+        //     sinon.assert.calledOnce(streamFetcherStub.authenticate)
+        //     sinon.assert.calledWithExactly(
+        //         streamFetcherStub.authenticate,
+        //         'streamId', 'session-token', 'stream_subscribe',
+        //     )
+        // })
 
-        it('authenticates with an explicitly given permission', () => {
-            streamFetcherStub.authenticate = sinon.stub()
-            streamFetcherStub.authenticate.returns(Promise.resolve({}))
+        // it('authenticates with an explicitly given permission', () => {
+        //     streamFetcherStub.authenticate = sinon.stub()
+        //     streamFetcherStub.authenticate.returns(Promise.resolve({}))
 
-            middlewareInstance = authenticator(streamFetcherStub, 'stream_publish')
-            middlewareInstance(request, response, next)
+        //     middlewareInstance = authenticator(streamFetcherStub, 'stream_publish')
+        //     middlewareInstance(request, response, next)
 
-            sinon.assert.calledOnce(streamFetcherStub.authenticate)
-            sinon.assert.calledWithExactly(
-                streamFetcherStub.authenticate,
-                'streamId', 'session-token', 'stream_publish',
-            )
-        })
+        //     sinon.assert.calledOnce(streamFetcherStub.authenticate)
+        //     sinon.assert.calledWithExactly(
+        //         streamFetcherStub.authenticate,
+        //         'streamId', 'session-token', 'stream_publish',
+        //     )
+        // })
 
         it('responds 403 and error message if streamFetcher#authenticate results in 403', (done) => {
             streamFetcherStub.authenticate = () => Promise.reject(new HttpError(403, 'GET', ''))
