@@ -165,31 +165,31 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
 
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>) {
-        return this.pipe((src) => G.map(src, fn, this.handleError))
+        return this.pipe((src) => G.map(src, fn, this.onError.trigger))
     }
 
     mapBefore(fn: G.GeneratorMap<InType, InType>) {
-        return this.pipeBefore((src) => G.map(src, fn, this.handleError))
+        return this.pipeBefore((src) => G.map(src, fn, this.onError.trigger))
     }
 
     forEach(fn: G.GeneratorForEach<OutType>) {
-        return this.pipe((src) => G.forEach(src, fn, this.handleError))
+        return this.pipe((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
     filter(fn: G.GeneratorFilter<OutType>) {
-        return this.pipe((src) => G.filter(src, fn, this.handleError))
+        return this.pipe((src) => G.filter(src, fn, this.onError.trigger))
     }
 
     reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType) {
-        return this.pipe((src) => G.reduce(src, fn, initialValue, this.handleError))
+        return this.pipe((src) => G.reduce(src, fn, initialValue, this.onError.trigger))
     }
 
     forEachBefore(fn: G.GeneratorForEach<InType>) {
-        return this.pipeBefore((src) => G.forEach(src, fn, this.handleError))
+        return this.pipeBefore((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
     filterBefore(fn: G.GeneratorFilter<InType>) {
-        return this.pipeBefore((src) => G.filter(src, fn, this.handleError))
+        return this.pipeBefore((src) => G.filter(src, fn, this.onError.trigger))
     }
 
     async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {
