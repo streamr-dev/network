@@ -103,6 +103,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             location: config.network.location,
             metricsContext,
             stunUrls: getStunTurnUrls(config)
+        },
+        cache: {
+            maxAge: 6 * 60 * 60 * 1000,
+            maxSize: 10000
         }
     })
     const publisher = new Publisher(streamrClient, metricsContext)
