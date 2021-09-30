@@ -13,7 +13,7 @@ import { NameDirectory } from '../../NameDirectory'
 import { DisconnectionReason } from "../../connection/ws/AbstractWsEndpoint"
 import { TrackerId } from '../tracker/Tracker'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
-import { Propagation } from './Propagation'
+import { Propagation } from './propagation/Propagation'
 
 const logger = new Logger(module)
 
