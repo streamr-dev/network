@@ -120,12 +120,28 @@ export class Tracker extends EventEmitter {
         this.metrics.record('processNodeStatus', 1)
         this.statusMeter.mark()
         const status = statusMessage.status as Status
-        const { stream, rtts, location, extra } = status
+        const legacyMessageStreams = (status as any).streams
+        if (legacyMessageStreams !== undefined) {
+            // backwards compatibility for testnet2 brokers
+            // https://linear.app/streamr/issue/FRONT-635/add-back-the-tracker-backwards-compatibility
+            // TODO remove this when testnet3 completes
+            const streamKeys = Object.keys(legacyMessageStreams)
+            if (streamKeys.length === 1) {
+                const streamKey = streamKeys[0]
+                status.stream = {
+                    streamKey,
+                    ...legacyMessageStreams[streamKey]
+                }
+            } else {
+                throw new Error(`Assertion failed: ${streamKeys.length} streams in a status messages`)
+            }
+        }
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
         if (!isMostRecent) {
             return
         }
 
+        const { stream, rtts, location, extra } = status
         // update RTTs and location
         if (rtts) {
             this.overlayConnectionRtts[source] = rtts
