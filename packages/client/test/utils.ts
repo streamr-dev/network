@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
+import { DependencyContainer } from 'tsyringe'
 
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
@@ -169,10 +170,10 @@ export const createTestStream = (streamrClient: StreamrClient, module: NodeModul
     })
 }
 
-export const getCreateClient = (defaultOpts = {}) => {
+export const getCreateClient = (defaultOpts = {}, defaultParentContainer?: DependencyContainer) => {
     const addAfter = addAfterFn()
 
-    return function createClient(opts = {}) {
+    return function createClient(opts = {}, parentContainer?: DependencyContainer) {
         const c = new StreamrClient({
             ...clientOptions,
             auth: {
@@ -180,7 +181,7 @@ export const getCreateClient = (defaultOpts = {}) => {
             },
             ...defaultOpts,
             ...opts,
-        })
+        }, defaultParentContainer ?? parentContainer)
 
         addAfter(async () => {
             await wait(0)
