@@ -9,7 +9,7 @@ import { Context } from './utils/Context'
 import { CacheConfig, Config } from './Config'
 import { StreamEndpoints } from './StreamEndpoints'
 
-const SEPARATOR = '|'
+const SEPARATOR = '|' // always use SEPARATOR for cache key to
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamEndpointsCached implements Context {
@@ -57,24 +57,28 @@ export class StreamEndpointsCached implements Context {
         }
     })
 
-    clearStream(streamId?: string) {
-        if (streamId != null) {
-            // include separator so startsWith(streamid) doesn't match streamid-something
-            const target = `${streamId}${SEPARATOR}`
-            this.getStream.clearMatching((s: string) => s.startsWith(target))
-            this.getStreamValidationInfo.clearMatching((s: string) => s.startsWith(target))
-            this.isStreamPublisher.clearMatching((s: string) => s.startsWith(target))
-            this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(target))
-        } else {
-            this.getStream.clear()
-            this.getStreamValidationInfo.clear()
-            this.isStreamPublisher.clear()
-            this.isStreamSubscriber.clear()
-        }
+    /**
+     * Clear cache for streamId
+     */
+    clearStream(streamId: string) {
+        this.debug('clearStream', streamId)
+        // include separator so startsWith(streamid) doesn't match streamid-something
+        const target = `${streamId}${SEPARATOR}`
+        const matchTarget = (s: string) => s.startsWith(target)
+        this.getStream.clearMatching(matchTarget)
+        this.getStreamValidationInfo.clearMatching(matchTarget)
+        this.isStreamPublisher.clearMatching(matchTarget)
+        this.isStreamSubscriber.clearMatching(matchTarget)
     }
 
+    /**
+     * Clear all cached data
+     */
     clear() {
         this.debug('clear')
-        this.clearStream()
+        this.getStream.clear()
+        this.getStreamValidationInfo.clear()
+        this.isStreamPublisher.clear()
+        this.isStreamSubscriber.clear()
     }
 }
