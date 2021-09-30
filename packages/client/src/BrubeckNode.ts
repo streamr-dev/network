@@ -45,15 +45,21 @@ export default class BrubeckNode implements Context {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
-        this.debug('initNode')
-        const address = await this.ethereum.getAddress()
-        const nodeId = `${address}#${uuid()}`
+        const { options } = this
+        let { id } = options
 
+        // generate id if none supplied
+        if (id == null || id === '') {
+            const address = await this.ethereum.getAddress()
+            id = `${address}#${uuid()}`
+        }
+
+        this.debug('initNode', id)
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
-            ...this.options,
-            id: nodeId,
-            name: nodeId
+            name: id,
+            ...options,
+            id,
         })
 
         if (!this.destroySignal.isDestroyed()) {

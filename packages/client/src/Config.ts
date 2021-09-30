@@ -135,6 +135,7 @@ export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubec
     const result: StrictBrubeckClientConfig = {
         ...defaults,
         ...userConfig,
+        network: merge(defaults.network || {}, clonedConfig.network),
         debug: merge(defaults.debug || {}, clonedConfig.debug),
     }
 
