@@ -63,7 +63,6 @@ describeRepeats('decryption', () => {
     async function setupClient(opts?: any) {
         const client = createClient(opts)
         await Promise.all([
-            client.session.getSessionToken(),
             client.connect(),
         ])
         return client

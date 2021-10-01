@@ -1,16 +1,15 @@
-/*
 import { Contract } from '@ethersproject/contracts'
 import { Wallet } from '@ethersproject/wallet'
-import { getRandomClient, createMockAddress } from '../utils'
 
-import * as Token from '../../contracts/TestToken.json'
-import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from './devEnvironment'
+import { getRandomClient, createMockAddress } from '../../utils'
+import * as Token from '../../../contracts/TestToken.json'
+import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from '../devEnvironment'
 import { BigNumber, providers } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
-import { EthereumAddress } from '../../src/types'
-import { until } from '../../src/utils'
+import { EthereumAddress } from '../../../src/types'
+import { until } from '../../../src/utils'
 import debug from 'debug'
-import StreamrClient from '../../src'
+import StreamrClient from '../../../src'
 
 const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
 const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
@@ -64,7 +63,6 @@ const sendTokensToSidechain = async (receiverAddress: EthereumAddress, amount: B
 }
 
 describe('Token', () => {
-
     let client: StreamrClient
 
     beforeAll(async () => {
@@ -87,9 +85,5 @@ describe('Token', () => {
         await sendTokensToSidechain(userWallet.address, amount)
         const balance = await client.getSidechainTokenBalance(userWallet.address)
         expect(balance.toString()).toBe('456000000000000000000')
-    }, 60000)
-
+    }, 160000)
 })
-*/
-
-it.skip('TokenBalance is skipped', () => {})
