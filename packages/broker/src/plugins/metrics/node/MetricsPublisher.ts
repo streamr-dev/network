@@ -46,30 +46,18 @@ export class MetricsPublisher {
         await Promise.all(Object.keys(STREAM_ID_SUFFIXES).map((periodLengthAsString: string) => this.ensureStreamCreated(Number(periodLengthAsString))))
     }
 
-    // TODO simplify error handling?
     private async ensureStreamCreated(periodLength: number): Promise<string> {
+        const streamId = this.getStreamId(periodLength)
         const stream = await this.client.getOrCreateStream({
-            id: this.getStreamId(periodLength)
+            id: streamId
         })
         await stream.grantPermission('stream_get' as StreamOperation, undefined)
         await stream.grantPermission('stream_subscribe' as StreamOperation, undefined)
         if (periodLength !== PERIOD_LENGTHS.FIVE_SECONDS) {
-            // TODO: pretify this error handler
-            // https://linear.app/streamr/issue/BACK-155/assign-a-stream-to-a-storage-node-when-it-has-already-been-assigned
             try {
                 await stream.addToStorageNode(this.storageNodeAddress)
-            } catch (e: any) {
-                if (!e.body) { throw e }
-                let parsedBody
-                try {
-                    parsedBody = JSON.parse(e.body)
-                } catch (jsonError) {
-                    throw e // original error, not parsing one
-                }
-                // expected error when re-adding storage node
-                if (parsedBody.code !== 'DUPLICATE_NOT_ALLOWED') {
-                    throw e
-                }
+            } catch (err: any) {
+                logger.warn('Unable to add %s to storage node, reason: %s', streamId, err.message)
             }
         }
         return stream.id
