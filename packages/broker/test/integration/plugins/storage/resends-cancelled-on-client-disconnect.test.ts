@@ -99,7 +99,6 @@ it.skip('resend cancellation', () => {
         await once(mockDataQueryServer, 'close')
     })
 
-
     async function setUpStream(): Promise<Stream> {
         const freshStream = await createTestStream(client, module)
         await freshStream.addToStorageNode(storageNodeAccount.address)
@@ -122,4 +121,5 @@ it.skip('resend cancellation', () => {
         await p
         expect(mockStorageData.destroyed).toBe(true)
     })
+    */
 })
