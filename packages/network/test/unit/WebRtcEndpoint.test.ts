@@ -1,10 +1,10 @@
 import { MetricsContext, startTracker } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
+import { Tracker, Event as TrackerEvent } from '../../src/logic/tracker/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { waitForCondition, waitForEvent, wait, runAndWaitForEvents } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
-import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
@@ -23,8 +23,10 @@ describe('WebRtcEndpoint', () => {
 
         beforeEach(async () => {
             tracker = await startTracker({
-                host: '127.0.0.1',
-                port: 28800,
+                listen: {
+                    hostname: '127.0.0.1',
+                    port: 28800
+                },
                 id: 'tracker'
             })
             const trackerPeerInfo = PeerInfo.newTracker('tracker')

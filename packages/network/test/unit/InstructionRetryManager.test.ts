@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { InstructionRetryManager } from '../../src/logic/InstructionRetryManager'
+import { InstructionRetryManager } from '../../src/logic/node/InstructionRetryManager'
 
 describe('InstructionRetryManager', () => {
     let handlerCb: any

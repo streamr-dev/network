@@ -21,13 +21,16 @@ describe('ServerWsEndpoint', () => {
     })
 
     test('receives unencrypted connections', async () => {
+        const listen = {
+            hostname: '127.0.0.1',
+            port: wssPort1
+        }
         const httpServer = await startHttpServer(
-            '127.0.0.1',
-            wssPort1,
+            listen,
             undefined,
             undefined
         )
-        serverWsEndpoint = new ServerWsEndpoint('127.0.0.1', wssPort1, false, httpServer, PeerInfo.newTracker('tracker'))
+        serverWsEndpoint = new ServerWsEndpoint(listen, false, httpServer, PeerInfo.newTracker('tracker'))
 
         const webSocketClient = new w3cwebsocket(
             serverWsEndpoint.getUrl() + '/ws'
@@ -47,13 +50,16 @@ describe('ServerWsEndpoint', () => {
         if (typeof _streamr_electron_test !== 'undefined') {
             return
         }
+        const listen = {
+            hostname: '127.0.0.1',
+            port: wssPort2
+        }
         const httpsServer = await startHttpServer(
-            '127.0.0.1',
-            wssPort2,
+            listen,
             'test/fixtures/key.pem',
             'test/fixtures/cert.pem'
         )
-        serverWsEndpoint = new ServerWsEndpoint('127.0.0.1', wssPort2, true, httpsServer, PeerInfo.newTracker('tracker'))
+        serverWsEndpoint = new ServerWsEndpoint(listen, true, httpsServer, PeerInfo.newTracker('tracker'))
         const webSocketClient = new w3cwebsocket(
             serverWsEndpoint.getUrl() + '/ws',
             undefined,

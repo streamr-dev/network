@@ -1,11 +1,11 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { Event as NodeEvent } from '../../src/logic/Node'
+import { Event as NodeEvent } from '../../src/logic/node/Node'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
 const FIRST_STREAM = 'stream-1' // assigned to trackerOne (arbitrarily by hashing algo)
@@ -32,18 +32,24 @@ describe('multi trackers', () => {
 
     beforeEach(async () => {
         trackerOne = await startTracker({
-            host: '127.0.0.1',
-            port: 49000,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 49000
+            },
             id: 'trackerOne'
         })
         trackerTwo = await startTracker({
-            host: '127.0.0.1',
-            port: 49001,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 49001
+            },
             id: 'trackerTwo',
         })
         trackerThree = await startTracker({
-            host: '127.0.0.1',
-            port: 49002,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 49002
+            },
             id: 'trackerThree'
         })
         const trackerInfo1 = { id: 'trackerOne', ws: trackerOne.getUrl(), http: trackerOne.getUrl() }
@@ -111,9 +117,9 @@ describe('multi trackers', () => {
         nodeTwo.subscribe(FIRST_STREAM_2, 0)
 
         // @ts-expect-error private field
-        let nodeOneEvents = eventsWithArgsToArray(nodeOne.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        let nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
-        let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
@@ -130,9 +136,9 @@ describe('multi trackers', () => {
         nodeTwo.subscribe(SECOND_STREAM_2, 0)
 
         // @ts-expect-error private field
-        nodeOneEvents = eventsWithArgsToArray(nodeOne.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
-        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
@@ -149,9 +155,9 @@ describe('multi trackers', () => {
         nodeTwo.subscribe(THIRD_STREAM_2, 0)
 
         // @ts-expect-error private field
-        nodeOneEvents = eventsWithArgsToArray(nodeOne.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
-        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
@@ -175,7 +181,8 @@ describe('multi trackers', () => {
             ],
             counter: 0
         })
-        await nodeOne.handleTrackerInstruction(unexpectedInstruction, 'trackerOne')
+        // @ts-expect-error private field
+        await nodeOne.trackerManager.handleTrackerInstruction(unexpectedInstruction, 'trackerOne')
         expect(nodeOne.getStreams()).not.toContain('stream-2::0')
     })
 })

@@ -2,16 +2,15 @@ import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
-import { decode } from '../helpers/MessageEncoder'
-import { RelayMessage, Status } from '../identifiers'
+import { decode } from './utils'
+import { RelayMessage, RtcSubTypes, Status } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
-import { RtcSubTypes } from '../logic/RtcMessage'
 import { NameDirectory } from '../NameDirectory'
 import { DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 import { AbstractClientWsEndpoint } from "../connection/ws/AbstractClientWsEndpoint"
 import { AbstractWsConnection } from "../connection/ws/AbstractWsConnection"
-import { NodeId } from '../logic/Node'
-import { TrackerId } from '../logic/Tracker'
+import { NodeId } from '../logic/node/Node'
+import { TrackerId } from '../logic/tracker/Tracker'
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
@@ -40,7 +39,6 @@ export class NodeToTracker extends EventEmitter {
     private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
     private readonly logger: Logger
 
-    // ServerWsEndpoint
     constructor(endpoint: AbstractClientWsEndpoint<AbstractWsConnection>) {
         super()
         this.endpoint = endpoint

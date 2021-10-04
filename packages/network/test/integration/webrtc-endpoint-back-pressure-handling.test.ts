@@ -1,8 +1,8 @@
 import { Event } from '../../src/connection/IWebRtcEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
-import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { Tracker } from '../../src/logic/Tracker'
+import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { startTracker } from '../../src/composition'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
@@ -20,8 +20,10 @@ describe('WebRtcEndpoint: back pressure handling', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 28710,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 28710
+            },
             id: 'tracker'
         })
 

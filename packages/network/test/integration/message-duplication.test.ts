@@ -1,10 +1,10 @@
-import { NetworkNode } from '../../src/NetworkNode'
-import { Tracker } from '../../src/logic/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as NodeEvent } from "../../src/logic/Node"
+import { Event as NodeEvent } from "../../src/logic/node/Node"
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -19,8 +19,10 @@ describe('duplicate message detection and avoidance', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30350,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30350
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }

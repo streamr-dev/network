@@ -1,7 +1,6 @@
 import { inspect } from 'util'
 import EventEmitter from 'events'
-import { v4 as uuidv4 } from 'uuid'
-import uniqueId from 'lodash/uniqueId'
+import { SEPARATOR } from './uuid'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import mem from 'mem'
@@ -14,18 +13,8 @@ import { MaybeAsync } from '../types'
 import AggregatedError from './AggregatedError'
 import Scaffold from './Scaffold'
 
+export { default as uuid } from './uuid'
 export { AggregatedError, Scaffold }
-
-const UUID = uuidv4()
-
-export const SEPARATOR = '-'
-/*
- * Incrementing + human readable uuid
- */
-
-export function uuid(label = '') {
-    return uniqueId(`${UUID}${label ? `${SEPARATOR}${label}` : ''}`)
-}
 
 export function randomString(length = 20) {
     // eslint-disable-next-line no-bitwise

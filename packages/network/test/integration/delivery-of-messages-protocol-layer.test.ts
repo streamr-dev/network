@@ -6,7 +6,7 @@ import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToN
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { TrackerServer, Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { RtcSignaller } from "../../src/logic/RtcSignaller"
+import { RtcSignaller } from "../../src/logic/node/RtcSignaller"
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
@@ -28,8 +28,10 @@ describe('delivery of messages in protocol layer', () => {
     let tracker: Tracker
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 28515,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 28515
+            },
             id: 'tracker'
         })
         const peerInfo1 = PeerInfo.newNode('node1')

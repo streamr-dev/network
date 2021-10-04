@@ -3,6 +3,7 @@ import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
 import { staticLogger, ServerWsConnection } from './ServerWsConnection'
 import fs from 'fs'
+import net from 'net'
 import https from 'https'
 import http from 'http'
 import WebSocket from 'ws'
@@ -10,13 +11,20 @@ import { once } from 'events'
 import { v4 } from 'uuid'
 import { Duplex } from "stream"
 
+type HostPort = {
+    hostname: string,
+    port: number
+}
+type UnixSocket = string
+
+export type HttpServerConfig = HostPort | UnixSocket
+
 export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     private readonly serverUrl: string
     private readonly httpServer: http.Server | https.Server
     private readonly wss: WebSocket.Server
     constructor(
-        host: string,
-        port: number,
+        listen: HttpServerConfig,
         sslEnabled: boolean,
         httpServer: http.Server | https.Server,
         peerInfo: PeerInfo,
@@ -26,7 +34,12 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         super(peerInfo, metricsContext, pingInterval)
 
         this.httpServer = httpServer
-        this.serverUrl = `${sslEnabled ? 'wss' : 'ws'}://${host}:${port}`
+        const protocol = sslEnabled ? 'wss' : 'ws'
+        if (typeof listen !== "string") {
+            this.serverUrl = `${protocol}://${listen.hostname}:${listen.port}`
+        } else {
+            this.serverUrl = `${protocol}+unix://${listen}`
+        }
         this.wss = this.startWsServer()
     }
 
@@ -62,7 +75,16 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                     if (uuid === handshakeUUID && peerId) {
                         otherNodeIdForLogging = peerId
                         this.clearHandshake(uuid)
-                        this.acceptConnection(ws, duplexStream, peerId, this.resolveIP(request))
+
+                        // Check that a client with the same peerId has not already connected to the server.
+                        if (!this.getConnectionByPeerId(peerId)) {
+                            this.acceptConnection(ws, duplexStream, peerId, this.resolveIP(request))
+                        } else {
+                            this.metrics.record('open:duplicateSocket', 1)
+                            const failedMessage = `Connection for node: ${peerId} has already been established, rejecting duplicate`
+                            ws.close(DisconnectionCode.DUPLICATE_SOCKET, failedMessage)
+                            this.logger.warn(failedMessage)
+                        }
                     } else {
                         this.logger.trace('Expected a handshake message got: ' + data.toString())
                     }
@@ -150,9 +172,47 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
     }
 }
 
+function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket) {
+    httpServer.on('error', (err: any) => {
+        // rethrow if unexpected error
+        if (!err.message.includes('EADDRINUSE')) { throw err }
+
+        staticLogger.info('socket in use, trying to recover: %s', config)
+        staticLogger.trace('checking if socket in use by another server')
+        const clientSocket = new net.Socket()
+        // socket will automatically close on error
+        clientSocket.on('error', (err: any) => {
+            // rethrow if unexpected error
+            if (!err.message.includes('ECONNREFUSED')) {
+                throw err
+            }
+
+            // No other server listening
+            try {
+                staticLogger.trace('cleaning unused socket: %s', config)
+                fs.unlinkSync(config)
+            } catch (unlinkErr) {
+                // ignore error if somehow file was already removed
+                if (unlinkErr.code !== 'ENOENT') {
+                    throw unlinkErr
+                }
+            }
+
+            // retry listening
+            httpServer.listen(config)
+        })
+
+        clientSocket.once('connect', () => {
+            // bad news if we are able to connect
+            staticLogger.error('Another server already running on socket: %s', config)
+            process.exit(1)
+        })
+        clientSocket.connect({ path: config })
+    })
+}
+
 export async function startHttpServer(
-    host: string | null,
-    port: number,
+    config: HttpServerConfig,
     privateKeyFileName: string | undefined = undefined,
     certFileName: string | undefined = undefined
 ): Promise<http.Server | https.Server> {
@@ -168,9 +228,23 @@ export async function startHttpServer(
     } else {
         throw new Error('must supply both privateKeyFileName and certFileName or neither')
     }
-
-    httpServer.listen(port)
-    await once(httpServer, 'listening')
-    staticLogger.trace(`started on port %s`, port)
+    // clean up Unix Socket
+    if (typeof config === 'string') {
+        cleanSocket(httpServer, config)
+    }
+    try {
+        httpServer.listen(config)
+        await once(httpServer, 'listening')
+        staticLogger.info(`listening on %s`, JSON.stringify(config))
+    } catch (err) {
+        // Kill process if started on host/port, else wait for Unix Socket to be cleaned up
+        if (typeof config !== "string") {
+            staticLogger.error(err)
+            process.exit(1)
+        } else {
+            await once(httpServer, 'listening')
+            staticLogger.info(`listening on %s`, JSON.stringify(config))
+        }
+    }
     return httpServer
 }

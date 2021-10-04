@@ -1,5 +1,5 @@
-import { getNodeConnections } from '../../src/logic/trackerSummaryUtils'
-import { OverlayTopology } from '../../src/logic/OverlayTopology'
+import { getNodeConnections } from '../../src/logic/tracker/trackerSummaryUtils'
+import { OverlayTopology } from '../../src/logic/tracker/OverlayTopology'
 
 const createOverlayTopology = (mapping: { [key: string]: string[] }) => {
     const overlayTopology = new OverlayTopology(4)

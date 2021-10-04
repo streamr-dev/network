@@ -12,7 +12,7 @@ import {
     OfferOptions,
     IceCandidateOptions,
     RtcSignaller
-} from '../logic/RtcSignaller'
+} from '../logic/node/RtcSignaller'
 import { Rtts } from '../identifiers'
 import { MessageQueue } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
@@ -48,6 +48,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly bufferThresholdLow: number
     private readonly bufferThresholdHigh: number
     private readonly maxMessageSize
+
+    private statusReportTimer?: NodeJS.Timeout
 
     constructor(
         peerInfo: PeerInfo,
@@ -117,6 +119,26 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             .addQueriedMetric('messageQueueSize', () => {
                 return Object.values(this.connections).reduce((total, c) => total + c.getQueueSize(), 0)
             })
+
+        this.startConnectionStatusReport()
+    }
+
+    private startConnectionStatusReport(): void {
+        const STATUS_REPORT_INTERVAL_MS = 5 * 60 * 1000
+        this.statusReportTimer = setInterval(() => {
+            let connectedPeerCount = 0
+            const pendingPeerIds = []
+            for (const peerId of Object.keys(this.connections)) {
+                const lastState = this.connections[peerId].getLastState()
+                if (lastState === 'connected') {
+                    connectedPeerCount += 1
+                } else if (lastState === 'connecting') {
+                    pendingPeerIds.push(peerId)
+                }
+            }
+            this.logger.info(`Successfully connected to %d peers. Still trying to connect to the following peers: [%s]`,
+                connectedPeerCount, pendingPeerIds.join(', '))
+        }, STATUS_REPORT_INTERVAL_MS)
     }
 
     private createConnection(
@@ -431,9 +453,14 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.rtcSignaller.setIceCandidateListener(() => {})
         this.rtcSignaller.setErrorListener(() => {})
         this.rtcSignaller.setConnectListener(() => {})
+        clearInterval(this.statusReportTimer!)
         this.removeAllListeners()
         Object.values(connections).forEach((connection) => connection.close())
         Object.values(messageQueues).forEach((queue) => queue.clear())
         this.connectionFactory.cleanUp()
+    }
+
+    getAllConnectionNodeIds(): PeerId[] {
+        return Object.keys(this.connections)
     }
 }

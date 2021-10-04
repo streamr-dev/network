@@ -1,9 +1,10 @@
 import _ from 'lodash'
-import { Logger } from '../helpers/Logger'
-import { Metrics } from '../helpers/MetricsContext'
-import { StreamIdAndPartition, StreamKey } from '../identifiers'
-import { TrackerServer } from '../protocol/TrackerServer'
-import { NodeId } from './Node'
+import io from '@pm2/io'
+import { Logger } from '../../helpers/Logger'
+import { Metrics } from '../../helpers/MetricsContext'
+import { StreamIdAndPartition, StreamKey } from '../../identifiers'
+import { TrackerServer } from '../../protocol/TrackerServer'
+import { NodeId } from '../node/Node'
 import { TopologyStabilizationOptions } from './Tracker'
 
 /**
@@ -63,18 +64,22 @@ export class InstructionSender {
     private readonly topologyStabilization: TopologyStabilizationOptions
     private readonly trackerServer: TrackerServer
     private readonly metrics: Metrics
+    private readonly pm2Meter: any
 
     constructor(topologyStabilization: TopologyStabilizationOptions|undefined, trackerServer: TrackerServer, metrics: Metrics) {
         this.topologyStabilization = topologyStabilization ?? DEFAULT_TOPOLOGY_STABILIZATION
         this.trackerServer = trackerServer
         this.metrics = metrics
+        this.pm2Meter = io.meter({
+            name: 'instructions/sec'
+        })
     }
 
-    addInstruction(instruction: Instruction) {
+    addInstruction(instruction: Instruction): void {
         this.getOrCreateBuffer(instruction.streamKey).addInstruction(instruction)
     }
 
-    getOrCreateBuffer(streamKey: StreamKey) {
+    getOrCreateBuffer(streamKey: StreamKey): StreamInstructionBuffer {
         const existingBuffer = this.streamBuffers.get(streamKey)
         if (existingBuffer !== undefined) {
             return existingBuffer
@@ -92,6 +97,7 @@ export class InstructionSender {
         for (const instruction of buffer!.getInstructions()) {
             const { nodeId, streamKey, newNeighbors, counterValue } = instruction
             this.metrics.record('instructionsSent', 1)
+            this.pm2Meter.mark()
             try {
                 await this.trackerServer.sendInstruction(
                     nodeId,
