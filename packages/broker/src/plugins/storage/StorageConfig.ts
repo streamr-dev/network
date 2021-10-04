@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { Logger } from 'streamr-network'
 import { StreamPart } from '../../types'
-import { StreamMessage, keyToArrayIndex } from 'streamr-network/dist/src/streamr-protocol'
+import { StreamMessage, keyToArrayIndex } from 'streamr-network/dist/streamr-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
 
 const logger = new Logger(module)
@@ -179,7 +179,7 @@ export class StorageConfig {
     }
 
     onAssignmentEvent(content: { storageNode: string, stream: { id: string, partitions: number }, event: string }) {
-        if (content.storageNode && content.storageNode.toLowerCase() == this.clusterId.toLowerCase()) {
+        if (content.storageNode && typeof content.storageNode === 'string' && content.storageNode.toLowerCase() === this.clusterId.toLowerCase()) {
             logger.trace('Received storage assignment message: %o', content)
             const keys = new Set(
                 getKeysFromStream(content.stream.id, content.stream.partitions)
