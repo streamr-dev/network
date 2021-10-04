@@ -1,5 +1,3 @@
-import { wait } from 'streamr-test-utils'
-
 import {
     Msg,
     clientOptions,
