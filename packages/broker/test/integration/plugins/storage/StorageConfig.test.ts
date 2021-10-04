@@ -76,7 +76,7 @@ describe('StorageConfig', () => {
             enableCassandra: false
         })
         client = createClient(tracker, publisherAccount.privateKey)
-        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     })
 

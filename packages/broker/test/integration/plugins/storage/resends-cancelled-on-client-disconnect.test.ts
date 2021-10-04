@@ -79,16 +79,26 @@ it.skip('resend cancellation', () => {
         const storagePlugin: StoragePlugin = storageNode.plugins.find((p) => p.name === 'storage')
         //@ts-expect-error .cassandra is private
         storagePlugin.cassandra.requestLast = mockStorageData
-        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     }, 10 * 1000)
 
-    afterAll(async () => {
+    afterEach(async () => {
+        await destroy()
+        await networkNode.stop()
+        await websocketServer.close()
         await tracker.stop()
-        await client.destroy()
-        await storageNode.stop()
-        await assignmentEventManager.close()
     })
+
+    beforeAll(async () => {
+        mockDataQueryServer = await createMockDataServer()
+    })
+
+    afterAll(async () => {
+        mockDataQueryServer.close()
+        await once(mockDataQueryServer, 'close')
+    })
+
 
     async function setUpStream(): Promise<Stream> {
         const freshStream = await createTestStream(client, module)
@@ -112,5 +122,4 @@ it.skip('resend cancellation', () => {
         await p
         expect(mockStorageData.destroyed).toBe(true)
     })
-    */
 })

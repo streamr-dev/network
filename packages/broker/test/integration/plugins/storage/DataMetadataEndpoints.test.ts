@@ -60,7 +60,7 @@ describe('DataMetadataEndpoints', () => {
         client1 = createClient(tracker, undefined, {
             storageNodeRegistry: storageNodeRegistry,
         })
-        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     }, 10 * 1000)
 

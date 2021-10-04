@@ -147,13 +147,14 @@ export function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey
 }
 
 export class StorageAssignmentEventManager {
-
+    storageNodeAccount: Wallet
     engineAndEditorAccount: Wallet
     client: StreamrClient
     eventStream?: Stream
 
-    constructor(tracker: Tracker, engineAndEditorAccount: Wallet) {
+    constructor(tracker: Tracker, engineAndEditorAccount: Wallet, storageNodeAccount: Wallet) {
         this.engineAndEditorAccount = engineAndEditorAccount
+        this.storageNodeAccount = storageNodeAccount
         this.client = createClient(tracker, engineAndEditorAccount.privateKey)
     }
 
@@ -184,12 +185,13 @@ export class StorageAssignmentEventManager {
             stream: {
                 id: streamId,
                 partitions: 1
-            }
+            },
+            storageNode: this.storageNodeAccount.address,
         })
     }
 
     close() {
-        return this.client.disconnect()
+        return this.client.destroy()
     }
 }
 

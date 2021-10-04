@@ -29,10 +29,10 @@ const getKeyFromStream = (streamId: string, streamPartition: number): StreamKey 
     return `${streamId}::${streamPartition}`
 }
 
-const getKeysFromStream = (streamId: string, partitions: number) => {
-    const keys = new Set<StreamKey>()
+const getKeysFromStream = (streamId: string, partitions: number): StreamKey[] => {
+    const keys: StreamKey[] = []
     for (let i = 0; i < partitions; i++) {
-        keys.add(getKeyFromStream(streamId, i))
+        keys.push(getKeyFromStream(streamId, i))
     }
     return keys
 }
@@ -51,22 +51,26 @@ export class StorageConfig {
 
     streamKeys: Set<StreamKey>
     listeners: StorageConfigListener[]
-    nodeId: string
+    clusterId: string
+    clusterSize: number
+    myIndexInCluster: number
     apiUrl: string
     private _poller!: ReturnType<typeof setTimeout>
     private _stopPoller: boolean
 
     // use createInstance method instead: it fetches the up-to-date config from API
-    constructor(nodeId: string, apiUrl: string) {
+    constructor(clusterId: string, clusterSize: number, myIndexInCluster: number, apiUrl: string) {
         this.streamKeys = new Set<StreamKey>()
         this.listeners = []
-        this.nodeId = nodeId
+        this.clusterId = clusterId
+        this.clusterSize = clusterSize
+        this.myIndexInCluster = myIndexInCluster
         this.apiUrl = apiUrl
         this._stopPoller = false
     }
 
-    static async createInstance(nodeId: string, apiUrl: string, pollInterval: number): Promise<StorageConfig> {
-        const instance = new StorageConfig(nodeId, apiUrl)
+    static async createInstance(clusterId: string, clusterSize: number, myIndexInCluster: number, apiUrl: string, pollInterval: number): Promise<StorageConfig> {
+        const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, apiUrl)
         // eslint-disable-next-line no-underscore-dangle
         if (pollInterval !== 0) {
             await instance._poll(pollInterval)
@@ -104,7 +108,7 @@ export class StorageConfig {
     }
 
     async refresh(): Promise<void> {
-        const res = await fetch(`${this.apiUrl}/storageNodes/${this.nodeId}/streams`)
+        const res = await fetch(`${this.apiUrl}/storageNodes/${this.clusterId}/streams`)
         if (!res.ok) {
             throw new Error(`Refresh failed: ${res.status} ${await res.text()}`)
         }
@@ -113,9 +117,11 @@ export class StorageConfig {
             throw new Error(`Invalid response. Refresh failed: ${json}`)
         }
 
-        const streamKeys = new Set<StreamKey>(json.flatMap((stream: { id: string, partitions: number }) => ([
-            ...getKeysFromStream(stream.id, stream.partitions)
-        ])))
+        const streamKeys = new Set<StreamKey>(
+            json.flatMap((stream: { id: string, partitions: number }) => ([
+                ...getKeysFromStream(stream.id, stream.partitions)
+            ])).filter ((key: StreamKey) => this.belongsToMeInCluster(key))
+        )
         this._setStreams(streamKeys)
     }
 
@@ -133,20 +139,25 @@ export class StorageConfig {
         }
     }
 
-    private _addStreams(streamKeys: Set<StreamKey>): void {
-        logger.info('Add %d streams to storage config: %s', streamKeys.size, Array.from(streamKeys).join(','))
-        this.streamKeys = new Set([...this.streamKeys, ...streamKeys])
+    private _addStreams(keysToAdd: Set<StreamKey>): void {
+        logger.info('Add %d streams to storage config: %s', keysToAdd.size, Array.from(keysToAdd).join(','))
+        this.streamKeys = new Set([...this.streamKeys, ...keysToAdd])
         this.listeners.forEach((listener) => {
-            streamKeys.forEach((key: StreamKey) => listener.onStreamAdded(getStreamFromKey(key)))
+            keysToAdd.forEach((key: StreamKey) => listener.onStreamAdded(getStreamFromKey(key)))
         })
     }
 
-    private _removeStreams(streamKeys: Set<StreamKey>): void {
-        logger.info('Remove %d streams from storage config: %s', streamKeys.size, Array.from(streamKeys).join(','))
-        this.streamKeys = new Set([...this.streamKeys].filter((x) => !streamKeys.has(x)))
+    private _removeStreams(keysToRemove: Set<StreamKey>): void {
+        logger.info('Remove %d streams from storage config: %s', keysToRemove.size, Array.from(keysToRemove).join(','))
+        this.streamKeys = new Set([...this.streamKeys].filter((x) => !keysToRemove.has(x)))
         this.listeners.forEach((listener) => {
-            streamKeys.forEach((key: StreamKey) => listener.onStreamRemoved(getStreamFromKey(key)))
+            keysToRemove.forEach((key: StreamKey) => listener.onStreamRemoved(getStreamFromKey(key)))
         })
+    }
+
+    private belongsToMeInCluster(key: StreamKey): boolean {
+        const hashedIndex = Protocol.Utils.keyToArrayIndex(this.clusterSize, key.toString())
+        return hashedIndex === this.myIndexInCluster
     }
 
     startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: StreamMessage<AssignmentMessage>) => void {
@@ -167,7 +178,29 @@ export class StorageConfig {
         return messageListener
     }
 
-    stopAssignmentEventListener(messageListener: (msg: StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
+    onAssignmentEvent(content: { storageNode: string, stream: { id: string, partitions: number }, event: string }) {
+        if (content.storageNode && content.storageNode.toLowerCase() == this.clusterId.toLowerCase()) {
+            logger.trace('Received storage assignment message: %o', content)
+            const keys = new Set(
+                getKeysFromStream(content.stream.id, content.stream.partitions)
+                    .filter ((key: StreamKey) => this.belongsToMeInCluster(key))
+            )
+
+            logger.trace('Adding %d of %d partitions in stream %s to this instance', keys.size, content.stream.partitions, content.stream.id)
+
+            if (content.event === 'STREAM_ADDED') {
+                this._addStreams(keys)
+            } else if (content.event === 'STREAM_REMOVED') {
+                this._removeStreams(keys)
+            }
+        } else if (!content.storageNode) {
+            logger.error('Received storage assignment message with no storageNode field present: %o', content)
+        } else {
+            logger.trace('Received storage assignment message for another storage node: %o', content)
+        }
+    }
+
+    stopAssignmentEventListener(messageListener: (msg: StreamMessage) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)
