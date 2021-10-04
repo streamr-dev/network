@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { Logger } from 'streamr-network'
 import { StreamPart } from '../../types'
-import { StreamMessage } from 'streamr-network/dist/src/streamr-protocol'
+import { StreamMessage, keyToArrayIndex } from 'streamr-network/dist/src/streamr-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
 
 const logger = new Logger(module)
@@ -156,7 +156,7 @@ export class StorageConfig {
     }
 
     private belongsToMeInCluster(key: StreamKey): boolean {
-        const hashedIndex = Protocol.Utils.keyToArrayIndex(this.clusterSize, key.toString())
+        const hashedIndex = keyToArrayIndex(this.clusterSize, key.toString())
         return hashedIndex === this.myIndexInCluster
     }
 
@@ -200,7 +200,7 @@ export class StorageConfig {
         }
     }
 
-    stopAssignmentEventListener(messageListener: (msg: StreamMessage) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
+    stopAssignmentEventListener(messageListener: (msg: StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)

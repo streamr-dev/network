@@ -1,3 +1,6 @@
+import { StreamMessage } from 'streamr-network/dist/src/streamr-protocol'
+import { Wallet } from 'ethers'
+
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
@@ -6,9 +9,7 @@ import { StreamFetcher } from '../../StreamFetcher'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig, AssignmentMessage } from './StorageConfig'
 import { StreamPart } from '../../types'
-import { Wallet } from 'ethers'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Protocol } from 'streamr-network'
 
 export interface StoragePluginConfig {
     cassandra: {
@@ -33,8 +34,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     private cassandra?: Storage
     private storageConfig?: StorageConfig
-    private messageListener?: (msg: Protocol.StreamMessage) => void
-    private assignmentMessageListener?: (msg: Protocol.StreamMessage<AssignmentMessage>) => void
+    private messageListener?: (msg: StreamMessage) => void
+    private assignmentMessageListener?: (msg: StreamMessage<AssignmentMessage>) => void
 
     constructor(options: PluginOptions) {
         super(options)
@@ -85,10 +86,10 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
         const apiUrl = this.brokerConfig.streamrUrl + '/api/v1'
         const storageConfig = await StorageConfig.createInstance(
-            this.pluginConfig.cluster.clusterAddress || brokerAddress, 
+            this.pluginConfig.cluster.clusterAddress || brokerAddress,
             this.pluginConfig.cluster.clusterSize,
             this.pluginConfig.cluster.myIndexInCluster,
-            apiUrl, 
+            apiUrl,
             this.pluginConfig.storageConfig.refreshInterval)
         this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.subscriptionManager)
         return storageConfig
