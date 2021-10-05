@@ -15,13 +15,13 @@ import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
 import { StorageNodeRegistry } from "./StorageNodeRegistry"
-import { v4 as uuidv4 } from 'uuid'
 
 const logger = new Logger(module)
 
 export interface Broker {
     getNeighbors: () => readonly string[]
     getStreams: () => readonly string[]
+    getNodeId: () => string
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
 }
@@ -84,12 +84,12 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const storageNodes = await getStorageNodes(config)
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
-    // Start network node
-    let sessionId
-    if (config.generateSessionId && !config.plugins['storage']) { // Exception: storage node needs consistent id
-        sessionId = `${brokerAddress}#${uuidv4()}`
+    // leave undefined to let client generate session id
+    let sessionId: string | undefined
+    if (config.plugins['storage']) { // storage node needs consistent id
+        sessionId = brokerAddress
     }
-    const nodeId = sessionId || brokerAddress
+
     const streamrClient = new StreamrClient({
         auth: {
             privateKey: config.ethereumPrivateKey,
@@ -97,7 +97,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         restUrl: `${config.streamrUrl}/api/v1`,
         storageNodeRegistry: config.storageNodeConfig?.registry,
         network: {
-            id: nodeId,
+            id: sessionId,
             name: networkNodeName,
             trackers,
             location: config.network.location,
@@ -106,7 +106,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         }
     })
     const publisher = new Publisher(streamrClient, metricsContext)
+    // Start network node
     const networkNode = await streamrClient.getNode()
+    const nodeId = networkNode.getNodeId()
     const subscriptionManager = new SubscriptionManager(networkNode)
     const apiAuthenticator = createApiAuthenticator(config)
 
@@ -121,7 +123,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             metricsContext,
             brokerConfig: config,
             storageNodeRegistry,
-            nodeId
+            nodeId,
         }
         return createPlugin(name, pluginOptions)
     })
@@ -131,6 +133,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     return {
         getNeighbors: () => networkNode.getNeighbors(),
         getStreams: () => networkNode.getStreams(),
+        getNodeId: () => networkNode.getNodeId(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
             //await streamrClient.startNode()

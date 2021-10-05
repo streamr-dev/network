@@ -7,7 +7,7 @@ import { createMockStorageConfig } from './MockStorageConfig'
 import { StorageNodeRegistry } from "../../../../src/StorageNodeRegistry"
 import { Wallet } from 'ethers'
 
-const STREAM_PARTS: StreamPart[] = [ 
+const STREAM_PARTS: StreamPart[] = [
     { id: 'foo', partition: 0 },
     { id: 'bar', partition: 0 }
 ]
