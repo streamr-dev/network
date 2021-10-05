@@ -26,6 +26,25 @@ describe('BrubeckNode', () => {
             // @ts-expect-error private
             expect(node.peerInfo.peerId.length).toBeGreaterThan(expectedPrefix.length) // has more characters after #
         })
+
+        it('generates different ids for different clients with same private key', async () => {
+            const client1 = createClient()
+            const client2 = createClient({ auth: client1.options.auth })
+            // same key, same address
+            expect(await client1.getAddress()).toEqual(await client2.getAddress())
+            const expectedPrefix = `${await client1.getAddress()}#`
+            const node1 = await client1.getNode()
+            const node2 = await client2.getNode()
+            expect(node1).not.toBe(node2)
+            // both start with same prefix
+            // @ts-expect-error private
+            expect(node1.peerInfo.peerId.startsWith(expectedPrefix)).toBe(true)
+            // @ts-expect-error private
+            expect(node2.peerInfo.peerId.startsWith(expectedPrefix)).toBe(true)
+
+            // @ts-expect-error private
+            expect(node1.peerInfo.peerId).not.toEqual(node2.peerInfo.peerId)
+        })
     })
 
     describe('create/destroy', () => {
