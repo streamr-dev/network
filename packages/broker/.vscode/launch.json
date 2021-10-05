@@ -11,17 +11,17 @@
             "name": "Jest single test",
             "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
             // "env": { "CI": "true", "STREAMR_DOCKER_DEV_HOST": "192.168.0.8", "DEBUG": "*" },
-            "env": { "CI": "true", "STREAMR_DOCKER_DEV_HOST": "localhost", "DEBUG": "*" },
+            "env": { "CI": "true", "STREAMR_DOCKER_DEV_HOST": "localhost", "DEBUG": "*", "LOG_LEVEL": "trace" },
             "args": [
             //   "-c",
             //   "./config/test/jest.json",
               "--verbose",
               "-i",
               "--no-cache",
-              "--detectOpenHandles",
-              "test/unit/plugins/storage/DataQueryEndpoints.test.ts",
+              // "--detectOpenHandles",
+              "test/integration/broker.test.ts",
               "-t",
-              "responds 400 and error message if optional param"
+              "happy-path: resend last request via http"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",

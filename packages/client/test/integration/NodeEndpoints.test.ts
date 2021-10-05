@@ -62,14 +62,7 @@ describe('createNode', () => {
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode', async () => {
         await client.addStreamToStorageNode(createdStream.id, nodeAddress)
-        await until(async () => {
-            try {
-                return await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)
-            } catch (err) {
-                log('stream still not added to node %o', err)
-                return false
-            }
-        }, 100000, 1000)
+        await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, nodeAddress) }, 100000, 1000)
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(true)
     })
 
@@ -93,27 +86,13 @@ describe('createNode', () => {
 
     it('removeStreamFromStorageNode', async () => {
         await client.removeStreamFromStorageNode(createdStream.id, nodeAddress)
-        await until(async () => {
-            try {
-                return !(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress))
-            } catch (err) {
-                log('stream still not added to node %o', err)
-                return false
-            }
-        }, 100000, 1000)
+        await until(async () => { return !client.isStreamStoredInStorageNode(createdStream.id, nodeAddress) }, 100000, 1000)
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(false)
     })
 
     it('addStreamToStorageNode through streamobject', async () => {
         await createdStream.addToStorageNode(nodeAddress)
-        await until(async () => {
-            try {
-                return await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)
-            } catch (err) {
-                log('stream still not added to node %o', err)
-                return false
-            }
-        }, 100000, 1000)
+        await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, nodeAddress) }, 100000, 1000)
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(true)
     })
 
