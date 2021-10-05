@@ -9,7 +9,7 @@ import {
     createTestStream,
     getCreateClient
 } from '../utils'
-import { Defer } from '../../src/utils'
+import { Defer, pLimitFn } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamOperation } from '../../src/Stream'
@@ -97,11 +97,15 @@ describeRepeats('decryption', () => {
         ])
     }
 
-    async function grantSubscriberPermissions({ stream: s = stream, client: c = subscriber }: { stream?: Stream, client?: StreamrClient } = {}) {
+    // run these in sequence (i.e. pLimitFn(fn, 1)) because core-api can't handle concurrency here
+    const grantSubscriberPermissions = pLimitFn(async ({
+        stream: s = stream,
+        client: c = subscriber,
+    }: { stream?: Stream, client?: StreamrClient } = {}) => {
         const p1 = await s.grantPermission(StreamOperation.STREAM_GET, await c.getAddress())
         const p2 = await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
         return [p1, p2]
-    }
+    })
 
     describe('using default config', () => {
         beforeEach(async () => {
