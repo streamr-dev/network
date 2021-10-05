@@ -13,18 +13,15 @@ describe('BrubeckNode', () => {
                 }
             })
             const node = await client.getNode()
-            // @ts-expect-error private
-            expect(node.peerInfo.peerId).toEqual(nodeId)
+            expect(node.getNodeId()).toEqual(nodeId)
         })
 
         it('generates node id from address, if id not supplied', async () => {
             const client = createClient()
             const node = await client.getNode()
             const expectedPrefix = `${await client.getAddress()}#`
-            // @ts-expect-error private
-            expect(node.peerInfo.peerId.startsWith(expectedPrefix)).toBe(true)
-            // @ts-expect-error private
-            expect(node.peerInfo.peerId.length).toBeGreaterThan(expectedPrefix.length) // has more characters after #
+            expect(node.getNodeId().startsWith(expectedPrefix)).toBe(true)
+            expect(node.getNodeId().length).toBeGreaterThan(expectedPrefix.length) // has more characters after #
         })
 
         it('generates different ids for different clients with same private key', async () => {
@@ -37,13 +34,9 @@ describe('BrubeckNode', () => {
             const node2 = await client2.getNode()
             expect(node1).not.toBe(node2)
             // both start with same prefix
-            // @ts-expect-error private
-            expect(node1.peerInfo.peerId.startsWith(expectedPrefix)).toBe(true)
-            // @ts-expect-error private
-            expect(node2.peerInfo.peerId.startsWith(expectedPrefix)).toBe(true)
-
-            // @ts-expect-error private
-            expect(node1.peerInfo.peerId).not.toEqual(node2.peerInfo.peerId)
+            expect(node1.getNodeId().startsWith(expectedPrefix)).toBe(true)
+            expect(node2.getNodeId().startsWith(expectedPrefix)).toBe(true)
+            expect(node1.getNodeId()).not.toEqual(node2.getNodeId())
         })
     })
 

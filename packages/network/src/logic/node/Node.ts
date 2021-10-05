@@ -58,8 +58,9 @@ export interface Node {
 }
 
 export class Node extends EventEmitter {
+    /** @internal */
+    public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
-    private readonly peerInfo: PeerInfo
     private readonly bufferTimeoutInMs: number
     private readonly bufferMaxSize: number
     private readonly disconnectionWaitTime: number
@@ -185,7 +186,7 @@ export class Node extends EventEmitter {
         const subscribePromises = nodeIds.map(async (nodeId) => {
             await promiseTimeout(this.nodeConnectTimeout,
                 this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
-            
+
             this.clearDisconnectionTimer(nodeId)
             this.subscribeToStreamOnNode(nodeId, streamId, false)
             return nodeId
@@ -394,5 +395,9 @@ export class Node extends EventEmitter {
 
     getNeighbors(): ReadonlyArray<NodeId> {
         return this.streams.getAllNodes()
+    }
+
+    getNodeId(): NodeId {
+        return this.peerInfo.peerId
     }
 }

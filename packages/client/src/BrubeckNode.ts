@@ -126,6 +126,11 @@ export default class BrubeckNode implements Context {
      */
     getNode = this.startNode
 
+    async getNodeId() {
+        const node = await this.getNode()
+        return node.getNodeId()
+    }
+
     /**
      * Calls publish on node after starting it.
      * Basically a wrapper around: (await getNode()).publish(…)
