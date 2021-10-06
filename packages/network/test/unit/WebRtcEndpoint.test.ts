@@ -303,7 +303,7 @@ describe('WebRtcEndpoint', () => {
                     endpoint1.close('node-2', 'test')
                 },
                 () => {
-                    endpoint1.connect('node-2', 'tracker')
+                    endpoint1.connect('node-2', 'tracker', false)
                 }], [
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
                 [endpoint2, EndpointEvent.PEER_CONNECTED]
@@ -314,7 +314,7 @@ describe('WebRtcEndpoint', () => {
                     endpoint2.close('node-1', 'test')
                 },
                 () => {
-                    endpoint2.connect('node-1', 'tracker', false)
+                    endpoint2.connect('node-1', 'tracker')
                 }], [
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
                 [endpoint2, EndpointEvent.PEER_CONNECTED]
@@ -398,7 +398,7 @@ describe('WebRtcEndpoint', () => {
             await Promise.all([
                 waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
                 waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
-                endpoint1.connect('node-2', 'tracker')
+                endpoint2.connect('node-1', 'tracker')
             ])
 
             let ep1NumOfReceivedMessages = 0
@@ -437,7 +437,7 @@ describe('WebRtcEndpoint', () => {
 
         it('cannot send too large of a payload', async () => {
             const payload = new Array(2 ** 21).fill('X').join('')
-            await endpoint1.connect('node-2', 'tracker')
+            await endpoint2.connect('node-1', 'tracker')
             await expect(async () => {
                 await endpoint1.send('node-2', payload)
             }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)

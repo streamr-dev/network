@@ -55,7 +55,10 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory
         )
-        await ep1.connect('ep2', 'tracker')
+        await Promise.all([
+            ep1.connect('ep2', 'tracker'),
+            ep2.connect('ep1', 'tracker')
+        ])
     })
 
     afterEach(async () => {
