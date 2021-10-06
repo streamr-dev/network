@@ -89,7 +89,7 @@ jobs:
           command: cd packages/cross-client-testing && DEBUG='' make run
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v2.0.1
+        uses: jwalton/gh-docker-logs@v2.0.2
         with:
           dest: 'packages/cross-client-testing/logs'
       - name: Upload logs to GitHub
