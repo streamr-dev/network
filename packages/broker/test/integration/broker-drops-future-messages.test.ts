@@ -2,14 +2,17 @@ import url from 'url'
 import WebSocket from 'ws'
 import fetch from 'node-fetch'
 import { startTracker, Protocol, Tracker } from 'streamr-network'
-import { startBroker, createClient, createTestStream } from '../utils'
+import { startBroker, createClient, createTestStream, until } from '../utils'
 import StreamrClient from 'streamr-client'
 import { Broker } from '../broker'
+import storagenodeConfig = require('./storageNodeConfig.json')
 
 const { ControlLayer } = Protocol
 const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
 
-const trackerPort = 19420
+jest.setTimeout(30000)
+
+const trackerPort = 19429
 const httpPort = 19422
 const wsPort = 19423
 const mqttPort = 19424
@@ -36,7 +39,6 @@ describe('broker drops future messages', () => {
     let broker: Broker
     let streamId: string
     let client: StreamrClient
-    let token: string
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -45,18 +47,19 @@ describe('broker drops future messages', () => {
             id: 'tracker'
         })
         broker = await startBroker({
-            name: 'broker',
-            privateKey: '0x0381aa979c2b85ce409f70f6c64c66f70677596c7acad0b58763b0990cd5fbff',
+            name: 'storageNode',
+            privateKey: storagenodeConfig.ethereumPrivateKey,
             trackerPort,
             httpPort,
             wsPort,
-            legacyMqttPort: mqttPort
+            enableCassandra: true,
+            ...storagenodeConfig
         })
 
-        client = createClient(tracker)
+        client = createClient(tracker, '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
         const freshStream = await createTestStream(client, module)
+        await until(async () => { return client.streamExistsOnTheGraph(freshStream.id) }, 100000, 1000)
         streamId = freshStream.id
-        token = await client.getSessionToken()
     })
 
     afterEach(async () => {
@@ -91,7 +94,6 @@ describe('broker drops future messages', () => {
             method: 'POST',
             body: streamMessage.serialize(),
             headers: {
-                Authorization: 'Bearer ' + token,
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
             }
@@ -116,7 +118,7 @@ describe('broker drops future messages', () => {
         const publishRequest = new ControlLayer.PublishRequest({
             streamMessage,
             requestId: '',
-            sessionToken: token,
+            sessionToken: null,
         })
 
         const ws = new WebSocket(`ws://127.0.0.1:${wsPort}/api/v1/ws?messageLayerVersion=31&controlLayerVersion=2`, {

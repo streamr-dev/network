@@ -1,55 +1,33 @@
 import { startTracker, Tracker } from 'streamr-network'
-import { startBroker, createClient, createTestStream } from '../utils'
-import { Broker } from '../../src/broker'
+import { createClient, createTestStream } from '../utils'
 import { StreamrClient, Stream, StreamOperation } from 'streamr-client'
 import { Wallet } from 'ethers'
 import { waitForCondition } from "streamr-test-utils"
 
 const trackerPort = 12740
-const broker1WsPort = 12474
-const broker2WsPort = 12477
+
+jest.setTimeout(30000)
 
 describe('node id: with generateSessionId enabled', () => {
     let sharedWallet: Wallet
     let tracker: Tracker
-    let broker1: Broker
-    let broker2: Broker
     let client1: StreamrClient
     let client2: StreamrClient
     let stream: Stream
 
     beforeEach(async () => {
-        sharedWallet = Wallet.createRandom()
+        sharedWallet = new Wallet('0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0')
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
             id: 'tracker-1'
         })
-        broker1 = await startBroker({
-            name: 'broker1',
-            privateKey: sharedWallet.privateKey,
-            generateSessionId: true,
-            networkPort: 12471,
-            trackerPort,
-            httpPort: 12473,
-            wsPort: broker1WsPort
-        })
-        broker2 = await startBroker({
-            name: 'broker2',
-            privateKey: sharedWallet.privateKey,
-            generateSessionId: true,
-            networkPort: 12475,
-            trackerPort,
-            httpPort: 12476,
-            wsPort: broker2WsPort
-        })
 
-        client1 = createClient(tracker)
-        client2 = createClient(tracker)
+        client1 = createClient(tracker, sharedWallet.privateKey)
+        client2 = createClient(tracker, sharedWallet.privateKey)
 
         stream = await createTestStream(client1, module)
-        stream.grantPermission(StreamOperation.STREAM_GET, undefined)
-        stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
+        stream.grantPublicPermission(StreamOperation.STREAM_SUBSCRIBE)
 
         await Promise.all([
             client1.subscribe({
@@ -67,18 +45,16 @@ describe('node id: with generateSessionId enabled', () => {
     afterEach(async () => {
         await Promise.all([
             tracker.stop(),
-            broker1.stop(),
-            broker2.stop(),
             client1.destroy(),
             client2.destroy()
         ])
     })
 
     it('two brokers with same privateKey are assigned separate node ids', async () => {
-        await waitForCondition(() => tracker.getNodes().length === 2)
+        await waitForCondition(() => tracker.getNodes().length === 2, 10000)
         const actual = tracker.getNodes()
         expect(actual[0]).not.toEqual(actual[1])
-        expect(actual[0].startsWith(sharedWallet.address)).toEqual(true)
-        expect(actual[1].startsWith(sharedWallet.address)).toEqual(true)
+        expect(actual[0].startsWith(sharedWallet.address.toLowerCase())).toEqual(true)
+        expect(actual[1].startsWith(sharedWallet.address.toLowerCase())).toEqual(true)
     })
 })

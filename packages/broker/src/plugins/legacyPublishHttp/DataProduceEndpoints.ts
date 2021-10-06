@@ -10,6 +10,7 @@ import { Publisher } from '../../Publisher'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 import { parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { Todo } from '../../types'
+import { StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -37,7 +38,7 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
             type() { return true },
         }),
         // Check write permission using middleware, writes req.stream
-        authenticator(streamFetcher, 'stream_publish'),
+        authenticator(streamFetcher, StreamOperation.STREAM_PUBLISH),
         // Produce request handler
         async (req: Todo, res: Todo) => {
             // Validate body

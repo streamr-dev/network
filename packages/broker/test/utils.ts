@@ -30,9 +30,13 @@ export function formConfig({
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = {
-        privatekey: '0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285',
-        address: '0x505D48552Ac17FfD0845FFA3783C2799fd4aaD78',
-        url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
+        // privatekey: '0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285',
+        // address: '0x505D48552Ac17FfD0845FFA3783C2799fd4aaD78',
+        // url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`,
+        registry: {
+            contractAddress: "0xbAA81A0179015bE47Ad439566374F2Bae098686F",
+            jsonRpcProvider: "http://10.200.10.1:8546"
+        }
     },
     storageConfigRefreshInterval = 5000,
 }: Todo): Config {
@@ -202,15 +206,18 @@ const getTestName = (module: NodeModule) => {
     return (groups !== null) ? groups[1] : module.filename
 }
 
-export const createTestStream = (
+export const createTestStream = async (
     streamrClient: StreamrClient,
     module: NodeModule,
     props?: Partial<StreamProperties>
 ): Promise<Stream> => {
-    return streamrClient.createStream({
-        id: '/test/' + getTestName(module) + '/' + Date.now(),
+    const id = (await streamrClient.getAddress()) + '/test/' + getTestName(module) + '/' + Date.now()
+    const stream = await streamrClient.createStream({
+        id,
         ...props
     })
+    await until(async () => { return streamrClient.streamExistsOnTheGraph(id) }, 100000, 1000)
+    return stream
 }
 
 export class Queue<T> {

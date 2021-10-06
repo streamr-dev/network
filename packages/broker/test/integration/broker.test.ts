@@ -13,7 +13,7 @@ import {
 import { Todo } from '../types'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import { Broker } from '../broker'
-import storagenodeConfig = require('../../configs/development-1.env.json')
+import storagenodeConfig = require('./storageNodeConfig.json')
 
 const httpPort = 12341
 const wsPort1 = 12351
@@ -105,7 +105,7 @@ describe('broker: end-to-end', () => {
         await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
         await until(async () => { return client1.isStreamStoredInStorageNode(freshStreamId, storageNodeAccount.address) }, 100000, 1000)
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort)
-        await freshStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
+        // await freshStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
     })
 
     afterAll(async () => {

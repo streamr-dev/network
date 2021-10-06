@@ -11,6 +11,7 @@ import { Storage } from './Storage'
 import { authenticator } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
+import { StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -129,7 +130,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
             }
         },
         // authentication
-        authenticator(streamFetcher, 'stream_subscribe'),
+        authenticator(streamFetcher, StreamOperation.STREAM_SUBSCRIBE),
     )
 
     createEndpointRoute('last', router, metrics, (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {

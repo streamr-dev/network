@@ -32,7 +32,7 @@ export class StreamFetcher {
         this.client = client
     }
 
-    private async _authenticate(streamId: string, sessionToken: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE): Promise<Todo>  {
+    private async _authenticate(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE): Promise<Todo>  {
         await this.checkPermission(streamId, operation)
         return this.fetch(streamId)
     }

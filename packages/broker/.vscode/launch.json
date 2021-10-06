@@ -19,9 +19,13 @@
               "-i",
               "--no-cache",
               // "--detectOpenHandles",
-              "test/integration/broker.test.ts",
-              "-t",
-              "happy-path: resend last request via http"
+              // "test/integration/broker.test.ts",
+              "test/integration/broker-drops-future-messages.test.ts",
+              // "test/integration/local-propagation.test.ts",
+              // "test/integration/node-id.test.ts",
+              // "test/integration/plugins/legacyMqtt/mqtt-error-handling.test.ts",
+              // "-t",
+              // "test not valid private key"
             ],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",

@@ -5,6 +5,8 @@ import {waitForEvent} from '../../../../../test-utils/dist/utils'
 import { Broker } from '../../../broker'
 import { startBroker, createMqttClient } from '../../../utils'
 
+jest.setTimeout(30000)
+
 const trackerPort = 12411
 const mqttPort = 12413
 

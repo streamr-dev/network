@@ -4,7 +4,10 @@ import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
 import { Todo } from '../types'
-import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
+import { startBroker, createClient, createMqttClient, createTestStream } from '../utils'
+import storagenodeConfig = require('./storageNodeConfig.json')
+
+jest.setTimeout(30000)
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -14,7 +17,7 @@ const mqttPort = 17751
 describe('local propagation', () => {
     let tracker: Tracker
     let broker: Broker
-    const privateKey = fastPrivateKey()
+    const privateKey = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream: Stream
@@ -31,11 +34,12 @@ describe('local propagation', () => {
 
         broker = await startBroker({
             name: 'broker1',
-            privateKey: '0xfe77283a570fda0e581897b18d65632c438f0d00f9440183119c1b7e4d5275e1',
+            privateKey: storagenodeConfig.ethereumPrivateKey,
             trackerPort,
             httpPort,
             wsPort,
-            legacyMqttPort: mqttPort
+            legacyMqttPort: mqttPort,
+            ...storagenodeConfig
         })
 
         client1 = createClient(tracker, privateKey)
@@ -50,7 +54,7 @@ describe('local propagation', () => {
         freshStreamId = freshStream.id
 
         await wait(3000)
-    }, 10 * 1000)
+    })
 
     afterEach(async () => {
         await Promise.all([
@@ -167,7 +171,7 @@ describe('local propagation', () => {
                 mqttPayload: 'key: 2'
             }
         ])
-    }, 10000)
+    })
 
     test('local propagation using StreamrClients and mqtt clients', async () => {
         const client1Messages: Todo[] = []
@@ -298,5 +302,5 @@ describe('local propagation', () => {
                 key: 4
             },
         ])
-    }, 10000)
+    })
 })
