@@ -409,7 +409,6 @@ export function publishTestMessagesGenerator(client: StreamrClient, stream: SIDL
         pipeline.forEach(opts.afterEach)
     }
     return pipeline
-
 }
 
 export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {

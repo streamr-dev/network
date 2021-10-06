@@ -20,6 +20,7 @@ export const DEFAULT_HEADERS = {
 export class AuthFetchError extends Error {
     response?: Response
     body?: any
+    code: ErrorCode
     errorCode: ErrorCode
 
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
@@ -29,7 +30,8 @@ export class AuthFetchError extends Error {
         super(typePrefix + message + bodyMessage)
         this.response = response
         this.body = body
-        this.errorCode = errorCode || ErrorCode.UNKNOWN
+        this.code = errorCode || ErrorCode.UNKNOWN
+        this.errorCode = this.code
 
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
