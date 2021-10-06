@@ -14,7 +14,7 @@ const SEPARATOR = '|' // always use SEPARATOR for cache key
 // Temporary during testnet: preloaded stream metadata to reduce calls to backend.
 /** @internal */
 export const preloadStreams = new Set([
-    'streamr.eth/brubeck-testnet/rewards/6hhb49',
+    'streamr.eth/brubeck-testnet/rewards/5hhb49',
     'streamr.eth/brubeck-testnet/rewards/95hc37',
     'streamr.eth/brubeck-testnet/rewards/12ab22',
     'streamr.eth/brubeck-testnet/rewards/z15g13',
