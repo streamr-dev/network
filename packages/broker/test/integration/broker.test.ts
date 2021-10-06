@@ -11,7 +11,7 @@ import {
     waitForStreamPersistedInStorageNode
 } from '../utils'
 import { Todo } from '../types'
-import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
+import StreamrClient, { Stream } from 'streamr-client'
 import { Broker } from '../broker'
 import storagenodeConfig = require('./storageNodeConfig.json')
 

@@ -1,3 +1,4 @@
+import { Wallet } from '@ethersproject/wallet'
 import { Stream, StreamrClient } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { Broker } from '../../src/broker'
@@ -27,7 +28,7 @@ const MOCK_MESSAGE = {
 }
 const MOCK_API_KEY = 'mock-api-key'
 
-const brokerUser = createMockUser()
+const brokerUser = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
 
 const assertReceivedMessage = (message: Message) => {
     const { content, metadata } = message

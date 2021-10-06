@@ -15,6 +15,8 @@ import {
 } from '../../../utils'
 import { Broker } from '../../../broker'
 
+jest.setTimeout(30000)
+
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
@@ -33,9 +35,9 @@ describe('StorageConfig', () => {
     let client: StreamrClient
     let stream: Stream
     let assignmentEventManager: StorageAssignmentEventManager
-    const publisherAccount = Wallet.createRandom()
-    const storageNodeAccount = Wallet.createRandom()
-    const brokerAccount = Wallet.createRandom()
+    const publisherAccount = new Wallet('0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0')
+    const storageNodeAccount = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
+    const brokerAccount = new Wallet('0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae')
 
     beforeAll(async () => {
         cassandraClient = new cassandra.Client({
@@ -50,7 +52,7 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
-        const engineAndEditorAccount = Wallet.createRandom()
+        const engineAndEditorAccount = new Wallet('0x633a182fb8975f22aaad41e9008cb49a432e9fdfef37f151e9e7c54e96258ef9')
         tracker = await startTracker({
             host: NODE_HOST,
             port: TRACKER_PORT,
@@ -97,5 +99,5 @@ describe('StorageConfig', () => {
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = Protocol.StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
         expect(storeMessage.messageId).toEqual(publishMessage.messageId)
-    }, 10000)
+    })
 })

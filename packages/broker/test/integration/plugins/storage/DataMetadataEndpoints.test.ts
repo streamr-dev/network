@@ -5,6 +5,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
+jest.setTimeout(30000)
 const httpPort1 = 12371
 const wsPort1 = 12372
 const trackerPort = 12375
@@ -26,23 +27,28 @@ describe('DataMetadataEndpoints', () => {
     let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
-    const storageNodeAccount = Wallet.createRandom()
+    const storageNodeAccount = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
 
-        const storageNodeRegistry = [{
-            address: storageNodeAccount.address,
-            url: `http://127.0.0.1:${httpPort1}`
-        }]
+        const storageNodeRegistry = {
+            contractAddress: storageNodeAccount.address,
+            jsonRpcProvider: `http://127.0.0.1:${httpPort1}`
+        }
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
             id: 'tracker-DataMetadataEndpoints'
         })
-        const engineAndEditorAccount = Wallet.createRandom()
+        const engineAndEditorAccount = new Wallet('0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0')
         const trackerInfo = tracker.getConfigRecord()
-
+        const storageNodeClient = new StreamrClient({
+            auth: {
+                privateKey: storageNodeAccount.privateKey
+            },
+        })
+        await storageNodeClient.setNode('http://127.0.0.1:' + httpPort1)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -55,12 +61,12 @@ describe('DataMetadataEndpoints', () => {
             trackers: [trackerInfo],
             storageNodeConfig: { registry: storageNodeRegistry }
         })
-        client1 = createClient(tracker, undefined, {
+        client1 = createClient(tracker, '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae', {
             storageNodeRegistry: storageNodeRegistry,
         })
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)
         await assignmentEventManager.createStream()
-    }, 10 * 1000)
+    })
 
     afterAll(async () => {
         await tracker.stop()

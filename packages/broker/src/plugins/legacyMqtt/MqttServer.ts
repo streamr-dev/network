@@ -168,7 +168,7 @@ export class MqttServer extends EventEmitter {
                 // })
 
             } catch {(err: any) => {
-                    logger.warn('onNewClientConnection: error fetching token %s', err.stack)
+                logger.warn('onNewClientConnection: error fetching token %s', err.stack)
                 if (err.code === 'INVALID_ARGUMENT') {
                     connection.sendConnectionRefused()
                 } else {
@@ -184,7 +184,7 @@ export class MqttServer extends EventEmitter {
         const { topic, payload, qos } = packet
 
         try {
-            const streamObj = await this.streamFetcher.authenticate(topic, connection.token, StreamOperation.STREAM_PUBLISH)
+            const streamObj = await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_PUBLISH)
 
             // No way to define partition over MQTT, so choose a random partition
             const streamPartition = this.partitionFn(streamObj.partitions)
@@ -232,7 +232,7 @@ export class MqttServer extends EventEmitter {
         const { topic } = packet.subscriptions[0]
 
         try {
-            const streamObj = await this.streamFetcher.authenticate(topic, connection.token, StreamOperation.STREAM_SUBSCRIBE)
+            const streamObj = await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_SUBSCRIBE)
             const newOrExistingStream = this.streams.getOrCreate(streamObj.id, 0, streamObj.name)
 
             // Subscribe now if the stream is not already subscribed or subscribing

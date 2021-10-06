@@ -21,7 +21,7 @@
     "test-unit": "jest test/unit",
     "test-sequential": "jest --maxWorkers=1 test/sequential # always run sequential tests with maxWorkers=1",
     "test-integration": "jest --forceExit test/integration && npm run test-sequential",
-    "t": "jest --forceExit test/unit/plugins/storage/DataQueryEndpoints.test.ts",
+    "t": "jest --forceExit test/integration/broker-drops-future-messages.test.ts",
     "eslint": "eslint ."
   },
   "author": "Streamr Network AG <contact@streamr.com>",

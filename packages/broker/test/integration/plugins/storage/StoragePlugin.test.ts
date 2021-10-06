@@ -4,7 +4,6 @@ import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StreamPart } from '../../../../src/types'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
-import { StorageNodeRegistry } from "../../../../src/StorageNodeRegistry"
 import { Wallet } from 'ethers'
 
 const STREAM_PARTS: StreamPart[] = [ 
@@ -13,7 +12,7 @@ const STREAM_PARTS: StreamPart[] = [
 ]
 
 const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
-    const wallet = Wallet.createRandom()
+    const wallet = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
     const brokerConfig: any = {
         ethereumPrivateKey: wallet.privateKey,
         plugins: {
@@ -43,7 +42,7 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
         brokerConfig,
-        storageNodeRegistry: StorageNodeRegistry.createInstance(brokerConfig, []),
+        // storageNodeRegistry: StorageNodeRegistry.createInstance(brokerConfig, []),
         nodeId: wallet.address
     })
 }
