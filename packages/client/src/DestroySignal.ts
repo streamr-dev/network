@@ -2,6 +2,7 @@
  * Client-wide destroy signal.
  */
 import { scoped, Lifecycle } from 'tsyringe'
+import { instanceId } from './utils'
 
 import { Context, ContextError } from './utils/Context'
 import Signal from './utils/Signal'
@@ -12,9 +13,18 @@ import Signal from './utils/Signal'
  * Trigger this to destroy the client.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class DestroySignal {
+export class DestroySignal implements Context {
     onDestroy = Signal.once()
     trigger = this.destroy
+    id = instanceId(this)
+    debug
+    constructor(context: Context) {
+        this.debug = context.debug.extend(this.id)
+        this.onDestroy(() => {
+            this.debug('triggered')
+        })
+    }
+
     destroy() {
         return this.onDestroy.trigger()
     }

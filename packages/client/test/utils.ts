@@ -430,6 +430,9 @@ export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDL
             contents.set(streamMessage, streamMessage.serializedContent)
         })
         const publishStream = publishTestMessagesGenerator(client, sid, maxMessages, options)
+        client.onDestroy(() => {
+            publishStream.return()
+        })
         if (opts.onPublishPipeline) {
             opts.onPublishPipeline.trigger(publishStream)
         }
