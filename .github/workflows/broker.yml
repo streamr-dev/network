@@ -85,6 +85,7 @@ jobs:
         with:
           services-to-start: "core-api cassandra nginx parity-sidechain-node0"
       - run: npm run test-integration
+      - run: npm run test-sequential
         env:
           CI: true
           LOG_LEVEL: warn
