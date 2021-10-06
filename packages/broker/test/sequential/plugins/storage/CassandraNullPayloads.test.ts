@@ -1,7 +1,7 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
-import { STREAMR_DOCKER_DEV_HOST, createTestStream, fastPrivateKey } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST, createTestStream } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
 import { StreamrClient } from 'streamr-client'
@@ -99,7 +99,7 @@ describe('CassandraNullPayloads', () => {
 
         const streamrClient = new StreamrClient({
             auth: {
-                privateKey: fastPrivateKey()
+                privateKey: '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
             },
             restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
         })
