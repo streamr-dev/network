@@ -84,12 +84,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const storageNodes = await getStorageNodes(config)
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
-    // leave undefined to let client generate session id
-    let sessionId: string | undefined
-    if (config.plugins['storage']) { // storage node needs consistent id
-        sessionId = brokerAddress
-    }
-
+    const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
     const streamrClient = new StreamrClient({
         auth: {
             privateKey: config.ethereumPrivateKey,
@@ -97,7 +92,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         restUrl: `${config.streamrUrl}/api/v1`,
         storageNodeRegistry: config.storageNodeConfig?.registry,
         network: {
-            id: sessionId,
+            id: usePredeterminedNetworkId ? brokerAddress : undefined,
             name: networkNodeName,
             trackers,
             location: config.network.location,
