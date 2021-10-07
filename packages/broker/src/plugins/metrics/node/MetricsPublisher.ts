@@ -125,33 +125,30 @@ export class MetricsPublisher {
     ): Promise<Sample[]> {
         return new Promise(async (resolve, reject) => {
             let isTimedOut = false
-            try {
-                function startTimeout() {
-                    return setTimeout(() => {
-                        isTimedOut = true
-                        reject(new Error('StreamMetrics timed out'))
-                        if (sub) {
-                            sub.return()
-                        }
-                    }, timeout)
-                }
+            let sub
+            function startTimeout() {
+                return setTimeout(() => {
+                    isTimedOut = true
+                    reject(new Error('StreamMetrics timed out'))
+                }, timeout)
+            }
 
-                let timeoutId = startTimeout()
-                const messages: Sample[] = []
-                const sub = await this.client.resend<Sample>({
+            let timeoutId = startTimeout()
+            const messages: Sample[] = []
+            try {
+                sub = await this.client.resend<Sample>({
                     stream: this.getStreamId(periodLength),
                     resend: {
                         last
                     }
                 }, (message) => {
                     clearTimeout(timeoutId)
-                    messages.push(message)
                     timeoutId = startTimeout()
+                    messages.push(message)
                 })
 
                 if (isTimedOut) {
                     resolve([])
-                    sub.return()
                     return
                 }
 
@@ -163,6 +160,11 @@ export class MetricsPublisher {
                 resolve(messages.filter((m) => m.period !== undefined && m.period.start !== undefined && m.period.end !== undefined))
             } catch (err) {
                 reject(err)
+            } finally {
+                clearTimeout(timeoutId)
+                if (sub) {
+                    sub.return()
+                }
             }
         })
     }
