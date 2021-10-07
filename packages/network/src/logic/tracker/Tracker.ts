@@ -3,11 +3,12 @@ import { EventEmitter } from 'events'
 import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { TrackerServer, Event as TrackerServerEvent } from '../../protocol/TrackerServer'
+import { SmartContractRecord } from 'streamr-client-protocol'
 import { OverlayTopology } from './OverlayTopology'
 import { COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
-import { PeerInfo } from '../../connection/PeerInfo'
+import { PeerId, PeerInfo } from '../../connection/PeerInfo'
 import { Location, Status, StreamStatus, StreamKey } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
@@ -48,7 +49,8 @@ export interface Tracker {
 export class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode: number
     private readonly trackerServer: TrackerServer
-    private readonly peerInfo: PeerInfo
+    /** @internal */
+    public readonly peerInfo: PeerInfo
     private readonly overlayPerStream: OverlayPerStream
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
@@ -249,5 +251,17 @@ export class Tracker extends EventEmitter {
 
     getOverlayPerStream(): Readonly<OverlayPerStream> {
         return this.overlayPerStream
+    }
+
+    getConfigRecord(): SmartContractRecord {
+        return {
+            id: this.peerInfo.peerId,
+            http: this.getUrl().replace(/^ws/, 'http'),
+            ws: this.getUrl()
+        }
+    }
+
+    getTrackerId(): PeerId {
+        return this.peerInfo.peerId
     }
 }

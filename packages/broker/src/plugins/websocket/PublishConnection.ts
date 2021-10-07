@@ -26,15 +26,15 @@ export class PublishConnection implements Connection {
             throw new Error('Invalid combination of "partition", "partitionKey" and "partitionKeyField"')
         }
     }
-    
+
     init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat) {
         ws.on('message', (payload: string) => {
             try {
                 const { content, metadata } = payloadFormat.createMessage(payload)
                 const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)
                 streamrClient.publish({
-                    id: this.streamId,
-                    partition: this.partition
+                    streamId: this.streamId,
+                    streamPartition: this.partition
                 }, content, metadata.timestamp, partitionKey)
             } catch (err: any) {
                 closeWithError(err, 'Unable to publish', ws, logger)

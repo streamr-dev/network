@@ -257,6 +257,36 @@ describe('OrderedMsgChain', () => {
         assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4, msg5])
     })
 
+    it('does not call the gap handler again while async gap handler is pending', (done) => {
+        const received: StreamMessage[] = []
+        const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+        const WAIT = 100
+        let count = 0
+        util = new OrderedMsgChain('publisherId', 'msgChainId', (msg: StreamMessage) => {
+            received.push(msg)
+        }, async () => {
+            count += 1
+            await wait(WAIT * 3)
+            util.add(msg2)
+        }, WAIT, WAIT)
+        util.on('drain', () => {
+            try {
+                assert.strictEqual(count, 1)
+                assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4, msg5])
+                done()
+            } catch (err) {
+                done(err)
+            }
+        })
+
+        util.add(msg1)
+        // msg2 missing
+        util.add(msg3)
+        util.add(msg4)
+        util.add(msg5)
+    })
+
     it('does not call the gap handler a second time if explicitly cleared', (done) => {
         let counter = 0
         util = new OrderedMsgChain('publisherId', 'msgChainId', () => {}, () => {

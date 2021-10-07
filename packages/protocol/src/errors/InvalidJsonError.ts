@@ -1,20 +1,13 @@
 import StreamMessage from '../protocol/message_layer/StreamMessage'
+import StreamMessageError from './StreamMessageError'
 
-export default class InvalidJsonError extends Error {
-
-    streamId: string
-    jsonString: string
+export default class InvalidJsonError extends StreamMessageError {
     parseError: Error
     streamMessage: StreamMessage
 
-    constructor(streamId: string, jsonString: string, parseError: Error, streamMessage: StreamMessage) {
-        super(`Invalid JSON in stream ${streamId}: ${jsonString}. Error while parsing was: ${parseError}`)
-        this.streamId = streamId
-        this.jsonString = jsonString
+    constructor(streamId: string, parseError: Error, streamMessage: StreamMessage) {
+        super(`Invalid JSON in stream ${streamId}: ${parseError}`, streamMessage)
         this.parseError = parseError
         this.streamMessage = streamMessage
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
     }
 }

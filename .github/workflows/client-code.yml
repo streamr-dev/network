@@ -33,11 +33,11 @@ jobs:
           all_but_latest: true
           access_token: ${{ github.token }}
   lint:
-    name: Run linter using Node 14.x
+    name: Run linter using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [16.x]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -56,7 +56,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: npm run eslint
         run: npm run eslint
 
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [14.x]
     env:
       TEST_REPEATS: 5
     steps:
@@ -86,7 +86,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: test-unit
         timeout-minutes: 7
         run: npm run test-unit
@@ -97,7 +97,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [14.x]
         test-name: [
             "test-integration-no-resend",
             "test-integration-resend",
@@ -130,7 +130,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -150,6 +150,7 @@ jobs:
           path: packages/client/logs
 
   flakey:
+    if: ${{ false }}
     name: Flakey Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -175,7 +176,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -189,6 +190,7 @@ jobs:
           command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
   memory:
+    if: ${{ false }}
     name:  Memory Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -214,7 +216,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:

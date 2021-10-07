@@ -175,15 +175,13 @@ describe('check status message flow between tracker and two nodes', () => {
 
         // @ts-expect-error private field
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            // @ts-expect-error private field
-            if (nodeId === nodeOne.peerInfo.peerId) {
+            if (nodeId === nodeOne.getNodeId()) {
                 nodeOneStatus = statusMessage.status
                 // @ts-expect-error private field
                 expect(tracker.locationManager.nodeLocations['node-1']).toBeUndefined()
             }
 
-            // @ts-expect-error private field
-            if (nodeId === nodeTwo.peerInfo.peerId) {
+            if (nodeId === nodeTwo.getNodeId()) {
                 nodeTwoStatus = statusMessage.status
                 // @ts-expect-error private field
                 expect(tracker.locationManager.nodeLocations['node-2'].country).toBe('FI')

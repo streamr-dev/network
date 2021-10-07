@@ -57,6 +57,8 @@ export const startServer = async (routers: express.Router[], config: HttpServerC
 }
 
 export const stopServer = async (httpServer: HttpServer|HttpsServer) => {
-    httpServer.close()
-    await once(httpServer, 'close')
+    if (httpServer.listening) {
+        httpServer.close()
+        await once(httpServer, 'close')
+    }
 }

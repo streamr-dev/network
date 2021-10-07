@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { Logger } from 'streamr-network'
 import { StreamPart } from '../../types'
-import { Protocol } from 'streamr-network'
+import { StreamMessage, keyToArrayIndex } from 'streamr-network/dist/streamr-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
 
 const logger = new Logger(module)
@@ -35,6 +35,14 @@ const getKeysFromStream = (streamId: string, partitions: number): StreamKey[] =>
         keys.push(getKeyFromStream(streamId, i))
     }
     return keys
+}
+
+export type AssignmentMessage = {
+    stream: {
+        id: string,
+        partitions: number,
+    },
+    event: 'STREAM_ADDED' | 'STREAM_REMOVED',
 }
 
 export class StorageConfig {
@@ -148,16 +156,21 @@ export class StorageConfig {
     }
 
     private belongsToMeInCluster(key: StreamKey): boolean {
-        const hashedIndex = Protocol.Utils.keyToArrayIndex(this.clusterSize, key.toString())
+        const hashedIndex = keyToArrayIndex(this.clusterSize, key.toString())
         return hashedIndex === this.myIndexInCluster
     }
 
-    startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: Protocol.StreamMessage) => void {
+    startAssignmentEventListener(streamrAddress: string, subscriptionManager: SubscriptionManager): (msg: StreamMessage<AssignmentMessage>) => void {
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
-        const messageListener = (msg: Protocol.StreamMessage) => {
+        const messageListener = (msg: StreamMessage<AssignmentMessage>) => {
             if (msg.messageId.streamId === assignmentStreamId) {
-                const content = msg.getParsedContent()
-                this.onAssignmentEvent(content)
+                const content = msg.getParsedContent() as any
+                const keys = new Set(getKeysFromStream(content.stream.id, content.stream.partitions))
+                if (content.event === 'STREAM_ADDED') {
+                    this._addStreams(keys)
+                } else if (content.event === 'STREAM_REMOVED') {
+                    this._removeStreams(keys)
+                }
             }
         }
         subscriptionManager.networkNode.addMessageListener(messageListener)
@@ -166,7 +179,7 @@ export class StorageConfig {
     }
 
     onAssignmentEvent(content: { storageNode: string, stream: { id: string, partitions: number }, event: string }) {
-        if (content.storageNode && content.storageNode.toLowerCase() == this.clusterId.toLowerCase()) {
+        if (content.storageNode && typeof content.storageNode === 'string' && content.storageNode.toLowerCase() === this.clusterId.toLowerCase()) {
             logger.trace('Received storage assignment message: %o', content)
             const keys = new Set(
                 getKeysFromStream(content.stream.id, content.stream.partitions)
@@ -187,7 +200,7 @@ export class StorageConfig {
         }
     }
 
-    stopAssignmentEventListener(messageListener: (msg: Protocol.StreamMessage) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
+    stopAssignmentEventListener(messageListener: (msg: StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)

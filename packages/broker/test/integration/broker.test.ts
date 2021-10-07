@@ -78,16 +78,16 @@ describe('broker: end-to-end', () => {
         // Create clients
         const user1 = Wallet.createRandom()
         const user2 = Wallet.createRandom()
-        client1 = createClient(wsPort1, user1.privateKey, {
-            storageNode: storageNodeRegistry[0]
+        client1 = createClient(tracker, user1.privateKey, {
+            storageNodeRegistry,
         })
-        client2 = createClient(wsPort2, user1.privateKey, {
-            storageNode: storageNodeRegistry[0]
+        client2 = createClient(tracker, user1.privateKey, {
+            storageNodeRegistry,
         })
-        client3 = createClient(wsPort3, user2.privateKey, {
-            storageNode: storageNodeRegistry[0]
+        client3 = createClient(tracker, user2.privateKey, {
+            storageNodeRegistry,
         })
-        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount, storageNodeAccount)
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
 
         // Set up stream
@@ -102,9 +102,9 @@ describe('broker: end-to-end', () => {
     afterAll(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
-            client3.ensureDisconnected(),
+            client1.disconnect(),
+            client2.disconnect(),
+            client3.disconnect(),
             storageNode.stop(),
             brokerNode1.stop(),
             brokerNode2.stop(),
@@ -117,7 +117,7 @@ describe('broker: end-to-end', () => {
         const client2Messages: Todo[] = []
         const client3Messages: Todo[] = []
 
-        await Promise.all([
+        const subs = await Promise.all([
             client1.subscribe({
                 stream: freshStreamId
             }, (message) => {
@@ -134,6 +134,8 @@ describe('broker: end-to-end', () => {
                 client3Messages.push(message)
             })
         ])
+
+        await Promise.all(subs.map((sub) => sub.waitForNeighbours()))
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -262,7 +264,7 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: resend last request via websocket', async () => {
-        await Promise.all([
+        const subs = await Promise.all([
             client1.subscribe({
                 stream: freshStreamId
             }, () => {}),
@@ -273,6 +275,8 @@ describe('broker: end-to-end', () => {
                 stream: freshStreamId
             }, () => {}),
         ])
+
+        await Promise.all(subs.map((sub) => sub.waitForNeighbours()))
 
         await client1.publish(freshStreamId, {
             key: 1

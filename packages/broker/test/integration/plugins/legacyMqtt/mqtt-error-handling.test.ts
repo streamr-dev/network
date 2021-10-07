@@ -1,7 +1,7 @@
 import { AsyncMqttClient } from 'async-mqtt'
-import net from 'net'
-import { startTracker } from 'streamr-network'
-import { Todo } from '../../../../src/types'
+import { Socket } from 'net'
+import { startTracker, Tracker } from 'streamr-network'
+import {waitForEvent} from '../../../../../test-utils/dist/utils'
 import { Broker } from '../../../broker'
 import { startBroker, createMqttClient } from '../../../utils'
 
@@ -9,13 +9,12 @@ const trackerPort = 12411
 const mqttPort = 12413
 
 describe('MQTT error handling', () => {
-    let tracker: Todo
+    let tracker: Tracker
     let broker: Broker
-    let socket: Todo
-    let newSocket: Todo
     let mqttClient: AsyncMqttClient
 
     async function setUpBroker(broken = false) {
+        // eslint-disable-next-line require-atomic-updates
         broker = await startBroker({
             name: 'broker',
             privateKey: '0x4e850f1940b1901ca926f20e121f40ba6f6730eaae655d827f48eccf01e32f40',
@@ -26,6 +25,9 @@ describe('MQTT error handling', () => {
     }
 
     beforeEach(async () => {
+        if (tracker) { return }
+
+        // eslint-disable-next-line require-atomic-updates
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
@@ -35,102 +37,97 @@ describe('MQTT error handling', () => {
         })
     })
 
-    afterEach(async () => {
-        if (socket) {
-            socket.destroy()
-        }
-
-        if (newSocket) {
-            newSocket.destroy()
-        }
-
-        if (mqttClient) {
-            mqttClient.end(true)
-        }
-
-        await broker.stop()
-        await tracker.stop()
+    afterAll(async () => {
+        await tracker?.stop()
     })
 
-    test('sending unrecognized packets causes client to be dropped without server crashing', (done) => {
-        setUpBroker(false).then(() => {
-            socket = new net.Socket()
+    afterEach(async () => {
+        if (mqttClient) {
+            await mqttClient.end(true)
+        }
+    })
 
-            socket.connect(mqttPort, '127.0.0.1', () => {
-                for (let i = 0; i < 100; ++i) {
-                    socket.write('nonsensepackage\r\n')
+    afterEach(async () => {
+        await broker?.stop()
+    })
+
+    describe('with valid broker', () => {
+        beforeEach(async () => {
+            await setUpBroker()
+        })
+
+        describe('with sockets', () => {
+            let socket: Socket
+            let newSocket: Socket
+
+            afterEach(async () => {
+                if (socket) {
+                    socket.destroy()
+                }
+
+                if (newSocket) {
+                    newSocket.destroy()
                 }
             })
 
-            socket.on('close', (hadError: boolean) => {
+            test('sending unrecognized packets causes client to be dropped without server crashing', async () => {
+                socket = new Socket()
+
+                socket.connect(mqttPort, '127.0.0.1', () => {
+                    for (let i = 0; i < 100; ++i) {
+                        socket.write('nonsensepackage\r\n')
+                    }
+                })
+
+                const [hadError] = await waitForEvent(socket, 'close')
                 // Make sure we didn't close with error
                 expect(hadError).toEqual(false)
 
-                // Ensure that server is indeed still up
-                newSocket = new net.Socket()
-                newSocket.on('error', (err: Todo) => {
-                    done(err)
-                })
-                newSocket.connect(mqttPort, '127.0.0.1', () => {
-                    done()
+                await new Promise((resolve, reject) => {
+                    // Ensure that server is indeed still up
+                    newSocket = new Socket()
+                    newSocket.once('error', reject)
+                    newSocket.connect(mqttPort, '127.0.0.1', () => resolve(undefined))
                 })
             })
-        }).catch((err) => {
-            done(err ?? new Error('test fail'))
         })
-    })
 
-    it('test no password given', (done) => {
-        setUpBroker(false).then(() => {
+        it('test no password given', async () => {
             mqttClient = createMqttClient(mqttPort, 'localhost', null as any)
-            mqttClient.on('error', (err) => {
-                expect(err.message).toEqual('Connection refused: Bad username or password')
-                mqttClient.end(true)
-                done()
-            })
-        }).catch((err) => {
-            done(err ?? new Error('test fail'))
+            const [err] = await waitForEvent(mqttClient, 'error')
+            expect(err && (err as Error).message).toEqual('Connection refused: Bad username or password')
         })
-    })
 
-    it('test not valid private key', (done) => {
-        setUpBroker(false).then(() => {
+        it('test not valid private key', async () => {
             mqttClient = createMqttClient(mqttPort, 'localhost', 'NOT_VALID_PRIVATE_KEY')
-            mqttClient.on('error', (err) => {
-                expect(err.message).toEqual('Connection refused: Bad username or password')
-                mqttClient.end(true)
-                done()
-            })
-        }).catch((err) => {
-            done(err ?? new Error('test fail'))
-        })
-    })
 
-    it('test streamFetcher service unavailable', (done) => {
-        setUpBroker(true).then(() => {
-            mqttClient = createMqttClient(mqttPort)
-            mqttClient.on('error', (err) => {
-                expect(err.message).toEqual('Connection refused: Server unavailable')
-                mqttClient.end(true)
-                done()
-            })
-        }).catch((err) => {
-            done(err ?? new Error('test fail'))
+            const [err] = await waitForEvent(mqttClient, 'error')
+            expect(err && (err as Error).message).toEqual('Connection refused: Bad username or password')
         })
-    })
 
-    it('test valid authentication without permissions to stream', (done) => {
-        setUpBroker(false).then(() => {
+        it('test valid authentication without permissions to stream', async () => {
             mqttClient = createMqttClient(mqttPort)
-            mqttClient.on('error', (err) => {
-                expect(err.message).toEqual('Connection refused: Not authorized')
-                done()
-            })
+            // listen for errors before publishing
+            const errTask = waitForEvent(mqttClient, 'error')
+            errTask.catch(() => {}) // handle later
+            // note the promise publish returns doesn't seem to resolve if there's an error?
             mqttClient.publish('NOT_VALID_STREAM', 'key: 1', {
                 qos: 1
             })
-        }).catch((err) => {
-            done(err ?? new Error('test fail'))
+            const [err] = await errTask
+            expect(err && (err as Error).message).toEqual('Connection refused: Not authorized')
+        })
+    })
+
+    describe('with invalid broker', () => {
+        beforeEach(async () => {
+            await setUpBroker(true)
+        })
+
+        it('test streamFetcher service unavailable', async () => {
+            mqttClient = createMqttClient(mqttPort)
+            const [err] = await waitForEvent(mqttClient, 'error')
+            expect(err && (err as Error).message).toEqual('Connection refused: Server unavailable')
         })
     })
 })

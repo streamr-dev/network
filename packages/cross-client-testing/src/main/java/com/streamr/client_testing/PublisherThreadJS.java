@@ -68,6 +68,15 @@ public class PublisherThreadJS extends PublisherThread {
     private void executeNode() {
         try {
             p = Runtime.getRuntime().exec(command, null);
+
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                public void run() {
+                    if (p.isAlive()) {
+                        p.destroy();
+                    }
+                }
+            }));
+
             final BufferedReader stdInput = new BufferedReader(new
                     InputStreamReader(p.getInputStream()));
 
@@ -126,6 +135,9 @@ public class PublisherThreadJS extends PublisherThread {
     @Override
     public void stop() {
         thread.interrupt();
+        if (p.isAlive()) {
+            p.destroy();
+        }
     }
 
     @Override

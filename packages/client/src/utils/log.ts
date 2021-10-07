@@ -4,42 +4,46 @@
 import util from 'util'
 import Debug from 'debug'
 
-export const DEFAULT_INSPECT_OPTS = {
-    maxStringLength: 256
-}
-
-const debug = Debug('Streamr')
-// @ts-expect-error inspectOpts not in debug types
-debug.inspectOpts = {
-    ...DEFAULT_INSPECT_OPTS,
-}
-
 // add global support for pretty millisecond formatting with %n
 Debug.formatters.n = (v) => {
     if (v == null || Number.isNaN(v)) { return String(v) }
     return Debug.humanize(v)
 }
 
-// override default formatters for node
-if (typeof window === 'undefined') {
-    // override %o & %O to ensure default opts apply
-    Debug.formatters.o = function o(v: any) {
-        // @ts-expect-error inspectOpts not in debug types
-        this.inspectOpts.colors = this.useColors
-        return util.inspect(v, { ...this.inspectOpts, ...DEFAULT_INSPECT_OPTS })
-            .split('\n')
-            .map((str) => str.trim())
-            .join(' ')
-    }
-
-    Debug.formatters.O = function O(v: any) {
-        // @ts-expect-error inspectOpts not in debug types
-        this.inspectOpts.colors = this.useColors
-        return util.inspect(v, { ...this.inspectOpts, ...DEFAULT_INSPECT_OPTS })
-    }
+export const DEFAULT_INSPECT_OPTS = {
+    maxStringLength: 256
 }
 
-const StreamrDebug = Object.assign(debug.extend.bind(debug), {
+// override default formatters for node
+if (typeof window === 'undefined') {
+    // monkeypatch default log function to use current `inspectOpts`.  This
+    // ensures values logged without placeholders e.g. %o, %O will have the
+    // same inspect options applied. Without this only values with a
+    // placeholder will use the `inspectOpts` config.
+    // e.g.
+    // `debug('msg', obj)` should use same `inspectOpts` as `debug('msg %O', msg)`
+    Debug.log = function log(...args) {
+        // @ts-expect-error inspectOpts/useColors not in debug types
+        if (this.inspectOpts.colors === undefined) {
+            // @ts-expect-error inspectOpts/useColors not in debug types
+            this.inspectOpts.colors = this.useColors // need this to get colours when no placeholder
+        }
+        return process.stderr.write(util.formatWithOptions({
+            // @ts-expect-error inspectOpts not in debug types
+            ...this.inspectOpts,
+        }, ...args) + '\n')
+    }
+
+    // mutate inspectOpts rather than replace, otherwise changes are lost
+    // @ts-expect-error inspectOpts not in debug types
+    Object.assign(Debug.inspectOpts, {
+        ...DEFAULT_INSPECT_OPTS,
+    })
+}
+
+const streamrDebug = Debug('Streamr')
+
+const StreamrDebug = Object.assign(streamrDebug.extend.bind(streamrDebug), {
     enable: Debug.enable.bind(Debug),
     disable: Debug.disable.bind(Debug),
     humanize: Debug.humanize.bind(Debug) as (v: any) => string,

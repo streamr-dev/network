@@ -1,9 +1,10 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
-import { createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST, createTestStream, fastPrivateKey } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
+import { StreamrClient } from 'streamr-client'
 const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
 
 const { TimeUuid } = cassandraTypes
@@ -11,8 +12,6 @@ const { TimeUuid } = cassandraTypes
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
-
-const DUMMY_WS_PORT = 9999
 
 const insertBucket = async (cassandraClient: Client, streamId: string) => {
     const dateCreate = Date.now()
@@ -62,7 +61,7 @@ async function storeMockMessages({
     return Promise.all(storePromises)
 }
 
-describe('CassandraNullPayloads', () => {  
+describe('CassandraNullPayloads', () => {
     let cassandraClient: Client
     let storage: Storage
 
@@ -97,9 +96,16 @@ describe('CassandraNullPayloads', () => {
 
     test('insert a null payload and retreve n-1 messages (null not included in return set)', async () => {
         const HEALTHY_MESSAGE_COUNT = 9
-        const streamrClient = createClient(DUMMY_WS_PORT)
+
+        const streamrClient = new StreamrClient({
+            auth: {
+                privateKey: fastPrivateKey()
+            },
+            restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+        })
+
         const stream = await createTestStream(streamrClient, module)
-        await streamrClient.disconnect()
+        await streamrClient.destroy()
         const streamId = stream.id
 
         const bucketId = await insertBucket(cassandraClient, streamId)

@@ -32,3 +32,4 @@ node_modules
 
 # dist/* we want the dist folder on npm!
 dist/*.html
+tests_output

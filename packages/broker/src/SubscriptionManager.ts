@@ -1,28 +1,22 @@
 import { NetworkNode } from 'streamr-network'
-import { Todo } from './types'
 
 export class SubscriptionManager {
+    streams = new Map<string, number>()
 
-    networkNode: NetworkNode
-    streams: Map<Todo,Todo>
-
-    constructor(networkNode: NetworkNode) {
-        this.networkNode = networkNode
-        this.streams = new Map()
+    constructor(public networkNode: NetworkNode) {
     }
 
-    subscribe(streamId: string, streamPartition = 0) {
+    subscribe(streamId: string, streamPartition = 0): void {
         const key = `${streamId}::${streamPartition}`
-        this.streams.set(key, (this.streams.get(key) || 0) + 1)
-
+        this.streams.set(key, this.streams.get(key) || 0)
         this.networkNode.subscribe(streamId, streamPartition)
     }
 
-    unsubscribe(streamId: string, streamPartition = 0) {
+    unsubscribe(streamId: string, streamPartition = 0): void {
         const key = `${streamId}::${streamPartition}`
         this.streams.set(key, (this.streams.get(key) || 0) - 1)
 
-        if (this.streams.get(key) <= 0) {
+        if ((this.streams.get(key) || 0) <= 0) {
             this.streams.delete(key)
 
             this.networkNode.unsubscribe(streamId, streamPartition)

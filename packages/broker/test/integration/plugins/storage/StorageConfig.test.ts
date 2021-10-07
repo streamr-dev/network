@@ -75,13 +75,13 @@ describe('StorageConfig', () => {
             streamrUrl: STREAMR_URL,
             enableCassandra: false
         })
-        client = createClient(WS_PORT, publisherAccount.privateKey)
-        assignmentEventManager = new StorageAssignmentEventManager(WS_PORT, engineAndEditorAccount, storageNodeAccount)
+        client = createClient(tracker, publisherAccount.privateKey)
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     })
 
     afterEach(async () => {
-        await client.ensureDisconnected()
+        await client.destroy()
         await Promise.allSettled([storageNode.stop(), broker.stop(), tracker.stop(), assignmentEventManager.close()])
     })
 
@@ -98,6 +98,6 @@ describe('StorageConfig', () => {
         })
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = Protocol.StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
-        expect(storeMessage.messageId).toEqual(publishMessage.streamMessage.messageId)
+        expect(storeMessage.messageId).toEqual(publishMessage.messageId)
     }, 10000)
 })

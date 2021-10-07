@@ -4,16 +4,24 @@ import path from 'path'
 import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg, createRelativeTestStreamId } from '../utils'
+import {
+    uid,
+    Msg,
+    getPublishTestMessages,
+    getCreateClient,
+    getPublishTestStreamMessages,
+    getWaitForStorage,
+    publishManyGenerator,
+    describeRepeats,
+    createRelativeTestStreamId
+} from '../utils'
+
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
-import Connection from '../../src/Connection'
+import * as G from '../../src/utils/GeneratorUtils'
 
-import clientOptions from './config'
-import { Stream } from '../../src/stream'
-import { Subscription } from '../../src'
-import { StorageNode } from '../../src/stream/StorageNode'
-import SubscriptionSession from '../../src/subscribe/SubscriptionSession'
+import { Stream } from '../../src/Stream'
+import { StorageNode } from '../../src/StorageNode'
 
 const { StreamMessage } = MessageLayer
 
@@ -30,23 +38,7 @@ describeRepeats('StreamrClient', () => {
     let onError = jest.fn()
     let client: StreamrClient
 
-    const createClient = (opts = {}) => {
-        const c = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: fakePrivateKey(),
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            // disconnectDelay: 500,
-            // publishAutoDisconnectDelay: 250,
-            maxRetries: 2,
-            ...opts,
-        })
-        c.onError = jest.fn()
-        c.on('error', onError)
-        return c
-    }
+    const createClient = getCreateClient()
 
     beforeEach(() => {
         errors = []
@@ -58,47 +50,16 @@ describeRepeats('StreamrClient', () => {
         await wait(0)
         // ensure no unexpected errors
         expect(errors).toHaveLength(expectErrors)
-        if (client) {
-            expect(client.onError).toHaveBeenCalledTimes(expectErrors)
-        }
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        if (client) {
-            client.debug('disconnecting after test')
-            await client.disconnect()
-        }
-
-        const openSockets = Connection.getOpen()
-        if (openSockets !== 0) {
-            throw new Error(`sockets not closed: ${openSockets}`)
-        }
     })
 
     let stream: Stream
-    let waitForStorage: (...args: any[]) => Promise<void>
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     // These tests will take time, especially on Travis
     const TIMEOUT = 30 * 1000
     const WAIT_TIME = 600
 
-    const attachSubListeners = (sub: Subscription | SubscriptionSession) => {
-        const onSubscribed = jest.fn()
-        sub.on('subscribed', onSubscribed)
-        const onResent = jest.fn()
-        sub.on('resent', onResent)
-        const onUnsubscribed = jest.fn()
-        sub.on('unsubscribed', onUnsubscribed)
-        return {
-            onSubscribed,
-            onUnsubscribed,
-            onResent,
-        }
-    }
-
-    const createStream = async ({ requireSignedData = true, ...opts } = {}) => {
+    const createStream = async ({ requireSignedData = true, ...opts }: any = {}) => {
         const name = uid('stream')
         const s = await client.createStream({
             id: createRelativeTestStreamId(module),
@@ -106,7 +67,6 @@ describeRepeats('StreamrClient', () => {
             requireSignedData,
             ...opts,
         })
-        await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         expect(s.id).toBeTruthy()
         expect(s.name).toEqual(name)
@@ -117,16 +77,11 @@ describeRepeats('StreamrClient', () => {
     beforeEach(async () => {
         client = createClient()
         await Promise.all([
-            client.session.getSessionToken(),
+            client.getSessionToken(),
             client.connect(),
         ])
         stream = await createStream()
-        publishTestMessages = getPublishTestMessages(client, {
-            stream,
-        })
-        waitForStorage = getWaitForStorage(client, {
-            stream,
-        })
+        publishTestMessages = getPublishTestMessages(client, stream)
         expect(onError).toHaveBeenCalledTimes(0)
     })
 
@@ -136,23 +91,8 @@ describeRepeats('StreamrClient', () => {
         expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
-    afterEach(async () => {
-        await wait(0)
-
-        if (client) {
-            client.debug('disconnecting after test')
-            await client.disconnect()
-        }
-
-        const openSockets = Connection.getOpen()
-        if (openSockets !== 0) {
-            await Connection.closeOpen()
-            throw new Error(`sockets not closed: ${openSockets}`)
-        }
-    })
-
     it('is stream publisher', async () => {
-        const publisherId = await client.getUserId()
+        const publisherId = await client.getAddress()
         const res = await client.isStreamPublisher(stream.id, publisherId)
         expect(res).toBe(true)
     })
@@ -181,30 +121,26 @@ describeRepeats('StreamrClient', () => {
 
         describe('subscribe/unsubscribe', () => {
             beforeEach(() => {
-                expect(client.getSubscriptions()).toHaveLength(0)
+                expect(client.getAllSubscriptions()).toHaveLength(0)
             })
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
-                const sub = await client.subscribe({
+                const subTask = client.subscribe<{ test: string }>({
                     streamId: stream.id,
                 }, () => {})
+                expect(client.subscriber.getSubscriptions()).toHaveLength(1) // has subscription immediately
 
-                const events = attachSubListeners(sub)
+                const sub = await subTask
 
-                expect(client.getSubscriptions()).toHaveLength(1) // has subscription immediately
                 expect(client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
-                expect(client.getSubscriptions()).toHaveLength(0)
-                expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
+                expect(client.subscriber.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe then unsubscribe before subscribed', async () => {
-                client.connection.enableAutoDisconnect(false)
                 const subTask = client.subscribe({
                     streamId: stream.id,
                 }, () => {})
-
-                const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream)!)
 
                 expect(client.getSubscriptions()).toHaveLength(1)
 
@@ -214,18 +150,409 @@ describeRepeats('StreamrClient', () => {
                 await unsubTask
                 await subTask
                 await wait(WAIT_TIME)
-                expect(events.onResent).toHaveBeenCalledTimes(0)
-                expect(events.onSubscribed).toHaveBeenCalledTimes(0)
-                expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
             }, TIMEOUT)
+        })
 
+        it('client.subscribe (realtime) with onMessage signal', async () => {
+            const done = Defer()
+            const msg = Msg()
+
+            const sub = await client.subscribe<typeof msg>({
+                streamId: stream.id,
+            })
+
+            sub.onMessage(done.wrap(async (streamMessage) => {
+                sub.unsubscribe()
+                const parsedContent = streamMessage.getParsedContent()
+                expect(parsedContent).toEqual(msg)
+
+                // Check signature stuff
+                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(streamMessage.getPublisherId()).toBeTruthy()
+                expect(streamMessage.signature).toBeTruthy()
+            }))
+
+            // Publish after subscribed
+            await client.publish(stream, msg)
+            await sub.consume()
+            await done
+        })
+
+        it('client.subscribe (realtime) with onMessage callback', async () => {
+            const done = Defer()
+            const msg = Msg()
+            await client.subscribe<typeof msg>({
+                streamId: stream.id,
+            }, done.wrap(async (parsedContent, streamMessage) => {
+                expect(parsedContent).toEqual(msg)
+
+                // Check signature stuff
+                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(streamMessage.getPublisherId()).toBeTruthy()
+                expect(streamMessage.signature).toBeTruthy()
+            }))
+
+            // Publish after subscribed
+            await client.publish(stream, msg)
+            await done
+        })
+
+        it('client.subscribe with onMessage & collect', async () => {
+            const onMessageMsgs: any[] = []
+            const done = Defer()
+            const sub = await client.subscribe<typeof Msg>({
+                streamId: stream.id,
+            }, async (msg) => {
+                onMessageMsgs.push(msg)
+                if (onMessageMsgs.length === MAX_MESSAGES) {
+                    done.resolve(undefined)
+                }
+            })
+
+            const published = await publishTestMessages(MAX_MESSAGES)
+            await expect(async () => sub.collect(1)).rejects.toThrow()
+            await done
+            expect(onMessageMsgs).toEqual(published)
+        })
+
+        it('client.subscribe with onMessage callback that throws', async () => {
+            const onMessageMsgs: any[] = []
+            const err = new Error('expected error')
+            const sub = await client.subscribe<typeof Msg>({
+                streamId: stream.id,
+            }, async (msg) => {
+                onMessageMsgs.push(msg)
+
+                if (onMessageMsgs.length === MAX_MESSAGES) {
+                    sub.return()
+                }
+                throw err
+            })
+
+            const published = await publishTestMessages(MAX_MESSAGES)
+            await sub.onFinally()
+            expect(onMessageMsgs).toEqual(published.slice(0, 1))
+        })
+
+        it('publish and subscribe a sequence of messages', async () => {
+            const done = Defer()
+            const received: typeof Msg[] = []
+            const sub = await client.subscribe<typeof Msg>({
+                streamId: stream.id,
+            }, done.wrapError((parsedContent, streamMessage) => {
+                received.push(parsedContent)
+                // Check signature stuff
+                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(streamMessage.getPublisherId()).toBeTruthy()
+                expect(streamMessage.signature).toBeTruthy()
+                if (received.length === MAX_MESSAGES) {
+                    done.resolve(client.unsubscribe(sub))
+                }
+            }))
+
+            // Publish after subscribed
+            const published = await publishTestMessages(MAX_MESSAGES)
+
+            await done
+            expect(received).toEqual(published)
+        })
+
+        describe('partitioning', () => {
+            it('pub with no partition key selects random partition', async () => {
+                const NUM_PARTITIONS = 3
+                const NUM_MESSAGES = 3
+                // create a new stream with multiple partitions
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+
+                const published1 = await publishTestStreamMessages(NUM_MESSAGES)
+                const published2 = await publishTestStreamMessages(NUM_MESSAGES)
+                expect(published1).toHaveLength(NUM_MESSAGES)
+                expect(published2).toHaveLength(NUM_MESSAGES)
+                const selectedPartition = published1[0].getStreamPartition()
+                // should use same partition
+                expect(published1.map((s) => s.getStreamPartition())).toEqual(published1.map(() => selectedPartition))
+                expect(published2.map((s) => s.getStreamPartition())).toEqual(published1.map(() => selectedPartition))
+
+                // clear message creator cache and retry should get another
+                // partition unless we're really unlucky and get 100 of the
+                // same partition in a row.
+                const foundPartitions: boolean[] = Array(NUM_PARTITIONS).fill(false)
+                for (let i = 0; i < 100; i++) {
+                    // @ts-expect-error private
+                    client.publisher.pipeline.messageCreator.streamPartitioner.clear()
+                    // eslint-disable-next-line no-await-in-loop
+                    const published3 = await publishTestStreamMessages(1)
+                    expect(published3).toHaveLength(1)
+                    const foundPartition = published3[0].getStreamPartition()
+                    foundPartitions[foundPartition] = true
+                    if (foundPartitions.every((v) => v)) {
+                        break
+                    }
+                }
+
+                expect(foundPartitions).toEqual(Array(NUM_PARTITIONS).fill(true))
+            })
+
+            it('publishing to different streams should get different random partitions', async () => {
+                const NUM_PARTITIONS = 3
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+                const partitionStream2 = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+                const publishTestStreamMessages2 = getPublishTestStreamMessages(client, partitionStream2)
+
+                // publishing to different streams should get different random partitions
+                // clear message creator cache and retry should get another
+                let gotDifferentPartitions = false
+                for (let i = 0; i < 100; i++) {
+                    // @ts-expect-error private
+                    client.publisher.pipeline.messageCreator.streamPartitioner.clear()
+                    // eslint-disable-next-line no-await-in-loop
+                    const [published1, published2] = await Promise.all([
+                        publishTestStreamMessages(1),
+                        publishTestStreamMessages2(1)
+                    ])
+                    const foundPartition1 = published1[0].getStreamPartition()
+                    const foundPartition2 = published2[0].getStreamPartition()
+                    if (foundPartition1 !== foundPartition2) {
+                        gotDifferentPartitions = true
+                        break
+                    }
+                }
+
+                expect(gotDifferentPartitions).toBe(true)
+            })
+
+            it('pub with string partition key can map to full partition range', async () => {
+                const NUM_PARTITIONS = 3
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+
+                // get many partitions with random keys
+                // should eventually map to all partitions
+                const foundPartitions: boolean[] = Array(NUM_PARTITIONS).fill(false)
+                for (let i = 0; i < 100; i++) {
+                    // eslint-disable-next-line no-await-in-loop
+                    const published3 = await publishTestStreamMessages(1, {
+                        partitionKey: String(i),
+                    })
+                    expect(published3).toHaveLength(1)
+                    const foundPartition = published3[0].getStreamPartition()
+                    foundPartitions[foundPartition] = true
+                    if (foundPartitions.every((v) => v)) {
+                        break
+                    }
+                }
+
+                expect(foundPartitions).toEqual(Array(NUM_PARTITIONS).fill(true))
+            })
+
+            it('pub with same string partition key always publishes to same partition', async () => {
+                const NUM_PARTITIONS = 6
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+                const partitionKey = String(Math.random())
+                const published = await publishTestStreamMessages(1, {
+                    partitionKey
+                })
+
+                // publish many times with same key
+                // should always be the same
+                // even if cache is cleared
+                const targetPartition = published[0].getStreamPartition()
+                const foundPartitions: number[] = []
+                for (let i = 0; i < 50; i++) {
+                    // @ts-expect-error private
+                    client.publisher.pipeline.messageCreator.streamPartitioner.clear()
+                    // eslint-disable-next-line no-await-in-loop
+                    const published2 = await publishTestStreamMessages(1, {
+                        partitionKey,
+                    })
+                    expect(published2).toHaveLength(1)
+                    foundPartitions.push(published2[0].getStreamPartition())
+                }
+
+                expect(foundPartitions).toEqual(foundPartitions.map(() => targetPartition))
+            })
+
+            it('pub/sub with numeric partition key publishes to that key', async () => {
+                const NUM_PARTITIONS = 3
+                const NUM_MESSAGES = 3
+                // create a new stream with multiple partitions
+                const partitionStream = await createStream({
+                    partitions: NUM_PARTITIONS
+                })
+
+                const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
+                const eachPartition = Array(NUM_PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
+
+                // subscribe to each partition
+                const subs = await Promise.all(eachPartition.map((streamPartition) => {
+                    return client.subscribe<typeof Msg>({
+                        streamId: partitionStream.id,
+                        streamPartition,
+                    })
+                }))
+
+                // publish to each partition
+                const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+                    return publishTestStreamMessages(NUM_MESSAGES, { partitionKey: streamPartition })
+                }))
+
+                // check messages match
+                expect(await Promise.all(subs.map((s) => s.collect(NUM_MESSAGES)))).toEqual(pubs)
+                // check all published messages have appropriate partition
+                // i.e. [[0,0,0], [1,1,1], etc]
+                expect(pubs.map((msgs) => msgs.map((msg) => msg.getStreamPartition())))
+                    .toEqual(pubs.map((msgs, index) => msgs.map(() => index)))
+            })
+        })
+
+        it('destroying stops publish', async () => {
+            const subscriber = createClient({
+                auth: client.options.auth,
+            })
+            const sub = await subscriber.subscribe({
+                streamId: stream.id,
+            })
+
+            const onMessage = jest.fn()
+            const gotMessages = Defer()
+            const published: any[] = []
+            client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
+                if (!streamMessage.spid.matches(stream.id)) { return }
+                onMessage()
+                published.push(streamMessage.getParsedContent())
+                if (published.length === 3) {
+                    await gotMessages
+                    await client.destroy()
+                }
+            })
+
+            const received: any[] = []
+            const publishTask = (async () => {
+                for (let i = 0; i < MAX_MESSAGES; i += 1) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await client.publish(stream.id, Msg())
+                }
+            })()
+            publishTask.catch(() => {})
+            for await (const msg of sub) {
+                received.push(msg)
+                if (received.length === 3) {
+                    gotMessages.resolve(undefined)
+                    setTimeout(() => { sub.unsubscribe() }, 500)
+                }
+            }
+            await expect(async () => {
+                await publishTask
+            }).rejects.toThrow('publish')
+            expect(received.map((s) => s.getParsedContent())).toEqual(published.slice(0, 3))
+            expect(onMessage).toHaveBeenCalledTimes(3)
+        })
+
+        it('destroying resolves publish promises', async () => {
+            // the subscriber side of this test is partially disabled as we
+            // can't yet reliably publish messages then disconnect and know
+            // that subscriber will actually get something.
+            // Probably needs to wait for propagation.
+            const subscriber = createClient({
+                auth: client.options.auth,
+            })
+
+            const received: any[] = []
+            // const gotMessage = Defer()
+            await subscriber.subscribe({
+                streamId: stream.id,
+            }, (msg) => {
+                received.push(msg)
+                // gotMessage.resolve(undefined)
+            })
+
+            const msgs = await G.collect(publishManyGenerator(MAX_MESSAGES))
+
+            const publishTasks = [
+                client.publishMessage(stream.id, msgs[0]).finally(async () => {
+                    await client.destroy()
+                }),
+                client.publishMessage(stream.id, msgs[1]),
+                client.publishMessage(stream.id, msgs[2]),
+                client.publishMessage(stream.id, msgs[3]),
+            ]
+            const results = await Promise.allSettled(publishTasks)
+            client.debug('publishTasks', results.map(({ status }) => status))
+            expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected', 'rejected', 'rejected'])
+            await wait(500)
+            client.debug('received', received)
+            // should probably get every publish that was fulfilled, right?
+            // expect(received).toEqual([msgs[0].content])
+        })
+
+        it('cannot subscribe or publish after destroy', async () => {
+            await client.destroy()
+            await expect(async () => {
+                await client.subscribe(stream.id)
+            }).rejects.toThrow('destroy')
+            await expect(async () => {
+                await client.publish(stream.id, Msg())
+            }).rejects.toThrow('destroy')
+            await expect(async () => {
+                await client.connect()
+            }).rejects.toThrow('destroy')
+        })
+    })
+
+    describe('utf-8 encoding', () => {
+        it('decodes realtime messages correctly', async () => {
+            const publishedMessage = Msg({
+                content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
+            })
+            const sub = await client.subscribe(stream.id)
+            await client.publish(stream.id, publishedMessage)
+            const messages = await sub.collect(1)
+            expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
+        })
+
+        it('decodes resent messages correctly', async () => {
+            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+            const publishedMessage = Msg({
+                content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
+            })
+            const publishReq = await client.publish(stream.id, publishedMessage)
+
+            await getWaitForStorage(client)(publishReq)
+            const sub = await client.resend({
+                stream: stream.id,
+                resend: {
+                    last: 3,
+                },
+            })
+            const messages = await sub.collectContent()
+            expect(messages).toEqual([publishedMessage])
+        }, 20000)
+    })
+})
+
+/*
             it('client.subscribe then unsubscribe before subscribed after started subscribing', async () => {
-                client.connection.enableAutoDisconnect(false)
                 const subTask = client.subscribe({
                     streamId: stream.id,
                 }, () => {})
                 const subSession = client.subscriber.getSubscriptionSession(stream)!
-                const events = attachSubListeners(subSession)
                 let unsubTask!: ReturnType<typeof client.unsubscribe>
                 const startedSubscribing = Defer()
                 subSession.once('subscribing', startedSubscribing.wrap(() => {
@@ -317,68 +644,6 @@ describeRepeats('StreamrClient', () => {
                 expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                 expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
             }, TIMEOUT)
-        })
-
-        it('client.subscribe (realtime)', async () => {
-            const id = Date.now()
-            const done = Defer()
-            const sub = await client.subscribe({
-                streamId: stream.id,
-            }, done.wrap(async (parsedContent, streamMessage) => {
-                expect(parsedContent.id).toBe(id)
-
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                expect(streamMessage.getPublisherId()).toBeTruthy()
-                expect(streamMessage.signature).toBeTruthy()
-            }))
-
-            // Publish after subscribed
-            await stream.publish({
-                id,
-            })
-            await done
-            // All good, unsubscribe
-            await client.unsubscribe(sub)
-        })
-
-        it('client.subscribe with onMessage & collect', async () => {
-            const onMessageMsgs: any[] = []
-            const sub = await client.subscribe({
-                streamId: stream.id,
-            }, async (msg) => {
-                onMessageMsgs.push(msg)
-            })
-
-            const published = await publishTestMessages(MAX_MESSAGES)
-            await expect(async () => sub.collect(1)).rejects.toThrow('iterate')
-            expect(onMessageMsgs).toEqual(published)
-        })
-
-        it('publish and subscribe a sequence of messages', async () => {
-            client.enableAutoConnect()
-            const done = Defer()
-            const received: any[] = []
-            const sub = await client.subscribe({
-                streamId: stream.id,
-            }, done.wrapError((parsedContent, streamMessage) => {
-                received.push(parsedContent)
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                expect(streamMessage.getPublisherId()).toBeTruthy()
-                expect(streamMessage.signature).toBeTruthy()
-                if (received.length === MAX_MESSAGES) {
-                    done.resolve(client.unsubscribe(sub))
-                }
-            }))
-
-            // Publish after subscribed
-            const published = await publishTestMessages(MAX_MESSAGES, {
-                wait: 100,
-            })
-
-            await done
-            expect(received).toEqual(published)
         })
 
         test('publish does not disconnect after each message with autoDisconnect', async () => {
@@ -501,31 +766,5 @@ describeRepeats('StreamrClient', () => {
         }, TIMEOUT)
     })
 
-    describe('utf-8 encoding', () => {
-        it('decodes realtime messages correctly', async () => {
-            const publishedMessage = Msg({
-                content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
-            })
-            const sub = await client.subscribe(stream.id)
-            await client.publish(stream.id, publishedMessage)
-            const messages = await sub.collect(1)
-            expect(messages).toEqual([publishedMessage])
-        })
-
-        it('decodes resent messages correctly', async () => {
-            const publishedMessage = Msg({
-                content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
-            })
-            const publishReq = await client.publish(stream.id, publishedMessage)
-            await waitForStorage(publishReq)
-            const sub = await client.resend({
-                stream: stream.id,
-                resend: {
-                    last: 3,
-                },
-            })
-            const messages = await sub.collect()
-            expect(messages).toEqual([publishedMessage])
-        }, 10000)
-    })
 })
+*/

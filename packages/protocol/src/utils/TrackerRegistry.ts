@@ -19,7 +19,7 @@ export class TrackerRegistry<T extends TrackerInfo> {
     private readonly records: T[]
 
     constructor(records: T[]) {
-        this.records = records
+        this.records = records.slice() // copy before mutating
         this.records.sort()  // TODO does this actually sort anything?
     }
 

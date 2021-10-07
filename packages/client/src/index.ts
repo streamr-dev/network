@@ -9,15 +9,17 @@ import { StreamrClient } from './StreamrClient'
 
 export * from './StreamrClient'
 export * from './Config'
-export * from './stream'
-export * from './stream/encryption/Encryption'
-export * from './stream/StreamPart'
-export * from './stream/StorageNode'
-export * from './subscribe'
-export * from './rest/LoginEndpoints'
-export * from './rest/StreamEndpoints'
-export * from './dataunion/DataUnion'
-export * from './rest/authFetch'
+export * from './Stream'
+export * from './encryption/Encryption'
+export * from './StorageNode'
+export * from './Subscriber'
+export * from './LoginEndpoints'
+export * from './StreamEndpoints'
+import ConfigTest from './ConfigTest'
+
+export { ConfigTest }
+// export * from './dataunion/DataUnion'
+export * from './authFetch'
 export * from './types'
 
 // TODO should export these to support StreamMessageAsObject:

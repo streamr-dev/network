@@ -1,4 +1,4 @@
-import { createNetworkNode, Protocol, MetricsContext } from 'streamr-network'
+import { Protocol, MetricsContext } from 'streamr-network'
 import StreamrClient from 'streamr-client'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
@@ -13,17 +13,15 @@ import { Config, NetworkSmartContract, StorageNodeRegistryItem, TrackerRegistryI
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
-import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
 import { StorageNodeRegistry } from "./StorageNodeRegistry"
-import { v4 as uuidv4 } from 'uuid'
-const { Utils } = Protocol
 
 const logger = new Logger(module)
 
 export interface Broker {
     getNeighbors: () => readonly string[]
     getStreams: () => readonly string[]
+    getNodeId: () => string
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
 }
@@ -68,18 +66,6 @@ const getStunTurnUrls = (config: Config): string[] | undefined => {
     return urls
 }
 
-const createStreamMessageValidator = (config: Config): Protocol.StreamMessageValidator => {
-    // Validator only needs public information, so use unauthenticated client for that
-    const unauthenticatedClient = new StreamrClient({
-        restUrl: config.streamrUrl + '/api/v1',
-    })
-    return new Utils.CachingStreamMessageValidator({
-        getStream: (sId) => unauthenticatedClient.getStreamValidationInfo(sId),
-        isPublisher: (address, sId) => unauthenticatedClient.isStreamPublisher(sId, address),
-        isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
-    })
-}
-
 export const createBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
 
@@ -98,25 +84,27 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const storageNodes = await getStorageNodes(config)
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
-    // Start network node
-    let sessionId
-    if (config.generateSessionId && !config.plugins['storage']) { // Exception: storage node needs consistent id
-        sessionId = `${brokerAddress}#${uuidv4()}`
-    }
-    const nodeId = sessionId || brokerAddress
-
-    const networkNode = createNetworkNode({
-        id: nodeId,
-        name: networkNodeName,
-        trackers,
-        location: config.network.location,
-        metricsContext,
-        stunUrls: getStunTurnUrls(config)
+    const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
+    const streamrClient = new StreamrClient({
+        auth: {
+            privateKey: config.ethereumPrivateKey,
+        },
+        restUrl: `${config.streamrUrl}/api/v1`,
+        storageNodeRegistry: config.storageNodeConfig?.registry,
+        network: {
+            id: usePredeterminedNetworkId ? brokerAddress : undefined,
+            name: networkNodeName,
+            trackers,
+            location: config.network.location,
+            metricsContext,
+            stunUrls: getStunTurnUrls(config)
+        }
     })
-
-    const publisher = new Publisher(networkNode, createStreamMessageValidator(config), metricsContext)
+    const publisher = new Publisher(streamrClient, metricsContext)
+    // Start network node
+    const networkNode = await streamrClient.getNode()
+    const nodeId = networkNode.getNodeId()
     const subscriptionManager = new SubscriptionManager(networkNode)
-    const localStreamrClient = createLocalStreamrClient(config)
     const apiAuthenticator = createApiAuthenticator(config)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
@@ -125,12 +113,12 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             networkNode,
             subscriptionManager,
             publisher,
-            streamrClient: localStreamrClient,
+            streamrClient,
             apiAuthenticator,
             metricsContext,
             brokerConfig: config,
             storageNodeRegistry,
-            nodeId
+            nodeId,
         }
         return createPlugin(name, pluginOptions)
     })
@@ -140,9 +128,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     return {
         getNeighbors: () => networkNode.getNeighbors(),
         getStreams: () => networkNode.getStreams(),
+        getNodeId: () => networkNode.getNodeId(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
-            await networkNode.start()
+            //await streamrClient.startNode()
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
             if (httpServerRoutes.length > 0) {
@@ -163,9 +152,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 await stopServer(httpServer)
             }
             await Promise.all(plugins.map((plugin) => plugin.stop()))
-            if (localStreamrClient !== undefined) {
-                await localStreamrClient.ensureDisconnected()
-            }        
+            if (streamrClient !== undefined) {
+                await streamrClient.destroy()
+            }
             await networkNode.stop()
         }
     }

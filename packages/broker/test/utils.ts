@@ -3,6 +3,7 @@ import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 's
 import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
+import { Tracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { StorageConfig } from '../src/plugins/storage/StorageConfig'
@@ -45,7 +46,7 @@ export function formConfig({
                 },
                 storageConfig: {
                     refreshInterval: storageConfigRefreshInterval
-                } 
+                }
             }
         }
     }
@@ -120,7 +121,7 @@ export function fastPrivateKey() {
 export const createMockUser = () => Wallet.createRandom()
 
 export function createClient(
-    wsPort: number,
+    tracker: Tracker,
     privateKey = fastPrivateKey(),
     clientOptions?: StreamrClientOptions
 ): StreamrClient {
@@ -128,8 +129,10 @@ export function createClient(
         auth: {
             privateKey
         },
-        url: getWsUrl(wsPort),
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+        network: {
+            trackers: [tracker.getConfigRecord()]
+        },
         ...clientOptions,
     })
 }
@@ -149,10 +152,10 @@ export class StorageAssignmentEventManager {
     client: StreamrClient
     eventStream?: Stream
 
-    constructor(wsPort: number, engineAndEditorAccount: Wallet, storageNodeAccount: Wallet) {
+    constructor(tracker: Tracker, engineAndEditorAccount: Wallet, storageNodeAccount: Wallet) {
         this.engineAndEditorAccount = engineAndEditorAccount
         this.storageNodeAccount = storageNodeAccount
-        this.client = createClient(wsPort, engineAndEditorAccount.privateKey)
+        this.client = createClient(tracker, engineAndEditorAccount.privateKey)
     }
 
     async createStream() {
@@ -188,7 +191,7 @@ export class StorageAssignmentEventManager {
     }
 
     close() {
-        return this.client.ensureDisconnected()
+        return this.client.destroy()
     }
 }
 
@@ -197,7 +200,7 @@ export const waitForStreamPersistedInStorageNode = async (streamId: string, part
         const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
     }
-    await waitForCondition(() => isPersistent(), undefined, 1000)
+    await waitForCondition(() => isPersistent(), 20000, 500)
 }
 
 const getTestName = (module: NodeModule) => {

@@ -46,4 +46,8 @@ export default class MessageRef {
     serialize() {
         return JSON.stringify(this.toArray())
     }
+
+    clone(): MessageRef {
+        return new MessageRef(this.timestamp, this.sequenceNumber)
+    }
 }

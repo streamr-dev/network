@@ -54,8 +54,7 @@ jobs:
       CONFIG_NAME: ${{ matrix.config-name }}
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 14
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: "14.x"
       - name: Cache Node.js modules
@@ -71,7 +70,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope @streamr/cross-client-testing --include-dependencies
+          npm run bootstrap-pkg @streamr/cross-client-testing
       - uses: actions/setup-java@v2.3.1
         with:
           distribution: 'zulu'
