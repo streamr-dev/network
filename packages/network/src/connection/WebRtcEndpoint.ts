@@ -124,20 +124,24 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     private startConnectionStatusReport(): void {
+        const getPeerNameList = (peerIds: PeerId[]) => {
+            return peerIds.map((peerId) => NameDirectory.getName(peerId)).join(',')
+        }
         const STATUS_REPORT_INTERVAL_MS = 5 * 60 * 1000
         this.statusReportTimer = setInterval(() => {
-            let connectedPeerCount = 0
+            const connectedPeerIds = []
             const pendingPeerIds = []
             for (const peerId of Object.keys(this.connections)) {
                 const lastState = this.connections[peerId].getLastState()
                 if (lastState === 'connected') {
-                    connectedPeerCount += 1
+                    connectedPeerIds.push(peerId)
                 } else if (lastState === 'connecting') {
                     pendingPeerIds.push(peerId)
                 }
             }
-            this.logger.info(`Successfully connected to %d peers. Still trying to connect to the following peers: [%s]`,
-                connectedPeerCount, pendingPeerIds.join(', '))
+            const suffix = (pendingPeerIds.length > 0) ? ', still trying to connect: %s' : ''
+            this.logger.info(`Successfully connected to %d peers (%s)${suffix}`,
+                connectedPeerIds.length, getPeerNameList(connectedPeerIds), getPeerNameList(pendingPeerIds))
         }, STATUS_REPORT_INTERVAL_MS)
     }
 
