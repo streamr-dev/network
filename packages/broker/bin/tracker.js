@@ -42,9 +42,17 @@ const listen = program.opts().unixSocket ? program.opts().unixSocket : {
 
 const { slackBotToken, slackChannel } = program.opts()
 let slackbot
-const slackAlertName = `Tracker ${trackerName} ${id}`
+const slackAlertHeader = `Tracker ${trackerName} ${id}`
 if (slackBotToken && slackChannel) {
     slackbot = new SlackBot(slackChannel, slackBotToken)
+}
+
+const logError = (err, errorType) => {
+    logger.getFinalLogger().error(err, errorType)
+    if (slackbot !== undefined) {
+        const message = `${errorType}: ${err}`
+        slackbot.alert([message], slackAlertHeader)
+    }
 }
 
 const getTopologyStabilization = () => {
@@ -86,10 +94,7 @@ async function main() {
             ...trackerObj
         })
     } catch (err) {
-        logger.getFinalLogger().error(err, 'tracker bin catch')
-        if (slackbot) {
-            slackbot.alert(['Uncaught exception: ' + err], slackAlertName)
-        }
+        logError(err, 'tracker bin catch')
         process.exit(1)
     }
 }
@@ -98,17 +103,11 @@ main()
 
 // pino.finalLogger
 process.on('uncaughtException', (err) => {
-    logger.getFinalLogger().error(err, 'uncaughtException')
-    if (slackbot) {
-        slackbot.alert(['Uncaught exception: ' + err], slackAlertName)
-    }
+    logError(err, 'uncaughtException')
     process.exit(1)
 })
 
 process.on('unhandledRejection', (err) => {
-    logger.getFinalLogger().error(err, 'unhandledRejection')
-    if (slackbot) {
-        slackbot.alert(['Uncaught rejection: ' + err], slackAlertName)
-    }
+    logError(err, 'unhandledRejection')
     process.exit(1)
 })
