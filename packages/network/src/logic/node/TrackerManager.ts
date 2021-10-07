@@ -9,6 +9,7 @@ import { NodeId } from './Node'
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { Metrics } from '../../helpers/MetricsContext'
+import { NameDirectory } from '../../NameDirectory'
 
 const logger = new Logger(module)
 
@@ -192,12 +193,12 @@ export class TrackerManager {
         const subscribedNodeIds: NodeId[] = []
         const unsubscribedNodeIds: NodeId[] = []
         let failedInstructions = false
-        results.forEach((res) => {
+        results.forEach((res, i) => {
             if (res.status === 'fulfilled') {
                 subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
-                logger.info('failed to subscribe (or connect) to node, reason: %s', res.reason)
+                logger.debug('failed to subscribe (or connect) to %s, reason: %s', NameDirectory.getName(nodeIds[i]), res.reason)
             }
         })
         if (!reattempt || failedInstructions) {
