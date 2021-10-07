@@ -5,7 +5,7 @@ RUN npm set unsafe-perm true && \
 	# explicitly use npm v6
 	npm install -g npm@6 && \
 	npm ci && \
-	npm run bootstrap-pkg streamr-broker && \
+	npm run bootstrap && \
 	# image contains all packages, remove devDeps to keep image size down
 	npx lerna exec -- npm prune --production && \
 	# restore inter-package symlinks removed by npm prune
