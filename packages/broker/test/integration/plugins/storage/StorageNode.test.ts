@@ -13,20 +13,22 @@ describe('StorageNode', () => {
     const storageNodeAccount = Wallet.createRandom()
 
     beforeAll(async () => {
-        const storageNodeRegistry = [{
-            address: storageNodeAccount.address,
-            url: `http://127.0.0.1:${httpPort1}`
-        }]
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },
-            id: 'tracker-DataMetadataEndpoints'
+            id: 'tracker-StorageNode'
         })
+    })
+
+    beforeAll(async () => {
+        const storageNodeRegistry = [{
+            address: storageNodeAccount.address,
+            url: `http://127.0.0.1:${httpPort1}`
+        }]
         const engineAndEditorAccount = Wallet.createRandom()
         const trackerInfo = tracker.getConfigRecord()
-
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -42,8 +44,8 @@ describe('StorageNode', () => {
     })
 
     afterAll(async () => {
-        await tracker.stop()
-        await storageNode.stop()
+        await tracker?.stop()
+        await storageNode?.stop()
     })
 
     it('has node id same as address', async () => {
