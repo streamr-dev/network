@@ -21,7 +21,7 @@ program
     .option('--topologyStabilizationDebounceWait <topologyStabilizationDebounceWait>', 'topologyStabilizationDebounceWait')
     .option('--topologyStabilizationMaxWait <topologyStabilizationMaxWait>', 'topologyStabilizationMaxWait')
     .option('--slackBotToken <slackBotToken>', 'slack API token', '')
-    .option('--slackChannel <slackBotToken>', 'slack channel for alerts', '#network-log')
+    .option('--slackChannel <slackChannel>', 'slack channel for alerts', '#network-log')
 
     .description('Run tracker with reporting')
     .parse(process.argv)
