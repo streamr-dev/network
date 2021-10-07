@@ -175,7 +175,7 @@ export class StreamEndpoints implements Context {
         this.debug('getStreamPublishers %o', {
             streamId,
         })
-        return this.streamRegistry.getStreamSubscribers(streamId)
+        return this.streamRegistry.getStreamPublishers(streamId)
     }
 
     async isStreamPublisher(streamId: string, ethAddress: EthereumAddress) {
@@ -183,7 +183,7 @@ export class StreamEndpoints implements Context {
             streamId,
             ethAddress,
         })
-        return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
+        return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
 
     async getStreamSubscribers(streamId: string) {

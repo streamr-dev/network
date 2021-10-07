@@ -1,6 +1,7 @@
 import cassandra, { Client } from 'cassandra-driver'
 import fetch from 'node-fetch'
 import pLimit, { Limit } from 'p-limit'
+import StreamrClient, { Stream } from 'streamr-client'
 import { Logger } from 'streamr-network'
 import { Todo } from '../../types'
 import { Bucket } from './Bucket'
@@ -45,12 +46,14 @@ export class DeleteExpiredCmd {
         this.limit = pLimit(5)
     }
 
-    async run() {
-        const streams = await this._getStreams()
+    async run(client: StreamrClient, streamId: string) {
+        const streams = []
+        const s = await client.getStream(streamId)//getAllStreams()
+        streams.push(s)
         logger.info(`Found ${streams.length} unique streams`)
 
-        const streamsInfo = await this._fetchStreamsInfo(streams)
-        const potentialBuckets = await this._getPotentiallyExpiredBuckets(streamsInfo)
+        // const streamsInfo = await this._fetchStreamsInfo(streams)
+        const potentialBuckets = await this._getPotentiallyExpiredBuckets(streams)
         logger.info('Found %d potentially expired buckets', potentialBuckets.length)
 
         const cutPotentialBuckets = potentialBuckets.slice(0, this.bucketLimit)
@@ -69,41 +72,14 @@ export class DeleteExpiredCmd {
         await this.cassandraClient.shutdown()
     }
 
-    async _getStreams() {
-        const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
-        const resultSet = await this.cassandraClient.execute(query, [], {
-            fetchSize: 100000
-        })
-        return resultSet.rows.map((row) => ({
-            streamId: row.stream_id,
-            partition: row.partition
-        }))
-    }
-
-    async _fetchStreamsInfo(streams: Todo) {
-        const tasks = streams.filter(Boolean).map((stream: Todo) => {
-            return this.limit(async () => {
-                const url = `${this.streamrBaseUrl}/api/v1/streams/${encodeURIComponent(stream.streamId)}/validation`
-                return fetch(url).then((res) => res.json()).then((json) => {
-                    return {
-                        streamId: stream.streamId,
-                        partition: stream.partition,
-                        storageDays: json.storageDays != null ? parseInt(json.storageDays) : 365,
-                    }
-                }).catch((err) => logger.error(err))
-            })
-        })
-
-        return Promise.all(tasks)
-    }
-
     async _getPotentiallyExpiredBuckets(streamsInfo: Todo) {
         const result: Todo[] = []
 
         const query = 'SELECT * FROM bucket WHERE stream_id = ? AND partition = ? AND date_create <= ?'
 
         const tasks = streamsInfo.filter(Boolean).map((stream: Todo) => {
-            const { streamId, partition, storageDays } = stream
+            const { streamId, storageDays } = stream
+            const partition = 0 // TODO where to get the partition number? (stream has partitions amount)
             const timestampBefore = Date.now() - 1000 * 60 * 60 * 24 * storageDays
             const params = [streamId, partition, timestampBefore]
 

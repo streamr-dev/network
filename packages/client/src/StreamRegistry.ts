@@ -372,7 +372,7 @@ export class StreamRegistry implements Context {
     private static buildGetAllStreamsQuery(): string {
         //    id: "0x4178babe9e5148c6d5fd431cd72884b07ad855a0/"}) {
         const query = `{
-            streams {
+            streams (first:1000) {
                  id,
                  metadata
             }
@@ -426,7 +426,7 @@ export class StreamRegistry implements Context {
     private static buildGetStreamPublishersQuery(streamId: string): string {
         const query = `{
             stream (id: "${streamId}") {
-                permissions (where: {publishExpiration_gt: "${Date.now()}"}) {
+                permissions (first:1000) (where: {publishExpiration_gt: "${Date.now()}"}) {
                     userAddress,
                 }
             }
@@ -437,7 +437,7 @@ export class StreamRegistry implements Context {
     private static buildIsPublisherQuery(streamId: string, userAddess: EthereumAddress): string {
         const query = `{
             stream (id: "${streamId}") {
-                permissions (where: {userAddress: "${userAddess}", publishExpiration_gt: "${Date.now()}"}) {
+                permissions (first:1000) (where: {userAddress: "${userAddess}", publishExpiration_gt: "${Date.now()}"}) {
                     id,
                 }
             }
@@ -448,7 +448,7 @@ export class StreamRegistry implements Context {
     private static buildGetStreamSubscribersQuery(streamId: string): string {
         const query = `{
             stream (id: "${streamId}") {
-                permissions (where: {subscribeExpiration_gt: "${Date.now()}"}) {
+                permissions (first:1000) (where: {subscribeExpiration_gt: "${Date.now()}"}) {
                     userAddress,
                 }
             }
@@ -459,7 +459,7 @@ export class StreamRegistry implements Context {
     private static buildIsSubscriberQuery(streamId: string, userAddess: EthereumAddress): string {
         const query = `{
             stream (id: "${streamId}") {
-                permissions (where: {userAddress: "${userAddess}", subscribeExpiration_gt: "${Date.now()}"}) {
+                permissions (first:1000) (where: {userAddress: "${userAddess}", subscribeExpiration_gt: "${Date.now()}"}) {
                     id
                 }
             }

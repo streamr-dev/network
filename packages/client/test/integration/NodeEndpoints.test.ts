@@ -86,7 +86,7 @@ describe('createNode', () => {
 
     it('removeStreamFromStorageNode', async () => {
         await client.removeStreamFromStorageNode(createdStream.id, nodeAddress)
-        await until(async () => { return !client.isStreamStoredInStorageNode(createdStream.id, nodeAddress) }, 100000, 1000)
+        await until(async () => { return !(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)) }, 100000, 1000)
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(false)
     })
 
