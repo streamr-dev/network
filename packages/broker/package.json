@@ -27,6 +27,7 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@pm2/io": "^4.3.5",
+    "@streamr/slackbot": "^1.1.0",
     "@teppeis/multimaps": "^2.0.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",

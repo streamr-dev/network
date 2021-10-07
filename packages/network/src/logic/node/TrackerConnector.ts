@@ -5,6 +5,7 @@ import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { TrackerId } from '../tracker/Tracker'
 import { StreamManager } from './StreamManager'
+import { NameDirectory } from '../../NameDirectory'
 
 const logger = new Logger(module)
 
@@ -69,7 +70,7 @@ export class TrackerConnector {
         this.nodeToTracker.connectToTracker(ws, PeerInfo.newTracker(id))
             .then(() => {
                 if (this.connectionStates.get(id) !== ConnectionState.SUCCESS) {
-                    logger.info('Connected to tracker %s', id)
+                    logger.info('Connected to tracker %s', NameDirectory.getName(id))
                     this.connectionStates.set(id, ConnectionState.SUCCESS)
                 }
                 return
@@ -79,7 +80,7 @@ export class TrackerConnector {
                     // TODO we could also store the previous error and check that the current error is the same?
                     // -> now it doesn't log anything if the connection error reason changes
                     this.connectionStates.set(id, ConnectionState.ERROR)
-                    logger.warn('Could not connect to tracker %s, reason: %s', id, err.message)
+                    logger.warn('Could not connect to tracker %s, reason: %s', NameDirectory.getName(id), err.message)
                 }
             })
     }
