@@ -86,7 +86,7 @@
     "async-mqtt": "^2.6.1",
     "buffer-reader": "^0.1.0",
     "eslint": "^7.32.0",
-    "eslint-config-streamr-ts": "^3.0.1",
+    "eslint-config-streamr-ts": "^4.0.1",
     "eslint-plugin-promise": "^5.1.0",
     "jest": "^27.0.5",
     "jest-circus": "^27.0.5",
