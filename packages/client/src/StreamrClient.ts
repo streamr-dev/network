@@ -1,574 +1,231 @@
-/**
- * @see {@link StreamrClient.StreamrClient}
- * @module StreamrClient
- */
-import EventEmitter from 'eventemitter3'
-import { ControlLayer } from 'streamr-client-protocol'
-import fetch from 'node-fetch'
-import { CacheAsyncFn, counterId, getEndpointUrl, pOne, uuid } from './utils'
-import { Debug, Debugger } from './utils/log'
-import { validateOptions } from './stream/utils'
-import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
-import StreamrEthereum from './Ethereum'
+import 'reflect-metadata'
+import './utils/PatchTsyringe'
+import { container as rootContainer, DependencyContainer, inject } from 'tsyringe'
+
+import { uuid, counterId, pOnce } from './utils'
+import { Debug } from './utils/log'
+import { Context } from './utils/Context'
+import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
+import { BrubeckContainer } from './Container'
+
+import Publisher from './Publisher'
+import Subscriber from './Subscriber'
+import Resends from './Resends'
+import ResendSubscribe from './ResendSubscribe'
+import BrubeckNode from './BrubeckNode'
+import Ethereum from './Ethereum'
 import Session from './Session'
-import Connection, { ConnectionError, ConnectionOptions } from './Connection'
-import Publisher from './publish'
-import { Subscriber, Subscription } from './subscribe'
-import { getUserId } from './user'
-import { EthereumAddress, MaybeAsync, Todo } from './types'
-import { StreamEndpoints } from './rest/StreamEndpoints'
-import { LoginEndpoints } from './rest/LoginEndpoints'
-import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
-import { BigNumber } from '@ethersproject/bignumber'
-import { getAddress } from '@ethersproject/address'
-import { Contract } from '@ethersproject/contracts'
-import { GroupKey, StreamPartDefinition } from './stream'
-import { BytesLike } from '@ethersproject/bytes'
-import Contracts from './dataunion/Contracts'
-
-// TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
-export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
-
-export type ResendOptions = {
-    from?: { timestamp: number, sequenceNumber?: number }
-    to?: { timestamp: number, sequenceNumber?: number }
-    last?: number
-}
-
-export type SubscribeOptions = {
-    resend?: ResendOptions
-} & ResendOptions
-
-interface MessageEvent {
-    data: any
-}
-
-const balanceOfAbi = [{
-    name: 'balanceOf',
-    inputs: [{ type: 'address' }],
-    outputs: [{ type: 'uint256' }],
-    constant: true,
-    payable: false,
-    stateMutability: 'view',
-    type: 'function'
-}]
-
-/**
- * Wrap connection message events with message parsing.
- */
-class StreamrConnection extends Connection {
-    // TODO define args type when we convert Connection class to TypeScript
-    constructor(options: ConnectionOptions, debug?: Debugger) {
-        super(options, debug)
-        this.on('message', this.onConnectionMessage)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    parse(messageEvent: MessageEvent) {
-        return ControlLayer.ControlMessage.deserialize(messageEvent.data)
-    }
-
-    onConnectionMessage(messageEvent: MessageEvent) {
-        let controlMessage
-        try {
-            controlMessage = this.parse(messageEvent)
-        } catch (err) {
-            this.debug('(%o) << %o', this.getState(), messageEvent && messageEvent.data)
-            this.debug('deserialize error', err)
-            this.emit('error', err)
-            return
-        }
-
-        if (!controlMessage) {
-            return
-        }
-
-        this.debug('(%o) << %o', this.getState(), controlMessage)
-        this.emit(controlMessage.type, controlMessage)
-    }
-}
-
-class StreamrCached {
-    client: StreamrClient
-    // TODO change all "any" types in this class to valid types when CacheAsyncFn is converted to TypeScript
-    getStream: any
-    getUserInfo: any
-    isStreamPublisher: any
-    isStreamSubscriber: any
-    getUserId: any
-
-    constructor(client: StreamrClient) {
-        this.client = client
-        const cacheOptions: Todo = client.options.cache
-        this.getStream = CacheAsyncFn(client.getStream.bind(client), {
-            ...cacheOptions,
-            cacheKey([maybeStreamId]) {
-                const { streamId } = validateOptions(maybeStreamId)
-                return streamId
-            }
-        })
-        this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
-        this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
-            ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]) {
-                const { streamId } = validateOptions(maybeStreamId)
-                return `${streamId}|${ethAddress}`
-            }
-        })
-
-        this.isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), {
-            ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]) {
-                const { streamId } = validateOptions(maybeStreamId)
-                return `${streamId}|${ethAddress}`
-            }
-        })
-
-        this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
-    }
-
-    clearStream(streamId?: string) {
-        this.getStream.clear()
-        if (streamId != null) {
-            this.isStreamPublisher.clearMatching((s: string) => s.startsWith(streamId))
-            this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(streamId))
-        } else {
-            this.isStreamPublisher.clear()
-            this.isStreamSubscriber.clear()
-        }
-    }
-
-    clearUser() {
-        this.getUserInfo.clear()
-        this.getUserId.clear()
-    }
-
-    clear() {
-        this.clearUser()
-        this.clearStream()
-    }
-}
+import { DestroySignal } from './DestroySignal'
+import { StreamEndpoints } from './StreamEndpoints'
+import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { LoginEndpoints } from './LoginEndpoints'
+import DataUnions from './dataunion'
+import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
+import NodeRegistry, { register as registerNodeRegistry } from './StorageNodeRegistry'
+import { Methods, Plugin } from './utils/Plugin'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
     ? `${process.pid}`
-    // Fall back to `uuid()` later (see the constructor). Doing it here will break browser projects
+    // Fall back to `uuid()` later (see initContainer). Doing it here will break browser projects
     // that utilize server-side rendering (no `window` while build's target is `web`).
     : ''
 
-/**
- * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
- */
-function Plugin(targetInstance: any, srcInstance: any) {
-    Object.getOwnPropertyNames(srcInstance.constructor.prototype).forEach((name) => {
-        const value = srcInstance.constructor.prototype[name]
-        if (typeof value !== 'function') { return }
-        // eslint-disable-next-line no-param-reassign
-        targetInstance[name] = srcInstance[name].bind(srcInstance)
-    })
-    return srcInstance
-}
-
 // these are mixed in via Plugin function above
-export interface StreamrClient extends StreamEndpoints, LoginEndpoints, Publisher, Subscriber {}
+// use MethodNames to only grab methods
+export interface StreamrClient extends Ethereum,
+    Methods<StreamEndpoints>,
+    Methods<Omit<Subscriber, 'subscribe'>>,
+    Methods<ResendSubscribe>,
+    // connect/pOnce in BrubeckNode are pOnce, we override them anyway
+    Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
+    Methods<LoginEndpoints>,
+    Methods<Publisher>,
+    Methods<NodeRegistry>,
+    Methods<DataUnions>,
+    Methods<GroupKeyStoreFactory>,
+    // Omit sessionTokenPromise because TS complains:
+    // Type 'undefined' is not assignable to type 'keyof Session'
+    // MethodNames's [K in keyof T] doesn't work if K is optional?
+    Methods<Omit<Session, 'sessionTokenPromise'>>,
+    Methods<Resends> {
+}
+
+class StreamrClientBase implements Context {
+    static generateEthereumAccount = Ethereum.generateEthereumAccount.bind(Ethereum)
+
+    id
+    debug
+    subscribe
+    onDestroy
+    isDestroyed
+
+    constructor(
+        public container: DependencyContainer,
+        public context: Context,
+        @inject(Config.Root) public options: StrictBrubeckClientConfig,
+        public node: BrubeckNode,
+        public ethereum: Ethereum,
+        public storageNodeRegistry: NodeRegistry,
+        public session: Session,
+        public loginEndpoints: LoginEndpoints,
+        public streamEndpoints: StreamEndpoints,
+        public cached: StreamEndpointsCached,
+        public resends: Resends,
+        public publisher: Publisher,
+        public subscriber: Subscriber,
+        public resendSubscriber: ResendSubscribe,
+        public groupKeyStore: GroupKeyStoreFactory,
+        protected destroySignal: DestroySignal,
+        public dataunions: DataUnions,
+    ) { // eslint-disable-line function-paren-newline
+        this.id = context.id
+        this.debug = context.debug
+        Plugin(this, this.loginEndpoints)
+        Plugin(this, this.streamEndpoints)
+        Plugin(this, this.ethereum)
+        Plugin(this, this.storageNodeRegistry)
+        Plugin(this, this.publisher)
+        Plugin(this, this.subscriber)
+        Plugin(this, this.resends)
+        Plugin(this, this.resendSubscriber)
+        Plugin(this, this.session)
+        Plugin(this, this.node)
+        Plugin(this, this.groupKeyStore)
+        Plugin(this, this.dataunions)
+
+        // override subscribe with resendSubscriber's subscribe+resend
+        this.subscribe = resendSubscriber.subscribe.bind(resendSubscriber)
+        this.onDestroy = this.destroySignal.onDestroy.bind(this.destroySignal)
+        this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
+    }
+
+    connect = pOnce(async () => {
+        await this.node.startNode()
+        const tasks = [
+            this.publisher.start(),
+        ]
+
+        await Promise.allSettled(tasks)
+        await Promise.all(tasks)
+    })
+
+    /** @deprecated */
+    disconnect() {
+        return this.destroy()
+    }
+
+    destroy = pOnce(async () => {
+        this.connect.reset() // reset connect (will error on next call)
+        const tasks = [
+            this.destroySignal.destroy().then(() => undefined),
+            this.resends.stop(),
+            this.publisher.stop(),
+            this.storageNodeRegistry.stop(),
+            this.subscriber.stop(),
+        ]
+
+        await Promise.allSettled(tasks)
+        await Promise.all(tasks)
+    })
+}
 
 /**
- * @category Important
+ * @internal
  */
-export class StreamrClient extends EventEmitter { // eslint-disable-line no-redeclare
-    /** @internal */
-    id: string
-    /** @internal */
-    debug: Debugger
-    options: StrictStreamrClientOptions
-    session: Session
-    /** @internal */
-    connection: StreamrConnection
-    /** @internal */
-    publisher: Publisher
-    /** @internal */
-    subscriber: Subscriber
-    /** @internal */
-    cached: StreamrCached
-    /** @internal */
-    ethereum: StreamrEthereum
+export function initContainer(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
+    const c = parentContainer.createChildContainer()
+    const config = BrubeckConfig(options)
+    uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+    const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
+    const debug = Debug(id)
+    // @ts-expect-error not in types
+    Object.assign(debug.inspectOpts, {
+        // @ts-expect-error not in types
+        ...debug.inspectOpts,
+        ...config.debug.inspectOpts
+    })
+    debug('create')
 
-    // TODO annotate connection parameter as internal parameter if possible?
-    constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
-        super()
-
-        uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
-
-        this.id = counterId(`${this.constructor.name}-${uid}${options.id || ''}`)
-        this.debug = Debug(this.id)
-
-        this.options = Config(options)
-
-        this.debug('new StreamrClient %s: %o', this.id, {
-            version: process.env.version,
-            GIT_VERSION: process.env.GIT_VERSION,
-            GIT_COMMITHASH: process.env.GIT_COMMITHASH,
-            GIT_BRANCH: process.env.GIT_BRANCH,
-        })
-
-        // bind event handlers
-        this.onConnectionConnected = this.onConnectionConnected.bind(this)
-        this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
-        this.onConnectionDone = pOne(this.onConnectionDone.bind(this))
-        this._onError = this._onError.bind(this)
-        this.onConnectionError = this.onConnectionError.bind(this)
-        this.getErrorEmitter = this.getErrorEmitter.bind(this)
-
-        this.on('error', this._onError) // attach before creating sub-components incase they fire error events
-
-        this.session = new Session(this, this.options.auth)
-        this.connection = connection || new StreamrConnection(this.options, this.debug)
-
-        this.connection
-            .on('connected', this.onConnectionConnected)
-            .on('disconnected', this.onConnectionDisconnected)
-            .on('done', this.onConnectionDone)
-            .on('error', this.onConnectionError)
-
-        this.ethereum = new StreamrEthereum(this)
-        this.publisher = new Publisher(this)
-        this.subscriber = new Subscriber(this)
-
-        Plugin(this, new StreamEndpoints(this))
-        Plugin(this, new LoginEndpoints(this))
-        this.cached = new StreamrCached(this)
+    const rootContext = {
+        id,
+        debug
     }
 
-    enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
-        Debug.enable(prefix)
-    }
+    c.register(Context as any, {
+        useValue: rootContext
+    })
 
-    disableDebugLogging() { // eslint-disable-line class-methods-use-this
-        Debug.disable()
-    }
+    c.register(BrubeckContainer, {
+        useValue: c
+    })
 
-    /** @internal */
-    async onConnectionConnected() {
-        this.debug('Connected!')
-        this.emit('connected')
-    }
+    // associate values to config tokens
+    const configTokens: [symbol, object][] = [
+        [Config.Root, config],
+        [Config.Auth, config.auth],
+        [Config.Ethereum, config],
+        [Config.NodeRegistry, config.storageNodeRegistry],
+        [Config.Network, config.network],
+        [Config.Connection, config],
+        [Config.Subscribe, config],
+        [Config.Publish, config],
+        [Config.Encryption, config],
+        [Config.Cache, config.cache],
+    ]
 
-    /** @internal */
-    async onConnectionDisconnected() {
-        this.debug('Disconnected.')
-        this.emit('disconnected')
-    }
+    configTokens.forEach(([token, useValue]) => {
+        c.register(token, { useValue })
+    })
 
-    /** @internal */
-    onConnectionError(err: Todo) {
-        this.emit('error', new ConnectionError(err))
-    }
-
-    /** @internal */
-    onConnectionDone() {
-        this.stop().catch(() => {
-            // ignore
-        })
-    }
-
-    async stop() {
-        this.cached.clear()
-        await Promise.allSettled([
-            this.publisher.stop().catch(() => {}),
-            this.subscriber.stop().catch(() => {}),
-            this.session.logout().catch(() => {})
-        ])
-        this.cached.clear()
-    }
-
-    /** @internal */
-    getErrorEmitter(source: Todo) {
-        return (err: Todo) => {
-            if (!(err instanceof ConnectionError || err.reason instanceof ConnectionError)) {
-                // emit non-connection errors
-                this.emit('error', err)
-            } else {
-                source.debug('error', err)
-            }
-        }
-    }
-
-    /** @internal */
-    _onError(err: Todo, ...args: Todo) {
-        // @ts-expect-error
-        this.onError(err, ...args)
-    }
-
-    /** @internal */
-    async send(request: Todo) {
-        return this.connection.send(request)
-    }
-
-    /**
-     * Override to control output
-     */
-    onError(error: Error) { // eslint-disable-line class-methods-use-this
-        console.error(error)
-    }
-
-    isConnected() {
-        return this.connection.isConnected()
-    }
-
-    isConnecting() {
-        return this.connection.isConnecting()
-    }
-
-    isDisconnecting() {
-        return this.connection.isDisconnecting()
-    }
-
-    isDisconnected() {
-        return this.connection.isDisconnected()
-    }
-
-    /**
-     * @category Important
-     */
-    async connect() {
-        return this.connection.connect()
-    }
-
-    async nextConnection() {
-        return this.connection.nextConnection()
-    }
-
-    /**
-     * @category Important
-     */
-    async disconnect() {
-        await this.connection.disconnect()
-        await this.stop()
-    }
-
-    getSubscriptions() {
-        return this.subscriber.getAll()
-    }
-
-    getSubscription(definition: StreamPartDefinition) {
-        return this.subscriber.get(definition)
-    }
-
-    async ensureConnected() {
-        return this.connect()
-    }
-
-    async ensureDisconnected() {
-        return this.disconnect()
-    }
-
-    logout() {
-        return this.session.logout()
-    }
-
-    /**
-     * @category Important
-     */
-    async publish(streamObjectOrId: StreamPartDefinition, content: object, timestamp?: number|string|Date, partitionKey?: string) {
-        return this.publisher.publish(streamObjectOrId, content, timestamp, partitionKey)
-    }
-
-    async getUserId() {
-        return getUserId(this)
-    }
-
-    async setNextGroupKey(streamId: string, newKey: GroupKey): Promise<void> {
-        return this.publisher.setNextGroupKey(streamId, newKey)
-    }
-
-    async rotateGroupKey(streamId: string) {
-        return this.publisher.rotateGroupKey(streamId)
-    }
-
-    async rekey(streamId: string) {
-        return this.publisher.rekey(streamId)
-    }
-
-    /**
-     * @category Important
-     */
-    async subscribe(opts: SubscribeOptions & StreamPartDefinition, onMessage?: OnMessageCallback) {
-        let subTask: Promise<Subscription> | undefined
-        let sub: Subscription | undefined
-        const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
-        const onEnd = (err?: Error) => {
-            if (sub && typeof onMessage === 'function') {
-                sub.off('message', onMessage)
-            }
-
-            if (err) {
-                throw err
-            }
-        }
-
-        if (hasResend) {
-            subTask = this.subscriber.resendSubscribe(opts, onEnd)
-        } else {
-            subTask = this.subscriber.subscribe(opts, onEnd)
-        }
-
-        if (typeof onMessage === 'function') {
-            Promise.resolve(subTask).then(async (s) => {
-                sub = s
-                sub.on('message', onMessage)
-                for await (const msg of sub) {
-                    sub.emit('message', msg.getParsedContent(), msg)
-                }
-                return sub
-            }).catch((err) => {
-                this.emit('error', err)
-            })
-        }
-        return subTask
-    }
-
-    /**
-     * @category Important
-     */
-    async unsubscribe(subscription: Subscription | SubscribeOptions & StreamPartDefinition) {
-        await this.subscriber.unsubscribe(subscription)
-    }
-
-    /**
-     * @category Important
-     */
-    async resend(opts: Todo, onMessage?: OnMessageCallback): Promise<Subscription> {
-        const task = this.subscriber.resend(opts)
-        if (typeof onMessage !== 'function') {
-            return task
-        }
-
-        Promise.resolve(task).then(async (sub) => {
-            for await (const msg of sub) {
-                await onMessage(msg.getParsedContent(), msg)
-            }
-
-            return sub
-        }).catch((err) => {
-            this.emit('error', err)
-        })
-
-        return task
-    }
-
-    enableAutoConnect(autoConnect?: boolean) {
-        return this.connection.enableAutoConnect(autoConnect)
-    }
-
-    enableAutoDisconnect(autoDisconnect?: boolean) {
-        return this.connection.enableAutoDisconnect(autoDisconnect)
-    }
-
-    async getAddress(): Promise<EthereumAddress> {
-        return this.ethereum.getAddress()
-    }
-
-    async getPublisherId(): Promise<EthereumAddress> {
-        return this.getAddress()
-    }
-
-    /**
-     * True if authenticated with private key/ethereum provider
-     */
-    canEncrypt() {
-        return this.ethereum.canEncrypt()
-    }
-
-    /**
-     * Get token balance in "wei" (10^-18 parts) for given address
-     */
-    async getTokenBalance(address: EthereumAddress): Promise<BigNumber> {
-        const { tokenAddress } = this.options
-        const addr = getAddress(address)
-        const provider = this.ethereum.getMainnetProvider()
-        const token = new Contract(tokenAddress, balanceOfAbi, provider)
-        return token.balanceOf(addr)
-    }
-
-    /**
-     * Get token balance in "wei" (10^-18 parts) for given address in sidechain
-     */
-    async getSidechainTokenBalance(address: EthereumAddress): Promise<BigNumber> {
-        const { tokenSidechainAddress } = this.options
-        const addr = getAddress(address)
-        const provider = this.ethereum.getSidechainProvider()
-        const token = new Contract(tokenSidechainAddress, balanceOfAbi, provider)
-        return token.balanceOf(addr)
-    }
-
-    getDataUnion(contractAddress: EthereumAddress) {
-        return DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
-    }
-
-    async safeGetDataUnion(contractAddress: EthereumAddress) {
-        const du = DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
-        const version = await du.getVersion()
-        if (version === 0) {
-            throw new Error(`${contractAddress} is not a Data Union!`)
-        } else if (version === 1) {
-            throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
-        } else if (version === 2) {
-            return du
-        }
-        throw new Error(`${contractAddress} is an unknown Data Union version "${version}"`)
-    }
-
-    async deployDataUnion(options?: DataUnionDeployOptions) {
-        return DataUnion._deploy(options, this) // eslint-disable-line no-underscore-dangle
-    }
-
-    async setBinanceDepositAddress(binanceRecipient: EthereumAddress) {
-        return DataUnion._setBinanceDepositAddress(binanceRecipient, this) // eslint-disable-line no-underscore-dangle
-    }
-
-    async setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike) {
-        return DataUnion._setBinanceDepositAddressFromSignature(from, binanceRecipient, signature, this) // eslint-disable-line no-underscore-dangle
-    }
-
-    // TODO: define returned object's type
-    async setBinanceDepositAddressViaWithdrawServer(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike): Promise<object> {
-        const url = getEndpointUrl(this.options.withdrawServerUrl, 'binanceAdapterSetRecipient')
-        const body = {
-            memberAddress: from,
-            binanceRecipientAddress: binanceRecipient,
-            signature
-        }
-        return fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(body),
-            headers: { 'Content-Type': 'application/json' }
-        })
-    }
-
-    async getBinanceDepositAddress(userAddress: EthereumAddress) {
-        return DataUnion._getBinanceDepositAddress(userAddress, this) // eslint-disable-line no-underscore-dangle
-    }
-
-    async signSetBinanceRecipient(
-        recipientAddress: EthereumAddress,
-    ): Promise<string> {
-        const to = getAddress(recipientAddress) // throws if bad address
-        const signer = this.ethereum.getSigner()
-        return DataUnion._createSetBinanceRecipientSignature(to, signer, new Contracts(this)) // eslint-disable-line no-underscore-dangle
-    }
-
-    /** @internal */
-    _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: EthereumAddress}) {
-        return DataUnion._fromName({ // eslint-disable-line no-underscore-dangle
-            dataUnionName,
-            deployerAddress
-        }, this)
-    }
-
-    /**
-     * @category Important
-     */
-    static generateEthereumAccount() {
-        return StreamrEthereum.generateEthereumAccount()
+    registerNodeRegistry(c)
+    return {
+        config,
+        childContainer: c,
+        rootContext,
     }
 }
+
+export class StreamrClient extends StreamrClientBase {
+    constructor(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
+        const { childContainer: c, config } = initContainer(options, parentContainer)
+        super(
+            c,
+            c.resolve<Context>(Context as any),
+            config,
+            c.resolve<BrubeckNode>(BrubeckNode),
+            c.resolve<Ethereum>(Ethereum),
+            c.resolve<NodeRegistry>(NodeRegistry as any),
+            c.resolve<Session>(Session),
+            c.resolve<LoginEndpoints>(LoginEndpoints),
+            c.resolve<StreamEndpoints>(StreamEndpoints),
+            c.resolve<StreamEndpointsCached>(StreamEndpointsCached),
+            c.resolve<Resends>(Resends),
+            c.resolve<Publisher>(Publisher),
+            c.resolve<Subscriber>(Subscriber),
+            c.resolve<ResendSubscribe>(ResendSubscribe),
+            c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
+            c.resolve<DestroySignal>(DestroySignal),
+            c.resolve<DataUnions>(DataUnions),
+        )
+    }
+}
+
+export const Dependencies = {
+    Context,
+    BrubeckNode,
+    NodeRegistry,
+    Session,
+    LoginEndpoints,
+    StreamEndpoints,
+    StreamEndpointsCached,
+    Resends,
+    Publisher,
+    Subscriber,
+    GroupKeyStoreFactory,
+    DestroySignal,
+    DataUnions,
+}
+
+export { ResendOptionsStrict as ResendOptions } from './Resends'
+export { BrubeckClientConfig as StreamrClientOptions } from './Config'

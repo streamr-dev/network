@@ -5,13 +5,11 @@ import { StreamrClientOptions } from 'streamr-client'
 export interface EnvironmentOptions {
     dev?: boolean
     stg?: boolean
-    wsUrl?: string
-    httpUrl?: string 
+    httpUrl?: string
 }
 
 export interface AuthenticationOptions {
     privateKey?: string
-    apiKey?: string
 }
 
 export function envOptions(program: commander.Command): commander.Command {
@@ -35,7 +33,7 @@ export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: nu
 }
 
 export function formStreamrOptionsWithEnv(
-    { dev, stg, wsUrl, httpUrl, privateKey, apiKey }: EnvironmentOptions & AuthenticationOptions
+    { dev, stg, httpUrl, privateKey }: EnvironmentOptions & AuthenticationOptions
 ): StreamrClientOptions {
     const options: StreamrClientOptions = {}
 
@@ -45,37 +43,23 @@ export function formStreamrOptionsWithEnv(
     }
 
     if (dev) {
-        options.url = 'ws://localhost/api/v1/ws'
         options.restUrl = 'http://localhost/api/v1'
-        options.storageNode = {
+        options.storageNodeRegistry = [{
             // "broker-node-storage-1" on Docker environment
             address: '0xde1112f631486CfC759A50196853011528bC5FA0',
             url: 'http://10.200.10.1:8891'
-        }
+        }]
     } else if (stg) {
-        options.url = 'wss://staging.streamr.com/api/v1/ws'
         options.restUrl = 'https://staging.streamr.com/api/v1/'
     }
 
-    if (wsUrl) {
-        options.url = wsUrl
-    }
     if (httpUrl) {
         options.restUrl = httpUrl
-    }
-
-    if (privateKey && apiKey) {
-        console.error('flags --privateKey and --apiKey cannot be used at the same time')
-        process.exit(1)
     }
 
     if (privateKey) {
         options.auth = {
             privateKey
-        }
-    } else if (apiKey) {
-        options.auth = {
-            apiKey
         }
     }
 

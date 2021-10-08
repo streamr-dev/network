@@ -44,15 +44,16 @@ export interface NodeOptions extends TrackerManagerOptions {
 export interface Node {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
-    on(event: Event.MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage, nodeId: NodeId) => void): this
-    on(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage, nodeId: NodeId) => void): this
+    on<T>(event: Event.MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
+    on<T>(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: NodeId, streamId: StreamIdAndPartition) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, streamId: StreamIdAndPartition) => void): this
 }
 
 export class Node extends EventEmitter {
+    /** @internal */
+    public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
-    private readonly peerInfo: PeerInfo
     private readonly bufferTimeoutInMs: number
     private readonly bufferMaxSize: number
     private readonly disconnectionWaitTime: number
@@ -207,9 +208,9 @@ export class Node extends EventEmitter {
         reattempt: boolean
     ): Promise<PromiseSettledResult<NodeId>[]> {
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            await promiseTimeout(this.nodeConnectTimeout, 
+            await promiseTimeout(this.nodeConnectTimeout,
                 this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
-            
+
             this.clearDisconnectionTimer(nodeId)
             this.subscribeToStreamOnNode(nodeId, streamId, false)
             return nodeId
@@ -305,7 +306,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    onNodeDisconnected(node: NodeId): void {
+    private onNodeDisconnected(node: NodeId): void {
         this.metrics.record('onNodeDisconnect', 1)
         const streams = this.streams.removeNodeFromAllStreams(node)
         logger.trace('removed all subscriptions of node %s', node)
@@ -341,5 +342,9 @@ export class Node extends EventEmitter {
 
     getNeighbors(): ReadonlyArray<NodeId> {
         return this.streams.getAllNodes()
+    }
+
+    getNodeId(): NodeId {
+        return this.peerInfo.peerId
     }
 }

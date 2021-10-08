@@ -8,7 +8,8 @@ const client = new StreamrClient({
     auth,
 })
 
-client.connect().then(() => {
+client.connect().then(async () => {
     console.info('success')
-    return client.disconnect()
+    await client.disconnect()
+    process.exit(0)
 })

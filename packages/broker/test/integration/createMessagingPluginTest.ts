@@ -89,9 +89,7 @@ export const createMessagingPluginTest = <T>(
         })
 
         beforeEach(async () => {
-            streamrClient = createClient(ports.legacyWebsocket, brokerUser.privateKey, {
-                autoDisconnect: false
-            })
+            streamrClient = createClient(tracker, brokerUser.privateKey)
             stream = await createTestStream(streamrClient, testModule)
             messageQueue = new Queue<Message>()
         })
@@ -100,11 +98,12 @@ export const createMessagingPluginTest = <T>(
             if (pluginClient !== undefined) {
                 await api.closeClient(pluginClient)
             }
-            await streamrClient?.ensureDisconnected()
+            streamrClient?.debug('destroy after test')
+            await streamrClient?.destroy()
         })
 
         test('publish', async () => {
-            streamrClient.subscribe(stream.id, (content: any, metadata: any) => {
+            await streamrClient.subscribe(stream.id, (content: any, metadata: any) => {
                 messageQueue.push({ content, metadata: metadata.messageId })
             })
             pluginClient = await api.createClient('publish', stream.id, MOCK_API_KEY)
@@ -120,7 +119,5 @@ export const createMessagingPluginTest = <T>(
             const message = await messageQueue.pop()
             assertReceivedMessage(message)
         })
-
     })
-
 }

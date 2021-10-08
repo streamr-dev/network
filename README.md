@@ -106,4 +106,4 @@ This lists internal packages & their versions on the left, linked packages are c
 If the package on the left links to the package in the column, it shows a checkmark & the semver range, otherwise it shows the mismatched semver range and prints a warning at the end.
 It prints the version ranges so you can double-check that they're formatted as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
-![image](https://user-images.githubusercontent.com/43438/120851127-6b173e00-c546-11eb-8b2e-0fcd33d0da5a.png)
+![image](https://user-images.githubusercontent.com/43438/135347920-97d6e0e7-b86c-40ff-bfc9-91f160ae975c.png)

@@ -3,10 +3,8 @@ import { validateIsArray, validateIsString } from '../../utils/validations'
 import StreamMessage from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
 
-export enum ErrorCode {
-    // TODO define the values, remove PLACEHOLDER
-    PLACEHOLDER = 'PLACEHOLDER'
-}
+// TODO define as enum
+export type ErrorCode = string
 
 export interface Options {
     requestId: string
@@ -15,6 +13,8 @@ export interface Options {
     errorMessage: string
     groupKeyIds: string[]
 }
+
+type GroupKeyErrorResponseSerialized = [string, string, ErrorCode, string, string[]]
 
 export default class GroupKeyErrorResponse extends GroupKeyMessage {
 
@@ -39,11 +39,11 @@ export default class GroupKeyErrorResponse extends GroupKeyMessage {
         this.groupKeyIds = groupKeyIds
     }
 
-    toArray() {
+    toArray(): GroupKeyErrorResponseSerialized {
         return [this.requestId, this.streamId, this.errorCode, this.errorMessage, this.groupKeyIds]
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: GroupKeyErrorResponseSerialized): GroupKeyErrorResponse {
         const [requestId, streamId, errorCode, errorMessage, groupKeyIds] = arr
         return new GroupKeyErrorResponse({
             requestId,
@@ -52,6 +52,10 @@ export default class GroupKeyErrorResponse extends GroupKeyMessage {
             errorMessage,
             groupKeyIds,
         })
+    }
+
+    static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyErrorResponseSerialized> {
+        return streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
     }
 }
 

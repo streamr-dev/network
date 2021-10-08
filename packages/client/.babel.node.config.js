@@ -14,6 +14,7 @@ module.exports = {
         ['@babel/preset-typescript']
     ],
     plugins: [
+        'transform-typescript-metadata',
         'add-module-exports',
         ['@babel/plugin-transform-runtime', {
             useESModules: false,

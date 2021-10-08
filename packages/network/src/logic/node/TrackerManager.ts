@@ -9,6 +9,7 @@ import { NodeId } from './Node'
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { Metrics } from '../../helpers/MetricsContext'
+import { NameDirectory } from '../../NameDirectory'
 
 const logger = new Logger(module)
 
@@ -143,13 +144,12 @@ export class TrackerManager {
     private async sendStatus(streamId: StreamIdAndPartition, trackerId: TrackerId): Promise<void> {
         const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
         const status = {
-            streams: this.streamManager.getStreamState(streamId),
-            singleStream: true,
+            stream: this.streamManager.getStreamStatus(streamId),
             ...nodeDescriptor
         }
         try {
             await this.nodeToTracker.sendStatus(trackerId, status)
-            logger.trace('sent status %j to tracker %s', status.streams, trackerId)
+            logger.trace('sent status %j to tracker %s', status.stream, trackerId)
         } catch (e) {
             logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
         }
@@ -193,12 +193,12 @@ export class TrackerManager {
         const subscribedNodeIds: NodeId[] = []
         const unsubscribedNodeIds: NodeId[] = []
         let failedInstructions = false
-        results.forEach((res) => {
+        results.forEach((res, i) => {
             if (res.status === 'fulfilled') {
                 subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
-                logger.info('failed to subscribe (or connect) to node, reason: %s', res.reason)
+                logger.debug('failed to subscribe (or connect) to %s, reason: %s', NameDirectory.getName(nodeIds[i]), res.reason)
             }
         })
         if (!reattempt || failedInstructions) {

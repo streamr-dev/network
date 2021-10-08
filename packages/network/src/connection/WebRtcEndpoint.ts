@@ -124,20 +124,24 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     private startConnectionStatusReport(): void {
+        const getPeerNameList = (peerIds: PeerId[]) => {
+            return peerIds.map((peerId) => NameDirectory.getName(peerId)).join(',')
+        }
         const STATUS_REPORT_INTERVAL_MS = 5 * 60 * 1000
         this.statusReportTimer = setInterval(() => {
-            let connectedPeerCount = 0
+            const connectedPeerIds = []
             const pendingPeerIds = []
             for (const peerId of Object.keys(this.connections)) {
                 const lastState = this.connections[peerId].getLastState()
                 if (lastState === 'connected') {
-                    connectedPeerCount += 1
+                    connectedPeerIds.push(peerId)
                 } else if (lastState === 'connecting') {
                     pendingPeerIds.push(peerId)
                 }
             }
-            this.logger.info(`Successfully connected to %d peers. Still trying to connect to the following peers: [%s]`,
-                connectedPeerCount, pendingPeerIds.join(', '))
+            const suffix = (pendingPeerIds.length > 0) ? ', still trying to connect: %s' : ''
+            this.logger.info(`Successfully connected to %d peers (%s)${suffix}`,
+                connectedPeerIds.length, getPeerNameList(connectedPeerIds), getPeerNameList(pendingPeerIds))
         }, STATUS_REPORT_INTERVAL_MS)
     }
 
@@ -242,9 +246,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
         if (!connection) {
-            this.logger.warn('unexpected rtcAnswer from %s: %s (no connection)', peerId, description)
+            this.logger.debug('unexpected rtcAnswer from %s: %s (no connection)', peerId, description)
         } else if (connection.getConnectionId() !== connectionId) {
-            this.logger.warn('unexpected rtcAnswer from %s (connectionId mismatch %s !== %s)', peerId, connection.getConnectionId(), connectionId)
+            this.logger.debug('unexpected rtcAnswer from %s (connectionId mismatch %s !== %s)', peerId, connection.getConnectionId(), connectionId)
         } else {
             connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
             connection.setRemoteDescription(description, 'answer')
@@ -256,9 +260,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
         if (!connection) { 
-            this.logger.warn('unexpected iceCandidate from %s: %s (no connection)', peerId, candidate)
+            this.logger.debug('unexpected iceCandidate from %s: %s (no connection)', peerId, candidate)
         } else if (connection.getConnectionId() !== connectionId) {
-            this.logger.warn('unexpected iceCandidate from %s (connectionId mismatch %s !== %s)', peerId, connection.getConnectionId(), connectionId)
+            this.logger.debug('unexpected iceCandidate from %s (connectionId mismatch %s !== %s)', peerId, connection.getConnectionId(), connectionId)
         } else {
             connection.addRemoteCandidate(candidate, mid)
         } 

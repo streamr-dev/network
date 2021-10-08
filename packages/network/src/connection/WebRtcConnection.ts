@@ -5,6 +5,7 @@ import { Logger } from '../helpers/Logger'
 import { PeerId, PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
+import crypto from 'crypto'
 
 export interface ConstructorOptions {
     selfId: PeerId
@@ -45,7 +46,12 @@ interface Events {
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
 export function isOffering(myId: PeerId, theirId: PeerId): boolean {
-    return myId < theirId
+    return offeringHash(myId + theirId) < offeringHash(theirId + myId)
+}
+
+function offeringHash(idPair: string): number {
+    const buffer = crypto.createHash('md5').update(idPair).digest()
+    return buffer.readInt32LE()
 }
 
 /**

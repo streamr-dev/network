@@ -14,7 +14,7 @@ export interface PluginOptions {
     networkNode: NetworkNode
     subscriptionManager: SubscriptionManager
     publisher: Publisher
-    streamrClient?: StreamrClient
+    streamrClient: StreamrClient
     apiAuthenticator: ApiAuthenticator
     metricsContext: MetricsContext
     brokerConfig: Config

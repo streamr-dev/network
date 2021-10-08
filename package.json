@@ -4,6 +4,8 @@
         "prepare": "husky install",
         "link": "lerna link",
         "bootstrap": "lerna bootstrap",
+        "postbootstrap": "npm run versions",
+        "postbootstrap-pkg": "npm run versions",
         "bootstrap-pkg": "npx lerna bootstrap --include-dependencies --scope",
         "versions": "zx ./show-versions.mjs",
         "clean": "npm run clean-dist && npx lerna clean -y # remove all node_modules",
