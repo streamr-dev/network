@@ -1,4 +1,4 @@
-import { StreamMessage } from 'streamr-network/dist/src/streamr-protocol'
+import { Protocol } from 'streamr-network'
 import { Wallet } from 'ethers'
 
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
@@ -34,8 +34,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     private cassandra?: Storage
     private storageConfig?: StorageConfig
-    private messageListener?: (msg: StreamMessage) => void
-    private assignmentMessageListener?: (msg: StreamMessage<AssignmentMessage>) => void
+    private messageListener?: (msg: Protocol.StreamMessage) => void
+    private assignmentMessageListener?: (msg: Protocol.StreamMessage<AssignmentMessage>) => void
 
     constructor(options: PluginOptions) {
         super(options)

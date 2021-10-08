@@ -2,7 +2,8 @@
   "extends": "@streamr/dev-config/ts/tsconfig.node.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDirs": ["src", "test"]
+    "rootDirs": ["src", "test"],
+    "useUnknownInCatchVariables": false
   },
   "include": [
     "src/**/*",

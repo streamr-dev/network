@@ -14,7 +14,7 @@ RUN npm run bootstrap-pkg -- streamr-client
 RUN npm run bootstrap-pkg -- @streamr/cli-tools
 RUN npx lerna bootstrap --scope streamr-broker
 # image contains all packages, remove devDeps to keep image size down
-RUN lerna exec -- npm prune --production
+RUN npx lerna exec -- npm prune --production
 # restore inter-package symlinks removed by npm prune
 RUN npx lerna link
 
