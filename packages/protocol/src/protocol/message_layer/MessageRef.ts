@@ -12,7 +12,7 @@ export default class MessageRef {
         this.sequenceNumber = sequenceNumber
     }
 
-    compareTo(other: MessageRef) {
+    compareTo(other: MessageRef): number {
         if (this.timestamp < other.timestamp) {
             return -1
         }
@@ -28,14 +28,14 @@ export default class MessageRef {
         return 0
     }
 
-    toArray() {
+    toArray(): any[] {
         return [
             this.timestamp,
             this.sequenceNumber,
         ]
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: any[]): MessageRef {
         const [
             timestamp,
             sequenceNumber,
@@ -43,7 +43,7 @@ export default class MessageRef {
         return new MessageRef(timestamp, sequenceNumber)
     }
 
-    serialize() {
+    serialize(): string {
         return JSON.stringify(this.toArray())
     }
 

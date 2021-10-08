@@ -7,7 +7,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 2
 
 export default class ResendLastRequestSerializerV2 extends Serializer<ResendLastRequest> {
-    toArray(resendLastRequest: ResendLastRequest) {
+    toArray(resendLastRequest: ResendLastRequest): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.ResendLastRequest,
@@ -19,7 +19,7 @@ export default class ResendLastRequestSerializerV2 extends Serializer<ResendLast
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): ResendLastRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

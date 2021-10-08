@@ -3,7 +3,7 @@ import { entropyToMnemonic, wordlists } from 'bip39'
 /**
  * @param address - valid eth address with leading 0x
  */
-export const generateMnemonicFromAddress = (address: string) =>
+export const generateMnemonicFromAddress = (address: string): string =>
     entropyToMnemonic(address.slice(2), wordlists.english)
         .split(' ')
         .slice(0, 3)
@@ -13,7 +13,7 @@ export const generateMnemonicFromAddress = (address: string) =>
 /**
  * @param id - node id
  */
-export const parseAddressFromNodeId = (id: string) => {
+export const parseAddressFromNodeId = (id: string): string => {
     const hashPos = id.indexOf('#')
 
     if (hashPos < 0) {

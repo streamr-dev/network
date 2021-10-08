@@ -8,7 +8,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 2
 
 export default class BroadcastMessageSerializerV2 extends Serializer<BroadcastMessage> {
-    toArray(broadcastMessage: BroadcastMessage, streamMessageVersion = StreamMessage.LATEST_VERSION) {
+    toArray(broadcastMessage: BroadcastMessage, streamMessageVersion = StreamMessage.LATEST_VERSION): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.BroadcastMessage,
@@ -17,7 +17,7 @@ export default class BroadcastMessageSerializerV2 extends Serializer<BroadcastMe
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): BroadcastMessage {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

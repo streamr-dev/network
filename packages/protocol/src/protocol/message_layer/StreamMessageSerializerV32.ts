@@ -8,7 +8,7 @@ import { Serializer } from '../../Serializer'
 const VERSION = 32
 
 export default class StreamMessageSerializerV32 extends Serializer<StreamMessage> {
-    toArray(streamMessage: StreamMessage) {
+    toArray(streamMessage: StreamMessage): any[] {
         return [
             VERSION,
             streamMessage.messageId.toArray(),
@@ -24,7 +24,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): StreamMessage<any> {
         const [
             version, // eslint-disable-line @typescript-eslint/no-unused-vars
             messageIdArr,
