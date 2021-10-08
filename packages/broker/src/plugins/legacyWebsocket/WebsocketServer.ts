@@ -248,7 +248,7 @@ export class WebsocketServer extends EventEmitter {
         this.connections.delete(connection)
 
         // Unsubscribe from all streams
-        connection.forEachStream((stream: Stream<any>) => {
+        connection.forEachStream((stream: Stream<Connection>) => {
             // for cleanup, spoof an UnsubscribeRequest to ourselves on the removed connection
             this.requestHandler.unsubscribe(
                 connection,
