@@ -80,6 +80,7 @@ const migrateTrackerRegistry = (trackerRegistry: TrackerRegistryItem[]): Tracker
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const testnet2AutoMigrate = (config: any, configFilePath: string): Config => {
     // Skip auto-migration if testnetMiner plugin not enabled
     if (config.plugins.testnetMiner === undefined) {

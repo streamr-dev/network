@@ -8,6 +8,7 @@ import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
 import { fetchOrThrow } from '../../helpers/fetch'
 import { version as CURRENT_VERSION } from '../../../package.json'
+import { Schema } from 'ajv'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
@@ -57,7 +58,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         this.streamId = this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)]
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.latencyPoller = await scheduleAtInterval(async () => {
             this.latestLatency = await this.getLatency()
         }, LATENCY_POLL_INTERVAL, true)
@@ -168,7 +169,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         }
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.latencyPoller?.stop()
         if (this.rewardSubscriptionRetryRef) {
             clearTimeout(this.rewardSubscriptionRetryRef)
@@ -176,7 +177,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         }
     }
 
-    getConfigSchema() {
+    getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

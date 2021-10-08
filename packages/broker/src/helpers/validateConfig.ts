@@ -2,7 +2,7 @@ import Ajv, { Schema } from 'ajv'
 import addFormats from 'ajv-formats'
 import { Todo } from '../types'
 
-export const validateConfig = (data: unknown, schema: Schema, contextName?: string) => {
+export const validateConfig = (data: unknown, schema: Schema, contextName?: string): void|never => {
     const ajv = new Ajv({
         useDefaults: true
     })

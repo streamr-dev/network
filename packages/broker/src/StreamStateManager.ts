@@ -7,9 +7,9 @@ function getStreamLookupKey(streamId: string, streamPartition: number) {
     return `${streamId}::${streamPartition}`
 }
 
-export class StreamStateManager {
+export class StreamStateManager<C> {
 
-    _streams: Record<string,Stream>
+    _streams: Record<string,Stream<C>>
     _timeouts: Record<string,NodeJS.Timeout>
 
     constructor() {
@@ -17,7 +17,7 @@ export class StreamStateManager {
         this._timeouts = {}
     }
 
-    getOrCreate(streamId: string, streamPartition: number, name = '') {
+    getOrCreate(streamId: string, streamPartition: number, name = ''): Stream<C> {
         const stream = this.get(streamId, streamPartition)
         if (stream) {
             return stream
@@ -25,11 +25,11 @@ export class StreamStateManager {
         return this.create(streamId, streamPartition, name)
     }
 
-    get(streamId: string, streamPartition: number) {
+    get(streamId: string, streamPartition: number): Stream<C> {
         return this._streams[getStreamLookupKey(streamId, streamPartition)]
     }
 
-    getByName(name: string) {
+    getByName(name: string): Stream<C>|null {
         const streamId = Object.keys(this._streams)
             .find((key) => { return this._streams[key].getName() === name })
         return streamId ? this._streams[streamId] : null
@@ -38,7 +38,7 @@ export class StreamStateManager {
     /**
      * Creates and returns a Stream object, holding the Stream subscription state.
      * */
-    create(streamId: string, streamPartition: number, name = '') {
+    create(streamId: string, streamPartition: number, name = ''): Stream<C> {
         if (streamId == null || streamPartition == null) {
             throw new Error('streamId or streamPartition not given!')
         }
@@ -48,7 +48,7 @@ export class StreamStateManager {
             throw new Error(`stream already exists for ${key}`)
         }
 
-        const stream = new Stream(streamId, streamPartition, name)
+        const stream = new Stream<C>(streamId, streamPartition, name)
         this._streams[key] = stream
 
         /*
@@ -72,7 +72,7 @@ export class StreamStateManager {
         return stream
     }
 
-    delete(streamId: string, streamPartition: number) {
+    delete(streamId: string, streamPartition: number): void {
         if (streamId == null || streamPartition == null) {
             throw new Error('streamId or streamPartition not given!')
         }
@@ -88,7 +88,7 @@ export class StreamStateManager {
         logger.debug('Stream object "%s" deleted', stream.toString())
     }
 
-    close() {
+    close(): void {
         Object.values(this._timeouts).forEach((timeout) => {
             clearTimeout(timeout)
         })

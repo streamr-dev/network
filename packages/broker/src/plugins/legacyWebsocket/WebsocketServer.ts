@@ -105,7 +105,7 @@ export class WebsocketServer extends EventEmitter {
                 }
             })
 
-        const streams = new StreamStateManager()
+        const streams = new StreamStateManager<Connection>()
         this.requestHandler = new RequestHandler(
             streamFetcher,
             publisher,
@@ -248,7 +248,7 @@ export class WebsocketServer extends EventEmitter {
         this.connections.delete(connection)
 
         // Unsubscribe from all streams
-        connection.forEachStream((stream: Stream) => {
+        connection.forEachStream((stream: Stream<Connection>) => {
             // for cleanup, spoof an UnsubscribeRequest to ourselves on the removed connection
             this.requestHandler.unsubscribe(
                 connection,
@@ -289,7 +289,7 @@ export class WebsocketServer extends EventEmitter {
         })
     }
 
-    private broadcastMessage(streamMessage: Protocol.StreamMessage, streams: StreamStateManager) {
+    private broadcastMessage(streamMessage: Protocol.StreamMessage, streams: StreamStateManager<Connection>) {
         const streamId = streamMessage.getStreamId()
         const streamPartition = streamMessage.getStreamPartition()
         const stream = streams.get(streamId, streamPartition)

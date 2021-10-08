@@ -27,7 +27,7 @@ export class RequestHandler {
 
     streamFetcher: StreamFetcher
     publisher: Publisher
-    streams: StreamStateManager
+    streams: StreamStateManager<Connection>
     subscriptionManager: SubscriptionManager
     metrics: Metrics
     storageNodeRegistry: StorageNodeRegistry
@@ -37,7 +37,7 @@ export class RequestHandler {
     constructor(   
         streamFetcher: StreamFetcher,
         publisher: Publisher,
-        streams: StreamStateManager,
+        streams: StreamStateManager<Connection>,
         subscriptionManager: SubscriptionManager,
         metrics: Metrics,
         storageNodeRegistry: StorageNodeRegistry,
@@ -288,7 +288,7 @@ export class RequestHandler {
         }
     }
 
-    async unsubscribe(connection: Connection, request: UnsubscribeRequest, noAck = false) {
+    async unsubscribe(connection: Connection, request: UnsubscribeRequest, noAck = false): Promise<void> {
         const stream = this.streams.get(request.streamId, request.streamPartition)
 
         if (stream) {
@@ -352,7 +352,7 @@ export class RequestHandler {
         }
     }
 
-    onConnectionClose(connectionId: string) {
+    onConnectionClose(connectionId: string): void {
         const ongoingResendResponses = this.ongoingResendResponses.get(connectionId)
         if (ongoingResendResponses.length > 0) {
             logger.info('Abort %s ongoing resends for connection %s', ongoingResendResponses.length, connectionId)
@@ -361,7 +361,7 @@ export class RequestHandler {
         }
     }
 
-    close() {
+    close(): void {
         this.streams.close()
     }
 }

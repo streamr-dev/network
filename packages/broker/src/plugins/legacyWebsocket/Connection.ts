@@ -27,7 +27,7 @@ export class Connection extends EventEmitter {
     readonly messageLayerVersion: number
     private readonly socket: WebSocket
     private readonly duplexStream: stream.Duplex
-    private readonly streams: Stream[] = []
+    private readonly streams: Stream<Connection>[] = []
     private dead = false
     private highBackPressure = false
     private respondedPong = true
@@ -89,7 +89,7 @@ export class Connection extends EventEmitter {
         return this.socket.bufferedAmount
     }
 
-    getStreams(): Stream[] {
+    getStreams(): Stream<Connection>[] {
         return this.streams.slice() // return copy
     }
 
@@ -105,23 +105,23 @@ export class Connection extends EventEmitter {
         return this.respondedPong
     }
 
-    addStream(stream: Stream): void {
+    addStream(stream: Stream<Connection>): void {
         this.streams.push(stream)
     }
 
     removeStream(streamId: string, streamPartition: number): void {
-        const i = this.streams.findIndex((s: Stream) => s.id === streamId && s.partition === streamPartition)
+        const i = this.streams.findIndex((s: Stream<Connection>) => s.id === streamId && s.partition === streamPartition)
         if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
 
-    forEachStream(cb: (stream: Stream) => void): void {
+    forEachStream(cb: (stream: Stream<Connection>) => void): void {
         this.getStreams().forEach(cb)
     }
 
     getStreamsAsString(): string[] {
-        return this.streams.map((s: Stream) => s.toString())
+        return this.streams.map((s: Stream<Connection>) => s.toString())
     }
 
     ping(): void {

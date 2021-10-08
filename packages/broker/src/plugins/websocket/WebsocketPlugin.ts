@@ -3,6 +3,7 @@ import { SslCertificateConfig } from '../../types'
 import { getPayloadFormat } from '../../helpers/PayloadFormat'
 import { WebsocketServer } from './WebsocketServer'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { Schema } from 'ajv'
 
 export interface WebsocketPluginConfig {
     port: number
@@ -21,7 +22,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         }
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.server = new WebsocketServer(this.streamrClient!)
         await this.server.start(
             this.pluginConfig.port, 
@@ -31,11 +32,11 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         )
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         await this.server!.stop()
     }
 
-    getConfigSchema() {
+    getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

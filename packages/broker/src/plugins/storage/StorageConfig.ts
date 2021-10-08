@@ -178,7 +178,7 @@ export class StorageConfig {
         return messageListener
     }
 
-    onAssignmentEvent(content: { storageNode: string, stream: { id: string, partitions: number }, event: string }) {
+    onAssignmentEvent(content: { storageNode: string, stream: { id: string, partitions: number }, event: string }): void {
         if (content.storageNode && typeof content.storageNode === 'string' && content.storageNode.toLowerCase() === this.clusterId.toLowerCase()) {
             logger.trace('Received storage assignment message: %o', content)
             const keys = new Set(
@@ -200,7 +200,7 @@ export class StorageConfig {
         }
     }
 
-    stopAssignmentEventListener(messageListener: (msg: StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager) {
+    stopAssignmentEventListener(messageListener: (msg: StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager): void {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)
