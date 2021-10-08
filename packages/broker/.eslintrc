@@ -3,6 +3,7 @@
   "rules": {
     "@typescript-eslint/ban-ts-comment": "warn",
     "@typescript-eslint/explicit-module-boundary-types": "warn",
+    "max-len": "warn",
     "no-underscore-dangle": "warn"
   }
 }

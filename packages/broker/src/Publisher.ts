@@ -4,7 +4,6 @@ import { FailedToPublishError } from './errors/FailedToPublishError'
 import { StreamrClient } from 'streamr-client'
 import { Protocol } from 'streamr-network'
 
-
 const THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS = 300 * 1000
 
 const isTimestampTooFarInTheFuture = (timestamp: Todo) => {

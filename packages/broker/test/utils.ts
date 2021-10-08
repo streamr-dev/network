@@ -195,7 +195,12 @@ export class StorageAssignmentEventManager {
     }
 }
 
-export const waitForStreamPersistedInStorageNode = async (streamId: string, partition: number, nodeHost: string, nodeHttpPort: number) => {
+export const waitForStreamPersistedInStorageNode = async (
+    streamId: string,
+    partition: number,
+    nodeHost: string,
+    nodeHttpPort: number
+) => {
     const isPersistent = async () => {
         const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
