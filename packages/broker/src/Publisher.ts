@@ -2,7 +2,8 @@ import { Todo } from './types'
 
 import { FailedToPublishError } from './errors/FailedToPublishError'
 import { StreamrClient } from 'streamr-client'
-import { StreamMessage } from 'streamr-network/dist/src/streamr-protocol'
+import { Protocol } from 'streamr-network'
+
 
 const THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS = 300 * 1000
 
@@ -28,7 +29,7 @@ export class Publisher {
             .addRecordedMetric('messages')
     }
 
-    async validateAndPublish(streamMessage: StreamMessage): Promise<void> {
+    async validateAndPublish(streamMessage: Protocol.StreamMessage): Promise<void> {
         if (isTimestampTooFarInTheFuture(streamMessage.getTimestamp())) {
             throw new FailedToPublishError(
                 streamMessage.getStreamId(),
