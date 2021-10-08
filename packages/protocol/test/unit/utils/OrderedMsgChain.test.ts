@@ -546,14 +546,19 @@ describe('OrderedMsgChain', () => {
     describe('maxGapRequests', () => {
         it('call the gap handler maxGapRequests times and then fails with GapFillFailedError', (done) => {
             let counter = 0
-            util = new OrderedMsgChain('publisherId', 'msgChainId', () => {}, (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => {
-                assert.strictEqual(from.timestamp, msg1.getMessageRef().timestamp)
-                assert.strictEqual(from.sequenceNumber, msg1.getMessageRef().sequenceNumber + 1)
-                assert.deepStrictEqual(to, msg3.prevMsgRef)
-                assert.strictEqual(publisherId, 'publisherId')
-                assert.strictEqual(msgChainId, 'msgChainId')
-                counter += 1
-            }, 100, 100)
+            util = new OrderedMsgChain(
+                'publisherId', 
+                'msgChainId', 
+                () => {}, 
+                (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => {
+                    assert.strictEqual(from.timestamp, msg1.getMessageRef().timestamp)
+                    assert.strictEqual(from.sequenceNumber, msg1.getMessageRef().sequenceNumber + 1)
+                    assert.deepStrictEqual(to, msg3.prevMsgRef)
+                    assert.strictEqual(publisherId, 'publisherId')
+                    assert.strictEqual(msgChainId, 'msgChainId')
+                    counter += 1
+                }, 
+                100, 100)
             util.once('error', (err: Error) => {
                 expect(err).toBeInstanceOf(GapFillFailedError)
                 if (err instanceof GapFillFailedError) {
@@ -696,7 +701,8 @@ describe('OrderedMsgChain', () => {
 
                 expect(received)
                 done(new Error('Was expecting to receive messages ordered per timestamp but instead received timestamps in this '
-                                + `order:\n${receivedTimestamps}.\nThe unordered messages were processed in the following timestamp order:\n${timestamps}`))
+                // eslint-disable-next-line max-len
+                    + `order:\n${receivedTimestamps}.\nThe unordered messages were processed in the following timestamp order:\n${timestamps}`))
                 return
             }
             done()
