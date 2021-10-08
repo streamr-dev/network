@@ -13,7 +13,7 @@ import { Config } from '../src/config'
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
-export function formConfig({
+export const formConfig = ({
     name,
     trackerPort,
     privateKey,
@@ -31,7 +31,7 @@ export function formConfig({
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
-}: Todo): Config {
+}: Todo): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['legacyPublishHttp'] = {}
@@ -106,7 +106,7 @@ export const startBroker = async (...args: Todo[]): Promise<Broker> => {
     return broker
 }
 
-export function getWsUrl(port: number, ssl = false) {
+export const getWsUrl = (port: number, ssl = false): string => {
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws`
 }
 
@@ -114,17 +114,17 @@ export function getWsUrl(port: number, ssl = false) {
 // equivalent to Wallet.createRandom().privateKey but much faster
 // the slow part seems to be deriving the address from the key so if you can avoid this, just use
 // fastPrivateKey instead of createMockUser
-export function fastPrivateKey() {
+export const fastPrivateKey = (): string => {
     return `0x${crypto.randomBytes(32).toString('hex')}`
 }
 
-export const createMockUser = () => Wallet.createRandom()
+export const createMockUser = (): Wallet => Wallet.createRandom()
 
-export function createClient(
+export const createClient = (
     tracker: Tracker,
     privateKey = fastPrivateKey(),
     clientOptions?: StreamrClientOptions
-): StreamrClient {
+): StreamrClient => {
     return new StreamrClient({
         auth: {
             privateKey
@@ -137,7 +137,7 @@ export function createClient(
     })
 }
 
-export function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = fastPrivateKey()) {
+export const createMqttClient = (mqttPort = 9000, host = 'localhost', privateKey = fastPrivateKey()): mqtt.AsyncClient => {
     return mqtt.connect({
         hostname: host,
         port: mqttPort,
@@ -158,13 +158,13 @@ export class StorageAssignmentEventManager {
         this.client = createClient(tracker, engineAndEditorAccount.privateKey)
     }
 
-    async createStream() {
+    async createStream(): Promise<void> {
         this.eventStream = await this.client.createStream({
             id: this.engineAndEditorAccount.address + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
         })
     }
 
-    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient) {
+    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient): Promise<void> {
         await fetch(`${API_URL}/streams/${encodeURIComponent(streamId)}/storageNodes`, {
             body: JSON.stringify({
                 address: storageNodeAddress
@@ -179,7 +179,7 @@ export class StorageAssignmentEventManager {
         this.publishAddEvent(streamId)
     }
 
-    publishAddEvent(streamId: string) {
+    publishAddEvent(streamId: string): void {
         this.eventStream!.publish({
             event: 'STREAM_ADDED',
             stream: {
@@ -190,8 +190,8 @@ export class StorageAssignmentEventManager {
         })
     }
 
-    close() {
-        return this.client.destroy()
+    async close(): Promise<void> {
+        await this.client.destroy()
     }
 }
 
@@ -200,7 +200,7 @@ export const waitForStreamPersistedInStorageNode = async (
     partition: number,
     nodeHost: string,
     nodeHttpPort: number
-) => {
+): Promise<void> => {
     const isPersistent = async () => {
         const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
@@ -228,7 +228,7 @@ export const createTestStream = (
 export class Queue<T> {
     items: T[] = []
 
-    push(item: T) {
+    push(item: T): void {
         this.items.push(item)
     }
 

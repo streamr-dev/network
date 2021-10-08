@@ -79,7 +79,7 @@ export class ConsoleAndPM2Metrics {
         })
     }
 
-    start() {
+    start(): void {
         logger.info('starting legacy metrics reporting interval')
         const reportingIntervalInMs = this.reportingIntervalSeconds * 1000
         const reportFn = async () => {
@@ -93,7 +93,7 @@ export class ConsoleAndPM2Metrics {
         this.timeout = setTimeout(reportFn, reportingIntervalInMs)
     }
 
-    stop() {
+    stop(): void {
         clearTimeout(this.timeout!)
     }
 

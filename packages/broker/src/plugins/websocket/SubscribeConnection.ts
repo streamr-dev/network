@@ -15,7 +15,7 @@ export class SubscribeConnection implements Connection {
         this.partitions = parseQueryParameterArray('partitions', queryParams, parsePositiveInteger)
     }
 
-    init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat) {
+    init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat): void {
         const streamPartDefitions = (this.partitions !== undefined)
             ? this.partitions.map((streamPartition: number) => ({ streamId: this.streamId, streamPartition }))
             : [{ streamId: this.streamId }]

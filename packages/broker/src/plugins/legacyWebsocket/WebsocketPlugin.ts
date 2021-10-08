@@ -8,6 +8,7 @@ import { once } from "events"
 import fs from "fs"
 import http from 'http'
 import https from "https"
+import { Schema } from 'ajv'
 
 const logger = new Logger(module)
 
@@ -60,7 +61,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         return this.websocketServer!.close()
     }
 
-    getConfigSchema(): Record<string, unknown> {
+    getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

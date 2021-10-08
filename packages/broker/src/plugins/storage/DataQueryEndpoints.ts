@@ -1,7 +1,7 @@
 /**
  * Endpoints for RESTful data requests
  */
-import express, { Request, Response } from 'express'
+import express, { Request, Response, Router } from 'express'
 import { MetricsContext, Protocol } from 'streamr-network'
 import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Logger } from 'streamr-network'
@@ -105,7 +105,7 @@ const createEndpointRoute = (
     })
 }
 
-export const router = (storage: Storage, streamFetcher: Todo, metricsContext: MetricsContext) => {
+export const router = (storage: Storage, streamFetcher: Todo, metricsContext: MetricsContext): Router => {
     const router = express.Router()
     const metrics = metricsContext.create('broker/http')
         .addRecordedMetric('outBytes')

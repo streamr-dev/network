@@ -24,7 +24,7 @@ class MockClaimServer {
     pingEndpointCalled = false
     claimRequestBody: any
 
-    async start() {
+    async start(): Promise<Server> {
         const app = express()
         app.use(express.json())
         app.post('/claim', (req: Request, res: Response) => {
@@ -42,7 +42,7 @@ class MockClaimServer {
         return this.server
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.server!.close()
         await once(this.server!, 'close')
     }

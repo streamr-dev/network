@@ -44,7 +44,7 @@ export const createMessagingPluginTest = <T>(
     ports: Ports, 
     testModule: NodeJS.Module,
     pluginConfig: any = {}
-) => {
+): any => {
 
     describe(`Plugin: ${pluginName}`, () => {
 

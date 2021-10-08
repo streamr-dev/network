@@ -10,6 +10,7 @@ import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig, AssignmentMessage } from './StorageConfig'
 import { StreamPart } from '../../types'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { Schema } from 'ajv'
 
 export interface StoragePluginConfig {
     cassandra: {
@@ -41,7 +42,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         super(options)
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.cassandra = await this.getCassandraStorage()
         this.storageConfig = await this.createStorageConfig()
         this.messageListener = (msg) => {
@@ -67,7 +68,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
     }
 
-    private async getCassandraStorage() {
+    private async getCassandraStorage(): Promise<Storage> {
         const cassandraStorage = await startCassandraStorage({
             contactPoints: [...this.pluginConfig.cassandra.hosts],
             localDataCenter: this.pluginConfig.cassandra.datacenter,
@@ -82,7 +83,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         return cassandraStorage
     }
 
-    private async createStorageConfig() {
+    private async createStorageConfig(): Promise<StorageConfig> {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
         const apiUrl = this.brokerConfig.streamrUrl + '/api/v1'
         const storageConfig = await StorageConfig.createInstance(
@@ -95,19 +96,19 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         return storageConfig
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, this.brokerConfig.streamrAddress, this.subscriptionManager)
         this.networkNode.removeMessageListener(this.messageListener!)
         this.storageConfig!.getStreams().forEach((stream) => {
             this.subscriptionManager.unsubscribe(stream.id, stream.partition)
         })
-        return Promise.all([
+        await Promise.all([
             this.cassandra!.close(),
             this.storageConfig!.cleanup()
         ])
     }
 
-    getConfigSchema() {
+    getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

@@ -45,7 +45,7 @@ export class DeleteExpiredCmd {
         this.limit = pLimit(5)
     }
 
-    async run() {
+    async run(): Promise<void> {
         const streams = await this._getStreams()
         logger.info(`Found ${streams.length} unique streams`)
 
@@ -69,7 +69,10 @@ export class DeleteExpiredCmd {
         await this.cassandraClient.shutdown()
     }
 
-    async _getStreams() {
+    async _getStreams(): Promise<{
+        streamId: string,
+        partition: number
+    }[]> {
         const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
         const resultSet = await this.cassandraClient.execute(query, [], {
             fetchSize: 100000
@@ -80,7 +83,7 @@ export class DeleteExpiredCmd {
         }))
     }
 
-    async _fetchStreamsInfo(streams: Todo) {
+    async _fetchStreamsInfo(streams: Todo): Promise<Todo> {
         const tasks = streams.filter(Boolean).map((stream: Todo) => {
             return this.limit(async () => {
                 const url = `${this.streamrBaseUrl}/api/v1/streams/${encodeURIComponent(stream.streamId)}/validation`
@@ -97,7 +100,7 @@ export class DeleteExpiredCmd {
         return Promise.all(tasks)
     }
 
-    async _getPotentiallyExpiredBuckets(streamsInfo: Todo) {
+    async _getPotentiallyExpiredBuckets(streamsInfo: Todo): Promise<Todo> {
         const result: Todo[] = []
 
         const query = 'SELECT * FROM bucket WHERE stream_id = ? AND partition = ? AND date_create <= ?'
@@ -132,7 +135,7 @@ export class DeleteExpiredCmd {
         return result
     }
 
-    async _filterExpiredBuckets(potentialBuckets: Todo) {
+    async _filterExpiredBuckets(potentialBuckets: Todo): Promise<Todo> {
         const result: Todo[] = []
 
         const query = 'SELECT MAX(ts) AS m FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?'
@@ -160,7 +163,7 @@ export class DeleteExpiredCmd {
         return result
     }
 
-    async _deleteExpired(expiredBuckets: Todo[]) {
+    async _deleteExpired(expiredBuckets: Todo[]): Promise<Todo> {
         const tasks = expiredBuckets.filter(Boolean).map((stream) => {
             const { bucketId, dateCreate, streamId, partition } = stream
             const queries = [
