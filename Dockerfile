@@ -1,22 +1,15 @@
 FROM node:16-buster as build
 WORKDIR /usr/src/monorepo
 COPY . .
-RUN npm set unsafe-perm true
-RUN npm set loglevel verbose
-# explicitly use npm v6
-RUN npm install -g npm@6
-RUN npm ci
-RUN npm run bootstrap-pkg @streamr/dev-config
-RUN npm run bootstrap-pkg streamr-test-utils
-RUN npm run bootstrap-pkg streamr-client-protocol
-RUN npm run bootstrap-pkg streamr-network
-RUN npm run bootstrap-pkg streamr-client
-RUN npm run bootstrap-pkg streamr-cli-tools
-RUN npm run bootstrap
-# image contains all packages, remove devDeps to keep image size down
-RUN lerna exec -- npm prune --production
-# restore inter-package symlinks removed by npm prune
-RUN npx lerna link
+RUN npm set unsafe-perm true && \
+	# explicitly use npm v6
+	npm install -g npm@6 && \
+	npm ci && \
+	npm run bootstrap && \
+	# image contains all packages, remove devDeps to keep image size down
+	npx lerna exec -- npm prune --production && \
+	# restore inter-package symlinks removed by npm prune
+	npx lerna link
 
 FROM node:16-buster-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
