@@ -426,7 +426,7 @@ export class StreamRegistry implements Context {
     private static buildGetStreamPublishersQuery(streamId: string): string {
         const query = `{
             stream (id: "${streamId}") {
-                permissions (first:1000) (where: {publishExpiration_gt: "${Date.now()}"}) {
+                permissions (first:1000, where: {publishExpiration_gt: "${Date.now()}"}) {
                     userAddress,
                 }
             }
@@ -437,7 +437,7 @@ export class StreamRegistry implements Context {
     private static buildIsPublisherQuery(streamId: string, userAddess: EthereumAddress): string {
         const query = `{
             stream (id: "${streamId}") {
-                permissions (first:1000) (where: {userAddress: "${userAddess}", publishExpiration_gt: "${Date.now()}"}) {
+                permissions (first:1000, where: {userAddress: "${userAddess}", publishExpiration_gt: "${Date.now()}"}) {
                     id,
                 }
             }
@@ -448,7 +448,7 @@ export class StreamRegistry implements Context {
     private static buildGetStreamSubscribersQuery(streamId: string): string {
         const query = `{
             stream (id: "${streamId}") {
-                permissions (first:1000) (where: {subscribeExpiration_gt: "${Date.now()}"}) {
+                permissions (first:1000, where: {subscribeExpiration_gt: "${Date.now()}"}) {
                     userAddress,
                 }
             }
@@ -459,7 +459,7 @@ export class StreamRegistry implements Context {
     private static buildIsSubscriberQuery(streamId: string, userAddess: EthereumAddress): string {
         const query = `{
             stream (id: "${streamId}") {
-                permissions (first:1000) (where: {userAddress: "${userAddess}", subscribeExpiration_gt: "${Date.now()}"}) {
+                permissions (first:1000, where: {userAddress: "${userAddess}", subscribeExpiration_gt: "${Date.now()}"}) {
                     id
                 }
             }

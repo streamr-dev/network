@@ -5,6 +5,9 @@ import { STREAMR_DOCKER_DEV_HOST, createTestStream } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
 import { StreamrClient } from 'streamr-client'
+
+jest.setTimeout(30000)
+
 const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
 
 const { TimeUuid } = cassandraTypes

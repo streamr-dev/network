@@ -20,7 +20,7 @@ const debug = Debug('StreamrClient::test')
 const TIMEOUT = 60 * 1000
 const NUM_MESSAGES = 5
 
-jest.setTimeout(120000)
+jest.setTimeout(30000)
 
 describeRepeats('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -131,7 +131,7 @@ describeRepeats('decryption', () => {
 
         describe('subscriber has permissions', () => {
             beforeEach(async () => {
-                await grantSubscriberPermissions()
+                // await grantSubscriberPermissions()
             })
 
             it('client.subscribe can decrypt encrypted messages if it knows the group key', async () => {
