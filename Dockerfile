@@ -6,13 +6,13 @@ RUN npm set loglevel verbose
 # explicitly use npm v6
 RUN npm install -g npm@6
 RUN npm ci
-RUN npm run bootstrap-pkg -- @streamr/dev-config
-RUN npm run bootstrap-pkg -- streamr-test-utils
-RUN npm run bootstrap-pkg -- streamr-client-protocol
-RUN npm run bootstrap-pkg -- streamr-network
-RUN npm run bootstrap-pkg -- streamr-client
-RUN npm run bootstrap-pkg -- @streamr/cli-tools
-RUN npx lerna bootstrap --scope streamr-broker
+RUN npm run bootstrap-pkg @streamr/dev-config
+RUN npm run bootstrap-pkg streamr-test-utils
+RUN npm run bootstrap-pkg streamr-client-protocol
+RUN npm run bootstrap-pkg streamr-network
+RUN npm run bootstrap-pkg streamr-client
+RUN npm run bootstrap-pkg @streamr/cli-tools
+RUN npm run bootstrap
 # image contains all packages, remove devDeps to keep image size down
 RUN lerna exec -- npm prune --production
 # restore inter-package symlinks removed by npm prune
