@@ -701,7 +701,7 @@ describe('OrderedMsgChain', () => {
 
                 expect(received)
                 done(new Error('Was expecting to receive messages ordered per timestamp but instead received timestamps in this '
-                // eslint-disable-next-line max-len
+                    // eslint-disable-next-line max-len
                     + `order:\n${receivedTimestamps}.\nThe unordered messages were processed in the following timestamp order:\n${timestamps}`))
                 return
             }
