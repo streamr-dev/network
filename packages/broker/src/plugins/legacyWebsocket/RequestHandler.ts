@@ -27,7 +27,7 @@ export class RequestHandler {
 
     streamFetcher: StreamFetcher
     publisher: Publisher
-    streams: StreamStateManager
+    streams: StreamStateManager<Connection>
     subscriptionManager: SubscriptionManager
     metrics: Metrics
     storageNodeRegistry: StorageNodeRegistry
@@ -37,7 +37,7 @@ export class RequestHandler {
     constructor(   
         streamFetcher: StreamFetcher,
         publisher: Publisher,
-        streams: StreamStateManager,
+        streams: StreamStateManager<Connection>,
         subscriptionManager: SubscriptionManager,
         metrics: Metrics,
         storageNodeRegistry: StorageNodeRegistry,

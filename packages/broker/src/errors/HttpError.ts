@@ -16,7 +16,7 @@ export class HttpError extends Error {
         this.url = url
     }
 
-    toString() {
+    toString(): string {
         return `HttpError ${this.method} ${this.url} responded with ${this.code}`
     }
 }

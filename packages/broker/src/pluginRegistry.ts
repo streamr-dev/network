@@ -1,4 +1,4 @@
-import { PluginOptions } from './Plugin'
+import { Plugin, PluginOptions } from './Plugin'
 import { PublishHttpPlugin } from './plugins/publishHttp/PublishHttpPlugin'
 import { PublishHttpPlugin as LegacyPublishHttpPlugin } from './plugins/legacyPublishHttp/PublishHttpPlugin'
 import { MetricsPlugin } from './plugins/metrics/MetricsPlugin'
@@ -9,7 +9,7 @@ import { MqttPlugin as LegacyMqttPlugin } from './plugins/legacyMqtt/MqttPlugin'
 import { StoragePlugin } from './plugins/storage/StoragePlugin'
 import { TestnetMinerPlugin } from './plugins/testnetMiner/TestnetMinerPlugin'
 
-export const createPlugin = (name: string, pluginOptions: PluginOptions) => {
+export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any>|never => {
     switch (name) {
         case 'publishHttp':
             return new PublishHttpPlugin(pluginOptions)

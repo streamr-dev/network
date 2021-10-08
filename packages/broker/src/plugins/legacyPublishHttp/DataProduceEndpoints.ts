@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Router } from 'express'
 import bodyParser from 'body-parser'
 import { Protocol } from 'streamr-network'
 import { Logger } from 'streamr-network'
@@ -19,7 +19,7 @@ const { InvalidJsonError, ValidationError } = Protocol.Errors
 /**
  * Endpoint for POSTing data to streams
  */
-export const router = (streamFetcher: StreamFetcher, publisher: Publisher, partitionFn = partition) => {
+export const router = (streamFetcher: StreamFetcher, publisher: Publisher, partitionFn = partition): Router => {
     if (!streamFetcher) {
         throw new Error('No StreamFetcher given! Must use: new StreamrDataApi(streamrUrl)')
     }
