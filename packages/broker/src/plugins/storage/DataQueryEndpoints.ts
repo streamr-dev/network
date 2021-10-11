@@ -130,7 +130,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
             }
         },
         // authentication
-        authenticator(streamFetcher, StreamOperation.STREAM_SUBSCRIBE),
+        authenticator(streamFetcher, StreamOperation.STREAM_SUBSCRIBE, null),
     )
 
     createEndpointRoute('last', router, metrics, (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {

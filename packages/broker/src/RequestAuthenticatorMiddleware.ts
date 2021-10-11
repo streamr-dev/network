@@ -2,14 +2,15 @@ import { Todo } from './types'
 import { HttpError } from './errors/HttpError'
 import { Logger } from 'streamr-network'
 import { StreamFetcher } from './StreamFetcher'
-import { StreamOperation } from 'streamr-client'
+import { EthereumAddress, StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 
 /**
  * Middleware used to authenticate REST API requests
  */
-export const authenticator = (streamFetcher: StreamFetcher, permission = StreamOperation.STREAM_SUBSCRIBE) => (req: Todo, res: Todo, next: Todo) => {
+export const authenticator = (streamFetcher: StreamFetcher, permission = StreamOperation.STREAM_SUBSCRIBE,
+    user: EthereumAddress | null) => (req: Todo, res: Todo, next: Todo) => {
 
     // Try to parse authorization header if defined
     if (req.headers.authorization !== undefined) {
@@ -25,7 +26,7 @@ export const authenticator = (streamFetcher: StreamFetcher, permission = StreamO
         }
     }
 
-    streamFetcher.authenticate(req.params.id, permission)
+    streamFetcher.authenticate(req.params.id, permission, user)
         .then((streamJson: Todo) => {
             req.stream = streamJson
             next()

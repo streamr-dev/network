@@ -184,9 +184,10 @@ export class MqttServer extends EventEmitter {
         const { topic, payload, qos } = packet
 
         try {
-            const streamObj = await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_PUBLISH)
-
             // No way to define partition over MQTT, so choose a random partition
+            // const streamObj = await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_PUBLISH, )
+            const streamObj = await this.streamFetcher.fetch(topic)
+
             const streamPartition = this.partitionFn(streamObj.partitions)
 
             const textPayload = payload.toString()
@@ -195,6 +196,7 @@ export class MqttServer extends EventEmitter {
                 messageId: new MessageID(streamObj.id, streamPartition, Date.now(), sequenceNumber, connection.id, connection.id),
                 content: mqttPayloadToObject(textPayload),
             })
+            await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_PUBLISH, streamMessage.getPublisherId())
 
             await this.publisher.validateAndPublish(streamMessage)
 
@@ -232,7 +234,8 @@ export class MqttServer extends EventEmitter {
         const { topic } = packet.subscriptions[0]
 
         try {
-            const streamObj = await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_SUBSCRIBE)
+            // const streamObj = await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_SUBSCRIBE)
+            const streamObj = await this.streamFetcher.fetch(topic)
             const newOrExistingStream = this.streams.getOrCreate(streamObj.id, 0, streamObj.name)
 
             // Subscribe now if the stream is not already subscribed or subscribing

@@ -1,10 +1,7 @@
 import memoize from 'memoizee'
-import { Logger } from 'streamr-network'
 // TODO do all REST operations to E&E via StreamrClient
-import StreamrClient, { StreamOperation } from 'streamr-client'
+import StreamrClient, { EthereumAddress, StreamOperation } from 'streamr-client'
 import { Todo } from './types'
-
-const logger = new Logger(module)
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes
@@ -32,8 +29,9 @@ export class StreamFetcher {
         this.client = client
     }
 
-    private async _authenticate(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE): Promise<Todo>  {
-        await this.checkPermission(streamId, operation)
+    private async _authenticate(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE,
+        user: EthereumAddress | null): Promise<Todo>  {
+        await this.checkPermission(streamId, operation, user)
         return this.fetch(streamId)
     }
 
@@ -61,10 +59,19 @@ export class StreamFetcher {
      * @returns {Promise}
      * @private
      */
-    private async _checkPermission(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE): Promise<boolean> {
+    private async _checkPermission(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE,
+        user: EthereumAddress | null): Promise<boolean> {
+        if (user === null) {
+            user = await this.client.getAddress()
+        }
         if (streamId == null) {
             throw new Error('_checkPermission: streamId can not be null!')
         }
-        return (await this.client.getStream(streamId)).hasPermission(operation, await this.client.getAddress())
+        const result = await (await this.client.getStream(streamId)).hasPermission(operation, user)
+        if (result) {
+            return result
+        } else {
+            throw new Error(`unauthorized: user ${user} does not have permission ${operation.toString()} on stream ${streamId}`)
+        }
     }
 }

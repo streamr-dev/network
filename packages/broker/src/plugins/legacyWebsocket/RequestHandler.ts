@@ -96,7 +96,8 @@ export class RequestHandler {
             // This can be removed when support for unsigned messages is dropped!
             if (!streamMessage.signature) {
                 // checkPermission is cached
-                await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(), StreamOperation.STREAM_PUBLISH)
+                await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(),
+                    StreamOperation.STREAM_PUBLISH, null)
             }
 
             await this.publisher.validateAndPublish(streamMessage)
@@ -345,7 +346,7 @@ export class RequestHandler {
                 throw new Error(`Key exchange streams only have partition 0. Tried to subscribe to ${request.streamId}:${request.streamPartition}`)
             }
         } else {
-            await this.streamFetcher.checkPermission(request.streamId, StreamOperation.STREAM_SUBSCRIBE)
+            await this.streamFetcher.checkPermission(request.streamId, StreamOperation.STREAM_SUBSCRIBE, null)
         }
     }
 

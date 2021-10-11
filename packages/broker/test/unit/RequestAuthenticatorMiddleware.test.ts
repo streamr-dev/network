@@ -3,6 +3,7 @@ import assert from 'assert'
 import sinon from 'sinon'
 import { authenticator } from '../../src/RequestAuthenticatorMiddleware'
 import { HttpError } from '../../src/errors/HttpError'
+import { StreamOperation } from 'streamr-client'
 
 describe('AuthenticationMiddleware', () => {
     let request: Todo
@@ -25,7 +26,7 @@ describe('AuthenticationMiddleware', () => {
         response.status.returns(response)
         next = sinon.spy()
         streamFetcherStub = {}
-        middlewareInstance = authenticator(streamFetcherStub)
+        middlewareInstance = authenticator(streamFetcherStub, StreamOperation.STREAM_SUBSCRIBE, 'fakeaddress')
     })
 
     // to get stream no session is needed any more, streamFetcher is getting streams from chain

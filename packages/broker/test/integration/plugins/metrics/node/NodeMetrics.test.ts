@@ -17,19 +17,19 @@ describe('NodeMetrics', () => {
     let client2: StreamrClient
 
     beforeAll(async () => {
-        const tmpAccount = Wallet.createRandom()
-        const storageNodeAccount = Wallet.createRandom()
-        const storageNodeRegistry = [{
-            address: storageNodeAccount.address,
-            url: `http://127.0.0.1:${httpPort}`
-        }]
+        const tmpAccount = new Wallet('0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0')
+        const storageNodeAccount = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
+        const storageNodeRegistry = {
+            contractAddress: storageNodeAccount.address,
+            jsonRpcProvider: `http://127.0.0.1:${httpPort}`
+        }
         nodeAddress = tmpAccount.address
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
             id: 'tracker-1'
         })
-        client1 = createClient(tracker, Wallet.createRandom().privateKey, {
+        client1 = createClient(tracker, '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', {
             storageNodeRegistry: storageNodeRegistry,
         })
         client2 = createClient(tracker, tmpAccount.privateKey, {
@@ -56,7 +56,7 @@ describe('NodeMetrics', () => {
                     nodeMetrics: {
                         client: {
                             wsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
-                            httpUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+                            httpUrl: `http://127.0.0.1:${httpPort}/api/v1`,
                         },
                         storageNode: storageNodeAccount.address
                     }

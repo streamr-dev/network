@@ -38,7 +38,7 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
             type() { return true },
         }),
         // Check write permission using middleware, writes req.stream
-        authenticator(streamFetcher, StreamOperation.STREAM_PUBLISH),
+        authenticator(streamFetcher, StreamOperation.STREAM_PUBLISH, null),
         // Produce request handler
         async (req: Todo, res: Todo) => {
             // Validate body
