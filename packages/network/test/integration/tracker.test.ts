@@ -47,8 +47,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     it('has id & peerInfo', async () => {
         expect(tracker.getTrackerId()).toEqual(tracker.peerInfo.peerId)
-        expect(tracker.peerInfo.isTracker()).toBeTrue()
-        expect(tracker.peerInfo.isNode()).toBeFalse()
+        expect(tracker.peerInfo.isTracker()).toEqual(true)
+        expect(tracker.peerInfo.isNode()).toEqual(false)
     })
 
     it('should be able to start two nodes, receive statuses, subscribe to streams', async () => {

@@ -23,8 +23,8 @@ describe('NetworkNode', () => {
 
     it('has id & peerInfo', () => {
         expect(node.getNodeId()).toEqual(node.peerInfo.peerId)
-        expect(node.peerInfo.isNode()).toBeTrue()
-        expect(node.peerInfo.isTracker()).toBeFalse()
+        expect(node.peerInfo.isNode()).toEqual(true)
+        expect(node.peerInfo.isTracker()).toEqual(false)
     })
 
     afterEach(async () => {
