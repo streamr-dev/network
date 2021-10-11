@@ -38,7 +38,10 @@ const createAuthenticatorMiddleware = (apiAuthenticator: ApiAuthenticator) => {
 
 export const startServer = async (routers: express.Router[], config: HttpServerConfig, apiAuthenticator: ApiAuthenticator): Promise<HttpServer|https.Server> => {
     const app = express()
-    app.use(cors())
+    app.use(cors({
+        origin: true, // Access-Control-Allow-Origin: request origin. The default '*' is invalid if credentials included.
+        credentials: true // Access-Control-Allow-Credentials: true
+    }))
     app.use(createAuthenticatorMiddleware(apiAuthenticator))
     routers.forEach((router) => app.use(router))
     let serverFactory: { listen: (port: number) => HttpServer|HttpsServer }
