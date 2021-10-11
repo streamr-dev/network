@@ -102,7 +102,6 @@ jobs:
         run: npm run test-exports
 
   browser-realtime:
-    if: ${{ false }}
     name: Test Browser Realtime using Node ${{ matrix.node-version }}
     strategy:
       matrix:
@@ -145,7 +144,6 @@ jobs:
           command: cd packages/client && npm run test-browser-realtime
 
   browser-resend:
-    if: ${{ false }}
     name: Test Browser Realtime + Resend using Node ${{ matrix.node-version }}
     strategy:
       matrix:
