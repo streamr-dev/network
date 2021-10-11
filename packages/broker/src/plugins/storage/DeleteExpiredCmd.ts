@@ -35,7 +35,7 @@ interface Options {
     cassandraHosts: string[],
     cassandraDatacenter: string,
     cassandraKeyspace: string,
-    bucketLimit: number,
+    bucketLimit?: number,
     dryRun?: boolean
 }
 
