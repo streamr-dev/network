@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import './utils/PatchTsyringe'
 import { container as rootContainer, DependencyContainer, inject } from 'tsyringe'
 
+import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
@@ -13,7 +14,6 @@ import Subscriber from './Subscriber'
 import Resends from './Resends'
 import ResendSubscribe from './ResendSubscribe'
 import BrubeckNode from './BrubeckNode'
-import Ethereum from './Ethereum'
 import Session from './Session'
 import { DestroySignal } from './DestroySignal'
 import { StreamEndpoints } from './StreamEndpoints'
@@ -128,6 +128,14 @@ class StreamrClientBase implements Context {
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
     })
+
+    enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
+        Debug.enable(prefix)
+    }
+
+    disableDebugLogging() { // eslint-disable-line class-methods-use-this
+        Debug.disable()
+    }
 }
 
 /**
@@ -139,6 +147,11 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
+    // @ts-expect-error not in types
+    if (!debug.inspectOpts) {
+        // @ts-expect-error not in types
+        debug.inspectOpts = {}
+    }
     // @ts-expect-error not in types
     Object.assign(debug.inspectOpts, {
         // @ts-expect-error not in types

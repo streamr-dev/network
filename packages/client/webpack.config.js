@@ -4,6 +4,7 @@
 process.env.NODE_ENV = process.env.NODE_ENV || 'development' // set a default NODE_ENV
 
 const path = require('path')
+const fs = require('fs')
 
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
@@ -11,6 +12,7 @@ const LodashWebpackPlugin = require('lodash-webpack-plugin')
 const { merge } = require('webpack-merge')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const { GitRevisionPlugin } = require('git-revision-webpack-plugin')
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
 const pkg = require('./package.json')
 
@@ -25,7 +27,7 @@ module.exports = (env, argv) => {
 
     const commonConfig = {
         mode: isProduction ? 'production' : 'development',
-        entry: path.join(__dirname, 'src', 'StreamrClient.ts'),
+        entry: path.join(__dirname, 'src', 'index-browser.ts'),
         devtool: 'source-map',
         output: {
             umdNamedDefine: true,
@@ -74,7 +76,7 @@ module.exports = (env, argv) => {
         name: 'browser-lib',
         target: 'web',
         output: {
-            libraryTarget: 'umd2',
+            libraryTarget: 'umd',
             filename: libraryName + '.web.js',
             library: 'StreamrClient',
             // NOTE:
@@ -89,7 +91,7 @@ module.exports = (env, argv) => {
             // `window.StreamrClient = { default: StreamrClient, … }`
             // which is wrong for browser builds.
             // see: https://github.com/webpack/webpack/issues/706#issuecomment-438007763
-            libraryExport: 'StreamrClient', // This fixes the above.
+            //libraryExport: 'StreamrClient', // This fixes the above.
             globalObject: 'globalThis',
         },
         resolve: {
@@ -105,15 +107,33 @@ module.exports = (env, argv) => {
                 buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
                 'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
-                'streamr-client-protocol/contracts/NodeRegistry.json': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/contracts/NodeRegistry.json'),
+                'streamr-client-protocol/dist/contracts/NodeRegistry.json': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/contracts/NodeRegistry.json'),
                 'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/src'),
+                //'streamr-network': path.resolve(__dirname, 'node_modules/streamr-network/src/browser.ts'),
+                //[path.resolve(__dirname, 'node_modules/streamr-network/src/connection/NodeWebRtcConnection.ts')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/BrowserWebRtcConnection.ts'),
+                //[path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/NodeClientWsEndpoint.ts')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
+                //[path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/NodeClientWsConnection.ts')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
+                'streamr-network': path.join(__dirname, '../network/src/browser.ts'),
+                [path.join(__dirname, '../network/src/connection/NodeWebRtcConnection.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/BrowserWebRtcConnection.ts'),
+                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
+                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
+                [path.join(__dirname, '../network/src/helpers/logger/LoggerNode.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/helpers/logger/LoggerBrowser.ts'),
                 // swap out ServerPersistentStore for BrowserPersistentStore
                 [path.resolve(__dirname, 'src/encryption/ServerPersistentStore')]: (
                     path.resolve(__dirname, 'src/encryption/BrowserPersistentStore')
                 ),
+            },
+            fallback: {
+                'module': false,
+                'net': false,
+                'http': false,
+                'https': false,
+                'express': false,
+                'ws': false,
             }
         },
         plugins: [
+            new NodePolyfillPlugin(),
             new LodashWebpackPlugin(),
             new webpack.ProvidePlugin({
                 process: 'process/browser',

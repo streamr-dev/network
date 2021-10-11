@@ -10,8 +10,6 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 
-const uid = process.pid != null ? `p${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
-
 /**
  * Wrap a network node.
  * Lazily creates & starts node on first call to getNode().
@@ -32,7 +30,7 @@ export default class BrubeckNode implements Context {
         @inject(Config.Network) options: NetworkNodeOptions
     ) {
         this.options = options
-        this.id = instanceId(this, uid)
+        this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         destroySignal.onDestroy(this.destroy)
     }
