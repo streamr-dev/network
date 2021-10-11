@@ -82,7 +82,7 @@ export class DeleteExpiredCmd {
         logger.info('Found %d potentially expired buckets', potentialBuckets.length)
 
         const cutPotentialBuckets = potentialBuckets.slice(0, this.bucketLimit)
-        logger.info('Left with %d potentially expired buckets fater cutting', cutPotentialBuckets.length)
+        logger.info('Left with %d potentially expired buckets after cutting', cutPotentialBuckets.length)
 
         const expiredBuckets = await this._filterExpiredBuckets(cutPotentialBuckets)
         logger.info('Found %d expired buckets (total records %d and size %d MB)',
