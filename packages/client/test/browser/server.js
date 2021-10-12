@@ -11,4 +11,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'browser.html'))
 })
 
-app.listen(8880)
+const server = app.listen(8880, () => {
+    console.info('Listening: ', server.address())
+})
