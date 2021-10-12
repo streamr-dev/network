@@ -55,8 +55,8 @@ export class StorageConfig {
     clusterSize: number
     myIndexInCluster: number
     apiUrl: string
-    private _poller!: ReturnType<typeof setTimeout>
-    private _stopPoller: boolean
+    private poller!: ReturnType<typeof setTimeout>
+    private stopPoller: boolean
 
     // use createInstance method instead: it fetches the up-to-date config from API
     constructor(clusterId: string, clusterSize: number, myIndexInCluster: number, apiUrl: string) {
@@ -66,20 +66,20 @@ export class StorageConfig {
         this.clusterSize = clusterSize
         this.myIndexInCluster = myIndexInCluster
         this.apiUrl = apiUrl
-        this._stopPoller = false
+        this.stopPoller = false
     }
 
     static async createInstance(clusterId: string, clusterSize: number, myIndexInCluster: number, apiUrl: string, pollInterval: number): Promise<StorageConfig> {
         const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, apiUrl)
         // eslint-disable-next-line no-underscore-dangle
         if (pollInterval !== 0) {
-            await instance._poll(pollInterval)
+            await instance.poll(pollInterval)
         }
         return instance
     }
 
-    private async _poll(pollInterval: number): Promise<void> {
-        if (this._stopPoller) { return }
+    private async poll(pollInterval: number): Promise<void> {
+        if (this.stopPoller) { return }
 
         try {
             await this.refresh()
@@ -87,11 +87,11 @@ export class StorageConfig {
             logger.warn(`Unable to refresh storage config: ${err}`)
         }
 
-        if (this._stopPoller) { return }
+        if (this.stopPoller) { return }
 
-        clearTimeout(this._poller)
+        clearTimeout(this.poller)
         // eslint-disable-next-line require-atomic-updates
-        this._poller = setTimeout(() => this._poll(pollInterval), pollInterval)
+        this.poller = setTimeout(() => this.poll(pollInterval), pollInterval)
     }
 
     hasStream(stream: StreamPart): boolean {
@@ -122,24 +122,24 @@ export class StorageConfig {
                 ...getKeysFromStream(stream.id, stream.partitions)
             ])).filter ((key: StreamKey) => this.belongsToMeInCluster(key))
         )
-        this._setStreams(streamKeys)
+        this.setStreams(streamKeys)
     }
 
-    private _setStreams(newKeys: Set<StreamKey>): void {
+    private setStreams(newKeys: Set<StreamKey>): void {
         const oldKeys = this.streamKeys
         const added = new Set([...newKeys].filter((x) => !oldKeys.has(x)))
         const removed = new Set([...oldKeys].filter((x) => !newKeys.has(x)))
 
         if (added.size > 0) {
-            this._addStreams(added)
+            this.addStreams(added)
         }
 
         if (removed.size > 0) {
-            this._removeStreams(removed)
+            this.removeStreams(removed)
         }
     }
 
-    private _addStreams(keysToAdd: Set<StreamKey>): void {
+    private addStreams(keysToAdd: Set<StreamKey>): void {
         logger.info('Add %d streams to storage config: %s', keysToAdd.size, Array.from(keysToAdd).join(','))
         this.streamKeys = new Set([...this.streamKeys, ...keysToAdd])
         this.listeners.forEach((listener) => {
@@ -147,7 +147,7 @@ export class StorageConfig {
         })
     }
 
-    private _removeStreams(keysToRemove: Set<StreamKey>): void {
+    private removeStreams(keysToRemove: Set<StreamKey>): void {
         logger.info('Remove %d streams from storage config: %s', keysToRemove.size, Array.from(keysToRemove).join(','))
         this.streamKeys = new Set([...this.streamKeys].filter((x) => !keysToRemove.has(x)))
         this.listeners.forEach((listener) => {
@@ -167,9 +167,9 @@ export class StorageConfig {
                 const content = msg.getParsedContent() as any
                 const keys = new Set(getKeysFromStream(content.stream.id, content.stream.partitions))
                 if (content.event === 'STREAM_ADDED') {
-                    this._addStreams(keys)
+                    this.addStreams(keys)
                 } else if (content.event === 'STREAM_REMOVED') {
-                    this._removeStreams(keys)
+                    this.removeStreams(keys)
                 }
             }
         }
@@ -189,9 +189,9 @@ export class StorageConfig {
             logger.trace('Adding %d of %d partitions in stream %s to this instance', keys.size, content.stream.partitions, content.stream.id)
 
             if (content.event === 'STREAM_ADDED') {
-                this._addStreams(keys)
+                this.addStreams(keys)
             } else if (content.event === 'STREAM_REMOVED') {
-                this._removeStreams(keys)
+                this.removeStreams(keys)
             }
         } else if (!content.storageNode) {
             logger.error('Received storage assignment message with no storageNode field present: %o', content)
@@ -211,7 +211,7 @@ export class StorageConfig {
     }
 
     cleanup(): void {
-        this._stopPoller = true
-        clearTimeout(this._poller)
+        this.stopPoller = true
+        clearTimeout(this.poller)
     }
 }

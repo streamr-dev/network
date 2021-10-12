@@ -134,7 +134,7 @@ export class RequestHandler {
     }
 
     private async resend(connection: Connection, request: ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
-        await this._validateSubscribeOrResendRequest(request)
+        await this.validateSubscribeOrResendRequest(request)
         let streamingStorageData
         try {
             const response = await createHistoricalDataResponse(request, this.storageNodeRegistry)
@@ -230,7 +230,7 @@ export class RequestHandler {
 
     private async subscribe(connection: Connection, request: SubscribeRequest) {
         try {
-            await this._validateSubscribeOrResendRequest(request)
+            await this.validateSubscribeOrResendRequest(request)
 
             if (connection.isDead()) {
                 return
@@ -342,7 +342,7 @@ export class RequestHandler {
         }
     }
 
-    private async _validateSubscribeOrResendRequest(request: SubscribeRequest|ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
+    private async validateSubscribeOrResendRequest(request: SubscribeRequest|ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
         if (Utils.StreamMessageValidator.isKeyExchangeStream(request.streamId)) {
             if (request.streamPartition !== 0) {
                 throw new Error(`Key exchange streams only have partition 0. Tried to subscribe to ${request.streamId}:${request.streamPartition}`)

@@ -8,14 +8,8 @@ function getStreamLookupKey(streamId: string, streamPartition: number) {
 }
 
 export class StreamStateManager<C> {
-
-    _streams: Record<string,Stream<C>>
-    _timeouts: Record<string,NodeJS.Timeout>
-
-    constructor() {
-        this._streams = {}
-        this._timeouts = {}
-    }
+    private streams: Record<string,Stream<C>> = {}
+    private timeouts: Record<string,NodeJS.Timeout> = {}
 
     getOrCreate(streamId: string, streamPartition: number, name = ''): Stream<C> {
         const stream = this.get(streamId, streamPartition)
@@ -26,13 +20,13 @@ export class StreamStateManager<C> {
     }
 
     get(streamId: string, streamPartition: number): Stream<C> {
-        return this._streams[getStreamLookupKey(streamId, streamPartition)]
+        return this.streams[getStreamLookupKey(streamId, streamPartition)]
     }
 
     getByName(name: string): Stream<C>|null {
-        const streamId = Object.keys(this._streams)
-            .find((key) => { return this._streams[key].getName() === name })
-        return streamId ? this._streams[streamId] : null
+        const streamId = Object.keys(this.streams)
+            .find((key) => { return this.streams[key].getName() === name })
+        return streamId ? this.streams[streamId] : null
     }
 
     /**
@@ -44,12 +38,12 @@ export class StreamStateManager<C> {
         }
 
         const key = getStreamLookupKey(streamId, streamPartition)
-        if (this._streams[key]) {
+        if (this.streams[key]) {
             throw new Error(`stream already exists for ${key}`)
         }
 
         const stream = new Stream<C>(streamId, streamPartition, name)
-        this._streams[key] = stream
+        this.streams[key] = stream
 
         /*
          * In normal conditions, the Stream object is cleaned when no more
@@ -61,7 +55,7 @@ export class StreamStateManager<C> {
          * end up in subscribed state within one minute (for example, ill-behaving)
          * clients only asking for resends and never subscribing.
          */
-        this._timeouts[key] = setTimeout(() => {
+        this.timeouts[key] = setTimeout(() => {
             if (stream.state !== 'subscribed') {
                 logger.debug('Stream "%s:%d" never subscribed, cleaning..', streamId, streamPartition)
                 this.delete(streamId, streamPartition)
@@ -80,16 +74,16 @@ export class StreamStateManager<C> {
         const stream = this.get(streamId, streamPartition)
         if (stream) {
             const key = getStreamLookupKey(streamId, streamPartition)
-            clearTimeout(this._timeouts[key])
-            delete this._timeouts[key]
-            delete this._streams[key]
+            clearTimeout(this.timeouts[key])
+            delete this.timeouts[key]
+            delete this.streams[key]
         }
 
         logger.debug('Stream object "%s" deleted', stream.toString())
     }
 
     close(): void {
-        Object.values(this._timeouts).forEach((timeout) => {
+        Object.values(this.timeouts).forEach((timeout) => {
             clearTimeout(timeout)
         })
     }
