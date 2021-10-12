@@ -1,34 +1,40 @@
-import fifo from 'fifo'
+import assert from "assert"
+import { List, Item } from "linked-list"
 
-interface FifoItem<K> {
-    key: K
-    counter: number
-}
-
-interface CacheItem<V> {
+interface CacheItem<K, V> {
     value: V
-    counter: number
+    queueItem: QueueItem<K>
     expiresAt: number
 }
 
-class FifoCache<K, V> {
-    private readonly cache = new Map<K, CacheItem<V>>()
-    private readonly fifoQueue = fifo<FifoItem<K>>()
-    private readonly ttlInMs
-    private readonly maxSize
-    private readonly timeProvider: () => number
-    private counter = 0
+class QueueItem<K> extends Item {
+    readonly key: K
 
-    constructor(ttlInMs: number, maxSize: number, timeProvider = Date.now) {
+    constructor(key: K) {
+        super()
+        this.key = key
+    }
+}
+
+export class FifoCache<K, V> {
+    private readonly cache = new Map<K, CacheItem<K, V>>()
+    private readonly queue = new List<QueueItem<K>>()
+    private readonly ttlInMs: number
+    private readonly maxSize: number
+    private readonly timeProvider: () => number
+    private readonly debugMode: boolean
+
+    constructor(ttlInMs: number, maxSize: number, timeProvider = Date.now, debugMode = false) {
         if (ttlInMs < 0) {
-            throw new Error('ttlInMs cannot be < 0')
+            throw new Error(`ttlInMs (${ttlInMs}) cannot be < 0`)
         }
         if (maxSize < 0) {
-            throw new Error('maxSize cannot be < 0')
+            throw new Error(`maxSize (${maxSize}) cannot be < 0`)
         }
         this.ttlInMs = ttlInMs
         this.maxSize = maxSize
         this.timeProvider = timeProvider
+        this.debugMode = debugMode
     }
 
     set(key: K, value: V): void {
@@ -36,31 +42,32 @@ class FifoCache<K, V> {
             return
         }
         while (this.cache.size >= this.maxSize) {
-            const fifoNode = this.fifoQueue.pop()
-            if (fifoNode === null) {
+            const headOfQueue = this.queue.head
+            if (headOfQueue === null) {
                 // this should only happen if there is a bug in the implementation of this class
-                throw new Error('invariant violated: fifoQueue empty but cache has still items')
+                throw new Error('invariant violated: queue empty but cache has still items')
             }
-            const cacheItemForKey = this.cache.get(fifoNode.value.key)
-            if (cacheItemForKey !== undefined && cacheItemForKey.counter === fifoNode.value.counter) {
-                this.cache.delete(fifoNode.value.key)
-            }
+            headOfQueue.detach()
         }
 
-        const counter = this.counter++
+        this.delete(key) // delete existing entry if exists
+
+        const queueItem = this.queue.append(new QueueItem<K>(key))
         this.cache.set(key, {
             value,
-            counter,
+            queueItem,
             expiresAt: this.timeProvider() + this.ttlInMs
         })
-        this.fifoQueue.push({
-            key,
-            counter
-        })
+        this.checkInvariants()
     }
 
     delete(key: K): void {
-        this.cache.delete(key)
+        const cacheItem = this.cache.get(key)
+        if (cacheItem !== undefined) {
+            this.cache.delete(key)
+            cacheItem.queueItem.detach()
+            this.checkInvariants()
+        }
     }
 
     get(key: K): V | undefined {
@@ -69,5 +76,17 @@ class FifoCache<K, V> {
             return undefined
         }
         return cacheItem.value
+    }
+
+    checkInvariants(): void {
+        if (this.debugMode) {
+            assert(this.cache.size === this.queue.size, 'cache.size !== queue.size')
+            for (const queueItem of this.queue) {
+                const key = queueItem.key
+                assert(this.cache.has(key), `cache missing ${key} (which was found in queue)`)
+                assert(this.cache.get(key)!.queueItem == queueItem, `cache queueItem !== item from queue`)
+            }
+
+        }
     }
 }
