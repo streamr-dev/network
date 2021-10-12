@@ -1,30 +1,36 @@
 import assert from "assert"
-import { List, Item } from "linked-list"
+import Yallist from "yallist"
 
 interface CacheItem<K, V> {
     value: V
-    queueItem: QueueItem<K>
+    fifoQueueNode: Yallist.Node<K>
     expiresAt: number
 }
 
-class QueueItem<K> extends Item {
-    readonly key: K
-
-    constructor(key: K) {
-        super()
-        this.key = key
-    }
+export interface FifoCacheOptions<K> {
+    ttlInMs: number
+    maxSize: number
+    onKeyDropped?: (key: K) => void
+    timeProvider?: () => number
+    debugMode?: boolean
 }
 
 export class FifoCache<K, V> {
     private readonly cache = new Map<K, CacheItem<K, V>>()
-    private readonly queue = new List<QueueItem<K>>()
+    private readonly fifoQueue = Yallist.create<K>()
     private readonly ttlInMs: number
     private readonly maxSize: number
+    private readonly onKeyDropped: (key: K) => void
     private readonly timeProvider: () => number
     private readonly debugMode: boolean
 
-    constructor(ttlInMs: number, maxSize: number, timeProvider = Date.now, debugMode = false) {
+    constructor({
+        ttlInMs,
+        maxSize,
+        onKeyDropped = () => {},
+        timeProvider = Date.now,
+        debugMode = false
+    }: FifoCacheOptions<K>) {
         if (ttlInMs < 0) {
             throw new Error(`ttlInMs (${ttlInMs}) cannot be < 0`)
         }
@@ -33,6 +39,7 @@ export class FifoCache<K, V> {
         }
         this.ttlInMs = ttlInMs
         this.maxSize = maxSize
+        this.onKeyDropped = onKeyDropped
         this.timeProvider = timeProvider
         this.debugMode = debugMode
     }
@@ -41,23 +48,30 @@ export class FifoCache<K, V> {
         if (this.maxSize === 0) {
             return
         }
+
+        // delete an existing entry if exists
+        this.delete(key)
+
+        // make room for new entry
         while (this.cache.size >= this.maxSize) {
-            const headOfQueue = this.queue.head
-            if (headOfQueue === null) {
+            const keyToDel = this.fifoQueue.shift()
+            if (keyToDel === undefined) {
                 // this should only happen if there is a bug in the implementation of this class
                 throw new Error('invariant violated: queue empty but cache has still items')
             }
-            headOfQueue.detach()
+            this.cache.delete(keyToDel)
+            this.onKeyDropped(keyToDel)
         }
 
-        this.delete(key) // delete existing entry if exists
-
-        const queueItem = this.queue.append(new QueueItem<K>(key))
+        // add entry
+        const fifoQueueNode = Yallist.Node<K>(key)
+        this.fifoQueue.pushNode(fifoQueueNode)
         this.cache.set(key, {
             value,
-            queueItem,
+            fifoQueueNode,
             expiresAt: this.timeProvider() + this.ttlInMs
         })
+
         this.checkInvariants()
     }
 
@@ -65,7 +79,8 @@ export class FifoCache<K, V> {
         const cacheItem = this.cache.get(key)
         if (cacheItem !== undefined) {
             this.cache.delete(key)
-            cacheItem.queueItem.detach()
+            this.fifoQueue.removeNode(cacheItem.fifoQueueNode)
+            this.onKeyDropped(key)
             this.checkInvariants()
         }
     }
@@ -78,15 +93,21 @@ export class FifoCache<K, V> {
         return cacheItem.value
     }
 
-    checkInvariants(): void {
+    /**
+     * Debug method to validate that class invariants hold. Namely,
+    *      1. The size of the cache and the FIFO linked list should always be equal
+    *      2. The set of keys present in the cache and the FIFO linked list is the same.
+     */
+    private checkInvariants(): void {
         if (this.debugMode) {
-            assert(this.cache.size === this.queue.size, 'cache.size !== queue.size')
-            for (const queueItem of this.queue) {
-                const key = queueItem.key
+            assert(this.cache.size === this.fifoQueue.length, 'cache.size !== queue.size')
+            let node = this.fifoQueue.head
+            while (node !== null) {
+                const key = node.value
                 assert(this.cache.has(key), `cache missing ${key} (which was found in queue)`)
-                assert(this.cache.get(key)!.queueItem == queueItem, `cache queueItem !== item from queue`)
+                assert(this.cache.get(key)!.fifoQueueNode == node, `cache queueItem !== node from queue`)
+                node = node.next
             }
-
         }
     }
 }
