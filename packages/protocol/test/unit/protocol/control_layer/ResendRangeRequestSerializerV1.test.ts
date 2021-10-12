@@ -16,6 +16,7 @@ const message = new ResendRangeRequest({
     msgChainId: 'msgChainId',
     sessionToken: 'sessionToken',
 })
+// eslint-disable-next-line max-len
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.ResendRangeRequest, 'streamId', 0, 'requestId', [132846894, 0], [132847000, 0], 'publisherId', 'msgChainId', 'sessionToken'])
 
 describe('ResendRangeRequestSerializerV1', () => {

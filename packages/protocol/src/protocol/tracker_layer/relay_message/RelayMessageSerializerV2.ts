@@ -7,7 +7,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 2
 
 export default class RelayMessageSerializerV2 extends Serializer<RelayMessage> {
-    toArray(relayMessage: RelayMessage) {
+    toArray(relayMessage: RelayMessage): any[] {
         return [
             VERSION,
             TrackerMessage.TYPES.RelayMessage,
@@ -19,7 +19,7 @@ export default class RelayMessageSerializerV2 extends Serializer<RelayMessage> {
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): RelayMessage {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

@@ -8,7 +8,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 1
 
 export default class ResendFromRequestSerializerV1 extends Serializer<ResendFromRequest> {
-    toArray(resendFromRequest: ResendFromRequest) {
+    toArray(resendFromRequest: ResendFromRequest): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.ResendFromRequest,
@@ -22,7 +22,7 @@ export default class ResendFromRequestSerializerV1 extends Serializer<ResendFrom
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): ResendFromRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
