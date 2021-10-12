@@ -42,8 +42,7 @@ describe('DataQueryEndpoints', () => {
 
     beforeEach(() => {
         app = express()
-        // @ts-expect-error
-        storage = {}
+        storage = {} as Storage
         streamFetcher = {
             authenticate(streamId: string, sessionToken: string|undefined) {
                 return new Promise(((resolve, reject) => {
@@ -153,8 +152,7 @@ describe('DataQueryEndpoints', () => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .then(() => {
                         expect(storage.requestLast).toHaveBeenCalledTimes(1)
-                        // @ts-expect-error
-                        expect(storage.requestLast.mock.calls[0])
+                        expect((storage.requestLast as jest.Mock).mock.calls[0])
                             .toEqual(['streamId', 0, 1])
                         done()
                     })

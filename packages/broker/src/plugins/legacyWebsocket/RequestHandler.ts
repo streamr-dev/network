@@ -1,5 +1,5 @@
 import { Protocol } from 'streamr-network'
-const { ControlLayer, Utils, ControlMessageType } = Protocol
+const { ControlLayer, Utils, ControlMessageType, ErrorCode } = Protocol
 import { ArrayMultimap } from '@teppeis/multimaps'
 import { HttpError } from '../../errors/HttpError'
 import { FailedToPublishError } from '../../errors/FailedToPublishError'
@@ -84,8 +84,7 @@ export class RequestHandler {
                     version: request.version,
                     requestId: request.requestId,
                     errorMessage: `Unknown request type: ${request.type}`,
-                    // @ts-expect-error
-                    errorCode: 'INVALID_REQUEST',
+                    errorCode: ErrorCode.INVALID_REQUEST,
                 }))
                 return Promise.resolve()
         }
@@ -108,26 +107,25 @@ export class RequestHandler {
             let errorCode
             if (err instanceof HttpError && err.code === 401) {
                 errorMessage = `Authentication failed while trying to publish to stream ${streamMessage.getStreamId()}`
-                errorCode = 'AUTHENTICATION_FAILED'
+                errorCode = ErrorCode.AUTHENTICATION_FAILED
             } else if (err instanceof HttpError && err.code === 403) {
                 errorMessage = `You are not allowed to write to stream ${streamMessage.getStreamId()}`
-                errorCode = 'PERMISSION_DENIED'
+                errorCode = ErrorCode.PERMISSION_DENIED
             } else if (err instanceof HttpError && err.code === 404) {
                 errorMessage = `Stream ${streamMessage.getStreamId()} not found.`
-                errorCode = 'NOT_FOUND'
+                errorCode = ErrorCode.NOT_FOUND
             } else if (err instanceof FailedToPublishError) {
                 errorMessage = err.message
-                errorCode = 'FUTURE_TIMESTAMP'
+                errorCode = ErrorCode.FUTURE_TIMESTAMP
             } else {
                 errorMessage = `Publish request failed: ${err.message || err}`
-                errorCode = 'REQUEST_FAILED'
+                errorCode = ErrorCode.REQUEST_FAILED
             }
 
             connection.send(new ControlLayer.ErrorResponse({
                 version: request.version,
                 requestId: request.requestId,
                 errorMessage,
-                // @ts-expect-error
                 errorCode,
             }))
         }
@@ -266,23 +264,22 @@ export class RequestHandler {
             let errorCode
             if (err instanceof HttpError && err.code === 401) {
                 errorMessage = `Authentication failed while trying to subscribe to stream ${request.streamId}`
-                errorCode = 'AUTHENTICATION_FAILED'
+                errorCode = ErrorCode.AUTHENTICATION_FAILED
             } else if (err instanceof HttpError && err.code === 403) {
                 errorMessage = `You are not allowed to subscribe to stream ${request.streamId}`
-                errorCode = 'PERMISSION_DENIED'
+                errorCode = ErrorCode.PERMISSION_DENIED
             } else if (err instanceof HttpError && err.code === 404) {
                 errorMessage = `Stream ${request.streamId} not found.`
-                errorCode = 'NOT_FOUND'
+                errorCode = ErrorCode.NOT_FOUND
             } else {
                 errorMessage = `Subscribe request failed: ${err}`
-                errorCode = 'REQUEST_FAILED'
+                errorCode = ErrorCode.REQUEST_FAILED
             }
 
             connection.send(new ControlLayer.ErrorResponse({
                 version: request.version,
                 requestId: request.requestId,
                 errorMessage,
-                // @ts-expect-error
                 errorCode,
             }))
         }
@@ -335,8 +332,7 @@ export class RequestHandler {
                     version: request.version,
                     requestId: request.requestId,
                     errorMessage: `Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`,
-                    // @ts-expect-error
-                    errorCode: 'INVALID_REQUEST',
+                    errorCode: ErrorCode.INVALID_REQUEST,
                 }))
             }
         }
