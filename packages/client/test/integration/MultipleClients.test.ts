@@ -367,7 +367,7 @@ describeRepeats('PubSub with multiple clients', () => {
             checkMessages(published, receivedMessagesOther)
         }, 80000)
 
-        test('works with multiple publishers on one stream with late subscriber', async () => {
+        test('works with multiple publishers on one stream with late subscriber (resend)', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
             // the otherClient subscribes after the 3rd message hits storage
@@ -546,7 +546,7 @@ describeRepeats('PubSub with multiple clients', () => {
         })
     }, 40000)
 
-    test('works with multiple publishers on one stream with late subscriber', async () => {
+    test('works with multiple publishers on one stream with late subscriber (resend)', async () => {
         const published: Record<string, any[]> = {}
         await mainClient.session.getSessionToken()
         await mainClient.connect()
