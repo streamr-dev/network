@@ -38,7 +38,6 @@ describe('StorageNode', () => {
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [trackerInfo],
             storageNodeConfig: { registry: storageNodeRegistry }
         })
     })
