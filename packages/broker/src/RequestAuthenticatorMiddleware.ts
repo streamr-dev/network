@@ -9,8 +9,10 @@ const logger = new Logger(module)
 /**
  * Middleware used to authenticate REST API requests
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const authenticator = (streamFetcher: StreamFetcher, permission = 'stream_subscribe') => (req: Request & { stream?: Todo }, res: Response, next: NextFunction) => {
+export const authenticator = (
+    streamFetcher: StreamFetcher,
+    permission = 'stream_subscribe'
+) => (req: Request & { stream?: Todo }, res: Response, next: NextFunction): void => {
     let sessionToken
 
     // Try to parse authorization header if defined

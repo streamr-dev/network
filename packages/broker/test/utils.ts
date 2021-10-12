@@ -202,6 +202,7 @@ export const waitForStreamPersistedInStorageNode = async (
     nodeHttpPort: number
 ): Promise<void> => {
     const isPersistent = async () => {
+        // eslint-disable-next-line max-len
         const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
     }

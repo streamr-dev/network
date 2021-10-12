@@ -69,7 +69,13 @@ export class StorageConfig {
         this.stopPoller = false
     }
 
-    static async createInstance(clusterId: string, clusterSize: number, myIndexInCluster: number, apiUrl: string, pollInterval: number): Promise<StorageConfig> {
+    static async createInstance(
+        clusterId: string,
+        clusterSize: number,
+        myIndexInCluster: number,
+        apiUrl: string,
+        pollInterval: number
+    ): Promise<StorageConfig> {
         const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, apiUrl)
         // eslint-disable-next-line no-underscore-dangle
         if (pollInterval !== 0) {
@@ -200,7 +206,11 @@ export class StorageConfig {
         }
     }
 
-    stopAssignmentEventListener(messageListener: (msg: StreamMessage<AssignmentMessage>) => void, streamrAddress: string, subscriptionManager: SubscriptionManager): void {
+    stopAssignmentEventListener(
+        messageListener: (msg: StreamMessage<AssignmentMessage>) => void,
+        streamrAddress: string,
+        subscriptionManager: SubscriptionManager
+    ): void {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)

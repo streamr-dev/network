@@ -30,6 +30,7 @@ const createPlainTextFormat = (getMessageAsString: (streamMessage: Protocol.Stre
 
 const FORMATS: Record<string,Format> = {
     // TODO could we deprecate protocol format?
+    // eslint-disable-next-line max-len
     'protocol': createJsonFormat((streamMessage: Protocol.StreamMessage, version: number|undefined) => JSON.stringify(streamMessage.serialize(version))),
     'object': createJsonFormat((streamMessage: Protocol.StreamMessage) => JSON.stringify(streamMessage.toObject())),
     // the raw format message is the same string which we have we have stored to Cassandra (if the version numbers match)

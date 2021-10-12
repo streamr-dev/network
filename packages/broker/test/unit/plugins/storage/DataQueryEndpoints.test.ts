@@ -2,7 +2,11 @@ import { Protocol, MetricsContext } from 'streamr-network'
 import express from 'express'
 import request from 'supertest'
 import { toReadableStream } from 'streamr-test-utils'
-import { router as restEndpointRouter, MIN_SEQUENCE_NUMBER_VALUE, MAX_SEQUENCE_NUMBER_VALUE } from '../../../../src/plugins/storage/DataQueryEndpoints'
+import {
+    router as restEndpointRouter,
+    MIN_SEQUENCE_NUMBER_VALUE,
+    MAX_SEQUENCE_NUMBER_VALUE
+} from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { HttpError } from '../../../../src/errors/HttpError'
 import { Todo } from '../../../../src/types'
@@ -103,6 +107,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 400 and error message if publisherId+msgChainId combination is invalid in range request', async () => {
+                // eslint-disable-next-line max-len
                 const base = '/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
                 const suffixes = ['publisherId=foo', 'msgChainId=bar']
                 for (const suffix of suffixes) {

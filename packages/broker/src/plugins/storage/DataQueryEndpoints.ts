@@ -132,6 +132,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         authenticator(streamFetcher, 'stream_subscribe'),
     )
 
+    // eslint-disable-next-line max-len
     createEndpointRoute('last', router, metrics, (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
         const count = req.query.count === undefined ? 1 : parseIntIfExists(req.query.count as string)
         if (Number.isNaN(count)) {
@@ -145,6 +146,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         }
     })
 
+    // eslint-disable-next-line max-len
     createEndpointRoute('from', router, metrics, (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
@@ -164,6 +166,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         }
     })
 
+    // eslint-disable-next-line max-len
     createEndpointRoute('range', router, metrics, (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const toTimestamp = parseIntIfExists(req.query.toTimestamp)
@@ -177,6 +180,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         } else if (Number.isNaN(fromTimestamp)) {
             onError(`Query parameter "fromTimestamp" not a number: ${req.query.fromTimestamp}`)
         } else if (toTimestamp === undefined) {
+            // eslint-disable-next-line max-len
             onError('Query parameter "toTimestamp" required as well. To request all messages since a timestamp, use the endpoint /streams/:id/data/partitions/:partition/from')
         } else if (Number.isNaN(toTimestamp)) {
             onError(`Query parameter "toTimestamp" not a number: ${req.query.toTimestamp}`)
