@@ -34,12 +34,9 @@ describe('StreamManager', () => {
         ])
         expect(manager.getStreamsAsKeys()).toEqual(['stream-1::0', 'stream-1::1', 'stream-2::0'])
 
-        expect(manager.getInboundNodesForStream(new StreamIdAndPartition('stream-1', 0))).toEqual([])
-        expect(manager.getOutboundNodesForStream(new StreamIdAndPartition('stream-1', 0))).toEqual([])
-        expect(manager.getInboundNodesForStream(new StreamIdAndPartition('stream-1', 1))).toEqual([])
-        expect(manager.getOutboundNodesForStream(new StreamIdAndPartition('stream-1', 1))).toEqual([])
-        expect(manager.getInboundNodesForStream(new StreamIdAndPartition('stream-2', 0))).toEqual([])
-        expect(manager.getOutboundNodesForStream(new StreamIdAndPartition('stream-2', 0))).toEqual([])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 0))).toEqual([])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 1))).toEqual([])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-2', 0))).toEqual([])
     })
 
     test('cannot re-setup same stream', () => {
@@ -98,32 +95,26 @@ describe('StreamManager', () => {
         )).toEqual(true)
     })
 
-    test('adding inbound and outbound nodes to a set-up stream', () => {
+    test('adding neighbor nodes to a set-up stream', () => {
         const streamId = new StreamIdAndPartition('stream-id', 0)
         const streamId2 = new StreamIdAndPartition('stream-id-2', 0)
 
         manager.setUpStream(new StreamIdAndPartition('stream-id', 0))
-        manager.addInboundNode(streamId, 'node-1')
-        manager.addInboundNode(streamId, 'node-2')
-        manager.addOutboundNode(streamId, 'node-1')
-        manager.addOutboundNode(streamId, 'node-3')
+        manager.addNeighbor(streamId, 'node-1')
+        manager.addNeighbor(streamId, 'node-2')
 
         manager.setUpStream(new StreamIdAndPartition('stream-id-2', 0))
-        manager.addInboundNode(streamId2, 'node-1')
-        manager.addInboundNode(streamId2, 'node-2')
-        manager.addOutboundNode(streamId2, 'node-3')
+        manager.addNeighbor(streamId2, 'node-1')
+        manager.addNeighbor(streamId2, 'node-2')
+        manager.addNeighbor(streamId2, 'node-3')
 
-        expect(manager.getInboundNodesForStream(streamId)).toEqual(['node-1', 'node-2'])
-        expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-1', 'node-3'])
-        expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-1', 'node-3'])
-        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-1', 'node-2', 'node-3'])
+        expect(manager.getNeighborsForStream(streamId)).toEqual(['node-1', 'node-2'])
+        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-1', 'node-2'])
         expect(manager.getAllNodesForStream(streamId2)).toEqual(['node-1', 'node-2', 'node-3'])
 
-        expect(manager.hasInboundNode(streamId, 'node-1')).toEqual(true)
-        expect(manager.hasInboundNode(streamId, 'node-3')).toEqual(false)
-        expect(manager.hasOutboundNode(streamId, 'node-3')).toEqual(true)
-        expect(manager.hasOutboundNode(streamId, 'node-2')).toEqual(false)
-        expect(manager.hasOutboundNode(streamId, 'node-2')).toEqual(false)
+        expect(manager.hasNeighbor(streamId, 'node-1')).toEqual(true)
+        expect(manager.hasNeighbor(streamId, 'node-2')).toEqual(true)
+        expect(manager.hasNeighbor(streamId, 'node-3')).toEqual(false)
 
         expect(manager.isNodePresent('node-1')).toEqual(true)
         expect(manager.isNodePresent('node-2')).toEqual(true)
@@ -131,38 +122,34 @@ describe('StreamManager', () => {
         expect(manager.isNodePresent('node-not-present')).toEqual(false)
     })
 
-    test('removing node from stream removes it from both inbound and outbound nodes', () => {
+    test('removing node from stream removes it from neighbors', () => {
         const streamId = new StreamIdAndPartition('stream-id', 0)
         const streamId2 = new StreamIdAndPartition('stream-id-2', 0)
 
         manager.setUpStream(streamId)
-        manager.addInboundNode(streamId, 'node-2')
-        manager.addInboundNode(streamId, 'node-1')
-        manager.addOutboundNode(streamId, 'node-1')
-        manager.addOutboundNode(streamId, 'node-3')
+        manager.addNeighbor(streamId, 'node-1')
+        manager.addNeighbor(streamId, 'node-2')
 
         manager.setUpStream(streamId2)
-        manager.addInboundNode(streamId2, 'node-1')
-        manager.addInboundNode(streamId2, 'node-2')
-        manager.addOutboundNode(streamId2, 'node-3')
+        manager.addNeighbor(streamId2, 'node-1')
+        manager.addNeighbor(streamId2, 'node-2')
+        manager.addNeighbor(streamId2, 'node-3')
 
-        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-1', 'node-2', 'node-3'])
+        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-1', 'node-2'])
         expect(manager.getAllNodesForStream(streamId2)).toEqual(['node-1', 'node-2', 'node-3'])
 
         manager.removeNodeFromStream(streamId, 'node-1')
 
-        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-2', 'node-3'])
+        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-2'])
         expect(manager.getAllNodesForStream(streamId2)).toEqual(['node-1', 'node-2', 'node-3'])
 
         manager.removeNodeFromStream(streamId2, 'node-3')
-        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-2', 'node-3'])
+        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-2'])
         expect(manager.getAllNodesForStream(streamId2)).toEqual(['node-1', 'node-2'])
 
-        expect(manager.getInboundNodesForStream(streamId)).toEqual(['node-2'])
-        expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-3'])
+        expect(manager.getNeighborsForStream(streamId)).toEqual(['node-2'])
 
-        expect(manager.hasInboundNode(streamId, 'node-1')).toEqual(false)
-        expect(manager.hasOutboundNode(streamId, 'node-1')).toEqual(false)
+        expect(manager.hasNeighbor(streamId, 'node-1')).toEqual(false)
         expect(manager.isNodePresent('node-1')).toEqual(true)
 
         manager.removeNodeFromStream(streamId2, 'node-1')
@@ -174,30 +161,23 @@ describe('StreamManager', () => {
         manager.setUpStream(new StreamIdAndPartition('stream-1', 1))
         manager.setUpStream(new StreamIdAndPartition('stream-2', 0))
 
-        manager.addInboundNode(new StreamIdAndPartition('stream-1', 0), 'node')
-        manager.addOutboundNode(new StreamIdAndPartition('stream-1', 0), 'should-not-be-removed')
-        manager.addOutboundNode(new StreamIdAndPartition('stream-1', 0), 'node')
+        manager.addNeighbor(new StreamIdAndPartition('stream-1', 0), 'node')
+        manager.addNeighbor(new StreamIdAndPartition('stream-1', 0), 'should-not-be-removed')
 
-        manager.addInboundNode(new StreamIdAndPartition('stream-1', 1), 'node')
-        manager.addInboundNode(new StreamIdAndPartition('stream-1', 1), 'should-not-be-removed')
-        manager.addOutboundNode(new StreamIdAndPartition('stream-1', 1), 'node')
-        manager.addOutboundNode(new StreamIdAndPartition('stream-1', 1), 'should-not-be-removed')
+        manager.addNeighbor(new StreamIdAndPartition('stream-1', 1), 'node')
+        manager.addNeighbor(new StreamIdAndPartition('stream-1', 1), 'should-not-be-removed')
 
-        manager.addInboundNode(new StreamIdAndPartition('stream-2', 0), 'node')
-        manager.addInboundNode(new StreamIdAndPartition('stream-2', 0), 'should-not-be-removed')
-        manager.addOutboundNode(new StreamIdAndPartition('stream-2', 0), 'node')
+        manager.addNeighbor(new StreamIdAndPartition('stream-2', 0), 'node')
+        manager.addNeighbor(new StreamIdAndPartition('stream-2', 0), 'should-not-be-removed')
 
         manager.removeNodeFromAllStreams('node')
 
-        expect(manager.getInboundNodesForStream(new StreamIdAndPartition('stream-1', 0))).toEqual([])
-        expect(manager.getOutboundNodesForStream(new StreamIdAndPartition('stream-1', 0))).toEqual(['should-not-be-removed'])
-        expect(manager.getInboundNodesForStream(new StreamIdAndPartition('stream-1', 1))).toEqual(['should-not-be-removed'])
-        expect(manager.getOutboundNodesForStream(new StreamIdAndPartition('stream-1', 1))).toEqual(['should-not-be-removed'])
-        expect(manager.getInboundNodesForStream(new StreamIdAndPartition('stream-2', 0))).toEqual(['should-not-be-removed'])
-        expect(manager.getOutboundNodesForStream(new StreamIdAndPartition('stream-2', 0))).toEqual([])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 0))).toEqual(['should-not-be-removed'])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 1))).toEqual(['should-not-be-removed'])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-2', 0))).toEqual(['should-not-be-removed'])
 
-        expect(manager.hasInboundNode(new StreamIdAndPartition('stream-1', 0), 'node')).toEqual(false)
-        expect(manager.hasOutboundNode(new StreamIdAndPartition('stream-2', 0), 'node')).toEqual(false)
+        expect(manager.hasNeighbor(new StreamIdAndPartition('stream-1', 0), 'node')).toEqual(false)
+        expect(manager.hasNeighbor(new StreamIdAndPartition('stream-2', 0), 'node')).toEqual(false)
 
         expect(manager.isNodePresent('should-not-be-removed')).toEqual(true)
         expect(manager.isNodePresent('node')).toEqual(false)
@@ -207,11 +187,9 @@ describe('StreamManager', () => {
         manager.setUpStream(new StreamIdAndPartition('stream-1', 0))
         manager.setUpStream(new StreamIdAndPartition('stream-2', 0))
 
-        manager.addInboundNode(new StreamIdAndPartition('stream-1', 0), 'n1')
-        manager.addOutboundNode(new StreamIdAndPartition('stream-1', 0), 'n1')
+        manager.addNeighbor(new StreamIdAndPartition('stream-1', 0), 'n1')
 
-        manager.addInboundNode(new StreamIdAndPartition('stream-2', 0), 'n1')
-        manager.addOutboundNode(new StreamIdAndPartition('stream-2', 0), 'n1')
+        manager.addNeighbor(new StreamIdAndPartition('stream-2', 0), 'n1')
 
         manager.removeStream(new StreamIdAndPartition('stream-1', 0))
 

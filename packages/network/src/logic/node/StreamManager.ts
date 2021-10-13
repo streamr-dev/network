@@ -6,8 +6,7 @@ import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
 
 interface StreamState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
-    inboundNodes: Set<NodeId> // Nodes that I am subscribed to for messages
-    outboundNodes: Set<NodeId> // Nodes that subscribe to me for messages
+    neighbors: Set<NodeId>
     counter: number
 }
 
@@ -27,8 +26,7 @@ export class StreamManager {
         }
         this.streams.set(streamId.key(), {
             detectors: new Map(),
-            inboundNodes: new Set(),
-            outboundNodes: new Set(),
+            neighbors: new Set(),
             counter: 0
         })
     }
@@ -58,23 +56,16 @@ export class StreamManager {
         this.streams.get(streamId.key())!.counter = counter
     }
 
-    addInboundNode(streamId: StreamIdAndPartition, node: NodeId): void {
+    addNeighbor(streamId: StreamIdAndPartition, node: NodeId): void {
         this.verifyThatIsSetUp(streamId)
-        const { inboundNodes } = this.streams.get(streamId.key())!
-        inboundNodes.add(node)
-    }
-
-    addOutboundNode(streamId: StreamIdAndPartition, node: NodeId): void {
-        this.verifyThatIsSetUp(streamId)
-        const { outboundNodes } = this.streams.get(streamId.key())!
-        outboundNodes.add(node)
+        const { neighbors } = this.streams.get(streamId.key())!
+        neighbors.add(node)
     }
 
     removeNodeFromStream(streamId: StreamIdAndPartition, node: NodeId): void {
         this.verifyThatIsSetUp(streamId)
-        const { inboundNodes, outboundNodes } = this.streams.get(streamId.key())!
-        inboundNodes.delete(node)
-        outboundNodes.delete(node)
+        const { neighbors } = this.streams.get(streamId.key())!
+        neighbors.delete(node)
     }
 
     getStreamStatus(streamId: StreamIdAndPartition): StreamStatus {
@@ -82,15 +73,13 @@ export class StreamManager {
         if (streamState !== undefined) {
             return {
                 streamKey: streamId.key(),
-                inboundNodes: [...streamState.inboundNodes],
-                outboundNodes: [...streamState.outboundNodes],
+                neighbors: [...streamState.neighbors],
                 counter: streamState.counter
             }
         } else {
             return {
                 streamKey: streamId.key(),
-                inboundNodes: new Array<NodeId>(),
-                outboundNodes: new Array<NodeId>(),
+                neighbors: [],
                 counter: COUNTER_UNSUBSCRIBE
             }
         }
@@ -98,21 +87,21 @@ export class StreamManager {
 
     removeNodeFromAllStreams(node: NodeId): StreamIdAndPartition[] {
         const streams: StreamIdAndPartition[] = []
-        this.streams.forEach(({ inboundNodes, outboundNodes }, streamKey) => {
-            const b1 = inboundNodes.delete(node)
-            const b2 = outboundNodes.delete(node)
-            if (b1 || b2) {
+        this.streams.forEach(({ neighbors }, streamKey) => {
+            const isRemoved = neighbors.delete(node)
+            if (isRemoved) {
                 streams.push(StreamIdAndPartition.fromKey(streamKey))
             }
         })
         return streams
     }
 
+    // TODO could this method return void as callers don't read the return value?
     removeStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
         this.verifyThatIsSetUp(streamId)
-        const { inboundNodes, outboundNodes } = this.streams.get(streamId.key())!
+        const { neighbors } = this.streams.get(streamId.key())!
         this.streams.delete(streamId.key())
-        return [...new Set([...inboundNodes, ...outboundNodes])]
+        return [...new Set([...neighbors])]
     }
 
     isSetUp(streamId: StreamIdAndPartition): boolean {
@@ -120,8 +109,8 @@ export class StreamManager {
     }
 
     isNodePresent(node: NodeId): boolean {
-        return [...this.streams.values()].some(({ inboundNodes, outboundNodes }) => {
-            return inboundNodes.has(node) || outboundNodes.has(node)
+        return [...this.streams.values()].some(({ neighbors }) => {
+            return neighbors.has(node)
         })
     }
 
@@ -140,39 +129,27 @@ export class StreamManager {
         return [...this.streams.keys()].sort()
     }
 
-    getOutboundNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
+    getNeighborsForStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
         this.verifyThatIsSetUp(streamId)
-        return [...this.streams.get(streamId.key())!.outboundNodes]
+        return [...this.streams.get(streamId.key())!.neighbors]
     }
 
-    getInboundNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
-        this.verifyThatIsSetUp(streamId)
-        return [...this.streams.get(streamId.key())!.inboundNodes]
-    }
-
+    // TODO callers could use getNeighborsForStream (if sorting is not needed)
     getAllNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
-        return [...new Set([
-            ...this.getInboundNodesForStream(streamId),
-            ...this.getOutboundNodesForStream(streamId)])].sort()
+        return [...this.getNeighborsForStream(streamId)].sort()
     }
 
     getAllNodes(): ReadonlyArray<NodeId> {
         const nodes: NodeId[] = []
-        this.streams.forEach(({ inboundNodes, outboundNodes }) => {
-            nodes.push(...inboundNodes)
-            nodes.push(...outboundNodes)
+        this.streams.forEach(({ neighbors }) => {
+            nodes.push(...neighbors)
         })
         return [...new Set(nodes)]
     }
 
-    hasOutboundNode(streamId: StreamIdAndPartition, node: NodeId): boolean {
+    hasNeighbor(streamId: StreamIdAndPartition, node: NodeId): boolean {
         this.verifyThatIsSetUp(streamId)
-        return this.streams.get(streamId.key())!.outboundNodes.has(node)
-    }
-
-    hasInboundNode(streamId: StreamIdAndPartition, node: NodeId): boolean {
-        this.verifyThatIsSetUp(streamId)
-        return this.streams.get(streamId.key())!.inboundNodes.has(node)
+        return this.streams.get(streamId.key())!.neighbors.has(node)
     }
 
     private verifyThatIsSetUp(streamId: StreamIdAndPartition): void | never {
