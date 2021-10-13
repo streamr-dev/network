@@ -55,46 +55,59 @@ describe(Propagation, () => {
     describe('#onNeighborJoined', () => {
         let msg: StreamMessage
 
-        beforeEach(() => {
-            sendToNeighbor
-                .mockResolvedValueOnce(true)    // n1
-                .mockResolvedValueOnce(true)    // n3
-                .mockRejectedValueOnce(new Error('failed to send')) // n666
-            getNeighbors.mockReturnValueOnce(['n1', 'n2', 'n3', 'n666'])
+        function setUpAndFeed(neighbors: string[], neighborRejectList: string[]) {
+            getNeighbors.mockReturnValueOnce(neighbors)
+            sendToNeighbor.mockImplementation(async (neighbor: string) => {
+                if (neighborRejectList.includes(neighbor)) {
+                    throw new Error('failed to send')
+                }
+            })
             msg = makeMsg('s1', 0, 1000, 1)
             propagation.feedUnseenMessage(msg, 'n2')
             sendToNeighbor.mockClear()
             getNeighbors.mockClear()
-        })
+        }
 
         it('no-op if passed non-existing stream', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'], [])
             propagation.onNeighborJoined('n4', new StreamIdAndPartition('non-existing-stream', 0))
             expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
 
         it('no-op if passed source node', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'], [])
             propagation.onNeighborJoined('n2', new StreamIdAndPartition('s1', 0))
             expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
 
         it('no-op if passed already handled neighbor', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'], [])
             propagation.onNeighborJoined('n3', new StreamIdAndPartition('s1', 0))
             expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
 
+        it('no-op if initially `minPropagationTargets` were propagated to', () => {
+            setUpAndFeed(['n1', 'n2', 'n3', 'n4'], [])
+            propagation.onNeighborJoined('n5', new StreamIdAndPartition('s1', 0))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
+        })
+
         it('sends to new neighbor', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'], [])
             propagation.onNeighborJoined('n4', new StreamIdAndPartition('s1', 0))
             expect(sendToNeighbor).toHaveBeenCalledTimes(1)
             expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n4', msg)
         })
 
         it('sends to old neighbor if initial propagation failed', () => {
+            setUpAndFeed(['n1', 'n2', 'n3', 'n666'], ['n666'])
             propagation.onNeighborJoined('n666', new StreamIdAndPartition('s1', 0))
             expect(sendToNeighbor).toHaveBeenCalledTimes(1)
             expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n666', msg)
         })
 
         it('sends to old neighbor if re-attempt propagation failed', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'], [])
             sendToNeighbor.mockRejectedValueOnce(new Error('failed to send (again)'))
             propagation.onNeighborJoined('n666', new StreamIdAndPartition('s1', 0))
             expect(sendToNeighbor).toHaveBeenCalledTimes(1) // sanity check
