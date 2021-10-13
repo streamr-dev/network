@@ -3,6 +3,7 @@ import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector
 import { MessageLayer } from 'streamr-client-protocol'
 import { NodeId } from './Node'
 import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
+import _ from 'lodash'
 
 interface StreamState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
@@ -136,7 +137,7 @@ export class StreamManager {
         this.streams.forEach(({ neighbors }) => {
             nodes.push(...neighbors)
         })
-        return [...new Set(nodes)]
+        return _.uniq(nodes)
     }
 
     hasNeighbor(streamId: StreamIdAndPartition, node: NodeId): boolean {
