@@ -31,7 +31,7 @@
   "dependencies": {
     "commander": "^7.2.0",
     "easy-table": "^1.1.1",
-    "ethers": "^5.3.1",
+    "ethers": "^5.4.7",
     "event-stream": "^4.0.1",
     "streamr-client": "^6.0.0-alpha.11"
   },
@@ -39,12 +39,12 @@
     "@streamr/dev-config": "^1.0.0",
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/jest": "^27.0.1",
-    "@typescript-eslint/eslint-plugin": "^4.31.2",
-    "@typescript-eslint/parser": "^4.31.2",
+    "@types/jest": "^27.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
     "eslint": "^7.32.0",
     "eslint-config-streamr-ts": "^4.0.1",
     "eslint-plugin-promise": "^5.1.0",
-    "typescript": "^4.3.4"
+    "typescript": "^4.4.4"
   }
 }
