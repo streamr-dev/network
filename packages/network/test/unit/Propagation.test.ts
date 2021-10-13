@@ -30,7 +30,7 @@ describe(Propagation, () => {
     })
 
     describe('#feedUnseenMessage', () => {
-        it('message gets propagated to nodes returned by getNeighbors', () => {
+        it('message is propagated to nodes returned by getNeighbors', () => {
             getNeighbors.mockReturnValueOnce(['n1', 'n2', 'n3'])
             const msg = makeMsg('s1', 0, 1000, 1)
             propagation.feedUnseenMessage(msg, null)
@@ -57,8 +57,8 @@ describe(Propagation, () => {
 
         beforeEach(() => {
             sendToNeighbor
-                .mockResolvedValueOnce(true)                    // n1
-                .mockResolvedValueOnce(true)                    // n3
+                .mockResolvedValueOnce(true)    // n1
+                .mockResolvedValueOnce(true)    // n3
                 .mockRejectedValueOnce(new Error('failed to send')) // n666
             getNeighbors.mockReturnValueOnce(['n1', 'n2', 'n3', 'n666'])
             msg = makeMsg('s1', 0, 1000, 1)
