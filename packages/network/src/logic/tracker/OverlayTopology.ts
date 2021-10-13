@@ -50,7 +50,7 @@ export class OverlayTopology {
     }
 
     update(nodeId: NodeId, neighbors: NodeId[]): void {
-        const newNeighbors = _.uniq([...neighbors])
+        const newNeighbors = _.uniq(neighbors)
             .filter((n) => n in this.nodes)
             .filter((n) => n !== nodeId) // in case nodeId is reporting itself as neighbor
 
