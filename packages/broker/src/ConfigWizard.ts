@@ -172,6 +172,7 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
     {
         type: 'confirm',
         name: 'revealGeneratedPrivateKey',
+        // eslint-disable-next-line max-len
         message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
         default: false,
         when: (answers: inquirer.Answers): boolean => {

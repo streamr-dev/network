@@ -41,6 +41,8 @@ export interface StorageNodeConfig {
     registry: StorageNodeRegistryItem[] | NetworkSmartContract
 }
 
+export type ApiAuthenticationConfig = { keys: string[] } | null
+
 export interface Config {
     ethereumPrivateKey: string
     generateSessionId: boolean
@@ -50,7 +52,5 @@ export interface Config {
     storageNodeConfig: StorageNodeConfig,
     httpServer: HttpServerConfig
     plugins: Record<string,any>
-    apiAuthentication: {
-        keys: string[]
-    } | null
+    apiAuthentication: ApiAuthenticationConfig
 }

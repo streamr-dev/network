@@ -54,7 +54,6 @@ describe('DataMetadataEndpoints', () => {
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [trackerInfo],
             storageNodeConfig: { registry: storageNodeRegistry }
         })
         client1 = createClient(tracker, undefined, {

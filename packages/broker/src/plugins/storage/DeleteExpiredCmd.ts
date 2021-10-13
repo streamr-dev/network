@@ -74,30 +74,30 @@ export class DeleteExpiredCmd {
     }
 
     async run(): Promise<void> {
-        const streams = await this._getStreams()
+        const streams = await this.getStreams()
         logger.info(`Found ${streams.length} unique streams`)
 
-        const streamsInfo = await this._fetchStreamsInfo(streams)
-        const potentialBuckets = await this._getPotentiallyExpiredBuckets(streamsInfo)
+        const streamsInfo = await this.fetchStreamsInfo(streams)
+        const potentialBuckets = await this.getPotentiallyExpiredBuckets(streamsInfo)
         logger.info('Found %d potentially expired buckets', potentialBuckets.length)
 
         const cutPotentialBuckets = potentialBuckets.slice(0, this.bucketLimit)
         logger.info('Left with %d potentially expired buckets after cutting', cutPotentialBuckets.length)
 
-        const expiredBuckets = await this._filterExpiredBuckets(cutPotentialBuckets)
+        const expiredBuckets = await this.filterExpiredBuckets(cutPotentialBuckets)
         logger.info('Found %d expired buckets (total records %d and size %d MB)',
             expiredBuckets.length,
             totalNumOfRecords(expiredBuckets),
             totalSizeOfBuckets(expiredBuckets))
 
         if (!this.dryRun) {
-            await this._deleteExpired(expiredBuckets)
+            await this.deleteExpired(expiredBuckets)
         }
 
         await this.cassandraClient.shutdown()
     }
 
-    async _getStreams(): Promise<StreamPart[]> {
+    private async getStreams(): Promise<StreamPart[]> {
         const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
         const resultSet = await this.cassandraClient.execute(query, [], {
             fetchSize: 100000
@@ -108,7 +108,7 @@ export class DeleteExpiredCmd {
         }))
     }
 
-    async _fetchStreamsInfo(streams: StreamPart[]): Promise<(StreamPartInfo|void)[]> {
+    private async fetchStreamsInfo(streams: StreamPart[]): Promise<(StreamPartInfo|void)[]> {
         const tasks = streams.filter(Boolean).map((stream: StreamPart) => {
             return this.limit(async () => {
                 const url = `${this.streamrBaseUrl}/api/v1/streams/${encodeURIComponent(stream.streamId)}/validation`
@@ -125,7 +125,7 @@ export class DeleteExpiredCmd {
         return Promise.all(tasks)
     }
 
-    async _getPotentiallyExpiredBuckets(streamsInfo: (StreamPartInfo|void)[]): Promise<BucketInfo[]> {
+    private async getPotentiallyExpiredBuckets(streamsInfo: (StreamPartInfo|void)[]): Promise<BucketInfo[]> {
         const result: BucketInfo[] = []
 
         const query = 'SELECT * FROM bucket WHERE stream_id = ? AND partition = ? AND date_create <= ?'
@@ -161,7 +161,7 @@ export class DeleteExpiredCmd {
         return result
     }
 
-    async _filterExpiredBuckets(potentialBuckets: BucketInfo[]): Promise<BucketInfo[]> {
+    private async filterExpiredBuckets(potentialBuckets: BucketInfo[]): Promise<BucketInfo[]> {
         const result: BucketInfo[] = []
 
         const query = 'SELECT MAX(ts) AS m FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?'
@@ -189,7 +189,7 @@ export class DeleteExpiredCmd {
         return result
     }
 
-    async _deleteExpired(expiredBuckets: BucketInfo[]): Promise<void[]> {
+    private async deleteExpired(expiredBuckets: BucketInfo[]): Promise<void[]> {
         const tasks = expiredBuckets.filter(Boolean).map((stream) => {
             const { bucketId, dateCreate, streamId, partition } = stream
             const queries = [

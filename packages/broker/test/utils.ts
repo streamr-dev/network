@@ -7,11 +7,30 @@ import { Tracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { StorageConfig } from '../src/plugins/storage/StorageConfig'
-import { Todo } from '../src/types'
-import { Config } from '../src/config'
+import { ApiAuthenticationConfig, Config, StorageNodeConfig } from '../src/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
+
+interface TestConfig {
+    name: string
+    trackerPort: number
+    privateKey: string
+    trackerId?: string
+    generateSessionId?: boolean
+    httpPort?: null | number
+    wsPort?: null | number
+    legacyMqttPort?: null | number
+    extraPlugins?: Record<string, unknown>
+    apiAuthentication?: ApiAuthenticationConfig
+    enableCassandra?: boolean
+    privateKeyFileName?: null | string
+    certFileName?: null | string
+    streamrAddress?: string
+    streamrUrl?: string
+    storageNodeConfig?: StorageNodeConfig
+    storageConfigRefreshInterval?: number
+}
 
 export const formConfig = ({
     name,
@@ -31,7 +50,7 @@ export const formConfig = ({
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
-}: Todo): Config => {
+}: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['legacyPublishHttp'] = {}
@@ -99,9 +118,8 @@ export const formConfig = ({
     }
 }
 
-export const startBroker = async (...args: Todo[]): Promise<Broker> => {
-    // @ts-expect-error
-    const broker = await createBroker(formConfig(...args))
+export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
+    const broker = await createBroker(formConfig(testConfig))
     await broker.start()
     return broker
 }
@@ -202,6 +220,7 @@ export const waitForStreamPersistedInStorageNode = async (
     nodeHttpPort: number
 ): Promise<void> => {
     const isPersistent = async () => {
+        // eslint-disable-next-line max-len
         const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
     }

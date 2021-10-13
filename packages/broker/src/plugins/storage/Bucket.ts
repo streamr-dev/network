@@ -10,11 +10,11 @@ export class Bucket {
     size: number
     records: number
     dateCreate: Date
-    private _maxSize: number
-    private _maxRecords: number
-    private _keepAliveSeconds: number
+    private maxSize: number
+    private maxRecords: number
+    private keepAliveSeconds: number
     ttl: Date
-    private _stored: boolean
+    private stored: boolean
     logger: Logger
 
     constructor(
@@ -74,26 +74,26 @@ export class Bucket {
         this.logger = new Logger(module, `${this.id}`)
         this.logger.trace(`init bucket: ${this.getId()}, dateCreate: ${this.dateCreate}`)
 
-        this._maxSize = maxSize
-        this._maxRecords = maxRecords
-        this._keepAliveSeconds = keepAliveSeconds
+        this.maxSize = maxSize
+        this.maxRecords = maxRecords
+        this.keepAliveSeconds = keepAliveSeconds
 
         this.ttl = new Date()
-        this._stored = false
-        this._updateTTL()
+        this.stored = false
+        this.updateTTL()
     }
 
     isStored(): boolean {
-        return this._stored
+        return this.stored
     }
 
     setStored(): void {
-        this._stored = true
+        this.stored = true
     }
 
-    private _checkSize(percentDeduction = 0): boolean {
-        const maxPercentSize = (this._maxSize * (100 - percentDeduction)) / 100
-        const maxRecords = (this._maxRecords * (100 - percentDeduction)) / 100
+    private checkSize(percentDeduction = 0): boolean {
+        const maxPercentSize = (this.maxSize * (100 - percentDeduction)) / 100
+        const maxRecords = (this.maxRecords * (100 - percentDeduction)) / 100
         const { size, records } = this
         this.logger.trace(
             `_checkSize: ${size >= maxPercentSize || records >= maxRecords} => ${size} >= ${maxPercentSize} || ${records} >= ${maxRecords}`
@@ -103,7 +103,7 @@ export class Bucket {
     }
 
     isAlmostFull(percentDeduction = 30): boolean {
-        return this._checkSize(percentDeduction)
+        return this.checkSize(percentDeduction)
     }
 
     getId(): string {
@@ -116,13 +116,13 @@ export class Bucket {
 
         this.logger.trace(`incremented bucket => size: ${this.size}, records: ${this.records}`)
 
-        this._stored = false
-        this._updateTTL()
+        this.stored = false
+        this.updateTTL()
     }
 
-    private _updateTTL(): void {
+    private updateTTL(): void {
         this.ttl = new Date()
-        this.ttl.setSeconds(this.ttl.getSeconds() + this._keepAliveSeconds)
+        this.ttl.setSeconds(this.ttl.getSeconds() + this.keepAliveSeconds)
         this.logger.trace(`new ttl: ${this.ttl}`)
     }
 

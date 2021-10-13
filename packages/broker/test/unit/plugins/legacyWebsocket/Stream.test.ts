@@ -3,8 +3,7 @@ import { Stream } from '../../../../src/Stream'
 
 describe('Stream', () => {
     it('addConnection adds connections', () => {
-        // @ts-expect-error
-        const stream = new Stream<string>('id', 0)
+        const stream = new Stream<string>('id', 0, 'name')
         stream.addConnection('a')
         stream.addConnection('b')
         stream.addConnection('c')
@@ -15,8 +14,7 @@ describe('Stream', () => {
         let stream: Stream<string>
 
         beforeEach(() => {
-            // @ts-expect-error
-            stream = new Stream('id', 0)
+            stream = new Stream('id', 0, 'name')
             stream.addConnection('a')
             stream.addConnection('b')
             stream.addConnection('c')

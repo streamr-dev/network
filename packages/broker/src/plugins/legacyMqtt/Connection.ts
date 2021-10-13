@@ -43,24 +43,24 @@ export class Connection extends events.EventEmitter {
 
     // Connection refused, server unavailable
     sendConnectionRefusedServerUnavailable(): void {
-        this._sendConnack(3)
+        this.sendConnack(3)
     }
 
     // Connection refused, bad user name or password
     sendConnectionRefused(): void {
-        this._sendConnack(4)
+        this.sendConnack(4)
     }
 
     // Connection refused, not authorized
     sendConnectionNotAuthorized(): void {
-        this._sendConnack(5)
+        this.sendConnack(5)
     }
 
     sendConnectionAccepted(): void {
-        this._sendConnack(0)
+        this.sendConnack(0)
     }
 
-    _sendConnack(code = 0): void {
+    private sendConnack(code = 0): void {
         try {
             this.client.connack({
                 returnCode: code
