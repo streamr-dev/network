@@ -245,7 +245,7 @@ export class Node extends EventEmitter {
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
         )
-        const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
+        const subscribers = this.streams.getNeighborsForStream(streamIdAndPartition).filter((n) => n !== source)
 
         if (!subscribers.length) {
             logger.debug('put back to buffer because could not propagate to %d nodes or more: %j',
@@ -318,8 +318,7 @@ export class Node extends EventEmitter {
     }
 
     private subscribeToStreamOnNode(node: NodeId, streamId: StreamIdAndPartition, sendStatus = true): NodeId {
-        this.streams.addInboundNode(streamId, node)
-        this.streams.addOutboundNode(streamId, node)
+        this.streams.addNeighbor(streamId, node)
         this.handleBufferedMessages(streamId)
         if (sendStatus) {
             this.trackerManager.sendStreamStatus(streamId)
