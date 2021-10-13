@@ -1,28 +1,31 @@
-import { MessageID } from 'streamr-client-protocol'
+import { MessageID, StreamMessage } from 'streamr-client-protocol'
 import { StreamIdAndPartition, StreamKey } from '../../../identifiers'
-import LRUCache from 'lru-cache'
+import { FifoCache } from './FifoCache'
+import { NodeId } from '../Node'
+
+export interface PropagationTask {
+    message: StreamMessage
+    source: NodeId | null
+    handledNeighbors: Set<NodeId>
+}
 
 /**
- * Fixed-size cache for storing items (in practice: PropagationTasks) by MessageID. Designed for the
- * needs of message propagation logic.
+ * Keeps track of active propagation tasks for the needs of message propagation logic.
  *
  * Properties:
- * - Allows look up by StreamIdAndPartition.
- * - Cache replacement policy is FIFO (when cache becomes full, first items to drop are the ones added first)
- * - Items have a TTL, after which they are considered stale and not returned when querying.
- *
- */
-export class PropagationTasksDataStructure<T> {
+ * - Upper bound on number of tasks stored, replacement policy if FIFO
+ * - Allows fetching propagation tasks by StreamIdAndPartition
+ * - Items have a TTL, after which they are considered stale and not returned when querying
+**/
+export class ActivePropagationTaskStore {
     private readonly streamLookup = new Map<StreamKey, Set<MessageID>>()
-    private readonly tasks: LRUCache<MessageID, T>
+    private readonly tasks: FifoCache<MessageID, PropagationTask>
 
     constructor(ttl: number, maxConcurrentMessages: number) {
-        this.tasks = new LRUCache({
-            max: maxConcurrentMessages,
-            maxAge: ttl,
-            noDisposeOnSet: true,  // don't invoke dispose cb when overwriting key
-            updateAgeOnGet: false, // make stale item removal effectively FIFO
-            dispose: (messageId) => {
+        this.tasks = new FifoCache<MessageID, PropagationTask>({
+            ttlInMs: ttl,
+            maxSize: maxConcurrentMessages,
+            onKeyDropped: (messageId: MessageID) => {
                 const stream = StreamIdAndPartition.fromMessage(messageId)
                 const messageIdsForStream = this.streamLookup.get(stream.key())
                 if (messageIdsForStream) {
@@ -35,7 +38,8 @@ export class PropagationTasksDataStructure<T> {
         })
     }
 
-    add(messageId: MessageID, task: T): void {
+    add(task: PropagationTask): void {
+        const messageId = task.message.messageId
         const stream = StreamIdAndPartition.fromMessage(messageId)
         if (!this.streamLookup.has(stream.key())) {
             this.streamLookup.set(stream.key(), new Set<MessageID>())
@@ -45,12 +49,12 @@ export class PropagationTasksDataStructure<T> {
     }
 
     delete(messageId: MessageID): void {
-        this.tasks.del(messageId)
+        this.tasks.delete(messageId) // causes `onKeyDropped` to be invoked
     }
 
-    get(stream: StreamIdAndPartition): Array<T> {
+    get(stream: StreamIdAndPartition): Array<PropagationTask> {
         const messageIds = this.streamLookup.get(stream.key())
-        const tasks: Array<T> = []
+        const tasks: Array<PropagationTask> = []
         if (messageIds) {
             messageIds.forEach((messageId) => {
                 const task = this.tasks.get(messageId)
