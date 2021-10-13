@@ -26,8 +26,14 @@ module.exports = (env, argv) => {
     const analyze = !!process.env.BUNDLE_ANALYSIS
 
     const commonConfig = {
+        cache: {
+            type: 'filesystem',
+        },
+        name: 'streamr-client',
         mode: isProduction ? 'production' : 'development',
-        entry: path.join(__dirname, 'src', 'index-browser.ts'),
+        entry: {
+            'streamr-client': path.join(__dirname, 'src', 'index-browser.ts'),
+        },
         devtool: 'source-map',
         output: {
             umdNamedDefine: true,
@@ -69,15 +75,17 @@ module.exports = (env, argv) => {
                 GIT_COMMITHASH: gitRevisionPlugin.commithash(),
                 GIT_BRANCH: gitRevisionPlugin.branch(),
             })
-        ]
+        ],
+        performance: {
+            hints: 'warning',
+        },
     }
 
     const clientConfig = merge({}, commonConfig, {
-        name: 'browser-lib',
         target: 'web',
         output: {
+            filename: '[name].web.js',
             libraryTarget: 'umd',
-            filename: libraryName + '.web.js',
             library: 'StreamrClient',
             // NOTE:
             // exporting the class directly
@@ -102,6 +110,7 @@ module.exports = (env, argv) => {
                 stream: 'readable-stream',
                 util: 'util',
                 http: path.resolve(__dirname, './src/shim/http-https.js'),
+                '@ethersproject/wordlists': path.resolve(__dirname, 'node_modules', '@ethersproject/wordlists/lib.esm/browser-wordlists.js'),
                 https: path.resolve(__dirname, './src/shim/http-https.js'),
                 crypto: path.resolve(__dirname, 'node_modules', 'crypto-browserify'),
                 buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
@@ -133,18 +142,16 @@ module.exports = (env, argv) => {
             }
         },
         plugins: [
-            new NodePolyfillPlugin(),
-            new LodashWebpackPlugin(),
-            new webpack.ProvidePlugin({
-                process: 'process/browser',
-                Buffer: ['buffer', 'Buffer'],
+            new NodePolyfillPlugin({
+                excludeAliases: ['console'],
             }),
+            new LodashWebpackPlugin(),
             ...(analyze ? [
                 new BundleAnalyzerPlugin({
                     analyzerMode: 'static',
                     openAnalyzer: false,
                     generateStatsFile: true,
-                }),
+                })
             ] : [])
         ]
     })
@@ -153,7 +160,7 @@ module.exports = (env, argv) => {
 
     if (isProduction) {
         clientMinifiedConfig = merge({}, clientConfig, {
-            name: 'browser-lib-min',
+            cache: false,
             optimization: {
                 minimize: true,
                 minimizer: [
@@ -169,10 +176,9 @@ module.exports = (env, argv) => {
                 ],
             },
             output: {
-                filename: libraryName + '.web.min.js',
+                filename: '[name].web.min.js',
             },
         })
     }
-
     return [clientConfig, clientMinifiedConfig].filter(Boolean)
 }
