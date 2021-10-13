@@ -6,8 +6,8 @@
     "streamr": "dist/bin/streamr.js"
   },
   "scripts": {
-    "eslint": "eslint .",
-    "prepare": "eslint . && tsc",
+    "eslint": "eslint --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "prepare": "npm run eslint && npm run build",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
