@@ -6,7 +6,7 @@ import Cutter from 'utf8-binary-cutter'
 const STATUS_UNEXPECTED_CONDITION = 1011
 const MAX_ERROR_MESSAGE_LENGTH = 123 // https://html.spec.whatwg.org/multipage/web-sockets.html
 
-export const closeWithError = (error: Error, context: string, ws: WebSocket, logger: Logger) => {
+export const closeWithError = (error: Error, context: string, ws: WebSocket, logger: Logger): void => {
     const msg = `${context}: ${error.message}`
     logger.error(msg, error)
     ws.close(STATUS_UNEXPECTED_CONDITION, Cutter.truncateToBinarySize(msg, MAX_ERROR_MESSAGE_LENGTH))

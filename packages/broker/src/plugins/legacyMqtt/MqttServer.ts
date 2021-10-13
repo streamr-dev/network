@@ -51,7 +51,7 @@ export class MqttServer extends EventEmitter {
     partitionFn
     subscriptionManager: SubscriptionManager
     connections = new Set<Connection>()
-    streams: StreamStateManager
+    streams: StreamStateManager<Connection>
     metrics: Metrics
 
     constructor(

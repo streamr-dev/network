@@ -7,7 +7,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 1
 
 export default class SubscribeResponseSerializerV1 extends Serializer<SubscribeResponse> {
-    toArray(subscribeResponse: SubscribeResponse) {
+    toArray(subscribeResponse: SubscribeResponse): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.SubscribeResponse,
@@ -16,7 +16,7 @@ export default class SubscribeResponseSerializerV1 extends Serializer<SubscribeR
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): SubscribeResponse {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

@@ -28,6 +28,7 @@ const getDataQueryEndpointUrl = (request: ResendFromRequest|ResendLastRequest|Re
             ...query,
             format: 'raw'
         }, { skipNulls: true })
+        // eslint-disable-next-line max-len
         return `${baseUrl}/streams/${encodeURIComponent(request.streamId)}/data/partitions/${request.streamPartition}/${endpointSuffix}?${queryParameters}`
     }
     let r
@@ -41,7 +42,8 @@ const getDataQueryEndpointUrl = (request: ResendFromRequest|ResendLastRequest|Re
             r = request as ResendFromRequest
             return createUrl('from', {
                 fromTimestamp: r.fromMsgRef.timestamp,
-                // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
+                // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE defaults when NET-267
+                //  have been implemented
                 fromSequenceNumber: r.fromMsgRef.sequenceNumber ?? MIN_SEQUENCE_NUMBER_VALUE,
                 publisherId: r.publisherId,
             })
@@ -49,7 +51,8 @@ const getDataQueryEndpointUrl = (request: ResendFromRequest|ResendLastRequest|Re
             r = request as ResendRangeRequest
             return createUrl('range', {
                 fromTimestamp: r.fromMsgRef.timestamp,
-                // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE&MAX_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
+                // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE&MAX_SEQUENCE_NUMBER_VALUE
+                // defaults when NET-267 have been implemented
                 fromSequenceNumber: r.fromMsgRef.sequenceNumber ?? MIN_SEQUENCE_NUMBER_VALUE,
                 toTimestamp: r.toMsgRef.timestamp,
                 toSequenceNumber: r.toMsgRef.sequenceNumber ?? MAX_SEQUENCE_NUMBER_VALUE,

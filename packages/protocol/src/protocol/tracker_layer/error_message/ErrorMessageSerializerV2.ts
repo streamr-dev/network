@@ -7,7 +7,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 2
 
 export default class ErrorMessageSerializerV2 extends Serializer<ErrorMessage> {
-    toArray(errorMessage: ErrorMessage) {
+    toArray(errorMessage: ErrorMessage): (string | number)[] {
         return [
             VERSION,
             TrackerMessage.TYPES.ErrorMessage,
@@ -17,7 +17,7 @@ export default class ErrorMessageSerializerV2 extends Serializer<ErrorMessage> {
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): ErrorMessage {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

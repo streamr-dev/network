@@ -77,17 +77,17 @@ describe.skip('ping-pong test between broker and clients', () => {
             expect(connection.isDead()).toEqual(false)
         })
 
-        // @ts-expect-error
+        // @ts-expect-error digging into client internals
         client1.connection.socket.on('ping', () => {
             pings += 1
         })
 
-        // @ts-expect-error
+        // @ts-expect-error digging into client internals
         client2.connection.socket.on('ping', () => {
             pings += 1
         })
 
-        // @ts-expect-error
+        // @ts-expect-error digging into client internals
         client3.connection.socket.on('ping', () => {
             pings += 1
         })
@@ -108,15 +108,15 @@ describe.skip('ping-pong test between broker and clients', () => {
     it('websocketServer closes connections, which are not replying with pong', (done) => {
         let pings = 0
 
-        // @ts-expect-error
+        // @ts-expect-error digging into client internals
         client1.connection.socket.pong = jest.fn() // don't send back pong
 
-        // @ts-expect-error
+        // @ts-expect-error digging into client internals
         client2.connection.socket.on('ping', () => {
             pings += 1
         })
 
-        // @ts-expect-error
+        // @ts-expect-error digging into client internals
         client3.connection.socket.on('ping', () => {
             pings += 1
         })

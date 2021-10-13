@@ -105,8 +105,7 @@ describe('DeleteExpiredCmd', () => {
             await insertData(cassandraClient, streamId, bucketId4, now - 3 * DAY_IN_MS)
 
             await deleteExpiredCmd.run()
-            // @ts-expect-error
-            const counts = await checkDBCount(cassandraClient, streamId, days)
+            const counts = await checkDBCount(cassandraClient, streamId)
             expect(counts).toEqual({
                 bucketCount: days,
                 messageCount: days

@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+import express, { Request, Response, Router } from 'express'
 import { Storage } from './Storage'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 
@@ -6,7 +6,7 @@ const parseIntIfExists = (x: string | undefined): number | undefined => {
     return x === undefined ? undefined : parseInt(x)
 }
 
-export const router = (cassandraStorage: Storage) => {
+export const router = (cassandraStorage: Storage): Router => {
     const router = express.Router()
     const handler = async (req: Request, res: Response) => {
         const streamId = req.params.id

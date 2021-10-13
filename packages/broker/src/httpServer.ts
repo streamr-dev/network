@@ -36,7 +36,11 @@ const createAuthenticatorMiddleware = (apiAuthenticator: ApiAuthenticator) => {
     }
 }
 
-export const startServer = async (routers: express.Router[], config: HttpServerConfig, apiAuthenticator: ApiAuthenticator) => {
+export const startServer = async (
+    routers: express.Router[],
+    config: HttpServerConfig,
+    apiAuthenticator: ApiAuthenticator
+): Promise<HttpServer|https.Server> => {
     const app = express()
     app.use(cors())
     app.use(createAuthenticatorMiddleware(apiAuthenticator))
@@ -56,7 +60,7 @@ export const startServer = async (routers: express.Router[], config: HttpServerC
     return server
 }
 
-export const stopServer = async (httpServer: HttpServer|HttpsServer) => {
+export const stopServer = async (httpServer: HttpServer|HttpsServer): Promise<void> => {
     if (httpServer.listening) {
         httpServer.close()
         await once(httpServer, 'close')

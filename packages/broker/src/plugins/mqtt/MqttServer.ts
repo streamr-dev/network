@@ -43,17 +43,17 @@ export class MqttServer {
         })
     }
 
-    setListener(listener: MqttServerListener) {
+    setListener(listener: MqttServerListener): void {
         this.listener = listener
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.server = net.createServer(this.aedes.handle)
         await util.promisify((callback: any) => this.server!.listen(this.port, callback))()
         logger.info(`MQTT server listening on port ${this.port}`)
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         if (!this.aedes.closed) {
             const closeAedes = util.promisify((callback: any) => this.aedes.close(callback))()
             const closeServer = util.promisify((callback: any) => this.server!.close(callback))()
@@ -62,7 +62,7 @@ export class MqttServer {
         }
     }
 
-    publish(topic: string, payload: string) {
+    publish(topic: string, payload: string): void {
         const packet: aedes.PublishPacket = {
             topic,
             payload,
@@ -79,7 +79,12 @@ export class MqttServer {
     }
 
     private static createAuthenicationHandler(apiAuthenticator: ApiAuthenticator): aedes.AuthenticateHandler {
-        return (_client: aedes.Client, _username: Readonly<string>|undefined, password: Readonly<Buffer>|undefined, done: (error: aedes.AuthenticateError|null, success: boolean|null) => void) => {
+        return (
+            _client: aedes.Client,
+            _username: Readonly<string>|undefined,
+            password: Readonly<Buffer>|undefined,
+            done: (error: aedes.AuthenticateError|null, success: boolean|null) => void
+        ) => {
             if (apiAuthenticator.isValidAuthentication(password?.toString())) {
                 done(null, true)
             } else {

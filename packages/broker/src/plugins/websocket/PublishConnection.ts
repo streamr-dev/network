@@ -27,7 +27,7 @@ export class PublishConnection implements Connection {
         }
     }
 
-    init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat) {
+    init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat): void {
         ws.on('message', (payload: string) => {
             try {
                 const { content, metadata } = payloadFormat.createMessage(payload)

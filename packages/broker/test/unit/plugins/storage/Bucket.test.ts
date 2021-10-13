@@ -72,8 +72,7 @@ describe('Bucket', () => {
         jest.advanceTimersByTime(1001)
 
         expect(bucket.isAlive()).toBeFalsy()
-        // @ts-expect-error
-        bucket.incrementBucket(1, 3)
+        bucket.incrementBucket(1)
         expect(bucket.isAlive()).toBeTruthy()
     })
 
@@ -84,8 +83,7 @@ describe('Bucket', () => {
         bucket.setStored()
         expect(bucket.isStored()).toBeTruthy()
 
-        // @ts-expect-error
-        bucket.incrementBucket(1, 1)
+        bucket.incrementBucket(1)
         expect(bucket.isStored()).toBeFalsy()
     })
 })

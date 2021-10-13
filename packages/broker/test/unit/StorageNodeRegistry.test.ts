@@ -71,16 +71,19 @@ describe('StorageNodeRegistry', () => {
         })
 
         it('no storage nodes', async () => {
-            return expect(() => registry.getUrlsByStreamId('stream-id-nonexisting')).rejects.toThrow('No storage nodes: stream-id-nonexisting')
+            return expect(() => registry.getUrlsByStreamId('stream-id-nonexisting'))
+                .rejects.toThrow('No storage nodes: stream-id-nonexisting')
         })
 
         it('node not in registry', async () => {
-            return expect(() => registry.getUrlsByStreamId('stream-id-2')).rejects.toThrow('Storage node not in registry: 0x2222222222222222222222222222222222222222')
+            return expect(() => registry.getUrlsByStreamId('stream-id-2'))
+                .rejects.toThrow('Storage node not in registry: 0x2222222222222222222222222222222222222222')
         })
 
         it('unable to list storage nodes', async () => {
             registry.streamrUrl = `http://127.0.0.1:${mockCoreApiServerPort}/fail`
-            return expect(() => registry.getUrlsByStreamId('stream-id-3')).rejects.toThrow('Unable to list storage nodes: stream-id-3')
+            return expect(() => registry.getUrlsByStreamId('stream-id-3'))
+                .rejects.toThrow('Unable to list storage nodes: stream-id-3')
         })
     })
 })

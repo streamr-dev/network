@@ -27,7 +27,6 @@ describe('websocket server', () => {
         brokerWithSSL = await startBroker({
             name: 'broker',
             privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
-            networkPort: 12347,
             trackerPort: 666,
             wsPort: 12348,
             privateKeyFileName: 'test/fixtures/key.pem',

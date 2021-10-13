@@ -1,4 +1,5 @@
 import { Todo } from './types'
+import { Request, Response, NextFunction } from 'express'
 import { HttpError } from './errors/HttpError'
 import { Logger } from 'streamr-network'
 import { StreamFetcher } from './StreamFetcher'
@@ -8,7 +9,10 @@ const logger = new Logger(module)
 /**
  * Middleware used to authenticate REST API requests
  */
-export const authenticator = (streamFetcher: StreamFetcher, permission = 'stream_subscribe') => (req: Todo, res: Todo, next: Todo) => {
+export const authenticator = (
+    streamFetcher: StreamFetcher,
+    permission = 'stream_subscribe'
+) => (req: Request & { stream?: Todo }, res: Response, next: NextFunction): void => {
     let sessionToken
 
     // Try to parse authorization header if defined

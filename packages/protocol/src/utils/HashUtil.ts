@@ -9,7 +9,7 @@ import crypto from 'crypto'
  * @param key Input string or number
  * @returns Array index between [0..lengthOfArray-1]
  */
-export const keyToArrayIndex = (lengthOfArray: number, key: string | number) => {
+export const keyToArrayIndex = (lengthOfArray: number, key: string | number): number => {
     if (!(Number.isSafeInteger(lengthOfArray) && lengthOfArray > 0)) {
         throw new Error(`lengthOfArray is not a safe positive integer! ${lengthOfArray}`)
     }

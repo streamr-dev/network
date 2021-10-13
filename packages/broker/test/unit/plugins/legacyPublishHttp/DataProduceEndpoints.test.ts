@@ -4,7 +4,8 @@ import request from 'supertest'
 import { Protocol } from 'streamr-network'
 import { router } from '../../../../src/plugins/legacyPublishHttp/DataProduceEndpoints'
 import { LEGACY_API_ROUTE_PREFIX } from '../../../../src/httpServer'
-import { Todo } from '../../../../src/types'
+import { StreamFetcher } from "../../../../src/StreamFetcher"
+import { Publisher } from "../../../../src/Publisher"
 
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 
@@ -14,9 +15,11 @@ describe('DataProduceEndpoints', () => {
         partitions: 1,
     }
 
-    let app: Todo
+    let app: express.Application
     let streamFetcher
-    let publisherMock: Todo
+    let publisherMock: {
+        validateAndPublish: sinon.SinonStub
+    }
 
     function postRequest(overridingOptions = {}) {
         const opts = {
@@ -28,10 +31,9 @@ describe('DataProduceEndpoints', () => {
             ...overridingOptions
         }
 
-        const headers = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-            // @ts-expect-error
-            Authorization: `Bearer ${opts.sessionToken}`,
+            Authorization: `Bearer ${opts.key}`,
             ...opts.headers
         }
 
@@ -41,7 +43,6 @@ describe('DataProduceEndpoints', () => {
             .send(opts.body)
 
         Object.keys(headers).forEach((key) => {
-            // @ts-expect-error
             req.set(key, headers[key])
         })
 
@@ -59,8 +60,7 @@ describe('DataProduceEndpoints', () => {
             validateAndPublish: sinon.stub().resolves(),
         }
 
-        // @ts-expect-error
-        app.use(router(streamFetcher, publisherMock, () => 0))
+        app.use(router(streamFetcher as unknown as StreamFetcher, publisherMock as unknown as Publisher, () => 0))
     })
 
     it('should call Publisher.validateAndPublish() with correct arguments', (done) => {
@@ -189,9 +189,8 @@ describe('DataProduceEndpoints', () => {
     })
 
     it('should return 413 (Payload Too Large) if body too large', (done) => {
-        const body = {}
+        const body: Record<string, string> = {}
         for (let i = 0; i < 20000; ++i) {
-            // @ts-expect-error
             body[`key-${i}`] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
         }
         postRequest({

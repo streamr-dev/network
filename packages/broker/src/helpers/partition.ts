@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-export const partition = (partitionCount: number, partitionKey = '') => {
+export const partition = (partitionCount: number, partitionKey = ''): number|never => {
     if (!partitionCount) {
         throw new Error('partitionCount is falsey!')
     } else if (partitionCount === 1) {

@@ -33,34 +33,34 @@ export class Connection extends events.EventEmitter {
         this.client.on('pingreq', () => this.client.pingresp())
     }
 
-    markAsDead() {
+    markAsDead(): void {
         this.dead = true
     }
 
-    isDead() {
+    isDead(): any {
         return this.dead
     }
 
     // Connection refused, server unavailable
-    sendConnectionRefusedServerUnavailable() {
-        this._sendConnack(3)
+    sendConnectionRefusedServerUnavailable(): void {
+        this.sendConnack(3)
     }
 
     // Connection refused, bad user name or password
-    sendConnectionRefused() {
-        this._sendConnack(4)
+    sendConnectionRefused(): void {
+        this.sendConnack(4)
     }
 
     // Connection refused, not authorized
-    sendConnectionNotAuthorized() {
-        this._sendConnack(5)
+    sendConnectionNotAuthorized(): void {
+        this.sendConnack(5)
     }
 
-    sendConnectionAccepted() {
-        this._sendConnack(0)
+    sendConnectionAccepted(): void {
+        this.sendConnack(0)
     }
 
-    _sendConnack(code = 0) {
+    private sendConnack(code = 0): void {
         try {
             this.client.connack({
                 returnCode: code
@@ -70,7 +70,7 @@ export class Connection extends events.EventEmitter {
         }
     }
 
-    sendUnsubscribe(packet: Todo) {
+    sendUnsubscribe(packet: Todo): void {
         try {
             if (!this.isDead()) {
                 this.client.unsubscribe(packet)
@@ -80,17 +80,17 @@ export class Connection extends events.EventEmitter {
         }
     }
 
-    setClientId(clientId: Todo) {
+    setClientId(clientId: Todo): this {
         this.id = clientId
         return this
     }
 
-    setToken(token: Todo) {
+    setToken(token: Todo): this {
         this.token = token
         return this
     }
 
-    close() {
+    close(): void {
         try {
             this.client.destroy()
         } catch (e) {
@@ -100,26 +100,26 @@ export class Connection extends events.EventEmitter {
         this.streams = []
     }
 
-    addStream(stream: Todo) {
+    addStream(stream: Todo): void {
         this.streams.push(stream)
     }
 
-    removeStream(streamId: string, streamPartition: number) {
+    removeStream(streamId: string, streamPartition: number): void {
         const i = this.streams.findIndex((s: Todo) => s.id === streamId && s.partition === streamPartition)
         if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
 
-    forEachStream(cb: Todo) {
+    forEachStream(cb: Todo): void {
         this.getStreams().forEach(cb)
     }
 
-    getStreams() {
+    getStreams(): any {
         return this.streams.slice() // return copy
     }
 
-    streamsAsString() {
+    streamsAsString(): any {
         return this.streams.map((s: Todo) => s.toString())
     }
 }

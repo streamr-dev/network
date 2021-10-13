@@ -98,6 +98,6 @@ export class MetadataPayloadFormat implements PayloadFormat {
     }
 }
 
-export const getPayloadFormat = (metadata: boolean) => {
+export const getPayloadFormat = (metadata: boolean): PayloadFormat => {
     return metadata ? new MetadataPayloadFormat() : new PlainPayloadFormat()
 }

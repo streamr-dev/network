@@ -157,7 +157,7 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
         type: 'password',
         name:'importPrivateKey',
         message: 'Please provide the private key to import',
-        when: (answers: inquirer.Answers) => {
+        when: (answers: inquirer.Answers): boolean => {
             return answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT
         },
         validate: (input: string): string | boolean => {
@@ -172,9 +172,10 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
     {
         type: 'confirm',
         name: 'revealGeneratedPrivateKey',
+        // eslint-disable-next-line max-len
         message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
         default: false,
-        when: (answers: inquirer.Answers) => {
+        when: (answers: inquirer.Answers): boolean => {
             return answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
         }
     }
@@ -296,6 +297,7 @@ const selectStoragePath = async (): Promise<inquirer.Answers> => {
     return answers
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
     if (!answers.parentDirExists) {
         mkdirSync(answers.parentDirPath)
@@ -310,7 +312,10 @@ export const getPrivateKey = (answers: inquirer.Answers): string => {
     return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT) ? answers.importPrivateKey : Wallet.createRandom().privateKey
 }
 
-export const getNodeIdentity = (privateKey: string) => {
+export const getNodeIdentity = (privateKey: string): {
+    mnemonic: string
+    networkExplorerUrl: string
+} => {
     const nodeAddress = new Wallet(privateKey).address
     const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
     const networkExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
