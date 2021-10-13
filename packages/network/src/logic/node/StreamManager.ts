@@ -134,11 +134,6 @@ export class StreamManager {
         return [...this.streams.get(streamId.key())!.neighbors]
     }
 
-    // TODO callers could use getNeighborsForStream (if sorting is not needed)
-    getAllNodesForStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
-        return [...this.getNeighborsForStream(streamId)].sort()
-    }
-
     getAllNodes(): ReadonlyArray<NodeId> {
         const nodes: NodeId[] = []
         this.streams.forEach(({ neighbors }) => {

@@ -34,9 +34,9 @@ describe('StreamManager', () => {
         ])
         expect(manager.getStreamsAsKeys()).toEqual(['stream-1::0', 'stream-1::1', 'stream-2::0'])
 
-        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 0))).toEqual([])
-        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 1))).toEqual([])
-        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-2', 0))).toEqual([])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 0))).toBeEmpty()
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 1))).toBeEmpty()
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-2', 0))).toBeEmpty()
     })
 
     test('cannot re-setup same stream', () => {
@@ -108,9 +108,8 @@ describe('StreamManager', () => {
         manager.addNeighbor(streamId2, 'node-2')
         manager.addNeighbor(streamId2, 'node-3')
 
-        expect(manager.getNeighborsForStream(streamId)).toEqual(['node-1', 'node-2'])
-        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-1', 'node-2'])
-        expect(manager.getAllNodesForStream(streamId2)).toEqual(['node-1', 'node-2', 'node-3'])
+        expect(manager.getNeighborsForStream(streamId)).toIncludeSameMembers(['node-1', 'node-2'])
+        expect(manager.getNeighborsForStream(streamId2)).toIncludeSameMembers(['node-1', 'node-2', 'node-3'])
 
         expect(manager.hasNeighbor(streamId, 'node-1')).toEqual(true)
         expect(manager.hasNeighbor(streamId, 'node-2')).toEqual(true)
@@ -135,19 +134,19 @@ describe('StreamManager', () => {
         manager.addNeighbor(streamId2, 'node-2')
         manager.addNeighbor(streamId2, 'node-3')
 
-        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-1', 'node-2'])
-        expect(manager.getAllNodesForStream(streamId2)).toEqual(['node-1', 'node-2', 'node-3'])
+        expect(manager.getNeighborsForStream(streamId)).toIncludeSameMembers(['node-1', 'node-2'])
+        expect(manager.getNeighborsForStream(streamId2)).toIncludeSameMembers(['node-1', 'node-2', 'node-3'])
 
         manager.removeNodeFromStream(streamId, 'node-1')
 
-        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-2'])
-        expect(manager.getAllNodesForStream(streamId2)).toEqual(['node-1', 'node-2', 'node-3'])
+        expect(manager.getNeighborsForStream(streamId)).toIncludeSameMembers(['node-2'])
+        expect(manager.getNeighborsForStream(streamId2)).toIncludeSameMembers(['node-1', 'node-2', 'node-3'])
 
         manager.removeNodeFromStream(streamId2, 'node-3')
-        expect(manager.getAllNodesForStream(streamId)).toEqual(['node-2'])
-        expect(manager.getAllNodesForStream(streamId2)).toEqual(['node-1', 'node-2'])
+        expect(manager.getNeighborsForStream(streamId)).toIncludeSameMembers(['node-2'])
+        expect(manager.getNeighborsForStream(streamId2)).toIncludeSameMembers(['node-1', 'node-2'])
 
-        expect(manager.getNeighborsForStream(streamId)).toEqual(['node-2'])
+        expect(manager.getNeighborsForStream(streamId)).toIncludeSameMembers(['node-2'])
 
         expect(manager.hasNeighbor(streamId, 'node-1')).toEqual(false)
         expect(manager.isNodePresent('node-1')).toEqual(true)
@@ -172,9 +171,9 @@ describe('StreamManager', () => {
 
         manager.removeNodeFromAllStreams('node')
 
-        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 0))).toEqual(['should-not-be-removed'])
-        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 1))).toEqual(['should-not-be-removed'])
-        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-2', 0))).toEqual(['should-not-be-removed'])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 0))).toIncludeSameMembers(['should-not-be-removed'])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-1', 1))).toIncludeSameMembers(['should-not-be-removed'])
+        expect(manager.getNeighborsForStream(new StreamIdAndPartition('stream-2', 0))).toIncludeSameMembers(['should-not-be-removed'])
 
         expect(manager.hasNeighbor(new StreamIdAndPartition('stream-1', 0), 'node')).toEqual(false)
         expect(manager.hasNeighbor(new StreamIdAndPartition('stream-2', 0), 'node')).toEqual(false)
