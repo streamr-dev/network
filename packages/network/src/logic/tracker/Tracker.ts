@@ -46,6 +46,8 @@ export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
 }
 
+export const DEFAULT_NODE_DEGREE = 4
+
 export class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode: number
     private readonly trackerServer: TrackerServer

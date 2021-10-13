@@ -11,7 +11,7 @@ import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NameDirectory } from '../../NameDirectory'
 import { DisconnectionReason } from "../../connection/ws/AbstractWsEndpoint"
-import { TrackerId } from '../tracker/Tracker'
+import { DEFAULT_NODE_DEGREE, TrackerId } from '../tracker/Tracker'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 
@@ -131,7 +131,7 @@ export class Node extends EventEmitter {
                     }
                 }
             },
-            minPropagationTargets: 2
+            minPropagationTargets: Math.floor(DEFAULT_NODE_DEGREE / 2)
         })
         this.trackerManager = new TrackerManager(
             opts.protocols.nodeToTracker,
