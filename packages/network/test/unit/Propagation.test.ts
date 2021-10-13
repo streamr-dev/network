@@ -2,6 +2,7 @@ import { Propagation } from '../../src/logic/node/propagation/Propagation'
 import { NodeId } from '../../src/logic/node/Node'
 import { StreamIdAndPartition } from '../../src/identifiers'
 import { MessageIDStrict, StreamMessage } from 'streamr-client-protocol'
+import { wait } from 'streamr-test-utils'
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
     return new StreamMessage({
@@ -11,6 +12,8 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         }
     })
 }
+
+const TTL = 100
 
 describe(Propagation, () => {
     let getNeighbors: jest.Mock<ReadonlyArray<NodeId>, [StreamIdAndPartition]>
@@ -24,7 +27,7 @@ describe(Propagation, () => {
             getNeighbors,
             sendToNeighbor,
             minPropagationTargets: 3,
-            ttl: 100,
+            ttl: TTL,
             maxConcurrentMessages: 5
         })
     })
@@ -55,67 +58,64 @@ describe(Propagation, () => {
     describe('#onNeighborJoined', () => {
         let msg: StreamMessage
 
-        function setUpAndFeed(neighbors: string[], neighborRejectList: string[]) {
+        function setUpAndFeed(neighbors: string[]) {
             getNeighbors.mockReturnValueOnce(neighbors)
-            sendToNeighbor.mockImplementation(async (neighbor: string) => {
-                if (neighborRejectList.includes(neighbor)) {
-                    throw new Error('failed to send')
-                }
-            })
             msg = makeMsg('s1', 0, 1000, 1)
             propagation.feedUnseenMessage(msg, 'n2')
             sendToNeighbor.mockClear()
             getNeighbors.mockClear()
         }
 
-        it('no-op if passed non-existing stream', () => {
-            setUpAndFeed(['n1', 'n2', 'n3'], [])
-            propagation.onNeighborJoined('n4', new StreamIdAndPartition('non-existing-stream', 0))
-            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
-        })
-
-        it('no-op if passed source node', () => {
-            setUpAndFeed(['n1', 'n2', 'n3'], [])
-            propagation.onNeighborJoined('n2', new StreamIdAndPartition('s1', 0))
-            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
-        })
-
-        it('no-op if passed already handled neighbor', () => {
-            setUpAndFeed(['n1', 'n2', 'n3'], [])
-            propagation.onNeighborJoined('n3', new StreamIdAndPartition('s1', 0))
-            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
-        })
-
-        it('no-op if initially `minPropagationTargets` were propagated to', () => {
-            setUpAndFeed(['n1', 'n2', 'n3', 'n4'], [])
-            propagation.onNeighborJoined('n5', new StreamIdAndPartition('s1', 0))
-            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
-        })
-
         it('sends to new neighbor', () => {
-            setUpAndFeed(['n1', 'n2', 'n3'], [])
+            setUpAndFeed(['n1', 'n2', 'n3'])
             propagation.onNeighborJoined('n4', new StreamIdAndPartition('s1', 0))
             expect(sendToNeighbor).toHaveBeenCalledTimes(1)
             expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n4', msg)
         })
 
-        it('sends to old neighbor if initial propagation failed', () => {
-            setUpAndFeed(['n1', 'n2', 'n3', 'n666'], ['n666'])
-            propagation.onNeighborJoined('n666', new StreamIdAndPartition('s1', 0))
-            expect(sendToNeighbor).toHaveBeenCalledTimes(1)
-            expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n666', msg)
+        it('no-op if passed non-existing stream', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'])
+            propagation.onNeighborJoined('n4', new StreamIdAndPartition('non-existing-stream', 0))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
 
-        it('sends to old neighbor if re-attempt propagation failed', () => {
-            setUpAndFeed(['n1', 'n2', 'n3'], [])
-            sendToNeighbor.mockRejectedValueOnce(new Error('failed to send (again)'))
-            propagation.onNeighborJoined('n666', new StreamIdAndPartition('s1', 0))
-            expect(sendToNeighbor).toHaveBeenCalledTimes(1) // sanity check
-            sendToNeighbor.mockClear()
+        it('no-op if passed source node', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'])
+            propagation.onNeighborJoined('n2', new StreamIdAndPartition('s1', 0))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
+        })
 
-            propagation.onNeighborJoined('n666', new StreamIdAndPartition('s1', 0))
-            expect(sendToNeighbor).toHaveBeenCalledTimes(1)
-            expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n666', msg)
+        it('no-op if passed already handled neighbor', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'])
+            propagation.onNeighborJoined('n3', new StreamIdAndPartition('s1', 0))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
+        })
+
+        it('no-op if initially `minPropagationTargets` were propagated to', () => {
+            setUpAndFeed(['n1', 'n2', 'n3', 'n4'])
+            propagation.onNeighborJoined('n5', new StreamIdAndPartition('s1', 0))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
+        })
+
+        it('no-op if initially `minPropagationTargets` were propagated to', () => {
+            setUpAndFeed(['n1', 'n2', 'n3', 'n4'])
+            propagation.onNeighborJoined('n5', new StreamIdAndPartition('s1', 0))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
+        })
+
+        it('no-op if later `minPropagationTargets` have been propagated to', () => {
+            setUpAndFeed(['n1', 'n2', 'n3'])
+            propagation.onNeighborJoined('n4', new StreamIdAndPartition('s1', 0))
+            sendToNeighbor.mockClear()
+            propagation.onNeighborJoined('n5', new StreamIdAndPartition('s1', 0))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
+        })
+
+        it('no-op if TTL expires', async () => {
+            setUpAndFeed(['n1', 'n2', 'n3'])
+            await wait(TTL + 1)
+            propagation.onNeighborJoined('n4', new StreamIdAndPartition('s1', 0))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
     })
 })

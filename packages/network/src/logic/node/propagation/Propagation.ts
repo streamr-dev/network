@@ -5,7 +5,7 @@ import { ActivePropagationTaskStore } from './ActivePropagationTaskStore'
 
 type GetNeighborsFn = (stream: StreamIdAndPartition) => ReadonlyArray<NodeId>
 
-type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => Promise<unknown>
+type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => void
 
 type ConstructorOptions = {
     getNeighbors: GetNeighborsFn
@@ -45,38 +45,38 @@ export class Propagation {
         this.activeTaskStore = new ActivePropagationTaskStore(ttl, maxConcurrentMessages)
     }
 
+    /**
+     * Node should invoke this when it learns about a new message
+     */
     feedUnseenMessage(message: StreamMessage, source: NodeId | null): void {
         const stream = StreamIdAndPartition.fromMessage(message.messageId)
         const targetNeighbors = this.getNeighbors(stream).filter((n) => n !== source)
 
-        const handledNeighbors = new Set<NodeId>()
-        targetNeighbors.forEach(async (neighborId) => {
-            try {
-                await this.sendToNeighbor(neighborId, message)
-                handledNeighbors.add(neighborId)
-            } catch (_e) {}
+        targetNeighbors.forEach((neighborId) => {
+            this.sendToNeighbor(neighborId, message)
         })
 
-        if (handledNeighbors.size < this.minPropagationTargets) {
+        if (targetNeighbors.length < this.minPropagationTargets) {
             this.activeTaskStore.add({
                 message,
                 source,
-                handledNeighbors
+                handledNeighbors: new Set<NodeId>(targetNeighbors)
             })
         }
     }
 
+    /**
+     * Node should invoke this when it learns about a new node stream assignment
+     */
     onNeighborJoined(neighborId: NodeId, stream: StreamIdAndPartition): void {
         const tasksOfStream = this.activeTaskStore.get(stream)
         if (tasksOfStream) {
-            tasksOfStream.forEach(async (task) => {
-                if (!task.handledNeighbors.has(neighborId) && neighborId !== task.source) {
-                    try {
-                        await this.sendToNeighbor(neighborId, task.message)
-                        task.handledNeighbors.add(neighborId)
-                    } catch (_e) {}
-                    if (task.handledNeighbors.size >= this.minPropagationTargets) {
-                        this.activeTaskStore.delete(task.message.messageId)
+            tasksOfStream.forEach(({ handledNeighbors, source, message}) => {
+                if (!handledNeighbors.has(neighborId) && neighborId !== source) {
+                    this.sendToNeighbor(neighborId, message)
+                    handledNeighbors.add(neighborId)
+                    if (handledNeighbors.size >= this.minPropagationTargets) {
+                        this.activeTaskStore.delete(message.messageId)
                     }
                 }
             })
