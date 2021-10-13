@@ -8,7 +8,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 1
 
 export default class UnicastMessageSerializerV1 extends Serializer<UnicastMessage> {
-    toArray(unicastMessage: UnicastMessage, streamMessageVersion = StreamMessage.LATEST_VERSION) {
+    toArray(unicastMessage: UnicastMessage, streamMessageVersion = StreamMessage.LATEST_VERSION): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.UnicastMessage,
@@ -17,7 +17,7 @@ export default class UnicastMessageSerializerV1 extends Serializer<UnicastMessag
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): UnicastMessage {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

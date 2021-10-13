@@ -2,7 +2,16 @@ import { Wallet } from 'ethers'
 import { writeFileSync, mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { PROMPTS, DEFAULT_CONFIG_PORTS, selectStoragePathPrompt, createStorageFile, getConfig, getPrivateKey, getNodeIdentity, start } from '../../src/ConfigWizard'
+import {
+    PROMPTS,
+    DEFAULT_CONFIG_PORTS,
+    selectStoragePathPrompt,
+    createStorageFile,
+    getConfig,
+    getPrivateKey,
+    getNodeIdentity,
+    start
+} from '../../src/ConfigWizard'
 import { readFileSync } from 'fs'
 
 const createMockLogger = () => {

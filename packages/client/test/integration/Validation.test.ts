@@ -110,7 +110,7 @@ describeRepeats('Validation', () => {
             expect(errs).toHaveLength(1)
             errs.forEach((err) => {
                 expect(err).toBeInstanceOf(Error)
-                expect(err.message).toMatch('signature')
+                expect(err.message).toBe('Signature validation failed')
             })
         }, 10000)
     })

@@ -103,14 +103,14 @@ describe('Batch', () => {
         expect(batch.streamMessages.length).toEqual(1)
         // @ts-expect-error access to private
         // eslint-disable-next-line no-underscore-dangle
-        expect(batch._timeout._idleTimeout).toEqual(10)
+        expect(batch.timeout._idleTimeout).toEqual(10)
 
         batch.clear()
 
         expect(batch.streamMessages.length).toEqual(0)
-        // @ts-expect-error
+        // @ts-expect-error access to private
         // eslint-disable-next-line no-underscore-dangle
-        expect(batch._timeout._idleTimeout).toEqual(-1)
+        expect(batch.timeout._idleTimeout).toEqual(-1)
     })
 
     it('setClose() emits close state', (done) => {

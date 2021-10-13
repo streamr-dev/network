@@ -8,7 +8,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 1
 
 export default class PublishRequestSerializerV1 extends Serializer<PublishRequest> {
-    toArray(publishRequest: PublishRequest, streamMessageVersion = StreamMessage.LATEST_VERSION) {
+    toArray(publishRequest: PublishRequest, streamMessageVersion = StreamMessage.LATEST_VERSION): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.PublishRequest,
@@ -17,7 +17,7 @@ export default class PublishRequestSerializerV1 extends Serializer<PublishReques
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): PublishRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

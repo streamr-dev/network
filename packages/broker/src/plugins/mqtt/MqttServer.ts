@@ -79,7 +79,12 @@ export class MqttServer {
     }
 
     private static createAuthenicationHandler(apiAuthenticator: ApiAuthenticator): aedes.AuthenticateHandler {
-        return (_client: aedes.Client, _username: Readonly<string>|undefined, password: Readonly<Buffer>|undefined, done: (error: aedes.AuthenticateError|null, success: boolean|null) => void) => {
+        return (
+            _client: aedes.Client,
+            _username: Readonly<string>|undefined,
+            password: Readonly<Buffer>|undefined,
+            done: (error: aedes.AuthenticateError|null, success: boolean|null) => void
+        ) => {
             if (apiAuthenticator.isValidAuthentication(password?.toString())) {
                 done(null, true)
             } else {

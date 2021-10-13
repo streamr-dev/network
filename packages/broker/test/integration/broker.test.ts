@@ -642,6 +642,7 @@ describe('broker: end-to-end', () => {
 
         await wait(3000)
 
+        // eslint-disable-next-line max-len
         const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
         const response = await fetch(url, {
             method: 'get',
@@ -657,6 +658,7 @@ describe('broker: end-to-end', () => {
 
     it('broker returns [] for empty http resend', async () => {
         const fromTimestamp = Date.now() + 99999999
+        // eslint-disable-next-line max-len
         const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
         const response = await fetch(url, {
             method: 'get',

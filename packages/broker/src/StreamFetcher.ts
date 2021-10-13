@@ -49,15 +49,15 @@ export class StreamFetcher {
 
     constructor(baseUrl: string) {
         this.apiUrl = `${baseUrl}/api/v1`
-        this.fetch = memoize<StreamFetcher['_fetch']>(this._fetch, {
+        this.fetch = memoize<StreamFetcher['uncachedFetch']>(this.uncachedFetch, {
             maxAge: MAX_AGE,
             promise: true,
         })
-        this.checkPermission = memoize<StreamFetcher['_checkPermission']>(this._checkPermission, {
+        this.checkPermission = memoize<StreamFetcher['uncachedCheckPermission']>(this.uncachedCheckPermission, {
             maxAge: MAX_AGE,
             promise: true,
         })
-        this.authenticate = memoize<StreamFetcher['_authenticate']>(this._authenticate, {
+        this.authenticate = memoize<StreamFetcher['uncachedAuthenticate']>(this.uncachedAuthenticate, {
             maxAge: MAX_AGE_MINUTE,
             promise: true,
         })
@@ -74,7 +74,7 @@ export class StreamFetcher {
         return client.session.getSessionToken()
     }
 
-    private async _authenticate(streamId: string, sessionToken: string|undefined, operation = 'stream_subscribe'): Promise<Todo>  {
+    private async uncachedAuthenticate(streamId: string, sessionToken: string|undefined, operation = 'stream_subscribe'): Promise<Todo>  {
         await this.checkPermission(streamId, sessionToken, operation)
         return this.fetch(streamId, sessionToken)
     }
@@ -88,7 +88,7 @@ export class StreamFetcher {
      * @returns {Promise.<TResult>}
      * @private
      */
-    private async _fetch(streamId: string, sessionToken?: string): Promise<Todo> {
+    private async uncachedFetch(streamId: string, sessionToken?: string): Promise<Todo> {
         const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}`
         const headers = formAuthorizationHeader(sessionToken)
 
@@ -115,7 +115,7 @@ export class StreamFetcher {
      * @returns {Promise}
      * @private
      */
-    private async _checkPermission(streamId: string, sessionToken: string | undefined | null, operation = 'stream_subscribe'): Promise<true> {
+    private async uncachedCheckPermission(streamId: string, sessionToken: string | undefined | null, operation = 'stream_subscribe'): Promise<true> {
         if (streamId == null) {
             throw new Error('_checkPermission: streamId can not be null!')
         }

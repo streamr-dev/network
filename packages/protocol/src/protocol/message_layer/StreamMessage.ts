@@ -51,6 +51,21 @@ export type StreamMessageOptions<T> = {
     signature?: string | null
 }
 
+export interface ObjectType<T> { 
+    streamId: string
+    streamPartition: number
+    timestamp: number
+    sequenceNumber: number
+    publisherId: string
+    msgChainId: string
+    messageType: StreamMessageType
+    contentType: ContentType
+    encryptionType: EncryptionType
+    groupKeyId: string|null
+    content: string|T
+    signatureType: SignatureType;
+    signature: string|null
+}
 /**
  * Any object that contains a toStreamMessage interface.
  * e.g. GroupKeyMessage
@@ -449,7 +464,7 @@ export default class StreamMessage<T = unknown> {
         return !!(content && typeof content === 'object' && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
     }
 
-    toObject() {
+    toObject(): ObjectType<T> {
         return {
             streamId: this.getStreamId(),
             streamPartition: this.getStreamPartition(),

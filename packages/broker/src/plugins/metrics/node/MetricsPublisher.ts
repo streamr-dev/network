@@ -43,7 +43,10 @@ export class MetricsPublisher {
     }
 
     async ensureStreamsCreated(): Promise<void> {
-        await Promise.all(Object.keys(STREAM_ID_SUFFIXES).map((periodLengthAsString: string) => this.ensureStreamCreated(Number(periodLengthAsString))))
+        await Promise.all(
+            Object.keys(STREAM_ID_SUFFIXES)
+                .map((periodLengthAsString: string) => this.ensureStreamCreated(Number(periodLengthAsString)))
+        )
     }
 
     private async ensureStreamCreated(periodLength: number): Promise<string> {
