@@ -97,7 +97,7 @@ export class DeleteExpiredCmd {
         await this.cassandraClient.shutdown()
     }
 
-    async getStreams(): Promise<StreamPart[]> {
+    private async getStreams(): Promise<StreamPart[]> {
         const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
         const resultSet = await this.cassandraClient.execute(query, [], {
             fetchSize: 100000
@@ -108,7 +108,7 @@ export class DeleteExpiredCmd {
         }))
     }
 
-    async fetchStreamsInfo(streams: StreamPart[]): Promise<(StreamPartInfo|void)[]> {
+    private async fetchStreamsInfo(streams: StreamPart[]): Promise<(StreamPartInfo|void)[]> {
         const tasks = streams.filter(Boolean).map((stream: StreamPart) => {
             return this.limit(async () => {
                 const url = `${this.streamrBaseUrl}/api/v1/streams/${encodeURIComponent(stream.streamId)}/validation`
@@ -125,7 +125,7 @@ export class DeleteExpiredCmd {
         return Promise.all(tasks)
     }
 
-    async getPotentiallyExpiredBuckets(streamsInfo: (StreamPartInfo|void)[]): Promise<BucketInfo[]> {
+    private async getPotentiallyExpiredBuckets(streamsInfo: (StreamPartInfo|void)[]): Promise<BucketInfo[]> {
         const result: BucketInfo[] = []
 
         const query = 'SELECT * FROM bucket WHERE stream_id = ? AND partition = ? AND date_create <= ?'
@@ -161,7 +161,7 @@ export class DeleteExpiredCmd {
         return result
     }
 
-    async filterExpiredBuckets(potentialBuckets: BucketInfo[]): Promise<BucketInfo[]> {
+    private async filterExpiredBuckets(potentialBuckets: BucketInfo[]): Promise<BucketInfo[]> {
         const result: BucketInfo[] = []
 
         const query = 'SELECT MAX(ts) AS m FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?'
@@ -189,7 +189,7 @@ export class DeleteExpiredCmd {
         return result
     }
 
-    async deleteExpired(expiredBuckets: BucketInfo[]): Promise<void[]> {
+    private async deleteExpired(expiredBuckets: BucketInfo[]): Promise<void[]> {
         const tasks = expiredBuckets.filter(Boolean).map((stream) => {
             const { bucketId, dateCreate, streamId, partition } = stream
             const queries = [
