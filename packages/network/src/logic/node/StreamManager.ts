@@ -96,12 +96,9 @@ export class StreamManager {
         return streams
     }
 
-    // TODO could this method return void as callers don't read the return value?
-    removeStream(streamId: StreamIdAndPartition): ReadonlyArray<NodeId> {
+    removeStream(streamId: StreamIdAndPartition): void {
         this.verifyThatIsSetUp(streamId)
-        const { neighbors } = this.streams.get(streamId.key())!
         this.streams.delete(streamId.key())
-        return [...new Set([...neighbors])]
     }
 
     isSetUp(streamId: StreamIdAndPartition): boolean {
