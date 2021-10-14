@@ -1,17 +1,21 @@
 {
-    "extends": "@streamr/dev-config/ts/tsconfig.browser.json",
+    "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
     "compilerOptions": {
-        "outDir": "dist",
-        "rootDirs": ["src", "test"],
+        "composite": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "strictBindCallApply": true
+        "strictBindCallApply": true,
+        "outDir": "dist"
     },
     "include": [
+        "package.json",
         "src/**/*",
         "vendor/**/*",
         "contracts/**/*",
         "test/**/*"
     ],
-    "exclude": ["node_modules", "dist"]
+    "exclude": ["test/legacy/*", "test/memory/*"],
+    "references": [
+        { "path": "./tsconfig.node.json" }
+    ]
 }

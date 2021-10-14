@@ -5,11 +5,13 @@
         "outDir": "dist"
     },
     "include": [
-        "package.json",
-        "src/**/*",
-        "bin/**/*"
+        "src/**/*"
+    ],
+    "exclude": [
+        "dist",
+        "src/**/BrowserWebRtcConnection.ts"
     ],
     "references": [
-        { "path": "node_modules/streamr-client/tsconfig.node.json" }
+        { "path": "node_modules/streamr-client-protocol" }
     ]
 }

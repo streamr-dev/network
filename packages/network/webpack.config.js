@@ -70,6 +70,9 @@ module.exports = (env, argv) => {
     const isProduction = environment === 'production'
 
     const config = {
+        cache: {
+            type: 'filesystem',
+        },
         mode: isProduction ? 'production' : 'development',
         entry: './src/browser.ts',
         devtool: "source-map",

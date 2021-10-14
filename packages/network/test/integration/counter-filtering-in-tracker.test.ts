@@ -7,7 +7,7 @@ import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/N
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { NodeId } from '../logic/node/Node'
+import { NodeId } from '../../src/logic/node/Node'
 
 const WAIT_TIME = 2000
 

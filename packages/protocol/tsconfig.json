@@ -1,13 +1,14 @@
 {
-  "extends": "@streamr/dev-config/ts/tsconfig.node.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "rootDirs": ["src", "test"]
-  },
-  "exclude": [
-    "dist",
-    "jest.config.js",
-    "node_modules",
-    "coverage"
-  ]
+    "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
+    "compilerOptions": {
+        "composite": true,
+        "outDir": "dist"
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*"
+    ],
+    "references": [
+        { "path": "./tsconfig.node.json" }
+    ]
 }

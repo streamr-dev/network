@@ -1,6 +1,6 @@
 import express, { Router } from 'express'
 import bodyParser from 'body-parser'
-import { Protocol } from 'streamr-network'
+import { StreamMessage, MessageID, MessageRef, InvalidJsonError, ValidationError } from 'streamr-client-protocol'
 import { Logger } from 'streamr-network'
 import { FailedToPublishError } from '../../errors/FailedToPublishError'
 import { partition } from '../../helpers/partition'
@@ -12,9 +12,6 @@ import { parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { Todo } from '../../types'
 
 const logger = new Logger(module)
-
-const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
-const { InvalidJsonError, ValidationError } = Protocol.Errors
 
 /**
  * Endpoint for POSTing data to streams

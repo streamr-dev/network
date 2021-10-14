@@ -2,9 +2,8 @@
  * Endpoints for RESTful data requests
  */
 import express, { Request, Response, Router } from 'express'
-import { MetricsContext, Protocol } from 'streamr-network'
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
-import { Logger } from 'streamr-network'
+import { StreamMessage } from 'streamr-client-protocol'
+import { Logger, Metrics, MetricsContext } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Todo } from '../../types'
 import { Storage } from './Storage'
@@ -32,7 +31,7 @@ class ResponseTransform extends Transform {
         this.version = version
     }
 
-    _transform(input: Protocol.MessageLayer.StreamMessage, _encoding: string, done: () => void) {
+    _transform(input: StreamMessage, _encoding: string, done: () => void) {
         if (this.firstMessage) {
             this.firstMessage = false
             this.push(this.format.header)
@@ -66,7 +65,7 @@ const sendError = (message: string, res: Response) => {
 const createEndpointRoute = (
     name: string,
     router: express.Router,
-    metrics: Metrics, 
+    metrics: Metrics,
     processRequest: (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => void
 ) => {
     router.get(`${LEGACY_API_ROUTE_PREFIX}/streams/:id/data/partitions/:partition/${name}`, (req: Request, res: Response) => {
@@ -78,7 +77,7 @@ const createEndpointRoute = (
             const streamId = req.params.id
             const partition = parseInt(req.params.partition)
             const version = parseIntIfExists(req.query.version)
-            processRequest(req, streamId, partition, 
+            processRequest(req, streamId, partition,
                 (data: Readable) => {
                     data.once('data', () => {
                         res.writeHead(200, {
@@ -202,4 +201,3 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
 
     return router
 }
-

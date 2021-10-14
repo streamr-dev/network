@@ -1,11 +1,23 @@
-import { Protocol } from 'streamr-network'
-const { ControlLayer, Utils, ControlMessageType, ErrorCode } = Protocol
+import type { Metrics } from 'streamr-network'
+import {
+    SubscribeRequest,
+    UnsubscribeRequest,
+    ResendLastRequest,
+    ResendFromRequest,
+    ResendRangeRequest,
+    PublishRequest,
+    Utils,
+    ControlMessageType,
+    ControlMessage,
+    StreamMessage,
+    ControlLayer,
+    ErrorCode
+} from 'streamr-client-protocol'
 import { ArrayMultimap } from '@teppeis/multimaps'
 import { HttpError } from '../../errors/HttpError'
 import { FailedToPublishError } from '../../errors/FailedToPublishError'
 import { Logger } from 'streamr-network'
-import { StreamStateManager } from '../../StreamStateManager' 
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
+import { StreamStateManager } from '../../StreamStateManager'
 import { Publisher } from '../../Publisher'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Connection } from './Connection'
@@ -15,13 +27,6 @@ import { createResponse as createHistoricalDataResponse, HistoricalDataResponse 
 import { GenericError } from '../../errors/GenericError'
 
 const logger = new Logger(module)
-
-type SubscribeRequest = Protocol.ControlLayer.SubscribeRequest
-type UnsubscribeRequest = Protocol.ControlLayer.UnsubscribeRequest
-type ResendLastRequest = Protocol.ControlLayer.ResendLastRequest
-type ResendFromRequest = Protocol.ControlLayer.ResendFromRequest
-type ResendRangeRequest = Protocol.ControlLayer.ResendRangeRequest
-type PublishRequest = Protocol.ControlLayer.PublishRequest
 
 export class RequestHandler {
 
@@ -34,7 +39,7 @@ export class RequestHandler {
     streamrUrl: string
     ongoingResendResponses: ArrayMultimap<string,HistoricalDataResponse> = new ArrayMultimap()
 
-    constructor(   
+    constructor(
         streamFetcher: StreamFetcher,
         publisher: Publisher,
         streams: StreamStateManager<Connection>,
@@ -66,20 +71,20 @@ export class RequestHandler {
         })
     }
 
-    handleRequest(connection: Connection, request: Protocol.ControlLayer.ControlMessage): Promise<any> {
+    handleRequest(connection: Connection, request: ControlMessage): Promise<any> {
         logger.debug(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
         switch (request.type) {
-            case ControlLayer.ControlMessage.TYPES.SubscribeRequest:
+            case ControlMessage.TYPES.SubscribeRequest:
                 return this.subscribe(connection, request as SubscribeRequest)
-            case ControlLayer.ControlMessage.TYPES.UnsubscribeRequest:
+            case ControlMessage.TYPES.UnsubscribeRequest:
                 return this.unsubscribe(connection, request as UnsubscribeRequest)
-            case ControlLayer.ControlMessage.TYPES.PublishRequest:
+            case ControlMessage.TYPES.PublishRequest:
                 return this.publish(connection, request as PublishRequest)
-            case ControlLayer.ControlMessage.TYPES.ResendLastRequest:
-            case ControlLayer.ControlMessage.TYPES.ResendFromRequest:
-            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest:
+            case ControlMessage.TYPES.ResendLastRequest:
+            case ControlMessage.TYPES.ResendFromRequest:
+            case ControlMessage.TYPES.ResendRangeRequest:
                 return this.resend(connection, request as (ResendLastRequest|ResendFromRequest|ResendRangeRequest))
-            default:
+            default: {
                 connection.send(new ControlLayer.ErrorResponse({
                     version: request.version,
                     requestId: request.requestId,
@@ -87,6 +92,7 @@ export class RequestHandler {
                     errorCode: ErrorCode.INVALID_REQUEST,
                 }))
                 return Promise.resolve()
+            }
         }
     }
 
@@ -146,17 +152,17 @@ export class RequestHandler {
     }
 
     private async sendResendResponse(
-        connection: Connection, 
+        connection: Connection,
         request: ResendFromRequest|ResendLastRequest|ResendRangeRequest,
         streamingStorageData: NodeJS.ReadableStream
     ) {
         let sentMessages = 0
-    
-        const msgHandler = (streamMessage: Protocol.StreamMessage) => {
+
+        const msgHandler = (streamMessage: StreamMessage) => {
             if (sentMessages === 0) {
                 connection.send(new ControlLayer.ResendResponseResending(request))
             }
-    
+
             this.metrics.record('outBytes', streamMessage.getSerializedContent().length)
             this.metrics.record('outMessages', 1)
             sentMessages += 1
@@ -166,7 +172,7 @@ export class RequestHandler {
                 streamMessage,
             }))
         }
-    
+
         const doneHandler = () => {
             logger.info('Finished resend %s: %d messages', request.requestId, sentMessages)
             if (sentMessages === 0) {
@@ -186,7 +192,7 @@ export class RequestHandler {
             }
             this.ongoingResendResponses.delete(connection.id)
         }
-    
+
         try {
             if (connection.isDead()) {
                 return
@@ -211,7 +217,7 @@ export class RequestHandler {
         }
     }
 
-    private sendError(e: Error, request: Protocol.ControlMessage, connection: Connection) {
+    private sendError(e: Error, request: ControlMessage, connection: Connection) {
         if (e instanceof GenericError) {
             logger.warn(e.message)
             connection.send(new ControlLayer.ErrorResponse({
@@ -289,8 +295,10 @@ export class RequestHandler {
         const stream = this.streams.get(request.streamId, request.streamPartition)
 
         if (stream) {
-            logger.trace('handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"', connection.id,
-                request.streamId, request.streamPartition)
+            logger.trace(
+                'handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"',
+                connection.id, request.streamId, request.streamPartition
+            )
 
             stream.removeConnection(connection)
             connection.removeStream(request.streamId, request.streamPartition)
@@ -353,7 +361,7 @@ export class RequestHandler {
         if (ongoingResendResponses.length > 0) {
             logger.info('Abort %s ongoing resends for connection %s', ongoingResendResponses.length, connectionId)
             ongoingResendResponses.forEach((response)=> response.abort())
-            this.ongoingResendResponses.delete(connectionId)   
+            this.ongoingResendResponses.delete(connectionId)
         }
     }
 

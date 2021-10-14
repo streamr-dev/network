@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
-import { Logger, Protocol } from 'streamr-network'
+import { Logger } from 'streamr-network'
+import { ControlMessage, ControlLayer } from 'streamr-client-protocol'
 import { Stream } from '../../Stream'
 import WebSocket from "ws"
 import stream from "stream"
@@ -15,7 +16,7 @@ function generateId(): string {
 }
 
 export interface Connection {
-    on(eventName: 'message', handler: (msg: Protocol.ControlMessage) => void): this
+    on(eventName: 'message', handler: (msg: ControlMessage) => void): this
     on(eventName: 'close', handler: () => void): this
     on(eventName: 'highBackPressure', handler: () => void): this
     on(eventName: 'lowBackPressure', handler: () => void): this
@@ -49,14 +50,14 @@ export class Connection extends EventEmitter {
             if (this.dead) {
                 return
             }
-            let message: Protocol.ControlMessage | undefined
+            let message: ControlMessage | undefined
             try {
-                message = Protocol.ControlMessage.deserialize(data.toString(), false)
+                message = ControlMessage.deserialize(data.toString(), false)
             } catch (err) {
-                this.send(new Protocol.ControlLayer.ErrorResponse({
+                this.send(new ControlLayer.ErrorResponse({
                     requestId: '', // Can't echo the requestId of the request since parsing the request failed
                     errorMessage: err.message || err,
-                    errorCode: Protocol.ControlLayer.ErrorCode.INVALID_REQUEST,
+                    errorCode: ControlLayer.ErrorCode.INVALID_REQUEST,
                 }))
             }
             if (message !== undefined) {
@@ -129,7 +130,7 @@ export class Connection extends EventEmitter {
         logger.trace(`sent ping to ${this.id}`)
     }
 
-    send(msg: Protocol.ControlLayer.ControlMessage): void {
+    send(msg: ControlMessage): void {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         logger.trace('send: %s: %o', this.id, serialized)
         let shouldContinueWriting = true

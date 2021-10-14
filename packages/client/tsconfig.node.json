@@ -1,6 +1,7 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.node.json",
     "compilerOptions": {
+        "composite": true,
         "declarationDir": "dist/types",
         "outDir": "dist",
         "lib": [
@@ -19,8 +20,13 @@
         "strictBindCallApply": true
     },
     "include": [
+        "package.json",
         "src/**/*",
         "vendor/**/*",
         "contracts/**/*"
+    ],
+    "references": [
+        { "path": "node_modules/streamr-network/tsconfig.node.json" },
+        { "path": "node_modules/streamr-client-protocol/tsconfig.node.json" }
     ]
 }

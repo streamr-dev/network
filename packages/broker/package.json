@@ -15,13 +15,15 @@
   },
   "main": "bin/broker.js",
   "scripts": {
-    "prepare": "tsc -p tsconfig-build.json",
+    "prepare": "npm run build",
     "test": "jest test/unit test/integration && npm run test-sequential",
-    "build": "tsc -p tsconfig-build.json",
+    "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
+    "build": "tsc -b tsconfig.node.json",
     "test-unit": "jest test/unit",
     "test-sequential": "jest --maxWorkers=1 test/sequential # always run sequential tests with maxWorkers=1",
     "test-integration": "jest --forceExit test/integration && npm run test-sequential",
-    "eslint": "eslint ."
+    "eslint": "eslint --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"
   },
   "author": "Streamr Network AG <contact@streamr.com>",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
@@ -71,6 +73,7 @@
     "qs": "^6.10.1",
     "split2": "^3.2.2",
     "streamr-client": "^6.0.0-alpha.11",
+    "streamr-client-protocol": "^9.1.0",
     "streamr-network": "^30.0.1",
     "streamr-test-utils": "^2.0.0",
     "terminal-kit": "^2.1.5",

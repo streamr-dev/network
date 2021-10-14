@@ -1,18 +1,18 @@
 {
-  "extends": "@streamr/dev-config/ts/tsconfig.node.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "rootDirs": ["src", "test"],
-    "types": [
-      "jest"
+    "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
+    "compilerOptions": {
+        "composite": true,
+        "outDir": "dist"
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*"
+    ],
+    "exclude": [
+        "test/**/BrowserWebRtcConnection.test.ts",
+        "test/**/IntegrationBrowserWebRtcConnection.test.ts"
+    ],
+    "references": [
+        { "path": "./tsconfig.node.json" }
     ]
-  },
-  "include": [
-    "src/**/*",
-    "test/**/*"
-  ],
-  "exclude": [
-    "src/**/BrowserWebRtcConnection.ts",
-    "test/**/BrowserWebRtcConnection.test.ts"
-  ]
 }

@@ -7,9 +7,9 @@
   "scripts": {
     "test": "jest",
     "test-unit": "npm run test",
-    "eslint": "eslint .",
-    "prepare": "eslint . && tsc",
-    "build": "tsc"
+    "eslint": "eslint --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "prepare": "npm run eslint && npm run build",
+    "build": "tsc --build tsconfig.json"
   },
   "keywords": [
     "testing",

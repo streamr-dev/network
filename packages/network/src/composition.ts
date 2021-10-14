@@ -1,6 +1,6 @@
 import 'setimmediate'
 export * as Protocol from 'streamr-client-protocol'
-export { MetricsContext } from './helpers/MetricsContext'
+export { MetricsContext, Metrics } from './helpers/MetricsContext'
 export { Location, AbstractNodeOptions } from './identifiers'
 export { Tracker } from './logic/tracker/Tracker'
 export { NetworkNode } from './logic/node/NetworkNode'

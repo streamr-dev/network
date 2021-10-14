@@ -10,9 +10,9 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig-build.json",
-    "prebuild": "npm run clean",
-    "clean": "rm -rf ./dist/* || true",
+    "build": "tsc -b tsconfig.node.json",
+    "prepublishOnly": "npm run clean && NODE_ENV=production npm run build",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "watch": "tsc --watch",
     "benchmark": "jest test/benchmarks --detectOpenHandles",
     "prepare": "npm run build",

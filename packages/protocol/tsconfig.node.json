@@ -5,11 +5,7 @@
         "outDir": "dist"
     },
     "include": [
-        "package.json",
         "src/**/*",
-        "bin/**/*"
-    ],
-    "references": [
-        { "path": "node_modules/streamr-client/tsconfig.node.json" }
+        "contracts/*.json"
     ]
 }

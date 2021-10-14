@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { Logger } from 'streamr-network'
 import { StreamPart } from '../../types'
-import { StreamMessage, keyToArrayIndex } from 'streamr-network/dist/streamr-protocol'
+import { StreamMessage, keyToArrayIndex } from 'streamr-client-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
 
 const logger = new Logger(module)
