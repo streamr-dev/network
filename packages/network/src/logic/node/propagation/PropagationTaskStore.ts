@@ -58,7 +58,7 @@ export class PropagationTaskStore {
         if (messageIds !== undefined) {
             messageIds.forEach((messageId) => {
                 const task = this.tasks.get(messageId)
-                if (task) {
+                if (task !== undefined) { // should never be undefined if we don't have bugs
                     tasks.push(task)
                 }
             })
