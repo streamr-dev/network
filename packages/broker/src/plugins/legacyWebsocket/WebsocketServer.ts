@@ -1,11 +1,10 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext, NetworkNode, Protocol } from 'streamr-network'
+import { Metrics, MetricsContext, NetworkNode, Protocol } from 'streamr-network'
 const { ControlLayer, MessageLayer, Errors } = Protocol
 import WebSocket from "ws"
 import { RequestHandler } from './RequestHandler'
 import { Connection } from './Connection'
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Publisher } from '../../Publisher'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Logger } from 'streamr-network'

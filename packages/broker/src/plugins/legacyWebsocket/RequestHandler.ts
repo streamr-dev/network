@@ -1,11 +1,10 @@
-import { Protocol } from 'streamr-network'
+import { Metrics, Protocol } from 'streamr-network'
 const { ControlLayer, Utils, ControlMessageType, ErrorCode } = Protocol
 import { ArrayMultimap } from '@teppeis/multimaps'
 import { HttpError } from '../../errors/HttpError'
 import { FailedToPublishError } from '../../errors/FailedToPublishError'
 import { Logger } from 'streamr-network'
 import { StreamStateManager } from '../../StreamStateManager' 
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Publisher } from '../../Publisher'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Connection } from './Connection'

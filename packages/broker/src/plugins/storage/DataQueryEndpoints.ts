@@ -2,8 +2,7 @@
  * Endpoints for RESTful data requests
  */
 import express, { Request, Response, Router } from 'express'
-import { MetricsContext, Protocol } from 'streamr-network'
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
+import { Metrics, MetricsContext, Protocol } from 'streamr-network'
 import { Logger } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Storage } from './Storage'
