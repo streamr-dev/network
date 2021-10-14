@@ -71,8 +71,9 @@ export class TrackerManager {
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.trackerConnector = new TrackerConnector(
-            streamManager,
-            this.nodeToTracker,
+            streamManager.getStreamsIterable.bind(streamManager),
+            this.nodeToTracker.connectToTracker.bind(this.nodeToTracker),
+            this.nodeToTracker.disconnectFromTracker.bind(this.nodeToTracker),
             this.trackerRegistry,
             opts.trackerConnectionMaintenanceInterval ?? 5000
         )
