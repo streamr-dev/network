@@ -53,7 +53,6 @@
         <button id="subscribe">Subscribe</button>
         <button id="publish">Publish</button>
         <button id="resend">Resend</button>
-        <button id="resend-subscribe">Resend Subscribe</button>
         <button id="disconnect">Disconnect</button>
     </nav>
     <article>
@@ -98,7 +97,10 @@
 let stream
 let messages = []
 
-const resetResults = () => $('#result').html('')
+const resetResults = () => {
+    $('#result').html('')
+    $('#error').html('')
+}
 
 
 $('#connect').on('click', async () => {

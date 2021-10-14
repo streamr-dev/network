@@ -115,8 +115,6 @@ describe('MessageStream', () => {
         })
         s.push(streamMessage)
         leaksDetector.add('streamMessage', streamMessage)
-        // const onEnd = jest.fn()
-        // s.on('end', onEnd)
         const received: StreamMessage<typeof testMessage>[] = []
         await expect(async () => {
             for await (const msg of s) {
@@ -125,7 +123,6 @@ describe('MessageStream', () => {
                 throw err
             }
         }).rejects.toThrow(err)
-        // expect(onEnd).toHaveBeenCalledTimes(1)
 
         expect(received).toEqual([streamMessage])
     })
@@ -135,8 +132,6 @@ describe('MessageStream', () => {
         leaksDetector.add('testMessage', testMessage)
         const s = new MessageStream<typeof testMessage>(context)
         leaksDetector.add(s.id, s)
-        // const onMessageStreamError = jest.fn()
-        // s.on('error', onMessageStreamError)
         const err = new Error(counterId('expected error'))
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
@@ -144,8 +139,6 @@ describe('MessageStream', () => {
         })
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
-        // const onEnd = jest.fn()
-        // s.on('end', onEnd)
         const received: StreamMessage<typeof testMessage>[] = []
         await expect(async () => {
             for await (const msg of s) {
@@ -157,8 +150,6 @@ describe('MessageStream', () => {
             }
         }).rejects.toThrow(err)
         await wait(10)
-        // expect(onEnd).toHaveBeenCalledTimes(1)
-        // expect(onMessageStreamError).toHaveBeenCalledTimes(1)
 
         expect(received).toEqual([streamMessage])
     })
@@ -170,8 +161,6 @@ describe('MessageStream', () => {
         leaksDetector.add(s.id, s)
         const err = new Error(counterId('expected error'))
 
-        // const onEnd = jest.fn()
-        // s.on('end', onEnd)
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
@@ -179,7 +168,6 @@ describe('MessageStream', () => {
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         s.endWrite(err)
-        // expect(onEnd).toHaveBeenCalledTimes(0)
         const received: StreamMessage<typeof testMessage>[] = []
         await expect(async () => {
             for await (const msg of s) {
@@ -188,7 +176,6 @@ describe('MessageStream', () => {
             }
         }).rejects.toThrow(err)
 
-        // expect(onEnd).toHaveBeenCalledTimes(1)
         expect(received).toEqual([streamMessage])
     })
     /*
@@ -237,8 +224,6 @@ describe('MessageStream', () => {
         const testMessage = Msg()
         const s = new MessageStream<typeof testMessage>(context)
 
-        // const onEnd = jest.fn()
-        // s.on('end', onEnd)
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
@@ -246,7 +231,6 @@ describe('MessageStream', () => {
         s.push(streamMessage)
         const received = await s.collect(1)
 
-        // expect(onEnd).toHaveBeenCalledTimes(1)
         expect(received).toEqual([streamMessage])
     })
 
@@ -256,8 +240,6 @@ describe('MessageStream', () => {
         leaksDetector.add('testMessage', testMessage)
         leaksDetector.add(s.id, s)
 
-        // const onEnd = jest.fn()
-        // s.on('end', onEnd)
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
@@ -269,7 +251,6 @@ describe('MessageStream', () => {
         await s.return()
         const received = await collectTask
 
-        // expect(onEnd).toHaveBeenCalledTimes(1)
         expect(received).toEqual([streamMessage])
     })
 
@@ -281,8 +262,6 @@ describe('MessageStream', () => {
         leaksDetector.add(s.id, s)
         leaksDetector.add('err', err)
 
-        // const onEnd = jest.fn()
-        // s.on('end', onEnd)
         const streamMessage = new StreamMessage({
             messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
             content: testMessage,
