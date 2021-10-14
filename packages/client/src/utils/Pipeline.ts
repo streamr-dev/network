@@ -204,7 +204,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         setImmediate(() => {
             // consume if not already doing so
             if (!this.isIterating) {
-                this.consume().catch(() => {}) // prevent unhandled
+                this.consume()
             }
         })
 
