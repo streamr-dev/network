@@ -221,12 +221,13 @@ describe(FifoMapWithTtl, () => {
                 expect(onItemDropped).toHaveBeenNthCalledWith(1, '4th')
             })
 
-            it('not invoked when TTL expires', () => {
+            it('invoked when getting a stale item', () => {
                 time = 0
                 setFirstFiveMessages()
                 time = 500
                 expect(fifoMap.get('1st')).toBeUndefined()
-                expect(onItemDropped).toHaveBeenCalledTimes(0)
+                expect(onItemDropped).toHaveBeenCalledTimes(1)
+                expect(onItemDropped).toHaveBeenNthCalledWith(1, '1st')
             })
         })
     })

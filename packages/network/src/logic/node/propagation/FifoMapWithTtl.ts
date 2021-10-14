@@ -92,8 +92,11 @@ export class FifoMapWithTtl<K, V> {
 
     get(key: K): V | undefined {
         const item = this.items.get(key)
-        if (item === undefined || item.expiresAt <= this.timeProvider()) {
-            // TODO: is there a significant performance impact if we were to delete here?
+        if (item === undefined) {
+            return undefined
+        }
+        if (item.expiresAt <= this.timeProvider()) {
+            this.delete(key)
             return undefined
         }
         return item.value
