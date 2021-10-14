@@ -15,7 +15,17 @@ const logger = new Logger(module)
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 const { InvalidJsonError, ValidationError } = Protocol.Errors
 
-type OptionalQueryParam = string | undefined
+interface QueryParams {
+    ts?: string
+    seq?: string
+    prev_ts?: string
+    prev_seq?: string
+    signatureType?: string
+    signature?: string
+    pkey?: string
+    address?: string
+    msgChainId?: string
+}
 
 /**
  * Endpoint for POSTing data to streams
@@ -40,7 +50,7 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
         // Check write permission using middleware, writes req.stream
         authenticator(streamFetcher, 'stream_publish'),
         // Produce request handler
-        async (req: AuthenticatedRequest, res: Response) => {
+        async (req: AuthenticatedRequest<QueryParams>, res: Response) => {
             // Validate body
             if (!req.body || !req.body.length) {
                 const errMsg = 'No request body or invalid request body.'
@@ -59,13 +69,13 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
             let signatureType
 
             try {
-                timestamp = req.query.ts ? parseTimestamp(req.query.ts as string) : Date.now()
-                sequenceNumber = req.query.seq ? parsePositiveInteger(req.query.seq as string) : 0
+                timestamp = req.query.ts ? parseTimestamp(req.query.ts) : Date.now()
+                sequenceNumber = req.query.seq ? parsePositiveInteger(req.query.seq) : 0
                 if (req.query.prev_ts) {
-                    const previousSequenceNumber = req.query.prev_seq ? parsePositiveInteger(req.query.prev_seq as string) : 0
-                    previousMessageRef = new MessageRef(parsePositiveInteger(req.query.prev_ts as string), previousSequenceNumber)
+                    const previousSequenceNumber = req.query.prev_seq ? parsePositiveInteger(req.query.prev_seq) : 0
+                    previousMessageRef = new MessageRef(parsePositiveInteger(req.query.prev_ts), previousSequenceNumber)
                 }
-                signatureType = req.query.signatureType ? parsePositiveInteger(req.query.signatureType as string) : 0
+                signatureType = req.query.signatureType ? parsePositiveInteger(req.query.signatureType) : 0
             } catch (err) {
                 logger.error(err)
                 res.status(400).send({
@@ -79,16 +89,16 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
                 const streamMessage = new StreamMessage({
                     messageId: new MessageID(
                         req.stream!.id as string,
-                        partitionFn(req.stream!.partitions as number, req.query.pkey as OptionalQueryParam),
+                        partitionFn(req.stream!.partitions as number, req.query.pkey),
                         timestamp,
                         sequenceNumber, // sequenceNumber
-                        (req.query.address as OptionalQueryParam) || '', // publisherId
-                        (req.query.msgChainId as OptionalQueryParam) || '',
+                        req.query.address || '', // publisherId
+                        req.query.msgChainId || '',
                     ),
                     prevMsgRef: previousMessageRef,
                     content: req.body.toString(),
                     signatureType,
-                    signature: (req.query.signature as OptionalQueryParam) || null,
+                    signature: req.query.signature || null,
                 })
 
                 await publisher.validateAndPublish(streamMessage)

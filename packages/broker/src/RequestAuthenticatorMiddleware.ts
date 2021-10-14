@@ -5,7 +5,9 @@ import { StreamFetcher } from './StreamFetcher'
 
 const logger = new Logger(module)
 
-export type AuthenticatedRequest = Request & { stream?: Record<string, unknown> }
+export interface AuthenticatedRequest<Q> extends Request<Record<string,any>,any,any,Q,Record<string,any>> {
+    stream?: Record<string, unknown>
+}
 
 /**
  * Middleware used to authenticate REST API requests
@@ -13,7 +15,7 @@ export type AuthenticatedRequest = Request & { stream?: Record<string, unknown> 
 export const authenticator = (
     streamFetcher: StreamFetcher,
     permission = 'stream_subscribe'
-) => (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+) => (req: AuthenticatedRequest<any>, res: Response, next: NextFunction): void => {
     let sessionToken
 
     // Try to parse authorization header if defined
