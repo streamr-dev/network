@@ -72,6 +72,37 @@ describe('MessageStream', () => {
         expect(received).toEqual([streamMessage])
     })
 
+    it('handles immediate errors in pull', async () => {
+        const testMessage = Msg()
+        const err = new Error(counterId('expected error'))
+        leaksDetector.add('err', err)
+        leaksDetector.add('testMessage', testMessage)
+        const streamMessage = new StreamMessage({
+            messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+            content: testMessage,
+        })
+        leaksDetector.add('streamMessage', streamMessage)
+        const s = new MessageStream<typeof testMessage>(context)
+        leaksDetector.add(s.id, s)
+        const received: StreamMessage<typeof testMessage>[] = []
+        s.onError((error) => {
+            throw error
+        })
+        // eslint-disable-next-line require-yield
+        s.pull((async function* g() {
+            throw err
+        }()))
+
+        await expect(async () => {
+            for await (const msg of s) {
+                leaksDetector.add('receivedMessage', msg)
+                received.push(msg)
+            }
+        }).rejects.toThrow(err)
+
+        expect(received).toEqual([])
+    })
+
     it('handles error during iteration', async () => {
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
