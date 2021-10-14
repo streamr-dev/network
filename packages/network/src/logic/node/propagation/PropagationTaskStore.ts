@@ -1,6 +1,6 @@
 import { MessageID, StreamMessage } from 'streamr-client-protocol'
 import { StreamIdAndPartition, StreamKey } from '../../../identifiers'
-import { FifoCache } from './FifoCache'
+import { FifoMapWithTtl } from './FifoMapWithTtl'
 import { NodeId } from '../Node'
 
 export interface PropagationTask {
@@ -10,25 +10,25 @@ export interface PropagationTask {
 }
 
 /**
- * Keeps track of active propagation tasks for the needs of message propagation logic.
+ * Keeps track of propagation tasks for the needs of message propagation logic.
  *
  * Properties:
- * - Upper bound on number of tasks stored, replacement policy if FIFO
  * - Allows fetching propagation tasks by StreamIdAndPartition
+ * - Upper bound on number of tasks stored, replacement policy if FIFO
  * - Items have a TTL, after which they are considered stale and not returned when querying
 **/
-export class ActivePropagationTaskStore {
+export class PropagationTaskStore {
     private readonly streamLookup = new Map<StreamKey, Set<MessageID>>()
-    private readonly tasks: FifoCache<MessageID, PropagationTask>
+    private readonly tasks: FifoMapWithTtl<MessageID, PropagationTask>
 
-    constructor(ttl: number, maxConcurrentMessages: number) {
-        this.tasks = new FifoCache<MessageID, PropagationTask>({
-            ttlInMs: ttl,
-            maxSize: maxConcurrentMessages,
-            onKeyDropped: (messageId: MessageID) => {
+    constructor(ttlInMs: number, maxTasks: number) {
+        this.tasks = new FifoMapWithTtl<MessageID, PropagationTask>({
+            ttlInMs,
+            maxSize: maxTasks,
+            onItemDropped: (messageId: MessageID) => {
                 const stream = StreamIdAndPartition.fromMessage(messageId)
                 const messageIdsForStream = this.streamLookup.get(stream.key())
-                if (messageIdsForStream) {
+                if (messageIdsForStream !== undefined) {
                     messageIdsForStream.delete(messageId)
                     if (messageIdsForStream.size === 0) {
                         this.streamLookup.delete(stream.key())
@@ -55,7 +55,7 @@ export class ActivePropagationTaskStore {
     get(stream: StreamIdAndPartition): Array<PropagationTask> {
         const messageIds = this.streamLookup.get(stream.key())
         const tasks: Array<PropagationTask> = []
-        if (messageIds) {
+        if (messageIds !== undefined) {
             messageIds.forEach((messageId) => {
                 const task = this.tasks.get(messageId)
                 if (task) {

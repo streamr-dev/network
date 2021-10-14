@@ -1,7 +1,7 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../Node'
 import { StreamIdAndPartition } from '../../../identifiers'
-import { ActivePropagationTaskStore } from './ActivePropagationTaskStore'
+import { PropagationTaskStore } from './PropagationTaskStore'
 
 type GetNeighborsFn = (stream: StreamIdAndPartition) => ReadonlyArray<NodeId>
 
@@ -12,10 +12,10 @@ type ConstructorOptions = {
     sendToNeighbor: SendToNeighborFn
     minPropagationTargets: number
     ttl?: number
-    maxConcurrentMessages?: number
+    maxMessages?: number
 }
 
-const DEFAULT_MAX_CONCURRENT_MESSAGES = 10000
+const DEFAULT_MAX_MESSAGES = 10000
 const DEFAULT_TTL = 30 * 1000
 
 /**
@@ -30,19 +30,19 @@ export class Propagation {
     private readonly getNeighbors: GetNeighborsFn
     private readonly sendToNeighbor: SendToNeighborFn
     private readonly minPropagationTargets: number
-    private readonly activeTaskStore: ActivePropagationTaskStore
+    private readonly activeTaskStore: PropagationTaskStore
 
     constructor({
         getNeighbors,
         sendToNeighbor,
         minPropagationTargets,
         ttl = DEFAULT_TTL,
-        maxConcurrentMessages = DEFAULT_MAX_CONCURRENT_MESSAGES
+        maxMessages = DEFAULT_MAX_MESSAGES
     }: ConstructorOptions) {
         this.getNeighbors = getNeighbors
         this.sendToNeighbor = sendToNeighbor
         this.minPropagationTargets = minPropagationTargets
-        this.activeTaskStore = new ActivePropagationTaskStore(ttl, maxConcurrentMessages)
+        this.activeTaskStore = new PropagationTaskStore(ttl, maxMessages)
     }
 
     /**
@@ -70,16 +70,14 @@ export class Propagation {
      */
     onNeighborJoined(neighborId: NodeId, stream: StreamIdAndPartition): void {
         const tasksOfStream = this.activeTaskStore.get(stream)
-        if (tasksOfStream) {
-            tasksOfStream.forEach(({ handledNeighbors, source, message}) => {
-                if (!handledNeighbors.has(neighborId) && neighborId !== source) {
-                    this.sendToNeighbor(neighborId, message)
-                    handledNeighbors.add(neighborId)
-                    if (handledNeighbors.size >= this.minPropagationTargets) {
-                        this.activeTaskStore.delete(message.messageId)
-                    }
+        tasksOfStream.forEach(({ handledNeighbors, source, message}) => {
+            if (!handledNeighbors.has(neighborId) && neighborId !== source) {
+                this.sendToNeighbor(neighborId, message)
+                handledNeighbors.add(neighborId)
+                if (handledNeighbors.size >= this.minPropagationTargets) {
+                    this.activeTaskStore.delete(message.messageId)
                 }
-            })
-        }
+            }
+        })
     }
 }

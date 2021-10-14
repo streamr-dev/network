@@ -1,7 +1,7 @@
 import {
-    ActivePropagationTaskStore,
+    PropagationTaskStore,
     PropagationTask
-} from '../../src/logic/node/propagation/ActivePropagationTaskStore'
+} from '../../src/logic/node/propagation/PropagationTaskStore'
 import { MessageIDStrict, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../../src/logic/node/Node'
 import { StreamIdAndPartition } from '../../src/identifiers'
@@ -27,6 +27,7 @@ const TASKS = [
     makeTask('s1', 1, 3000, []),
     makeTask('s2', 0, 4000, ['x', 'y']),
     makeTask('s3', 0, 5000, []),
+
     makeTask('s1', 0, 6000, []),
     makeTask('s1', 1, 7000, ['a', 'f']),
     makeTask('s4', 0, 8000, ['g']),
@@ -34,11 +35,11 @@ const TASKS = [
     makeTask('s2', 0, 10000, ['1', '2']),
 ]
 
-describe(ActivePropagationTaskStore, () => {
-    let store: ActivePropagationTaskStore
+describe(PropagationTaskStore, () => {
+    let store: PropagationTaskStore
 
     beforeEach(() => {
-        store = new ActivePropagationTaskStore(1000, 5)
+        store = new PropagationTaskStore(1000, 5)
         store.add(TASKS[0])
         store.add(TASKS[1])
         store.add(TASKS[2])
@@ -94,14 +95,15 @@ describe(ActivePropagationTaskStore, () => {
     })
 
     it('stale tasks are not returned', async () => {
-        store = new ActivePropagationTaskStore(100, 5)
+        const TTL = 100
+        store = new PropagationTaskStore(TTL, 5)
         store.add(TASKS[0])
         store.add(TASKS[2])
-        await wait(50)
+        await wait(TTL / 2)
         store.add(TASKS[1])
         store.add(TASKS[3])
         store.add(TASKS[4])
-        await wait(51)
+        await wait((TTL / 2) + 1)
         expect(store.get(new StreamIdAndPartition('s1', 0))).toEqual([TASKS[1]])
         expect(store.get(new StreamIdAndPartition('s1', 1))).toEqual([])
         expect(store.get(new StreamIdAndPartition('s2', 0))).toEqual([TASKS[3]])

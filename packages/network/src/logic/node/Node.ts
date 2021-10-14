@@ -11,7 +11,7 @@ import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NameDirectory } from '../../NameDirectory'
 import { DisconnectionReason } from "../../connection/ws/AbstractWsEndpoint"
-import { DEFAULT_NODE_DEGREE, TrackerId } from '../tracker/Tracker'
+import { DEFAULT_MAX_NEIGHBOR_COUNT, TrackerId } from '../tracker/Tracker'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 
@@ -95,7 +95,7 @@ export class Node extends EventEmitter {
 
         this.streams = new StreamManager()
         this.propagation = new Propagation({
-            getNeighbors: this.streams.getOutboundNodesForStream.bind(this.streams),
+            getNeighbors: this.streams.getNeighborsForStream.bind(this.streams),
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
@@ -131,7 +131,7 @@ export class Node extends EventEmitter {
                     }
                 }
             },
-            minPropagationTargets: Math.floor(DEFAULT_NODE_DEGREE / 2)
+            minPropagationTargets: Math.floor(DEFAULT_MAX_NEIGHBOR_COUNT / 2)
         })
         this.trackerManager = new TrackerManager(
             opts.protocols.nodeToTracker,
@@ -268,7 +268,7 @@ export class Node extends EventEmitter {
         }
         Object.values(this.disconnectionTimers).forEach((timeout) => clearTimeout(timeout))
         this.nodeToNode.stop()
-        return Promise.all([this.trackerManager.stop()])
+        return this.trackerManager.stop()
     }
 
     private subscribeToStreamOnNode(node: NodeId, streamId: StreamIdAndPartition, sendStatus = true): NodeId {

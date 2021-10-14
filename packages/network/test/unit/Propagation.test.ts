@@ -28,7 +28,7 @@ describe(Propagation, () => {
             sendToNeighbor,
             minPropagationTargets: 3,
             ttl: TTL,
-            maxConcurrentMessages: 5
+            maxMessages: 5
         })
     })
 
@@ -88,12 +88,6 @@ describe(Propagation, () => {
         it('no-op if passed already handled neighbor', () => {
             setUpAndFeed(['n1', 'n2', 'n3'])
             propagation.onNeighborJoined('n3', new StreamIdAndPartition('s1', 0))
-            expect(sendToNeighbor).toHaveBeenCalledTimes(0)
-        })
-
-        it('no-op if initially `minPropagationTargets` were propagated to', () => {
-            setUpAndFeed(['n1', 'n2', 'n3', 'n4'])
-            propagation.onNeighborJoined('n5', new StreamIdAndPartition('s1', 0))
             expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
 
