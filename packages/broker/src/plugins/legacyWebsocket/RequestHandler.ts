@@ -97,7 +97,7 @@ export class RequestHandler {
             if (!streamMessage.signature) {
                 // checkPermission is cached
                 await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(),
-                    StreamOperation.STREAM_PUBLISH, null)
+                    StreamOperation.STREAM_PUBLISH, streamMessage.getPublisherId())
             }
 
             await this.publisher.validateAndPublish(streamMessage)
@@ -346,7 +346,7 @@ export class RequestHandler {
                 throw new Error(`Key exchange streams only have partition 0. Tried to subscribe to ${request.streamId}:${request.streamPartition}`)
             }
         } else {
-            await this.streamFetcher.checkPermission(request.streamId, StreamOperation.STREAM_SUBSCRIBE, null)
+            // await this.streamFetcher.checkPermission(request.streamId, StreamOperation.STREAM_SUBSCRIBE, ???)
         }
     }
 

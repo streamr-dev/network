@@ -51,7 +51,7 @@ describeRepeats('StreamrClient', () => {
     }
 
     beforeEach(async () => {
-        client = createClient()
+        client = await createClient()
         client.debug('create stream >>')
         stream = await createStream()
         client.debug('create stream <<')

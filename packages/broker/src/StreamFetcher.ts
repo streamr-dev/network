@@ -30,7 +30,7 @@ export class StreamFetcher {
     }
 
     private async _authenticate(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE,
-        user: EthereumAddress | null): Promise<Todo>  {
+        user: EthereumAddress): Promise<Todo>  {
         await this.checkPermission(streamId, operation, user)
         return this.fetch(streamId)
     }
@@ -60,10 +60,7 @@ export class StreamFetcher {
      * @private
      */
     private async _checkPermission(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE,
-        user: EthereumAddress | null): Promise<boolean> {
-        if (user === null) {
-            user = await this.client.getAddress()
-        }
+        user: EthereumAddress): Promise<boolean> {
         if (streamId == null) {
             throw new Error('_checkPermission: streamId can not be null!')
         }

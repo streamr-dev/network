@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 
+import fetch from 'node-fetch'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { PublishRequest, StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
@@ -33,12 +34,16 @@ export function mockContext() {
 
 export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
-export function fakePrivateKey() {
-    return crypto.randomBytes(32).toString('hex')
-}
+// export function fakePrivateKey() {
+//     return crypto.randomBytes(32).toString('hex')
+// }
 
-export function fakeAddress() {
-    return crypto.randomBytes(32).toString('hex').slice(0, 40)
+// export function fakeAddress() {
+//     return crypto.randomBytes(32).toString('hex').slice(0, 40)
+// }
+export async function getPrivateKey(): Promise<string> {
+    const response = await fetch('http://localhost:45454/key')
+    return response.text()
 }
 
 const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
@@ -176,12 +181,13 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
 export const getCreateClient = (defaultOpts = {}) => {
     const addAfter = addAfterFn()
 
-    return function createClient(opts = {}) {
+    return async function createClient(opts = {}) {
+        const key = await getPrivateKey()
         const c = new StreamrClient({
             ...clientOptions,
-            // auth: {
-            //     privateKey: fakePrivateKey(),
-            // },
+            auth: {
+                privateKey: key,
+            },
             ...defaultOpts,
             ...opts,
         })

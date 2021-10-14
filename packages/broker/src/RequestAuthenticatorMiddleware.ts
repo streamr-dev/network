@@ -10,7 +10,7 @@ const logger = new Logger(module)
  * Middleware used to authenticate REST API requests
  */
 export const authenticator = (streamFetcher: StreamFetcher, permission = StreamOperation.STREAM_SUBSCRIBE,
-    user: EthereumAddress | null) => (req: Todo, res: Todo, next: Todo) => {
+    user: EthereumAddress) => (req: Todo, res: Todo, next: Todo) => {
 
     // Try to parse authorization header if defined
     if (req.headers.authorization !== undefined) {
@@ -26,26 +26,28 @@ export const authenticator = (streamFetcher: StreamFetcher, permission = StreamO
         }
     }
 
-    streamFetcher.authenticate(req.params.id, permission, user)
-        .then((streamJson: Todo) => {
-            req.stream = streamJson
-            next()
-        })
-        .catch((err: Todo) => {
-            let errorMsg
-            if (err instanceof HttpError && err.code === 403) {
-                errorMsg = 'Authentication failed.'
-            } else if (err instanceof HttpError && err.code === 404) {
-                errorMsg = `Stream ${req.params.id} not found.`
-            } else {
-                errorMsg = 'Request failed.'
-            }
+    req.stream = streamFetcher.authenticate(req.params.id, permission, user)
+    next()
+    // streamFetcher.authenticate(req.params.id, permission, user)
+    //     .then((streamJson: Todo) => {
+    //         req.stream = streamJson
+    //         next()
+    //     })
+    //     .catch((err: Todo) => {
+    //         let errorMsg
+    //         if (err instanceof HttpError && err.code === 403) {
+    //             errorMsg = 'Authentication failed.'
+    //         } else if (err instanceof HttpError && err.code === 404) {
+    //             errorMsg = `Stream ${req.params.id} not found.`
+    //         } else {
+    //             errorMsg = 'Request failed.'
+    //         }
 
-            logger.error(err)
-            logger.error(errorMsg)
+    //         logger.error(err)
+    //         logger.error(errorMsg)
 
-            res.status(err.code || 503).send({
-                error: errorMsg,
-            })
-        })
+    //         res.status(err.code || 503).send({
+    //             error: errorMsg,
+    //         })
+    //     })
 }
