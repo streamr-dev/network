@@ -40,7 +40,7 @@ jobs:
         node-version: [16.x]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
@@ -70,7 +70,7 @@ jobs:
       TEST_REPEATS: 5
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
@@ -114,7 +114,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
@@ -160,7 +160,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
@@ -200,7 +200,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
