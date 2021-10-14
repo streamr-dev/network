@@ -24,9 +24,9 @@ export interface FifoMapWithTtlOptions<K> {
  *
  */
 export class FifoMapWithTtl<K, V> {
-    // class invariant: the keys present in the `items` and `dropQueue` are the same set.
+    // class invariant: the keys present in `items` and `dropQueue` are the same set.
     private readonly items = new Map<K, Item<K, V>>()
-    private readonly dropQueue = Yallist.create<K>() // queue is used primarily to determine deletion order when full
+    private readonly dropQueue = Yallist.create<K>() // queue is used to determine deletion order when full
     private readonly ttlInMs: number
     private readonly maxSize: number
     private readonly onItemDropped: (key: K) => void
@@ -72,11 +72,11 @@ export class FifoMapWithTtl<K, V> {
         }
 
         // add entry
-        const fifoQueueNode = new Yallist.Node<K>(key)
-        this.dropQueue.pushNode(fifoQueueNode)
+        const dropQueueNode = new Yallist.Node<K>(key)
+        this.dropQueue.pushNode(dropQueueNode)
         this.items.set(key, {
             value,
-            dropQueueNode: fifoQueueNode,
+            dropQueueNode,
             expiresAt: this.timeProvider() + this.ttlInMs
         })
     }
