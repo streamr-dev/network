@@ -157,7 +157,7 @@ export class Storage extends EventEmitter {
         this.cassandraClient.eachRow(GET_BUCKETS, [streamId, partition], options, (_n, row: types.Row) => {
             bucketId = row.id
             bucketIds.push(bucketId)
-        }, async (err: Error, result: types.ResultSet) => {
+        }, async (err: Error | undefined, result: types.ResultSet) => {
             // do nothing if resultStream ended
             if (resultStream.writableEnded || resultStream.readableEnded) { return }
             if (err) {

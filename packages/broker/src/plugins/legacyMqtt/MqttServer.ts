@@ -258,7 +258,7 @@ export class MqttServer extends EventEmitter {
 
         // Unsubscribe from all streams
         connection.forEachStream((stream) => {
-            const object = {
+            const object: Partial<mqtt.IUnsubscribePacket> = {
                 messageId: 0,
                 unsubscriptions: [stream.getName()]
             }

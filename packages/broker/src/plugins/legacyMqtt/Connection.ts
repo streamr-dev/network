@@ -134,7 +134,7 @@ export class Connection extends ConnectionEmitter {
         return this.streams.slice() // return copy
     }
 
-    streamsAsString(): any {
+    streamsAsString(): string[] {
         return this.streams.map((s) => s.toString())
     }
 }

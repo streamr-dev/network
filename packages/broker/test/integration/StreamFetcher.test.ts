@@ -4,7 +4,7 @@ import bodyParser from 'body-parser'
 import { v4 as uuidv4 } from 'uuid'
 import { StreamFetcher } from '../../src/StreamFetcher'
 import { HttpError } from '../../src/errors/HttpError'
-import http from "http"
+import http from 'http'
 
 describe('StreamFetcher', () => {
     let streamFetcher: StreamFetcher
