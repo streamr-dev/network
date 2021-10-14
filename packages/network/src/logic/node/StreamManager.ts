@@ -117,6 +117,12 @@ export class StreamManager {
         return this.getStreamsAsKeys().map((key) => StreamIdAndPartition.fromKey(key))
     }
 
+    *getStreamsIterable(): IterableIterator<StreamIdAndPartition> {
+        for (const streamKey of this.getStreamKeys()) {
+            yield StreamIdAndPartition.fromKey(streamKey)
+        }
+    }
+
     // efficient way to access streams
     getStreamKeys(): IterableIterator<StreamKey> {
         return this.streams.keys()
