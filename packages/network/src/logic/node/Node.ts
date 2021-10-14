@@ -272,8 +272,7 @@ export class Node extends EventEmitter {
     }
 
     private subscribeToStreamOnNode(node: NodeId, streamId: StreamIdAndPartition, sendStatus = true): NodeId {
-        this.streams.addInboundNode(streamId, node)
-        this.streams.addOutboundNode(streamId, node)
+        this.streams.addNeighbor(streamId, node)
         this.propagation.onNeighborJoined(node, streamId)
         if (sendStatus) {
             this.trackerManager.sendStreamStatus(streamId)

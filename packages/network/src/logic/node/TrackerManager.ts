@@ -177,7 +177,7 @@ export class TrackerManager {
         logger.trace('received instructions for %s, nodes to connect %o', streamId, nodeIds)
 
         this.subscriber.subscribeToStreamIfHaveNotYet(streamId, false)
-        const currentNodes = this.streamManager.getAllNodesForStream(streamId)
+        const currentNodes = this.streamManager.getNeighborsForStream(streamId)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {
