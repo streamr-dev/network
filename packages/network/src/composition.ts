@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
-import { MetricsContext } from './helpers/MetricsContext'
+import { Metrics, MetricsContext } from './helpers/MetricsContext'
 import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { HttpServerConfig, ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
@@ -23,6 +23,7 @@ require('setimmediate')
 
 export {
     Location,
+    Metrics,
     MetricsContext,
     NetworkNode,
     Protocol,

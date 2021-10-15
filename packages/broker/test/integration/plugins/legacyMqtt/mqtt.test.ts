@@ -2,7 +2,6 @@ import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Todo } from '../../../../src/types'
 import { Broker } from '../../../broker'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../../../utils'
 
@@ -103,9 +102,9 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     it('happy-path: real-time mqtt plain text producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
@@ -189,8 +188,8 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     it('happy-path: real-time mqtt json producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
@@ -244,10 +243,10 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     it('happy-path: real-time mqtt and websocket producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
-        const client4Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
+        const client4Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
 
