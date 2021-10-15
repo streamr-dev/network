@@ -5,7 +5,18 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "strictBindCallApply": true,
-        "outDir": "dist"
+        "outDir": "dist",
+        "lib": [
+            "ES5",
+            "ES2015",
+            "ES2016",
+            "ES2017",
+            "ES2018",
+            "ES2019",
+            "ES2020",
+            "ESNext",
+            "DOM"
+        ]
     },
     "include": [
         "package.json",
@@ -14,7 +25,12 @@
         "contracts/**/*.json",
         "test/**/*"
     ],
-    "exclude": ["test/legacy/*", "test/memory/*", "test/exports/*"],
+    "exclude": [
+        "test/legacy/*",
+        "test/memory/*",
+        "test/exports/*",
+        "src/shim/*"
+    ],
     "references": [
         { "path": "./tsconfig.node.json" }
     ]

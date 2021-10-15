@@ -1,0 +1,41 @@
+{
+    "extends": "@streamr/dev-config/ts/tsconfig.browser.json",
+    "compilerOptions": {
+        "composite": true,
+        "noEmit": true,
+        "declarationDir": "dist/types",
+        "outDir": "dist",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "strictBindCallApply": true,
+        "baseUrl": ".",
+        "paths": {
+            "stream": ["readable-stream"],
+            "util": ["util"],
+            "http": ["./src/shim/http-https.js"],
+            "@ethersproject/wordlists": ["./node_modules/@ethersproject/wordlists/lib.esm/browser-wordlists.js"],
+            "https": ["./src/shim/http-https.js"],
+            "crypto": ["./node_modules/crypto-browserify"],
+            "buffer": ["./node_modules/buffer"],
+            "node-fetch": ["./src/shim/node-fetch.ts"],
+            "node-webcrypto-ossl": ["./src/shim/crypto.ts"],
+            "streamr-client-protocol/dist/contracts/NodeRegistry.json": ["./node_modules/streamr-client-protocol/dist/contracts/NodeRegistry.json"],
+            "streamr-client-protocol/*": ["./node_modules/streamr-client-protocol/src/*"],
+            "streamr-client-protocol": ["./node_modules/streamr-client-protocol/src/index.ts"],
+            "streamr-network": ["./node_modules/streamr-network/src/browser.ts"],
+            "./node_modules/streamr-network/src/connection/NodeWebRtcConnection.ts": ["./node_modules/streamr-network/src/connection/BrowserWebRtcConnection.ts"],
+            "./node_modules/streamr-network/src/connection/ws/NodeClientWsEndpoint.ts": ["./node_modules/streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts"],
+            "./node_modules/streamr-network/src/connection/ws/NodeClientWsConnection.ts": ["./node_modules/streamr-network/src/connection/ws/BrowserClientWsConnection.ts"],
+            "./node_modules/streamr-network/src/helpers/logger/LoggerNode.ts": ["./node_modules/streamr-network/src/helpers/logger/LoggerBrowser.ts"]
+        }
+    },
+    "include": [
+        "package.json",
+        "src/**/*",
+        "vendor/**/*",
+        "contracts/**/*.json"
+    ],
+    "references": [
+        { "path": "node_modules/streamr-client-protocol/tsconfig.node.json" }
+    ]
+}

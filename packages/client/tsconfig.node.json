@@ -26,7 +26,7 @@
         "contracts/**/*.json"
     ],
     "exclude": [
-        "src/**/WebCryptoBrowser.ts"
+        "src/shim/*"
     ],
     "references": [
         { "path": "node_modules/streamr-network/tsconfig.node.json" },

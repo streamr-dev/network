@@ -13,7 +13,7 @@
     "subscriber": "bin/subscriber.js",
     "tracker": "bin/tracker.js"
   },
-  "main": "dist/streamr-network.js",
+  "main": "dist/src/composition.js",
   "browser": "dist/streamr-network.js",
   "types": "dist/src/composition.d.ts",
   "scripts": {

@@ -5,7 +5,7 @@ import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { SPID, SIDLike, MessageRef, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import split2 from 'split2'
-import { Transform } from 'stream'
+import { Readable } from 'stream'
 
 import { instanceId, counterId } from './utils'
 import { Context, ContextError } from './utils/Context'
@@ -19,24 +19,33 @@ import Session from './Session'
 import NodeRegistry from './StorageNodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
+import { ConvertBrowserStream } from './utils/ConvertBrowserStream'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
-async function fetchStream(url: string, session: Session, opts = {}, abortController = new AbortController()) {
+async function fetchStream(url: string, session: Session, opts = {}, abortController = new AbortController()): Promise<Readable> {
     const startTime = Date.now()
     const response = await authRequest(url, session, {
         signal: abortController.signal,
         ...opts,
     })
+    if (!response.body) {
+        throw new Error('No Response Body')
+    }
+
     try {
-        const stream: Transform = response.body.pipe(split2((message: string) => {
+        const source: Readable = ConvertBrowserStream(response.body as unknown as (ReadableStream | Readable))
+
+        const stream = source.pipe(split2((message: string) => {
             return StreamMessage.deserialize(message)
         }))
+
         stream.once('close', () => {
             abortController.abort()
         })
+
         return Object.assign(stream, {
             startTime,
         })
