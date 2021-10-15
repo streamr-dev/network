@@ -16,6 +16,16 @@ export interface DisconnectionManagerOptions {
     cleanUpIntervalInMs: number
 }
 
+/**
+ * DisconnectionManager assists a network node in disconnecting from other nodes when streams are
+ * no longer shared between them.
+ *
+ * There are two ways this is achieved:
+ *  1. Manual: a node can schedule (and cancel) disconnections that get executed after `disconnectionDelayInMs` if
+ *      they still don't share streams.
+ *  2. Automatic: a clean up interval is ran periodically in which any node without shared streams gets disconnected
+ *      from.
+ */
 export class DisconnectionManager {
     private readonly disconnectionTimers: Record<NodeId, NodeJS.Timeout> = Object.create(null)
     private readonly getAllNodes: GetAllNodesFn
