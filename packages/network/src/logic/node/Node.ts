@@ -9,11 +9,10 @@ import { StreamManager } from './StreamManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
-import { NameDirectory } from '../../NameDirectory'
-import { DisconnectionReason } from "../../connection/ws/AbstractWsEndpoint"
 import { DEFAULT_MAX_NEIGHBOR_COUNT, TrackerId } from '../tracker/Tracker'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
+import { DisconnectionManager } from './DisconnectionManager'
 
 const logger = new Logger(module)
 
@@ -54,12 +53,11 @@ export class Node extends EventEmitter {
     /** @internal */
     public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
-    private readonly disconnectionWaitTime: number
     private readonly nodeConnectTimeout: number
     private readonly started: string
 
-    private readonly disconnectionTimers: Record<NodeId,NodeJS.Timeout>
     protected readonly streams: StreamManager
+    private readonly disconnectionManager: DisconnectionManager
     private readonly propagation: Propagation
     private readonly trackerManager: TrackerManager
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
@@ -72,8 +70,6 @@ export class Node extends EventEmitter {
 
         this.nodeToNode = opts.protocols.nodeToNode
         this.peerInfo = opts.peerInfo
-
-        this.disconnectionWaitTime = opts.disconnectionWaitTime || 30 * 1000
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.started = new Date().toLocaleString()
 
@@ -90,6 +86,11 @@ export class Node extends EventEmitter {
             .addFixedMetric('latency')
 
         this.streams = new StreamManager()
+        this.disconnectionManager = new DisconnectionManager({
+            hasSharedStreams: this.streams.isNodePresent.bind(this.streams),
+            disconnect: this.nodeToNode.disconnectFromNode.bind(this.nodeToNode),
+            disconnectionDelayInMs: opts.disconnectionWaitTime || 30 * 1000
+        })
         this.propagation = new Propagation({
             getNeighbors: this.streams.getNeighborsForStream.bind(this.streams),
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
@@ -147,7 +148,6 @@ export class Node extends EventEmitter {
             }
         )
 
-        this.disconnectionTimers = {}
         this.consecutiveDeliveryFailures = {}
         this.connectionCleanUpInterval = null
 
@@ -204,10 +204,8 @@ export class Node extends EventEmitter {
         reattempt: boolean
     ): Promise<PromiseSettledResult<NodeId>[]> {
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            await promiseTimeout(this.nodeConnectTimeout,
-                this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
-
-            this.clearDisconnectionTimer(nodeId)
+            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
+            this.disconnectionManager.cancelScheduledDisconnection(nodeId)
             this.subscribeToStreamOnNode(nodeId, streamId, false)
             return nodeId
         })
@@ -262,7 +260,7 @@ export class Node extends EventEmitter {
             clearInterval(this.connectionCleanUpInterval)
             this.connectionCleanUpInterval = null
         }
-        Object.values(this.disconnectionTimers).forEach((timeout) => clearTimeout(timeout))
+        this.disconnectionManager.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
     }
@@ -285,17 +283,7 @@ export class Node extends EventEmitter {
         this.streams.removeNodeFromStream(streamId, node)
         logger.trace('node %s unsubscribed from stream %s', node, streamId)
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamId)
-
-        if (!this.streams.isNodePresent(node)) {
-            this.clearDisconnectionTimer(node)
-            this.disconnectionTimers[node] = setTimeout(() => {
-                delete this.disconnectionTimers[node]
-                if (!this.streams.isNodePresent(node)) {
-                    logger.info('No shared streams with %s, disconnecting', NameDirectory.getName(node))
-                    this.nodeToNode.disconnectFromNode(node, DisconnectionReason.NO_SHARED_STREAMS)
-                }
-            }, this.disconnectionWaitTime)
-        }
+        this.disconnectionManager.scheduleDisconnectionIfNoSharedStreams(node)
         if (sendStatus) {
             this.trackerManager.sendStreamStatus(streamId)
         }
@@ -309,13 +297,6 @@ export class Node extends EventEmitter {
             this.trackerManager.sendStreamStatus(s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
-    }
-
-    private clearDisconnectionTimer(nodeId: NodeId): void {
-        if (this.disconnectionTimers[nodeId] != null) {
-            clearTimeout(this.disconnectionTimers[nodeId])
-            delete this.disconnectionTimers[nodeId]
-        }
     }
 
     private startConnectionCleanUpInterval(interval: number): NodeJS.Timeout {
