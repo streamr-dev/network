@@ -60,7 +60,6 @@ module.exports = {
     globals: {
         'ts-jest': {
             babelConfig: false,
-            // tsConfig: 'tsconfig.test.json',
         }
     },
 

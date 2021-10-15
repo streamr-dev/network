@@ -8,9 +8,9 @@ module.exports = {
     globals: {
         'ts-jest': {
             babelConfig: false,
-            tsconfig: 'tsconfig.test.json',
         }
     },
+
     // Automatically clear mock calls and instances between every test
     clearMocks: true,
 
