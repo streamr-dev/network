@@ -141,6 +141,17 @@ describe(DisconnectionManager, () => {
             expect(disconnect).toHaveBeenCalledTimes(0)
         })
 
+        it('re-scheduling same disconnection causes debounce', async () => {
+            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            await wait(TTL / 2)
+            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            await wait((TTL / 2) + 1)
+            expect(disconnect).toHaveBeenCalledTimes(0)
+            await wait((TTL / 2) + 1)
+            expect(disconnect).toHaveBeenCalledTimes(1)
+            expect(disconnect).toHaveBeenNthCalledWith(1, 'node', 'no shared streams')
+        })
+
         it('not executed after TTL if canceled before', async () => {
             manager.scheduleDisconnectionIfNoSharedStreams('node')
             await wait(TTL / 2)
