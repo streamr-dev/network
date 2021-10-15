@@ -4,14 +4,14 @@ import { Logger } from '../../helpers/Logger'
 
 type GetAllNodesFn = () => ReadonlyArray<NodeId>
 type HasSharedStreamsFn = (nodeId: NodeId) => boolean
-type DisconnectionFn = (nodeId: NodeId, reason: string) => void
+type DisconnectFn = (nodeId: NodeId, reason: string) => void
 
 const logger = new Logger(module)
 
 export interface DisconnectionManagerOptions {
     getAllNodes: GetAllNodesFn,
     hasSharedStreams: HasSharedStreamsFn,
-    disconnect: DisconnectionFn,
+    disconnect: DisconnectFn,
     disconnectionDelayInMs: number,
     cleanUpIntervalInMs: number
 }
@@ -20,7 +20,7 @@ export class DisconnectionManager {
     private readonly disconnectionTimers: Record<NodeId, NodeJS.Timeout> = Object.create(null)
     private readonly getAllNodes: GetAllNodesFn
     private readonly hasSharedStreams: HasSharedStreamsFn
-    private readonly disconnect: DisconnectionFn
+    private readonly disconnect: DisconnectFn
     private readonly disconnectionDelayInMs: number
     private readonly cleanUpIntervalInMs: number
     private connectionCleanUpInterval: NodeJS.Timeout | null = null
