@@ -29,12 +29,10 @@ const TRACKERS = [
     },
 ]
 
-const STREAMS = [
-    new StreamIdAndPartition('streamOne', 0),   // t1
-    new StreamIdAndPartition('streamOne', 15),  // t2
-    new StreamIdAndPartition('streamSix', 0),   // t3
-    new StreamIdAndPartition('streamTwo', 0)    // t4
-]
+const T1_STREAM = new StreamIdAndPartition('streamOne', 0)
+const T2_STREAM = new StreamIdAndPartition('streamOne', 15)
+const T3_STREAM = new StreamIdAndPartition('streamSix', 0)
+const T4_STREAM = new StreamIdAndPartition('streamTwo', 0)
 
 describe(TrackerConnector, () => {
     let streams: Array<StreamIdAndPartition>
@@ -44,9 +42,13 @@ describe(TrackerConnector, () => {
     beforeAll(() => {
         // sanity check stream hash assignments
         const trackerRegistry = new Utils.TrackerRegistry<TrackerInfo>(TRACKERS)
-        for (let i = 0; i < STREAMS.length; ++i) {
-            expect(trackerRegistry.getTracker(STREAMS[i].id, STREAMS[i].partition)).toEqual(TRACKERS[i])
+        function checkTrackerAssignment({ id, partition }: StreamIdAndPartition, expectedTracker: TrackerInfo): void {
+            expect(trackerRegistry.getTracker(id, partition)).toEqual(expectedTracker)
         }
+        checkTrackerAssignment(T1_STREAM, TRACKERS[0])
+        checkTrackerAssignment(T2_STREAM, TRACKERS[1])
+        checkTrackerAssignment(T3_STREAM, TRACKERS[2])
+        checkTrackerAssignment(T4_STREAM, TRACKERS[3])
     })
 
     function setUpConnector(intervalInMs: number) {
@@ -85,7 +87,7 @@ describe(TrackerConnector, () => {
         await wait(TTL_IN_MS + 1)
         expect(activeConnections).toBeEmpty()
 
-        streams = [STREAMS[0]]
+        streams = [T1_STREAM]
         await wait(TTL_IN_MS + 1)
         expect(activeConnections).toEqual(new Set<string>(['t1']))
 
@@ -93,14 +95,14 @@ describe(TrackerConnector, () => {
         await wait(TTL_IN_MS + 1)
         expect(activeConnections).toBeEmpty()
 
-        streams = [STREAMS[1], STREAMS[2]]
+        streams = [T2_STREAM, T3_STREAM]
         await wait(TTL_IN_MS + 1)
         expect(activeConnections).toEqual(new Set<string>(['t2', 't3']))
 
         streams = [
-            STREAMS[3],
-            STREAMS[2],
-            STREAMS[1]
+            T4_STREAM,
+            T3_STREAM,
+            T2_STREAM
         ]
         await wait(TTL_IN_MS + 1)
         expect(activeConnections).toEqual(new Set<string>(['t2', 't3', 't4']))
@@ -114,10 +116,10 @@ describe(TrackerConnector, () => {
         setUpConnector(1000000000)
         connector.start()
 
-        connector.onNewStream(STREAMS[1])
+        connector.onNewStream(T2_STREAM)
         expect(activeConnections).toEqual(new Set<string>(['t2']))
 
-        connector.onNewStream(STREAMS[3])
+        connector.onNewStream(T4_STREAM)
         expect(activeConnections).toEqual(new Set<string>(['t2', 't4']))
     })
 })
