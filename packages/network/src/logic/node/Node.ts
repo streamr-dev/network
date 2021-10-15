@@ -62,7 +62,6 @@ export class Node extends EventEmitter {
     private readonly trackerManager: TrackerManager
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metrics: Metrics
-    private connectionCleanUpInterval: NodeJS.Timeout | null
     protected extraMetadata: Record<string, unknown> = {}
 
     constructor(opts: NodeOptions) {
@@ -71,6 +70,7 @@ export class Node extends EventEmitter {
         this.nodeToNode = opts.protocols.nodeToNode
         this.peerInfo = opts.peerInfo
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
+        this.consecutiveDeliveryFailures = {}
         this.started = new Date().toLocaleString()
 
         const metricsContext = opts.metricsContext || new MetricsContext('')
@@ -87,9 +87,11 @@ export class Node extends EventEmitter {
 
         this.streams = new StreamManager()
         this.disconnectionManager = new DisconnectionManager({
+            getAllNodes: this.nodeToNode.getAllConnectionNodeIds,
             hasSharedStreams: this.streams.isNodePresent.bind(this.streams),
             disconnect: this.nodeToNode.disconnectFromNode.bind(this.nodeToNode),
-            disconnectionDelayInMs: opts.disconnectionWaitTime || 30 * 1000
+            disconnectionDelayInMs: opts.disconnectionWaitTime ?? 30 * 1000,
+            cleanUpIntervalInMs: 2 * 60 * 1000
         })
         this.propagation = new Propagation({
             getNeighbors: this.streams.getNeighborsForStream.bind(this.streams),
@@ -148,9 +150,6 @@ export class Node extends EventEmitter {
             }
         )
 
-        this.consecutiveDeliveryFailures = {}
-        this.connectionCleanUpInterval = null
-
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
@@ -173,8 +172,6 @@ export class Node extends EventEmitter {
     start(): void {
         logger.trace('started')
         this.trackerManager.start()
-        clearInterval(this.connectionCleanUpInterval!)
-        this.connectionCleanUpInterval = this.startConnectionCleanUpInterval(2 * 60 * 1000)
     }
 
     subscribeToStreamIfHaveNotYet(streamId: StreamIdAndPartition, sendStatus = true): void {
@@ -256,10 +253,6 @@ export class Node extends EventEmitter {
     }
 
     stop(): Promise<unknown> {
-        if (this.connectionCleanUpInterval) {
-            clearInterval(this.connectionCleanUpInterval)
-            this.connectionCleanUpInterval = null
-        }
         this.disconnectionManager.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
@@ -273,10 +266,6 @@ export class Node extends EventEmitter {
         }
         this.emit(Event.NODE_SUBSCRIBED, node, streamId)
         return node
-    }
-
-    protected isNodePresent(nodeId: NodeId): boolean {
-        return this.streams.isNodePresent(nodeId)
     }
 
     private unsubscribeFromStreamOnNode(node: NodeId, streamId: StreamIdAndPartition, sendStatus = true): void {
@@ -297,19 +286,6 @@ export class Node extends EventEmitter {
             this.trackerManager.sendStreamStatus(s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
-    }
-
-    private startConnectionCleanUpInterval(interval: number): NodeJS.Timeout {
-        return setInterval(() => {
-            const peerIds = this.nodeToNode.getAllConnectionNodeIds()
-            const unusedConnections = peerIds.filter((peer) => !this.isNodePresent(peer))
-            if (unusedConnections.length > 0) {
-                logger.debug(`Disconnecting from ${unusedConnections.length} unused connections`)
-                unusedConnections.forEach((peerId) => {
-                    this.nodeToNode.disconnectFromNode(peerId, 'Unused connection')
-                })
-            }
-        }, interval)
     }
 
     getStreams(): ReadonlyArray<string> {
