@@ -1,10 +1,8 @@
 import { Utils } from 'streamr-client-protocol'
 import { StreamIdAndPartition, TrackerInfo } from '../../identifiers'
-import { NodeToTracker } from '../../protocol/NodeToTracker'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { TrackerId } from '../tracker/Tracker'
-import { StreamManager } from './StreamManager'
 import { NameDirectory } from '../../NameDirectory'
 
 const logger = new Logger(module)
@@ -14,36 +12,32 @@ enum ConnectionState {
     ERROR
 }
 
-export class TrackerConnector {
+type GetStreamsFn = () => Iterable<StreamIdAndPartition>
+type ConnectToTrackerFn = (trackerAddress: string, trackerPeerInfo: PeerInfo) => Promise<unknown>
+type DisconnectFromTrackerFn = (trackerId: TrackerId) => void
 
-    private readonly streamManager: StreamManager
-    private readonly nodeToTracker: NodeToTracker
+export class TrackerConnector {
+    private readonly getStreams: GetStreamsFn
+    private readonly connectToTracker: ConnectToTrackerFn
+    private readonly disconnectFromTracker: DisconnectFromTrackerFn
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
-    private connectionStates: Map<TrackerId,ConnectionState>
+    private connectionStates: Map<TrackerId, ConnectionState>
 
     constructor(
-        streamManager: StreamManager,
-        nodeToTracker: NodeToTracker,
+        getStreams: GetStreamsFn,
+        connectToTracker: ConnectToTrackerFn,
+        disconnectFromTracker: DisconnectFromTrackerFn,
         trackerRegistry: Utils.TrackerRegistry<TrackerInfo>,
         maintenanceInterval: number
     ) {
-        this.streamManager = streamManager
-        this.nodeToTracker = nodeToTracker
+        this.getStreams = getStreams
+        this.connectToTracker = connectToTracker
+        this.disconnectFromTracker = disconnectFromTracker
         this.trackerRegistry = trackerRegistry
         this.maintenanceInterval = maintenanceInterval
         this.connectionStates = new Map()
-    }
-
-    maintainConnections(): void {
-        this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
-            if (this.isActiveTracker(trackerInfo.id)) {
-                this.connectTo(trackerInfo)
-            } else {
-                this.nodeToTracker.disconnectFromTracker(trackerInfo.id)
-            }
-        })
     }
 
     onNewStream(streamId: StreamIdAndPartition): void {
@@ -66,8 +60,18 @@ export class TrackerConnector {
         }
     }
 
+    private maintainConnections(): void {
+        this.trackerRegistry.getAllTrackers().forEach((trackerInfo) => {
+            if (this.isActiveTracker(trackerInfo.id)) {
+                this.connectTo(trackerInfo)
+            } else {
+                this.disconnectFromTracker(trackerInfo.id)
+            }
+        })
+    }
+
     private connectTo({ id, ws }: TrackerInfo): void {
-        this.nodeToTracker.connectToTracker(ws, PeerInfo.newTracker(id))
+        this.connectToTracker(ws, PeerInfo.newTracker(id))
             .then(() => {
                 if (this.connectionStates.get(id) !== ConnectionState.SUCCESS) {
                     logger.info('Connected to tracker %s', NameDirectory.getName(id))
@@ -86,8 +90,7 @@ export class TrackerConnector {
     }
 
     private isActiveTracker(trackerId: TrackerId): boolean {
-        for (const streamKey of this.streamManager.getStreamKeys()) {
-            const { id: streamId, partition } = StreamIdAndPartition.fromKey(streamKey)
+        for (const { id: streamId, partition } of this.getStreams()) {
             if (this.trackerRegistry.getTracker(streamId, partition).id === trackerId) {
                 return true
             }
