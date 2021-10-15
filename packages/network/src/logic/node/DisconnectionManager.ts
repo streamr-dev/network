@@ -1,11 +1,10 @@
 import { NodeId } from './Node'
 import { NameDirectory } from '../../NameDirectory'
-import { DisconnectionReason } from '../../connection/ws/AbstractWsEndpoint'
 import { Logger } from '../../helpers/Logger'
 
 type GetAllNodesFn = () => ReadonlyArray<NodeId>
 type HasSharedStreamsFn = (nodeId: NodeId) => boolean
-type DisconnectionFn = (nodeId: NodeId, reason: DisconnectionReason) => void
+type DisconnectionFn = (nodeId: NodeId, reason: string) => void
 
 const logger = new Logger(module)
 
@@ -48,7 +47,7 @@ export class DisconnectionManager {
                 logger.debug('connectionCleanUpInterval: disconnecting from %d nodes', nonNeighborNodeIds.length)
                 nonNeighborNodeIds.forEach((nodeId) => {
                     logger.trace('executing disconnect from %s', NameDirectory.getName(nodeId))
-                    this.disconnect(nodeId, DisconnectionReason.NO_SHARED_STREAMS)
+                    this.disconnect(nodeId, 'no shared streams')
                 })
             }
         }, this.cleanUpIntervalInMs)
@@ -68,7 +67,7 @@ export class DisconnectionManager {
                 delete this.disconnectionTimers[nodeId]
                 if (!this.hasSharedStreams(nodeId)) {
                     logger.trace('executing disconnect from %s', NameDirectory.getName(nodeId))
-                    this.disconnect(nodeId, DisconnectionReason.NO_SHARED_STREAMS)
+                    this.disconnect(nodeId, 'no shared streams')
                 }
             }, this.disconnectionDelayInMs)
             logger.trace('scheduled disconnection from %s in %d ms', nodeId, this.disconnectionDelayInMs)
