@@ -7,7 +7,7 @@ import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
 
 /**
- * This test verifies that tracker receives status messages from nodes with list of inBound and outBound connections
+ * This test verifies that tracker receives status messages from nodes with list of neighbor connections
  */
 
 // Seems to only be able to perform one connection on the tracker using the split ws client/server (???)

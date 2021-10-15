@@ -46,6 +46,8 @@ export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
 }
 
+export const DEFAULT_MAX_NEIGHBOR_COUNT = 4
+
 export class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode: number
     private readonly trackerServer: TrackerServer
@@ -137,6 +139,12 @@ export class Tracker extends EventEmitter {
                 throw new Error(`Assertion failed: ${streamKeys.length} streams in a status messages`)
             }
         }
+        if ((status.stream as any).inboundNodes !== undefined) {
+            // backwards compatibility to support old status message
+            // which contained "inboundNodes" and "outboundNodes" field instead of "neighbors" field
+            // TODO remove this e.g. at the same time we remove the above FRONT-635 hack
+            status.stream.neighbors = (status.stream as any).inboundNodes  // status.stream.outboundNodes has exactly the same content
+        }
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
         if (!isMostRecent) {
             return
@@ -180,8 +188,7 @@ export class Tracker extends EventEmitter {
         if (status.counter === COUNTER_UNSUBSCRIBE) {
             this.leaveAndCheckEmptyOverlay(status.streamKey, this.overlayPerStream[status.streamKey], node)
         } else {
-            const neighbors = new Set([...status.inboundNodes, ...status.outboundNodes])
-            this.overlayPerStream[status.streamKey].update(node, [...neighbors])
+            this.overlayPerStream[status.streamKey].update(node, status.neighbors)
         }
     }
 

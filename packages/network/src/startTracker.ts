@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { MetricsContext } from './helpers/MetricsContext'
 import { PeerInfo } from './connection/PeerInfo'
 import { HttpServerConfig, ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
-import { TopologyStabilizationOptions, Tracker } from './logic/tracker/Tracker'
+import { TopologyStabilizationOptions, Tracker, DEFAULT_MAX_NEIGHBOR_COUNT } from './logic/tracker/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './logic/tracker/trackerHttpEndpoints'
 import { AbstractNodeOptions } from './identifiers'
@@ -22,7 +22,7 @@ export const startTracker = async ({
     name,
     location,
     attachHttpEndpoints = true,
-    maxNeighborsPerNode = 4,
+    maxNeighborsPerNode = DEFAULT_MAX_NEIGHBOR_COUNT,
     metricsContext = new MetricsContext(id),
     trackerPingInterval,
     privateKeyFileName,

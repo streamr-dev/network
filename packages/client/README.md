@@ -13,14 +13,9 @@
 [![GitHub stars](https://img.shields.io/github/stars/streamr-dev/streamr-client-javascript.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/streamr-client-javascript/)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
-By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams. The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
+This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to data, as well as contains convenience functions for creating and managing streams.
 
-Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
-
-
-### Breaking changes notice
-
-* Support for unsigned data will be dropped in the second half of 2021 or in 2022. This means that every data point will require a signature using the publisher's private key.
+Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ----
 
@@ -37,22 +32,18 @@ The client is available on [npm](https://www.npmjs.com/package/streamr-client) a
 npm install streamr-client
 ```
 
-Node v14 or higher is recommended if you intend to use the client in a Node environment. For example, inside a script.
-
 ## Usage
 
-Here are some quick examples. More detailed examples for the browser and node.js can be found [here](https://github.com/streamr-dev/streamr-client/tree/master/examples).
+Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
 
-Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
-
-If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
 ### Creating a StreamrClient instance
 
 ```js
 const client = new StreamrClient({
     auth: {
-        privateKey: 'your-private-key'
+        privateKey: 'your-ethereum-private-key'
     }
 })
 ```
@@ -60,7 +51,7 @@ const client = new StreamrClient({
 When using Node.js remember to import the library with:
 
 ```js
-import { StreamrClient } from 'streamr-client';
+import { StreamrClient } from 'streamr-client'
 ```
 
 ### Subscribing to real-time events in a stream
@@ -139,14 +130,6 @@ await stream.publish(msg)
 ```
 
 ----
-
-## API Docs
-
-The [API docs](https://streamr-dev.github.io/streamr-client-javascript/) are automatically generated from the TypeScript source code. They can also be rebuilt locally via:
-
-```
-npm run docs
-```
 
 ## Client options
 

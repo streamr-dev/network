@@ -1,10 +1,9 @@
 import { Client } from 'cassandra-driver'
 import StreamrClient, { Stream } from 'streamr-client'
-import { Protocol, startTracker } from 'streamr-network'
+import { Protocol, startTracker, Tracker } from 'streamr-network'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
-import { Todo } from '../../../../src/types'
 import {
     startBroker,
     createClient,
@@ -27,7 +26,7 @@ const TRACKER_PORT = 17772
 
 describe('StorageConfig', () => {
     let cassandraClient: Client
-    let tracker: Todo
+    let tracker: Tracker
     let storageNode: Broker
     let broker: Broker
     let client: StreamrClient
