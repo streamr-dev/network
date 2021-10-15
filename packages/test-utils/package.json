@@ -2,14 +2,14 @@
   "name": "streamr-test-utils",
   "version": "2.0.0",
   "description": "a collection of Node.js utilities for dealing with asynchronous behavior in jest/mocha tests",
-  "main": "./dist/utils.js",
-  "types": "./dist/utils.d.ts",
+  "main": "./dist/src/utils.js",
+  "types": "./dist/src/utils.d.ts",
   "scripts": {
     "test": "jest",
     "test-unit": "npm run test",
     "eslint": "eslint --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepare": "npm run eslint && npm run build",
-    "build": "tsc --build tsconfig.json"
+    "build": "tsc --build tsconfig.node.json"
   },
   "keywords": [
     "testing",
