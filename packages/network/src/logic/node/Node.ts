@@ -54,8 +54,6 @@ export class Node extends EventEmitter {
     /** @internal */
     public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
-    private readonly bufferTimeoutInMs: number
-    private readonly bufferMaxSize: number
     private readonly disconnectionWaitTime: number
     private readonly nodeConnectTimeout: number
     private readonly started: string
@@ -75,8 +73,6 @@ export class Node extends EventEmitter {
         this.nodeToNode = opts.protocols.nodeToNode
         this.peerInfo = opts.peerInfo
 
-        this.bufferTimeoutInMs = opts.bufferTimeoutInMs || 60 * 1000
-        this.bufferMaxSize = opts.bufferMaxSize || 10000
         this.disconnectionWaitTime = opts.disconnectionWaitTime || 30 * 1000
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.started = new Date().toLocaleString()
