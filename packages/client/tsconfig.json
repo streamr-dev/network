@@ -11,10 +11,10 @@
         "package.json",
         "src/**/*",
         "vendor/**/*",
-        "contracts/**/*",
+        "contracts/**/*.json",
         "test/**/*"
     ],
-    "exclude": ["test/legacy/*", "test/memory/*"],
+    "exclude": ["test/legacy/*", "test/memory/*", "test/exports/*"],
     "references": [
         { "path": "./tsconfig.node.json" }
     ]

@@ -23,7 +23,10 @@
         "package.json",
         "src/**/*",
         "vendor/**/*",
-        "contracts/**/*"
+        "contracts/**/*.json"
+    ],
+    "exclude": [
+        "src/**/WebCryptoBrowser.ts"
     ],
     "references": [
         { "path": "node_modules/streamr-network/tsconfig.node.json" },
