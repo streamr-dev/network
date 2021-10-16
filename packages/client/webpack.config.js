@@ -116,8 +116,8 @@ module.exports = (env, argv) => {
                 buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
                 'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.ts'),
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.ts'),
-                'streamr-client-protocol/dist/contracts/NodeRegistry.json': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/contracts/NodeRegistry.json'),
-                'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/src'),
+                'streamr-client-protocol/dist/contracts/NodeRegistry.json': path.resolve(__dirname, 'node_modules/streamr-client-protocol/contracts/NodeRegistry.json'),
+                'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/src'),
                 'streamr-network': path.join(__dirname, '../network/src/browser.ts'),
                 [path.join(__dirname, '../network/src/connection/NodeWebRtcConnection.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/BrowserWebRtcConnection.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
@@ -125,11 +125,12 @@ module.exports = (env, argv) => {
                 [path.join(__dirname, '../network/src/helpers/logger/LoggerNode.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/helpers/logger/LoggerBrowser.ts'),
                 // swap out ServerPersistentStore for BrowserPersistentStore
                 [path.resolve(__dirname, 'src/encryption/ServerPersistentStore')]: (
-                    path.resolve(__dirname, 'src/encryption/BrowserPersistentStore')
+                    path.resolve(__dirname, 'src/encryption/BrowserPersistentStore.ts')
                 ),
             },
             fallback: {
                 'module': false,
+                'fs': false,
                 'net': false,
                 'http': false,
                 'https': false,
