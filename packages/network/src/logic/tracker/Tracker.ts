@@ -13,7 +13,6 @@ import { Location, Status, StreamStatus, StreamKey } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
-import { DEFAULT_MAX_NEIGHBOR_COUNT } from './config'
 
 export type TrackerId = string
 
