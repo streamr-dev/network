@@ -1,7 +1,7 @@
 import { Stream, StreamrClient } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { Broker } from '../../src/broker'
-import { Message } from '../helpers/PayloadFormat'
+import { Message } from '../../src/helpers/PayloadFormat'
 import { createClient, startBroker, createTestStream, createMockUser, Queue } from '../utils'
 
 interface MessagingPluginApi<T> {
@@ -17,13 +17,13 @@ interface Ports {
     tracker: number
 }
 
-const MOCK_MESSAGE = { 
-    content: { 
-        foo: 'bar' 
-    }, 
+const MOCK_MESSAGE = {
+    content: {
+        foo: 'bar'
+    },
     metadata: {
         timestamp: 11111111
-    } 
+    }
 }
 const MOCK_API_KEY = 'mock-api-key'
 
@@ -39,9 +39,9 @@ const assertReceivedMessage = (message: Message) => {
 }
 
 export const createMessagingPluginTest = <T>(
-    pluginName: string, 
-    api: MessagingPluginApi<T>, 
-    ports: Ports, 
+    pluginName: string,
+    api: MessagingPluginApi<T>,
+    ports: Ports,
     testModule: NodeJS.Module,
     pluginConfig: any = {}
 ): any => {

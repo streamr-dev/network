@@ -12,7 +12,7 @@ import {
     STREAMR_DOCKER_DEV_HOST,
     createTestStream
 } from '../../../utils'
-import { Broker } from '../../../broker'
+import { Broker } from '../../../../src/broker'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'

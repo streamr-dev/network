@@ -1,6 +1,6 @@
 import http from 'http'
 import { startTracker, Tracker } from 'streamr-network'
-import { Broker } from '../../../broker'
+import { Broker } from '../../../../src/broker'
 import { startBroker, createClient, createTestStream } from '../../../utils'
 
 const trackerPort = 12420
