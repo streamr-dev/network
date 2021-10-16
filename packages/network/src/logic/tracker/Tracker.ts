@@ -13,6 +13,7 @@ import { Location, Status, StreamStatus, StreamKey } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
+import { DEFAULT_MAX_NEIGHBOR_COUNT } from './config'
 
 export type TrackerId = string
 
@@ -45,8 +46,6 @@ export type OverlayConnectionRtts = Record<NodeId,Record<NodeId,number>>
 export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
 }
-
-export const DEFAULT_MAX_NEIGHBOR_COUNT = 4
 
 export class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode: number

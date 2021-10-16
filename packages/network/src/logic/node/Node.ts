@@ -11,7 +11,8 @@ import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NameDirectory } from '../../NameDirectory'
 import { DisconnectionReason } from "../../connection/ws/AbstractWsEndpoint"
-import { DEFAULT_MAX_NEIGHBOR_COUNT, TrackerId } from '../tracker/Tracker'
+import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../tracker/config'
+import type { TrackerId } from '../tracker/Tracker'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 
