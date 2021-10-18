@@ -113,23 +113,12 @@ export class StreamManager {
         })
     }
 
-    // TODO: rename to getSortedStreams() (or remove sort functionality altogether)
-    getStreams(): ReadonlyArray<SPID> {
-        return this.getStreamsAsKeys().map((key) => SPID.from(key))
-    }
-
     getSPIDs(): Iterable<SPID> {
         return transformIterable(this.getSPIDKeys(), (spidKey) => SPID.from(spidKey))
     }
 
-    // efficient way to access streams
     getSPIDKeys(): IterableIterator<SPIDKey> {
         return this.streams.keys()
-    }
-
-    // TODO: rename to getStreamKeysAsSortedArray (or remove sort functionality altogether)
-    getStreamsAsKeys(): ReadonlyArray<SPIDKey> {
-        return [...this.streams.keys()].sort()
     }
 
     getNeighborsForStream(spid: SPID): ReadonlyArray<NodeId> {

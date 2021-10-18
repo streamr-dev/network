@@ -12,8 +12,7 @@ describe('StreamManager', () => {
 
     test('starts out empty', () => {
         expect(manager.isSetUp(new SPID('streamId', 0))).toEqual(false)
-        expect(manager.getStreams()).toEqual([])
-        expect(manager.getStreamsAsKeys()).toEqual([])
+        expect(Array.from(manager.getSPIDKeys())).toEqual([])
     })
 
     test('setting up streams and testing values', () => {
@@ -25,12 +24,7 @@ describe('StreamManager', () => {
         expect(manager.isSetUp(new SPID('stream-1', 1))).toEqual(true)
         expect(manager.isSetUp(new SPID('stream-2', 0))).toEqual(true)
 
-        expect(manager.getStreams()).toEqual([
-            new SPID('stream-1', 0),
-            new SPID('stream-1', 1),
-            new SPID('stream-2', 0)
-        ])
-        expect(manager.getStreamsAsKeys()).toEqual(['stream-1#0', 'stream-1#1', 'stream-2#0'])
+        expect(Array.from(manager.getSPIDKeys())).toIncludeSameMembers(['stream-1#0', 'stream-1#1', 'stream-2#0'])
 
         expect(manager.getNeighborsForStream(new SPID('stream-1', 0))).toBeEmpty()
         expect(manager.getNeighborsForStream(new SPID('stream-1', 1))).toBeEmpty()
@@ -192,9 +186,7 @@ describe('StreamManager', () => {
 
         expect(manager.isSetUp(new SPID('stream-1', 0))).toEqual(false)
 
-        expect(manager.getStreams()).toEqual([
-            new SPID('stream-2', 0)
-        ])
+        expect(Array.from(manager.getSPIDKeys())).toEqual(['stream-2#0'])
     })
 
     test('updating counter', () => {
