@@ -171,8 +171,8 @@ export class TrackerServer extends EventEmitter {
         }
     }
 
-    disconnectFromPeer(peerId: string, disconnectionCode = DisconnectionCode.VERSION_CONFICT, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
-        this.endpoint.close(peerId, disconnectionCode, reason)
+    disconnectFromPeer(peerId: string, code = DisconnectionCode.GRACEFUL_SHUTDOWN, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
+        this.endpoint.close(peerId, code, reason)
     }
 
     onMessageReceived(peerInfo: PeerInfo, rawMessage: string): void {
