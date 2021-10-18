@@ -5,6 +5,7 @@ import { wait, waitForCondition } from 'streamr-test-utils'
 import {
     createClient,
     createTestStream,
+    getPrivateKey,
     startBroker,
     StorageAssignmentEventManager,
     until,
@@ -37,7 +38,7 @@ describe('broker: end-to-end', () => {
 
     beforeAll(async () => {
         const storageNodeAccount = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
-        const engineAndEditorAccount = new Wallet('0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0')
+        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         const storageNodeRegistry = {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
             jsonRpcProvider: `http://10.200.10.1:8546`
@@ -67,7 +68,6 @@ describe('broker: end-to-end', () => {
 
         brokerNode1 = await startBroker({
             name: 'brokerNode1',
-            privateKey: '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae',
             trackerPort,
             wsPort: wsPort2,
             streamrAddress: engineAndEditorAccount.address,
@@ -76,7 +76,6 @@ describe('broker: end-to-end', () => {
         })
         brokerNode2 = await startBroker({
             name: 'brokerNode2',
-            privateKey: '0x633a182fb8975f22aaad41e9008cb49a432e9fdfef37f151e9e7c54e96258ef9',
             trackerPort,
             wsPort: wsPort3,
             streamrAddress: engineAndEditorAccount.address,
@@ -85,8 +84,8 @@ describe('broker: end-to-end', () => {
         })
 
         // Create clients
-        const user1 = new Wallet('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
-        const user2 = new Wallet('0xd7609ae3a29375768fac8bc0f8c2f6ac81c5f2ffca2b981e6cf15460f01efe14')
+        const user1 = new Wallet(await getPrivateKey())
+        const user2 = new Wallet(await getPrivateKey())
         client1 = createClient(tracker, user1.privateKey, {
             storageNodeRegistry: storageNodeRegistry
         })

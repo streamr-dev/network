@@ -5,7 +5,7 @@ import {
     Msg,
     collect,
     describeRepeats,
-    fakePrivateKey,
+    await getPrivateKey,
     getWaitForStorage,
     getPublishTestMessages,
     createTestStream,
@@ -39,7 +39,7 @@ describeRepeats.skip('sequential resend subscribe', () => {
         const c = new StreamrClient({
             ...clientOptions,
             // auth: {
-//                 privateKey: fakePrivateKey(),
+//                 privateKey: await getPrivateKey(),
 //            },
             publishAutoDisconnectDelay: 1000,
             autoConnect: false,
@@ -51,7 +51,7 @@ describeRepeats.skip('sequential resend subscribe', () => {
     }
 
     beforeAll(async () => {
-        client = createClient()
+        client = await createClient()
         subscriber = client.subscriber
 
         // eslint-disable-next-line require-atomic-updates

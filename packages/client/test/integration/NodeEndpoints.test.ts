@@ -26,10 +26,10 @@ beforeAll(async () => {
     const key = config.auth.privateKey
     // const hash = id(`marketplace-contracts${1}`)
     // return new Wallet(hash, provider)
-    client = createClient({ auth: {
+    client = await createClient({ auth: {
         privateKey: key
     } })
-    storageNodeClient = createClient({ auth: {
+    storageNodeClient = await createClient({ auth: {
         privateKey: config.storageNode.privatekey
     } })
     nodeAddress = config.storageNode.address.toLowerCase()

@@ -51,7 +51,7 @@ describeRepeats('resends', () => {
         stream = await createTestStream(client, module)
         client.debug('createStream <<')
         client.debug('addToStorageNode >>')
-        const storageNodeClient = createClient({ auth: {
+        const storageNodeClient = await createClient({ auth: {
             privateKey: clientOptions.storageNode.privatekey
         } })
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)

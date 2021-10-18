@@ -20,6 +20,7 @@ import { Stream, StreamOperation, StreamPermission, StreamProperties } from './S
 import { NotFoundError, ValidationError } from './authFetch'
 import { EthereumAddress } from './types'
 import { StreamListQuery } from './StreamEndpoints'
+import { constants } from 'ethers'
 
 // const { ValidationError } = Errors
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
@@ -192,6 +193,18 @@ export class StreamRegistry implements Context {
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.grantPublicPermission(streamId,
             StreamRegistry.streamOperationToSolidityType(operation))
+        await tx.wait()
+    }
+
+    async setPermissions(streamId: string, recievingUser: string, edit: boolean, deletePermission: boolean,
+        publish: boolean, subscribe: boolean, share: boolean) {
+        log(`Setting Permissions for user ${recievingUser} on stream ${streamId}:
+        edit: ${edit}, delete: ${deletePermission}, publish: ${publish}, subscribe: ${subscribe}, share: ${share}`)
+        await this.connectToStreamRegistryContract()
+        const publishExpiration = publish ? constants.MaxInt256 : 0
+        const subscribeExpiration = subscribe ? constants.MaxUint256 : 0
+        const tx = await this.streamRegistryContract!.setPermissionsForUser(streamId, recievingUser,
+            edit, deletePermission, publishExpiration, subscribeExpiration, share)
         await tx.wait()
     }
 

@@ -45,13 +45,13 @@ describeRepeats('GapFill', () => {
 
     async function setupClient(opts: BrubeckClientConfig) {
         // eslint-disable-next-line require-atomic-updates
-        client = createClient(opts)
+        client = await createClient(opts)
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module, {
             requireSignedData: true
         })
-        const storageNodeClient = createClient({ auth: {
+        const storageNodeClient = await createClient({ auth: {
             privateKey: clientOptions.storageNode.privatekey
         } })
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)

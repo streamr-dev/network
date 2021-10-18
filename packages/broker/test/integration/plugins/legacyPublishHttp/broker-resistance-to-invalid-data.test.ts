@@ -6,7 +6,7 @@ import { startBroker, createClient, createTestStream } from '../../../utils'
 const trackerPort = 12420
 const httpPort = 12422
 
-describe('broker resistance to invalid data', () => {
+describe.skip('broker resistance to invalid data', () => {
     let tracker: Tracker
     let broker: Broker
     let streamId: string

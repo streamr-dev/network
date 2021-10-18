@@ -8,12 +8,12 @@ const pkg = require('./package.json')
 
 export default async () => {
     const app = express()
-    let c = 1
+    let c = 0
     app.get('/key', (_req, res) => {
+        c += 1
         const hexString = c.toString(16)
         const privkey = '0x' + hexString.padStart(64, '0')
         log('key endpoint called, returning key ' + privkey)
-        c += 1
         res.send(privkey)
     })
     app.listen(45454)

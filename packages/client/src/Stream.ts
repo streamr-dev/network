@@ -177,6 +177,12 @@ class StreamrStream implements StreamMetadata {
         await this._streamRegistry.grantPublicPermission(this.id, operation)
     }
 
+    async setPermissions(recipientId: EthereumAddress, edit: boolean,
+        deletePerm: boolean, publish: boolean, subscribe: boolean, share: boolean) {
+        await this._streamRegistry.setPermissions(this.id, recipientId, edit,
+            deletePerm, publish, subscribe, share)
+    }
+
     async revokePermission(operation: StreamOperation, recipientId: EthereumAddress) {
         await this._streamRegistry.revokePermission(this.id, operation, recipientId.toLowerCase())
     }

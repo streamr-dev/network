@@ -1,7 +1,7 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    getCreateClient, getPublishTestMessages, getWaitForStorage, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream, clientOptions, until
+    getCreateClient, getPublishTestMessages, getWaitForStorage, describeRepeats, uid, addAfterFn, createTestStream, clientOptions, until, getPrivateKey
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
@@ -18,20 +18,20 @@ describeRepeats('PubSub with multiple clients', () => {
     let mainClient: StreamrClient
     let otherClient: StreamrClient
     let privateKey: string
-    let errors: Error[] = []
+    const errors: Error[] = []
 
     const createClient = getCreateClient()
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
         privateKey = clientOptions.auth.privateKey
-        mainClient = createClient({
+        mainClient = await createClient({
             id: 'main',
             auth: {
                 privateKey
             }
         })
-        const storageNodeClient = createClient({ auth: {
+        const storageNodeClient = await createClient({ auth: {
             privateKey: clientOptions.storageNode.privatekey
         } })
         stream = await createTestStream(mainClient, module)
@@ -45,11 +45,11 @@ describeRepeats('PubSub with multiple clients', () => {
     })
 
     async function createPublisher(opts = {}) {
-        const pubClient = createClient({
-            // auth: {
-            //                 privateKey: fakePrivateKey(),
-            //            },
-            ...opts, auth: { privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }
+        const pubClient = await createClient({
+            auth: {
+                privateKey: await getPrivateKey(),
+            },
+            ...opts
         })
         const publisherId = (await pubClient.getAddress()).toLowerCase()
 
@@ -68,7 +68,7 @@ describeRepeats('PubSub with multiple clients', () => {
     }
 
     async function createSubscriber(opts = {}) {
-        const client = createClient({
+        const client = await createClient({
             id: 'subscriber',
             ...opts,
             auth: { privateKey: '0xd7609ae3a29375768fac8bc0f8c2f6ac81c5f2ffca2b981e6cf15460f01efe14' }
@@ -469,9 +469,9 @@ describeRepeats('PubSub with multiple clients', () => {
     test('works with multiple publishers on one stream', async () => {
         await mainClient.connect()
 
-        otherClient = createClient({
+        otherClient = await createClient({
             auth: {
-                privateKey: '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
+                privateKey: await getPrivateKey()
             }
         })
         // otherClient.on('error', getOnError(errors))
@@ -543,9 +543,9 @@ describeRepeats('PubSub with multiple clients', () => {
         const published: Record<string, any[]> = {}
         await mainClient.connect()
 
-        otherClient = createClient({
+        otherClient = await createClient({
             auth: {
-                privateKey: '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
+                privateKey: await getPrivateKey()
             }
         })
         // otherClient.on('error', getOnError(errors))

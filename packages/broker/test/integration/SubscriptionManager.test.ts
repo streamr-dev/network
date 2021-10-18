@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
-import { startBroker, createClient, createMqttClient, createTestStream } from '../utils'
+import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey } from '../utils'
 
 jest.setTimeout(30000)
 
@@ -19,7 +19,6 @@ describe('SubscriptionManager', () => {
     let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
-    const privateKey = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream1: Stream
@@ -36,7 +35,6 @@ describe('SubscriptionManager', () => {
 
         broker1 = await startBroker({
             name: 'broker1',
-            privateKey: '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae',
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
@@ -44,7 +42,6 @@ describe('SubscriptionManager', () => {
         })
         broker2 = await startBroker({
             name: 'broker2',
-            privateKey: '0x633a182fb8975f22aaad41e9008cb49a432e9fdfef37f151e9e7c54e96258ef9',
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
@@ -53,11 +50,11 @@ describe('SubscriptionManager', () => {
 
         await wait(2000)
 
-        client1 = createClient(tracker, privateKey)
-        client2 = createClient(tracker, privateKey)
+        client1 = createClient(tracker, await getPrivateKey())
+        client2 = createClient(tracker, await getPrivateKey())
 
-        mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
-        mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
+        mqttClient1 = createMqttClient(mqttPort1, 'localhost', await getPrivateKey())
+        mqttClient2 = createMqttClient(mqttPort2, 'localhost', await getPrivateKey())
 
         freshStream1 = await createTestStream(client1, module)
         freshStream2 = await createTestStream(client2, module)

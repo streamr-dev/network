@@ -66,7 +66,7 @@ describeRepeats('decryption', () => {
     })
 
     async function setupClient(opts?: any) {
-        const client = createClient(opts)
+        const client = await createClient(opts)
         await Promise.all([
             client.connect(),
         ])
@@ -74,7 +74,7 @@ describeRepeats('decryption', () => {
     }
 
     async function setupStream() {
-        const storageNodeClient = createClient({ auth: {
+        const storageNodeClient = await createClient({ auth: {
             privateKey: clientOptions.storageNode.privatekey
         } })
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)

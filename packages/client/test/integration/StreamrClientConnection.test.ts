@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 import { ControlLayer, ControlMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, createTestStream, getPublishTestMessages } from '../utils'
+import { describeRepeats, uid, await getPrivateKey, createTestStream, getPublishTestMessages } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -30,7 +30,7 @@ describeRepeats('StreamrClient Connection', () => {
         const c = new StreamrClient({
             ...clientOptions,
             // auth: {
-//                 privateKey: fakePrivateKey(),
+//                 privateKey: await getPrivateKey(),
 //            },
             autoConnect: false,
             autoDisconnect: false,
@@ -45,7 +45,7 @@ describeRepeats('StreamrClient Connection', () => {
     }
 
     async function checkConnection() {
-        const c = createClient()
+        const c = await createClient()
         // create a temp client before connecting ws
         // so client generates correct options.url for us
         try {
@@ -120,7 +120,7 @@ describeRepeats('StreamrClient Connection', () => {
 
     describe('bad config.restUrl', () => {
         it('emits no error with no connection', async () => {
-            client = createClient({
+            client = await createClient({
                 restUrl: 'asdasd',
                 autoConnect: false,
                 autoDisconnect: false,
@@ -131,7 +131,7 @@ describeRepeats('StreamrClient Connection', () => {
 
         it('does not emit error with connect', async () => {
             // error will come through when getting session
-            client = createClient({
+            client = await createClient({
                 restUrl: 'asdasd',
                 autoConnect: false,
                 autoDisconnect: false,
@@ -143,7 +143,7 @@ describeRepeats('StreamrClient Connection', () => {
 
     describe('connect handling', () => {
         it('connects the client', async () => {
-            client = createClient()
+            client = await createClient()
             await client.connect()
             expect(client.isConnected()).toBeTruthy()
             // no error if already connected
@@ -153,7 +153,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('does not error if connecting', async () => {
-            client = createClient()
+            client = await createClient()
             const done = Defer()
             client.connection.once('connecting', done.wrap(async () => {
                 await client.connect()
@@ -167,7 +167,7 @@ describeRepeats('StreamrClient Connection', () => {
 
         it('connects if disconnecting', async () => {
             const done = Defer()
-            client = createClient()
+            client = await createClient()
             client.connection.once('disconnecting', done.wrap(async () => {
                 await client.connect()
                 expect(client.isConnected()).toBeTruthy()
@@ -184,7 +184,7 @@ describeRepeats('StreamrClient Connection', () => {
 
     describe('disconnect handling', () => {
         it('disconnects the client', async () => {
-            client = createClient()
+            client = await createClient()
             // no error if already disconnected
             await client.disconnect()
             await client.connect()
@@ -193,7 +193,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('does not error if disconnecting', async () => {
-            client = createClient()
+            client = await createClient()
             const done = Defer()
             client.connection.once('disconnecting', done.wrap(async () => {
                 await client.disconnect()
@@ -206,7 +206,7 @@ describeRepeats('StreamrClient Connection', () => {
 
         it('disconnects if connecting', async () => {
             const done = Defer()
-            client = createClient()
+            client = await createClient()
             client.connection.once('connecting', done.wrap(async () => {
                 await client.disconnect()
                 expect(client.isDisconnected()).toBeTruthy()
@@ -218,7 +218,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('does not reconnect after purposeful disconnect', async () => {
-            client = createClient()
+            client = await createClient()
             await client.connect()
             const done = Defer()
 
@@ -236,7 +236,7 @@ describeRepeats('StreamrClient Connection', () => {
     describe('connect during disconnect', () => {
         it('can connect after disconnect', async () => {
             const done = Defer()
-            client = createClient()
+            client = await createClient()
             client.once('connected', done.wrapError(async () => {
                 await expect(async () => {
                     await client.disconnect()
@@ -259,7 +259,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('can disconnect before connected', async () => {
-            client = createClient()
+            client = await createClient()
 
             const t = expect(async () => {
                 await client.connect()
@@ -269,7 +269,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('can disconnect before connected', async () => {
-            client = createClient()
+            client = await createClient()
             const t = expect(async () => {
                 await client.connect()
             }).rejects.toThrow()
@@ -278,7 +278,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('can connect', async () => {
-            client = createClient()
+            client = await createClient()
             const done = Defer()
             await client.connect()
 
@@ -294,7 +294,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('can reconnect on unexpected close', async () => {
-            client = createClient()
+            client = await createClient()
             await client.connect()
 
             client.connection.socket?.close()
@@ -305,7 +305,7 @@ describeRepeats('StreamrClient Connection', () => {
 
         it('will resolve original disconnect', async () => {
             const done = Defer()
-            client = createClient()
+            client = await createClient()
 
             await client.connect()
 
@@ -319,7 +319,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('has connection state transitions in correct order', async () => {
-            client = createClient()
+            client = await createClient()
             const done = Defer()
             const connectionEventSpy = jest.spyOn(client.connection, 'emit')
 
@@ -343,7 +343,7 @@ describeRepeats('StreamrClient Connection', () => {
         }, 5000)
 
         it('should not subscribe to unsubscribed streams on reconnect', async () => {
-            client = createClient()
+            client = await createClient()
             await client.connect()
             const sessionToken = await client.session.getSessionToken()!
 
@@ -378,7 +378,7 @@ describeRepeats('StreamrClient Connection', () => {
         })
 
         it('should not subscribe after resend() on reconnect', async () => {
-            client = createClient()
+            client = await createClient()
             await client.connect()
             const sessionToken = await client.session.getSessionToken()!
 
@@ -414,7 +414,7 @@ describeRepeats('StreamrClient Connection', () => {
         }, 15000)
 
         it('does not try to reconnect', async () => {
-            client = createClient()
+            client = await createClient()
             await client.connect()
 
             const onConnectAfterDisconnecting = Defer()
@@ -445,7 +445,7 @@ describeRepeats('StreamrClient Connection', () => {
         describe('publish', () => {
             it('will connect if not connected if autoconnect set', async () => {
                 const done = Defer()
-                client = createClient({
+                client = await createClient({
                     autoConnect: true,
                     autoDisconnect: true,
                 })
@@ -466,7 +466,7 @@ describeRepeats('StreamrClient Connection', () => {
             })
 
             it('errors if disconnected autoconnect set', async () => {
-                client = createClient({
+                client = await createClient({
                     autoConnect: true,
                     autoDisconnect: true,
                 })
@@ -490,7 +490,7 @@ describeRepeats('StreamrClient Connection', () => {
             })
 
             it('errors if disconnected autoconnect not set', async () => {
-                client = createClient({
+                client = await createClient({
                     autoConnect: false,
                     autoDisconnect: true,
                 })
@@ -515,7 +515,7 @@ describeRepeats('StreamrClient Connection', () => {
 
             it('does not error if logged out while publishing', async () => {
                 const MAX_MESSAGES = 5
-                client = createClient()
+                client = await createClient()
                 await client.connect()
                 const stream = await createTestStream(client, module)
                 let didLogout = false
@@ -550,7 +550,7 @@ describeRepeats('StreamrClient Connection', () => {
 
         describe('subscribe', () => {
             it('does not error if disconnect after subscribe', async () => {
-                client = createClient({
+                client = await createClient({
                     autoConnect: true,
                     autoDisconnect: true,
                 })
@@ -567,7 +567,7 @@ describeRepeats('StreamrClient Connection', () => {
             })
 
             it('does not error if disconnect after subscribe with resend', async () => {
-                client = createClient({
+                client = await createClient({
                     autoConnect: true,
                     autoDisconnect: true,
                 })
@@ -589,7 +589,7 @@ describeRepeats('StreamrClient Connection', () => {
             })
 
             it('does not error if disconnect then connect before subscribe', async () => {
-                client = createClient()
+                client = await createClient()
                 await client.connect()
                 const stream = await createTestStream(client, module)
                 await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)

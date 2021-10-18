@@ -38,9 +38,10 @@ export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-'
 //     return crypto.randomBytes(32).toString('hex')
 // }
 
-// export function fakeAddress() {
-//     return crypto.randomBytes(32).toString('hex').slice(0, 40)
-// }
+export function fakeAddress() {
+    return crypto.randomBytes(32).toString('hex').slice(0, 40)
+}
+
 export async function getPrivateKey(): Promise<string> {
     const response = await fetch('http://localhost:45454/key')
     return response.text()

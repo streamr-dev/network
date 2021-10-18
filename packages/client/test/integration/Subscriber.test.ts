@@ -33,7 +33,7 @@ describeRepeats('Subscriber', () => {
 
     beforeEach(async () => {
         // eslint-disable-next-line require-atomic-updates
-        client = createClient()
+        client = await createClient()
         M = client.subscriber
         client.debug('connecting before test >>')
         await Promise.all([
@@ -390,7 +390,7 @@ describeRepeats('Subscriber', () => {
                 sub2.onError(onSuppressError)
 
                 const received1: any[] = []
-                const client2 = createClient({
+                const client2 = await createClient({
                     auth: client.options.auth,
                 })
 

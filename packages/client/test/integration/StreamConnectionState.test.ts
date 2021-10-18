@@ -1,7 +1,7 @@
 /*
 import { wait } from 'streamr-test-utils'
 
-import { fakePrivateKey, describeRepeats, getPublishTestMessages, addAfterFn, createTestStream } from '../utils'
+import { getPrivateKey, describeRepeats, getPublishTestMessages, addAfterFn, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -28,7 +28,7 @@ describeRepeats('Connection State', () => {
         const c = new StreamrClient({
             ...clientOptions,
             // auth: {
-//                 privateKey: fakePrivateKey(),
+//                 privateKey: await getPrivateKey(),
 //            },
             autoConnect: false,
             autoDisconnect: false,
@@ -43,7 +43,7 @@ describeRepeats('Connection State', () => {
 
     async function setupClient(opts: StreamrClientOptions) {
         // eslint-disable-next-line require-atomic-updates
-        client = createClient(opts)
+        client = await createClient(opts)
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         await client.session.getSessionToken()
@@ -166,7 +166,7 @@ describeRepeats('Connection State', () => {
 
         // this test is flakey, might be test setup or maybe network bug :/
         it.skip('should receive messages if subscriber disconnects after each message', async () => {
-            const otherClient = createClient({
+            const otherClient = await createClient({
                 auth: client.options.auth,
             })
 
@@ -360,7 +360,7 @@ describeRepeats('Connection State', () => {
             let otherClient: StreamrClient
 
             beforeEach(async () => {
-                otherClient = createClient({
+                otherClient = await createClient({
                     auth: client.options.auth,
                 })
                 const tasks = [

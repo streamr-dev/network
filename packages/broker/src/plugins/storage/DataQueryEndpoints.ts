@@ -8,10 +8,8 @@ import { Logger } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Todo } from '../../types'
 import { Storage } from './Storage'
-import { authenticator } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
-import { StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 

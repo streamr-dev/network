@@ -29,7 +29,7 @@ describe('Sequencing', () => {
     const createClient = getCreateClient()
 
     beforeEach(async () => {
-        client = createClient()
+        client = await createClient()
         await client.connect()
 
         stream = await createTestStream(client, module)

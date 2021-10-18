@@ -1,5 +1,5 @@
 import { startTracker, Tracker } from 'streamr-network'
-import { createClient, createTestStream } from '../utils'
+import { createClient, createTestStream, getPrivateKey } from '../utils'
 import { StreamrClient, Stream, StreamOperation } from 'streamr-client'
 import { Wallet } from 'ethers'
 import { waitForCondition } from "streamr-test-utils"
@@ -16,7 +16,7 @@ describe('node id: with generateSessionId enabled', () => {
     let stream: Stream
 
     beforeEach(async () => {
-        sharedWallet = new Wallet('0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0')
+        sharedWallet = new Wallet(await getPrivateKey())
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,

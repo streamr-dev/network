@@ -4,7 +4,7 @@ import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
 import { Todo } from '../types'
-import { startBroker, createClient, createMqttClient, createTestStream } from '../utils'
+import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey } from '../utils'
 import storagenodeConfig = require('./storageNodeConfig.json')
 
 jest.setTimeout(30000)
@@ -17,7 +17,7 @@ const mqttPort = 17751
 describe('local propagation', () => {
     let tracker: Tracker
     let broker: Broker
-    const privateKey = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
+    let privateKey: string
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream: Stream
@@ -25,7 +25,8 @@ describe('local propagation', () => {
     let mqttClient1: AsyncMqttClient
     let mqttClient2: AsyncMqttClient
 
-    beforeEach(async () => {
+    beforeAll(async () => {
+        privateKey = await getPrivateKey()
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,

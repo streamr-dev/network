@@ -6,12 +6,12 @@ import { Wallet } from 'ethers'
 import { Tracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
-import { StorageConfig } from '../src/plugins/storage/StorageConfig'
+// import { StorageConfig } from '../src/plugins/storage/StorageConfig'
 import { Todo } from '../src/types'
 import { Config } from '../src/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
-const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
+// const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
 export function formConfig({
     name,
@@ -42,7 +42,7 @@ export function formConfig({
 }: Todo): Config {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
-        plugins['legacyPublishHttp'] = {}
+        plugins['publishHttp'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -67,7 +67,7 @@ export function formConfig({
         }
     }
     if (legacyMqttPort) {
-        plugins['legacyMqtt'] = {
+        plugins['mqtt'] = {
             port: legacyMqttPort,
             streamsTimeout: 300000
         }
@@ -107,9 +107,21 @@ export function formConfig({
     }
 }
 
-export const startBroker = async (...args: Todo[]): Promise<Broker> => {
-    // @ts-expect-error
-    const broker = await createBroker(formConfig(...args))
+export async function getPrivateKey(): Promise<string> {
+    const response = await fetch('http://localhost:45454/key')
+    return response.text()
+}
+
+// export const startBroker = async (...args: Todo[]): Promise<Broker> => {
+//     // @ts-expect-error
+//     const broker = await createBroker(formConfig(...args))
+//     await broker.start()
+//     return broker
+// }
+export const startBroker = async (config: Todo): Promise<Broker> => {
+    const privateKey = config.privateKey || await getPrivateKey()
+    // console.log('###################' + JSON.stringify(config))
+    const broker = await createBroker(formConfig({privateKey, ...config}))
     await broker.start()
     return broker
 }

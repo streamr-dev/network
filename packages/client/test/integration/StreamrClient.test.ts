@@ -79,7 +79,7 @@ describeRepeats('StreamrClient', () => {
     }
 
     beforeEach(async () => {
-        client = createClient()
+        client = await createClient()
         await client.connect()
         stream = await createStream()
         publishTestMessages = getPublishTestMessages(client, stream)
@@ -424,7 +424,7 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('destroying stops publish', async () => {
-            const subscriber = createClient({
+            const subscriber = await createClient({
                 auth: client.options.auth,
             })
             const sub = await subscriber.subscribe({
@@ -471,7 +471,7 @@ describeRepeats('StreamrClient', () => {
             // can't yet reliably publish messages then disconnect and know
             // that subscriber will actually get something.
             // Probably needs to wait for propagation.
-            const subscriber = createClient({
+            const subscriber = await createClient({
                 auth: client.options.auth,
             })
 
@@ -529,7 +529,7 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('decodes resent messages correctly', async () => {
-            const storageNodeClient = createClient({ auth: {
+            const storageNodeClient = await createClient({ auth: {
                 privateKey: clientOptions.storageNode.privatekey
             } })
             const node = await storageNodeClient.setNode(clientOptions.storageNode.url)

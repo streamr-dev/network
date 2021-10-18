@@ -4,13 +4,11 @@ import { Protocol } from 'streamr-network'
 import { Logger } from 'streamr-network'
 import { FailedToPublishError } from '../../errors/FailedToPublishError'
 import { partition } from '../../helpers/partition'
-import { authenticator } from '../../RequestAuthenticatorMiddleware'
 import { StreamFetcher } from '../../StreamFetcher'
 import { Publisher } from '../../Publisher'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 import { parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { Todo } from '../../types'
-import { StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 

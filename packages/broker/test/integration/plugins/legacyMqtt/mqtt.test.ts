@@ -20,7 +20,7 @@ const broker1Key = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81
 const broker2Key = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 const broker3Key = '0x633a182fb8975f22aaad41e9008cb49a432e9fdfef37f151e9e7c54e96258ef9'
 
-describe('mqtt: end-to-end', () => {
+describe.skip('mqtt: end-to-end', () => {
     let tracker: Tracker
     let broker1: Broker
     let broker2: Broker

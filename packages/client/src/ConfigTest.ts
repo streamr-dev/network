@@ -25,15 +25,15 @@ export default {
     network: {
         trackers: [
             {
-                id: '0xDE11165537ef6C01260ee89A850a281525A5b63F',
+                id: '0xb9e7cEBF7b03AE26458E32a059488386b05798e8',
                 ws: 'ws://127.0.0.1:30301',
                 http: 'http://127.0.0.1:30301'
             }, {
-                id: '0xDE22222da3F861c2Ec63b03e16a1dce153Cf069c',
+                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
                 ws: 'ws://127.0.0.1:30302',
                 http: 'http://127.0.0.1:30302'
             }, {
-                id: '0xDE33390cC85aBf61d9c27715Fa61d8E5efC61e75',
+                id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
                 ws: 'ws://127.0.0.1:30303',
                 http: 'http://127.0.0.1:30303'
             }
@@ -44,8 +44,8 @@ export default {
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     },
     storageNode: {
-        privatekey: '0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285',
-        address: '0x505D48552Ac17FfD0845FFA3783C2799fd4aaD78',
+        privatekey: 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966',
+        address: '0xde1112f631486CfC759A50196853011528bC5FA0',
         url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
     },
     // storageNodeRegistry: [{

@@ -6,8 +6,6 @@ import { Stream, StreamOperation } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
 import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getCreateClient } from '../utils'
 
-import debug from 'debug'
-
 jest.setTimeout(30000)
 
 const createClient = getCreateClient()
@@ -39,7 +37,7 @@ function TestStreamEndpoints(getName: () => string) {
             requireSignedData: true,
             requireEncryptedData: false,
         })
-        const storageNodeClient = createClient({ auth: {
+        const storageNodeClient = await createClient({ auth: {
             privateKey: clientOptions.storageNode.privatekey
         } })
         storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)

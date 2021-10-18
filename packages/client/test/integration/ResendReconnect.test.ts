@@ -1,7 +1,7 @@
 /*
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
+import { getPrivateKey, getPublishTestMessages, createTestStream } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
@@ -14,7 +14,7 @@ import { StorageNode } from '../../src/stream/StorageNode'
 const createClient = (opts = {}) => new StreamrClient({
     ...clientOptions,
     auth: {
-        privateKey: fakePrivateKey(),
+        privateKey: await getPrivateKey(),
     },
     autoConnect: false,
     autoDisconnect: false,
@@ -30,7 +30,7 @@ describe('resend/reconnect', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     beforeEach(async () => {
-        client = createClient()
+        client = await createClient()
         await client.connect()
 
         stream = await createTestStream(client, module)

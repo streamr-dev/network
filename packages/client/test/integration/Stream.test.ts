@@ -10,11 +10,11 @@ describe('Stream', () => {
 
     const createClient = getCreateClient()
     beforeEach(async () => {
-        client = createClient()
+        client = await createClient()
         await client.connect()
 
         stream = await createTestStream(client, module)
-        const storageNodeClient = createClient({ auth: {
+        const storageNodeClient = await createClient({ auth: {
             privateKey: clientOptions.storageNode.privatekey
         } })
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
