@@ -27,7 +27,7 @@ export interface DisconnectionManagerOptions {
  *      from.
  */
 export class DisconnectionManager {
-    private readonly disconnectionTimers: Record<NodeId, NodeJS.Timeout> = Object.create(null)
+    private readonly disconnectionTimers = new Map<NodeId, NodeJS.Timeout>()
     private readonly getAllNodes: GetAllNodesFn
     private readonly hasSharedStreams: HasSharedStreamsFn
     private readonly disconnect: DisconnectFn
@@ -64,7 +64,7 @@ export class DisconnectionManager {
 
     stop(): void {
         clearInterval(this.connectionCleanUpInterval!)
-        Object.values(this.disconnectionTimers).forEach((timeout) => {
+        this.disconnectionTimers.forEach((timeout) => {
             clearTimeout(timeout)
         })
     }
@@ -72,20 +72,21 @@ export class DisconnectionManager {
     scheduleDisconnectionIfNoSharedStreams(nodeId: NodeId): void {
         if (!this.hasSharedStreams(nodeId)) {
             this.cancelScheduledDisconnection(nodeId)
-            this.disconnectionTimers[nodeId] = setTimeout(() => {
-                delete this.disconnectionTimers[nodeId]
+            this.disconnectionTimers.set(nodeId, setTimeout(() => {
+                this.disconnectionTimers.delete(nodeId)
                 if (!this.hasSharedStreams(nodeId)) {
                     this.loggedDisconnect(nodeId)
                 }
-            }, this.disconnectionDelayInMs)
+            }, this.disconnectionDelayInMs))
             logger.trace('scheduled disconnection from %s in %d ms', nodeId, this.disconnectionDelayInMs)
         }
     }
 
     cancelScheduledDisconnection(nodeId: NodeId): void {
-        if (this.disconnectionTimers[nodeId] != null) {
-            clearTimeout(this.disconnectionTimers[nodeId])
-            delete this.disconnectionTimers[nodeId]
+        const timeout = this.disconnectionTimers.get(nodeId)
+        if (timeout !== undefined) {
+            clearTimeout(timeout)
+            this.disconnectionTimers.delete(nodeId)
             logger.trace('canceled scheduled disconnection from %s', nodeId)
         }
     }
