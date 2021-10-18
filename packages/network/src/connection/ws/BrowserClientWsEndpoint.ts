@@ -60,6 +60,9 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
             if (event.code === DisconnectionCode.DUPLICATE_SOCKET) {
                 this.logger.warn('Connection refused: Duplicate nodeId detected, are you running multiple nodes with the same private key?')
             }
+            if (event.code === DisconnectionCode.VERSION_CONFICT) {
+                this.logger.warn('Connection refused: Version conflict detected, are you running an outdated version?')
+            }
         }
 
         ws.onerror = (error) => {
