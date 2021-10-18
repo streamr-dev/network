@@ -1,6 +1,6 @@
 import io from '@pm2/io'
 import { EventEmitter } from 'events'
-import { SmartContractRecord, SPIDKey } from 'streamr-client-protocol'
+import { SmartContractRecord, SPID, SPIDKey } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { TrackerServer, Event as TrackerServerEvent } from '../../protocol/TrackerServer'
@@ -143,6 +143,14 @@ export class Tracker extends EventEmitter {
             // which contained "inboundNodes" and "outboundNodes" field instead of "neighbors" field
             // TODO remove this e.g. at the same time we remove the above FRONT-635 hack
             status.stream.neighbors = (status.stream as any).inboundNodes  // status.stream.outboundNodes has exactly the same content
+        }
+        // backwards compatibility to convert status.stream.streamKey -> status.stream.spid
+        // TODO remove this e.g. at the same time we remove the above FRONT-635 hack
+        if ((status.stream as any).streamKey !== undefined) {
+            const DELIMITER = '::'
+            const [ streamId, streamPartition ] = (status.stream as any).streamKey.split(DELIMITER)
+            const spid = new SPID(streamId, Number.parseInt(streamPartition))
+            status.stream.spidKey = spid.toKey()
         }
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
         if (!isMostRecent) {
