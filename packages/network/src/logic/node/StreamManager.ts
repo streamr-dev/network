@@ -4,6 +4,7 @@ import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector
 import { NodeId } from './Node'
 import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
 import _ from 'lodash'
+import { transformIterable } from '../../helpers/transformIterable'
 
 interface StreamState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
@@ -117,11 +118,8 @@ export class StreamManager {
         return this.getStreamsAsKeys().map((key) => SPID.from(key))
     }
 
-    // TODO remove this method and use getSPIDKeys?
-    *getStreamsIterable(): IterableIterator<SPID> {
-        for (const spidKey of this.getSPIDKeys()) {
-            yield SPID.from(spidKey)
-        }
+    getSPIDs(): Iterable<SPID> {
+        return transformIterable(this.getSPIDKeys(), (spidKey) => SPID.from(spidKey))
     }
 
     // efficient way to access streams

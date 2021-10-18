@@ -330,8 +330,8 @@ export class Node extends EventEmitter {
         }, interval)
     }
 
-    getStreams(): ReadonlyArray<string> {
-        return this.streams.getStreamsAsKeys()
+    getSPIDs(): Iterable<SPID> {
+        return this.streams.getSPIDs()
     }
 
     getNeighbors(): ReadonlyArray<NodeId> {

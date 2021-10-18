@@ -13,10 +13,9 @@ import { Location, Status, StreamStatus } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
+import { transformIterable } from '../../helpers/transformIterable'
 
 export type TrackerId = string
-
-type StreamId = string
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:node-connected'
@@ -232,8 +231,8 @@ export class Tracker extends EventEmitter {
         }
     }
 
-    getStreams(): ReadonlyArray<StreamId> {
-        return Object.keys(this.overlayPerStream)
+    getSPIDs(): Iterable<SPID> {
+        return transformIterable(Object.keys(this.overlayPerStream), (spidKey) => SPID.from(spidKey))
     }
 
     getAllNodeLocations(): Readonly<Record<NodeId,Location>> {
