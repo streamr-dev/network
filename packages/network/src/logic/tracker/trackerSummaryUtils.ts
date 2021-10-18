@@ -1,8 +1,8 @@
-import { SPID } from 'streamr-client-protocol'
+import { SPID, SPIDKey } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
 
-type OverLayWithRtts = { [key: string]: Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] > }
+type OverLayWithRtts = Record<SPIDKey,Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] >>
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
 
 export function getTopology(
