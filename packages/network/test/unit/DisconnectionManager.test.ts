@@ -49,9 +49,9 @@ describe(DisconnectionManager, () => {
             getAllNodes.mockReturnValue(['n1', 'n2', 'n3'])
             await setUpManagerAndRunCleanUpIntervalOnce()
             expect(disconnect).toHaveBeenCalledTimes(3)
-            expect(disconnect).toHaveBeenNthCalledWith(1, 'n1', 'no shared streams')
-            expect(disconnect).toHaveBeenNthCalledWith(2, 'n2', 'no shared streams')
-            expect(disconnect).toHaveBeenNthCalledWith(3, 'n3', 'no shared streams')
+            expect(disconnect).toHaveBeenNthCalledWith(1, 'n1', DisconnectionManager.DISCONNECTION_REASON)
+            expect(disconnect).toHaveBeenNthCalledWith(2, 'n2', DisconnectionManager.DISCONNECTION_REASON)
+            expect(disconnect).toHaveBeenNthCalledWith(3, 'n3', DisconnectionManager.DISCONNECTION_REASON)
         })
 
         it('disconnects from nodes with which no shared streams', async () => {
@@ -59,8 +59,8 @@ describe(DisconnectionManager, () => {
             hasSharedStreams.mockImplementation((nodeId) => ['n1', 'n4'].includes(nodeId))
             await setUpManagerAndRunCleanUpIntervalOnce()
             expect(disconnect).toHaveBeenCalledTimes(2)
-            expect(disconnect).toHaveBeenNthCalledWith(1, 'n2', 'no shared streams')
-            expect(disconnect).toHaveBeenNthCalledWith(2, 'n3', 'no shared streams')
+            expect(disconnect).toHaveBeenNthCalledWith(1, 'n2', DisconnectionManager.DISCONNECTION_REASON)
+            expect(disconnect).toHaveBeenNthCalledWith(2, 'n3', DisconnectionManager.DISCONNECTION_REASON)
         })
 
         it('longer scenario', async () => {
@@ -71,8 +71,8 @@ describe(DisconnectionManager, () => {
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
-                ['n2', 'no shared streams'],
-                ['n3', 'no shared streams']
+                ['n2', DisconnectionManager.DISCONNECTION_REASON],
+                ['n3', DisconnectionManager.DISCONNECTION_REASON]
             ])
 
             disconnect.mockReset()
@@ -81,7 +81,7 @@ describe(DisconnectionManager, () => {
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
-                ['n3', 'no shared streams']
+                ['n3', DisconnectionManager.DISCONNECTION_REASON]
             ])
 
             disconnect.mockReset()
@@ -90,8 +90,8 @@ describe(DisconnectionManager, () => {
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
-                ['n4', 'no shared streams'],
-                ['n5', 'no shared streams']
+                ['n4', DisconnectionManager.DISCONNECTION_REASON],
+                ['n5', DisconnectionManager.DISCONNECTION_REASON]
             ])
 
             disconnect.mockReset()
@@ -100,7 +100,7 @@ describe(DisconnectionManager, () => {
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
-                ['n6', 'no shared streams']
+                ['n6', DisconnectionManager.DISCONNECTION_REASON]
             ])
 
             disconnect.mockReset()
@@ -109,7 +109,7 @@ describe(DisconnectionManager, () => {
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
-                ['n1', 'no shared streams']
+                ['n1', DisconnectionManager.DISCONNECTION_REASON]
             ])
         })
     })
@@ -123,7 +123,7 @@ describe(DisconnectionManager, () => {
             manager.scheduleDisconnectionIfNoSharedStreams('node')
             await wait(TTL + 1)
             expect(disconnect).toHaveBeenCalledTimes(1)
-            expect(disconnect).toHaveBeenNthCalledWith(1, 'node', 'no shared streams')
+            expect(disconnect).toHaveBeenNthCalledWith(1, 'node', DisconnectionManager.DISCONNECTION_REASON)
         })
 
         it('not executed after TTL if has shared streams by then', async () => {
@@ -149,7 +149,7 @@ describe(DisconnectionManager, () => {
             expect(disconnect).toHaveBeenCalledTimes(0)
             await wait((TTL / 2) + 1)
             expect(disconnect).toHaveBeenCalledTimes(1)
-            expect(disconnect).toHaveBeenNthCalledWith(1, 'node', 'no shared streams')
+            expect(disconnect).toHaveBeenNthCalledWith(1, 'node', DisconnectionManager.DISCONNECTION_REASON)
         })
 
         it('not executed after TTL if canceled before', async () => {
@@ -167,7 +167,7 @@ describe(DisconnectionManager, () => {
             manager.cancelScheduledDisconnection('node-2')
             await wait((TTL / 2) + 1)
             expect(disconnect).toHaveBeenCalledTimes(1)
-            expect(disconnect).toHaveBeenNthCalledWith(1, 'node-1', 'no shared streams')
+            expect(disconnect).toHaveBeenNthCalledWith(1, 'node-1', DisconnectionManager.DISCONNECTION_REASON)
         })
 
         it('canceling non-existing disconnection does not throw', () => {

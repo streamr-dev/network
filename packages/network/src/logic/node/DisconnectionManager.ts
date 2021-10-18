@@ -27,6 +27,8 @@ export interface DisconnectionManagerOptions {
  *      from.
  */
 export class DisconnectionManager {
+    public static DISCONNECTION_REASON = 'no shared streams'
+
     private readonly disconnectionTimers = new Map<NodeId, NodeJS.Timeout>()
     private readonly getAllNodes: GetAllNodesFn
     private readonly hasSharedStreams: HasSharedStreamsFn
@@ -93,6 +95,6 @@ export class DisconnectionManager {
 
     private loggedDisconnect(nodeId: NodeId): void {
         logger.trace('executing disconnect from %s', NameDirectory.getName(nodeId))
-        this.disconnect(nodeId, 'no shared streams')
+        this.disconnect(nodeId, DisconnectionManager.DISCONNECTION_REASON)
     }
 }
