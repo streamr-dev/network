@@ -1,11 +1,13 @@
+import { SPID } from 'streamr-client-protocol'
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { TrackerServer, Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 
 const SOURCE_NODE = 'source-node'
 const TARGET_NODE_1 = 'target-node-1'
 const TARGET_NODE_2 = 'target-node-2'
-const STREAM_SPID_KEY = 's1#0'
-const STREAM_KEY = 's1::0'
+const STREAM_ID = 's1'
+const STREAM_PARTITION = 0
+const STREAM_KEY = `${STREAM_ID}::${STREAM_PARTITION}`
 const COUNTER = 123
 
 describe('Tracker reads deprecated status format', () => {
@@ -32,18 +34,20 @@ describe('Tracker reads deprecated status format', () => {
     })
 
     const assertStatusProcessed = () => {
+        const spidKey = new SPID(STREAM_ID, STREAM_PARTITION).toKey()
         expect(createTopology).toBeCalledTimes(1)
-        expect(createTopology).toBeCalledWith(STREAM_SPID_KEY)
+        expect(createTopology).toBeCalledWith(spidKey)
         expect(updateNodeOnStream).toBeCalledTimes(1)
         expect(updateNodeOnStream.mock.calls[0][0]).toBe(SOURCE_NODE)
         const actualStatus = updateNodeOnStream.mock.calls[0][1]
         expect(actualStatus).toContainEntries([
-            ['counter', COUNTER],
+            ['id', STREAM_ID],
+            ['partition', STREAM_PARTITION],
             ['neighbors', [TARGET_NODE_1, TARGET_NODE_2]],
-            ['spidKey', STREAM_SPID_KEY]
+            ['counter', COUNTER],
         ])
         expect(formAndSendInstructions).toBeCalledTimes(1)
-        expect(formAndSendInstructions).toBeCalledWith(SOURCE_NODE, STREAM_SPID_KEY)
+        expect(formAndSendInstructions).toBeCalledWith(SOURCE_NODE, spidKey)
     }
 
     it('multiple streams format', () => {

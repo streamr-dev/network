@@ -13,7 +13,8 @@ const WAIT_TIME = 2000
 
 const formStatus = (counter1: number, nodes1: NodeId[]): Partial<Status> => ({
     stream: {
-        spidKey: 'stream-1#0',
+        id: 'stream-1',
+        partition: 0,
         neighbors: nodes1,
         counter: counter1
     }

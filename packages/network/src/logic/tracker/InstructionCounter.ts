@@ -1,4 +1,4 @@
-import { SPIDKey } from 'streamr-client-protocol'
+import { SPID, SPIDKey } from 'streamr-client-protocol'
 import { Status } from '../../identifiers'
 import { NodeId } from '../node/Node'
 
@@ -18,7 +18,8 @@ export class InstructionCounter {
     }
 
     isMostRecent(status: Status, source: NodeId): boolean {
-        const currentCounter = this.getAndSetIfNecessary(source, status.stream.spidKey)
+        const spidKey = new SPID(status.stream.id, status.stream.partition).toKey()
+        const currentCounter = this.getAndSetIfNecessary(source, spidKey)
         return (status.stream.counter >= currentCounter || status.stream.counter === COUNTER_UNSUBSCRIBE)
     }
 

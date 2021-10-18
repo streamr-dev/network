@@ -149,8 +149,8 @@ export class Tracker extends EventEmitter {
         if ((status.stream as any).streamKey !== undefined) {
             const DELIMITER = '::'
             const [ streamId, streamPartition ] = (status.stream as any).streamKey.split(DELIMITER)
-            const spid = new SPID(streamId, Number.parseInt(streamPartition))
-            status.stream.spidKey = spid.toKey()
+            status.stream.id = streamId
+            status.stream.partition = parseInt(streamPartition)
         }
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
         if (!isMostRecent) {
@@ -169,10 +169,12 @@ export class Tracker extends EventEmitter {
         })
         this.extraMetadatas[source] = extra
 
+        const spidKey = new SPID(stream.id, stream.partition).toKey()
+
         // update topology
-        this.createTopology(stream.spidKey)
+        this.createTopology(spidKey)
         this.updateNodeOnStream(source, stream)
-        this.formAndSendInstructions(source, stream.spidKey)
+        this.formAndSendInstructions(source, spidKey)
     }
 
     stop(): Promise<void> {
@@ -192,10 +194,11 @@ export class Tracker extends EventEmitter {
     }
 
     private updateNodeOnStream(node: NodeId, status: StreamStatus): void {
+        const spidKey = new SPID(status.id, status.partition).toKey()
         if (status.counter === COUNTER_UNSUBSCRIBE) {
-            this.leaveAndCheckEmptyOverlay(status.spidKey, this.overlayPerStream[status.spidKey], node)
+            this.leaveAndCheckEmptyOverlay(spidKey, this.overlayPerStream[spidKey], node)
         } else {
-            this.overlayPerStream[status.spidKey].update(node, status.neighbors)
+            this.overlayPerStream[spidKey].update(node, status.neighbors)
         }
     }
 

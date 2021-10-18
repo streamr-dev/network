@@ -74,13 +74,15 @@ export class StreamManager {
         const streamState = this.streams.get(spid.toKey())
         if (streamState !== undefined) {
             return {
-                spidKey: spid.toKey(),  
+                id: spid.streamId,
+                partition: spid.streamPartition,
                 neighbors: [...streamState.neighbors],
                 counter: streamState.counter
             }
         } else {
             return {
-                spidKey: spid.toKey(),
+                id: spid.streamId,
+                partition: spid.streamPartition,
                 neighbors: [],
                 counter: COUNTER_UNSUBSCRIBE
             }
