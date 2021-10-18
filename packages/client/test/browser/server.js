@@ -7,10 +7,21 @@ const app = express()
 // viewed at http://localhost:8880
 app.use('/static', express.static(path.join(__dirname, '/../../dist')))
 
+let server
+
+app.get('/stop', (req, res) => {
+    res.end()
+
+    if (server) {
+        console.info('Browser Test Server: Closed')
+        server.close()
+    }
+})
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'browser.html'))
 })
 
-const server = app.listen(8880, () => {
-    console.info('Listening: ', server.address())
+server = app.listen(8880, () => {
+    console.info('Browser Test Server: Listening on ', server.address())
 })
