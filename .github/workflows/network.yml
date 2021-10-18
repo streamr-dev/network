@@ -35,7 +35,7 @@ jobs:
         node-version: [ 14.x ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
@@ -103,7 +103,7 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - uses: actions/setup-node@v2
         with:
           node-version: 14
