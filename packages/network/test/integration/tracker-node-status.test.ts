@@ -207,7 +207,7 @@ describe('check status message flow between tracker and two nodes', () => {
             status: {
                 counter: 1,
                 streamKey: 123,
-                neighbors: {}
+                neighbors: []
             }
         })
         await runAndWaitForEvents([() => {

@@ -10,9 +10,11 @@ import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerId, PeerInfo } from '../../connection/PeerInfo'
 import { Location, Status, StreamKey, StreamStatus } from '../../identifiers'
+import { statusSchema } from "../../helpers/schemas"
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
 import { DisconnectionCode, DisconnectionReason } from '../../connection/ws/AbstractWsEndpoint'
+import Ajv from 'ajv'
 
 export type TrackerId = string
 
@@ -62,6 +64,7 @@ export class Tracker extends EventEmitter {
     private readonly logger: Logger
     private readonly metrics: Metrics
     private readonly statusMeter: any
+    private readonly statusSchemaValidator: any
 
     constructor(opts: TrackerOptions) {
         super()
@@ -85,6 +88,9 @@ export class Tracker extends EventEmitter {
         this.instructionCounter = new InstructionCounter()
         this.extraMetadatas = Object.create(null)
 
+        const ajv = new Ajv()
+        this.statusSchemaValidator = ajv.compile(statusSchema)
+
         this.trackerServer.on(TrackerServerEvent.NODE_CONNECTED, (nodeId) => {
             this.onNodeConnected(nodeId)
         })
@@ -92,7 +98,13 @@ export class Tracker extends EventEmitter {
             this.onNodeDisconnected(nodeId)
         })
         this.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            this.processNodeStatus(statusMessage, nodeId)
+            const valid = this.statusSchemaValidator(statusMessage.status)
+            if (valid) {
+                this.processNodeStatus(statusMessage, nodeId)
+            } else {
+                this.logger.warn(`Status message with invalid format received from ${nodeId}`)
+                this.trackerServer.disconnectFromPeer(nodeId, DisconnectionCode.INVALID_STATUS, DisconnectionReason.INVALID_STATUS)
+            }
         })
         attachRtcSignalling(this.trackerServer)
 
@@ -122,56 +134,50 @@ export class Tracker extends EventEmitter {
     processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
         this.metrics.record('processNodeStatus', 1)
         this.statusMeter.mark()
-        try {
-            const status = statusMessage.status as Status
-            const legacyMessageStreams = (status as any).streams
-            if (legacyMessageStreams !== undefined) {
-                // backwards compatibility for testnet2 brokers
-                // https://linear.app/streamr/issue/FRONT-635/add-back-the-tracker-backwards-compatibility
-                // TODO remove this when testnet3 completes
-                const streamKeys = Object.keys(legacyMessageStreams)
-                if (streamKeys.length === 1) {
-                    const streamKey = streamKeys[0]
-                    status.stream = {
-                        streamKey,
-                        ...legacyMessageStreams[streamKey]
-                    }
-                } else {
-                    throw new Error(`Assertion failed: ${streamKeys.length} streams in a status messages`)
+        const status = statusMessage.status as Status
+        const legacyMessageStreams = (status as any).streams
+        if (legacyMessageStreams !== undefined) {
+            // backwards compatibility for testnet2 brokers
+            // https://linear.app/streamr/issue/FRONT-635/add-back-the-tracker-backwards-compatibility
+            // TODO remove this when testnet3 completes
+            const streamKeys = Object.keys(legacyMessageStreams)
+            if (streamKeys.length === 1) {
+                const streamKey = streamKeys[0]
+                status.stream = {
+                    streamKey,
+                    ...legacyMessageStreams[streamKey]
                 }
+            } else {
+                throw new Error(`Assertion failed: ${streamKeys.length} streams in a status messages`)
             }
-            if ((status.stream as any).inboundNodes !== undefined) {
-                // backwards compatibility to support old status message
-                // which contained "inboundNodes" and "outboundNodes" field instead of "neighbors" field
-                // TODO remove this e.g. at the same time we remove the above FRONT-635 hack
-                status.stream.neighbors = (status.stream as any).inboundNodes  // status.stream.outboundNodes has exactly the same content
-            }
-            const isMostRecent = this.instructionCounter.isMostRecent(status, source)
-            if (!isMostRecent) {
-                return
-            }
-
-            const { stream, rtts, location, extra } = status
-            // update RTTs and location
-            if (rtts) {
-                this.overlayConnectionRtts[source] = rtts
-            }
-            this.locationManager.updateLocation({
-                nodeId: source,
-                location,
-                address: this.trackerServer.resolveAddress(source),
-            })
-            this.extraMetadatas[source] = extra
-
-            // update topology
-            this.createTopology(stream.streamKey)
-            this.updateNodeOnStream(source, stream)
-            this.formAndSendInstructions(source, stream.streamKey)
         }
-        catch (err: any) {
-            this.logger.warn(`Error while processing status message from node ${source}:\n${err}`)
-            this.trackerServer.disconnectFromPeer(source, DisconnectionCode.VERSION_CONFICT, DisconnectionReason.VERSION_CONFICT)
+        if ((status.stream as any).inboundNodes !== undefined) {
+            // backwards compatibility to support old status message
+            // which contained "inboundNodes" and "outboundNodes" field instead of "neighbors" field
+            // TODO remove this e.g. at the same time we remove the above FRONT-635 hack
+            status.stream.neighbors = (status.stream as any).inboundNodes  // status.stream.outboundNodes has exactly the same content
         }
+        const isMostRecent = this.instructionCounter.isMostRecent(status, source)
+        if (!isMostRecent) {
+            return
+        }
+
+        const { stream, rtts, location, extra } = status
+        // update RTTs and location
+        if (rtts) {
+            this.overlayConnectionRtts[source] = rtts
+        }
+        this.locationManager.updateLocation({
+            nodeId: source,
+            location,
+            address: this.trackerServer.resolveAddress(source),
+        })
+        this.extraMetadatas[source] = extra
+
+        // update topology
+        this.createTopology(stream.streamKey)
+        this.updateNodeOnStream(source, stream)
+        this.formAndSendInstructions(source, stream.streamKey)
     }
 
     stop(): Promise<void> {

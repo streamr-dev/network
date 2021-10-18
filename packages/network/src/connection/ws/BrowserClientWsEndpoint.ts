@@ -59,9 +59,8 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
             this.onClose(connection, event.code, event.reason as DisconnectionReason)
             if (event.code === DisconnectionCode.DUPLICATE_SOCKET) {
                 this.logger.warn('Connection refused: Duplicate nodeId detected, are you running multiple nodes with the same private key?')
-            }
-            if (event.code === DisconnectionCode.VERSION_CONFICT) {
-                this.logger.warn('Connection refused: Version conflict detected, are you running an outdated version?')
+            } else if (event.code === DisconnectionCode.INVALID_STATUS) {
+                this.logger.warn('Connection refused: Invalid status message format detected, are you running an outdated version?')
             }
         }
 
