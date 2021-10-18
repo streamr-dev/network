@@ -104,11 +104,10 @@ export class InstructionSender {
     }
 
     private async sendInstructions(buffer: StreamInstructionBuffer): Promise<void> {
-        const promises: Promise<void>[] = []
-        for (const { nodeId, streamKey, newNeighbors, counterValue } of buffer.getInstructions()) {
-            this.metrics.record('instructionsSent', 1)
-            this.pm2Meter.mark()
-            promises.push((async () => {
+        const promises = Array.from(buffer.getInstructions())
+            .map(async ({ nodeId, streamKey, newNeighbors, counterValue }) => {
+                this.metrics.record('instructionsSent', 1)
+                this.pm2Meter.mark()
                 try {
                     await this.sendInstruction(
                         nodeId,
@@ -124,8 +123,7 @@ export class InstructionSender {
                         err
                     )
                 }
-            })())
-        }
+            })
         await Promise.allSettled(promises)
     }
 }
