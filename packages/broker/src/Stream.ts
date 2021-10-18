@@ -1,3 +1,6 @@
+import { Protocol } from 'streamr-network'
+import { SPID } from 'streamr-network/dist/streamr-protocol'
+
 type State = 'init'|'subscribing'|'subscribed'
 
 export class Stream<C> {
@@ -51,8 +54,8 @@ export class Stream<C> {
         return this.state === 'subscribed'
     }
 
-    toString(): string {
-        return `${this.id}::${this.partition}`
+    getSPIDKey(): Protocol.SPIDKey {
+        return new SPID(this.id, this.partition).toKey()
     }
 
     getName(): string {

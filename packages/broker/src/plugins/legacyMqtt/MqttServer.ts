@@ -1,7 +1,7 @@
 import { Server, Socket } from 'net'
 import { EventEmitter } from 'events'
 import mqttCon from 'mqtt-connection'
-import { Metrics, MetricsContext, NetworkNode } from 'streamr-network'
+import { Metrics, MetricsContext, NetworkNode, Protocol } from 'streamr-network'
 import { StreamMessage, MessageID } from 'streamr-network/dist/streamr-protocol'
 import { Logger } from 'streamr-network'
 import { partition } from '../../helpers/partition'
@@ -304,7 +304,7 @@ export class MqttServer extends EventEmitter {
             this.metrics.record('outBytes', streamMessage.getSerializedContent().length * stream.getConnections().length)
             this.metrics.record('outMessages', stream.getConnections().length)
         } else {
-            logger.debug('broadcastMessage: stream "%s::%d" not found', streamId, streamPartition)
+            logger.debug('broadcastMessage: stream "%s" not found', new Protocol.SPID(streamId, streamPartition).toKey())
         }
     }
 }

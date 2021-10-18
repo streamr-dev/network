@@ -120,8 +120,8 @@ export class Connection extends EventEmitter {
         this.getStreams().forEach(cb)
     }
 
-    getStreamsAsString(): string[] {
-        return this.streams.map((s: Stream<Connection>) => s.toString())
+    getStreamsAsString(): Protocol.SPIDKey[] {
+        return this.streams.map((s: Stream<Connection>) => s.getSPIDKey())
     }
 
     ping(): void {

@@ -1,15 +1,11 @@
 import { Stream } from './Stream'
-import { Logger } from 'streamr-network'
+import { Logger, Protocol } from 'streamr-network'
 
 const logger = new Logger(module)
 
-function getStreamLookupKey(streamId: string, streamPartition: number) {
-    return `${streamId}::${streamPartition}`
-}
-
 export class StreamStateManager<C> {
-    private streams: Record<string,Stream<C>> = {}
-    private timeouts: Record<string,NodeJS.Timeout> = {}
+    private streams: Record<Protocol.SPIDKey,Stream<C>> = {}
+    private timeouts: Record<Protocol.SPIDKey,NodeJS.Timeout> = {}
 
     getOrCreate(streamId: string, streamPartition: number, name = ''): Stream<C> {
         const stream = this.get(streamId, streamPartition)
@@ -20,7 +16,8 @@ export class StreamStateManager<C> {
     }
 
     get(streamId: string, streamPartition: number): Stream<C> {
-        return this.streams[getStreamLookupKey(streamId, streamPartition)]
+        const key = new Protocol.SPID(streamId, streamPartition).toKey()
+        return this.streams[key]
     }
 
     getByName(name: string): Stream<C>|null {
@@ -37,7 +34,7 @@ export class StreamStateManager<C> {
             throw new Error('streamId or streamPartition not given!')
         }
 
-        const key = getStreamLookupKey(streamId, streamPartition)
+        const key = new Protocol.SPID(streamId, streamPartition).toKey()
         if (this.streams[key]) {
             throw new Error(`stream already exists for ${key}`)
         }
@@ -62,7 +59,7 @@ export class StreamStateManager<C> {
             }
         }, 60 * 1000)
 
-        logger.debug('Stream object "%s" created', stream.toString())
+        logger.debug('Stream object "%s" created', stream.getSPIDKey())
         return stream
     }
 
@@ -73,13 +70,13 @@ export class StreamStateManager<C> {
 
         const stream = this.get(streamId, streamPartition)
         if (stream) {
-            const key = getStreamLookupKey(streamId, streamPartition)
+            const key = new Protocol.SPID(streamId, streamPartition).toKey()
             clearTimeout(this.timeouts[key])
             delete this.timeouts[key]
             delete this.streams[key]
         }
 
-        logger.debug('Stream object "%s" deleted', stream.toString())
+        logger.debug('Stream object "%s" deleted', stream.getSPIDKey())
     }
 
     close(): void {
