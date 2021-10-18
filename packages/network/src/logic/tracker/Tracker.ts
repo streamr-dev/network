@@ -99,7 +99,6 @@ export class Tracker extends EventEmitter {
         this.metrics = metricsContext.create('tracker')
             .addRecordedMetric('onNodeDisconnected')
             .addRecordedMetric('processNodeStatus')
-            .addRecordedMetric('instructionsSent')
             .addRecordedMetric('_removeNode')
 
         this.statusMeter = io.meter({
