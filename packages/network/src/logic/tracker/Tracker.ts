@@ -105,7 +105,11 @@ export class Tracker extends EventEmitter {
             name: 'statuses/sec'
         })
 
-        this.instructionSender = new InstructionSender(opts.topologyStabilization, this.trackerServer, this.metrics)
+        this.instructionSender = new InstructionSender(
+            opts.topologyStabilization,
+            this.trackerServer.sendInstruction.bind(this.trackerServer),
+            this.metrics
+        )
     }
 
     onNodeConnected(node: NodeId): void {
