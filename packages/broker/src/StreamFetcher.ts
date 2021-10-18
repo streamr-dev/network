@@ -4,27 +4,13 @@ import { Logger } from 'streamr-network'
 import { HttpError } from './errors/HttpError'
 // TODO do all REST operations to E&E via StreamrClient
 import StreamrClient from 'streamr-client'
+import { Todo } from './types'
 import { formAuthorizationHeader } from './helpers/authentication'
-import memoizee from "memoizee"
 
 const logger = new Logger(module)
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes
-
-type FetchMethod = (streamId: string, sessionToken?: string) => Promise<Record<string, unknown>>
-
-type CheckPermissionMethod = (
-    streamId: string,
-    sessionToken: string | undefined | null,
-    operation?: string
-) => Promise<true>
-
-type AuthenticateMethod = (
-    streamId: string,
-    sessionToken: string|undefined,
-    operation?: string
-) => Promise<Record<string, unknown>>
 
 async function fetchWithErrorLogging(...args: Parameters<typeof fetch>) {
     try {
@@ -55,18 +41,19 @@ async function handleNon2xxResponse(
 }
 
 export class StreamFetcher {
-    private readonly apiUrl: string
-    fetch: memoizee.Memoized<FetchMethod> & FetchMethod
-    checkPermission: memoizee.Memoized<CheckPermissionMethod> & CheckPermissionMethod
-    authenticate: memoize.Memoized<AuthenticateMethod> & AuthenticateMethod
+
+    apiUrl: string
+    fetch
+    checkPermission
+    authenticate
 
     constructor(baseUrl: string) {
         this.apiUrl = `${baseUrl}/api/v1`
-        this.fetch = memoize<FetchMethod>(this.uncachedFetch, {
+        this.fetch = memoize<StreamFetcher['uncachedFetch']>(this.uncachedFetch, {
             maxAge: MAX_AGE,
             promise: true,
         })
-        this.checkPermission = memoize<CheckPermissionMethod>(this.uncachedCheckPermission, {
+        this.checkPermission = memoize<StreamFetcher['uncachedCheckPermission']>(this.uncachedCheckPermission, {
             maxAge: MAX_AGE,
             promise: true,
         })
@@ -76,7 +63,7 @@ export class StreamFetcher {
         })
     }
 
-    async getToken(privateKey: string): Promise<string> {
+    async getToken(privateKey: string): Promise<Todo> {
         const client = new StreamrClient({
             auth: {
                 privateKey,
@@ -87,19 +74,21 @@ export class StreamFetcher {
         return client.session.getSessionToken()
     }
 
-    private async uncachedAuthenticate(
-        streamId: string,
-        sessionToken: string|undefined,
-        operation = 'stream_subscribe'
-    ): Promise<Record<string, unknown>>  {
+    private async uncachedAuthenticate(streamId: string, sessionToken: string|undefined, operation = 'stream_subscribe'): Promise<Todo>  {
         await this.checkPermission(streamId, sessionToken, operation)
         return this.fetch(streamId, sessionToken)
     }
 
     /**
      * Returns a Promise that resolves with the stream json.
+     * Fails if there is no read permission.
+     *
+     * @param streamId
+     * @param sessionToken
+     * @returns {Promise.<TResult>}
+     * @private
      */
-    private async uncachedFetch(streamId: string, sessionToken?: string): Promise<Record<string, unknown>> {
+    private async uncachedFetch(streamId: string, sessionToken?: string): Promise<Todo> {
         const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}`
         const headers = formAuthorizationHeader(sessionToken)
 
@@ -118,7 +107,13 @@ export class StreamFetcher {
     /**
      * Retrieves permissions to a stream, and checks if a permission is granted
      * for the requested operation.
-     * Promise always resolves to true or throws if permission has not been granted.
+     * Promise always resolves to true or throws if permissions are invalid.
+     *
+     * @param streamId
+     * @param sessionToken
+     * @param operation
+     * @returns {Promise}
+     * @private
      */
     private async uncachedCheckPermission(streamId: string, sessionToken: string | undefined | null, operation = 'stream_subscribe'): Promise<true> {
         if (streamId == null) {
@@ -140,7 +135,7 @@ export class StreamFetcher {
         }
 
         const permissions = await response.json()
-        if (permissions.some((p: Record<string, unknown>) => p.operation === operation)) {
+        if (permissions.some((p: Todo) => p.operation === operation)) {
             return true
         }
 

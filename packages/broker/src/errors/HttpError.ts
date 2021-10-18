@@ -1,9 +1,12 @@
-export class HttpError extends Error {
-    readonly code: number
-    readonly method: string
-    readonly url: string
+import { Todo } from '../types'
 
-    constructor(code: number, method: string, url: string) {
+export class HttpError extends Error {
+
+    code: Todo
+    method: Todo
+    url: Todo
+
+    constructor(code: Todo, method: Todo, url: Todo) {
         super(`${method} ${url} responded with status code ${code}`)
         Error.captureStackTrace(this, HttpError) // exclude this constructor from stack trace
         this.name = this.constructor.name

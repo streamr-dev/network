@@ -71,9 +71,8 @@ export class TrackerManager {
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.trackerConnector = new TrackerConnector(
-            streamManager.getStreamsIterable.bind(streamManager),
-            this.nodeToTracker.connectToTracker.bind(this.nodeToTracker),
-            this.nodeToTracker.disconnectFromTracker.bind(this.nodeToTracker),
+            streamManager,
+            this.nodeToTracker,
             this.trackerRegistry,
             opts.trackerConnectionMaintenanceInterval ?? 5000
         )
@@ -178,7 +177,7 @@ export class TrackerManager {
         logger.trace('received instructions for %s, nodes to connect %o', streamId, nodeIds)
 
         this.subscriber.subscribeToStreamIfHaveNotYet(streamId, false)
-        const currentNodes = this.streamManager.getNeighborsForStream(streamId)
+        const currentNodes = this.streamManager.getAllNodesForStream(streamId)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {

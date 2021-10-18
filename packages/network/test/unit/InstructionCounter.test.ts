@@ -12,7 +12,8 @@ describe('InstructionCounter', () => {
         const status: Partial<Status> = {
             stream: {
                 streamKey: 'stream-1',
-                neighbors: [],
+                inboundNodes: [],
+                outboundNodes: [],
                 counter: 123
             }
         }
@@ -29,14 +30,16 @@ describe('InstructionCounter', () => {
         const status1 = {
             stream: {
                 streamKey: 'stream-1',
-                neighbors: [],
+                inboundNodes: [],
+                outboundNodes: [],
                 counter: 1
             }
         }
         const status2 = {
             stream: {
                 streamKey: 'stream-2',
-                neighbors: [],
+                inboundNodes: [],
+                outboundNodes: [],
                 counter: 3
             }
         }
@@ -53,14 +56,16 @@ describe('InstructionCounter', () => {
         const status1 = {
             stream: {
                 streamKey: 'stream-1',
-                neighbors: [],
+                inboundNodes: [],
+                outboundNodes: [],
                 counter: 1
             }
         }
         const status2 = {
             stream: {
                 streamKey: 'stream-1',
-                neighbors: [],
+                inboundNodes: [],
+                outboundNodes: [],
                 counter: 3
             }
         }
@@ -76,7 +81,8 @@ describe('InstructionCounter', () => {
         const status = {
             stream: {
                 streamKey: 'stream-1',
-                neighbors: [],
+                inboundNodes: [],
+                outboundNodes: [],
                 counter: 0
             }
         }
@@ -91,7 +97,8 @@ describe('InstructionCounter', () => {
         const status = {
             stream: {
                 streamKey: 'stream-1',
-                neighbors: [],
+                inboundNodes: [],
+                outboundNodes: [],
                 counter: 0
             }
         }

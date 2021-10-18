@@ -35,8 +35,9 @@ npm install streamr-broker --global
 To enable the features you want, configure some [plugins](plugins.md).
 
 ## Run
-When developing the Broker, it is convenient to run it as part of the full Streamr development stack. Check out
-the [streamr-docker-dev](https://github.com/streamr-dev/streamr-docker-dev) tool that can be used to run the full stack.
+It is convenient to run a broker node as part of the full Streamr stack. Check out
+the [streamr-docker-dev](https://github.com/streamr-dev/streamr-docker-dev) tool
+that can be used to run the full Streamr stack.
 
 If instead you want to run a broker node by itself without Docker, follow the steps below.
 
@@ -122,6 +123,9 @@ https://semver.org/. Files package.json and package-lock.json will be automatica
 
 ## Misc
 
+### API Specification
+
+For production version of the Streamr API refer to [API Explorer](https://api-explorer.streamr.com).
 
 ### Special considerations for using MQTT plugin
 - For authentication put private key in the password connection field

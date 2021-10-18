@@ -54,6 +54,7 @@
     "geoip-lite": "^1.4.2",
     "heap": "^0.2.6",
     "lodash": "^4.17.21",
+    "lru-cache": "^6.0.0",
     "morgan": "^1.10.0",
     "node-datachannel": "^0.1.11",
     "pino": "^6.11.3",
@@ -62,8 +63,7 @@
     "strict-event-emitter-types": "^2.0.0",
     "uuid": "^8.3.2",
     "websocket": "^1.0.34",
-    "ws": "^7.5.0",
-    "yallist": "^4.0.0"
+    "ws": "^7.5.0"
   },
   "devDependencies": {
     "@jest/fake-timers": "^27.0.5",
@@ -81,7 +81,6 @@
     "@types/uuid": "^8.3.1",
     "@types/websocket": "^1.0.3",
     "@types/ws": "^7.4.5",
-    "@types/yallist": "^4.0.1",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "browserify-fs": "^1.0.0",

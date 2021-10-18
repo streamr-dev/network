@@ -1,5 +1,4 @@
 import { NodeId } from '../node/Node'
-import _ from 'lodash'
 
 // From: https://gist.github.com/guilhermepontes/17ae0cc71fa2b13ea8c20c94c5c35dc4
 const shuffleArray = <T>(arr: Array<T>): Array<T> => arr
@@ -50,7 +49,7 @@ export class OverlayTopology {
     }
 
     update(nodeId: NodeId, neighbors: NodeId[]): void {
-        const newNeighbors = _.uniq(neighbors)
+        const newNeighbors = [...neighbors]
             .filter((n) => n in this.nodes)
             .filter((n) => n !== nodeId) // in case nodeId is reporting itself as neighbor
 

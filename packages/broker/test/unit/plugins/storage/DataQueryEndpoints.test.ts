@@ -9,11 +9,11 @@ import {
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { HttpError } from '../../../../src/errors/HttpError'
+import { Todo } from '../../../../src/types'
 import { PassThrough } from 'stream'
-import { StreamFetcher } from "../../../../src/StreamFetcher"
 
 const { MessageLayer } = Protocol
-const { MessageID } = MessageLayer
+const { StreamMessage, MessageID } = MessageLayer
 
 const createEmptyStream = () => {
     const stream = new PassThrough()
@@ -24,9 +24,7 @@ const createEmptyStream = () => {
 describe('DataQueryEndpoints', () => {
     let app: express.Express
     let storage: Storage
-    let streamFetcher: {
-        authenticate: (streamId: string, sessionToken: string|undefined) => Promise<Record<string, never>>
-    }
+    let streamFetcher: Todo
 
     function testGetRequest(url: string, sessionToken = 'mock-session-token') {
         return request(app)
@@ -35,8 +33,8 @@ describe('DataQueryEndpoints', () => {
             .set('Authorization', `Bearer ${sessionToken}`)
     }
 
-    function createStreamMessage(content: any): Protocol.StreamMessage {
-        return new Protocol.StreamMessage({
+    function createStreamMessage(content: any) {
+        return new StreamMessage({
             messageId: new MessageID('streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', 'msgChainId'),
             content,
         })
@@ -56,11 +54,11 @@ describe('DataQueryEndpoints', () => {
                 }))
             },
         }
-        app.use(restEndpointRouter(storage, streamFetcher as unknown as StreamFetcher, new MetricsContext(null as any)))
+        app.use(restEndpointRouter(storage, streamFetcher, new MetricsContext(null as any)))
     })
 
     describe('Getting last events', () => {
-        let streamMessages: Protocol.StreamMessage[]
+        let streamMessages: Todo[]
 
         beforeEach(() => {
             streamMessages = [
@@ -136,7 +134,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with latest version protocol serialization of messages given format=protocol', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?format=protocol')
-                    .expect(streamMessages.map((msg) => msg.serialize(Protocol.StreamMessage.LATEST_VERSION)), done)
+                    .expect(streamMessages.map((msg) => msg.serialize(StreamMessage.LATEST_VERSION)), done)
             })
 
             it('responds with specific version protocol serialization of messages given format=protocol&version=30', (done) => {
@@ -187,7 +185,7 @@ describe('DataQueryEndpoints', () => {
     })
 
     describe('From queries', () => {
-        let streamMessages: Protocol.StreamMessage[]
+        let streamMessages: Todo[]
 
         beforeEach(() => {
             streamMessages = [
@@ -329,7 +327,7 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
-            let streamMessages: Protocol.StreamMessage[]
+            let streamMessages: Todo[]
             beforeEach(() => {
                 streamMessages = [
                     createStreamMessage([6, 6, 6]),
@@ -411,7 +409,7 @@ describe('DataQueryEndpoints', () => {
             // eslint-disable-next-line max-len
             const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId&msgChainId=msgChainId'
 
-            let streamMessages: Protocol.StreamMessage[]
+            let streamMessages: Todo[]
             beforeEach(() => {
                 streamMessages = [
                     createStreamMessage([6, 6, 6]),

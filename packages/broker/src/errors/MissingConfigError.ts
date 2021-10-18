@@ -1,9 +1,12 @@
-export class MissingConfigError extends Error {
-    readonly message: string
-    readonly name: string
-    readonly config: string
+import { Todo } from '../types'
 
-    constructor(config: string) {
+export class MissingConfigError extends Error {
+
+    message: string
+    name: string
+    config: Todo
+
+    constructor(config: Todo) {
         super()
         this.message = `Config ${config} not set`
         this.name = this.constructor.name

@@ -1,12 +1,14 @@
+import { Todo } from './types'
+
 type State = 'init'|'subscribing'|'subscribed'
 
 export class Stream<C> {
 
-    readonly id: string
-    readonly name: string
-    readonly partition: number
+    id: string
+    name: string
+    partition: number
     state: State
-    readonly connections: C[]
+    connections: C[]
 
     constructor(id: string, partition: number, name: string) {
         this.id = id
@@ -27,7 +29,7 @@ export class Stream<C> {
         }
     }
 
-    forEachConnection(cb: (connection: C) => void): void {
+    forEachConnection(cb: Todo): void {
         this.getConnections().forEach(cb)
     }
 

@@ -1,3 +1,4 @@
+import { Todo } from './types'
 import { Request, Response, NextFunction } from 'express'
 import { HttpError } from './errors/HttpError'
 import { Logger } from 'streamr-network'
@@ -5,17 +6,13 @@ import { StreamFetcher } from './StreamFetcher'
 
 const logger = new Logger(module)
 
-export interface AuthenticatedRequest<Q> extends Request<Record<string,any>,any,any,Q,Record<string,any>> {
-    stream?: Record<string, unknown>
-}
-
 /**
  * Middleware used to authenticate REST API requests
  */
 export const authenticator = (
     streamFetcher: StreamFetcher,
     permission = 'stream_subscribe'
-) => (req: AuthenticatedRequest<any>, res: Response, next: NextFunction): void => {
+) => (req: Request & { stream?: Todo }, res: Response, next: NextFunction): void => {
     let sessionToken
 
     // Try to parse authorization header if defined
@@ -36,11 +33,11 @@ export const authenticator = (
     }
 
     streamFetcher.authenticate(req.params.id, sessionToken, permission)
-        .then((streamJson: Record<string, unknown>) => {
+        .then((streamJson: Todo) => {
             req.stream = streamJson
             next()
         })
-        .catch((err: any) => {
+        .catch((err: Todo) => {
             let errorMsg
             if (err instanceof HttpError && err.code === 403) {
                 errorMsg = 'Authentication failed.'

@@ -6,6 +6,17 @@
 - [MQTT](#mqtt)
 - [PublishHttp](#publishhttp)
 
+## Dependencies
+
+Currently many plugins use `legacyWebsocket` plugin as an internal communication channel. To use `websocket`, `mqtt`, or `publishHttp` plugin, you must enable an additional `legacyWebsocket` plugin in the Broker config:
+
+```
+plugins: {
+    "legacyWebsocket": {}
+}
+```
+
+
 ## Websocket
 
 The `websocket` plugin provides a websocket interface for publishing and subscribing. 

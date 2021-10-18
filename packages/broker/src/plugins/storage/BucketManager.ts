@@ -1,4 +1,5 @@
 import { Client } from 'cassandra-driver'
+import { Todo } from '../../types'
 import Heap from 'heap'
 import { types as cassandraTypes } from 'cassandra-driver'
 import { Logger } from 'streamr-network'
@@ -340,7 +341,7 @@ export class BucketManager {
             }
         }))
 
-        results.forEach((result) => {
+        results.forEach((result: Todo) => {
             if (result.status === 'fulfilled') {
                 const { bucket: storedBucket, records } = result.value
 

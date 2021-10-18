@@ -1,20 +1,28 @@
+import { Todo } from './types'
+
 import { FailedToPublishError } from './errors/FailedToPublishError'
 import type { StreamrClient } from 'streamr-client'
 import type { StreamMessage } from 'streamr-client-protocol'
-import type { Metrics, MetricsContext } from 'streamr-network'
 
 const THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS = 300 * 1000
 
-const isTimestampTooFarInTheFuture = (timestamp: number): boolean => {
+const isTimestampTooFarInTheFuture = (timestamp: Todo) => {
     return timestamp > Date.now() + THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS
 }
 
 export class Publisher {
-    private metrics: Metrics
-    private client: StreamrClient
+    public metrics
 
-    constructor(client: StreamrClient, metricsContext: MetricsContext) {
-        this.client = client
+    constructor(
+        public client: StreamrClient,
+        metricsContext: Todo
+    ) {
+        if (!client) {
+            throw new Error('No streamrClient defined!')
+        }
+        if (!metricsContext) {
+            throw new Error('No metricsContext defined!')
+        }
         this.metrics = metricsContext.create('broker/publisher')
             .addRecordedMetric('bytes')
             .addRecordedMetric('messages')

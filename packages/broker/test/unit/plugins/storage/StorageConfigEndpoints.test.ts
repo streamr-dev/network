@@ -1,9 +1,10 @@
 import express from 'express'
 import request from 'supertest'
 import { router } from '../../../../src/plugins/storage/StorageConfigEndpoints'
+import { Todo } from '../../../../src/types'
 import { createMockStorageConfig } from '../../../integration/plugins/storage/MockStorageConfig'
 
-const createRequest = (streamId: string, partition: number, app: express.Application) => {
+const createRequest = (streamId: string, partition: number, app: Todo) => {
     return request(app).get(`/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
 }
 

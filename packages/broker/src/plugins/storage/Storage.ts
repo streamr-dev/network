@@ -1,4 +1,4 @@
-import { auth, Client, types, tracker } from 'cassandra-driver'
+import { auth, Client, tracker } from 'cassandra-driver'
 import { MetricsContext } from 'streamr-network'
 import { BatchManager } from './BatchManager'
 import { Readable, Transform } from 'stream'
@@ -7,8 +7,9 @@ import { pipeline } from 'stream'
 import { v1 as uuidv1 } from 'uuid'
 import merge2 from 'merge2'
 import { StreamMessage } from 'streamr-client-protocol'
-import { BucketManager, BucketManagerOptions } from './BucketManager'
+import { BucketManager } from './BucketManager'
 import { Logger } from 'streamr-network'
+import { Todo } from '../../types'
 import { Bucket, BucketId } from './Bucket'
 
 const logger = new Logger(module)
@@ -21,7 +22,7 @@ export interface StartCassandraOptions {
     keyspace: string
     username?: string
     password?: string
-    opts?: Partial<BucketManagerOptions & { useTtl: boolean }>
+    opts?: Todo
 }
 
 export type MessageFilter = (streamMessage: StreamMessage) => boolean
@@ -41,20 +42,15 @@ interface ResendDebugInfo {
     msgChainId?: string | null
 }
 
-export type StorageOptions = Partial<BucketManagerOptions> & {
-    useTtl?: boolean
-    retriesIntervalMilliseconds?: number
-}
-
 export class Storage extends EventEmitter {
 
-    opts: StorageOptions
+    opts: Todo
     cassandraClient: Client
     bucketManager: BucketManager
     batchManager: BatchManager
     pendingStores: Map<string,NodeJS.Timeout>
 
-    constructor(cassandraClient: Client, opts: StorageOptions) {
+    constructor(cassandraClient: Client, opts: Todo) {
         super()
 
         const defaultOptions = {
@@ -137,7 +133,7 @@ export class Storage extends EventEmitter {
                     prepare: true,
                     fetchSize: 0 // disable paging
                 })
-                resultSet.rows.reverse().forEach((r: types.Row) => {
+                resultSet.rows.reverse().forEach((r: Todo) => {
                     resultStream.write(r)
                 })
                 resultStream.end()
@@ -154,10 +150,10 @@ export class Storage extends EventEmitter {
          * - if enough => get all messages and return
          * - if not => move to the next bucket and repeat cycle
          */
-        this.cassandraClient.eachRow(GET_BUCKETS, [streamId, partition], options, (_n, row: types.Row) => {
+        this.cassandraClient.eachRow(GET_BUCKETS, [streamId, partition], options, (_n: Todo, row: Todo) => {
             bucketId = row.id
             bucketIds.push(bucketId)
-        }, async (err: Error | undefined, result: types.ResultSet) => {
+        }, async (err: Todo, result: Todo) => {
             // do nothing if resultStream ended
             if (resultStream.writableEnded || resultStream.readableEnded) { return }
             if (err) {
@@ -288,7 +284,7 @@ export class Storage extends EventEmitter {
                 }
             )
         })
-            .catch((e) => {
+            .catch((e: Todo) => {
                 resultStream.destroy(e)
             })
 
@@ -335,14 +331,14 @@ export class Storage extends EventEmitter {
                     pipeError: true,
                 }),
                 resultStream,
-                (err) => {
+                (err: Todo) => {
                     resultStream.destroy(err || undefined)
                     stream1.destroy(err || undefined)
                     stream2.destroy(err || undefined)
                 }
             )
         })
-            .catch((e) => {
+            .catch((e: Todo) => {
                 resultStream.destroy(e)
             })
 
@@ -376,7 +372,7 @@ export class Storage extends EventEmitter {
                 }
             )
         })
-            .catch((e) => {
+            .catch((e: Todo) => {
                 resultStream.destroy(e)
             })
 
@@ -452,7 +448,7 @@ export class Storage extends EventEmitter {
                 }
             )
         })
-            .catch((e) => {
+            .catch((e: Todo) => {
                 resultStream.destroy(e)
             })
 
@@ -468,7 +464,7 @@ export class Storage extends EventEmitter {
         }) as Readable
     }
 
-    private parseRow(row: types.Row, debugInfo: ResendDebugInfo): StreamMessage | null {
+    private parseRow(row: Todo, debugInfo: ResendDebugInfo): StreamMessage | null {
         if (row.payload === null) {
             logger.error(`Found message with NULL payload on cassandra; debug info: ${JSON.stringify(debugInfo)}`)
             return null
@@ -485,7 +481,7 @@ export class Storage extends EventEmitter {
         return new Transform({
             highWaterMark: 1024, // buffer up to 1024 messages
             objectMode: true,
-            transform(row: types.Row, _, done) {
+            transform(row: Todo, _: Todo, done: Todo) {
                 const now = Date.now()
                 const message = self.parseRow(row, debugInfo)
                 if (message !== null) {
@@ -668,7 +664,7 @@ export const startCassandraStorage = async ({
     while (retryCount > 0) {
         /* eslint-disable no-await-in-loop */
         try {
-            await cassandraClient.connect().catch((err) => { throw err })
+            await cassandraClient.connect().catch((err: Todo) => { throw err })
             return new Storage(cassandraClient, opts || {})
         } catch (err) {
             // eslint-disable-next-line no-console

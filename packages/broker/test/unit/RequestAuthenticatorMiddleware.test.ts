@@ -1,14 +1,15 @@
+import { Todo } from '../types'
 import assert from 'assert'
 import sinon from 'sinon'
 import { authenticator } from '../../src/RequestAuthenticatorMiddleware'
 import { HttpError } from '../../src/errors/HttpError'
 
 describe('AuthenticationMiddleware', () => {
-    let request: any
-    let response: any
-    let next: any
-    let streamFetcherStub: any
-    let middlewareInstance: any
+    let request: Todo
+    let response: Todo
+    let next: Todo
+    let streamFetcherStub: Todo
+    let middlewareInstance: Todo
 
     beforeEach(() => {
         request = {

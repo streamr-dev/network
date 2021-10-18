@@ -75,9 +75,9 @@ describe('Check tracker instructions to node', () => {
         const streamIdAndPartition = new StreamIdAndPartition(streamId, 0)
 
         // @ts-expect-error private field
-        expect(nodeOne.streams.getNeighborsForStream(streamIdAndPartition).length).toBe(1)
+        expect(nodeOne.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(1)
         // @ts-expect-error private field
-        expect(nodeTwo.streams.getNeighborsForStream(streamIdAndPartition).length).toBe(1)
+        expect(nodeTwo.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(1)
         
         // send empty list and wait for expected events
         await runAndWaitForEvents([
@@ -99,8 +99,8 @@ describe('Check tracker instructions to node', () => {
         ])
 
         // @ts-expect-error private field
-        expect(nodeOne.streams.getNeighborsForStream(streamIdAndPartition).length).toBe(0)
+        expect(nodeOne.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(0)
         // @ts-expect-error private field
-        expect(nodeTwo.streams.getNeighborsForStream(streamIdAndPartition).length).toBe(0)
+        expect(nodeTwo.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(0)
     })
 })

@@ -53,7 +53,8 @@ export interface Location {
 
 export interface StreamStatus {
     streamKey: StreamKey
-    neighbors: NodeId[]
+    inboundNodes: NodeId[]
+    outboundNodes: NodeId[]
     counter: number // TODO this field could be a field of "Status" interface, not this interface?
 }
 
