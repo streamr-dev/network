@@ -1,4 +1,4 @@
-import { StreamIdAndPartition } from '../../identifiers'
+import { SPID } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
 
@@ -13,11 +13,10 @@ export function getTopology(
 ): OverLayWithRtts {
     const topology: OverLayWithRtts = {}
 
-    const streamKeys = findStreamKeys(overlayPerStream, streamId, partition)
-
-    streamKeys.forEach((streamKey) => {
-        const streamOverlay = overlayPerStream[streamKey].state()
-        topology[streamKey] = Object.assign({}, ...Object.entries(streamOverlay).map(([nodeId, neighbors]) => {
+    const spidKeys = findSPIDKeys(overlayPerStream, streamId, partition)
+    spidKeys.forEach((spidKey) => {
+        const streamOverlay = overlayPerStream[spidKey].state()
+        topology[spidKey] = Object.assign({}, ...Object.entries(streamOverlay).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, neighbors, connectionRtts)
         }))
     })
@@ -26,14 +25,13 @@ export function getTopology(
 }
 
 export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): OverlaySizes {
-    const streamKeys = findStreamKeys(overlayPerStream, streamId, partition)
-
-    const streamSizes: OverlaySizes = streamKeys.map((streamKey) => {
-        const key = StreamIdAndPartition.fromKey(streamKey)
+    const spidKeys = findSPIDKeys(overlayPerStream, streamId, partition)
+    const streamSizes: OverlaySizes = spidKeys.map((spidKey) => {
+        const spid = SPID.from(spidKey)
         return {
-            streamId: key.id,
-            partition: key.partition,
-            nodeCount: overlayPerStream[streamKey].getNumberOfNodes()
+            streamId: spid.streamId,
+            partition: spid.streamPartition,
+            nodeCount: overlayPerStream[spidKey].getNumberOfNodes()
         }
     })
     return streamSizes
@@ -78,11 +76,11 @@ export function findStreamsForNode(
 ): Array<{ streamId: string, partition: number, topologySize: number}> {
     return Object.entries(overlayPerStream)
         .filter(([_, overlayTopology]) => overlayTopology.hasNode(nodeId))
-        .map(([streamKey, overlayTopology]) => {
-            const streamIdAndPartition = StreamIdAndPartition.fromKey(streamKey)
+        .map(([spidKey, overlayTopology]) => {
+            const spid = SPID.from(spidKey)
             return {
-                streamId: streamIdAndPartition.id,
-                partition: streamIdAndPartition.partition,
+                streamId: spid.streamId,
+                partition: spid.streamPartition,
                 topologySize: overlayTopology.getNumberOfNodes()
             }
         })
@@ -101,21 +99,21 @@ function getNodeToNodeConnectionRtts(
     }
 }
 
-function findStreamKeys(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): string[] {
-    let streamKeys
+function findSPIDKeys(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): string[] {
+    let keys
 
     if (streamId && partition === null) {
-        streamKeys = Object.keys(overlayPerStream).filter((streamKey) => streamKey.includes(streamId))
+        keys = Object.keys(overlayPerStream).filter((spidKey) => spidKey.includes(streamId))
     } else {
-        let askedStreamKey: StreamIdAndPartition | null = null
+        let askedKey: SPID | null = null
         if (streamId && partition != null && Number.isSafeInteger(partition) && partition >= 0) {
-            askedStreamKey = new StreamIdAndPartition(streamId, partition)
+            askedKey = new SPID(streamId, partition)
         }
 
-        streamKeys = askedStreamKey
-            ? Object.keys(overlayPerStream).filter((streamKey) => streamKey === askedStreamKey!.toString())
+        keys = askedKey
+            ? Object.keys(overlayPerStream).filter((spidKey) => spidKey === askedKey!.toString())
             : Object.keys(overlayPerStream)
     }
 
-    return streamKeys
+    return keys
 }

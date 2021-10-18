@@ -1,15 +1,15 @@
 import io from '@pm2/io'
 import { EventEmitter } from 'events'
+import { SmartContractRecord, SPIDKey } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { TrackerServer, Event as TrackerServerEvent } from '../../protocol/TrackerServer'
-import { SmartContractRecord } from 'streamr-client-protocol'
 import { OverlayTopology } from './OverlayTopology'
 import { COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerId, PeerInfo } from '../../connection/PeerInfo'
-import { Location, Status, StreamStatus, StreamKey } from '../../identifiers'
+import { Location, Status, StreamStatus } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
@@ -37,7 +37,7 @@ export interface TrackerOptions {
     topologyStabilization?: TopologyStabilizationOptions
 }
 
-export type OverlayPerStream = Record<StreamKey,OverlayTopology>
+export type OverlayPerStream = Record<SPIDKey,OverlayTopology>
 
 // nodeId => connected nodeId => rtt
 export type OverlayConnectionRtts = Record<NodeId,Record<NodeId,number>>
@@ -163,9 +163,9 @@ export class Tracker extends EventEmitter {
         this.extraMetadatas[source] = extra
 
         // update topology
-        this.createTopology(stream.streamKey)
+        this.createTopology(stream.spidKey)
         this.updateNodeOnStream(source, stream)
-        this.formAndSendInstructions(source, stream.streamKey)
+        this.formAndSendInstructions(source, stream.spidKey)
     }
 
     stop(): Promise<void> {
@@ -178,28 +178,28 @@ export class Tracker extends EventEmitter {
         return this.trackerServer.getUrl()
     }
 
-    private createTopology(streamKey: StreamKey) {
-        if (this.overlayPerStream[streamKey] == null) {
-            this.overlayPerStream[streamKey] = new OverlayTopology(this.maxNeighborsPerNode)
+    private createTopology(spidKey: SPIDKey) {
+        if (this.overlayPerStream[spidKey] == null) {
+            this.overlayPerStream[spidKey] = new OverlayTopology(this.maxNeighborsPerNode)
         }
     }
 
     private updateNodeOnStream(node: NodeId, status: StreamStatus): void {
         if (status.counter === COUNTER_UNSUBSCRIBE) {
-            this.leaveAndCheckEmptyOverlay(status.streamKey, this.overlayPerStream[status.streamKey], node)
+            this.leaveAndCheckEmptyOverlay(status.spidKey, this.overlayPerStream[status.spidKey], node)
         } else {
-            this.overlayPerStream[status.streamKey].update(node, status.neighbors)
+            this.overlayPerStream[status.spidKey].update(node, status.neighbors)
         }
     }
 
-    private formAndSendInstructions(node: NodeId, streamKey: StreamKey, forceGenerate = false): void {
-        if (this.overlayPerStream[streamKey]) {
-            const instructions = this.overlayPerStream[streamKey].formInstructions(node, forceGenerate)
+    private formAndSendInstructions(node: NodeId, spidKey: SPIDKey, forceGenerate = false): void {
+        if (this.overlayPerStream[spidKey]) {
+            const instructions = this.overlayPerStream[spidKey].formInstructions(node, forceGenerate)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
-                const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamKey)
+                const counterValue = this.instructionCounter.setOrIncrement(nodeId, spidKey)
                 await this.instructionSender.addInstruction({
                     nodeId,
-                    streamKey,
+                    spidKey,
                     newNeighbors,
                     counterValue
                 })
@@ -213,21 +213,21 @@ export class Tracker extends EventEmitter {
         this.locationManager.removeNode(node)
         delete this.extraMetadatas[node]
         Object.entries(this.overlayPerStream)
-            .forEach(([streamKey, overlayTopology]) => {
-                this.leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node)
+            .forEach(([spidKey, overlayTopology]) => {
+                this.leaveAndCheckEmptyOverlay(spidKey, overlayTopology, node)
             })
     }
 
-    private leaveAndCheckEmptyOverlay(streamKey: StreamKey, overlayTopology: OverlayTopology, node: NodeId) {
+    private leaveAndCheckEmptyOverlay(spidKey: SPIDKey, overlayTopology: OverlayTopology, node: NodeId) {
         const neighbors = overlayTopology.leave(node)
         this.instructionCounter.removeNode(node)
 
         if (overlayTopology.isEmpty()) {
-            this.instructionCounter.removeStream(streamKey)
-            delete this.overlayPerStream[streamKey]
+            this.instructionCounter.removeStream(spidKey)
+            delete this.overlayPerStream[spidKey]
         } else {
             neighbors.forEach((neighbor) => {
-                this.formAndSendInstructions(neighbor, streamKey, true)
+                this.formAndSendInstructions(neighbor, spidKey, true)
             })
         }
     }

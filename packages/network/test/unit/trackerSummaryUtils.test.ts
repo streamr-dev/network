@@ -16,17 +16,17 @@ const createOverlayTopology = (mapping: { [key: string]: string[] }) => {
 test('getNodeConnections', () => {
     const nodes = ['node1', 'node2', 'node3', 'node4', 'node5', 'node6', 'nodeNotInTopology']
     const overlayPerStream = {
-        'stream-a::0': createOverlayTopology({
+        'stream-a#0': createOverlayTopology({
             node1: ['node2', 'node3']
         }),
-        'stream-b::0': createOverlayTopology({
+        'stream-b#0': createOverlayTopology({
             node2: ['node4']
         }),
-        'stream-c::0': createOverlayTopology({}),
-        'stream-d::0': createOverlayTopology({
+        'stream-c#0': createOverlayTopology({}),
+        'stream-d#0': createOverlayTopology({
             node1: ['node3', 'node5']
         }),
-        'stream-e::0': createOverlayTopology({
+        'stream-e#0': createOverlayTopology({
             node6: []
         })
     }

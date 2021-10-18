@@ -1,5 +1,5 @@
-import { TrackerLayer, Utils } from 'streamr-client-protocol'
-import { Location, Rtts, StreamIdAndPartition, TrackerInfo } from '../../identifiers'
+import { SPID, TrackerLayer, Utils } from 'streamr-client-protocol'
+import { Location, Rtts, TrackerInfo } from '../../identifiers'
 import { TrackerId } from '../tracker/Tracker'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../protocol/NodeToTracker'
@@ -21,14 +21,14 @@ interface NodeDescriptor {
 }
 
 interface Subscriber {
-    subscribeToStreamIfHaveNotYet: (streamId: StreamIdAndPartition, sendStatus?: boolean) => void
+    subscribeToStreamIfHaveNotYet: (spid: SPID, sendStatus?: boolean) => void
     subscribeToStreamsOnNode: (
         nodeIds: NodeId[],
-        streamId: StreamIdAndPartition,
+        spid: SPID,
         trackerId: TrackerId,
         reattempt: boolean
     ) => Promise<PromiseSettledResult<NodeId>[]>,
-    unsubscribeFromStreamOnNode: (node: NodeId, streamId: StreamIdAndPartition, sendStatus?: boolean) => void
+    unsubscribeFromStreamOnNode: (node: NodeId, spid: SPID, sendStatus?: boolean) => void
 }
 
 type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
@@ -86,8 +86,8 @@ export class TrackerManager {
 
         this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => {
             logger.trace('connected to tracker %s', trackerId)
-            this.getStreamsForTracker(trackerId).forEach((streamId) => {
-                this.sendStatus(streamId, trackerId)
+            this.getStreamsForTracker(trackerId).forEach((spid) => {
+                this.sendStatus(spid, trackerId)
             })
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (instructionMessage, trackerId) => {
@@ -98,17 +98,17 @@ export class TrackerManager {
         })
     }
 
-    sendStreamStatus(streamId: StreamIdAndPartition): void {
-        const trackerId = this.getTrackerId(streamId)
-        this.sendStatus(streamId, trackerId)
+    sendStreamStatus(spid: SPID): void {
+        const trackerId = this.getTrackerId(spid)
+        this.sendStatus(spid, trackerId)
     }
 
-    onNewStream(streamId: StreamIdAndPartition): void {
-        this.trackerConnector.onNewStream(streamId)
+    onNewStream(spid: SPID): void {
+        this.trackerConnector.onNewStream(spid)
     }
 
-    onUnsubscribeFromStream(streamId: StreamIdAndPartition): void {
-        const key = streamId.key()
+    onUnsubscribeFromStream(spid: SPID): void {
+        const key = spid.toKey()
         this.instructionThrottler.removeStream(key)
         this.instructionRetryManager.removeStream(key)
     }
@@ -125,9 +125,9 @@ export class TrackerManager {
         await this.nodeToTracker.stop()
     }
 
-    private getStreamsForTracker(trackerId: TrackerId): Array<StreamIdAndPartition> {
-        return [...this.streamManager.getStreamKeys()]
-            .map((key) => StreamIdAndPartition.fromKey(key))
+    private getStreamsForTracker(trackerId: TrackerId): Array<SPID> {
+        return [...this.streamManager.getSPIDKeys()]
+            .map((key) => SPID.from(key))
             .filter((streamId) => this.getTrackerId(streamId) === trackerId)
     }
 
@@ -142,10 +142,10 @@ export class TrackerManager {
         return false
     }
 
-    private async sendStatus(streamId: StreamIdAndPartition, trackerId: TrackerId): Promise<void> {
+    private async sendStatus(spid: SPID, trackerId: TrackerId): Promise<void> {
         const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
         const status = {
-            stream: this.streamManager.getStreamStatus(streamId),
+            stream: this.streamManager.getStreamStatus(spid),
             ...nodeDescriptor
         }
         try {
@@ -161,7 +161,7 @@ export class TrackerManager {
         trackerId: TrackerId,
         reattempt = false
     ): Promise<void> {
-        const streamId = StreamIdAndPartition.fromMessage(instructionMessage)
+        const streamId = SPID.from(instructionMessage)
         const { nodeIds, counter } = instructionMessage
 
         this.instructionRetryManager.add(instructionMessage, trackerId)
@@ -216,7 +216,7 @@ export class TrackerManager {
         }
     }
 
-    private getTrackerId(streamId: StreamIdAndPartition): TrackerId {
-        return this.trackerRegistry.getTracker(streamId.id, streamId.partition).id
+    private getTrackerId(spid: SPID): TrackerId {
+        return this.trackerRegistry.getTracker(spid.streamId, spid.streamPartition).id
     }
 }

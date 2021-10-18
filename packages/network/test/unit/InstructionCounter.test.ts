@@ -11,7 +11,7 @@ describe('InstructionCounter', () => {
     it('if counters have not been set', () => {
         const status: Partial<Status> = {
             stream: {
-                streamKey: 'stream-1',
+                spidKey: 'stream-1',
                 neighbors: [],
                 counter: 123
             }
@@ -28,14 +28,14 @@ describe('InstructionCounter', () => {
         instructionCounter.setOrIncrement('node', 'stream-2')
         const status1 = {
             stream: {
-                streamKey: 'stream-1',
+                spidKey: 'stream-1',
                 neighbors: [],
                 counter: 1
             }
         }
         const status2 = {
             stream: {
-                streamKey: 'stream-2',
+                spidKey: 'stream-2',
                 neighbors: [],
                 counter: 3
             }
@@ -52,14 +52,14 @@ describe('InstructionCounter', () => {
         instructionCounter.setOrIncrement('node-2', 'stream-1')
         const status1 = {
             stream: {
-                streamKey: 'stream-1',
+                spidKey: 'stream-1',
                 neighbors: [],
                 counter: 1
             }
         }
         const status2 = {
             stream: {
-                streamKey: 'stream-1',
+                spidKey: 'stream-1',
                 neighbors: [],
                 counter: 3
             }
@@ -75,7 +75,7 @@ describe('InstructionCounter', () => {
         instructionCounter.removeNode('node')
         const status = {
             stream: {
-                streamKey: 'stream-1',
+                spidKey: 'stream-1',
                 neighbors: [],
                 counter: 0
             }
@@ -90,7 +90,7 @@ describe('InstructionCounter', () => {
         instructionCounter.removeStream('stream-1')
         const status = {
             stream: {
-                streamKey: 'stream-1',
+                spidKey: 'stream-1',
                 neighbors: [],
                 counter: 0
             }
