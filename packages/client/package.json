@@ -43,7 +43,7 @@
     "eslint": "eslint --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit --verbose --useStderr --detectOpenHandles",
-    "test-types": "npm run test-browser-types && (cd test/exports && npm run link && tsc --project --noEmit ./tsconfig.json)",
+    "test-types": "npm run test-browser-types && (cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json)",
     "test-browser-types": "tsc -b tsconfig.browser.json",
     "coverage": "jest --coverage",
     "test-integration": "jest --verbose --useStderr --forceExit test/integration/brubeck",
