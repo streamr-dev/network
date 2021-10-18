@@ -11,17 +11,20 @@ export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',
     NODE_DISCONNECTED = 'streamr:node-node:node-disconnected',
     DATA_RECEIVED = 'streamr:node-node:stream-data',
+    UNICAST_RECEIVED = 'streamr:node-node:unicast-received',
     LOW_BACK_PRESSURE = 'streamr:node-node:low-back-pressure',
     HIGH_BACK_PRESSURE = 'streamr:node-node:high-back-pressure',
 }
 
 const eventPerType: { [key: number]: string } = {}
 eventPerType[ControlLayer.ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.UnicastMessage] = Event.UNICAST_RECEIVED
 
 export interface NodeToNode {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.DATA_RECEIVED, listener: (message: ControlLayer.BroadcastMessage, nodeId: NodeId) => void): this
+    on(event: Event.UNICAST_RECEIVED, listener: (message: ControlLayer.UnicastMessage, nodeId: NodeId) => void): this
     on(event: Event.LOW_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
     on(event: Event.HIGH_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
 }
