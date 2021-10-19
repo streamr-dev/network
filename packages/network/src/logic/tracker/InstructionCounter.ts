@@ -4,7 +4,7 @@ import { NodeId } from '../node/Node'
 
 export const COUNTER_UNSUBSCRIBE = -1
 
-type Counters = Record<NodeId,Record<SPIDKey,number>>
+type Counters = Record<NodeId, Record<SPIDKey, number>>
 
 export class InstructionCounter {
     private readonly counters: Counters = {}
