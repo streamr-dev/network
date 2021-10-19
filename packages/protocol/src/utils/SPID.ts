@@ -244,9 +244,9 @@ export class SPID implements SPIDKeyShape {
      * const key = SPID.toKey({ streamId, streamPartition })
      * ```
      */
-    static toKey(spidLike: SPIDShape): SPIDKey
+    static toKey(spidLike: SPIDLike): SPIDKey
     static toKey(streamId: string, streamPartition: number): SPIDKey
-    static toKey(param1: string|SPIDShape, param2?: number): SPIDKey {
+    static toKey(param1: string|SPIDLike, param2?: number): SPIDKey {
         if ((typeof param1 === 'string') && (param2 !== undefined)) {
             return new SPID(param1, param2).key
         } else {
