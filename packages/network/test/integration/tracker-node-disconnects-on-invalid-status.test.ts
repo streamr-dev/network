@@ -31,8 +31,10 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
         ])
     })
     beforeEach(async () => {
-        await tracker.stop()
-        await nodeToTracker.stop()
+        await Promise.allSettled([
+            tracker?.stop(),
+            nodeToTracker?.stop()
+        ])
     })
 
     it('Tracker disconnects from node if node sends invalid status data', async () => {
@@ -45,7 +47,7 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
             }
         }
         await runAndWaitForEvents([() => {
-            nodeToTracker.sendStatus('tracker', faultyStatus as Status)
+            nodeToTracker.sendStatus(TRACKER_ID, faultyStatus as Status)
         }], [
             [nodeToTracker, 'streamr:tracker-node:tracker-disconnected']
         ])
