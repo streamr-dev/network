@@ -161,7 +161,7 @@ export class TrackerManager {
         trackerId: TrackerId,
         reattempt = false
     ): Promise<void> {
-        const spid = SPID.from(instructionMessage)
+        const spid = instructionMessage.getSPID()
         const { nodeIds, counter } = instructionMessage
 
         this.instructionRetryManager.add(instructionMessage, trackerId)

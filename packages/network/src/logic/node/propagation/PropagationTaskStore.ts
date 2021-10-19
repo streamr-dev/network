@@ -25,12 +25,12 @@ export class PropagationTaskStore {
             ttlInMs,
             maxSize: maxTasks,
             onItemDropped: (messageId: MessageID) => {
-                const stream = SPID.from(messageId)
-                const messageIdsForStream = this.streamLookup.get(stream.toKey())
+                const spid = SPID.from(messageId)
+                const messageIdsForStream = this.streamLookup.get(spid.toKey())
                 if (messageIdsForStream !== undefined) {
                     messageIdsForStream.delete(messageId)
                     if (messageIdsForStream.size === 0) {
-                        this.streamLookup.delete(stream.toKey())
+                        this.streamLookup.delete(spid.toKey())
                     }
                 }
             }

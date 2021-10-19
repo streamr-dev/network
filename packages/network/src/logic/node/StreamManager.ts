@@ -37,7 +37,7 @@ export class StreamManager {
         messageId: MessageLayer.MessageID,
         previousMessageReference: MessageLayer.MessageRef | null
     ): boolean | never {
-        const spid = new SPID(messageId.streamId, messageId.streamPartition)
+        const spid = SPID.from(messageId)
         this.verifyThatIsSetUp(spid)
 
         const detectorKey = keyForDetector(messageId)

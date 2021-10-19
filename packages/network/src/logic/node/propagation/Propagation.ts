@@ -48,7 +48,7 @@ export class Propagation {
      * Node should invoke this when it learns about a new message
      */
     feedUnseenMessage(message: StreamMessage, source: NodeId | null): void {
-        const spid = SPID.from(message.messageId)
+        const spid = message.getSPID()
         const targetNeighbors = this.getNeighbors(spid).filter((n) => n !== source)
 
         targetNeighbors.forEach((neighborId) => {

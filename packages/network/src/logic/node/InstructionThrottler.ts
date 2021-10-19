@@ -1,4 +1,4 @@
-import { SPID, SPIDKey } from 'streamr-client-protocol'
+import { SPIDKey } from 'streamr-client-protocol'
 import { cancelable, CancelablePromiseType } from 'cancelable-promise'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from "../../helpers/Logger"
@@ -39,7 +39,7 @@ export class InstructionThrottler {
         if (this.stopped) {
             return
         }
-        const spidKey = SPID.from(instructionMessage).toKey()
+        const spidKey = instructionMessage.getSPID().toKey()
         if (!this.instructionCounter[spidKey] || this.instructionCounter[spidKey] <= instructionMessage.counter) {
             this.instructionCounter[spidKey] = instructionMessage.counter
             this.queue[spidKey] = {

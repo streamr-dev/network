@@ -45,7 +45,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.cassandra = await this.getCassandraStorage()
         this.storageConfig = await this.createStorageConfig()
         this.messageListener = (msg) => {
-            if (this.storageConfig!.hasSPID(Protocol.SPID.from(msg.messageId))) {
+            if (this.storageConfig!.hasSPID(msg.getSPID())) {
                 this.cassandra!.store(msg)
             }
         }

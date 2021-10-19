@@ -1,4 +1,4 @@
-import { SPID, SPIDKey } from 'streamr-client-protocol'
+import { SPIDKey } from 'streamr-client-protocol'
 import { TrackerLayer } from "streamr-client-protocol"
 import { Logger } from "../../helpers/Logger"
 import { TrackerId } from '../tracker/Tracker'
@@ -33,7 +33,7 @@ export class InstructionRetryManager {
         if (this.stopped) {
             return
         }
-        const spidKey = SPID.from(instructionMessage).toKey()
+        const spidKey = instructionMessage.getSPID().toKey()
         if (this.instructionRetryIntervals[spidKey]) {
             clearTimeout(this.instructionRetryIntervals[spidKey].interval)
         }
@@ -49,7 +49,7 @@ export class InstructionRetryManager {
         if (this.stopped) {
             return
         }
-        const spidKey = SPID.from(instructionMessage).toKey()
+        const spidKey = instructionMessage.getSPID().toKey()
         try {
             // First and every nth instruction retries will always send status messages to tracker
             await this.handleFn(instructionMessage, trackerId, this.instructionRetryIntervals[spidKey].counter !== 0)
