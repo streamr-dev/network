@@ -30,6 +30,10 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
             [nodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER]
         ])
     })
+    beforeEach(async () => {
+        await tracker.stop()
+        await nodeToTracker.stop()
+    })
 
     it('Tracker disconnects from node if node sends invalid status data', async () => {
         const faultyStatus: Partial<Status> = {
@@ -45,6 +49,6 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
         }], [
             [nodeToTracker, 'streamr:tracker-node:tracker-disconnected']
         ])
-        expect(tracker.getNodes()).toBeArrayOfSize(0)
+        expect(tracker.getNodes().length).toEqual(0)
     })
 })
