@@ -40,8 +40,8 @@ export class TrackerConnector {
         this.connectionStates = new Map()
     }
 
-    onNewStream(streamId: SPID): void {
-        const trackerInfo = this.trackerRegistry.getTracker(streamId.streamId, streamId.streamPartition)
+    onNewStream(spid: SPID): void {
+        const trackerInfo = this.trackerRegistry.getTracker(spid.streamId, spid.streamPartition)
         this.connectTo(trackerInfo)
     }
 
