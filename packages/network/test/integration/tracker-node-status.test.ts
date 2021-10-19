@@ -1,11 +1,9 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { runAndWaitForEvents, wait, waitForEvent } from 'streamr-test-utils'
-
+import { wait, waitForEvent } from 'streamr-test-utils'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
-import { TrackerLayer } from "streamr-client-protocol"
 
 /**
  * This test verifies that tracker receives status messages from nodes with list of neighbor connections
@@ -194,28 +192,5 @@ describe('check status message flow between tracker and two nodes', () => {
                 done()
             }
         })
-    })
-
-    it('Tracker disconnects from node if node sends invalid status data', async () => {
-        await nodeOne.start()
-        nodeOne.subscribe('test-stream', 0)
-        // @ts-expect-error private field
-        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_CONNECTED)
-
-        const faultyStatus  = new TrackerLayer.StatusMessage({
-            requestId: 'faulty',
-            status: {
-                counter: 1,
-                streamKey: 123,
-                neighbors: []
-            }
-        })
-        await runAndWaitForEvents([() => {
-            // @ts-expect-error private field
-            nodeOne.trackerManager.nodeToTracker.endpoint.send('tracker', faultyStatus.serialize())
-        }], [
-            // @ts-expect-error private field
-            [nodeOne.trackerManager.nodeToTracker, 'streamr:tracker-node:tracker-disconnected']
-        ])
     })
 })
