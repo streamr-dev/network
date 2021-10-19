@@ -17,7 +17,7 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
 }
 
 export class StreamManager {
-    private readonly streams: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>() // spidKey => {}
+    private readonly streams: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
 
     setUpStream(spid: SPID): void {
         if (!(spid instanceof SPID)) {
