@@ -40,6 +40,7 @@ module.exports = (env, argv) => {
         },
         optimization: {
             minimize: false,
+            moduleIds: 'named',
         },
         module: {
             rules: [

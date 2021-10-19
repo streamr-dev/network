@@ -23,7 +23,7 @@ export class LoggerBrowser extends LoggerCommon {
     }
 
     private static createName(module: NodeJS.Module, context?: string) {
-        const parsedPath = path.parse(module.id)
+        const parsedPath = path.parse(String(module.id))
         let fileId = parsedPath.name
         if (fileId === 'index') {
             // file with name "foobar/index.ts" -> "foobar"
