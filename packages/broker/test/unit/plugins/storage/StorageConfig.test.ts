@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle, object-curly-newline */
 import { StorageConfig, StorageConfigListener } from '../../../../src/plugins/storage/StorageConfig'
 import nock from 'nock'
-import { SPID } from 'streamr-network/dist/streamr-protocol'
+import { Protocol } from 'streamr-network'
 
 describe('StorageConfig', () => {
 
@@ -31,31 +31,31 @@ describe('StorageConfig', () => {
             // @ts-expect-error private
             config.setSPIDKeys(new Set(['existing2#0', 'existing3#0', 'new1#0', 'new2#0']))
             expect(listener.onSPIDAdded).toBeCalledTimes(2)
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new SPID('new1', 0))
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new SPID('new2', 0))
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('new1', 0))
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('new2', 0))
             expect(listener.onSPIDRemoved).toBeCalledTimes(2)
-            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new SPID('existing1', 0))
-            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new SPID('existing2', 1))
-            expect(config.hasSPID(new SPID('new1', 0))).toBeTruthy()
-            expect(config.hasSPID(new SPID('existing1', 0))).toBeFalsy()
-            expect(config.hasSPID(new SPID('other', 0))).toBeFalsy()
+            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing1', 0))
+            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 1))
+            expect(config.hasSPID(new Protocol.SPID('new1', 0))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('existing1', 0))).toBeFalsy()
+            expect(config.hasSPID(new Protocol.SPID('other', 0))).toBeFalsy()
         })
 
         it('addStream', () => {
             // @ts-expect-error private
             config.addSPIDKeys(new Set(['loremipsum#0', 'foo#0', 'bar#0']))
             expect(listener.onSPIDAdded).toBeCalledTimes(3)
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new SPID('loremipsum', 0))
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new SPID('foo', 0))
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new SPID('bar', 0))
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('loremipsum', 0))
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('foo', 0))
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('bar', 0))
         })
 
         it('removeStreams', () => {
             // @ts-expect-error private
             config.removeSPIDKeys(new Set(['existing2#0', 'existing2#1']))
             expect(listener.onSPIDRemoved).toBeCalledTimes(2)
-            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new SPID('existing2', 0))
-            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new SPID('existing2', 1))
+            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 0))
+            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 1))
         })
 
         it('refresh', async () => {
@@ -73,9 +73,9 @@ describe('StorageConfig', () => {
                 ])
 
             await config.refresh()
-            expect(config.hasSPID(new SPID('foo', 0))).toBeTruthy()
-            expect(config.hasSPID(new SPID('foo', 1))).toBeTruthy()
-            expect(config.hasSPID(new SPID('bar', 0))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('foo', 0))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('foo', 1))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('bar', 0))).toBeTruthy()
         })
 
         it('onAssignmentEvent', () => {
@@ -87,8 +87,8 @@ describe('StorageConfig', () => {
                 }, 
                 event: 'STREAM_ADDED'
             })
-            expect(config.hasSPID(new SPID('foo', 0))).toBeTruthy()
-            expect(config.hasSPID(new SPID('foo', 1))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('foo', 0))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('foo', 1))).toBeTruthy()
         })
     })
 

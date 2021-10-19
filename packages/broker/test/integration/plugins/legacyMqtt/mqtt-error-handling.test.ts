@@ -1,8 +1,8 @@
 import { AsyncMqttClient } from 'async-mqtt'
 import { Socket } from 'net'
 import { startTracker, Tracker } from 'streamr-network'
-import {waitForEvent} from '../../../../../test-utils/dist/utils'
-import { Broker } from '../../../broker'
+import { waitForEvent } from 'streamr-test-utils'
+import { Broker } from '../../../../src/broker'
 import { startBroker, createMqttClient } from '../../../utils'
 
 const trackerPort = 12411

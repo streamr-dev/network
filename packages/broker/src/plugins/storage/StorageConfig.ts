@@ -1,6 +1,5 @@
 import fetch from 'node-fetch'
 import { Logger, Protocol } from 'streamr-network'
-import { SPID } from 'streamr-network/dist/streamr-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
 
 const logger = new Logger(module)
@@ -91,7 +90,7 @@ export class StorageConfig {
     }
 
     getSPIDs(): Protocol.SPID[] {
-        return Array.from(this.spidKeys, (key) => SPID.from(key))
+        return Array.from(this.spidKeys, (key) => Protocol.SPID.from(key))
     }
 
     addChangeListener(listener: StorageConfigListener): void {

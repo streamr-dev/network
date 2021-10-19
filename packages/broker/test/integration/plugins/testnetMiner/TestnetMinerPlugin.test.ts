@@ -1,11 +1,11 @@
 import { Server } from 'http'
 import { once } from 'events'
 import { Logger, startTracker, Tracker } from 'streamr-network'
+import { waitForCondition } from 'streamr-test-utils'
 import express, { Request, Response} from 'express'
 import { Broker } from '../../../../src/broker'
 import { createClient, createTestStream, fastPrivateKey, startBroker } from '../../../utils'
 import { Stream, StreamOperation, StreamrClient } from 'streamr-client'
-import { waitForCondition } from '../../../../../test-utils/dist/utils'
 import { Wallet } from 'ethers'
 import { version as CURRENT_VERSION } from '../../../../package.json'
 
