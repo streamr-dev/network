@@ -29,10 +29,10 @@ const TRACKERS = [
     },
 ]
 
-const T1_STREAM = new SPID('streamOne', 0)
-const T2_STREAM = new SPID('streamOne', 15)
-const T3_STREAM = new SPID('streamSix', 0)
-const T4_STREAM = new SPID('streamTwo', 0)
+const T1_STREAM = SPID.from('a#0')
+const T2_STREAM = SPID.from('b#10')
+const T3_STREAM = SPID.from('c#12')
+const T4_STREAM = SPID.from('d#4')
 
 describe(TrackerConnector, () => {
     let streams: Array<SPID>
@@ -42,8 +42,8 @@ describe(TrackerConnector, () => {
     beforeAll(() => {
         // sanity check stream hash assignments
         const trackerRegistry = new Utils.TrackerRegistry<TrackerInfo>(TRACKERS)
-        function checkTrackerAssignment({ streamId, streamPartition }: SPID, expectedTracker: TrackerInfo): void {
-            expect(trackerRegistry.getTracker(streamId, streamPartition)).toEqual(expectedTracker)
+        function checkTrackerAssignment(spid: SPID, expectedTracker: TrackerInfo): void {
+            expect(trackerRegistry.getTracker(spid)).toEqual(expectedTracker)
         }
         checkTrackerAssignment(T1_STREAM, TRACKERS[0])
         checkTrackerAssignment(T2_STREAM, TRACKERS[1])

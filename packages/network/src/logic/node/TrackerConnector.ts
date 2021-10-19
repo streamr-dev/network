@@ -41,7 +41,7 @@ export class TrackerConnector {
     }
 
     onNewStream(spid: SPID): void {
-        const trackerInfo = this.trackerRegistry.getTracker(spid.streamId, spid.streamPartition)
+        const trackerInfo = this.trackerRegistry.getTracker(spid)
         this.connectTo(trackerInfo)
     }
 
@@ -91,7 +91,7 @@ export class TrackerConnector {
 
     private isActiveTracker(trackerId: TrackerId): boolean {
         for (const { streamId, streamPartition } of this.getSPIDs()) {
-            if (this.trackerRegistry.getTracker(streamId, streamPartition).id === trackerId) {
+            if (this.trackerRegistry.getTracker(new SPID(streamId, streamPartition)).id === trackerId) {
                 return true
             }
         }
