@@ -54,7 +54,7 @@ export class Stream<C> {
     }
 
     getSPIDKey(): Protocol.SPIDKey {
-        return new Protocol.SPID(this.id, this.partition).toKey()
+        return Protocol.SPID.toKey(this.id, this.partition)
     }
 
     getName(): string {

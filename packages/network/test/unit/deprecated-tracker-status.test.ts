@@ -34,7 +34,7 @@ describe('Tracker reads deprecated status format', () => {
     })
 
     const assertStatusProcessed = () => {
-        const spidKey = new SPID(STREAM_ID, STREAM_PARTITION).toKey()
+        const spidKey = SPID.toKey(STREAM_ID, STREAM_PARTITION)
         expect(createTopology).toBeCalledTimes(1)
         expect(createTopology).toBeCalledWith(spidKey)
         expect(updateNodeOnStream).toBeCalledTimes(1)

@@ -12,7 +12,7 @@ export interface StorageConfigListener {
 const getSPIDKeys = (streamId: string, partitions: number): Protocol.SPIDKey[] => {
     const keys: Protocol.SPIDKey[] = []
     for (let i = 0; i < partitions; i++) {
-        keys.push(new Protocol.SPID(streamId, i).toKey())
+        keys.push(Protocol.SPID.toKey(streamId, i))
     }
     return keys
 }
@@ -85,7 +85,7 @@ export class StorageConfig {
     }
 
     hasSPID(spid: Protocol.SPID): boolean {
-        const key = new Protocol.SPID(spid.streamId, spid.streamPartition).toKey()
+        const key = Protocol.SPID.toKey(spid.streamId, spid.streamPartition)
         return this.spidKeys.has(key)
     }
 

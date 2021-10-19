@@ -303,7 +303,7 @@ export class MqttServer extends EventEmitter {
             this.metrics.record('outBytes', streamMessage.getSerializedContent().length * stream.getConnections().length)
             this.metrics.record('outMessages', stream.getConnections().length)
         } else {
-            logger.debug('broadcastMessage: stream "%s" not found', new Protocol.SPID(streamId, streamPartition).toKey())
+            logger.debug('broadcastMessage: stream "%s" not found', Protocol.SPID.toKey(streamId, streamPartition))
         }
     }
 }

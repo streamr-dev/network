@@ -18,7 +18,7 @@ export class InstructionCounter {
     }
 
     isMostRecent(status: Status, source: NodeId): boolean {
-        const spidKey = new SPID(status.stream.id, status.stream.partition).toKey()
+        const spidKey = SPID.toKey(status.stream.id, status.stream.partition)
         const currentCounter = this.getAndSetIfNecessary(source, spidKey)
         return (status.stream.counter >= currentCounter || status.stream.counter === COUNTER_UNSUBSCRIBE)
     }

@@ -169,7 +169,7 @@ export class Tracker extends EventEmitter {
         })
         this.extraMetadatas[source] = extra
 
-        const spidKey = new SPID(stream.id, stream.partition).toKey()
+        const spidKey = SPID.toKey(stream.id, stream.partition)
 
         // update topology
         this.createTopology(spidKey)
@@ -194,7 +194,7 @@ export class Tracker extends EventEmitter {
     }
 
     private updateNodeOnStream(node: NodeId, status: StreamStatus): void {
-        const spidKey = new SPID(status.id, status.partition).toKey()
+        const spidKey = SPID.toKey(status.id, status.partition)
         if (status.counter === COUNTER_UNSUBSCRIBE) {
             this.leaveAndCheckEmptyOverlay(spidKey, this.overlayPerStream[spidKey], node)
         } else {

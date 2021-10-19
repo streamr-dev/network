@@ -16,7 +16,7 @@ export class StreamStateManager<C> {
     }
 
     get(streamId: string, streamPartition: number): Stream<C> {
-        const key = new Protocol.SPID(streamId, streamPartition).toKey()
+        const key = Protocol.SPID.toKey(streamId, streamPartition)
         return this.streams[key]
     }
 
@@ -34,7 +34,7 @@ export class StreamStateManager<C> {
             throw new Error('streamId or streamPartition not given!')
         }
 
-        const key = new Protocol.SPID(streamId, streamPartition).toKey()
+        const key = Protocol.SPID.toKey(streamId, streamPartition)
         if (this.streams[key]) {
             throw new Error(`stream already exists for ${key}`)
         }
@@ -70,7 +70,7 @@ export class StreamStateManager<C> {
 
         const stream = this.get(streamId, streamPartition)
         if (stream) {
-            const key = new Protocol.SPID(streamId, streamPartition).toKey()
+            const key = Protocol.SPID.toKey(streamId, streamPartition)
             clearTimeout(this.timeouts[key])
             delete this.timeouts[key]
             delete this.streams[key]
