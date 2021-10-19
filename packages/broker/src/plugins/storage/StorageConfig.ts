@@ -131,7 +131,7 @@ export class StorageConfig {
     }
 
     private addSPIDKeys(keysToAdd: Set<Protocol.SPIDKey>): void {
-        logger.info('Add %d SPIDs to storage config: %s', keysToAdd.size, Array.from(keysToAdd).join(','))
+        logger.info('Add %d partitions to storage config: %s', keysToAdd.size, Array.from(keysToAdd).join(','))
         this.spidKeys = new Set([...this.spidKeys, ...keysToAdd])
         this.listeners.forEach((listener) => {
             keysToAdd.forEach((key: Protocol.SPIDKey) => listener.onSPIDAdded(Protocol.SPID.from(key)))
@@ -139,7 +139,7 @@ export class StorageConfig {
     }
 
     private removeSPIDKeys(keysToRemove: Set<Protocol.SPIDKey>): void {
-        logger.info('Remove %d SPIDs from storage config: %s', keysToRemove.size, Array.from(keysToRemove).join(','))
+        logger.info('Remove %d partitions from storage config: %s', keysToRemove.size, Array.from(keysToRemove).join(','))
         this.spidKeys = new Set([...this.spidKeys].filter((x) => !keysToRemove.has(x)))
         this.listeners.forEach((listener) => {
             keysToRemove.forEach((key: Protocol.SPIDKey) => listener.onSPIDRemoved(Protocol.SPID.from(key)))
