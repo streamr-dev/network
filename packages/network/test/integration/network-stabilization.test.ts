@@ -1,9 +1,8 @@
+import assert from 'assert'
+import { wait } from 'streamr-test-utils'
+import { SPID } from 'streamr-client-protocol'
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import assert from 'assert'
-
-import { wait } from 'streamr-test-utils'
-
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 
@@ -41,7 +40,7 @@ describe('check network stabilization', () => {
                 id: `node-${i}`,
                 trackers: [trackerInfo]
             })
-            node.subscribe('stream', 0)
+            node.subscribe(new SPID('stream', 0))
             nodes.push(node)
         }
         nodes.forEach((node) => node.start())

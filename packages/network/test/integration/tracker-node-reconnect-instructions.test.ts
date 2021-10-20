@@ -36,8 +36,8 @@ describe('Check tracker instructions to node', () => {
             disconnectionWaitTime: 200
         })
 
-        nodeOne.subscribe(streamId, 0)
-        nodeTwo.subscribe(streamId, 0)
+        nodeOne.subscribe(new SPID(streamId, 0))
+        nodeTwo.subscribe(new SPID(streamId, 0))
 
         await Promise.all([
             nodeOne.start(),

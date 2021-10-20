@@ -5,6 +5,7 @@ import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
+import { SPID } from 'streamr-client-protocol'
 
 /**
  * Tests for error scenarios during signalling
@@ -54,7 +55,7 @@ describe('Signalling error scenarios', () => {
     })
 
     it('connection recovers after timeout if one endpoint closes during signalling', async () => {
-        await runAndWaitForEvents([ ()=> { nodeOne.subscribe(streamId, 0) }, () => { nodeTwo.subscribe(streamId, 0) } ],
+        await runAndWaitForEvents([ ()=> { nodeOne.subscribe(new SPID(streamId, 0)) }, () => { nodeTwo.subscribe(new SPID(streamId, 0)) } ],
             // @ts-expect-error private field
             [nodeTwo.trackerManager.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED]
         )
@@ -73,7 +74,7 @@ describe('Signalling error scenarios', () => {
 
     it('connection recovers after timeout if both endpoints close during signalling', async () => {
         
-        await runAndWaitForEvents([ () => { nodeOne.subscribe(streamId, 0)}, () => { nodeTwo.subscribe(streamId, 0) } ], [
+        await runAndWaitForEvents([ () => { nodeOne.subscribe(new SPID(streamId, 0))}, () => { nodeTwo.subscribe(new SPID(streamId, 0)) } ], [
             // @ts-expect-error private field
             [ nodeTwo.trackerManager.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED],
             // @ts-expect-error private field
@@ -111,7 +112,7 @@ describe('Signalling error scenarios', () => {
             return
         }) 
 
-        await runAndWaitForEvents([ () => { nodeOne.subscribe('stream-id', 0) }, () => { nodeTwo.subscribe('stream-id', 0) }] , [
+        await runAndWaitForEvents([ () => { nodeOne.subscribe(new SPID('stream-id', 0)) }, () => { nodeTwo.subscribe(new SPID('stream-id', 0)) }] , [
             // @ts-expect-error private field
             [nodeOne.trackerManager.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED],
             // @ts-expect-error private field
@@ -137,8 +138,8 @@ describe('Signalling error scenarios', () => {
     it('nodes recover if one signaller connection fails during signalling', async () => {
 
         await runAndRaceEvents([
-            () => { nodeOne.subscribe('stream-id', 0) },
-            () => { nodeTwo.subscribe('stream-id', 0) } ], [
+            () => { nodeOne.subscribe(new SPID('stream-id', 0)) },
+            () => { nodeTwo.subscribe(new SPID('stream-id', 0)) } ], [
             // @ts-expect-error private field
             [ nodeOne.trackerManager.nodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED ],
             // @ts-expect-error private field

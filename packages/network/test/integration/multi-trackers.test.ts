@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { SPID, TrackerLayer } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
@@ -85,7 +85,7 @@ describe('multi trackers', () => {
 
     test('node sends stream status to specific tracker', async () => {
         // first stream, first tracker
-        nodeOne.subscribe(FIRST_STREAM, 0)
+        nodeOne.subscribe(new SPID(FIRST_STREAM, 0))
 
         await wait(500)
 
@@ -94,7 +94,7 @@ describe('multi trackers', () => {
         expect(getSPIDKeys(trackerThree)).not.toContain(`${FIRST_STREAM}#0`)
 
         // second stream, second tracker
-        nodeOne.subscribe(SECOND_STREAM, 0)
+        nodeOne.subscribe(new SPID(SECOND_STREAM, 0))
 
         await wait(500)
 
@@ -103,7 +103,7 @@ describe('multi trackers', () => {
         expect(getSPIDKeys(trackerThree)).not.toContain(`${SECOND_STREAM}#0`)
 
         // third stream, third tracker
-        nodeOne.subscribe(THIRD_STREAM, 0)
+        nodeOne.subscribe(new SPID(THIRD_STREAM, 0))
 
         await wait(500)
 
@@ -114,8 +114,8 @@ describe('multi trackers', () => {
 
     test('only one specific tracker sends instructions about stream', async () => {
         // first stream, first tracker
-        nodeOne.subscribe(FIRST_STREAM_2, 0)
-        nodeTwo.subscribe(FIRST_STREAM_2, 0)
+        nodeOne.subscribe(new SPID(FIRST_STREAM_2, 0))
+        nodeTwo.subscribe(new SPID(FIRST_STREAM_2, 0))
 
         // @ts-expect-error private field
         let nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
@@ -133,8 +133,8 @@ describe('multi trackers', () => {
         expect(nodeTwoEvents[1][2]).toEqual('trackerOne')
 
         // second stream, second tracker
-        nodeOne.subscribe(SECOND_STREAM_2, 0)
-        nodeTwo.subscribe(SECOND_STREAM_2, 0)
+        nodeOne.subscribe(new SPID(SECOND_STREAM_2, 0))
+        nodeTwo.subscribe(new SPID(SECOND_STREAM_2, 0))
 
         // @ts-expect-error private field
         nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
@@ -152,8 +152,8 @@ describe('multi trackers', () => {
         expect(nodeTwoEvents[1][2]).toEqual('trackerTwo')
 
         // third stream, third tracker
-        nodeOne.subscribe(THIRD_STREAM_2, 0)
-        nodeTwo.subscribe(THIRD_STREAM_2, 0)
+        nodeOne.subscribe(new SPID(THIRD_STREAM_2, 0))
+        nodeTwo.subscribe(new SPID(THIRD_STREAM_2, 0))
 
         // @ts-expect-error private field
         nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)

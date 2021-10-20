@@ -29,16 +29,16 @@ export class NetworkNode extends Node {
         this.off(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }
 
-    subscribe(streamId: string, streamPartition: number): void {
-        this.subscribeToSPIDIfHaveNotYet(new SPID(streamId, streamPartition))
+    subscribe(spid: SPID): void {
+        this.subscribeToSPIDIfHaveNotYet(spid)
     }
 
-    unsubscribe(streamId: string, streamPartition: number): void {
-        this.unsubscribeFromStream(new SPID(streamId, streamPartition))
+    unsubscribe(spid: SPID): void {
+        this.unsubscribeFromStream(spid)
     }
 
-    getNeighborsForStream(streamId: string, streamPartition: number): ReadonlyArray<NodeId> {
-        return this.spidManager.getNeighborsForSPID(new SPID(streamId, streamPartition))
+    getNeighborsForSPID(spid: SPID): ReadonlyArray<NodeId> {
+        return this.spidManager.getNeighborsForSPID(spid)
     }
 
     getRtt(nodeId: NodeId): number|undefined {

@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { wait, waitForEvent } from 'streamr-test-utils'
-
+import { SPID } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
@@ -63,32 +63,32 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     it('tracker should receive status message from node', (done) => {
-        nodeOne.subscribe(streamId, 0)
+        nodeOne.subscribe(new SPID(streamId, 0))
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-1')
             done()
         })
 
-        nodeOne.subscribe('stream-id', 0)
+        nodeOne.subscribe(new SPID('stream-id', 0))
         nodeOne.start()
     })
 
     it('tracker should receive status from second node', (done) => {
-        nodeTwo.subscribe(streamId, 0)
+        nodeTwo.subscribe(new SPID(streamId, 0))
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-2')
             done()
         })
 
-        nodeTwo.subscribe('stream-id', 0)
+        nodeTwo.subscribe(new SPID('stream-id', 0))
         nodeTwo.start()
     })
 
     it('tracker should receive from both nodes new statuses', (done) => {
-        nodeOne.subscribe('stream-id', 0)
-        nodeTwo.subscribe('stream-id', 0)
+        nodeOne.subscribe(new SPID('stream-id', 0))
+        nodeTwo.subscribe(new SPID('stream-id', 0))
         nodeOne.start()
         nodeTwo.start()
 
@@ -114,8 +114,8 @@ describe('check status message flow between tracker and two nodes', () => {
         })
 
         setTimeout(() => {
-            nodeOne.subscribe(streamId, 0)
-            nodeTwo.subscribe(streamId, 0)
+            nodeOne.subscribe(new SPID(streamId, 0))
+            nodeTwo.subscribe(new SPID(streamId, 0))
         }, 100)
     })
 
@@ -130,8 +130,8 @@ describe('check status message flow between tracker and two nodes', () => {
                 nodeTwo.start()
             ])
 
-            nodeOne.subscribe(streamId, 0)
-            nodeTwo.subscribe(streamId, 0)
+            nodeOne.subscribe(new SPID(streamId, 0))
+            nodeTwo.subscribe(new SPID(streamId, 0))
 
             await Promise.all([
                 waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
@@ -157,8 +157,8 @@ describe('check status message flow between tracker and two nodes', () => {
                     resolve(true)
                 }
             })
-            nodeOne.subscribe(streamId2, 0)
-            nodeTwo.subscribe(streamId2, 0)
+            nodeOne.subscribe(new SPID(streamId2, 0))
+            nodeTwo.subscribe(new SPID(streamId2, 0))
         })
     })
 
@@ -170,8 +170,8 @@ describe('check status message flow between tracker and two nodes', () => {
         nodeOne.start()
         nodeTwo.start()
 
-        nodeOne.subscribe(streamId, 0)
-        nodeTwo.subscribe(streamId, 0)
+        nodeOne.subscribe(new SPID(streamId, 0))
+        nodeTwo.subscribe(new SPID(streamId, 0))
 
         // @ts-expect-error private field
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {

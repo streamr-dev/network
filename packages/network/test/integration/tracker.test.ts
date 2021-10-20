@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { runAndWaitForEvents, runAndWaitForConditions } from 'streamr-test-utils'
-
+import { SPID } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
@@ -32,11 +32,11 @@ describe('check tracker, nodes and statuses from nodes', () => {
             trackers: [trackerInfo]
         })
 
-        subscriberOne.subscribe('stream-1', 0)
-        subscriberOne.subscribe('stream-2', 2)
+        subscriberOne.subscribe(new SPID('stream-1', 0))
+        subscriberOne.subscribe(new SPID('stream-2', 2))
 
-        subscriberTwo.subscribe('stream-1', 0)
-        subscriberTwo.subscribe('stream-2', 2)
+        subscriberTwo.subscribe(new SPID('stream-1', 0))
+        subscriberTwo.subscribe(new SPID('stream-2', 2))
     })
 
     afterEach(async () => {
@@ -85,7 +85,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         ])
 
-        await runAndWaitForEvents(() => { subscriberOne.unsubscribe('stream-2', 2) },[
+        await runAndWaitForEvents(() => { subscriberOne.unsubscribe(new SPID('stream-2', 2)) },[
             [subscriberTwo, NodeEvent.NODE_UNSUBSCRIBED],
             // @ts-expect-error private field
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
@@ -101,7 +101,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             }
         })
 
-        await runAndWaitForEvents(() => { subscriberOne.unsubscribe('stream-1', 0) }, [
+        await runAndWaitForEvents(() => { subscriberOne.unsubscribe(new SPID('stream-1', 0)) }, [
             [subscriberTwo, NodeEvent.NODE_UNSUBSCRIBED],
             // @ts-expect-error private field
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
@@ -117,7 +117,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         await runAndWaitForConditions(
-            () => subscriberTwo.unsubscribe('stream-1', 0),
+            () => subscriberTwo.unsubscribe(new SPID('stream-1', 0)),
             () => getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())['stream-1#0'] == null
         )
 
@@ -128,7 +128,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         await runAndWaitForEvents(
-            () => subscriberTwo.unsubscribe('stream-2', 2),
+            () => subscriberTwo.unsubscribe(new SPID('stream-2', 2)),
             // @ts-expect-error private field
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )

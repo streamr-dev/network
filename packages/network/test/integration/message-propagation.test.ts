@@ -1,6 +1,6 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { MessageLayer } from 'streamr-client-protocol'
+import { MessageLayer, SPID } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { Event as NodeEvent } from '../../src/logic/node/Node'
@@ -86,8 +86,8 @@ describe('message propagation in network', () => {
             payload: streamMessage.getParsedContent()
         }))
 
-        n2.subscribe('stream-1', 0)
-        n3.subscribe('stream-1', 0)
+        n2.subscribe(new SPID('stream-1', 0))
+        n3.subscribe(new SPID('stream-1', 0))
 
         await Promise.all([
             waitForEvent(n2, NodeEvent.NODE_SUBSCRIBED),

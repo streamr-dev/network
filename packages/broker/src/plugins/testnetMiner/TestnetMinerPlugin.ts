@@ -1,5 +1,5 @@
 import fetchNatType from 'nat-type-identifier'
-import { Logger, Metrics } from 'streamr-network'
+import { Logger, Metrics, Protocol } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -110,7 +110,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private getPeers(): Peer[] {
-        const neighbors = this.networkNode.getNeighborsForStream(this.streamId, REWARD_STREAM_PARTITION)
+        const neighbors = this.networkNode.getNeighborsForSPID(new Protocol.SPID(this.streamId, REWARD_STREAM_PARTITION))
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
             rtt: this.networkNode.getRtt(nodeId)

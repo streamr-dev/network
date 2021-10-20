@@ -1,9 +1,8 @@
+import http from 'http'
+import { waitForCondition } from 'streamr-test-utils'
+import { SPID } from 'streamr-client-protocol'
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import http from 'http'
-
-import { waitForCondition } from 'streamr-test-utils'
-
 import { createNetworkNode, startTracker } from '../../src/composition'
 
 function getHttp(url: string) {
@@ -71,11 +70,11 @@ describe('tracker endpoint', () => {
             foo: 'bar'
         })
 
-        nodeOne.subscribe('stream-1', 0)
-        nodeTwo.subscribe('stream-1', 0)
+        nodeOne.subscribe(new SPID('stream-1', 0))
+        nodeTwo.subscribe(new SPID('stream-1', 0))
 
-        nodeOne.subscribe('stream-2', 0)
-        nodeOne.subscribe('sandbox/test/stream-3', 0)
+        nodeOne.subscribe(new SPID('stream-2', 0))
+        nodeOne.subscribe(new SPID('sandbox/test/stream-3', 0))
 
         nodeOne.start()
         nodeTwo.start()
