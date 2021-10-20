@@ -73,9 +73,9 @@ describe('Check tracker instructions to node', () => {
         const spid = new SPID(streamId, 0)
 
         // @ts-expect-error private field
-        expect(nodeOne.streams.getNeighborsForSPID(spid).length).toBe(1)
+        expect(nodeOne.spidManager.getNeighborsForSPID(spid).length).toBe(1)
         // @ts-expect-error private field
-        expect(nodeTwo.streams.getNeighborsForSPID(spid).length).toBe(1)
+        expect(nodeTwo.spidManager.getNeighborsForSPID(spid).length).toBe(1)
         
         // send empty list and wait for expected events
         await runAndWaitForEvents([
@@ -97,8 +97,8 @@ describe('Check tracker instructions to node', () => {
         ])
 
         // @ts-expect-error private field
-        expect(nodeOne.streams.getNeighborsForSPID(spid).length).toBe(0)
+        expect(nodeOne.spidManager.getNeighborsForSPID(spid).length).toBe(0)
         // @ts-expect-error private field
-        expect(nodeTwo.streams.getNeighborsForSPID(spid).length).toBe(0)
+        expect(nodeTwo.spidManager.getNeighborsForSPID(spid).length).toBe(0)
     })
 })

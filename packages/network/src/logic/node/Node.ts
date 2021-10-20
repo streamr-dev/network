@@ -55,7 +55,7 @@ export class Node extends EventEmitter {
     private readonly nodeConnectTimeout: number
     private readonly started: string
 
-    protected readonly streams: SPIDManager
+    protected readonly spidManager: SPIDManager
     private readonly disconnectionManager: DisconnectionManager
     private readonly propagation: Propagation
     private readonly trackerManager: TrackerManager
@@ -84,16 +84,16 @@ export class Node extends EventEmitter {
             .addRecordedMetric('onNodeDisconnect')
             .addFixedMetric('latency')
 
-        this.streams = new SPIDManager()
+        this.spidManager = new SPIDManager()
         this.disconnectionManager = new DisconnectionManager({
             getAllNodes: this.nodeToNode.getAllConnectionNodeIds,
-            hasSharedStreams: this.streams.isNodePresent.bind(this.streams),
+            hasSharedStreams: this.spidManager.isNodePresent.bind(this.spidManager),
             disconnect: this.nodeToNode.disconnectFromNode.bind(this.nodeToNode),
             disconnectionDelayInMs: opts.disconnectionWaitTime ?? 30 * 1000,
             cleanUpIntervalInMs: 2 * 60 * 1000
         })
         this.propagation = new Propagation({
-            getNeighbors: this.streams.getNeighborsForSPID.bind(this.streams),
+            getNeighbors: this.spidManager.getNeighborsForSPID.bind(this.spidManager),
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
@@ -134,7 +134,7 @@ export class Node extends EventEmitter {
         this.trackerManager = new TrackerManager(
             opts.protocols.nodeToTracker,
             opts,
-            this.streams,
+            this.spidManager,
             this.metrics,
             (includeRtt) => ({
                 started: this.started,
@@ -174,9 +174,9 @@ export class Node extends EventEmitter {
     }
 
     subscribeToStreamIfHaveNotYet(spid: SPID, sendStatus = true): void {
-        if (!this.streams.isSetUp(spid)) {
+        if (!this.spidManager.isSetUp(spid)) {
             logger.trace('add %s to streams', spid)
-            this.streams.setUpSPID(spid)
+            this.spidManager.setUpSPID(spid)
             this.trackerManager.onNewStream(spid) // TODO: perhaps we should react based on event from SPIDManager?
             if (sendStatus) {
                 this.trackerManager.sendStreamStatus(spid)
@@ -186,7 +186,7 @@ export class Node extends EventEmitter {
 
     unsubscribeFromStream(spid: SPID, sendStatus = true): void {
         logger.trace('remove %s from streams', spid)
-        this.streams.removeSPID(spid)
+        this.spidManager.removeSPID(spid)
         this.trackerManager.onUnsubscribeFromStream(spid)
         if (sendStatus) {
             this.trackerManager.sendStreamStatus(spid)
@@ -222,7 +222,7 @@ export class Node extends EventEmitter {
         // Check duplicate
         let isUnseen
         try {
-            isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(
+            isUnseen = this.spidManager.markNumbersAndCheckThatIsNotDuplicate(
                 streamMessage.messageId,
                 streamMessage.prevMsgRef
             )
@@ -258,7 +258,7 @@ export class Node extends EventEmitter {
     }
 
     private subscribeToStreamOnNode(node: NodeId, spid: SPID, sendStatus = true): NodeId {
-        this.streams.addNeighbor(spid, node)
+        this.spidManager.addNeighbor(spid, node)
         this.propagation.onNeighborJoined(node, spid)
         if (sendStatus) {
             this.trackerManager.sendStreamStatus(spid)
@@ -268,7 +268,7 @@ export class Node extends EventEmitter {
     }
 
     private unsubscribeFromStreamOnNode(node: NodeId, spid: SPID, sendStatus = true): void {
-        this.streams.removeNeighbor(spid, node)
+        this.spidManager.removeNeighbor(spid, node)
         logger.trace('node %s unsubscribed from stream %s', node, spid)
         this.emit(Event.NODE_UNSUBSCRIBED, node, spid)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedStreams(node)
@@ -279,7 +279,7 @@ export class Node extends EventEmitter {
 
     private onNodeDisconnected(node: NodeId): void {
         this.metrics.record('onNodeDisconnect', 1)
-        const streams = this.streams.removeNodeFromAllSPIDs(node)
+        const streams = this.spidManager.removeNodeFromAllSPIDs(node)
         logger.trace('removed all subscriptions of node %s', node)
         streams.forEach((s) => {
             this.trackerManager.sendStreamStatus(s)
@@ -288,11 +288,11 @@ export class Node extends EventEmitter {
     }
 
     getSPIDs(): Iterable<SPID> {
-        return this.streams.getSPIDs()
+        return this.spidManager.getSPIDs()
     }
 
     getNeighbors(): ReadonlyArray<NodeId> {
-        return this.streams.getAllNodes()
+        return this.spidManager.getAllNodes()
     }
 
     getNodeId(): NodeId {
