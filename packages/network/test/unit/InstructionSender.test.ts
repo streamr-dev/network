@@ -1,9 +1,9 @@
+import { SPID, SPIDKey } from 'streamr-client-protocol'
 import { Instruction, InstructionSender, SendInstructionFn } from '../../src/logic/tracker/InstructionSender'
-import { StreamIdAndPartition, StreamKey } from '../../src/identifiers'
 import { Metrics, MetricsContext } from '../../src/helpers/MetricsContext'
 
-const MOCK_STREAM_1 = 'stream-id::1'
-const MOCK_STREAM_2 = 'stream-id::2'
+const MOCK_SPID_1 = 'stream-id#1'
+const MOCK_SPID_2 = 'stream-id#2'
 const STARTUP_TIME = 1234567890
 
 const DEBOUNCE_WAIT = 100
@@ -11,11 +11,11 @@ const MAX_WAIT = 2000
 
 let mockInstructionIdSuffix = 0
 
-const createMockInstruction = (streamKey: StreamKey): Instruction => {
+const createMockInstruction = (spidKey: SPIDKey): Instruction => {
     mockInstructionIdSuffix++
     return {
         nodeId: `mock-node-id-${mockInstructionIdSuffix}`,
-        streamKey,
+        spidKey,
         newNeighbors: [],
         counterValue: 0
     }
@@ -45,14 +45,13 @@ describe('InstructionSender', () => {
     function assertSendsCalled(instructions: readonly Instruction[]): void {
         expect(send).toBeCalledTimes(instructions.length)
         for (let i = 0; i < instructions.length; ++i) {
-            const { nodeId, streamKey, newNeighbors, counterValue } = instructions[i]
-            const stream = StreamIdAndPartition.fromKey(streamKey)
-            expect(send).toHaveBeenNthCalledWith(i + 1, nodeId, stream, newNeighbors, counterValue)
+            const { nodeId, spidKey, newNeighbors, counterValue } = instructions[i]
+            expect(send).toHaveBeenNthCalledWith(i + 1, nodeId, SPID.from(spidKey), newNeighbors, counterValue)
         }
     }
 
     it('wait stabilization', () => {
-        const instruction = createMockInstruction(MOCK_STREAM_1)
+        const instruction = createMockInstruction(MOCK_SPID_1)
         sender.addInstruction(instruction)
         expect(send).not.toBeCalled()
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
@@ -60,20 +59,20 @@ describe('InstructionSender', () => {
     })
 
     it('add within stabilization wait', () => {
-        const instruction1 = createMockInstruction(MOCK_STREAM_1)
+        const instruction1 = createMockInstruction(MOCK_SPID_1)
         sender.addInstruction(instruction1)
         jest.advanceTimersByTime(DEBOUNCE_WAIT / 2)
-        const instruction2 = createMockInstruction(MOCK_STREAM_1)
+        const instruction2 = createMockInstruction(MOCK_SPID_1)
         sender.addInstruction(instruction2)
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
         assertSendsCalled([instruction1, instruction2])
     })
 
     it('add after stabilization wait', () => {
-        const instruction1 = createMockInstruction(MOCK_STREAM_1)
+        const instruction1 = createMockInstruction(MOCK_SPID_1)
         sender.addInstruction(instruction1)
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
-        const instruction2 = createMockInstruction(MOCK_STREAM_1)
+        const instruction2 = createMockInstruction(MOCK_SPID_1)
         sender.addInstruction(instruction2)
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
         assertSendsCalled([instruction1, instruction2])
@@ -82,7 +81,7 @@ describe('InstructionSender', () => {
     it('max wait reached', () => {
         const expected: Instruction[] = []
         while ((Date.now() - STARTUP_TIME) < MAX_WAIT) {
-            const instruction = createMockInstruction(MOCK_STREAM_1)
+            const instruction = createMockInstruction(MOCK_SPID_1)
             sender.addInstruction(instruction)
             expected.push(instruction)
             jest.advanceTimersByTime(DEBOUNCE_WAIT / 2)
@@ -91,10 +90,10 @@ describe('InstructionSender', () => {
     })
 
     it('independent stream buffers', () => {
-        const instruction1 = createMockInstruction(MOCK_STREAM_1)
+        const instruction1 = createMockInstruction(MOCK_SPID_1)
         sender.addInstruction(instruction1)
         jest.advanceTimersByTime(DEBOUNCE_WAIT / 2)
-        const instruction2 = createMockInstruction(MOCK_STREAM_2)
+        const instruction2 = createMockInstruction(MOCK_SPID_2)
         sender.addInstruction(instruction2)
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
         assertSendsCalled([instruction1, instruction2])

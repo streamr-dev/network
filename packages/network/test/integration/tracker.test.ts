@@ -55,10 +55,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
         // @ts-expect-error private field
         await runAndWaitForEvents(() => {subscriberOne.start()}, [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED])
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
-            'stream-1::0': {
+            'stream-1#0': {
                 subscriberOne: [],
             },
-            'stream-2::2': {
+            'stream-2#2': {
                 subscriberOne: []
             }
         })
@@ -66,11 +66,11 @@ describe('check tracker, nodes and statuses from nodes', () => {
         // @ts-expect-error private field
         await runAndWaitForEvents(()=> { subscriberTwo.start() }, [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED])
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
-            'stream-1::0': {
+            'stream-1#0': {
                 subscriberOne: [{neighborId: 'subscriberTwo', rtt: null}],
                 subscriberTwo: [{neighborId: 'subscriberOne', rtt: null}]
             },
-            'stream-2::2': {
+            'stream-2#2': {
                 subscriberOne: [{neighborId: 'subscriberTwo', rtt: null}],
                 subscriberTwo: [{neighborId: 'subscriberOne', rtt: null}]
             }
@@ -92,11 +92,11 @@ describe('check tracker, nodes and statuses from nodes', () => {
         ])
 
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
-            'stream-1::0': {
+            'stream-1#0': {
                 subscriberOne: [{neighborId: 'subscriberTwo', rtt: null}],
                 subscriberTwo: [{neighborId: 'subscriberOne', rtt: null}],
             },
-            'stream-2::2': {
+            'stream-2#2': {
                 subscriberTwo: []
             }
         })
@@ -108,21 +108,21 @@ describe('check tracker, nodes and statuses from nodes', () => {
         ])
 
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
-            'stream-1::0': {
+            'stream-1#0': {
                 subscriberTwo: [],
             },
-            'stream-2::2': {
+            'stream-2#2': {
                 subscriberTwo: []
             }
         })
 
         await runAndWaitForConditions(
             () => subscriberTwo.unsubscribe('stream-1', 0),
-            () => getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())['stream-1::0'] == null
+            () => getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())['stream-1#0'] == null
         )
 
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
-            'stream-2::2': {
+            'stream-2#2': {
                 subscriberTwo: []
             }
         })

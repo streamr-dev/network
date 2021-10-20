@@ -1,5 +1,5 @@
+import { SPID } from 'streamr-client-protocol'
 import { Node, Event as NodeEvent, NodeOptions, NodeId } from './Node'
-import { StreamIdAndPartition } from '../../identifiers'
 import { StreamMessage } from 'streamr-client-protocol'
 
 /*
@@ -30,15 +30,15 @@ export class NetworkNode extends Node {
     }
 
     subscribe(streamId: string, streamPartition: number): void {
-        this.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition(streamId, streamPartition))
+        this.subscribeToStreamIfHaveNotYet(new SPID(streamId, streamPartition))
     }
 
     unsubscribe(streamId: string, streamPartition: number): void {
-        this.unsubscribeFromStream(new StreamIdAndPartition(streamId, streamPartition))
+        this.unsubscribeFromStream(new SPID(streamId, streamPartition))
     }
 
     getNeighborsForStream(streamId: string, streamPartition: number): ReadonlyArray<NodeId> {
-        return this.streams.getNeighborsForStream(new StreamIdAndPartition(streamId, streamPartition))
+        return this.streams.getNeighborsForStream(new SPID(streamId, streamPartition))
     }
 
     getRtt(nodeId: NodeId): number|undefined {

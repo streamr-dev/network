@@ -1,10 +1,10 @@
+import { SPIDKey } from 'streamr-client-protocol'
 import { cancelable, CancelablePromiseType } from 'cancelable-promise'
-import { StreamIdAndPartition, StreamKey } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from "../../helpers/Logger"
 import { TrackerId } from '../tracker/Tracker'
 
-type Queue = Record<StreamKey, {
+type Queue = Record<SPIDKey, {
     instructionMessage: TrackerLayer.InstructionMessage
     trackerId: TrackerId
 }>
@@ -15,14 +15,14 @@ type HandleFn = (instructionMessage: TrackerLayer.InstructionMessage, trackerId:
  * InstructionThrottler makes sure that
  *  1. no more than one instruction is handled at a time
  *  2. any new instructions arriving while an instruction is being handled are queued in a
- *     way where only the most latest instruction per streamKey is kept in queue.
+ *     way where only the most latest instruction per spidKey is kept in queue.
  */
 export class InstructionThrottler {
     private readonly logger: Logger
     private readonly handleFn: HandleFn
     private queue: Queue = {}
-    private instructionCounter: Record<StreamKey,number> = {} // streamKey => counter
-    private ongoingPromises: Record<StreamKey, {
+    private instructionCounter: Record<SPIDKey,number> = {} // spidKey => counter
+    private ongoingPromises: Record<SPIDKey, {
         promise: CancelablePromiseType<void> | null
         handling: boolean
     }>
@@ -39,38 +39,38 @@ export class InstructionThrottler {
         if (this.stopped) {
             return
         }
-        const streamKey = StreamIdAndPartition.fromMessage(instructionMessage).key()
-        if (!this.instructionCounter[streamKey] || this.instructionCounter[streamKey] <= instructionMessage.counter) {
-            this.instructionCounter[streamKey] = instructionMessage.counter
-            this.queue[StreamIdAndPartition.fromMessage(instructionMessage).key()] = {
+        const spidKey = instructionMessage.getSPID().toKey()
+        if (!this.instructionCounter[spidKey] || this.instructionCounter[spidKey] <= instructionMessage.counter) {
+            this.instructionCounter[spidKey] = instructionMessage.counter
+            this.queue[spidKey] = {
                 instructionMessage,
                 trackerId
             }
 
-            if (!this.ongoingPromises[streamKey]) {
-                this.ongoingPromises[streamKey] = {
+            if (!this.ongoingPromises[spidKey]) {
+                this.ongoingPromises[spidKey] = {
                     promise: null,
                     handling: false
                 }
             }
-            if (!this.ongoingPromises[streamKey].handling) {
-                this.invokeHandleFnWithLock(streamKey).catch((err) => {
+            if (!this.ongoingPromises[spidKey].handling) {
+                this.invokeHandleFnWithLock(spidKey).catch((err) => {
                     this.logger.warn("error handling instruction, reason: %s", err)
                 })
             }
         }
     }
 
-    removeStream(streamKey: StreamKey): void {
+    removeStream(spidKey: SPIDKey): void {
         if (this.stopped) {
             return
         }
-        delete this.queue[streamKey]
-        delete this.instructionCounter[streamKey]
-        if (this.ongoingPromises[streamKey]) {
-            this.ongoingPromises[streamKey].promise!.cancel()
+        delete this.queue[spidKey]
+        delete this.instructionCounter[spidKey]
+        if (this.ongoingPromises[spidKey]) {
+            this.ongoingPromises[spidKey].promise!.cancel()
         }
-        delete this.ongoingPromises[streamKey]
+        delete this.ongoingPromises[spidKey]
     }
 
     isIdle(): boolean {
@@ -80,38 +80,38 @@ export class InstructionThrottler {
     stop(): void {
         this.queue = {}
         this.instructionCounter = {}
-        Object.keys(this.ongoingPromises).forEach((streamKey) => {
-            if (this.ongoingPromises[streamKey]) {
-                this.ongoingPromises[streamKey].promise!.cancel()
+        Object.keys(this.ongoingPromises).forEach((spidKey) => {
+            if (this.ongoingPromises[spidKey]) {
+                this.ongoingPromises[spidKey].promise!.cancel()
             }
-            delete this.ongoingPromises[streamKey]
+            delete this.ongoingPromises[spidKey]
         })
         this.ongoingPromises = {}
         this.stopped = true
     }
 
-    private async invokeHandleFnWithLock(streamKey: StreamKey): Promise<void> {
+    private async invokeHandleFnWithLock(spidKey: SPIDKey): Promise<void> {
         if (this.stopped) {
             return
         }
-        if (!this.queue[streamKey]) {
-            if (this.ongoingPromises[streamKey]) {
-                this.ongoingPromises[streamKey].handling = false
+        if (!this.queue[spidKey]) {
+            if (this.ongoingPromises[spidKey]) {
+                this.ongoingPromises[spidKey].handling = false
             }
             return
         }
-        this.ongoingPromises[streamKey].handling = true
+        this.ongoingPromises[spidKey].handling = true
 
-        const { instructionMessage, trackerId } = this.queue[streamKey]
-        delete this.queue[streamKey]
+        const { instructionMessage, trackerId } = this.queue[spidKey]
+        delete this.queue[spidKey]
 
         try {
-            this.ongoingPromises[streamKey].promise = cancelable(this.handleFn(instructionMessage, trackerId))
-            await this.ongoingPromises[streamKey].promise
+            this.ongoingPromises[spidKey].promise = cancelable(this.handleFn(instructionMessage, trackerId))
+            await this.ongoingPromises[spidKey].promise
         } catch (err) {
             this.logger.warn('handling InstructionMessage threw, error %j', err)
         } finally {
-            this.invokeHandleFnWithLock(streamKey)
+            this.invokeHandleFnWithLock(spidKey)
         }
     }
 }

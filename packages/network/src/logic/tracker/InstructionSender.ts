@@ -1,8 +1,8 @@
 import _ from 'lodash'
 import io from '@pm2/io'
+import { SPID, SPIDKey } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics } from '../../helpers/MetricsContext'
-import { StreamIdAndPartition, StreamKey } from '../../identifiers'
 import { NodeId } from '../node/Node'
 import { TopologyStabilizationOptions } from './Tracker'
 
@@ -31,7 +31,7 @@ const logger = new Logger(module)
 
 export interface Instruction {
     nodeId: NodeId,
-    streamKey: StreamKey,
+    spidKey: SPIDKey,
     newNeighbors: NodeId[],
     counterValue: number
 }
@@ -59,13 +59,13 @@ class StreamInstructionBuffer {
 
 export type SendInstructionFn = (
     receiverNodeId: NodeId,
-    streamId: StreamIdAndPartition,
+    spid: SPID,
     nodeIds: NodeId[],
     counter: number
 ) => Promise<void>
 
 export class InstructionSender {
-    private readonly streamBuffers = new Map<StreamKey, StreamInstructionBuffer>()
+    private readonly streamBuffers = new Map<SPIDKey, StreamInstructionBuffer>()
     private readonly options: TopologyStabilizationOptions
     private readonly sendInstruction: SendInstructionFn
     private readonly metrics: Metrics
@@ -86,40 +86,40 @@ export class InstructionSender {
     }
 
     addInstruction(instruction: Instruction): void {
-        this.getOrCreateBuffer(instruction.streamKey).addInstruction(instruction)
+        this.getOrCreateBuffer(instruction.spidKey).addInstruction(instruction)
     }
 
-    private getOrCreateBuffer(streamKey: StreamKey): StreamInstructionBuffer {
-        const existingBuffer = this.streamBuffers.get(streamKey)
+    private getOrCreateBuffer(spidKey: SPIDKey): StreamInstructionBuffer {
+        const existingBuffer = this.streamBuffers.get(spidKey)
         if (existingBuffer !== undefined) {
             return existingBuffer
         } else {
             const newBuffer = new StreamInstructionBuffer(this.options, () => {
-                this.streamBuffers.delete(streamKey)
+                this.streamBuffers.delete(spidKey)
                 this.sendInstructions(newBuffer)
             })
-            this.streamBuffers.set(streamKey, newBuffer)
+            this.streamBuffers.set(spidKey, newBuffer)
             return newBuffer
         }
     }
 
     private async sendInstructions(buffer: StreamInstructionBuffer): Promise<void> {
         const promises = Array.from(buffer.getInstructions())
-            .map(async ({ nodeId, streamKey, newNeighbors, counterValue }) => {
+            .map(async ({ nodeId, spidKey, newNeighbors, counterValue }) => {
                 this.metrics.record('instructionsSent', 1)
                 this.pm2Meter.mark()
                 try {
                     await this.sendInstruction(
                         nodeId,
-                        StreamIdAndPartition.fromKey(streamKey),
+                        SPID.from(spidKey),
                         newNeighbors,
                         counterValue
                     )
-                    logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamKey, nodeId })
+                    logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, spidKey, nodeId })
                 } catch (err) {
                     logger.error(`failed to send instructions %o to node %o, reason: %s`,
                         newNeighbors,
-                        { counterValue, streamKey, nodeId },
+                        { counterValue, spidKey, nodeId },
                         err
                     )
                 }

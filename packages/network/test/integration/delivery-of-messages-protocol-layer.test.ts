@@ -1,7 +1,5 @@
-import { MessageLayer, ControlLayer, TrackerLayer } from 'streamr-client-protocol'
+import { MessageLayer, ControlLayer, TrackerLayer, SPID } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
-
-import { StreamIdAndPartition } from '../../src/identifiers'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { TrackerServer, Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
@@ -125,7 +123,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     it('sendInstruction is delivered', async () => {
-        trackerServer.sendInstruction('node1', new StreamIdAndPartition('stream', 10), ['node1'], 15)
+        trackerServer.sendInstruction('node1', new SPID('stream', 10), ['node1'], 15)
         const [msg, trackerId]: any = await waitForEvent(nodeToTracker, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
 
         expect(trackerId).toEqual('trackerServer')

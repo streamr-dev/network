@@ -1,8 +1,8 @@
-import { Utils } from 'streamr-client-protocol'
-import { TrackerConnector } from '../../src/logic/node/TrackerConnector'
-import { StreamIdAndPartition, TrackerInfo } from '../../src/identifiers'
-import { TrackerId } from '../../src/logic/tracker/Tracker'
 import { wait } from 'streamr-test-utils'
+import { SPID, Utils } from 'streamr-client-protocol'
+import { TrackerConnector } from '../../src/logic/node/TrackerConnector'
+import { TrackerInfo } from '../../src/identifiers'
+import { TrackerId } from '../../src/logic/tracker/Tracker'
 
 const TTL_IN_MS = 10
 
@@ -29,21 +29,21 @@ const TRACKERS = [
     },
 ]
 
-const T1_STREAM = new StreamIdAndPartition('streamOne', 0)
-const T2_STREAM = new StreamIdAndPartition('streamOne', 15)
-const T3_STREAM = new StreamIdAndPartition('streamSix', 0)
-const T4_STREAM = new StreamIdAndPartition('streamTwo', 0)
+const T1_STREAM = SPID.from('a#0')
+const T2_STREAM = SPID.from('b#10')
+const T3_STREAM = SPID.from('c#12')
+const T4_STREAM = SPID.from('d#4')
 
 describe(TrackerConnector, () => {
-    let streams: Array<StreamIdAndPartition>
+    let streams: Array<SPID>
     let activeConnections: Set<TrackerId>
     let connector: TrackerConnector
 
     beforeAll(() => {
         // sanity check stream hash assignments
         const trackerRegistry = new Utils.TrackerRegistry<TrackerInfo>(TRACKERS)
-        function checkTrackerAssignment({ id, partition }: StreamIdAndPartition, expectedTracker: TrackerInfo): void {
-            expect(trackerRegistry.getTracker(id, partition)).toEqual(expectedTracker)
+        function checkTrackerAssignment(spid: SPID, expectedTracker: TrackerInfo): void {
+            expect(trackerRegistry.getTracker(spid)).toEqual(expectedTracker)
         }
         checkTrackerAssignment(T1_STREAM, TRACKERS[0])
         checkTrackerAssignment(T2_STREAM, TRACKERS[1])

@@ -1,5 +1,4 @@
-import { MessageID, StreamMessage } from 'streamr-client-protocol'
-import { StreamIdAndPartition, StreamKey } from '../../../identifiers'
+import { MessageID, SPID, SPIDKey, StreamMessage } from 'streamr-client-protocol'
 import { FifoMapWithTtl } from './FifoMapWithTtl'
 import { NodeId } from '../Node'
 
@@ -13,12 +12,12 @@ export interface PropagationTask {
  * Keeps track of propagation tasks for the needs of message propagation logic.
  *
  * Properties:
- * - Allows fetching propagation tasks by StreamIdAndPartition
+ * - Allows fetching propagation tasks by SPID
  * - Upper bound on number of tasks stored, replacement policy if FIFO
  * - Items have a TTL, after which they are considered stale and not returned when querying
 **/
 export class PropagationTaskStore {
-    private readonly streamLookup = new Map<StreamKey, Set<MessageID>>()
+    private readonly streamLookup = new Map<SPIDKey, Set<MessageID>>()
     private readonly tasks: FifoMapWithTtl<MessageID, PropagationTask>
 
     constructor(ttlInMs: number, maxTasks: number) {
@@ -26,12 +25,12 @@ export class PropagationTaskStore {
             ttlInMs,
             maxSize: maxTasks,
             onItemDropped: (messageId: MessageID) => {
-                const stream = StreamIdAndPartition.fromMessage(messageId)
-                const messageIdsForStream = this.streamLookup.get(stream.key())
+                const spid = SPID.from(messageId)
+                const messageIdsForStream = this.streamLookup.get(spid.toKey())
                 if (messageIdsForStream !== undefined) {
                     messageIdsForStream.delete(messageId)
                     if (messageIdsForStream.size === 0) {
-                        this.streamLookup.delete(stream.key())
+                        this.streamLookup.delete(spid.toKey())
                     }
                 }
             }
@@ -40,11 +39,11 @@ export class PropagationTaskStore {
 
     add(task: PropagationTask): void {
         const messageId = task.message.messageId
-        const stream = StreamIdAndPartition.fromMessage(messageId)
-        if (!this.streamLookup.has(stream.key())) {
-            this.streamLookup.set(stream.key(), new Set<MessageID>())
+        const spidKey = SPID.from(messageId).toKey()
+        if (!this.streamLookup.has(spidKey)) {
+            this.streamLookup.set(spidKey, new Set<MessageID>())
         }
-        this.streamLookup.get(stream.key())!.add(messageId)
+        this.streamLookup.get(spidKey)!.add(messageId)
         this.tasks.set(messageId, task)
     }
 
@@ -52,8 +51,8 @@ export class PropagationTaskStore {
         this.tasks.delete(messageId) // causes `onKeyDropped` to be invoked
     }
 
-    get(stream: StreamIdAndPartition): Array<PropagationTask> {
-        const messageIds = this.streamLookup.get(stream.key())
+    get(spid: SPID): Array<PropagationTask> {
+        const messageIds = this.streamLookup.get(spid.toKey())
         const tasks: Array<PropagationTask> = []
         if (messageIds !== undefined) {
             messageIds.forEach((messageId) => {
