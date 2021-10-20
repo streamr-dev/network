@@ -39,8 +39,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
             disconnectionWaitTime: 200
         })
 
-        node1.subscribeToStreamIfHaveNotYet(s1)
-        node2.subscribeToStreamIfHaveNotYet(s1)
+        node1.subscribeToSPIDIfHaveNotYet(s1)
+        node2.subscribeToSPIDIfHaveNotYet(s1)
 
         node1.start()
         node2.start()

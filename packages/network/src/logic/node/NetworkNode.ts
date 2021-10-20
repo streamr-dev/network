@@ -30,7 +30,7 @@ export class NetworkNode extends Node {
     }
 
     subscribe(streamId: string, streamPartition: number): void {
-        this.subscribeToStreamIfHaveNotYet(new SPID(streamId, streamPartition))
+        this.subscribeToSPIDIfHaveNotYet(new SPID(streamId, streamPartition))
     }
 
     unsubscribe(streamId: string, streamPartition: number): void {

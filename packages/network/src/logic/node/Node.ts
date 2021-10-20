@@ -143,9 +143,9 @@ export class Node extends EventEmitter {
                 rtts: includeRtt ? this.nodeToNode.getRtts() : null
             }),
             {
-                subscribeToStreamIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
-                subscribeToStreamsOnNode: this.subscribeToStreamsOnNode.bind(this),
-                unsubscribeFromStreamOnNode: this.unsubscribeFromStreamOnNode.bind(this)
+                subscribeToSPIDIfHaveNotYet: this.subscribeToSPIDIfHaveNotYet.bind(this),
+                subscribeToSPIDsOnNode: this.subscribeToSPIDsOnNode.bind(this),
+                unsubscribeFromSPIDOnNode: this.unsubscribeFromSPIDOnNode.bind(this)
             }
         )
 
@@ -173,7 +173,7 @@ export class Node extends EventEmitter {
         this.trackerManager.start()
     }
 
-    subscribeToStreamIfHaveNotYet(spid: SPID, sendStatus = true): void {
+    subscribeToSPIDIfHaveNotYet(spid: SPID, sendStatus = true): void {
         if (!this.spidManager.isSetUp(spid)) {
             logger.trace('add %s to streams', spid)
             this.spidManager.setUpSPID(spid)
@@ -193,7 +193,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    subscribeToStreamsOnNode(
+    subscribeToSPIDsOnNode(
         nodeIds: NodeId[],
         spid: SPID,
         trackerId: TrackerId,
@@ -217,7 +217,7 @@ export class Node extends EventEmitter {
 
         this.emit(Event.MESSAGE_RECEIVED, streamMessage, source)
 
-        this.subscribeToStreamIfHaveNotYet(spid)
+        this.subscribeToSPIDIfHaveNotYet(spid)
 
         // Check duplicate
         let isUnseen
@@ -267,7 +267,7 @@ export class Node extends EventEmitter {
         return node
     }
 
-    private unsubscribeFromStreamOnNode(node: NodeId, spid: SPID, sendStatus = true): void {
+    private unsubscribeFromSPIDOnNode(node: NodeId, spid: SPID, sendStatus = true): void {
         this.spidManager.removeNeighbor(spid, node)
         logger.trace('node %s unsubscribed from stream %s', node, spid)
         this.emit(Event.NODE_UNSUBSCRIBED, node, spid)

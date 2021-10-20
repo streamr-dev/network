@@ -21,14 +21,14 @@ interface NodeDescriptor {
 }
 
 interface Subscriber {
-    subscribeToStreamIfHaveNotYet: (spid: SPID, sendStatus?: boolean) => void
-    subscribeToStreamsOnNode: (
+    subscribeToSPIDIfHaveNotYet: (spid: SPID, sendStatus?: boolean) => void
+    subscribeToSPIDsOnNode: (
         nodeIds: NodeId[],
         spid: SPID,
         trackerId: TrackerId,
         reattempt: boolean
     ) => Promise<PromiseSettledResult<NodeId>[]>,
-    unsubscribeFromStreamOnNode: (node: NodeId, spid: SPID, sendStatus?: boolean) => void
+    unsubscribeFromSPIDOnNode: (node: NodeId, spid: SPID, sendStatus?: boolean) => void
 }
 
 type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
@@ -177,15 +177,15 @@ export class TrackerManager {
         this.metrics.record('trackerInstructions', 1)
         logger.trace('received instructions for %s, nodes to connect %o', spid, nodeIds)
 
-        this.subscriber.subscribeToStreamIfHaveNotYet(spid, false)
+        this.subscriber.subscribeToSPIDIfHaveNotYet(spid, false)
         const currentNodes = this.spidManager.getNeighborsForSPID(spid)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {
-            this.subscriber.unsubscribeFromStreamOnNode(nodeId, spid, false)
+            this.subscriber.unsubscribeFromSPIDOnNode(nodeId, spid, false)
         })
 
-        const results = await this.subscriber.subscribeToStreamsOnNode(nodeIds, spid, trackerId, reattempt)
+        const results = await this.subscriber.subscribeToSPIDsOnNode(nodeIds, spid, trackerId, reattempt)
         if (this.spidManager.isSetUp(spid)) {
             this.spidManager.updateCounter(spid, counter)
         }
