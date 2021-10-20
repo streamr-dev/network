@@ -3,14 +3,14 @@ import { NameDirectory } from '../../NameDirectory'
 import { Logger } from '../../helpers/Logger'
 
 type GetAllNodesFn = () => ReadonlyArray<NodeId>
-type HasSharedStreamsFn = (nodeId: NodeId) => boolean
+type HasSharedSPIDsFn = (nodeId: NodeId) => boolean
 type DisconnectFn = (nodeId: NodeId, reason: string) => void
 
 const logger = new Logger(module)
 
 export interface DisconnectionManagerOptions {
     getAllNodes: GetAllNodesFn,
-    hasSharedStreams: HasSharedStreamsFn,
+    hasSharedSPIDs: HasSharedSPIDsFn,
     disconnect: DisconnectFn,
     disconnectionDelayInMs: number,
     cleanUpIntervalInMs: number
@@ -31,7 +31,7 @@ export class DisconnectionManager {
 
     private readonly disconnectionTimers = new Map<NodeId, NodeJS.Timeout>()
     private readonly getAllNodes: GetAllNodesFn
-    private readonly hasSharedStreams: HasSharedStreamsFn
+    private readonly hasSharedSPIDs: HasSharedSPIDsFn
     private readonly disconnect: DisconnectFn
     private readonly disconnectionDelayInMs: number
     private readonly cleanUpIntervalInMs: number
@@ -39,13 +39,13 @@ export class DisconnectionManager {
 
     constructor({
         getAllNodes,
-        hasSharedStreams,
+        hasSharedSPIDs,
         disconnect,
         disconnectionDelayInMs,
         cleanUpIntervalInMs
     }: DisconnectionManagerOptions) {
         this.getAllNodes = getAllNodes
-        this.hasSharedStreams = hasSharedStreams
+        this.hasSharedSPIDs = hasSharedSPIDs
         this.disconnect = disconnect
         this.disconnectionDelayInMs = disconnectionDelayInMs
         this.cleanUpIntervalInMs = cleanUpIntervalInMs
@@ -54,7 +54,7 @@ export class DisconnectionManager {
     start(): void {
         this.connectionCleanUpInterval = setInterval(() => {
             const nodeIds = this.getAllNodes()
-            const nonNeighborNodeIds = nodeIds.filter((nodeId) => !this.hasSharedStreams(nodeId))
+            const nonNeighborNodeIds = nodeIds.filter((nodeId) => !this.hasSharedSPIDs(nodeId))
             if (nonNeighborNodeIds.length > 0) {
                 logger.debug('connectionCleanUpInterval: disconnecting from %d nodes', nonNeighborNodeIds.length)
                 nonNeighborNodeIds.forEach((nodeId) => {
@@ -72,11 +72,11 @@ export class DisconnectionManager {
     }
 
     scheduleDisconnectionIfNoSharedStreams(nodeId: NodeId): void {
-        if (!this.hasSharedStreams(nodeId)) {
+        if (!this.hasSharedSPIDs(nodeId)) {
             this.cancelScheduledDisconnection(nodeId)
             this.disconnectionTimers.set(nodeId, setTimeout(() => {
                 this.disconnectionTimers.delete(nodeId)
-                if (!this.hasSharedStreams(nodeId)) {
+                if (!this.hasSharedSPIDs(nodeId)) {
                     this.loggedDisconnect(nodeId)
                 }
             }, this.disconnectionDelayInMs))

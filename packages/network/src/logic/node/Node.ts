@@ -87,7 +87,7 @@ export class Node extends EventEmitter {
         this.spidManager = new SPIDManager()
         this.disconnectionManager = new DisconnectionManager({
             getAllNodes: this.nodeToNode.getAllConnectionNodeIds,
-            hasSharedStreams: this.spidManager.isNodePresent.bind(this.spidManager),
+            hasSharedSPIDs: this.spidManager.isNodePresent.bind(this.spidManager),
             disconnect: this.nodeToNode.disconnectFromNode.bind(this.nodeToNode),
             disconnectionDelayInMs: opts.disconnectionWaitTime ?? 30 * 1000,
             cleanUpIntervalInMs: 2 * 60 * 1000
