@@ -1,7 +1,7 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
-
+export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
     streamId: string
@@ -24,7 +24,7 @@ export default class MessageID {
         this.msgChainId = msgChainId
     }
 
-    toArray() {
+    toArray(): MessageIDArray {
         return [
             this.streamId,
             this.streamPartition,
@@ -35,7 +35,7 @@ export default class MessageID {
         ]
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: MessageIDArray): MessageID {
         const [
             streamId,
             streamPartition,
@@ -48,11 +48,15 @@ export default class MessageID {
         return new MessageID(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
     }
 
-    serialize() {
+    serialize(): string {
         return JSON.stringify(this.toArray())
     }
 
-    toMessageRef() {
+    toMessageRef(): MessageRef {
         return new MessageRef(this.timestamp, this.sequenceNumber)
+    }
+
+    clone(): MessageID {
+        return new MessageID(...this.toArray())
     }
 }

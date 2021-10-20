@@ -1,9 +1,9 @@
 import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startTracker } from 'streamr-network'
+import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Todo } from '../../../../src/types'
-import { startBroker, fastPrivateKey, createClient, createMqttClient } from '../../../utils'
+import { Broker } from '../../../broker'
+import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../../../utils'
 
 const httpPort1 = 12381
 const httpPort2 = 12382
@@ -11,9 +11,6 @@ const httpPort3 = 12383
 const wsPort1 = 12391
 const wsPort2 = 12392
 const wsPort3 = 12393
-const networkPort1 = 12401
-const networkPort2 = 12402
-const networkPort3 = 12403
 const trackerPort = 12410
 const mqttPort1 = 12551
 const mqttPort2 = 12552
@@ -23,10 +20,10 @@ const broker2Key = '0xd2672dce1578d6b75a58e11fa96c978b3b500750be287fc4e7f1e894eb
 const broker3Key = '0xa417da20e3afeb69544585c6b44b95ad4d987f38cf257f4a53eab415cc12334f'
 
 describe('mqtt: end-to-end', () => {
-    let tracker: Todo
-    let broker1: Todo
-    let broker2: Todo
-    let broker3: Todo
+    let tracker: Tracker
+    let broker1: Broker
+    let broker2: Broker
+    let broker3: Broker
     const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
@@ -38,14 +35,15 @@ describe('mqtt: end-to-end', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
+            id: 'tracker-1'
         })
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: broker1Key,
-            networkPort: networkPort1,
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
@@ -54,7 +52,6 @@ describe('mqtt: end-to-end', () => {
         broker2 = await startBroker({
             name: 'broker2',
             privateKey: broker2Key,
-            networkPort: networkPort2,
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
@@ -63,7 +60,6 @@ describe('mqtt: end-to-end', () => {
         broker3 = await startBroker({
             name: 'broker3',
             privateKey: broker3Key,
-            networkPort: networkPort3,
             trackerPort,
             httpPort: httpPort3,
             wsPort: wsPort3,
@@ -72,26 +68,24 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     beforeEach(async () => {
-        client1 = createClient(wsPort1, privateKey)
-        client2 = createClient(wsPort2, privateKey)
-        client3 = createClient(wsPort3, privateKey)
+        client1 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
+        client3 = createClient(tracker, privateKey)
 
         mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
         mqttClient3 = createMqttClient(mqttPort3, 'localhost', privateKey)
 
-        freshStream1 = await client1.createStream({
-            name: 'mqtt.test.js-' + Date.now()
-        })
+        freshStream1 = await createTestStream(client1, module)
     }, 15000)
 
     afterEach(async () => {
         await tracker.stop()
 
         await Promise.all([
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
-            client3.ensureDisconnected(),
+            client1.destroy(),
+            client2.destroy(),
+            client3.destroy(),
         ])
 
         await Promise.all([
@@ -101,16 +95,16 @@ describe('mqtt: end-to-end', () => {
         ])
 
         await Promise.all([
-            broker1.close(),
-            broker2.close(),
-            broker3.close(),
+            broker1.stop(),
+            broker2.stop(),
+            broker3.stop(),
         ])
     }, 15000)
 
     it('happy-path: real-time mqtt plain text producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
@@ -194,8 +188,8 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     it('happy-path: real-time mqtt json producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
@@ -249,10 +243,10 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     it('happy-path: real-time mqtt and websocket producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
-        const client4Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
+        const client4Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
 
@@ -261,7 +255,7 @@ describe('mqtt: end-to-end', () => {
             client4Messages.push(JSON.parse(message.toString()))
         })
 
-        await Promise.all([
+        const subs = await Promise.all([
             client1.subscribe({
                 stream: freshStream1.id
             }, (message) => {
@@ -278,6 +272,8 @@ describe('mqtt: end-to-end', () => {
                 client3Messages.push(message)
             })
         ])
+
+        await Promise.all(subs.map((sub) => sub.waitForNeighbours()))
 
         await client1.publish(freshStream1.id, {
             key: 1

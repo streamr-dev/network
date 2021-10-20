@@ -1,11 +1,10 @@
-import { NetworkNode } from '../../src/NetworkNode'
-import { Tracker } from '../../src/logic/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
-import { Event as NodeEvent } from "../../src/logic/Node"
+import { createNetworkNode, startTracker } from '../../src/composition'
+import { Event as NodeEvent } from "../../src/logic/node/Node"
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -20,66 +19,52 @@ describe('duplicate message detection and avoidance', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30350,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30350
+            },
             id: 'tracker'
         })
-        contactNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30351,
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        contactNode = createNetworkNode({
             id: 'node-0',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             stunUrls: []
         })
         contactNode.start()
 
-        otherNodes = await Promise.all([
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 30352,
+        otherNodes = [
+            createNetworkNode({
                 id: 'node-1',
-                trackers: [tracker.getAddress()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 30353,
+            createNetworkNode({
                 id: 'node-2',
-                trackers: [tracker.getAddress()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 30354,
+            createNetworkNode({
                 id: 'node-3',
-                trackers: [tracker.getAddress()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 30355,
+            createNetworkNode({
                 id: 'node-4',
-                trackers: [tracker.getAddress()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
-            startNetworkNode({
-                host: '127.0.0.1',
-                port: 30356,
+            createNetworkNode({
                 id: 'node-5',
-                trackers: [tracker.getAddress()],
+                trackers: [trackerInfo],
                 stunUrls: []
             }),
-        ])
+        ]
 
-        const allNodesConnnectedToTrackerPromise = Promise.all(otherNodes.map((node) => {
-            // @ts-expect-error private field
-            return waitForEvent(node.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER)
-        }))
         // eslint-disable-next-line no-restricted-syntax
         for (const node of otherNodes) {
             node.start()
         }
-        await allNodesConnnectedToTrackerPromise
 
         const allNodesSubscribed = Promise.all(otherNodes.map((node) => {
             return waitForEvent(node, NodeEvent.NODE_SUBSCRIBED)

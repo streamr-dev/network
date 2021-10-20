@@ -1,22 +1,23 @@
 import { Event as wrtcEvent } from '../../src/connection/IWebRtcEndpoint'
-import { WebRtcEndpoint } from "../../src/connection/WebRtcEndpoint"
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
-import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { Tracker } from '../../src/logic/Tracker'
+import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { startTracker } from '../../src/composition'
-import { startEndpoint } from '../../src/connection/WsEndpoint'
-import { TrackerNode } from '../../src/protocol/TrackerNode'
+import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage } from "streamr-client-protocol"
-import { waitForEvent } from "streamr-test-utils"
+import { runAndWaitForEvents } from "streamr-test-utils"
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
+import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
-    let trackerNode1: TrackerNode
-    let trackerNode2: TrackerNode
-    let trackerNode3: TrackerNode
+    let nodeToTracker1: NodeToTracker
+    let nodeToTracker2: NodeToTracker
+    let nodeToTracker3: NodeToTracker
     let ep1: WebRtcEndpoint
     let ep2: WebRtcEndpoint
     let ep3: WebRtcEndpoint
@@ -25,69 +26,75 @@ describe('Node-to-Node protocol version negotiation', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 28680,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 28680
+            },
             id: 'tracker'
         })
 
         const peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31])
         const peerInfo2 = new PeerInfo('node-endpoint2', PeerType.Node, [1, 2], [31, 32, 33])
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
+        const trackerPeerInfo = PeerInfo.newTracker('tracker')
+        // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
+        const wsEp1 = new NodeClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
+        const wsEp2 = new NodeClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
+        const wsEp3 = new NodeClientWsEndpoint(peerInfo3, new MetricsContext(peerInfo2.peerId))
+        nodeToTracker1 = new NodeToTracker(wsEp1)
+        nodeToTracker2 = new NodeToTracker(wsEp2)
+        nodeToTracker3 = new NodeToTracker(wsEp3)
 
-        // Need to set up TrackerNodes and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = await startEndpoint('127.0.0.1', 28681, peerInfo1, null, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = await startEndpoint('127.0.0.1', 28682, peerInfo2, null, new MetricsContext(peerInfo2.peerId))
-        const wsEp3 = await startEndpoint('127.0.0.1', 28683, peerInfo3, null, new MetricsContext(peerInfo2.peerId))
-        trackerNode1 = new TrackerNode(wsEp1)
-        trackerNode2 = new TrackerNode(wsEp2)
-        trackerNode3 = new TrackerNode(wsEp3)
-
-        await trackerNode1.connectToTracker(tracker.getAddress())
-        await trackerNode2.connectToTracker(tracker.getAddress())
-        await trackerNode3.connectToTracker(tracker.getAddress())
+        await nodeToTracker1.connectToTracker(tracker.getUrl(), trackerPeerInfo)
+        await nodeToTracker2.connectToTracker(tracker.getUrl(), trackerPeerInfo)
+        await nodeToTracker3.connectToTracker(tracker.getUrl(), trackerPeerInfo)
 
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(
             peerInfo1,
             [],
-            new RtcSignaller(peerInfo1, trackerNode1),
+            new RtcSignaller(peerInfo1, nodeToTracker1),
             new MetricsContext('node-endpoint1'),
             new NegotiatedProtocolVersions(peerInfo1),
+            NodeWebRtcConnectionFactory,
             5000
         )
         ep2 = new WebRtcEndpoint(
             peerInfo2,
             [],
-            new RtcSignaller(peerInfo2, trackerNode2),
+            new RtcSignaller(peerInfo2, nodeToTracker2),
             new MetricsContext('node-endpoint2'),
             new NegotiatedProtocolVersions(peerInfo2),
+            NodeWebRtcConnectionFactory,
             5000
         )
         ep3 = new WebRtcEndpoint(
             peerInfo3,
             [],
-            new RtcSignaller(peerInfo3, trackerNode3),
+            new RtcSignaller(peerInfo3, nodeToTracker3),
             new MetricsContext('node-endpoint3'),
             new NegotiatedProtocolVersions(peerInfo3),
+            NodeWebRtcConnectionFactory,
             5000
         )
         nodeToNode1 = new NodeToNode(ep1)
         nodeToNode2 = new NodeToNode(ep2)
 
-        nodeToNode1.connectToNode('node-endpoint2', 'tracker')
-        await Promise.all([
-            waitForEvent(nodeToNode1, ntnEvent.NODE_CONNECTED),
-            waitForEvent(nodeToNode2, ntnEvent.NODE_CONNECTED)
+        await runAndWaitForEvents(()=> {nodeToNode1.connectToNode('node-endpoint2', 'tracker')}, [
+            [nodeToNode1, ntnEvent.NODE_CONNECTED],
+            [nodeToNode2, ntnEvent.NODE_CONNECTED]
         ])
     })
 
     afterEach(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            trackerNode1.stop(),
-            trackerNode2.stop(),
+            nodeToTracker1.stop(),
+            nodeToTracker2.stop(),
+            nodeToTracker3.stop(),
             ep1.stop(),
-            ep2.stop()
+            ep2.stop(),
+            ep3.stop()
         ])
     })
 
@@ -115,8 +122,7 @@ describe('Node-to-Node protocol version negotiation', () => {
     })
 
     it('negotiated version is removed once node is disconnected', async () => {
-        ep1.close('node-endpoint2', 'test')
-        await waitForEvent(ep2, wrtcEvent.PEER_DISCONNECTED)
+        await runAndWaitForEvents(()=> { ep1.close('node-endpoint2', 'test') }, [ep2, wrtcEvent.PEER_DISCONNECTED])
 
         expect(ep1.getNegotiatedControlLayerProtocolVersionOnNode('node-endpoint2')).toEqual(undefined)
         expect(ep2.getNegotiatedControlLayerProtocolVersionOnNode('node-endpoint1')).toEqual(undefined)
@@ -125,7 +131,10 @@ describe('Node-to-Node protocol version negotiation', () => {
     it('if there are no shared versions the connection is closed', async () => {
         let errors = 0
         try {
-            await ep3.connect('node-endpoint1', 'tracker')
+            await Promise.all([
+                ep3.connect('node-endpoint1', 'tracker'),
+                ep1.connect('node-endpoint3', 'tracker')
+            ])
         } catch (err) {
             errors += 1
         }

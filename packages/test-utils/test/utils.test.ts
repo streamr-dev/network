@@ -7,6 +7,7 @@ import {
     waitForCondition,
     eventsToArray, eventsWithArgsToArray
 } from "../src/utils"
+import { performance } from 'perf_hooks'
 import { Readable } from "stream"
 import { EventEmitter } from "events"
 
@@ -160,9 +161,11 @@ describe(waitForCondition, () => {
 
 describe(wait, () => {
     it("waits at least the predetermined time", async () => {
-        const start = Date.now()
+        // use performance.now instead of Date.now
+        // Date.now may not be accurate enough for low wait values e.g. 10ms
+        const start = performance.now()
         await wait(10)
-        const end = Date.now()
+        const end = performance.now()
         expect(end - start).toBeGreaterThanOrEqual(10)
     })
 })

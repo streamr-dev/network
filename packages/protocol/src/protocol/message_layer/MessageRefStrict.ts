@@ -10,4 +10,8 @@ export default class MessageRefStrict extends MessageRef {
         super(timestamp, sequenceNumber)
         validateIsNotNegativeInteger('sequenceNumber', sequenceNumber)
     }
+
+    clone(): MessageRefStrict {
+        return new MessageRefStrict(this.timestamp, this.sequenceNumber)
+    }
 }

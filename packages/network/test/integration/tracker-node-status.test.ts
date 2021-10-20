@@ -1,14 +1,16 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { Event as NodeEvent } from '../../src/logic/Node'
+import { Event as NodeEvent } from '../../src/logic/node/Node'
 
 /**
- * This test verifies that tracker receives status messages from nodes with list of inBound and outBound connections
+ * This test verifies that tracker receives status messages from nodes with list of neighbor connections
  */
+
+// Seems to only be able to perform one connection on the tracker using the split ws client/server (???)
 describe('check status message flow between tracker and two nodes', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
@@ -26,81 +28,87 @@ describe('check status message flow between tracker and two nodes', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30750,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30750
+            },
             id: TRACKER_ID
         })
-        nodeOne = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30751,
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+
+        nodeOne = createNetworkNode({
             id: 'node-1',
-            trackers: [tracker.getAddress()],
-            pingInterval: 100
+            trackers: [trackerInfo],
+            peerPingInterval: 100,
+            trackerPingInterval: 100,
+            rttUpdateTimeout: 10
         })
-        nodeTwo = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 30752,
+        
+        nodeTwo = createNetworkNode({
             id: 'node-2',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             location,
-            pingInterval: 100
+            peerPingInterval: 100,
+            trackerPingInterval: 100,
+            rttUpdateTimeout: 10
         })
     })
 
     afterEach(async () => {
-        await nodeOne.stop()
-        await nodeTwo.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            nodeOne.stop(),
+            nodeTwo.stop(),
+            tracker.stop()
+        ])
     })
 
     it('tracker should receive status message from node', (done) => {
+        nodeOne.subscribe(streamId, 0)
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-1')
-            // @ts-expect-error private field
-            expect(statusMessage.status).toEqual(nodeOne.getFullStatus(TRACKER_ID))
             done()
         })
 
+        nodeOne.subscribe('stream-id', 0)
         nodeOne.start()
     })
 
     it('tracker should receive status from second node', (done) => {
+        nodeTwo.subscribe(streamId, 0)
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-2')
-            // @ts-expect-error private field
-            expect(statusMessage.status).toEqual(nodeTwo.getFullStatus(TRACKER_ID))
             done()
         })
+
+        nodeTwo.subscribe('stream-id', 0)
         nodeTwo.start()
     })
 
     it('tracker should receive from both nodes new statuses', (done) => {
+        nodeOne.subscribe('stream-id', 0)
+        nodeTwo.subscribe('stream-id', 0)
         nodeOne.start()
         nodeTwo.start()
 
         let receivedTotal = 0
-        let nodeOneStatus: any = null
-        let nodeTwoStatus: any = null
+        let nodeOneStatusReceived = false
+        let nodeTwoStatusReceived = false
 
         // @ts-expect-error private field
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            if (nodeId === 'node-1') {
-                nodeOneStatus = statusMessage.status
+            if (nodeId === 'node-1' && !nodeOneStatusReceived) {
+                nodeOneStatusReceived = true
                 receivedTotal += 1
             }
 
-            if (nodeId === 'node-2') {
-                nodeTwoStatus = statusMessage.status
+            if (nodeId === 'node-2' && !nodeTwoStatusReceived) {
+                nodeTwoStatusReceived = true
                 receivedTotal += 1
             }
 
             if (receivedTotal === 2) {
-                // @ts-expect-error private field
-                expect(nodeOneStatus).toEqual(nodeOne.getFullStatus())
-                // @ts-expect-error private field
-                expect(nodeTwoStatus).toEqual(nodeTwo.getFullStatus())
                 done()
             }
         })
@@ -117,8 +125,10 @@ describe('check status message flow between tracker and two nodes', () => {
             let nodeOneStatus: any = null
             let nodeTwoStatus: any = null
 
-            nodeOne.start()
-            nodeTwo.start()
+            await Promise.all([
+                nodeOne.start(),
+                nodeTwo.start()
+            ])
 
             nodeOne.subscribe(streamId, 0)
             nodeTwo.subscribe(streamId, 0)
@@ -165,15 +175,13 @@ describe('check status message flow between tracker and two nodes', () => {
 
         // @ts-expect-error private field
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            // @ts-expect-error private field
-            if (nodeId === nodeOne.peerInfo.peerId) {
+            if (nodeId === nodeOne.getNodeId()) {
                 nodeOneStatus = statusMessage.status
                 // @ts-expect-error private field
                 expect(tracker.locationManager.nodeLocations['node-1']).toBeUndefined()
             }
 
-            // @ts-expect-error private field
-            if (nodeId === nodeTwo.peerInfo.peerId) {
+            if (nodeId === nodeTwo.getNodeId()) {
                 nodeTwoStatus = statusMessage.status
                 // @ts-expect-error private field
                 expect(tracker.locationManager.nodeLocations['node-2'].country).toBe('FI')

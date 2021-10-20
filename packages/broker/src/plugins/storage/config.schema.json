@@ -52,7 +52,36 @@
                     "description": "Interval (in milliseconds) in which to refresh storage config from Core API (0 = disable)"
                 }
             },
-            "additionalProperties": false
-        }  
+            "additionalProperties": false,
+            "default": {
+                "refreshInterval": 600000
+            }
+        },
+        "cluster": {
+            "type": "object",
+            "description": "Storage node cluster config",
+            "required": [
+                "clusterAddress",
+                "clusterSize",
+                "myIndexInCluster"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "clusterAddress": {
+                    "type": ["string", "null"]
+                },
+                "clusterSize": {
+                    "type": "number"
+                },
+                "myIndexInCluster": {
+                    "type": "number"
+                }
+            },
+            "default": {
+                "clusterAddress": null,
+                "clusterSize": 1,
+                "myIndexInCluster": 0
+            }
+        }
     }
 }

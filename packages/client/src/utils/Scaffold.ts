@@ -28,7 +28,7 @@ const noop = () => {}
 
 export default function Scaffold(
     sequence: Step[] = [],
-    _checkFn: () => Promise<boolean>,
+    _checkFn: (() => Promise<boolean>) | (() => boolean),
     { id = '', onError, onDone, onChange }: ScaffoldOptions = {}
 ) {
     let error: Error | undefined
@@ -78,7 +78,7 @@ export default function Scaffold(
     let prevShouldUp = false
     const innerQueue = pLimit(1)
 
-    async function next(): Promise<void> {
+    async function nextScaffoldStep(): Promise<void> {
         shouldUp = await checkShouldUp()
         const didChange = prevShouldUp !== shouldUp
         prevShouldUp = shouldUp
@@ -88,7 +88,7 @@ export default function Scaffold(
             } catch (err) {
                 collectErrors(err)
             }
-            return next()
+            return nextScaffoldStep()
         }
 
         if (shouldUp) {
@@ -105,7 +105,7 @@ export default function Scaffold(
                 }
                 onDownSteps.push(onDownStep || (() => {}))
                 // eslint-disable-next-line no-return-await
-                return await next() // return await gives us a better stack trace
+                return await nextScaffoldStep() // return await gives us a better stack trace
             }
         } else if (onDownSteps.length) {
             isDone = false
@@ -118,7 +118,7 @@ export default function Scaffold(
             }
             nextSteps.push(prevSteps.pop() as StepUp)
             // eslint-disable-next-line no-return-await
-            return await next() // return await gives us a better stack trace
+            return await nextScaffoldStep() // return await gives us a better stack trace
         } else if (error) {
             const err = error
             // eslint-disable-next-line require-atomic-updates
@@ -142,7 +142,7 @@ export default function Scaffold(
     }
 
     const nextDone = async () => {
-        await innerQueue(() => next())
+        await innerQueue(() => nextScaffoldStep())
     }
 
     let currentStep: Promise<void>

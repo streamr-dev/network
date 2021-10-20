@@ -1,36 +1,19 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/stream'
-import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
-import { StorageNode } from '../../src/stream/StorageNode'
-
-import config from './config'
-
-const createClient = (opts = {}) => new StreamrClient({
-    ...config.clientOptions,
-    auth: {
-        privateKey: fakePrivateKey(),
-    },
-    autoConnect: false,
-    autoDisconnect: false,
-    ...opts,
-})
+import { Stream } from '../../src/Stream'
+import { getPublishTestMessages, getCreateClient, createTestStream } from '../utils'
+import { StorageNode } from '../../src/StorageNode'
 
 describe('Stream', () => {
     let client: StreamrClient
     let stream: Stream
 
+    const createClient = getCreateClient()
     beforeEach(async () => {
         client = createClient()
         await client.connect()
 
-        stream = await client.createStream({
-            name: uid('stream-integration-test')
-        })
+        stream = await createTestStream(client, module)
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
-    })
-
-    afterEach(async () => {
-        await client.disconnect()
     })
 
     describe('detectFields()', () => {
@@ -45,8 +28,7 @@ describe('Stream', () => {
                 array: [1, 2, 3],
                 string: 'test',
             }
-            const publishTestMessages = getPublishTestMessages(client, {
-                streamId: stream.id,
+            const publishTestMessages = getPublishTestMessages(client, stream, {
                 waitForLast: true,
                 createMessage: () => msg,
             })
@@ -91,8 +73,7 @@ describe('Stream', () => {
                 symbol: Symbol('test'),
                 // TODO: bigint: 10n,
             }
-            const publishTestMessages = getPublishTestMessages(client, {
-                streamId: stream.id,
+            const publishTestMessages = getPublishTestMessages(client, stream, {
                 waitForLast: true,
                 createMessage: () => msg,
             })

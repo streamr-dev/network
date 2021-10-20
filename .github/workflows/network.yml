@@ -9,10 +9,6 @@ on:
   pull_request:
     branches:
       - '*'
-    paths:
-      - 'packages/network/*'
-      - 'packages/network/**/*'
-      - '.github/workflows/network.yml'
   schedule:
     # run every day at 00:00
     - cron:  '0 0 * * *'
@@ -26,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.0
+        uses: styfle/cancel-workflow-action@0.9.1
         with:
           all_but_latest: true
           access_token: ${{ github.token }}
@@ -39,13 +35,63 @@ jobs:
         node-version: [ 14.x ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+      - name: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npm run bootstrap-pkg streamr-network
+      - run: npm run eslint
+      - run: npm run test-unit
+        env:
+          CI: true
+      - name: Run test-integration
+        run: |
+          ulimit -c unlimited
+          mkdir -p /tmp/cores
+          chmod a+rwx /tmp/cores
+          echo "/tmp/cores/core.%p" | sudo tee /proc/sys/kernel/core_pattern
+          npm run test-integration
+        env:
+          CI: true
+      - if: failure()
+        name: Print core dump
+        run: |
+          if ls /tmp/cores/core.* 1> /dev/null 2>&1; then
+            echo "Core dump found, printing stack trace..."
+            sudo apt-get install -y gdb > /dev/null
+            for c in /tmp/cores/core.*; do
+              gdb node --core=$c --eval-command="set pagination off" --eval-command="info threads" --eval-command="backtrace" --eval-command="quit"
+              done
+          else
+            echo "No core dump found."
+          fi
+
+  test-browser:
+    name: Test on Browser Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2.3.5
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Cache Node.js modules
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -58,18 +104,8 @@ jobs:
         run: |
           npm ci
           npx lerna bootstrap --scope streamr-network --include-dependencies
-      - run: npm run eslint
-      - run: npm run test-unit
-        env:
-          CI: true
-      - uses: nick-invision/retry@v2
-        name: Flakey Tests
-        with:
-          max_attempts: 5
-          timeout_minutes: 4
-          retry_on: error
-          command: cd packages/network && CI=true LOG_LEVEL=trace npm run test-flakey
-      - run: npm run test-integration
+          sudo apt-get install xvfb
+      - run: xvfb-run --auto-servernum npm run test-browser
         env:
           CI: true
 
@@ -85,13 +121,13 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - uses: actions/setup-node@v2
         with:
           node-version: 14
           registry-url: https://registry.npmjs.org/
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -103,7 +139,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
+          npm run bootstrap-pkg streamr-network
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword

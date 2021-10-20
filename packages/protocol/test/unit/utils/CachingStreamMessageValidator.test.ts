@@ -41,6 +41,7 @@ describe('CachingStreamMessageValidator', () => {
         verify = sinon.stub().resolves(true)
         cacheTimeoutMillis = 15 * 60 * 1000
 
+        // eslint-disable-next-line max-len
         msg = StreamMessage.deserialize('[31,["tagHE6nTQ9SJV2wPoCxBFw",0,1587141844396,0,"0xbce3217F2AC9c8a2D14A6303F87506c4FC124014","k000EDTMtqOTLM8sirFj"],[1587141844312,0],27,0,"{\\"eventType\\":\\"trade\\",\\"eventTime\\":1587141844398,\\"symbol\\":\\"ETHBTC\\",\\"tradeId\\":172530352,\\"price\\":0.02415,\\"quantity\\":0.296,\\"buyerOrderId\\":687544144,\\"sellerOrderId\\":687544104,\\"time\\":1587141844396,\\"maker\\":false,\\"ignored\\":true}",2,"0x91c47df28dc3014a49ef50313efa8e40015eeeccea0cf006ab2c7b05efbb0ddc7e10e430aaa7ea6dd0ca5e05761eaf0c14c8ca09b57c8d8626da7bb9ea2d50fa1b"]')
     })
 
@@ -77,6 +78,7 @@ describe('CachingStreamMessageValidator', () => {
     })
 
     it('only calls the expensive function once for each different stream', async () => {
+        // eslint-disable-next-line max-len
         const msg2 = StreamMessage.deserialize('[31,["streamId",0,1587141844396,0,"0xbce3217F2AC9c8a2D14A6303F87506c4FC124014","k000EDTMtqOTLM8sirFj"],[1587141844312,0],27,0,"{\\"foo\\":\\"bar\\"}",2,"some-signature"]')
         const validator = getValidator()
 
@@ -84,7 +86,9 @@ describe('CachingStreamMessageValidator', () => {
         await validator.validate(msg2)
 
         assert.strictEqual((isPublisher as any).callCount, 2, `Unexpected calls: ${(isPublisher as any).getCalls()}`)
+        // eslint-disable-next-line max-len
         assert((isPublisher as any).calledWith('0xbce3217F2AC9c8a2D14A6303F87506c4FC124014', 'streamId'), `Unexpected calls: ${(isPublisher as any).getCalls()}`)
+        // eslint-disable-next-line max-len
         assert((isPublisher as any).calledWith('0xbce3217F2AC9c8a2D14A6303F87506c4FC124014', 'tagHE6nTQ9SJV2wPoCxBFw'), `Unexpected calls: ${(isPublisher as any).getCalls()}`)
     })
 
@@ -108,7 +112,7 @@ describe('CachingStreamMessageValidator', () => {
     it('does not swallow rejections', async () => {
         const testError = new Error('test error')
         isPublisher = sinon.stub().rejects(testError)
-        await assert.rejects(getValidator().validate(msg), (err) => {
+        await assert.rejects(getValidator().validate(msg), (err: Error) => {
             assert(err === testError)
             return true
         })

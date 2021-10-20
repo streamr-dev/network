@@ -1,8 +1,16 @@
+/**
+ * Session token caching and async init.
+ */
+import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
-import { Wallet } from '@ethersproject/wallet'
-import { ExternalProvider, JsonRpcFetchFunc, Web3Provider } from '@ethersproject/providers'
-import { StreamrClient } from './StreamrClient'
-import { BytesLike } from '@ethersproject/bytes'
+
+import { LoginEndpoints, TokenObject } from './LoginEndpoints'
+import { AuthConfig } from './Ethereum'
+import { Config } from './Config'
+import { BrubeckContainer } from './Container'
+import { Debug } from './utils/log'
+
+const debug = Debug('Session')
 
 enum State {
     LOGGING_OUT = 'logging out',
@@ -11,84 +19,65 @@ enum State {
     LOGGED_IN = 'logged in',
 }
 
-export interface SessionOptions {
-    privateKey?: BytesLike
-    ethereum?: ExternalProvider|JsonRpcFetchFunc
-    apiKey?: string
-    username?: string
-    password?: string
-    sessionToken?: string
-    unauthenticated?: boolean
-}
-
-interface TokenObject {
-    token: string
-}
-
-/** @internal */
+@scoped(Lifecycle.ContainerScoped)
 export default class Session extends EventEmitter {
-
-    _client: StreamrClient
-    options: SessionOptions
     state: State
-    loginFunction: () => Promise<TokenObject>
-    sessionTokenPromise?: Promise<string|undefined>
+    sessionTokenPromise?: Promise<string>
 
-    constructor(client: StreamrClient, options: SessionOptions = {}) {
+    constructor(
+        @inject(BrubeckContainer) private container: DependencyContainer,
+        @inject(Config.Auth) public options: AuthConfig
+    ) {
         super()
-        this._client = client
-        this.options = {
-            ...options
-        }
-
         this.state = State.LOGGED_OUT
-
-        // TODO: move loginFunction to StreamrClient constructor where "auth type" is checked
-        if (typeof this.options.privateKey !== 'undefined') {
-            const wallet = new Wallet(this.options.privateKey)
-            this.loginFunction = async () => (
-                this._client.loginWithChallengeResponse((d: string) => wallet.signMessage(d), wallet.address)
-            )
-        } else if (typeof this.options.ethereum !== 'undefined') {
-            const provider = new Web3Provider(this.options.ethereum)
-            const signer = provider.getSigner()
-            this.loginFunction = async () => (
-                this._client.loginWithChallengeResponse((d: string) => signer.signMessage(d), await signer.getAddress())
-            )
-        } else if (typeof this.options.apiKey !== 'undefined') {
-            this.loginFunction = async () => (
-                this._client.loginWithApiKey(this.options.apiKey!)
-            )
-        } else if (typeof this.options.username !== 'undefined' && typeof this.options.password !== 'undefined') {
-            this.loginFunction = async () => (
-                this._client.loginWithUsernamePassword(this.options.username!, this.options.password!)
-            )
-        } else {
-            if (!this.options.sessionToken) {
-                this.options.unauthenticated = true
-            }
-            this.loginFunction = async () => {
-                throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to login.')
-            }
+        this.options = options
+        if (!this.options.sessionToken) {
+            this.options.unauthenticated = true
         }
     }
 
     isUnauthenticated() {
-        return this.options.unauthenticated
+        return !this.options.privateKey && !this.options.ethereum && !this.options.sessionToken
     }
 
     updateState(newState: State) {
+        debug('updateState %s -> %s', this.state, newState)
         this.state = newState
         this.emit(newState)
     }
 
-    async getSessionToken(requireNewToken = false) {
+    get loginEndpoints() {
+        return this.container.resolve<LoginEndpoints>(LoginEndpoints)
+    }
+
+    async sendLogin(): Promise<TokenObject> {
+        const auth = this.options
+        debug('sendLogin()')
+        if (typeof auth.privateKey !== 'undefined' || typeof auth.ethereum !== 'undefined') {
+            debug('sendLogin challenge')
+            return this.loginEndpoints.loginWithChallengeResponse()
+        }
+
+        throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to login.')
+    }
+
+    async getSessionToken(requireNewToken = false): Promise<string> {
+        // @ts-expect-error
+        if (typeof this.options.apiKey !== 'undefined') {
+            throw new Error('apiKey auth no longer supported')
+        }
+
+        // @ts-expect-error
+        if (typeof this.options.username !== 'undefined') {
+            throw new Error('username/password auth no longer supported')
+        }
+
         if (this.options.sessionToken && !requireNewToken) {
             return this.options.sessionToken
         }
 
-        if (this.options.unauthenticated) {
-            return undefined
+        if (!this.options.privateKey && !this.options.ethereum && !this.options.sessionToken) {
+            return ''
         }
 
         if (this.state !== State.LOGGING_IN) {
@@ -98,7 +87,7 @@ export default class Session extends EventEmitter {
                 })
             } else {
                 this.updateState(State.LOGGING_IN)
-                this.sessionTokenPromise = this.loginFunction().then((tokenObj: TokenObject) => {
+                this.sessionTokenPromise = this.sendLogin().then((tokenObj: TokenObject) => {
                     this.options.sessionToken = tokenObj.token
                     this.updateState(State.LOGGED_IN)
                     return tokenObj.token
@@ -108,7 +97,8 @@ export default class Session extends EventEmitter {
                 })
             }
         }
-        return this.sessionTokenPromise
+
+        return this.sessionTokenPromise!
     }
 
     async logout() {
@@ -127,9 +117,14 @@ export default class Session extends EventEmitter {
             return
         }
 
-        this.updateState(State.LOGGING_OUT)
-        await this._client.logoutEndpoint()
-        this.options.sessionToken = undefined
-        this.updateState(State.LOGGED_OUT)
+        try {
+            this.updateState(State.LOGGING_OUT)
+            const t = this.loginEndpoints.logoutEndpoint()
+            this.options.sessionToken = undefined
+            this.sessionTokenPromise = undefined
+            await t
+        } finally {
+            this.updateState(State.LOGGED_OUT)
+        }
     }
 }

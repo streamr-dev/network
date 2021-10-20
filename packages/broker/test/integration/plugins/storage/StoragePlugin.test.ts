@@ -2,17 +2,20 @@ import { MetricsContext } from 'streamr-network'
 import { StoragePlugin } from '../../../../src/plugins/storage/StoragePlugin'
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StreamPart } from '../../../../src/types'
-import { fastPrivateKey, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
+import { StorageNodeRegistry } from "../../../../src/StorageNodeRegistry"
+import { Wallet } from 'ethers'
 
-const STREAM_PARTS: StreamPart[] = [ 
+const STREAM_PARTS: StreamPart[] = [
     { id: 'foo', partition: 0 },
     { id: 'bar', partition: 0 }
 ]
 
 const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
+    const wallet = Wallet.createRandom()
     const brokerConfig: any = {
-        ethereumPrivateKey: fastPrivateKey(),
+        ethereumPrivateKey: wallet.privateKey,
         plugins: {
             storage: {
                 cassandra: {
@@ -35,10 +38,12 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
         networkNode,
         subscriptionManager,
         publisher: undefined as any,
-        streamrClient: undefined,
+        streamrClient: undefined as any,
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
-        brokerConfig
+        brokerConfig,
+        storageNodeRegistry: StorageNodeRegistry.createInstance(brokerConfig, []),
+        nodeId: wallet.address
     })
 }
 

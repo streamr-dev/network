@@ -1,29 +1,25 @@
 import { Contract, providers } from 'ethers'
 import { ConnectionInfo } from 'ethers/lib/utils'
 
+import { keyToArrayIndex } from './HashUtil'
+
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
 
 const { JsonRpcProvider } = providers
 
 export type SmartContractRecord = {
+    id: string
     http: string
     ws: string
 }
 
 export type TrackerInfo = SmartContractRecord | string
 
-// source: https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
-function hashCode(str: string): number {
-    const a = str.split('')
-        .reduce((prevHash, currVal) => (((prevHash << 5) - prevHash) + currVal.charCodeAt(0)) | 0, 0)
-    return Math.abs(a)
-}
-
 export class TrackerRegistry<T extends TrackerInfo> {
     private readonly records: T[]
 
     constructor(records: T[]) {
-        this.records = records
+        this.records = records.slice() // copy before mutating
         this.records.sort()  // TODO does this actually sort anything?
     }
 
@@ -37,7 +33,8 @@ export class TrackerRegistry<T extends TrackerInfo> {
 
         const streamKey = `${streamId}::${partition}`
 
-        return this.records[hashCode(streamKey) % this.records.length]
+        const index = keyToArrayIndex(this.records.length, streamKey)
+        return this.records[index]
     }
 
     getAllTrackers(): T[] {
@@ -58,10 +55,7 @@ async function fetchTrackers(contractAddress: string, jsonRpcProvider: string | 
         throw Error(`getNodes function is not defined in smart contract (${contractAddress})`)
     }
 
-    const result = await contract.getNodes()
-    // The field is tracker.metadata in newer contracts and tracker.url in old contracts.
-    // It's safe to clean up tracker.url when no such contract is used anymore.
-    return result.map((tracker: any) => tracker.metadata || tracker.url)
+    return await contract.getNodes()
 }
 
 export function createTrackerRegistry<T extends TrackerInfo>(servers: T[]): TrackerRegistry<T> {
@@ -78,8 +72,15 @@ export async function getTrackerRegistryFromContract({
     const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
     const records: SmartContractRecord[] = []
     for (let i = 0; i < trackers.length; ++i) {
+        const { metadata, url, nodeAddress } = trackers[i]
         try {
-            records.push(JSON.parse(trackers[i]))
+            // The field is tracker.metadata in newer contracts and tracker.url in old contracts.
+            // It's safe to clean up tracker.url when no such contract is used anymore.
+            const urls = JSON.parse(metadata || url)
+            records.push({
+                id: nodeAddress,
+                ...urls
+            })
         } catch (e) {
             throw new Error(`Element trackers[${i}] not parsable as object: ${trackers[i]}`)
         }

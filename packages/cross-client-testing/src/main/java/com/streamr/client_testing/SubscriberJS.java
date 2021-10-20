@@ -62,6 +62,14 @@ public class SubscriberJS extends Subscriber {
     private void executeNode() {
         try {
             p = Runtime.getRuntime().exec(command, null);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                public void run() {
+                    if (p.isAlive()) {
+                        p.destroy();
+                    }
+                }
+            }));
+
             BufferedReader stdInput = new BufferedReader(new
                     InputStreamReader(p.getInputStream()));
 
@@ -115,7 +123,11 @@ public class SubscriberJS extends Subscriber {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         thread.interrupt();
+        if (p.isAlive()) {
+            p.destroy();
+        }
     }
 
     private static String resendOptionToJson(ResendOption resendOption) {

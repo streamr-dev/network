@@ -1,7 +1,8 @@
 import { StreamrClient } from '../../src/index'
-import { Stream } from '../../src/stream'
+import { Stream } from '../../src/Stream'
 
 export default class StubbedStreamrClient extends StreamrClient {
+    // @ts-expect-error
     // eslint-disable-next-line class-methods-use-this
     getUserInfo() {
         return Promise.resolve({
@@ -10,11 +11,12 @@ export default class StubbedStreamrClient extends StreamrClient {
         })
     }
 
+    // @ts-expect-error
     async getStream(): Promise<Stream> {
-        return new Stream(this, {
+        return new Stream({
             id: 'streamId',
             partitions: 1,
-        })
+        }, this.container)
     }
 }
 // publisherId is the hash of 'username'

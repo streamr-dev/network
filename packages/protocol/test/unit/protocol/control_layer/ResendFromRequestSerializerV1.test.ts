@@ -15,6 +15,7 @@ const message = new ResendFromRequest({
     publisherId: 'publisherId',
     sessionToken: 'sessionToken',
 })
+// eslint-disable-next-line max-len
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.ResendFromRequest, 'streamId', 0, 'requestId', [132846894, 0], 'publisherId', null, 'sessionToken'])
 
 describe('ResendFromRequestSerializerV1', () => {

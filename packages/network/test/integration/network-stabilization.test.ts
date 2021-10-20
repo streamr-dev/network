@@ -1,11 +1,11 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import assert from 'assert'
 
 import { wait } from 'streamr-test-utils'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
-import { getTopology } from '../../src/logic/trackerSummaryUtils'
+import { createNetworkNode, startTracker } from '../../src/composition'
+import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 
 function areEqual(a: any, b: any) {
     try {
@@ -23,23 +23,23 @@ describe('check network stabilization', () => {
     let tracker: Tracker
     let nodes: NetworkNode[]
     const MAX_NODES = 10
-    const startingPort = 39001
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 39000,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 39000
+            },
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const node = await startNetworkNode({
-                host: '127.0.0.1',
-                port: startingPort + i,
+            const node = createNetworkNode({
                 id: `node-${i}`,
-                trackers: [tracker.getAddress()]
+                trackers: [trackerInfo]
             })
             node.subscribe('stream', 0)
             nodes.push(node)
@@ -54,7 +54,7 @@ describe('check network stabilization', () => {
         ])
     })
 
-    it('network must become stable in less than 10 seconds',  () => {
+    it('network must become stable in less than 10 seconds',  async () => {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < 10; ++i) {
                 const beforeTopology = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())

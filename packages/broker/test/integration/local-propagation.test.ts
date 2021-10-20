@@ -2,18 +2,17 @@ import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Todo } from '../types'
-import { startBroker, fastPrivateKey, createClient, createMqttClient } from '../utils'
+import { Broker } from '../broker'
+import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
 
 const trackerPort = 17711
 const httpPort = 17712
 const wsPort = 17713
-const networkPort = 17701
 const mqttPort = 17751
 
 describe('local propagation', () => {
     let tracker: Tracker
-    let broker: Todo
+    let broker: Broker
     const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
@@ -24,32 +23,31 @@ describe('local propagation', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
+            id: 'tracker-1'
         })
 
         broker = await startBroker({
             name: 'broker1',
             privateKey: '0xfe77283a570fda0e581897b18d65632c438f0d00f9440183119c1b7e4d5275e1',
-            networkPort,
             trackerPort,
             httpPort,
             wsPort,
             legacyMqttPort: mqttPort
         })
 
-        client1 = createClient(wsPort, privateKey)
-        client2 = createClient(wsPort, privateKey)
+        client1 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
 
         mqttClient1 = createMqttClient(mqttPort, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort, 'localhost', privateKey)
     })
 
     beforeEach(async () => {
-        freshStream = await client1.createStream({
-            name: 'local-propagation.test.js-' + Date.now()
-        })
+        freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
 
         await wait(3000)
@@ -58,17 +56,17 @@ describe('local propagation', () => {
     afterEach(async () => {
         await Promise.all([
             tracker.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
+            client1.destroy(),
+            client2.destroy(),
             mqttClient2.end(true),
             mqttClient1.end(true),
-            broker.close()
+            broker.stop()
         ])
     })
 
     test('local propagation using StreamrClients', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
 
         await Promise.all([
             client1.subscribe({
@@ -122,8 +120,8 @@ describe('local propagation', () => {
     })
 
     test('local propagation using mqtt clients', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
@@ -173,10 +171,10 @@ describe('local propagation', () => {
     }, 10000)
 
     test('local propagation using StreamrClients and mqtt clients', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
-        const client4Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
+        const client4Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)

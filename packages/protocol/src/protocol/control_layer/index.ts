@@ -1,5 +1,6 @@
 import BroadcastMessage from "./broadcast_message/BroadcastMessage"
 import ErrorResponse from "./error_response/ErrorResponse"
+import { ErrorCode } from "./error_response/ErrorResponse"
 import PublishRequest from "./publish_request/PublishRequest"
 import ResendFromRequest from "./resend_request/ResendFromRequest"
 import ResendLastRequest from "./resend_request/ResendLastRequest"
@@ -48,6 +49,7 @@ import './unsubscribe_response/UnsubscribeResponseSerializerV2'
 export {
     BroadcastMessage,
     ErrorResponse,
+    ErrorCode,
     PublishRequest,
     ResendFromRequest,
     ResendLastRequest,

@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="broker (dev-2)" type="NodeJSConfigurationType" application-parameters="configs/development-2.env.json" path-to-js-file="bin/broker.js" working-dir="$PROJECT_DIR$/packages/broker">
+    <envs>
+      <env name="LOG_LEVEL" value="info" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>

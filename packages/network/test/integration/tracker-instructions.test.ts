@@ -1,46 +1,43 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { startNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { Event as NodeEvent } from '../../src/logic/Node'
+import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { StreamIdAndPartition } from '../../src/identifiers'
-import { getTopology } from '../../src/logic/trackerSummaryUtils'
+import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker: Tracker
     const trackerPort = 32900
 
     let node1: NetworkNode
-    const port1 = 33971
-
     let node2: NetworkNode
-    const port2 = 33972
 
     const s1 = new StreamIdAndPartition('stream-1', 0)
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker'
         })
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+
         // @ts-expect-error private method
         tracker.formAndSendInstructions = () => {}
-        node1 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: port1,
+        node1 = createNetworkNode({
             id: 'node1',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
-        node2 = await startNetworkNode({
-            host: '127.0.0.1',
-            port: port2,
+        node2 = createNetworkNode({
             id: 'node2',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             disconnectionWaitTime: 200
         })
 
@@ -82,8 +79,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         await Promise.race([
-            node1.onTrackerInstructionReceived('tracker', trackerInstruction1),
-            node2.onTrackerInstructionReceived('tracker', trackerInstruction2)
+            // @ts-expect-error private field
+            node1.trackerManager.instructionThrottler.add(trackerInstruction1, 'tracker'),
+            // @ts-expect-error private field
+            node2.trackerManager.instructionThrottler.add(trackerInstruction2, 'tracker')
         ]).catch(() => {})
 
         await Promise.race([

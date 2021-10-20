@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://streamr.network">
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
+  </a>
+</p>
+
 # @streamr/cli-tools
 
 Command line tool for interacting with [Streamr](https://streamr.network).
@@ -28,12 +34,14 @@ To get a list of all commands simply run `streamr`. To list subcommands run e.g.
 
 Run `streamr <command> <subcommand> --help` to get more information about a a command, its options, and so forth.
 
+If there is a stream parameter in a command, it can be defined as a full id (e.g. `0x1234567890123456789012345678901234567890/foo/bar`) or a path (e.g. `/foo/bar`). If path notation is used, the stream ID is made by prefixing the authenticated Ethereum address (`--private-key <key>`) to the path.
+
 ### subscribe
 Used to subscribe to a stream and output real-time JSON objects to stdout line-by-line.
 
 For example, to subscribe to a public stream such as the tram demo do
 ```
-streamr stream subscribe 7wa7APtlTq6EC5iTCBy6dw
+streamr stream subscribe streamr.eth/demos/helsinki-trams
 ```
 
 To subscribe to a private stream and authenticate with an Ethereum private key:
@@ -79,15 +87,22 @@ streamr stream show <streamId> --private-key <key>
 ### create
 Create a new stream
 ```
-streamr stream create <name> --private-key <key>
+streamr stream create <streamId> --private-key <key>
 ```
+E.g.
+```
+streamr stream create /foo/bar
+streamr stream create 0x1234567890123456789012345678901234567890/foobar
+streamr stream create yourdomain.ens/foobar
+```
+
 
 ### resend
 Request a resend of historical data printed as JSON objects to stdout line-by-line.
 
 For example, to fetch the 10 latest messages of a public stream such as the tram demo do
 ```
-streamr stream resend last 10 7wa7APtlTq6EC5iTCBy6dw
+streamr stream resend last 10 streamr.eth/demos/helsinki-trams
 ```
 
 
@@ -114,7 +129,7 @@ You can pipe the line-by-line JSON objects output by `subscribe` to
 your program written in any language. Just make the program read JSON objects
 from stdin.
 ```
-streamr stream subscribe 7wa7APtlTq6EC5iTCBy6dw | ruby calculate-average-speed.rb
+streamr stream subscribe streamr.eth/demos/helsinki-trams | ruby calculate-average-speed.rb
 ```
 
 #### Publishing to a stream from any programming language
@@ -139,12 +154,12 @@ If you have a working stream in production that you'd also like to use in your
 development environment, you can combine the `subscribe` and `publish` commands to effectively copy
 the real-time events.
 ```
-streamr stream subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr stream publish --dev <streamId> --private-key <key>
+streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish --dev <streamId> --private-key <key>
 ```
 
 And the same for staging environment:
 ```
-streamr stream subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr stream publish --stg <streamId> --private-key <key>
+streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish --stg <streamId> --private-key <key>
 ```
 
 ## Develop

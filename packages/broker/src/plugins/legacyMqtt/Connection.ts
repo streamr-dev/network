@@ -1,66 +1,81 @@
-import events from 'events'
+import { EventEmitter } from 'events'
+import StrictEventEmitter from 'strict-event-emitter-types'
 import { Logger } from 'streamr-network'
-import { Todo } from '../../types'
+import mqttCon from "mqtt-connection"
+import { Stream } from "../../Stream"
+import * as mqtt from "mqtt-packet"
 
 const logger = new Logger(module)
 
-export class Connection extends events.EventEmitter {
+/**
+ * Strict types for EventEmitter interface.
+ */
+interface Events {
+    connect: (packet: mqtt.IConnectPacket) => void
+    close: () => void
+    disconnect: () => void
+    publish: (packet: mqtt.IPublishPacket) => void
+    subscribe: (packet: mqtt.ISubscribePacket & mqtt.ISubscription) => void
+    unsubscribe: (packet: mqtt.IUnsubscribePacket) => void
+    error: (err?: any) => void
+}
 
-    id: Todo
-    client: Todo
-    token: Todo
-    streams: Todo
-    dead: Todo
+// reminder: only use Connection emitter for external handlers
+// to make it safe for consumers to call removeAllListeners
+// i.e. no this.on('event')
+export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-    constructor(client: Todo, clientId = '', token = '') {
+export class Connection extends ConnectionEmitter {
+
+    id = ''
+    client: mqttCon.Connection
+    token = ''
+    streams: Array<Stream<Connection>> = []
+    private dead = false
+
+    constructor(client: mqttCon.Connection) {
         super()
 
-        this.id = clientId
         this.client = client
-        this.token = token
-        this.streams = []
-        this.dead = false
-
-        this.client.once('connect', (packet: Todo) => this.emit('connect', packet))
+        this.client.once('connect', (packet) => this.emit('connect', packet))
         this.client.once('close', () => this.emit('close'))
-        this.client.on('error', (err: Todo) => this.emit('error', err))
         this.client.once('disconnect', () => this.emit('disconnect'))
 
-        this.client.on('publish', (packet: Todo) => this.emit('publish', packet))
-        this.client.on('subscribe', (packet: Todo) => this.emit('subscribe', packet))
-        this.client.on('unsubscribe', (packet: Todo) => this.emit('unsubscribe', packet))
-
+        this.client.on('publish', (packet) => this.emit('publish', packet))
+        this.client.on('subscribe', (packet) => this.emit('subscribe', packet))
+        this.client.on('unsubscribe', (packet) => this.emit('unsubscribe', packet))
         this.client.on('pingreq', () => this.client.pingresp())
+        this.client.on('error', (err) => this.emit('error', err))
     }
 
-    markAsDead() {
+    markAsDead(): void {
         this.dead = true
     }
 
-    isDead() {
+    isDead(): any {
         return this.dead
     }
 
     // Connection refused, server unavailable
-    sendConnectionRefusedServerUnavailable() {
-        this._sendConnack(3)
+    sendConnectionRefusedServerUnavailable(): void {
+        this.sendConnack(3)
     }
 
     // Connection refused, bad user name or password
-    sendConnectionRefused() {
-        this._sendConnack(4)
+    sendConnectionRefused(): void {
+        this.sendConnack(4)
     }
 
     // Connection refused, not authorized
-    sendConnectionNotAuthorized() {
-        this._sendConnack(5)
+    sendConnectionNotAuthorized(): void {
+        this.sendConnack(5)
     }
 
-    sendConnectionAccepted() {
-        this._sendConnack(0)
+    sendConnectionAccepted(): void {
+        this.sendConnack(0)
     }
 
-    _sendConnack(code = 0) {
+    private sendConnack(code = 0): void {
         try {
             this.client.connack({
                 returnCode: code
@@ -70,7 +85,7 @@ export class Connection extends events.EventEmitter {
         }
     }
 
-    sendUnsubscribe(packet: Todo) {
+    sendUnsubscribe(packet: Partial<mqtt.IUnsubscribePacket>): void {
         try {
             if (!this.isDead()) {
                 this.client.unsubscribe(packet)
@@ -80,17 +95,17 @@ export class Connection extends events.EventEmitter {
         }
     }
 
-    setClientId(clientId: Todo) {
+    setClientId(clientId: string): this {
         this.id = clientId
         return this
     }
 
-    setToken(token: Todo) {
+    setToken(token: string): this {
         this.token = token
         return this
     }
 
-    close() {
+    close(): void {
         try {
             this.client.destroy()
         } catch (e) {
@@ -100,27 +115,27 @@ export class Connection extends events.EventEmitter {
         this.streams = []
     }
 
-    addStream(stream: Todo) {
+    addStream(stream: Stream<Connection>): void {
         this.streams.push(stream)
     }
 
-    removeStream(streamId: string, streamPartition: number) {
-        const i = this.streams.findIndex((s: Todo) => s.id === streamId && s.partition === streamPartition)
+    removeStream(streamId: string, streamPartition: number): void {
+        const i = this.streams.findIndex((s) => s.id === streamId && s.partition === streamPartition)
         if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
 
-    forEachStream(cb: Todo) {
+    forEachStream(cb: (stream: Stream<Connection>) => void): void {
         this.getStreams().forEach(cb)
     }
 
-    getStreams() {
+    getStreams(): any {
         return this.streams.slice() // return copy
     }
 
-    streamsAsString() {
-        return this.streams.map((s: Todo) => s.toString())
+    streamsAsString(): string[] {
+        return this.streams.map((s) => s.toString())
     }
 }
 

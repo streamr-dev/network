@@ -3,7 +3,11 @@ import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator from "./StreamMessageValidator"
 import CachingStreamMessageValidator from "./CachingStreamMessageValidator"
 import SigningUtil from "./SigningUtil"
-import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry } from "./TrackerRegistry"
+export * from "./SPID"
+import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
+import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
+import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
+import { keyToArrayIndex } from "./HashUtil"
 
 export {
     TimestampUtil,
@@ -11,7 +15,14 @@ export {
     StreamMessageValidator,
     CachingStreamMessageValidator,
     SigningUtil,
+    SmartContractRecord,
     TrackerRegistry,
     createTrackerRegistry,
-    getTrackerRegistryFromContract
+    getTrackerRegistryFromContract,
+    StorageNodeRegistry,
+    createStorageNodeRegistry,
+    getStorageNodeRegistryFromContract,
+    generateMnemonicFromAddress,
+    parseAddressFromNodeId,
+    keyToArrayIndex,
 }

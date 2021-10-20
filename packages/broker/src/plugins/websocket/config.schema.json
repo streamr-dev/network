@@ -3,33 +3,40 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "description": "WebSocket plugin configuration",
-    "required": [
-        "port"
-    ],
     "additionalProperties": false,
     "properties": {
         "port": {
             "type": "integer",
-            "description": "Port to start plugin on"
+            "description": "Port to start plugin on",
+            "default": 7170
         },
-        "pingInterval": {
-            "type": "integer",
-            "description": "How often to ping client connections (in milliseconds)",
-            "minimum": 0
+        "payloadMetadata": {
+            "type": "boolean",
+            "description": "The format of payloads: payload is wrapped as { content, metadata } or is a plain content JSON",
+            "default": false
         },
-        "certFileName": {
+        "sslCertificate": {
+            "description": "Files to use for SSL",
             "type": [
-                "string",
+                "object",
                 "null"
             ],
-            "description": "Path of certificate file to use for SSL"
-        },
-        "privateKeyFileName": {
-            "type": [
-                "string",
-                "null"
+            "default": null,
+            "required": [
+                "certFileName",
+                "privateKeyFileName"
             ],
-            "description": "Path of private key file to use for SSL"
+            "additionalProperties": false,
+            "properties": {
+                "certFileName": {
+                    "type": "string",
+                    "description": "Path of certificate file"
+                },
+                "privateKeyFileName": {
+                    "type": "string",
+                    "description": "Path of private key file"
+                }
+            }
         }
     }
 }

@@ -1,25 +1,13 @@
 import * as Protocol from '../../src'
+import * as ControlLayer from "../../src/protocol/control_layer/index"
+import * as MessageLayer from "../../src/protocol/message_layer/index"
+import * as TrackerLayer from "../../src/protocol/tracker_layer/index"
+import * as Errors from "../../src/errors/index"
+import * as Utils from "../../src/utils/index"
 
-// in enum the first key is a number, that number maps to a string,
-// and that string maps to the first key (e.g. '123' => 'Foobar' => '123')
-const isProbablyEnum = (obj: any) => {
-    const key = Object.keys(obj)[0]
-    if (Number.isNaN(parseInt(key))) {
-        return false
-    }
-    const value = obj[key]
-    if (typeof value !== 'string') {
-        return false
-    }
-    return obj[value] == key
-}
-
-describe('re-exports', () => {
-    it('re-exports everything', () => {
-        // ensure all sub-modules are exported at top level
-        // and there aren't any duplicates
-        const protocolEntries = Object.values(Protocol)
-        const containers = protocolEntries.filter((value) => (typeof value !== 'function') && !isProbablyEnum(value))
+describe('index.ts', () => {
+    it('exports all members of containers at top level also ensuring there are no duplicate names', () => {
+        const containers = [ControlLayer, MessageLayer, TrackerLayer, Errors, Utils]
         const numKeys = containers.map((value) => Object.keys(value).length).reduce((a, b) => a + b)
         expect.assertions(numKeys)
         containers.forEach((container) => {

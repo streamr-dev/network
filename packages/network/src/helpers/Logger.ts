@@ -1,4 +1,5 @@
 import pino from 'pino'
+import pinoPretty from 'pino-pretty'
 import path from 'path'
 import _ from 'lodash'
 
@@ -16,6 +17,7 @@ const parseBoolean = (value: string|undefined) => {
 }
 
 export class Logger {
+
     static NAME_LENGTH = 20
 
     private readonly logger: pino.Logger
@@ -24,10 +26,15 @@ export class Logger {
     private static logLevel: pino.LevelWithSilent = (process.env.LOG_LEVEL as pino.LevelWithSilent) || 'info'
 
     constructor(module: NodeJS.Module, context?: string, destinationStream?: { write(msg: string): void }) {
-        const options = {
+        const options: pino.LoggerOptions = {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
             level: Logger.logLevel,
+            // explicitly pass prettifier, otherwise pino may try to lazy require it,
+            // which can fail when under jest+typescript, due to some CJS/ESM
+            // incompatibility leading to throwing an error like:
+            // "prettyFactory is not a function"
+            prettifier: process.env.NODE_ENV === 'production' ? undefined : pinoPretty,
             prettyPrint: process.env.NODE_ENV === 'production' ? false : {
                 colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
                 translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
@@ -40,7 +47,8 @@ export class Logger {
     }
 
     private static createName(module: NodeJS.Module, context?: string) {
-        const parsedPath = path.parse(module.filename)
+
+        const parsedPath = path.parse(module.id)
         let fileId = parsedPath.name
         if (fileId === 'index') {
             // file with name "foobar/index.ts" -> "foobar"
@@ -64,7 +72,15 @@ export class Logger {
 
     error(msg: string, ...args: any[]): void {
         this.updateLogLevelIfChanged()
-        const errorInstance = args.find((arg) => (arg instanceof Error))
+        const errorInstance = args.find((arg) => (arg.constructor.name === 'Error'
+            || arg.constructor.name === 'AggregateError'
+            || arg.constructor.name === 'EvalError'
+            || arg.constructor.name === 'RangeError'
+            || arg.constructor.name === 'ReferenceError'
+            || arg.constructor.name === 'SyntaxError'
+            || arg.constructor.name === 'TypeError'
+            || arg.constructor.name === 'URIError'
+        ))
         if (errorInstance !== undefined) {
             this.logger.error({ err: errorInstance }, msg, ...args)
         } else {

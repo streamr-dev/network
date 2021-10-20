@@ -43,7 +43,7 @@ export default class TrackerMessage {
         this.requestId = requestId
     }
 
-    static registerSerializer(version: number, type: number, serializer: Serializer<TrackerMessage>) {
+    static registerSerializer(version: number, type: number, serializer: Serializer<TrackerMessage>): void {
         // Check the serializer interface
         if (!serializer.fromArray) {
             throw new Error(`Serializer ${JSON.stringify(serializer)} doesn't implement a method fromArray!`)
@@ -63,11 +63,11 @@ export default class TrackerMessage {
         serializerByVersionAndType[version][type] = serializer
     }
 
-    static unregisterSerializer(version: number, type: TrackerMessageType) {
+    static unregisterSerializer(version: number, type: TrackerMessageType): void {
         delete serializerByVersionAndType[version][type]
     }
 
-    static getSerializer(version: number, type: TrackerMessageType) {
+    static getSerializer(version: number, type: TrackerMessageType): Serializer<TrackerMessage> {
         const serializersByType = serializerByVersionAndType[version]
         if (!serializersByType) {
             throw new UnsupportedVersionError(version, `Supported versions: [${TrackerMessage.getSupportedVersions()}]`)
@@ -79,18 +79,18 @@ export default class TrackerMessage {
         return clazz
     }
 
-    static getSupportedVersions() {
+    static getSupportedVersions(): number[] {
         return Object.keys(serializerByVersionAndType).map((key) => parseInt(key, 10))
     }
 
-    serialize(version = this.version, ...typeSpecificSerializeArgs: any[]) {
+    serialize(version = this.version, ...typeSpecificSerializeArgs: any[]): string {
         return JSON.stringify(TrackerMessage.getSerializer(version, this.type).toArray(this, ...typeSpecificSerializeArgs))
     }
 
     /**
      * Takes a serialized representation (array or string) of a message, and returns a ControlMessage instance.
      */
-    static deserialize(msg: any[] | string, ...typeSpecificDeserializeArgs: any[]) {
+    static deserialize(msg: any[] | string, ...typeSpecificDeserializeArgs: any[]): TrackerMessage {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
 
         /* eslint-disable prefer-destructuring */

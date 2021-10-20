@@ -12,7 +12,7 @@ import pkg from '../package.json'
 
 const program = new Command()
 program
-    .arguments('<name>')
+    .arguments('<streamId>')
     .description('create a new stream')
     .option('-d, --description <description>', 'define a description')
     .option('-c, --config <config>', 'define a configuration as JSON', (s: string) => JSON.parse(s))
@@ -21,9 +21,9 @@ program
 authOptions(program)
 envOptions(program)
     .version(pkg.version)
-    .action((name: string, options: any) => {
+    .action((streamIdOrPath: string, options: any) => {
         const body: any = {
-            name,
+            id: streamIdOrPath,
             description: options.description,
             config: options.config,
             partitions: options.partitions

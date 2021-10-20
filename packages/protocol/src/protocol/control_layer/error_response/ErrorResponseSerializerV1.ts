@@ -7,7 +7,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 1
 
 export default class ErrorResponseSerializerV1 extends Serializer<ErrorResponse> {
-    toArray(errorResponse: ErrorResponse) {
+    toArray(errorResponse: ErrorResponse): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.ErrorResponse,
@@ -15,7 +15,7 @@ export default class ErrorResponseSerializerV1 extends Serializer<ErrorResponse>
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): ErrorResponse {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

@@ -24,12 +24,15 @@ The different parameters allow to test different scenarios. For example one stre
 Build both the JS and Java parts:
 
 ```
-npm ci && gradle fatjar
+make install
 ```
 
 ## Usage
 
-The script `streamr-client-testing.sh` takes one required command-line argument:
+Gradle distribution's wrapper script can be called to execute the client_testing application:
+`client_testing-1.0-SNAPSHOT/bin/client_testing com.streamr.client_testing.Main`
+
+The app takes one required command-line argument:
 - `-s`, `--stream`: The stream setup to run. Value should be one of the following (the names should be self-explanatory. See the code for more specifics and `application.conf` for the number of publishers/subscribers):
     - `"stream-cleartext-unsigned"`
     - `"stream-cleartext-signed"`
@@ -48,6 +51,8 @@ The other command line arguments are optional:
 The client connection URLs, number of publishers and subscribers on each platform are set in a `.conf` file. The default is `config/default.conf`, and another file can be specific with the `--config` option.
 
 Log level is configured in `src/main/resources/log4j2.xml`.
+
+Run tests with `Makefile`: `TEST_NAME=stream-cleartext-unsigned CONFIG_NAME=java-only NUM_MESSAGES=5 make run`
 
 ### Late Subscribers with Resend
 
@@ -68,7 +73,7 @@ nbJavaSubscribers=2
 nbJavascriptPublishers=0
 nbJavascriptSubscribers=4
 
->> sh streamr-client-testing.sh -s stream-encrypted-shared-rotating-signed -c config/my-custom-config.conf
+>> TEST_NAME=stream-encrypted-shared-rotating-signed CONFIG_NAME=my-custom-config NUM_MESSAGES=2 make run
 ```
 
 ## Contributing

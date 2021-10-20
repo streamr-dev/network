@@ -6,6 +6,7 @@ import {
     authOptions,
     exitWithHelpIfArgsNotBetween,
     formStreamrOptionsWithEnv,
+    getStreamId,
 } from './common'
 import pkg from '../package.json'
 import EasyTable from 'easy-table'
@@ -14,10 +15,11 @@ const getStorageNodes = async (streamId: string | undefined, client: StreamrClie
     if (streamId !== undefined) {
         const stream = await client.getStream(streamId)
         const storageNodes = await stream.getStorageNodes()
-        return storageNodes.map((storageNode) => storageNode.getAddress())
+        return storageNodes.map((storageNode) => storageNode.address)
     } else {
         // all storage nodes (currently there is only one)
-        return [client.options.storageNode.address]
+        const nodes = await client.getNodes()
+        return nodes.map((n) => n.address)
     }
 }
 
@@ -25,12 +27,15 @@ const program = new Command()
 program
     .description('fetch a list of storage nodes')
     .option('-s, --stream <streamId>', 'only storage nodes which store the given stream (needs authentication)')
+
 authOptions(program)
+
 envOptions(program)
     .version(pkg.version)
     .action((options: any) => {
         const client = new StreamrClient(formStreamrOptionsWithEnv(options))
-        getStorageNodes(options.stream, client).then((addresses: string[]) => {
+        const streamId = getStreamId(options.stream, options)
+        getStorageNodes(streamId, client).then((addresses: string[]) => {
             if (addresses.length > 0) {
                 console.info(EasyTable.print(addresses.map((address: string) => ({
                     address

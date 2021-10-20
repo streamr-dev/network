@@ -1,15 +1,12 @@
 import http from 'http'
-import { startTracker, startNetworkNode, Tracker, NetworkNode } from 'streamr-network'
-import { wait } from 'streamr-test-utils'
+import { startTracker, Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } from '../../../utils'
+import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 const httpPort1 = 12371
 const wsPort1 = 12372
-const networkPort1 = 12373
-const networkPort2 = 12374
 const trackerPort = 12375
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
@@ -25,51 +22,51 @@ const httpGet = (url: string): Promise<[number, string]> => { // return tuple is
     })
 }
 
-const WAIT_TIME_TO_LAND_IN_STORAGE = 3000
-
 describe('DataMetadataEndpoints', () => {
     let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
-    let publisherNode: NetworkNode
     const storageNodeAccount = Wallet.createRandom()
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
-        const engineAndEditorAccount = Wallet.createRandom()
+
+        const storageNodeRegistry = [{
+            address: storageNodeAccount.address,
+            url: `http://127.0.0.1:${httpPort1}`
+        }]
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
+            id: 'tracker-DataMetadataEndpoints'
         })
-        publisherNode = await startNetworkNode({
-            host: '127.0.0.1',
-            port: networkPort1,
-            id: 'publisherNode',
-            trackers: [tracker.getAddress()]
-        })
-        publisherNode.start()
+        const engineAndEditorAccount = Wallet.createRandom()
+        const trackerInfo = tracker.getConfigRecord()
+
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
-            networkPort: networkPort2,
             trackerPort,
+            trackerId: trackerInfo.id,
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [tracker.getAddress()]
+            storageNodeConfig: { registry: storageNodeRegistry }
         })
-        client1 = createClient(wsPort1)
-        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
+        client1 = createClient(tracker, undefined, {
+            storageNodeRegistry: storageNodeRegistry,
+        })
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     }, 10 * 1000)
 
     afterAll(async () => {
         await tracker.stop()
-        await client1.ensureDisconnected()
-        await publisherNode.stop()
-        await storageNode.close()
+        await client1.destroy()
+        await storageNode.stop()
         await assignmentEventManager.close()
     })
 
@@ -97,9 +94,7 @@ describe('DataMetadataEndpoints', () => {
     })
 
     async function setUpStream(): Promise<Stream> {
-        const freshStream = await client1.createStream({
-            name: 'DataMetadataEndpoints.test.ts-' + Date.now()
-        })
+        const freshStream = await createTestStream(client1, module)
         await assignmentEventManager.addStreamToStorageNode(freshStream.id, storageNodeAccount.address, client1)
         await waitForStreamPersistedInStorageNode(freshStream.id, 0, '127.0.0.1', httpPort1)
         return freshStream
@@ -116,18 +111,17 @@ describe('DataMetadataEndpoints', () => {
         await client1.publish(stream.id, {
             key: 3
         })
-        await client1.publish(stream.id, {
+        const lastItem = await client1.publish(stream.id, {
             key: 4
         })
+        await client1.waitForStorage(lastItem)
 
-        await wait(WAIT_TIME_TO_LAND_IN_STORAGE)
-
-        const url = `http://localhost:${httpPort1}/api/v1/streams/${stream.id}/metadata/partitions/0`
+        const url = `http://localhost:${httpPort1}/api/v1/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
         expect(status).toEqual(200)
-        expect(res.totalBytes).toEqual(1199)
+        expect(res.totalBytes).toEqual(1443)
         expect(res.totalMessages).toEqual(4)
         expect(
             new Date(res.firstMessage).getTime()

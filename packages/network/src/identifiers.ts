@@ -1,5 +1,5 @@
-import { TrackerLayer } from 'streamr-client-protocol'
-import { RtcSubTypes } from './logic/RtcMessage'
+import { SmartContractRecord, TrackerLayer } from 'streamr-client-protocol'
+import { NodeId } from './logic/node/Node'
 
 /**
  * Uniquely identifies a stream
@@ -50,39 +50,31 @@ export interface Location {
     city: string | null
 }
 
-export interface StatusStreams {
-    [key: string]: { // StreamKey
-        inboundNodes: string[]
-        outboundNodes: string[]
-        counter: number
-    }
+export interface StreamStatus {
+    streamKey: StreamKey
+    neighbors: NodeId[]
+    counter: number // TODO this field could be a field of "Status" interface, not this interface?
 }
 
 export interface Status {
-    streams: StatusStreams
-    rtts: Rtts
+    stream: StreamStatus
+    rtts: Rtts | null
     location: Location
     started: string
-    singleStream: boolean // indicate whether this is a status update for only a single stream
+    extra: Record<string, unknown>
 }
 
-export type OfferMessage = {
-    subType: RtcSubTypes.RTC_OFFER
-    data: {
-        description: string
-    }
+export enum RtcSubTypes {
+    ICE_CANDIDATE = 'iceCandidate',
+    RTC_OFFER = 'rtcOffer',
+    RTC_ANSWER = 'rtcAnswer',
+    RTC_CONNECT = 'rtcConnect',
 }
 
-export type AnswerMessage = {
-    subType: RtcSubTypes.RTC_ANSWER
+export type RtcIceCandidateMessage = {
+    subType: RtcSubTypes.ICE_CANDIDATE
     data: {
-        description: string
-    }
-}
-
-export type RemoteCandidateMessage = {
-    subType: RtcSubTypes.REMOTE_CANDIDATE
-    data: {
+        connectionId: string,
         candidate: string
         mid: string
     }
@@ -95,32 +87,32 @@ export type RtcConnectMessage = {
     }
 }
 
-export type LocalDescriptionMessage = {
-    subType: RtcSubTypes.LOCAL_DESCRIPTION
+export type RtcOfferMessage = {
+    subType: RtcSubTypes.RTC_OFFER
     data: {
-        type: "answer" | "offer"
+        connectionId: string,
+        description: string,
+    }
+}
+
+export type RtcAnswerMessage = {
+    subType: RtcSubTypes.RTC_ANSWER
+    data: {
+        connectionId: string,
         description: string
     }
 }
 
-export type LocalCandidateMessage = {
-    subType: RtcSubTypes.LOCAL_CANDIDATE
-    data: {
-        candidate: string
-        mid: string
-    }
-}
-
 export type RelayMessage = (
-    OfferMessage
-        | AnswerMessage
-        | RemoteCandidateMessage
+    RtcOfferMessage
+        | RtcAnswerMessage
+        | RtcIceCandidateMessage
         | RtcConnectMessage
-        | LocalDescriptionMessage
-        | LocalCandidateMessage
     ) & TrackerLayer.RelayMessage
 
 export interface RtcErrorMessage {
-    targetNode: string
+    targetNode: NodeId
     errorCode: string
 }
+
+export type TrackerInfo = SmartContractRecord

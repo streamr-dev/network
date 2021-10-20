@@ -1,8 +1,7 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
-
-import { MetricsContext, startNetworkNode, startTracker } from '../../src/composition'
+import { MetricsContext, createNetworkNode, startTracker } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -13,26 +12,27 @@ describe('latency metrics', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 32910,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 32910
+            },
             id: 'tracker'
         })
-
+        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
         metricsContext = new MetricsContext('node1')
-        node = await startNetworkNode({
-            host: '127.0.0.1',
-            port: 32911,
+        node = createNetworkNode({
             id: 'node1',
-            trackers: [tracker.getAddress()],
+            trackers: [trackerInfo],
             metricsContext
         })
-
         node.start()
     })
 
     afterEach(async () => {
-        await node.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            node.stop(),
+            tracker.stop()
+        ])
     })
 
     it('should fetch empty metrics', async () => {

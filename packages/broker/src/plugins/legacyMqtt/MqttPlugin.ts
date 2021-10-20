@@ -5,6 +5,7 @@ import { MqttServer } from './MqttServer'
 import { Plugin, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { Schema } from 'ajv'
 
 const logger = new Logger(module)
 
@@ -21,7 +22,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         super(options)
     }
 
-    async start() {
+    async start(): Promise<void> {
         if (this.pluginConfig.port === undefined) {
             throw new MissingConfigError('port')
         }
@@ -39,11 +40,11 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         )
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         return this.mqttServer!.close()
     }
 
-    getConfigSchema() {
+    getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

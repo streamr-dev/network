@@ -13,7 +13,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:streamr-dev/cli-tools.git"
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/cli-tools"
   },
   "keywords": [
     "streamr",
@@ -30,19 +31,20 @@
   "dependencies": {
     "commander": "^7.2.0",
     "easy-table": "^1.1.1",
+    "ethers": "^5.3.1",
     "event-stream": "^4.0.1",
-    "streamr-client": "^5.4.2"
+    "streamr-client": "^6.0.0-alpha.11"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/jest": "^26.0.23",
-    "@typescript-eslint/eslint-plugin": "^4.24.0",
-    "@typescript-eslint/parser": "^4.24.0",
-    "eslint": "^7.26.0",
-    "eslint-config-streamr-ts": "^3.0.1",
+    "@types/jest": "^27.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.31.2",
+    "@typescript-eslint/parser": "^4.31.2",
+    "eslint": "^7.32.0",
+    "eslint-config-streamr-ts": "^4.0.1",
     "eslint-plugin-promise": "^5.1.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.3.4"
   }
 }

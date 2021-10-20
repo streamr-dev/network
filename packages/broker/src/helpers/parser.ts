@@ -1,4 +1,4 @@
-import { Request } from 'express'
+import { ParsedQs } from 'qs'
 
 export const parsePositiveInteger = (n: string): number|never => {
     const parsed = parseInt(n)
@@ -25,11 +25,15 @@ export const parseTimestamp = (millisOrString: number|string): number|never => {
     }
 }
 
-export const parseQueryParameter = <T>(name: string, req: Request, parser: (input: string) => T): T|undefined => {
-    const value = req.query[name] as string
+export const parseQueryParameter = <T>(name: string, query: ParsedQs, parser: (input: string) => T): T|undefined => {
+    const value = query[name] as string
     if (value !== undefined) {
         return parser(value)
     } else {
         return undefined
     }
+}
+
+export const parseQueryParameterArray = <T>(name: string, query: ParsedQs, parser: (input: string) => T): T[]|undefined => {
+    return parseQueryParameter(name, query, (input) => input.split(',').map((part) => parser(part)))
 }

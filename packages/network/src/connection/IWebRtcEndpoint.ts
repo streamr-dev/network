@@ -1,4 +1,4 @@
-import { PeerInfo } from './PeerInfo'
+import { PeerId, PeerInfo } from './PeerInfo'
 import { Rtts } from '../identifiers'
 
 export enum Event {
@@ -18,15 +18,16 @@ export interface IWebRtcEndpoint {
     on(event: Event.HIGH_BACK_PRESSURE, listener: (peerInfo: PeerInfo) => void): this
     on(event: Event.LOW_BACK_PRESSURE, listener: (peerInfo: PeerInfo) => void): this
 
-    connect(targetPeerId: string, routerId: string, isOffering: boolean|undefined): Promise<string>
-    send(targetPeerId: string, message: string): Promise<void>
-    close(receiverNodeId: string, reason: string): void
+    connect(targetPeerId: PeerId, routerId: string, trackerInstructed: boolean): Promise<PeerId>
+    send(targetPeerId: PeerId, message: string): Promise<void>
+    close(receiverPeerId: PeerId, reason: string): void
     getRtts(): Readonly<Rtts>
     getPeerInfo(): Readonly<PeerInfo>
     getAddress(): string
     stop(): void
-    getNegotiatedMessageLayerProtocolVersionOnNode(peerId: string): number | undefined
-    getNegotiatedControlLayerProtocolVersionOnNode(peerId: string): number | undefined
+    getNegotiatedMessageLayerProtocolVersionOnNode(peerId: PeerId): number | undefined
+    getNegotiatedControlLayerProtocolVersionOnNode(peerId: PeerId): number | undefined
     getDefaultMessageLayerProtocolVersion(): number
     getDefaultControlLayerProtocolVersion(): number
+    getAllConnectionNodeIds(): PeerId[]
 }

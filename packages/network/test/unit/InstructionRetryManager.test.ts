@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { InstructionRetryManager } from '../../src/logic/InstructionRetryManager'
+import { InstructionRetryManager } from '../../src/logic/node/InstructionRetryManager'
 
 describe('InstructionRetryManager', () => {
     let handlerCb: any
@@ -13,7 +13,7 @@ describe('InstructionRetryManager', () => {
     })
 
     afterEach(() => {
-        instructionRetryManager.reset()
+        instructionRetryManager.stop()
     })
 
     function createInstruction(streamId: string, counter: number) {
@@ -50,9 +50,9 @@ describe('InstructionRetryManager', () => {
         instructionRetryManager.add(createInstruction('stream-4', 4), 'tracker-1')
         instructionRetryManager.add(createInstruction('stream-5', 5), 'tracker-2')
 
-        await wait(220)
+        await wait(2000)
 
-        expect(handlerCb.mock.calls).toEqual([
+        expect(handlerCb.mock.calls).toEqual(expect.arrayContaining([
             [createInstruction('stream-1', 1), 'tracker-1', false],
             [createInstruction('stream-2', 2), 'tracker-2', false],
             [createInstruction('stream-3', 3), 'tracker-1', false],
@@ -63,7 +63,7 @@ describe('InstructionRetryManager', () => {
             [createInstruction('stream-3', 3), 'tracker-1', true],
             [createInstruction('stream-4', 4), 'tracker-1', true],
             [createInstruction('stream-5', 5), 'tracker-2', true],
-        ])
+        ]))
     })
     it('Instruction reattempts are updated properly per stream', async () => {
         instructionRetryManager.add(createInstruction('stream-1', 1), 'tracker-1')
@@ -98,7 +98,7 @@ describe('InstructionRetryManager', () => {
             [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
 
-        instructionRetryManager.removeStreamId('stream-1::0')
+        instructionRetryManager.removeStream('stream-1::0')
         await wait(110)
         expect(handlerCb.mock.calls).toEqual([
             [createInstruction('stream-1', 1), 'tracker-1', false],
@@ -115,7 +115,7 @@ describe('InstructionRetryManager', () => {
             [createInstruction('stream-1', 1), 'tracker-1', false],
             [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
-        instructionRetryManager.reset()
+        instructionRetryManager.stop()
         await wait(220)
         expect(handlerCb.mock.calls).toEqual([
             [createInstruction('stream-1', 1), 'tracker-1', false],

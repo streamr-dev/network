@@ -6,6 +6,7 @@ import {
     authOptions,
     exitWithHelpIfArgsNotBetween,
     formStreamrOptionsWithEnv,
+    getStreamId,
 } from './common'
 import pkg from '../package.json'
 
@@ -16,8 +17,9 @@ program
 authOptions(program)
 envOptions(program)
     .version(pkg.version)
-    .action((storageNodeAddress: string, streamId: string, options: any) => {
+    .action((storageNodeAddress: string, streamIdOrPath: string, options: any) => {
         const client = new StreamrClient(formStreamrOptionsWithEnv(options))
+        const streamId = getStreamId(streamIdOrPath, options)!
         client.getStream(streamId)
             .then((stream: Stream) => stream.addToStorageNode(storageNodeAddress))
             .catch((err) => {

@@ -3,7 +3,8 @@ import { Command } from 'commander'
 import {
     envOptions,
     authOptions,
-    formStreamrOptionsWithEnv
+    formStreamrOptionsWithEnv,
+    getStreamId
 } from './common'
 import pkg from '../package.json'
 import { AnonymousStreamPermisson, StreamOperation, StreamrClient, UserStreamPermission } from 'streamr-client'
@@ -47,10 +48,11 @@ program
 authOptions(program)
 envOptions(program)
     .version(pkg.version)
-    .action(async (streamId: string, user: string, operationIds: string[], options: any) => {
+    .action(async (streamIdOrPath: string, user: string, operationIds: string[], options: any) => {
         const operations = operationIds.map((o: string) => getOperation(o))
         const target = getTarget(user)
         const client = new StreamrClient(formStreamrOptionsWithEnv(options))
+        const streamId = getStreamId(streamIdOrPath, options)!
         const stream = await client.getStream(streamId)
         const tasks = operations.map((operation: StreamOperation) => stream.grantPermission(operation, target))
         const permissions = await Promise.all(tasks)

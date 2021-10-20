@@ -1,7 +1,7 @@
 import { waitForCondition } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
-import { InstructionThrottler } from '../../src/logic/InstructionThrottler'
+import { InstructionThrottler } from '../../src/logic/node/InstructionThrottler'
 
 describe('InstructionThrottler', () => {
     let handlerCb: any

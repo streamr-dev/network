@@ -1,8 +1,9 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/streamr-client-javascript/master/readme-header-img.png" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
   </a>
 </p>
+
 <h1 align="left">
   Streamr JavaScript Client
 </h1>
@@ -12,14 +13,9 @@
 [![GitHub stars](https://img.shields.io/github/stars/streamr-dev/streamr-client-javascript.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/streamr-client-javascript/)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
-By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams. The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
+This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to data, as well as contains convenience functions for creating and managing streams.
 
-Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
-
-
-### Breaking changes notice
-
-* Date TBD: Support for unsigned data will be dropped.
+Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ----
 
@@ -36,22 +32,18 @@ The client is available on [npm](https://www.npmjs.com/package/streamr-client) a
 npm install streamr-client
 ```
 
-Node v14 or higher is recommended if you intend to use the client in a Node environment. For example, inside a script.
-
 ## Usage
 
-Here are some quick examples. More detailed examples for the browser and node.js can be found [here](https://github.com/streamr-dev/streamr-client/tree/master/examples).
+Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
 
-Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
-
-If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
 ### Creating a StreamrClient instance
 
 ```js
 const client = new StreamrClient({
     auth: {
-        privateKey: 'your-private-key'
+        privateKey: 'your-ethereum-private-key'
     }
 })
 ```
@@ -59,7 +51,7 @@ const client = new StreamrClient({
 When using Node.js remember to import the library with:
 
 ```js
-import { StreamrClient } from 'streamr-client';
+import { StreamrClient } from 'streamr-client'
 ```
 
 ### Subscribing to real-time events in a stream
@@ -139,14 +131,6 @@ await stream.publish(msg)
 
 ----
 
-## API Docs
-
-The [API docs](https://streamr-dev.github.io/streamr-client-javascript/) are automatically generated from the TypeScript source code. They can also be rebuilt locally via:
-
-```
-npm run docs
-```
-
 ## Client options
 
 | Option                   | Default value                    | Description                                                                                                                                                                                                                                                                                                                             |
@@ -191,7 +175,7 @@ const client = new StreamrClient({
 })
 ```
 
-(Authenticating with a pre-existing session token, for internal use by the Streamr app):
+Authenticating with a pre-existing session token (used internally by the Streamr app):
 
 ```js
 const client = new StreamrClient({
@@ -200,6 +184,24 @@ const client = new StreamrClient({
     }
 })
 ```
+
+To extract the session token from an authenticated client:
+
+```js
+const bearerToken = await client.session.getSessionToken()
+```
+
+Then for example, 
+```js
+    axios({
+        headers: {
+            Authorization: `Bearer ${bearerToken}`,
+        },
+        ...
+    )}
+```
+
+Note, session tokens expire after four hours and may need to be refreshed.
 
 ## Connecting
 
@@ -237,7 +239,7 @@ await client.connect()
 | subscribe(options, callback) | Subscribes to a stream. Messages in this stream are passed to the `callback` function. See below for subscription options. Returns a Promise resolving a `Subscription` object. |
 | unsubscribe(Subscription)    | Unsubscribes the given `Subscription`. Returns a promise.                                                                                                                       |
 | unsubscribeAll(`streamId`)   | Unsubscribes all `Subscriptions` for `streamId`. Returns a promise.                                                                                                             |
-| getSubscriptions(`streamId`) | Returns a list of `Subscriptions` for `streamId`. Returns a promise.                                                                                                            |
+| getSubscriptions() | Returns a list of all active `Subscriptions` on this client. Returns a promise.                                                                                                            |
 
 ### Message handler callback
 
@@ -361,6 +363,11 @@ To get an existing (previously deployed) `DataUnion` instance:
 const dataUnion = client.getDataUnion(dataUnionAddress)
 ```
 
+Or to verify untrusted (e.g. user) input, use:
+```js
+const dataUnion = await client.safeGetDataUnion(dataUnionAddress)
+```
+
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
 These DataUnion-specific options can be given to `new StreamrClient` options:
 
@@ -373,16 +380,22 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 
 ### Admin Functions
 
+Admin functions require xDai tokens on the xDai network. To get xDai you can either use a [faucet](https://www.xdaichain.com/for-users/get-xdai-tokens/xdai-faucet) or you can reach out on the [Streamr Discord #dev channel](https://discord.gg/gZAm8P7hK8).
+
+Adding members using admin functions is not at feature parity with the member function `join`. The newly added member will not be granted publish permissions to the streams inside the Data Union. This will need to be done manually using, `streamr.grantPermission(stream_publish, user)`. Similarly, after removing a member using the admin function `removeMembers`, the publish permissions will need to be removed in a secondary step using `revokePermission(permissionId)`.
+
 | Name                              | Returns             | Description                                                    |
 | :-------------------------------- | :------------------ | :------------------------------------------------------------- |
 | createSecret(\[name])             | string              | Create a secret for a Data Union                               |
-| setAdminFee(newFeeFraction)       | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
 | addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
 | removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
+| setAdminFee(newFeeFraction[, ethersOptions]) `**`                                                     | Transaction receipt     | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
+| withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send some of the withdrawable earnings to the address signed off by the member |
 
-`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case. 
+`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.<br>
+`**` `ethersOptions` that `setAdminFee` takes can be found as ["overrides" documented in docs.ethers.io](https://docs.ethers.io/v5/api/contract/contract/#contract-functionsSend).
 
 Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
 
@@ -408,6 +421,7 @@ const receipt = await dataUnion.addMembers([
 | Name                                                                  | Returns                   | Description                                                                 |
 | :-------------------------------------------------------------------- | :------------------------ | :-------------------------------------------------------------------------- |
 | join(\[secret])                                                       | JoinRequest               | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
+| part()                                                                | Transaction receipt       | Leave the Data Union
 | isMember(memberAddress)                                               | boolean                   |                                                                             |
 | withdrawAll(\[[options](#withdraw-options)\])                         | Transaction receipt `*`   | Withdraw funds from Data Union                                              |
 | withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\])     | Transaction receipt `*`   | Donate/move your earnings to recipientAddress instead of your memberAddress |
@@ -476,15 +490,16 @@ const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 
 ### Withdraw options
 
-The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
+The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned`, `withdrawAmountToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
 
-| Name              | Default               | Description                                                                           |
-| :---------------- | :-------------------- | :----------------------------------------------------------------------------------   |
-| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)   |
-| payForTransport   | true                  | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge |
-| waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                |
-| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                 |
-| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                             |
+| Name              | Default               | Description                                                                               |
+| :---------------- | :-------------------- | :--------------------------------------------------------------------------------------   |
+| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)       |
+| payForTransport   | true                  | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge|
+| waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                    |
+| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                     |
+| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                                 |
+| gasPrice          | network estimate      | Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge    | 
 
 These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low),
 but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
