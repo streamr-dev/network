@@ -4,7 +4,7 @@ import { NodeToNode, Event as NodeToNodeEvent } from '../../protocol/NodeToNode'
 import { NodeToTracker } from '../../protocol/NodeToTracker'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { promiseTimeout } from '../../helpers/PromiseTools'
-import { StreamManager } from './StreamManager'
+import { SPIDManager } from './SPIDManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
@@ -55,7 +55,7 @@ export class Node extends EventEmitter {
     private readonly nodeConnectTimeout: number
     private readonly started: string
 
-    protected readonly streams: StreamManager
+    protected readonly streams: SPIDManager
     private readonly disconnectionManager: DisconnectionManager
     private readonly propagation: Propagation
     private readonly trackerManager: TrackerManager
@@ -84,7 +84,7 @@ export class Node extends EventEmitter {
             .addRecordedMetric('onNodeDisconnect')
             .addFixedMetric('latency')
 
-        this.streams = new StreamManager()
+        this.streams = new SPIDManager()
         this.disconnectionManager = new DisconnectionManager({
             getAllNodes: this.nodeToNode.getAllConnectionNodeIds,
             hasSharedStreams: this.streams.isNodePresent.bind(this.streams),
@@ -177,7 +177,7 @@ export class Node extends EventEmitter {
         if (!this.streams.isSetUp(spid)) {
             logger.trace('add %s to streams', spid)
             this.streams.setUpSPID(spid)
-            this.trackerManager.onNewStream(spid) // TODO: perhaps we should react based on event from StreamManager?
+            this.trackerManager.onNewStream(spid) // TODO: perhaps we should react based on event from SPIDManager?
             if (sendStatus) {
                 this.trackerManager.sendStreamStatus(spid)
             }

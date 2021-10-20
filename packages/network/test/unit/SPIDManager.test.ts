@@ -1,13 +1,13 @@
 import { MessageLayer, SPID } from 'streamr-client-protocol'
-import { StreamManager } from '../../src/logic/node/StreamManager'
+import { SPIDManager } from '../../src/logic/node/SPIDManager'
 
 const { MessageID, MessageRef } = MessageLayer
 
-describe('StreamManager', () => {
-    let manager: StreamManager
+describe('SPIDManager', () => {
+    let manager: SPIDManager
 
     beforeEach(() => {
-        manager = new StreamManager()
+        manager = new SPIDManager()
     })
 
     test('starts out empty', () => {
@@ -15,7 +15,7 @@ describe('StreamManager', () => {
         expect(Array.from(manager.getSPIDKeys())).toEqual([])
     })
 
-    test('setting up streams and testing values', () => {
+    test('setting up SPIDs and testing values', () => {
         manager.setUpSPID(new SPID('stream-1', 0))
         manager.setUpSPID(new SPID('stream-2', 0))
         manager.setUpSPID(new SPID('stream-1', 1))
@@ -31,15 +31,15 @@ describe('StreamManager', () => {
         expect(manager.getNeighborsForSPID(new SPID('stream-2', 0))).toBeEmpty()
     })
 
-    test('cannot re-setup same stream', () => {
+    test('cannot re-setup same SPID', () => {
         manager.setUpSPID(new SPID('stream-id', 0))
 
         expect(() => {
             manager.setUpSPID(new SPID('stream-id', 0))
-        }).toThrowError('Stream stream-id#0 already set up')
+        }).toThrowError('Stream partition stream-id#0 already set up')
     })
 
-    test('can duplicate detect on previously set up stream', () => {
+    test('can duplicate detect on previously set up SPID', () => {
         manager.setUpSPID(new SPID('stream-id', 0))
 
         expect(() => {
@@ -50,13 +50,13 @@ describe('StreamManager', () => {
         }).not.toThrowError()
     })
 
-    test('cannot duplicate detect on non-existing stream', () => {
+    test('cannot duplicate detect on non-existing SPID', () => {
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
                 new MessageID('stream-id', 0, 10, 0, 'publisher-id', 'session-id'),
                 new MessageRef(5, 0)
             )
-        }).toThrowError('Stream stream-id#0 is not set up')
+        }).toThrowError('Stream partition stream-id#0 is not set up')
     })
 
     test('duplicate detection is per publisher, msgChainId', () => {
@@ -87,7 +87,7 @@ describe('StreamManager', () => {
         )).toEqual(true)
     })
 
-    test('adding neighbor nodes to a set-up stream', () => {
+    test('adding neighbor nodes to a set-up SPID', () => {
         const streamId = new SPID('stream-id', 0)
         const streamId2 = new SPID('stream-id-2', 0)
 
@@ -113,7 +113,7 @@ describe('StreamManager', () => {
         expect(manager.isNodePresent('node-not-present')).toEqual(false)
     })
 
-    test('removing node from stream removes it from neighbors', () => {
+    test('removing node from SPID removes it from neighbors', () => {
         const streamId = new SPID('stream-id', 0)
         const streamId2 = new SPID('stream-id-2', 0)
 
@@ -147,7 +147,7 @@ describe('StreamManager', () => {
         expect(manager.isNodePresent('node-1')).toEqual(false)
     })
 
-    test('remove node from all streams', () => {
+    test('remove node from all SPIDs', () => {
         manager.setUpSPID(new SPID('stream-1', 0))
         manager.setUpSPID(new SPID('stream-1', 1))
         manager.setUpSPID(new SPID('stream-2', 0))
@@ -174,7 +174,7 @@ describe('StreamManager', () => {
         expect(manager.isNodePresent('node')).toEqual(false)
     })
 
-    test('remove stream', () => {
+    test('remove SPID', () => {
         manager.setUpSPID(new SPID('stream-1', 0))
         manager.setUpSPID(new SPID('stream-2', 0))
 

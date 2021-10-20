@@ -16,7 +16,7 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
     return `${publisherId}-${msgChainId}`
 }
 
-export class StreamManager {
+export class SPIDManager {
     private readonly states: Map<SPIDKey,SPIDState> = new Map<SPIDKey,SPIDState>()
 
     setUpSPID(spid: SPID): void {

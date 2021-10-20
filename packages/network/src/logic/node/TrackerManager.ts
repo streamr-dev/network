@@ -3,7 +3,7 @@ import { Location, Rtts, TrackerInfo } from '../../identifiers'
 import { TrackerId } from '../tracker/Tracker'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../protocol/NodeToTracker'
-import { StreamManager } from './StreamManager'
+import { SPIDManager } from './SPIDManager'
 import { Logger } from '../../helpers/Logger'
 import { NodeId } from './Node'
 import { InstructionThrottler } from './InstructionThrottler'
@@ -45,7 +45,7 @@ export class TrackerManager {
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private readonly trackerConnector: TrackerConnector
     private readonly nodeToTracker: NodeToTracker
-    private readonly streamManager: StreamManager
+    private readonly spidManager: SPIDManager
     private readonly rttUpdateInterval: number
     private readonly instructionThrottler: InstructionThrottler
     private readonly instructionRetryManager: InstructionRetryManager
@@ -56,13 +56,13 @@ export class TrackerManager {
     constructor(
         nodeToTracker: NodeToTracker,
         opts: TrackerManagerOptions,
-        streamManager: StreamManager,
+        streamManager: SPIDManager,
         metrics: Metrics,
         getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
     ) {
         this.nodeToTracker =  nodeToTracker
-        this.streamManager = streamManager
+        this.spidManager = streamManager
         this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
         this.metrics = metrics
             .addRecordedMetric('unexpectedTrackerInstructions')
@@ -126,7 +126,7 @@ export class TrackerManager {
     }
 
     private getStreamsForTracker(trackerId: TrackerId): Array<SPID> {
-        return [...this.streamManager.getSPIDKeys()]
+        return [...this.spidManager.getSPIDKeys()]
             .map((key) => SPID.from(key))
             .filter((spid) => this.getTrackerId(spid) === trackerId)
     }
@@ -145,7 +145,7 @@ export class TrackerManager {
     private async sendStatus(spid: SPID, trackerId: TrackerId): Promise<void> {
         const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
         const status = {
-            stream: this.streamManager.getSPIDStatus(spid),
+            stream: this.spidManager.getSPIDStatus(spid),
             ...nodeDescriptor
         }
         try {
@@ -178,7 +178,7 @@ export class TrackerManager {
         logger.trace('received instructions for %s, nodes to connect %o', spid, nodeIds)
 
         this.subscriber.subscribeToStreamIfHaveNotYet(spid, false)
-        const currentNodes = this.streamManager.getNeighborsForSPID(spid)
+        const currentNodes = this.spidManager.getNeighborsForSPID(spid)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {
@@ -186,8 +186,8 @@ export class TrackerManager {
         })
 
         const results = await this.subscriber.subscribeToStreamsOnNode(nodeIds, spid, trackerId, reattempt)
-        if (this.streamManager.isSetUp(spid)) {
-            this.streamManager.updateCounter(spid, counter)
+        if (this.spidManager.isSetUp(spid)) {
+            this.spidManager.updateCounter(spid, counter)
         }
 
         // Log success / failures
