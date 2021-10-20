@@ -93,7 +93,7 @@ export class Node extends EventEmitter {
             cleanUpIntervalInMs: 2 * 60 * 1000
         })
         this.propagation = new Propagation({
-            getNeighbors: this.streams.getNeighborsForStream.bind(this.streams),
+            getNeighbors: this.streams.getNeighborsForSPID.bind(this.streams),
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
@@ -176,7 +176,7 @@ export class Node extends EventEmitter {
     subscribeToStreamIfHaveNotYet(spid: SPID, sendStatus = true): void {
         if (!this.streams.isSetUp(spid)) {
             logger.trace('add %s to streams', spid)
-            this.streams.setUpStream(spid)
+            this.streams.setUpSPID(spid)
             this.trackerManager.onNewStream(spid) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
                 this.trackerManager.sendStreamStatus(spid)
@@ -186,7 +186,7 @@ export class Node extends EventEmitter {
 
     unsubscribeFromStream(spid: SPID, sendStatus = true): void {
         logger.trace('remove %s from streams', spid)
-        this.streams.removeStream(spid)
+        this.streams.removeSPID(spid)
         this.trackerManager.onUnsubscribeFromStream(spid)
         if (sendStatus) {
             this.trackerManager.sendStreamStatus(spid)
@@ -268,7 +268,7 @@ export class Node extends EventEmitter {
     }
 
     private unsubscribeFromStreamOnNode(node: NodeId, spid: SPID, sendStatus = true): void {
-        this.streams.removeNodeFromStream(spid, node)
+        this.streams.removeNeighbor(spid, node)
         logger.trace('node %s unsubscribed from stream %s', node, spid)
         this.emit(Event.NODE_UNSUBSCRIBED, node, spid)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedStreams(node)
@@ -279,7 +279,7 @@ export class Node extends EventEmitter {
 
     private onNodeDisconnected(node: NodeId): void {
         this.metrics.record('onNodeDisconnect', 1)
-        const streams = this.streams.removeNodeFromAllStreams(node)
+        const streams = this.streams.removeNodeFromAllSPIDs(node)
         logger.trace('removed all subscriptions of node %s', node)
         streams.forEach((s) => {
             this.trackerManager.sendStreamStatus(s)

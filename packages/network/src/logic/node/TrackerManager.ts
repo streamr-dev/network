@@ -145,7 +145,7 @@ export class TrackerManager {
     private async sendStatus(spid: SPID, trackerId: TrackerId): Promise<void> {
         const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
         const status = {
-            stream: this.streamManager.getStreamStatus(spid),
+            stream: this.streamManager.getSPIDStatus(spid),
             ...nodeDescriptor
         }
         try {
@@ -178,7 +178,7 @@ export class TrackerManager {
         logger.trace('received instructions for %s, nodes to connect %o', spid, nodeIds)
 
         this.subscriber.subscribeToStreamIfHaveNotYet(spid, false)
-        const currentNodes = this.streamManager.getNeighborsForStream(spid)
+        const currentNodes = this.streamManager.getNeighborsForSPID(spid)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {
