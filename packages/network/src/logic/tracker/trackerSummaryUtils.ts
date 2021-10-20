@@ -24,9 +24,9 @@ export function getTopology(
     return topology
 }
 
-export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): OverlaySizes {
+export function getSPIDSizes(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): OverlaySizes {
     const spidKeys = findSPIDKeys(overlayPerStream, streamId, partition)
-    const streamSizes: OverlaySizes = spidKeys.map((spidKey) => {
+    const spidSizes: OverlaySizes = spidKeys.map((spidKey) => {
         const spid = SPID.from(spidKey)
         return {
             streamId: spid.streamId,
@@ -34,7 +34,7 @@ export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: str
             nodeCount: overlayPerStream[spidKey].getNumberOfNodes()
         }
     })
-    return streamSizes
+    return spidSizes
 }
 
 export function getNodeConnections(nodes: readonly NodeId[], overlayPerStream: OverlayPerStream): Record<NodeId,Set<NodeId>> {

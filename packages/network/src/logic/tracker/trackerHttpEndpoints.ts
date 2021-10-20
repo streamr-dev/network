@@ -6,7 +6,7 @@ import {
     findStreamsForNode,
     getNodeConnections,
     getTopology,
-    getStreamSizes
+    getSPIDSizes
 } from './trackerSummaryUtils'
 import { Logger } from '../../helpers/Logger'
 import { Tracker } from './Tracker'
@@ -138,7 +138,7 @@ export function trackerHttpEndpoints(
     })
     app.get('/topology-size/', async (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology-size/')
-        res.json(getStreamSizes(tracker.getOverlayPerStream()))
+        res.json(getSPIDSizes(tracker.getOverlayPerStream()))
     })
     app.get('/topology-size/:streamId/', async (req: express.Request, res: express.Response) => {
         const streamId = validateStreamId(req, res)
@@ -147,7 +147,7 @@ export function trackerHttpEndpoints(
         }
         
         staticLogger.debug(`request to /topology-size/${streamId}/`)
-        res.json(getStreamSizes(tracker.getOverlayPerStream(), streamId, null))
+        res.json(getSPIDSizes(tracker.getOverlayPerStream(), streamId, null))
     })
     app.get('/topology-size/:streamId/:partition/', async (req: express.Request, res: express.Response) => {
         const streamId = validateStreamId(req, res)
@@ -161,6 +161,6 @@ export function trackerHttpEndpoints(
         }
 
         staticLogger.debug(`request to /topology-size/${streamId}/${askedPartition}/`)
-        res.json(getStreamSizes(tracker.getOverlayPerStream(), streamId, askedPartition))
+        res.json(getSPIDSizes(tracker.getOverlayPerStream(), streamId, askedPartition))
     })
 }
