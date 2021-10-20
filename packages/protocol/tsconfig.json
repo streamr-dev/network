@@ -1,6 +1,7 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
     "compilerOptions": {
+        "noEmit": true,
         "composite": true,
         "outDir": "dist"
     },

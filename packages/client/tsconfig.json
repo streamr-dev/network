@@ -5,7 +5,9 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "strictBindCallApply": true,
+        "noEmit": true,
         "outDir": "dist",
+        "declarationDir": "dist/types",
         "lib": [
             "ES5",
             "ES2015",
