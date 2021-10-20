@@ -58,9 +58,27 @@ jobs:
       - run: npm run test-unit
         env:
           CI: true
-      - run: npm run test-integration
+      - name: Run test-integration
+        run: |
+          ulimit -c unlimited
+          mkdir -p /tmp/cores
+          chmod a+rwx /tmp/cores
+          echo "/tmp/cores/core.%p" | sudo tee /proc/sys/kernel/core_pattern
+          npm run test-integration
         env:
           CI: true
+      - if: failure()
+        name: Print core dump
+        run: |
+          if ls /tmp/cores/core.* 1> /dev/null 2>&1; then
+            echo "Core dump found, printing stack trace..."
+            sudo apt-get install -y gdb > /dev/null
+            for c in /tmp/cores/core.*; do
+              gdb node --core=$c --eval-command="set pagination off" --eval-command="info threads" --eval-command="backtrace" --eval-command="quit"
+              done
+          else
+            echo "No core dump found."
+          fi
 
   test-browser:
     name: Test on Browser Node ${{ matrix.node-version }}
