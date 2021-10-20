@@ -175,7 +175,7 @@ export class Node extends EventEmitter {
 
     subscribeToSPIDIfHaveNotYet(spid: SPID, sendStatus = true): void {
         if (!this.spidManager.isSetUp(spid)) {
-            logger.trace('add %s to streams', spid)
+            logger.trace('add %s to stream partitions', spid)
             this.spidManager.setUpSPID(spid)
             this.trackerManager.onNewStream(spid) // TODO: perhaps we should react based on event from SPIDManager?
             if (sendStatus) {
@@ -185,7 +185,7 @@ export class Node extends EventEmitter {
     }
 
     unsubscribeFromStream(spid: SPID, sendStatus = true): void {
-        logger.trace('remove %s from streams', spid)
+        logger.trace('remove %s from stream partitions', spid)
         this.spidManager.removeSPID(spid)
         this.trackerManager.onUnsubscribeFromStream(spid)
         if (sendStatus) {
