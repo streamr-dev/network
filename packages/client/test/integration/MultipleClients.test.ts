@@ -7,6 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
 // import { StorageNode } from '../../src/StorageNode'
 import { Stream, StreamOperation } from '../../src/Stream'
+import { Wallet } from 'ethers'
 
 jest.setTimeout(240000)
 // this number should be at least 10, otherwise late subscribers might not join
@@ -24,20 +25,17 @@ describeRepeats('PubSub with multiple clients', () => {
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
-        privateKey = clientOptions.auth.privateKey
+        privateKey = await getPrivateKey()
         mainClient = await createClient({
             id: 'main',
             auth: {
                 privateKey
             }
         })
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: clientOptions.storageNode.privatekey
-        } })
+
+        const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
         stream = await createTestStream(mainClient, module)
-        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
-        await stream.addToStorageNode(storageNode.getAddress())
-        await until(async () => { return mainClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
+        await stream.addToStorageNode(await storageNodeWallet.getAddress())
     })
 
     afterEach(async () => {

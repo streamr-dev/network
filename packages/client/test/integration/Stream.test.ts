@@ -19,7 +19,6 @@ describe('Stream', () => {
         } })
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
         await stream.addToStorageNode(storageNode)
-        await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
     })
 
     describe('detectFields()', () => {

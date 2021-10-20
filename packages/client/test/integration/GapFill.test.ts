@@ -10,7 +10,7 @@ import Subscription from '../../src/Subscription'
 import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg, clientOptions, until } from '../utils'
 
 const MAX_MESSAGES = 10
-jest.setTimeout(60000)
+jest.setTimeout(30000)
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
     let count = 0
@@ -56,8 +56,6 @@ describeRepeats('GapFill', () => {
         } })
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
         await stream.addToStorageNode(storageNode)
-        await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
-
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream, { waitForLast: true })
         return client
@@ -207,11 +205,11 @@ describeRepeats('GapFill', () => {
             it('can fill gaps in resends even if gap cannot be filled (ignores missing)', async () => {
                 let ts = 0
                 const node = await client.getNode()
-                let publishCount = 0
+                let publishCount = 1000
                 const publish = node.publish.bind(node)
                 node.publish = (msg) => {
                     publishCount += 1
-                    if (publishCount === 3) {
+                    if (publishCount === 1003) {
                         return undefined
                     }
 

@@ -1,15 +1,16 @@
 /* eslint-disable no-await-in-loop */
-import { clientOptions, describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, until } from '../utils'
+import { clientOptions, describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, until, getPrivateKey } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
+import { Wallet } from 'ethers'
 
 const TIMEOUT = 400 * 1000
 jest.setTimeout(30000)
-const publisherPrivateKey = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
-const subscriberPrivateKey = '0xd7609ae3a29375768fac8bc0f8c2f6ac81c5f2ffca2b981e6cf15460f01efe14'
 
 describeRepeats('Group Key Persistence', () => {
+    let publisherPrivateKey: string
+    let subscriberPrivateKey: string
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -29,18 +30,15 @@ describeRepeats('Group Key Persistence', () => {
                 requireEncryptedData: true,
                 ...streamOpts,
             })
-            const storageNodeClient = await createClient({ auth: {
-                privateKey: clientOptions.storageNode.privatekey
-            } })
-            const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
-            await stream.addToStorageNode(storageNode)
-            await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
-
+            const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+            await stream.addToStorageNode(await storageNodeWallet.getAddress())
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
         }
-
         beforeEach(async () => {
+            publisherPrivateKey = await getPrivateKey()
+            subscriberPrivateKey = await getPrivateKey()
+
             publisher = await setupPublisher({
                 id: 'publisher',
                 auth: {

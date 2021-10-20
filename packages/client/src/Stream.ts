@@ -1,4 +1,5 @@
 import { DependencyContainer, inject } from 'tsyringe'
+import fetch from 'node-fetch'
 
 export { GroupKey } from './encryption/Encryption'
 import { EthereumAddress } from './types'
@@ -15,6 +16,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { StorageNode } from './StorageNode'
+import { until } from './utils'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -132,7 +134,11 @@ class StreamrStream implements StreamMetadata {
     }
 
     async update() {
-        await this._streamRegistry.updateStream(this.toObject())
+        try {
+            await this._streamRegistry.updateStream(this.toObject())
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     toObject() : StreamProperties {
@@ -146,7 +152,11 @@ class StreamrStream implements StreamMetadata {
     }
 
     async delete() {
-        await this._streamRegistry.deleteStream(this.id)
+        try {
+            await this._streamRegistry.deleteStream(this.id)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async getPermissions() {
@@ -170,21 +180,37 @@ class StreamrStream implements StreamMetadata {
     }
 
     async grantPermission(operation: StreamOperation, recipientId: EthereumAddress) {
-        await this._streamRegistry.grantPermission(this.id, operation, recipientId.toLowerCase())
+        try {
+            await this._streamRegistry.grantPermission(this.id, operation, recipientId.toLowerCase())
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async grantPublicPermission(operation: StreamOperation) {
-        await this._streamRegistry.grantPublicPermission(this.id, operation)
+        try {
+            await this._streamRegistry.grantPublicPermission(this.id, operation)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async setPermissions(recipientId: EthereumAddress, edit: boolean,
         deletePerm: boolean, publish: boolean, subscribe: boolean, share: boolean) {
-        await this._streamRegistry.setPermissions(this.id, recipientId, edit,
-            deletePerm, publish, subscribe, share)
+        try {
+            await this._streamRegistry.setPermissions(this.id, recipientId, edit,
+                deletePerm, publish, subscribe, share)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async revokePermission(operation: StreamOperation, recipientId: EthereumAddress) {
-        await this._streamRegistry.revokePermission(this.id, operation, recipientId.toLowerCase())
+        try {
+            await this._streamRegistry.revokePermission(this.id, operation, recipientId.toLowerCase())
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async detectFields() {
@@ -216,23 +242,67 @@ class StreamrStream implements StreamMetadata {
     }
 
     async revokePublicPermission(operation: StreamOperation) {
-        await this._streamRegistry.revokePublicPermission(this.id, operation)
+        try {
+            await this._streamRegistry.revokePublicPermission(this.id, operation)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
-    async addToStorageNode(node: StorageNode | EthereumAddress) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
-        await this._nodeRegistry.addStreamToStorageNode(this.id, address)
+    async addToStorageNode(node: StorageNode | EthereumAddress, waitOptions: {
+        timeout?: number,
+        pollInterval?: number
+    } = {}) {
+        try {
+            const address = (node instanceof StorageNode) ? node.getAddress() : node
+            await this._nodeRegistry.addStreamToStorageNode(this.id, address)
+            await this.waitUntilStorageAssigned(waitOptions)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
+    }
+
+    async waitUntilStorageAssigned({
+        timeout = 30000,
+        pollInterval = 500
+    }: {
+        timeout?: number,
+        pollInterval?: number
+    } = {}) {
+        // wait for propagation: the storage node sees the database change in E&E and
+        // is ready to store the any stream data which we publish
+        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, pollInterval, () => (
+            `Propagation timeout when adding stream to a storage node: ${this.id}`
+        ))
+    }
+
+    private async isStreamStoredInStorageNode(streamId: string) {
+        const nodes = await this.getStorageNodes()
+        if (!nodes.length) { return false }
+        const url = `${nodes[0].url}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
+        const response = await fetch(url)
+        if (response.status === 200) {
+            return true
+        }
+        if (response.status === 404) { // eslint-disable-line padding-line-between-statements
+            return false
+        }
+        throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
     async removeFromStorageNode(node: StorageNode | EthereumAddress) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
-        return this._nodeRegistry.removeStreamFromStorageNode(this.id, address)
+        try {
+            const address = (node instanceof StorageNode) ? node.getAddress() : node
+            return this._nodeRegistry.removeStreamFromStorageNode(this.id, address)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
-    private async isStreamStoredInStorageNode(node: StorageNode | EthereumAddress) {
-        const address = (node instanceof StorageNode) ? node.getAddress() : node
-        return this._nodeRegistry.isStreamStoredInStorageNode(this.id, address)
-    }
+    // private async isStreamStoredInStorageNode(node: StorageNode | EthereumAddress) {
+    //     const address = (node instanceof StorageNode) ? node.getAddress() : node
+    //     return this._nodeRegistry.isStreamStoredInStorageNode(this.id, address)
+    // }
 
     async getStorageNodes() {
         return this._nodeRegistry.getStorageNodesOf(this.id)

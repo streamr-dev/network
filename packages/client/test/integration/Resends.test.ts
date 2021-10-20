@@ -56,8 +56,6 @@ describeRepeats('resends', () => {
         } })
         const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
         await stream.addToStorageNode(storageNode.getAddress())
-        await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
-        // wait until storagenode actually picks up new info and stores streamdata
         client.debug('waiting for storagenode to poll new info')
         await new Promise((resolve) => setTimeout(resolve, 11000))
         client.debug('addToStorageNode <<')

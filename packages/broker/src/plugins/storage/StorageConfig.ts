@@ -105,9 +105,6 @@ export class StorageConfig {
     }
 
     async refresh(): Promise<void> {
-        // const res = await fetch(`${this.apiUrl}/storageNodes/${this.nodeId}/streams`)
-        // const json = await res.json()
-        // const node = this.streamrClient.getStorageNode(this.nodeId)
         const streamsToStore = await this.streamrClient.getStoredStreamsOf(this.nodeId)
         const streamKeys = new Set<StreamKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
 
