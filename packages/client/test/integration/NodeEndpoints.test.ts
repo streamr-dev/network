@@ -1,8 +1,9 @@
 import debug from 'debug'
+import { Wallet } from 'ethers'
 import { EthereumAddress, NotFoundError, StorageNode, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
-import { createTestStream, getCreateClient } from '../utils'
+import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 // import { id } from '@ethersproject/hash'
 
 import config from './config'
@@ -23,16 +24,15 @@ let nodeAddress: EthereumAddress
 const createClient = getCreateClient()
 
 beforeAll(async () => {
-    const key = config.auth.privateKey
-    // const hash = id(`marketplace-contracts${1}`)
-    // return new Wallet(hash, provider)
+    const key = await getPrivateKey()
     client = await createClient({ auth: {
         privateKey: key
     } })
+    const storageNodeWallet = new Wallet(await getPrivateKey())
     storageNodeClient = await createClient({ auth: {
-        privateKey: config.storageNode.privatekey
+        privateKey: storageNodeWallet.privateKey
     } })
-    nodeAddress = config.storageNode.address.toLowerCase()
+    nodeAddress = (await storageNodeWallet.getAddress())
     createdStream = await createTestStream(client, module, {})
     return until(async () => {
         try {
@@ -56,7 +56,7 @@ describe('createNode', () => {
                 return false
             }
         }, 100000, 1000)
-        expect(createdNode.getAddress()).toEqual(nodeAddress)
+        expect(createdNode.getAddress()).toEqual(nodeAddress.toLowerCase())
         return expect(createdNode.url).toEqual(config.storageNode.url)
     })
 
@@ -91,9 +91,11 @@ describe('createNode', () => {
     })
 
     it('addStreamToStorageNode through streamobject', async () => {
-        await createdStream.addToStorageNode(nodeAddress)
-        await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, nodeAddress) }, 100000, 1000)
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(true)
+        const storageNodeFromDevEnv = await createClient({ auth: {
+            privateKey: config.storageNode.privatekey
+        } })
+        await createdStream.addToStorageNode(await storageNodeFromDevEnv.getAddress())
+        return expect(await client.isStreamStoredInStorageNode(createdStream.id, await storageNodeFromDevEnv.getAddress())).toEqual(true)
     })
 
     it('delete a node ', async () => {

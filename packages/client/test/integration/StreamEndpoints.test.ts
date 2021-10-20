@@ -1,10 +1,10 @@
 import { Wallet } from 'ethers'
-import { StreamrClient } from '../../src/StreamrClient'
 
+import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getCreateClient, getPrivateKey } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
+import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
-import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getCreateClient } from '../utils'
 
 jest.setTimeout(30000)
 
@@ -23,11 +23,13 @@ function TestStreamEndpoints(getName: () => string) {
         return (await (await wallet.getAddress()).toLowerCase()) + createRelativeTestStreamId(module)
     }
 
-    beforeAll(() => {
-        const key = clientOptions.auth.privateKey
+    beforeAll(async () => {
+        const key = await getPrivateKey()
         wallet = new Wallet(key)
-        client = new StreamrClient({
-            ...clientOptions,
+        client = await createClient({
+            auth: {
+                privateKey: key
+            }
         })
     })
 

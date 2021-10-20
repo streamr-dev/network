@@ -129,7 +129,6 @@ class StreamrStream implements StreamMetadata {
         this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
         this._nodeRegistry = _container.resolve<NodeRegistry>(NodeRegistry)
-        this._nodeRegistry = _container.resolve<NodeRegistry>(NodeRegistry)
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
     }
 

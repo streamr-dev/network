@@ -7,25 +7,25 @@ import {
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,
-    getCreateClient,
-    until
+    getCreateClient
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/Resends'
 
 import { Stream } from '../../src/Stream'
+import { Wallet } from 'ethers'
+// import { EthereumAddress } from '../types'
 
 /* eslint-disable no-await-in-loop */
 
-// const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 60000 : 10000
-const WAIT_FOR_STORAGE_TIMEOUT = 60000
+const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 20000 : 10000
 const MAX_MESSAGES = 5
 
 const createClient = getCreateClient()
 
 jest.setTimeout(60000)
 
-describeRepeats('resends', () => {
+describeRepeats.skip('resends', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
@@ -33,9 +33,10 @@ describeRepeats('resends', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
     let subscriber: Resend
+    let storageNodeAddress: string
 
     beforeAll(async () => {
-        client = new StreamrClient(clientOptions)
+        client = await createClient()
         subscriber = client.resends
 
         // eslint-disable-next-line require-atomic-updates
@@ -51,13 +52,9 @@ describeRepeats('resends', () => {
         stream = await createTestStream(client, module)
         client.debug('createStream <<')
         client.debug('addToStorageNode >>')
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: clientOptions.storageNode.privatekey
-        } })
-        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
-        await stream.addToStorageNode(storageNode.getAddress())
-        client.debug('waiting for storagenode to poll new info')
-        await new Promise((resolve) => setTimeout(resolve, 11000))
+        const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+        storageNodeAddress = await storageNodeWallet.getAddress()
+        await stream.addToStorageNode(await storageNodeWallet.getAddress())
         client.debug('addToStorageNode <<')
 
         publishTestMessages = getPublishTestStreamMessages(client, stream)

@@ -182,8 +182,13 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
 export const getCreateClient = (defaultOpts = {}) => {
     const addAfter = addAfterFn()
 
-    return async function createClient(opts = {}) {
-        const key = await getPrivateKey()
+    return async function createClient(opts: any = {}) {
+        let key
+        if (opts.auth && opts.auth.privateKey) {
+            key = opts.auth.privateKey
+        } else {
+            key = await getPrivateKey()
+        }
         const c = new StreamrClient({
             ...clientOptions,
             auth: {

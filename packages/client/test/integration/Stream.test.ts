@@ -1,6 +1,7 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { getPublishTestMessages, getCreateClient, createTestStream, until, clientOptions } from '../utils'
+import { Wallet } from 'ethers'
 
 jest.setTimeout(30000)
 
@@ -14,11 +15,8 @@ describe('Stream', () => {
         await client.connect()
 
         stream = await createTestStream(client, module)
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: clientOptions.storageNode.privatekey
-        } })
-        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
-        await stream.addToStorageNode(storageNode)
+        const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+        await stream.addToStorageNode(await storageNodeWallet.getAddress())
     })
 
     describe('detectFields()', () => {

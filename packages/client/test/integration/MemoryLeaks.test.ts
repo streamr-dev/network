@@ -7,6 +7,7 @@ import { counterId, Defer } from '../../src/utils'
 
 import clientOptions from './config'
 import { StrictBrubeckClientConfig } from '../Config'
+import { ethers } from 'ethers'
 
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
@@ -16,6 +17,7 @@ describe('MemoryLeaks', () => {
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
         leaksDetector.ignoreAll(container)
+        leaksDetector.ignoreAll(ethers)
         snapshot()
     })
 
