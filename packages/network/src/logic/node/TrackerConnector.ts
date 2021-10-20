@@ -90,8 +90,8 @@ export class TrackerConnector {
     }
 
     private isActiveTracker(trackerId: TrackerId): boolean {
-        for (const { streamId, streamPartition } of this.getSPIDs()) {
-            if (this.trackerRegistry.getTracker(new SPID(streamId, streamPartition)).id === trackerId) {
+        for (const spid of this.getSPIDs()) {
+            if (this.trackerRegistry.getTracker(spid).id === trackerId) {
                 return true
             }
         }

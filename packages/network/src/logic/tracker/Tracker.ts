@@ -9,7 +9,7 @@ import { COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerId, PeerInfo } from '../../connection/PeerInfo'
-import { Location, Status, StreamStatus } from '../../identifiers'
+import { Location, Status, SPIDStatus } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
@@ -196,7 +196,7 @@ export class Tracker extends EventEmitter {
         }
     }
 
-    private updateNodeOnStream(node: NodeId, status: StreamStatus): void {
+    private updateNodeOnStream(node: NodeId, status: SPIDStatus): void {
         const spidKey = SPID.toKey(status.id, status.partition)
         if (status.counter === COUNTER_UNSUBSCRIBE) {
             this.leaveAndCheckEmptyOverlay(spidKey, this.overlayPerStream[spidKey], node)
