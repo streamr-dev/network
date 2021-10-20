@@ -98,14 +98,17 @@ export class Tracker extends EventEmitter {
         this.metrics = metricsContext.create('tracker')
             .addRecordedMetric('onNodeDisconnected')
             .addRecordedMetric('processNodeStatus')
-            .addRecordedMetric('instructionsSent')
             .addRecordedMetric('_removeNode')
 
         this.statusMeter = io.meter({
             name: 'statuses/sec'
         })
 
-        this.instructionSender = new InstructionSender(opts.topologyStabilization, this.trackerServer, this.metrics)
+        this.instructionSender = new InstructionSender(
+            opts.topologyStabilization,
+            this.trackerServer.sendInstruction.bind(this.trackerServer),
+            this.metrics
+        )
     }
 
     onNodeConnected(node: NodeId): void {
