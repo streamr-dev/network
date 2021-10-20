@@ -11,7 +11,10 @@
             "ES2020",
             "ESNext",
             "DOM"
-        ]
+        ],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "strictBindCallApply": true
     },
     "include": [
         "src/**/*",
@@ -19,5 +22,5 @@
         "contracts/**/*",
         "test/**/*"
     ],
-    "exclude": ["node_modules", "dist", "test/legacy/*"]
+    "exclude": ["node_modules", "dist", "test/legacy/*", "test/memory/*"]
 }

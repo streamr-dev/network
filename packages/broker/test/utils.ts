@@ -3,16 +3,36 @@ import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 's
 import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
+import { Tracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { StorageConfig } from '../src/plugins/storage/StorageConfig'
-import { Todo } from '../src/types'
-import { Config } from '../src/config'
+import { ApiAuthenticationConfig, Config, StorageNodeConfig } from '../src/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
-export function formConfig({
+interface TestConfig {
+    name: string
+    trackerPort: number
+    privateKey: string
+    trackerId?: string
+    generateSessionId?: boolean
+    httpPort?: null | number
+    wsPort?: null | number
+    legacyMqttPort?: null | number
+    extraPlugins?: Record<string, unknown>
+    apiAuthentication?: ApiAuthenticationConfig
+    enableCassandra?: boolean
+    privateKeyFileName?: null | string
+    certFileName?: null | string
+    streamrAddress?: string
+    streamrUrl?: string
+    storageNodeConfig?: StorageNodeConfig
+    storageConfigRefreshInterval?: number
+}
+
+export const formConfig = ({
     name,
     trackerPort,
     privateKey,
@@ -30,7 +50,7 @@ export function formConfig({
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
     storageNodeConfig = { registry: [] },
     storageConfigRefreshInterval = 0,
-}: Todo): Config {
+}: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['legacyPublishHttp'] = {}
@@ -45,7 +65,7 @@ export function formConfig({
                 },
                 storageConfig: {
                     refreshInterval: storageConfigRefreshInterval
-                } 
+                }
             }
         }
     }
@@ -98,14 +118,13 @@ export function formConfig({
     }
 }
 
-export const startBroker = async (...args: Todo[]): Promise<Broker> => {
-    // @ts-expect-error
-    const broker = await createBroker(formConfig(...args))
+export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
+    const broker = await createBroker(formConfig(testConfig))
     await broker.start()
     return broker
 }
 
-export function getWsUrl(port: number, ssl = false) {
+export const getWsUrl = (port: number, ssl = false): string => {
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws`
 }
 
@@ -113,28 +132,30 @@ export function getWsUrl(port: number, ssl = false) {
 // equivalent to Wallet.createRandom().privateKey but much faster
 // the slow part seems to be deriving the address from the key so if you can avoid this, just use
 // fastPrivateKey instead of createMockUser
-export function fastPrivateKey() {
+export const fastPrivateKey = (): string => {
     return `0x${crypto.randomBytes(32).toString('hex')}`
 }
 
-export const createMockUser = () => Wallet.createRandom()
+export const createMockUser = (): Wallet => Wallet.createRandom()
 
-export function createClient(
-    wsPort: number,
+export const createClient = (
+    tracker: Tracker,
     privateKey = fastPrivateKey(),
     clientOptions?: StreamrClientOptions
-): StreamrClient {
+): StreamrClient => {
     return new StreamrClient({
         auth: {
             privateKey
         },
-        url: getWsUrl(wsPort),
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+        network: {
+            trackers: [tracker.getConfigRecord()]
+        },
         ...clientOptions,
     })
 }
 
-export function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = fastPrivateKey()) {
+export const createMqttClient = (mqttPort = 9000, host = 'localhost', privateKey = fastPrivateKey()): mqtt.AsyncClient => {
     return mqtt.connect({
         hostname: host,
         port: mqttPort,
@@ -144,23 +165,24 @@ export function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey
 }
 
 export class StorageAssignmentEventManager {
-
+    storageNodeAccount: Wallet
     engineAndEditorAccount: Wallet
     client: StreamrClient
     eventStream?: Stream
 
-    constructor(wsPort: number, engineAndEditorAccount: Wallet) {
+    constructor(tracker: Tracker, engineAndEditorAccount: Wallet, storageNodeAccount: Wallet) {
         this.engineAndEditorAccount = engineAndEditorAccount
-        this.client = createClient(wsPort, engineAndEditorAccount.privateKey)
+        this.storageNodeAccount = storageNodeAccount
+        this.client = createClient(tracker, engineAndEditorAccount.privateKey)
     }
 
-    async createStream() {
+    async createStream(): Promise<void> {
         this.eventStream = await this.client.createStream({
             id: this.engineAndEditorAccount.address + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
         })
     }
 
-    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient) {
+    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient): Promise<void> {
         await fetch(`${API_URL}/streams/${encodeURIComponent(streamId)}/storageNodes`, {
             body: JSON.stringify({
                 address: storageNodeAddress
@@ -175,27 +197,34 @@ export class StorageAssignmentEventManager {
         this.publishAddEvent(streamId)
     }
 
-    publishAddEvent(streamId: string) {
+    publishAddEvent(streamId: string): void {
         this.eventStream!.publish({
             event: 'STREAM_ADDED',
             stream: {
                 id: streamId,
                 partitions: 1
-            }
+            },
+            storageNode: this.storageNodeAccount.address,
         })
     }
 
-    close() {
-        return this.client.ensureDisconnected()
+    async close(): Promise<void> {
+        await this.client.destroy()
     }
 }
 
-export const waitForStreamPersistedInStorageNode = async (streamId: string, partition: number, nodeHost: string, nodeHttpPort: number) => {
+export const waitForStreamPersistedInStorageNode = async (
+    streamId: string,
+    partition: number,
+    nodeHost: string,
+    nodeHttpPort: number
+): Promise<void> => {
     const isPersistent = async () => {
+        // eslint-disable-next-line max-len
         const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
     }
-    await waitForCondition(() => isPersistent(), undefined, 1000)
+    await waitForCondition(() => isPersistent(), 20000, 500)
 }
 
 const getTestName = (module: NodeModule) => {
@@ -218,7 +247,7 @@ export const createTestStream = (
 export class Queue<T> {
     items: T[] = []
 
-    push(item: T) {
+    push(item: T): void {
         this.items.push(item)
     }
 

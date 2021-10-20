@@ -1,11 +1,11 @@
-import express, { Request, Response } from 'express'
+import express, { Request, Response, Router } from 'express'
 import { MetricsContext } from 'streamr-network'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 
 /**
  * Endpoint for GETing volume metrics
  */
-export const router = (metricsContext: MetricsContext) => {
+export const router = (metricsContext: MetricsContext): Router => {
     if (!metricsContext) {
         throw new Error('metricsContext not given!')
     }

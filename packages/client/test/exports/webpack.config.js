@@ -31,7 +31,7 @@ module.exports = (env, argv) => {
                     use: {
                         loader: 'babel-loader',
                         options: {
-                            configFile: path.resolve(__dirname, '../../.babel.config.js'),
+                            configFile: path.resolve(__dirname, '../../.babel.browser.config.js'),
                             babelrc: false,
                             cacheDirectory: true,
                         }

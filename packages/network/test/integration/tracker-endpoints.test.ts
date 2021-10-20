@@ -1,5 +1,5 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import http from 'http'
 
 import { waitForCondition } from 'streamr-test-utils'
@@ -39,8 +39,10 @@ describe('tracker endpoint', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker',
             attachHttpEndpoints: true
         })
@@ -243,7 +245,12 @@ describe('tracker endpoint', () => {
     it('/nodes/node-1/streams', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/nodes/node-1/streams/`)
         expect(status).toEqual(200)
-        expect(jsonResult).toEqual([
+        expect(jsonResult).toIncludeSameMembers([
+            {
+                "partition": 0,
+                "streamId": "sandbox/test/stream-3",
+                "topologySize": 1
+            },
             {
                 "partition": 0,
                 "streamId": "stream-1",
@@ -254,11 +261,6 @@ describe('tracker endpoint', () => {
                 "streamId": "stream-2",
                 "topologySize": 1
             },
-            {
-                "partition": 0,
-                "streamId": "sandbox/test/stream-3",
-                "topologySize": 1
-            }
         ])
     })
 

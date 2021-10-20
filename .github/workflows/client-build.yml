@@ -29,24 +29,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.8.0
+        uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
   build:
-    name: Run build using Node 14.x
+    name: Build using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     env:
       BUNDLE_ANALYSIS: true
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [16.x]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -58,7 +58,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
       - uses: actions/upload-artifact@v2
@@ -67,20 +67,23 @@ jobs:
           path: packages/client/dist
 
   test-exports:
-    name: Test Exports using Node 16.x
+    name: Test Exports using Node ${{ matrix.node-version }}
+    strategy:
+      matrix:
+        node-version: [16.x]
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - uses: actions/setup-node@v2
         with:
-          node-version: "16.x"
+          node-version: ${{ matrix.node-version }}
       - uses: actions/download-artifact@v2
         with:
           name: client-build
           path: packages/client/dist
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -92,27 +95,31 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: test-types
         run: npm run test-types
       - name: npm run test-exports
         run: npm run test-exports
 
   browser-realtime:
-    name: Test Browser Realtime
+    if: ${{ false }}
+    name: Test Browser Realtime using Node ${{ matrix.node-version }}
+    strategy:
+      matrix:
+        node-version: [16.x]
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - uses: actions/setup-node@v2
         with:
-          node-version: "14.x"
+          node-version: ${{ matrix.node-version }}
       - uses: actions/download-artifact@v2
         with:
           name: client-build
           path: packages/client/dist
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -124,7 +131,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -138,20 +145,24 @@ jobs:
           command: cd packages/client && npm run test-browser-realtime
 
   browser-resend:
-    name: Test Browser Realtime + Resend
+    if: ${{ false }}
+    name: Test Browser Realtime + Resend using Node ${{ matrix.node-version }}
+    strategy:
+      matrix:
+        node-version: [16.x]
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - uses: actions/setup-node@v2
         with:
-          node-version: "14.x"
+          node-version: ${{ matrix.node-version }}
       - uses: actions/download-artifact@v2
         with:
           name: client-build
           path: packages/client/dist
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -163,7 +174,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -185,7 +196,7 @@ jobs:
       matrix:
         node-version: [14.x, 16.x]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
@@ -198,7 +209,7 @@ jobs:
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -210,7 +221,7 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm run bootstrap-pkg streamr-client
       - name: benchmark publish
         timeout-minutes: 15
         run: DEBUG='' npm run benchmark-publish > benchmark-publish.txt

@@ -12,10 +12,6 @@ const logger = new Logger(module)
 export interface MetricsPluginConfig {
     consoleAndPM2IntervalInSeconds: number
     nodeMetrics: {
-        client: {
-            wsUrl: string
-            httpUrl: string
-        }
         storageNode: string
     } | null
 }
@@ -31,14 +27,8 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
             this.metricsContext,
         )
         if (this.pluginConfig.nodeMetrics !== null) {
-            const metricsPublisher = new MetricsPublisher(this.nodeId, {
-                ethereumPrivateKey: this.brokerConfig.ethereumPrivateKey,
-                storageNode: this.pluginConfig.nodeMetrics.storageNode,
-                storageNodes: this.storageNodeRegistry.getStorageNodes(),
-                clientWsUrl: this.pluginConfig.nodeMetrics.client.wsUrl,
-                clientHttpUrl: this.pluginConfig.nodeMetrics.client.httpUrl
-            })
-            this.nodeMetrics = new NodeMetrics(this.metricsContext, metricsPublisher) 
+            const metricsPublisher = new MetricsPublisher(this.nodeId, options.streamrClient, this.pluginConfig.nodeMetrics.storageNode)
+            this.nodeMetrics = new NodeMetrics(this.metricsContext, metricsPublisher)
         }
     }
 

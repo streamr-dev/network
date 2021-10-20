@@ -1,6 +1,5 @@
 import http from 'http'
-import { startTracker, createNetworkNode, Tracker, NetworkNode } from 'streamr-network'
-import { wait } from 'streamr-test-utils'
+import { startTracker, Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
 import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream } from '../../../utils'
@@ -23,48 +22,50 @@ const httpGet = (url: string): Promise<[number, string]> => { // return tuple is
     })
 }
 
-const WAIT_TIME_TO_LAND_IN_STORAGE = 3000
-
 describe('DataMetadataEndpoints', () => {
     let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
-    let publisherNode: NetworkNode
     const storageNodeAccount = Wallet.createRandom()
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
-        const engineAndEditorAccount = Wallet.createRandom()
+
+        const storageNodeRegistry = [{
+            address: storageNodeAccount.address,
+            url: `http://127.0.0.1:${httpPort1}`
+        }]
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
+            id: 'tracker-DataMetadataEndpoints'
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: '' }
-        publisherNode = createNetworkNode({
-            id: 'publisherNode',
-            trackers: [trackerInfo]
-        })
-        publisherNode.start()
+        const engineAndEditorAccount = Wallet.createRandom()
+        const trackerInfo = tracker.getConfigRecord()
+
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
+            trackerId: trackerInfo.id,
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [trackerInfo]
+            storageNodeConfig: { registry: storageNodeRegistry }
         })
-        client1 = createClient(wsPort1)
-        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
+        client1 = createClient(tracker, undefined, {
+            storageNodeRegistry: storageNodeRegistry,
+        })
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     }, 10 * 1000)
 
     afterAll(async () => {
         await tracker.stop()
-        await client1.ensureDisconnected()
-        await publisherNode.stop()
+        await client1.destroy()
         await storageNode.stop()
         await assignmentEventManager.close()
     })
@@ -110,11 +111,10 @@ describe('DataMetadataEndpoints', () => {
         await client1.publish(stream.id, {
             key: 3
         })
-        await client1.publish(stream.id, {
+        const lastItem = await client1.publish(stream.id, {
             key: 4
         })
-
-        await wait(WAIT_TIME_TO_LAND_IN_STORAGE)
+        await client1.waitForStorage(lastItem)
 
         const url = `http://localhost:${httpPort1}/api/v1/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)

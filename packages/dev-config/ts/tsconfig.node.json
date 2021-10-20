@@ -1,7 +1,7 @@
 {
     "$schema": "https://json.schemastore.org/tsconfig",
-    "display": "Node 12 – Streamr",
-    "extends": "@tsconfig/node12/tsconfig.json",
+    "display": "Node 14 – Streamr",
+    "extends": "@tsconfig/node14/tsconfig.json",
     "compilerOptions": {
         "allowJs": true,
         "declaration": true,
@@ -10,6 +10,7 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
+        "useUnknownInCatchVariables": false,
         "strict": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,

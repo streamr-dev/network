@@ -1,5 +1,5 @@
 import { Status } from '../../src/identifiers'
-import { InstructionCounter } from '../../src/logic/InstructionCounter'
+import { InstructionCounter } from '../../src/logic/tracker/InstructionCounter'
 
 describe('InstructionCounter', () => {
     let instructionCounter: InstructionCounter
@@ -8,186 +8,94 @@ describe('InstructionCounter', () => {
         instructionCounter = new InstructionCounter()
     })
 
-    it('filterStatus returns all if counters have not been set', () => {
+    it('if counters have not been set', () => {
         const status: Partial<Status> = {
-            streams: {
-                'stream-1': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 1
-                },
-                'stream-2': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 3
-                },
+            stream: {
+                streamKey: 'stream-1',
+                neighbors: [],
+                counter: 123
             }
         }
-        const filtered = instructionCounter.filterStatus(status as Status, 'node')
-        expect(filtered).toEqual(status.streams)
+        const isMostRecent = instructionCounter.isMostRecent(status as Status, 'node')
+        expect(isMostRecent).toEqual(true)
     })
 
-    it('filterStatus filters streams according to counters', () => {
+    it('stream specific', () => {
         instructionCounter.setOrIncrement('node', 'stream-1')
         instructionCounter.setOrIncrement('node', 'stream-1')
-
         instructionCounter.setOrIncrement('node', 'stream-2')
         instructionCounter.setOrIncrement('node', 'stream-2')
         instructionCounter.setOrIncrement('node', 'stream-2')
-
-        instructionCounter.setOrIncrement('node', 'stream-3')
-
-        const status = {
-            streams: {
-                'stream-1': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 1
-                },
-                'stream-2': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 3
-                },
-                'stream-3': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 0
-                },
+        const status1 = {
+            stream: {
+                streamKey: 'stream-1',
+                neighbors: [],
+                counter: 1
             }
         }
-        const filtered = instructionCounter.filterStatus(status as any, 'node')
-        expect(filtered).toEqual({
-            'stream-2': {
-                inboundNodes: [],
-                outboundNodes: [],
+        const status2 = {
+            stream: {
+                streamKey: 'stream-2',
+                neighbors: [],
                 counter: 3
-            },
-        })
-    })
-
-    it('filterStatus is node-specific', () => {
-        instructionCounter.setOrIncrement('node', 'stream-1')
-        instructionCounter.setOrIncrement('node', 'stream-1')
-        instructionCounter.setOrIncrement('node', 'stream-1')
-
-        instructionCounter.setOrIncrement('node', 'stream-2')
-        instructionCounter.setOrIncrement('node', 'stream-2')
-        instructionCounter.setOrIncrement('node', 'stream-2')
-
-        instructionCounter.setOrIncrement('node', 'stream-3')
-        instructionCounter.setOrIncrement('node', 'stream-3')
-        instructionCounter.setOrIncrement('node', 'stream-3')
-
-        const status = {
-            streams: {
-                'stream-1': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 1
-                },
-                'stream-2': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 3
-                },
-                'stream-3': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 0
-                },
             }
         }
-        const filtered = instructionCounter.filterStatus(status as any, 'another-node')
-        expect(filtered).toEqual(status.streams)
+        expect(instructionCounter.isMostRecent(status1 as any, 'node')).toBe(false)
+        expect(instructionCounter.isMostRecent(status2 as any, 'node')).toBe(true)
+    })
+
+    it('node specific', () => {
+        instructionCounter.setOrIncrement('node-1', 'stream-1')
+        instructionCounter.setOrIncrement('node-1', 'stream-1')
+        instructionCounter.setOrIncrement('node-2', 'stream-1')
+        instructionCounter.setOrIncrement('node-2', 'stream-1')
+        instructionCounter.setOrIncrement('node-2', 'stream-1')
+        const status1 = {
+            stream: {
+                streamKey: 'stream-1',
+                neighbors: [],
+                counter: 1
+            }
+        }
+        const status2 = {
+            stream: {
+                streamKey: 'stream-1',
+                neighbors: [],
+                counter: 3
+            }
+        }
+        expect(instructionCounter.isMostRecent(status1 as any, 'node-1')).toBe(false)
+        expect(instructionCounter.isMostRecent(status2 as any, 'node-2')).toBe(true)
     })
 
     it('removeNode unsets counters', () => {
         instructionCounter.setOrIncrement('node', 'stream-1')
         instructionCounter.setOrIncrement('node', 'stream-1')
         instructionCounter.setOrIncrement('node', 'stream-1')
-
-        instructionCounter.setOrIncrement('node', 'stream-2')
-        instructionCounter.setOrIncrement('node', 'stream-2')
-        instructionCounter.setOrIncrement('node', 'stream-2')
-
-        instructionCounter.setOrIncrement('node', 'stream-3')
-        instructionCounter.setOrIncrement('node', 'stream-3')
-        instructionCounter.setOrIncrement('node', 'stream-3')
-
+        instructionCounter.removeNode('node')
         const status = {
-            streams: {
-                'stream-1': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 1
-                },
-                'stream-2': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 3
-                },
-                'stream-3': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 0
-                },
+            stream: {
+                streamKey: 'stream-1',
+                neighbors: [],
+                counter: 0
             }
         }
-
-        instructionCounter.removeNode('node')
-        const filtered = instructionCounter.filterStatus(status as any, 'node')
-        expect(filtered).toEqual(status.streams)
+        expect(instructionCounter.isMostRecent(status as any, 'node')).toEqual(true)
     })
 
     it('removeStream unsets counters', () => {
         instructionCounter.setOrIncrement('node', 'stream-1')
         instructionCounter.setOrIncrement('node', 'stream-1')
         instructionCounter.setOrIncrement('node', 'stream-1')
-
-        instructionCounter.setOrIncrement('node', 'stream-2')
-        instructionCounter.setOrIncrement('node', 'stream-2')
-        instructionCounter.setOrIncrement('node', 'stream-2')
-
-        instructionCounter.setOrIncrement('node', 'stream-3')
-        instructionCounter.setOrIncrement('node', 'stream-3')
-        instructionCounter.setOrIncrement('node', 'stream-3')
-
+        instructionCounter.removeStream('stream-1')
         const status = {
-            streams: {
-                'stream-1': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 1
-                },
-                'stream-2': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 3
-                },
-                'stream-3': {
-                    inboundNodes: [],
-                    outboundNodes: [],
-                    counter: 0
-                },
+            stream: {
+                streamKey: 'stream-1',
+                neighbors: [],
+                counter: 0
             }
         }
-
-        instructionCounter.removeStream('stream-3')
-        const filtered = instructionCounter.filterStatus(status as any, 'node')
-
-        expect(filtered).toEqual({
-            'stream-2': {
-                inboundNodes: [],
-                outboundNodes: [],
-                counter: 3
-            },
-            'stream-3': {
-                inboundNodes: [],
-                outboundNodes: [],
-                counter: 0
-            },
-        })
+        expect(instructionCounter.isMostRecent(status as any, 'node')).toEqual(true)
     })
 
     test('setOrIncrement returns node/stream-specific counter value', () => {
@@ -200,11 +108,9 @@ describe('InstructionCounter', () => {
         expect(instructionCounter.setOrIncrement('node-b', 'stream-2')).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-b', 'stream-3')).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1')).toEqual(4)
-
         instructionCounter.removeStream('stream-1')
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1')).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-b', 'stream-1')).toEqual(1)
-
         instructionCounter.removeNode('node-a')
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1')).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-a', 'stream-2')).toEqual(1)

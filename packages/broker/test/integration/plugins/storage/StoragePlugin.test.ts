@@ -7,7 +7,7 @@ import { createMockStorageConfig } from './MockStorageConfig'
 import { StorageNodeRegistry } from "../../../../src/StorageNodeRegistry"
 import { Wallet } from 'ethers'
 
-const STREAM_PARTS: StreamPart[] = [ 
+const STREAM_PARTS: StreamPart[] = [
     { id: 'foo', partition: 0 },
     { id: 'bar', partition: 0 }
 ]
@@ -38,7 +38,7 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
         networkNode,
         subscriptionManager,
         publisher: undefined as any,
-        streamrClient: undefined,
+        streamrClient: undefined as any,
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
         brokerConfig,

@@ -41,7 +41,7 @@ module.exports = (env, argv) => {
                     use: {
                         loader: 'babel-loader',
                         options: {
-                            configFile: path.resolve(__dirname, '.babel.config.js'),
+                            configFile: path.resolve(__dirname, '.babel.browser.config.js'),
                             babelrc: false,
                             cacheDirectory: true,
                         }
@@ -90,6 +90,7 @@ module.exports = (env, argv) => {
             // which is wrong for browser builds.
             // see: https://github.com/webpack/webpack/issues/706#issuecomment-438007763
             libraryExport: 'StreamrClient', // This fixes the above.
+            globalObject: 'globalThis',
         },
         resolve: {
             modules: [
@@ -100,15 +101,15 @@ module.exports = (env, argv) => {
                 util: 'util',
                 http: path.resolve(__dirname, './src/shim/http-https.js'),
                 https: path.resolve(__dirname, './src/shim/http-https.js'),
-                ws: path.resolve(__dirname, './src/shim/ws.js'),
                 crypto: path.resolve(__dirname, 'node_modules', 'crypto-browserify'),
                 buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
                 'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
+                'streamr-client-protocol/contracts/NodeRegistry.json': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/contracts/NodeRegistry.json'),
                 'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/src'),
                 // swap out ServerPersistentStore for BrowserPersistentStore
-                [path.resolve(__dirname, 'src/stream/encryption/ServerPersistentStore')]: (
-                    path.resolve(__dirname, 'src/stream/encryption/BrowserPersistentStore')
+                [path.resolve(__dirname, 'src/encryption/ServerPersistentStore')]: (
+                    path.resolve(__dirname, 'src/encryption/BrowserPersistentStore')
                 ),
             }
         },

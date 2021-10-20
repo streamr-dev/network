@@ -19,9 +19,12 @@ module.exports = {
 
     // Default timeout of a test in milliseconds
     testTimeout: 15000,
+    maxWorkers: 3,
 
     // This option allows use of a custom test runner
     testRunner: 'jest-circus/runner',
 
-    testPathIgnorePatterns: ["/browser/", "/node_modules/"]
+    testPathIgnorePatterns: ["/browser/", "/node_modules/"],
+
+    setupFilesAfterEnv: ["jest-extended"],
 }

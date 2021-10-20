@@ -1,11 +1,10 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext, NetworkNode, Protocol } from 'streamr-network'
+import { Metrics, MetricsContext, NetworkNode, Protocol } from 'streamr-network'
 const { ControlLayer, MessageLayer, Errors } = Protocol
 import WebSocket from "ws"
 import { RequestHandler } from './RequestHandler'
 import { Connection } from './Connection'
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Publisher } from '../../Publisher'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Logger } from 'streamr-network'
@@ -105,7 +104,7 @@ export class WebsocketServer extends EventEmitter {
                 }
             })
 
-        const streams = new StreamStateManager()
+        const streams = new StreamStateManager<Connection>()
         this.requestHandler = new RequestHandler(
             streamFetcher,
             publisher,
@@ -248,7 +247,7 @@ export class WebsocketServer extends EventEmitter {
         this.connections.delete(connection)
 
         // Unsubscribe from all streams
-        connection.forEachStream((stream: Stream) => {
+        connection.forEachStream((stream: Stream<Connection>) => {
             // for cleanup, spoof an UnsubscribeRequest to ourselves on the removed connection
             this.requestHandler.unsubscribe(
                 connection,
@@ -269,7 +268,7 @@ export class WebsocketServer extends EventEmitter {
 
     private pingConnections() {
         function logAndForceClose(connection: Connection, reason: string | Error): void {
-            logger.error(`Failed to ping connection: ${connection.id}, reason ${reason}`)
+            logger.info(`Failed to ping connection: ${connection.id}, reason ${reason}`)
             connection.forceClose(reason.toString())
         }
 
@@ -283,13 +282,13 @@ export class WebsocketServer extends EventEmitter {
             try {
                 connection.ping()
             } catch (e) {
-                logger.error(`Failed to ping connection: ${connection.id}, error ${e}`)
+                logger.info(`Failed to ping connection: ${connection.id}, error ${e}`)
                 logAndForceClose(connection, 'failed to ping')
             }
         })
     }
 
-    private broadcastMessage(streamMessage: Protocol.StreamMessage, streams: StreamStateManager) {
+    private broadcastMessage(streamMessage: Protocol.StreamMessage, streams: StreamStateManager<Connection>) {
         const streamId = streamMessage.getStreamId()
         const streamPartition = streamMessage.getStreamPartition()
         const stream = streams.get(streamId, streamPartition)

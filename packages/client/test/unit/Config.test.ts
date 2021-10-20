@@ -2,6 +2,7 @@ import set from 'lodash/set'
 import { arrayify, BytesLike } from '@ethersproject/bytes'
 
 import { StreamrClient } from '../../src/StreamrClient'
+import config from '../../src/ConfigTest'
 
 describe('Config', () => {
     describe('validate ethereum addresses', () => {
@@ -46,6 +47,43 @@ describe('Config', () => {
         it('byteslike', async () => {
             const client = createAuthenticatedClient(arrayify('0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'))
             expect(await client.getAddress()).toBe('0xFCAd0B19bB29D4674531d6f115237E16AfCE377c')
+        })
+    })
+
+    describe('merging configs', () => {
+        it('works with no arguments', () => {
+            expect(new StreamrClient()).toBeInstanceOf(StreamrClient)
+        })
+
+        it('can override storageNodeRegistry & network.trackers arrays', () => {
+            const clientDefaults = new StreamrClient()
+            const clientOverrides = new StreamrClient(config)
+            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
+            expect(clientOverrides.options.storageNodeRegistry).toEqual(config.storageNodeRegistry)
+            expect(clientOverrides.options.network.trackers).not.toEqual(clientDefaults.options.network.trackers)
+            expect(clientOverrides.options.network.trackers).toEqual(config.network.trackers)
+        })
+
+        it('can override storageNodeRegistry as contract', () => {
+            const clientDefaults = new StreamrClient()
+            const clientOverrides = new StreamrClient({
+                storageNodeRegistry: {
+                    contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+                    jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
+                },
+            })
+            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
+        })
+
+        it('can override storageNodeRegistry as array of nodes', () => {
+            const clientDefaults = new StreamrClient()
+            const clientOverrides = new StreamrClient({
+                storageNodeRegistry: [{
+                    address: '0xde1112f631486CfC759A50196853011528bC5FA0',
+                    url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
+                }],
+            })
+            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
         })
     })
 })

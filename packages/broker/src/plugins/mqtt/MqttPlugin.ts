@@ -3,6 +3,7 @@ import { getPayloadFormat } from '../../helpers/PayloadFormat'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { MqttServer } from './MqttServer'
 import { Bridge } from './Bridge'
+import { Schema } from 'ajv'
 
 export interface MqttPluginConfig {
     port: number
@@ -21,7 +22,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         }
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.server = new MqttServer(this.pluginConfig.port, this.apiAuthenticator)
         const bridge = new Bridge(
             this.streamrClient!, 
@@ -33,11 +34,11 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         return this.server.start()
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         await this.server!.stop()
     }
 
-    getConfigSchema() {
+    getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

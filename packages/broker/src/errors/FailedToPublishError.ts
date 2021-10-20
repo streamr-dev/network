@@ -1,7 +1,5 @@
-import { Todo } from '../types'
-
 export class FailedToPublishError extends Error {
-    constructor(streamId: Todo, reason: Todo) {
+    constructor(streamId: string, reason: string) {
         super(`Failed publish to stream ${streamId}, reason: ${reason}`)
     }
 }

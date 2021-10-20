@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.8.0
+        uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
   cross-client-testing:
@@ -53,13 +53,12 @@ jobs:
       TEST_NAME: ${{ matrix.test-name }}
       CONFIG_NAME: ${{ matrix.config-name }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 14
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.3.5
+      - uses: actions/setup-node@v2
         with:
           node-version: "14.x"
       - name: Cache Node.js modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -71,9 +70,10 @@ jobs:
         working-directory: './'
         run: |
           npm ci
-          npx lerna bootstrap --scope @streamr/cross-client-testing --include-dependencies
-      - uses: actions/setup-java@v1
+          npm run bootstrap-pkg @streamr/cross-client-testing
+      - uses: actions/setup-java@v2.3.1
         with:
+          distribution: 'zulu'
           java-version: '8'
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -88,7 +88,7 @@ jobs:
           command: cd packages/cross-client-testing && DEBUG='' make run
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v1
+        uses: jwalton/gh-docker-logs@v2.0.2
         with:
           dest: 'packages/cross-client-testing/logs'
       - name: Upload logs to GitHub

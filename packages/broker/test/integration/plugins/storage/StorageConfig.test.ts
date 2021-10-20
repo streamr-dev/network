@@ -1,10 +1,9 @@
 import { Client } from 'cassandra-driver'
 import StreamrClient, { Stream } from 'streamr-client'
-import { Protocol, startTracker } from 'streamr-network'
+import { Protocol, startTracker, Tracker } from 'streamr-network'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
-import { Todo } from '../../../../src/types'
 import {
     startBroker,
     createClient,
@@ -27,7 +26,7 @@ const TRACKER_PORT = 17772
 
 describe('StorageConfig', () => {
     let cassandraClient: Client
-    let tracker: Todo
+    let tracker: Tracker
     let storageNode: Broker
     let broker: Broker
     let client: StreamrClient
@@ -52,8 +51,10 @@ describe('StorageConfig', () => {
     beforeEach(async () => {
         const engineAndEditorAccount = Wallet.createRandom()
         tracker = await startTracker({
-            host: NODE_HOST,
-            port: TRACKER_PORT,
+            listen: {
+                hostname: NODE_HOST,
+                port: TRACKER_PORT
+            },
             id: 'tracker-1'
         })
         storageNode = await startBroker({
@@ -73,13 +74,13 @@ describe('StorageConfig', () => {
             streamrUrl: STREAMR_URL,
             enableCassandra: false
         })
-        client = createClient(WS_PORT, publisherAccount.privateKey)
-        assignmentEventManager = new StorageAssignmentEventManager(WS_PORT, engineAndEditorAccount)
+        client = createClient(tracker, publisherAccount.privateKey)
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     })
 
     afterEach(async () => {
-        await client.ensureDisconnected()
+        await client.destroy()
         await Promise.allSettled([storageNode.stop(), broker.stop(), tracker.stop(), assignmentEventManager.close()])
     })
 
@@ -96,6 +97,6 @@ describe('StorageConfig', () => {
         })
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = Protocol.StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
-        expect(storeMessage.messageId).toEqual(publishMessage.streamMessage.messageId)
+        expect(storeMessage.messageId).toEqual(publishMessage.messageId)
     }, 10000)
 })

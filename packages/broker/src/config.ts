@@ -1,13 +1,11 @@
+import { Protocol } from 'streamr-network'
+
 export interface NetworkSmartContract {
     contractAddress: string
     jsonRpcProvider: string
 }
 
-export interface TrackerRegistryItem {
-    id: string
-    ws: string
-    http: string
-}
+export type TrackerRegistryItem = Protocol.SmartContractRecord
 
 export interface TurnConfig {
     url: string,
@@ -29,7 +27,7 @@ export interface NetworkConfig {
 }
 
 export interface HttpServerConfig {
-    port: number, 
+    port: number,
     privateKeyFileName: string | null,
     certFileName: string | null
 }
@@ -43,6 +41,8 @@ export interface StorageNodeConfig {
     registry: StorageNodeRegistryItem[] | NetworkSmartContract
 }
 
+export type ApiAuthenticationConfig = { keys: string[] } | null
+
 export interface Config {
     ethereumPrivateKey: string
     generateSessionId: boolean
@@ -52,7 +52,5 @@ export interface Config {
     storageNodeConfig: StorageNodeConfig,
     httpServer: HttpServerConfig
     plugins: Record<string,any>
-    apiAuthentication: {
-        keys: string[]
-    } | null
+    apiAuthentication: ApiAuthenticationConfig
 }

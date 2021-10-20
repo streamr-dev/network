@@ -7,17 +7,11 @@ function getStreamLookupKey(streamId: string, streamPartition: number) {
     return `${streamId}::${streamPartition}`
 }
 
-export class StreamStateManager {
+export class StreamStateManager<C> {
+    private streams: Record<string,Stream<C>> = {}
+    private timeouts: Record<string,NodeJS.Timeout> = {}
 
-    _streams: Record<string,Stream>
-    _timeouts: Record<string,NodeJS.Timeout>
-
-    constructor() {
-        this._streams = {}
-        this._timeouts = {}
-    }
-
-    getOrCreate(streamId: string, streamPartition: number, name = '') {
+    getOrCreate(streamId: string, streamPartition: number, name = ''): Stream<C> {
         const stream = this.get(streamId, streamPartition)
         if (stream) {
             return stream
@@ -25,31 +19,31 @@ export class StreamStateManager {
         return this.create(streamId, streamPartition, name)
     }
 
-    get(streamId: string, streamPartition: number) {
-        return this._streams[getStreamLookupKey(streamId, streamPartition)]
+    get(streamId: string, streamPartition: number): Stream<C> {
+        return this.streams[getStreamLookupKey(streamId, streamPartition)]
     }
 
-    getByName(name: string) {
-        const streamId = Object.keys(this._streams)
-            .find((key) => { return this._streams[key].getName() === name })
-        return streamId ? this._streams[streamId] : null
+    getByName(name: string): Stream<C>|null {
+        const streamId = Object.keys(this.streams)
+            .find((key) => { return this.streams[key].getName() === name })
+        return streamId ? this.streams[streamId] : null
     }
 
     /**
      * Creates and returns a Stream object, holding the Stream subscription state.
      * */
-    create(streamId: string, streamPartition: number, name = '') {
+    create(streamId: string, streamPartition: number, name = ''): Stream<C> {
         if (streamId == null || streamPartition == null) {
             throw new Error('streamId or streamPartition not given!')
         }
 
         const key = getStreamLookupKey(streamId, streamPartition)
-        if (this._streams[key]) {
+        if (this.streams[key]) {
             throw new Error(`stream already exists for ${key}`)
         }
 
-        const stream = new Stream(streamId, streamPartition, name)
-        this._streams[key] = stream
+        const stream = new Stream<C>(streamId, streamPartition, name)
+        this.streams[key] = stream
 
         /*
          * In normal conditions, the Stream object is cleaned when no more
@@ -61,7 +55,7 @@ export class StreamStateManager {
          * end up in subscribed state within one minute (for example, ill-behaving)
          * clients only asking for resends and never subscribing.
          */
-        this._timeouts[key] = setTimeout(() => {
+        this.timeouts[key] = setTimeout(() => {
             if (stream.state !== 'subscribed') {
                 logger.debug('Stream "%s:%d" never subscribed, cleaning..', streamId, streamPartition)
                 this.delete(streamId, streamPartition)
@@ -72,7 +66,7 @@ export class StreamStateManager {
         return stream
     }
 
-    delete(streamId: string, streamPartition: number) {
+    delete(streamId: string, streamPartition: number): void {
         if (streamId == null || streamPartition == null) {
             throw new Error('streamId or streamPartition not given!')
         }
@@ -80,16 +74,16 @@ export class StreamStateManager {
         const stream = this.get(streamId, streamPartition)
         if (stream) {
             const key = getStreamLookupKey(streamId, streamPartition)
-            clearTimeout(this._timeouts[key])
-            delete this._timeouts[key]
-            delete this._streams[key]
+            clearTimeout(this.timeouts[key])
+            delete this.timeouts[key]
+            delete this.streams[key]
         }
 
         logger.debug('Stream object "%s" deleted', stream.toString())
     }
 
-    close() {
-        Object.values(this._timeouts).forEach((timeout) => {
+    close(): void {
+        Object.values(this.timeouts).forEach((timeout) => {
             clearTimeout(timeout)
         })
     }

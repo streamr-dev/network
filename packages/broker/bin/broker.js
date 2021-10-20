@@ -7,6 +7,7 @@ const program = require('commander')
 
 const CURRENT_VERSION = require('../package.json').version
 const { createBroker } = require('../dist/src/broker')
+const { testnet2AutoMigrate } = require('../dist/src/helpers/ConfigAutoMigrate')
 
 program
     .version(CURRENT_VERSION)
@@ -21,12 +22,12 @@ program
         if (configFile == null) {
             configFile = path.join(os.homedir(), '/.streamr/broker-config.json')
             if (!fs.existsSync(configFile)) {
+                // eslint-disable-next-line max-len
                 console.error('Config file not found in the default location ~/.streamr/broker-config.json. You can run "streamr-broker-init" to generate a config file interactively, or specify the config file as argument: "streamr-broker path-to-config/file.json"')
                 process.exit(1)
             }
         }
-        const config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
-
+        let config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
         if (program.opts().streamrUrl) {
             config.streamrUrl = program.opts().streamrUrl
         }
@@ -38,6 +39,7 @@ program
         }
 
         try {
+            config = testnet2AutoMigrate(config, configFile)
             const broker = await createBroker(config, true)
             if (!program.opts().test) {
                 await broker.start()

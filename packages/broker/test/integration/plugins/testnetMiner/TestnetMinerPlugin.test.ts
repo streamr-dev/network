@@ -4,7 +4,7 @@ import { Logger, startTracker, Tracker } from 'streamr-network'
 import express, { Request, Response} from 'express'
 import { Broker } from '../../../../src/broker'
 import { createClient, createTestStream, fastPrivateKey, startBroker } from '../../../utils'
-import { Stream, StreamOperation } from 'streamr-client'
+import { Stream, StreamOperation, StreamrClient } from 'streamr-client'
 import { waitForCondition } from '../../../../../test-utils/dist/utils'
 import { Wallet } from 'ethers'
 import { version as CURRENT_VERSION } from '../../../../package.json'
@@ -24,10 +24,11 @@ class MockClaimServer {
     pingEndpointCalled = false
     claimRequestBody: any
 
-    async start() {
+    async start(): Promise<Server> {
         const app = express()
         app.use(express.json())
         app.post('/claim', (req: Request, res: Response) => {
+            logger.info('Claim endpoint called')
             this.claimRequestBody = req.body
             res.status(200).end()
         })
@@ -41,29 +42,18 @@ class MockClaimServer {
         return this.server
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.server!.close()
         await once(this.server!, 'close')
     }
 }
 
-const createRewardStream = async (): Promise<Stream> => {
-    const client = createClient(undefined as any, rewardPublisherPrivateKey, {
-        autoConnect: false
-    })
+const createRewardStream = async (client: StreamrClient): Promise<Stream> => {
     const stream = await createTestStream(client, module)
     await Promise.all(
         [StreamOperation.STREAM_GET, StreamOperation.STREAM_SUBSCRIBE].map((op) => stream.grantPermission(op, undefined))
     )
     return stream
-}
-
-const publishRewardCode = async (rewardStreamId: string) => {
-    const client = createClient(LEGACY_WEBSOCKET_PORT, rewardPublisherPrivateKey)
-    await client.publish(rewardStreamId, {
-        rewardCode: MOCK_REWARD_CODE
-    })
-    await client.ensureDisconnected()
 }
 
 describe('TestnetMinerPlugin', () => {
@@ -72,17 +62,27 @@ describe('TestnetMinerPlugin', () => {
     let broker: Broker
     let claimServer: MockClaimServer
     let rewardStreamId: string
+    let client: StreamrClient
+
+    const publishRewardCode = async (rewardStreamId: string) => {
+        await client.publish(rewardStreamId, {
+            rewardCode: MOCK_REWARD_CODE
+        })
+    }
 
     beforeAll(async () => {
-        const rewardStream = await createRewardStream()
+        tracker = await startTracker({
+            id: 'tracker',
+            listen: {
+                hostname: '127.0.0.1',
+                port: TRACKER_PORT
+            },
+        })
+        client = createClient(tracker, rewardPublisherPrivateKey)
+        const rewardStream = await createRewardStream(client)
         rewardStreamId = rewardStream.id
         claimServer = new MockClaimServer()
         await claimServer.start()
-        tracker = await startTracker({
-            id: 'tracker',
-            host: '127.0.0.1',
-            port: TRACKER_PORT,
-        })
         brokerWallet = Wallet.createRandom()
         broker = await startBroker({
             name: 'broker',
@@ -92,7 +92,7 @@ describe('TestnetMinerPlugin', () => {
             wsPort: LEGACY_WEBSOCKET_PORT,
             extraPlugins: {
                 testnetMiner: {
-                    rewardStreamId,
+                    rewardStreamIds: [rewardStreamId],
                     claimServerUrl: `http://127.0.0.1:${CLAIM_SERVER_PORT}`,
                     stunServerHost: null,
                     maxClaimDelay: 100
@@ -105,27 +105,31 @@ describe('TestnetMinerPlugin', () => {
         await Promise.allSettled([
             broker?.stop(),
             tracker?.stop(),
-            claimServer?.stop()
+            claimServer?.stop(),
+            client.destroy()
         ])
     })
 
     it('happy path', async () => {
         expect(claimServer!.pingEndpointCalled).toBeTruthy()
         await publishRewardCode(rewardStreamId)
-        await waitForCondition(() => claimServer.claimRequestBody !== undefined)
+        await waitForCondition(() => claimServer.claimRequestBody !== undefined, 30000)
         expect(claimServer.claimRequestBody.rewardCode).toBe(MOCK_REWARD_CODE)
         expect(claimServer.claimRequestBody.nodeAddress).toBe(brokerWallet.address)
         expect(claimServer.claimRequestBody.clientServerLatency).toBeGreaterThanOrEqual(0)
         expect(claimServer.claimRequestBody.waitTime).toBeGreaterThanOrEqual(0)
-        expect(claimServer.claimRequestBody.peers).toEqual([])
+        // will have broker as peer
+        expect(claimServer.claimRequestBody.peers).toHaveLength(1)
     })
 
     it('tracker is supplied metadata about broker version and nat type', async () => {
-        expect(tracker.getAllExtraMetadatas()).toEqual({
-            [brokerWallet.address]: {
+        // don't know key names because node ids are private and auto-generated by client.
+        expect(Object.values(tracker.getAllExtraMetadatas())).toEqual([
+            {
                 natType: null,
                 brokerVersion: CURRENT_VERSION
-            }
-        })
+            },
+            {}, // broker metadata is empty
+        ])
     })
 })

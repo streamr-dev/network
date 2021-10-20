@@ -1,5 +1,5 @@
-import { TrackerLayer, SmartContractRecord } from 'streamr-client-protocol'
-import { RtcSubTypes } from './logic/RtcMessage'
+import { SmartContractRecord, TrackerLayer } from 'streamr-client-protocol'
+import { NodeId } from './logic/node/Node'
 
 /**
  * Uniquely identifies a stream
@@ -50,21 +50,25 @@ export interface Location {
     city: string | null
 }
 
-export interface StatusStreams {
-    [key: string]: { // StreamKey
-        inboundNodes: string[]
-        outboundNodes: string[]
-        counter: number
-    }
+export interface StreamStatus {
+    streamKey: StreamKey
+    neighbors: NodeId[]
+    counter: number // TODO this field could be a field of "Status" interface, not this interface?
 }
 
 export interface Status {
-    streams: StatusStreams
-    rtts: Rtts
+    stream: StreamStatus
+    rtts: Rtts | null
     location: Location
     started: string
-    singleStream: boolean // indicate whether this is a status update for only a single stream
     extra: Record<string, unknown>
+}
+
+export enum RtcSubTypes {
+    ICE_CANDIDATE = 'iceCandidate',
+    RTC_OFFER = 'rtcOffer',
+    RTC_ANSWER = 'rtcAnswer',
+    RTC_CONNECT = 'rtcConnect',
 }
 
 export type RtcIceCandidateMessage = {
@@ -107,7 +111,7 @@ export type RelayMessage = (
     ) & TrackerLayer.RelayMessage
 
 export interface RtcErrorMessage {
-    targetNode: string
+    targetNode: NodeId
     errorCode: string
 }
 

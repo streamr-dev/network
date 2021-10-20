@@ -24,13 +24,18 @@ describe('NodeMetrics', () => {
             url: `http://127.0.0.1:${httpPort}`
         }]
         nodeAddress = tmpAccount.address
-        client1 = createClient(wsPort, Wallet.createRandom().privateKey, {
-            storageNode: storageNodeRegistry[0]
-        })
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
+            listen: {
+                hostname: '127.0.0.1',
+                port: trackerPort
+            },
             id: 'tracker-1'
+        })
+        client1 = createClient(tracker, Wallet.createRandom().privateKey, {
+            storageNodeRegistry: storageNodeRegistry,
+        })
+        client2 = createClient(tracker, tmpAccount.privateKey, {
+            storageNodeRegistry: storageNodeRegistry,
         })
         storageNode = await startBroker({
             name: 'storageNode',
@@ -61,7 +66,6 @@ describe('NodeMetrics', () => {
             },
             storageNodeConfig: { registry: storageNodeRegistry }
         })
-        client2 = createClient(wsPort, tmpAccount.privateKey)
     }, 35 * 1000)
 
     afterAll(async () => {
@@ -69,15 +73,15 @@ describe('NodeMetrics', () => {
             tracker.stop(),
             broker1.stop(),
             storageNode.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected()
+            client1.destroy(),
+            client2.destroy()
         ])
     }, 30 * 1000)
 
     it('should retrieve the a `sec` metrics', async () => {
         const messageQueue = new Queue<any>()
         const streamId = `${nodeAddress.toLowerCase()}/streamr/node/metrics/sec`
-        client2.subscribe(streamId, (content: any) => {
+        await client2.subscribe(streamId, (content: any) => {
             messageQueue.push({ content })
         })
         const message = await messageQueue.pop(10 * 1000)

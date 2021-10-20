@@ -13,7 +13,10 @@
             "ES2020",
             "ESNext",
             "DOM"
-        ]
+        ],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "strictBindCallApply": true
     },
     "include": [
         "src/**/*",

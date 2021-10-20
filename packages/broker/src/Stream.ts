@@ -1,12 +1,12 @@
-import { Todo } from './types'
+type State = 'init'|'subscribing'|'subscribed'
 
-export class Stream {
+export class Stream<C> {
 
-    id: Todo
-    name: Todo
-    partition: Todo
-    state: Todo
-    connections: Todo
+    readonly id: string
+    readonly name: string
+    readonly partition: number
+    state: State
+    readonly connections: C[]
 
     constructor(id: string, partition: number, name: string) {
         this.id = id
@@ -16,54 +16,54 @@ export class Stream {
         this.connections = []
     }
 
-    addConnection(connection: Todo) {
+    addConnection(connection: C): void {
         this.connections.push(connection)
     }
 
-    removeConnection(connection: Todo) {
+    removeConnection(connection: C): void {
         const index = this.connections.indexOf(connection)
         if (index > -1) {
             this.connections.splice(index, 1)
         }
     }
 
-    forEachConnection(cb: Todo) {
+    forEachConnection(cb: (connection: C) => void): void {
         this.getConnections().forEach(cb)
     }
 
-    getConnections() {
+    getConnections(): C[] {
         return this.connections
     }
 
-    setSubscribing() {
+    setSubscribing(): void {
         this.state = 'subscribing'
     }
 
-    setSubscribed() {
+    setSubscribed(): void {
         this.state = 'subscribed'
     }
 
-    isSubscribing() {
+    isSubscribing(): boolean {
         return this.state === 'subscribing'
     }
 
-    isSubscribed() {
+    isSubscribed(): boolean {
         return this.state === 'subscribed'
     }
 
-    toString() {
+    toString(): string {
         return `${this.id}::${this.partition}`
     }
 
-    getName() {
+    getName(): string {
         return this.name
     }
 
-    getId() {
+    getId(): string {
         return this.id
     }
 
-    getPartition() {
+    getPartition(): number {
         return this.partition
     }
 }

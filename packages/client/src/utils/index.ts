@@ -1,11 +1,10 @@
 import { inspect } from 'util'
 import EventEmitter from 'events'
-import { v4 as uuidv4 } from 'uuid'
-import uniqueId from 'lodash/uniqueId'
+import { SEPARATOR } from './uuid'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import mem from 'mem'
-import { L, F } from 'ts-toolbelt'
+import { L } from 'ts-toolbelt'
 
 import pkg from '../../package.json'
 import LRU from '../../vendor/quick-lru'
@@ -13,19 +12,12 @@ import { MaybeAsync } from '../types'
 
 import AggregatedError from './AggregatedError'
 import Scaffold from './Scaffold'
+import { Debug } from './log'
 
+export const debug = Debug('utils')
+
+export { default as uuid } from './uuid'
 export { AggregatedError, Scaffold }
-
-const UUID = uuidv4()
-
-export const SEPARATOR = '-'
-/*
- * Incrementing + human readable uuid
- */
-
-export function uuid(label = '') {
-    return uniqueId(`${UUID}${label ? `${SEPARATOR}${label}` : ''}`)
-}
 
 export function randomString(length = 20) {
     // eslint-disable-next-line no-bitwise
@@ -87,6 +79,17 @@ export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefi
 
 export const counterId = CounterId()
 
+export type AnyInstance = {
+    constructor: {
+        name: string
+        prototype: null | AnyInstance
+    }
+}
+
+export function instanceId(instance: AnyInstance, suffix = '') {
+    return counterId(instance.constructor.name) + suffix
+}
+
 function getVersion() {
     // dev deps are removed for production build
     const hasDevDependencies = !!(pkg.devDependencies && Object.keys(pkg.devDependencies).length)
@@ -132,7 +135,7 @@ type Collection<K, V> = {
     delete: Map<K, V>['delete']
 }
 
-function clearMatching(cache: Collection<unknown, unknown>, matchFn: (key: unknown) => boolean) {
+function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => boolean) {
     for (const key of cache.keys()) {
         if (matchFn(key)) {
             cache.delete(key)
@@ -155,15 +158,21 @@ function clearMatching(cache: Collection<unknown, unknown>, matchFn: (key: unkno
  * cachedAsyncFn.clear()
  * ```
  */
-
-export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
+export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
     onEviction = () => {},
+    cacheKey = (args: ArgsType) => args[0], // type+provide default so we can infer KeyType
     ...opts
-} = {}) {
-    const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
+}: {
+    maxSize?: number
+    maxAge?: number
+    cachePromiseRejection?: boolean
+    onEviction?: (...args: any[]) => void
+    cacheKey?: (args: ArgsType) => KeyType
+} = {}): ((...args: ArgsType) => Promise<ReturnType>) & { clear: () => void; clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
+    const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
         onEviction,
@@ -172,13 +181,14 @@ export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
     const cachedFn = Object.assign(pMemoize(asyncFn, {
         cachePromiseRejection,
         cache,
+        cacheKey,
         ...opts,
     }), {
         clear: () => {
-            pMemoize.clear(cachedFn)
+            pMemoize.clear(cachedFn as any)
             cache.clear()
         },
-        clearMatching: (...args: L.Tail<Parameters<typeof clearMatching>>) => clearMatching(cache, ...args),
+        clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
     })
 
     return cachedFn
@@ -198,25 +208,34 @@ export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
  * ```
  */
 
-export function CacheFn(fn: Parameters<typeof mem>[0], {
+export function CacheFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(fn: (...args: ArgsType) => ReturnType, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     onEviction = () => {},
+    cacheKey = (args: ArgsType) => args[0], // type+provide default so we can infer KeyType
     ...opts
+}: {
+    maxSize?: number
+    maxAge?: number
+    onEviction?: (...args: any[]) => void
+    cacheKey?: (args: ArgsType) => KeyType
 } = {}) {
-    const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
+    const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
         onEviction,
     })
 
     const cachedFn = Object.assign(mem(fn, {
-        maxAge,
         cache,
+        cacheKey,
         ...opts,
     }), {
-        clear: () => mem.clear(cachedFn),
-        clearMatching: (...args: L.Tail<Parameters<typeof clearMatching>>) => clearMatching(cache, ...args),
+        clear: () => {
+            mem.clear(cachedFn as any)
+            cache.clear()
+        },
+        clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
     })
 
     return cachedFn
@@ -236,10 +255,24 @@ type PromiseReject = L.Compulsory<Parameters<Promise<any>['then']>>[1]
 
 const noop = () => {}
 
+/*
+ * Some TS magic to allow type A = Defer<T>
+ * but instead as Deferred<T>
+ */
+class DeferredWrapper<T> {
+    // eslint-disable-next-line class-methods-use-this
+    wrap(...args: any[]) {
+        return Defer<T>(...args)
+    }
+}
+
+export type Deferred<T> = ReturnType<DeferredWrapper<T>['wrap']>
+
 export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop) {
     let resolveFn: PromiseResolve | undefined
     let rejectFn: PromiseResolve | undefined
-    const resolve: PromiseReject = (value) => {
+    let isResolved = false
+    const resolve: PromiseResolve = (value) => {
         if (resolveFn) {
             const r = resolveFn
             resolveFn = undefined
@@ -264,25 +297,27 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
     })
     p.catch(() => {}) // prevent unhandledrejection
 
-    function wrap(fn: F.Function) {
-        return async (...args: unknown[]) => {
+    function wrap<ArgsType extends any[], ReturnType>(fn: (...args: ArgsType) => ReturnType) {
+        return async (...args: ArgsType) => {
             try {
                 return resolve(await fn(...args))
             } catch (err) {
                 reject(err)
+                throw err
+            } finally {
+                isResolved = true
             }
-            return Promise.resolve()
         }
     }
 
-    function wrapError(fn: F.Function) {
-        return async (...args: unknown[]) => {
+    function wrapError<ArgsType extends any[], ReturnType>(fn: (...args: ArgsType) => ReturnType) {
+        return async (...args: ArgsType) => {
             try {
                 return await fn(...args)
             } catch (err) {
                 reject(err)
+                throw err
             }
-            return Promise.resolve()
         }
     }
 
@@ -299,7 +334,10 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
         reject,
         wrap,
         wrapError,
-        handleErrBack
+        handleErrBack,
+        isResolved() {
+            return isResolved
+        },
     })
 }
 
@@ -355,10 +393,12 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
  * Execute functions in parallel, but ensure they resolve in the order they were executed
  */
 
-export function pOrderedResolve(fn: F.Function) {
+export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
+    fn: (...args: ArgsType) => ReturnType
+) {
     const queue = pLimit(1)
-    return Object.assign(async (...args: Parameters<typeof fn>) => {
-        const d = Defer()
+    return Object.assign(async (...args: ArgsType) => {
+        const d = Defer<ReturnType>()
         const done = queue(() => d)
         // eslint-disable-next-line promise/catch-or-return
         await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
@@ -374,9 +414,12 @@ export function pOrderedResolve(fn: F.Function) {
  * Returns a function that executes with limited concurrency.
  */
 
-export function pLimitFn(fn: F.Function, limit = 1) {
+export function pLimitFn<ArgsType extends unknown[], ReturnType>(
+    fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>,
+    limit = 1
+): ((...args: ArgsType) => Promise<ReturnType>) & { clear(): void } {
     const queue = pLimit(limit)
-    return Object.assign((...args: unknown[]) => queue(() => fn(...args)), {
+    return Object.assign((...args: ArgsType) => queue(() => fn(...args)), {
         clear() {
             queue.clearQueue()
         }
@@ -384,34 +427,20 @@ export function pLimitFn(fn: F.Function, limit = 1) {
 }
 
 /**
- * Unwrap a Promise type e.g. Awaited<Promise<T>> => T
- * Required as TS doesn't (currently) understand Promise<T> is equivalent to Promise<Promise<T>>
- */
-type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
-
-/**
  * Only allows one outstanding call.
  * Returns same promise while task is executing.
  */
 
-export function pOne<Args extends any[], R>(
-    fn: (...args: Args) => R
-): (...args: Args) => Promise<Awaited<R>> {
-    let inProgress: Promise<Awaited<R>> | undefined
-    return async (...args: Args): Promise<Awaited<R>> => {
-        if (inProgress) {
-            return inProgress
+export function pOne<ArgsType extends unknown[], ReturnType>(
+    fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>,
+): ((...args: ArgsType) => Promise<ReturnType>) {
+    const once = pOnce(fn)
+    return async (...args: ArgsType): Promise<ReturnType> => {
+        try {
+            return await once(...args)
+        } finally {
+            once.reset()
         }
-
-        inProgress = (async () => {
-            try {
-                return await Promise.resolve(fn(...args)) as Awaited<R>
-            } finally {
-                inProgress = undefined
-            }
-        })()
-
-        return inProgress
     }
 }
 
@@ -420,37 +449,66 @@ export function pOne<Args extends any[], R>(
  * Returns same promise while task is executing.
  */
 
-export function pOnce<Args extends any[], R>(
-    fn: (...args: Args) => R
-): (...args: Args) => Promise<Awaited<R>> {
-    let inProgress: Promise<void> | undefined
-    let started = false
-    let value: Awaited<R>
-    let error: Error | undefined
-    return async (...args: Args) => {
-        if (!started) {
-            started = true
-            inProgress = (async () => {
-                try {
-                    value = await Promise.resolve(fn(...args)) as Awaited<R>
-                } catch (err) {
-                    error = err
-                } finally {
-                    inProgress = undefined
-                }
-            })()
+export function pOnce<ArgsType extends unknown[], ReturnType>(
+    fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>
+): ((...args: ArgsType) => Promise<ReturnType>) & { reset(): void, isStarted(): boolean } {
+    type CallStatus = PromiseSettledResult<ReturnType> | { status: 'init' } | { status: 'pending', promise: Promise<ReturnType> }
+    let currentCall: CallStatus = { status: 'init' }
+
+    return Object.assign(async function pOnceWrap(...args: ArgsType): Promise<ReturnType> { // eslint-disable-line prefer-arrow-callback
+        // capture currentCall so can assign to it, even after reset
+        const thisCall = currentCall
+        if (thisCall.status === 'pending') {
+            return thisCall.promise
         }
 
-        if (inProgress) {
-            await inProgress
+        if (thisCall.status === 'fulfilled') {
+            return thisCall.value
         }
 
-        if (error) {
-            throw error
+        if (thisCall.status === 'rejected') {
+            throw thisCall.reason
         }
 
-        return value
-    }
+        // status === 'init'
+
+        currentCall = thisCall
+
+        const promise = (async () => {
+            // capture value/error
+            try {
+                const value = await fn(...args)
+                Object.assign(thisCall, {
+                    promise: undefined, // release promise
+                    status: 'fulfilled',
+                    value,
+                })
+                return value
+            } catch (reason) {
+                Object.assign(thisCall, {
+                    promise: undefined, // release promise
+                    status: 'rejected',
+                    reason,
+                })
+
+                throw reason
+            }
+        })()
+        promise.catch(() => {}) // prevent unhandled
+        Object.assign(thisCall, {
+            status: 'pending',
+            promise,
+        })
+
+        return promise
+    }, {
+        isStarted() {
+            return currentCall.status !== 'init'
+        },
+        reset() {
+            currentCall = { status: 'init' }
+        }
+    })
 }
 
 export class TimeoutError extends Error {
@@ -486,7 +544,7 @@ type pTimeoutOpts = {
 
 type pTimeoutArgs = [timeout?: number, message?: string] | [pTimeoutOpts]
 
-export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs) {
+export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): Promise<T | undefined> {
     let opts: pTimeoutOpts = {}
     if (args[0] && typeof args[0] === 'object') {
         [opts] = args
@@ -501,7 +559,7 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
     }
 
     let timedOut = false
-    const p = Defer()
+    const p = Defer<T>()
     const t = setTimeout(() => {
         timedOut = true
         if (rejectOnTimeout) {
@@ -517,7 +575,7 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
             clearTimeout(t)
             if (timedOut) {
                 // ignore errors after timeout
-                return
+                return undefined
             }
 
             throw err

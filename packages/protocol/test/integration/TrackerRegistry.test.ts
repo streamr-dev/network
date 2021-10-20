@@ -4,37 +4,28 @@ const contractAddress = '0xBFCF120a8fD17670536f1B27D9737B775b2FD4CF'
 const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}:8545`
 
 describe('TrackerRegistry', () => {
-    test('throw exception if address is wrong (ENS)', async (done) => {
-        try {
+    test('throw exception if address is wrong (ENS)', async () => {
+        await expect(async () => (
             await getTrackerRegistryFromContract({
                 contractAddress: 'address', jsonRpcProvider
             })
-        } catch (e) {
-            expect(e.toString()).toContain('ENS')
-            done()
-        }
+        )).rejects.toThrow('ENS')
     })
 
-    test('throw exception if address is wrong', async (done) => {
-        try {
+    test('throw exception if address is wrong', async () => {
+        await expect(async () => (
             await getTrackerRegistryFromContract({
                 contractAddress: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', jsonRpcProvider
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: call revert exception')
-            done()
-        }
+        )).rejects.toThrow('call revert exception')
     })
 
-    test('throw exception if jsonRpcProvider is wrong', async (done) => {
-        try {
+    test('throw exception if jsonRpcProvider is wrong', async () => {
+        await expect(async () => (
             await getTrackerRegistryFromContract({
                 contractAddress, jsonRpcProvider: 'jsonRpcProvider'
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: could not detect network')
-            done()
-        }
+        )).rejects.toThrow('could not detect network')
     })
 
     describe('getAllTrackers', () => {
@@ -110,14 +101,14 @@ describe('TrackerRegistry', () => {
                 ws: 'ws://10.200.10.1:30301'
             })
             expect(trackerRegistry.getTracker('stream-2')).toEqual({
-                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
-                http: 'http://10.200.10.1:30302',
-                ws: 'ws://10.200.10.1:30302'
-            })
-            expect(trackerRegistry.getTracker('stream-3')).toEqual({
                 id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
                 http: 'http://10.200.10.1:30303',
                 ws: 'ws://10.200.10.1:30303'
+            })
+            expect(trackerRegistry.getTracker('stream-3')).toEqual({
+                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
+                http: 'http://10.200.10.1:30302',
+                ws: 'ws://10.200.10.1:30302'
             })
         })
     })

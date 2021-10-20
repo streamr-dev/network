@@ -125,7 +125,7 @@ class MsgChainQueue {
 }
 
 export type MessageHandler = (msg: StreamMessage) => void
-export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => void
+export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => void | Promise<void>
 
 /**
  * Strict types for EventEmitter interface.
@@ -172,7 +172,6 @@ class OrderedMsgChain extends MsgChainEmitter {
     propagationTimeout: number
     resendTimeout: number
     nextGaps: ReturnType<typeof setTimeout> | null = null
-    firstGap: ReturnType<typeof setTimeout> | null = null
     markedExplicitly = new StreamMessageSet()
     debug: ReturnType<typeof Debug>
 
@@ -273,10 +272,8 @@ class OrderedMsgChain extends MsgChainEmitter {
             this.debug('clearGap')
         }
         this.hasPendingGap = false
-        clearTimeout(this.firstGap!)
-        clearInterval(this.nextGaps!)
+        clearTimeout(this.nextGaps!)
         this.nextGaps = null
-        this.firstGap = null
     }
 
     disable(): void {
@@ -369,7 +366,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             }
 
             this.inOrderHandler(msg)
-        } catch (err) {
+        } catch (err: any) {
             this.emit('error', err)
         }
         return msg
@@ -380,29 +377,33 @@ class OrderedMsgChain extends MsgChainEmitter {
      */
     private scheduleGap(): void {
         if (this.hasPendingGap) { return }
+
         this.gapRequestCount = 0
         this.hasPendingGap = true
-        clearTimeout(this.firstGap!)
+
+        if (!this.isGapHandlingEnabled()) {
+            this.onGapFillsExhausted()
+            return
+        }
+
         this.debug('scheduleGap in %dms', this.propagationTimeout)
-        this.firstGap = setTimeout(() => {
-            this.requestGapFill()
-            if (!this.hasPendingGap) { return }
-            clearInterval(this.nextGaps!)
-            this.nextGaps = setInterval(() => {
-                if (!this.hasPendingGap) {
-                    clearInterval(this.nextGaps!)
-                    return
-                }
-                this.requestGapFill()
-            }, this.resendTimeout)
-        }, this.propagationTimeout)
+        const nextGap = (timeout: number) => {
+            clearTimeout(this.nextGaps!)
+            this.nextGaps = setTimeout(async () => {
+                if (!this.hasPendingGap) { return }
+                await this.requestGapFill()
+                if (!this.hasPendingGap) { return }
+                nextGap(this.resendTimeout)
+            }, timeout)
+        }
+        nextGap(this.propagationTimeout)
     }
 
     /**
      * Call gapHandler until run out of gapRequests.
      * Failure emits an error and sets up to continue processing enqueued messages after the gap.
      */
-    private requestGapFill(): void {
+    private async requestGapFill(): Promise<void> {
         if (!this.hasPendingGap || this.isEmpty()) { return }
         const msg = this.queue.peek() as ChainedMessage
         const { lastOrderedMsgRef } = this
@@ -417,36 +418,49 @@ class OrderedMsgChain extends MsgChainEmitter {
         const to = msg.prevMsgRef
         const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
         const { gapRequestCount, maxGapRequests } = this
-        if (gapRequestCount! < maxGapRequests) {
+        if (gapRequestCount < maxGapRequests) {
             this.debug('requestGapFill %d of %d: %o', gapRequestCount + 1, maxGapRequests, {
                 from,
                 to,
             })
             this.gapRequestCount += 1
             try {
-                this.gapHandler(from, to, this.publisherId, this.msgChainId)
-            } catch (err) {
+                await this.gapHandler(from, to, this.publisherId, this.msgChainId)
+            } catch (err: any) {
                 this.emit('error', err)
             }
         } else {
-            if (!this.isEmpty()) {
-                if (this.isGapHandlingEnabled()) {
-                    this.debug('requestGapFill failed after %d attempts: %o', maxGapRequests, {
-                        from,
-                        to,
-                    })
-                    this.debugStatus()
-                }
-                // skip gap, allow queue processing to continue
-                this.lastOrderedMsgRef = msg.getPreviousMessageRef()
-                if (this.isGapHandlingEnabled()) {
-                    this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
-                }
-                this.clearGap()
-                // keep processing
-                this.checkQueue()
-            }
+            this.onGapFillsExhausted()
         }
+    }
+
+    private onGapFillsExhausted() {
+        if (!this.hasPendingGap || this.isEmpty()) { return }
+        const { maxGapRequests } = this
+        const msg = this.queue.peek() as ChainedMessage
+        const { lastOrderedMsgRef } = this
+        if (!msg || !lastOrderedMsgRef) { return }
+
+        const to = msg.prevMsgRef
+        const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
+        if (this.isGapHandlingEnabled()) {
+            this.debug('requestGapFill failed after %d attempts: %o', maxGapRequests, {
+                from,
+                to,
+            })
+            this.debugStatus()
+        }
+
+        // skip gap, allow queue processing to continue
+        this.lastOrderedMsgRef = msg.getPreviousMessageRef()
+        if (this.isGapHandlingEnabled()) {
+            this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
+        }
+
+        this.clearGap()
+        // keep processing
+        this.checkQueue()
+
     }
 
     debugStatus(): void {

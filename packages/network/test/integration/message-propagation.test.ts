@@ -1,9 +1,9 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
-import { Event as NodeEvent } from '../../src/logic/Node'
+import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { startTracker, createNetworkNode } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -17,8 +17,10 @@ describe('message propagation in network', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 33300,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 33300
+            },
             id: 'tracker'
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }

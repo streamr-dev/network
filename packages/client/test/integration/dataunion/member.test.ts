@@ -5,7 +5,7 @@ import { StreamrClient } from '../../../src/StreamrClient'
 import { clientOptions, getSidechainTestWallet, tokenAdminWalletSidechain } from '../devEnvironment'
 import { DataUnion, JoinRequestState } from '../../../src/dataunion/DataUnion'
 import { createMockAddress, expectInvalidAddress, fakePrivateKey } from '../../utils'
-import authFetch from '../../../src/rest/authFetch'
+import authFetch from '../../../src/authFetch'
 import { getEndpointUrl } from '../../../src/utils'
 
 const { parseEther } = utils
