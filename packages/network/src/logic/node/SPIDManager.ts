@@ -1,5 +1,5 @@
 import { MessageLayer, SPID, SPIDKey } from 'streamr-client-protocol'
-import { StreamStatus } from '../../identifiers'
+import { SPIDStatus } from '../../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { NodeId } from './Node'
 import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
@@ -67,7 +67,7 @@ export class SPIDManager {
         neighbors.delete(node)
     }
 
-    getSPIDStatus(spid: SPID): StreamStatus {
+    getSPIDStatus(spid: SPID): SPIDStatus {
         const streamState = this.states.get(spid.toKey())
         if (streamState !== undefined) {
             return {

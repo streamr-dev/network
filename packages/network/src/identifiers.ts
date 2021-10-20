@@ -12,7 +12,7 @@ export interface Location {
     city: string | null
 }
 
-export interface StreamStatus {
+export interface SPIDStatus {
     id: string
     partition: number,
     neighbors: NodeId[]
@@ -20,7 +20,7 @@ export interface StreamStatus {
 }
 
 export interface Status {
-    stream: StreamStatus
+    stream: SPIDStatus
     rtts: Rtts | null
     location: Location
     started: string
