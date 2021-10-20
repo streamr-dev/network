@@ -125,16 +125,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     let httpServer: HttpServer|HttpsServer|undefined
 
-    setTimeout(() => {
-        console.info("SET LOG LEVEL TO TRACE")
-        Logger.changeLogLevel('trace')
-    }, 20 * 1000)
-
-    setTimeout(() => {
-        console.info("SET LOG LEVEL TO WARN")
-        Logger.changeLogLevel('warn')
-    }, 30 * 1000)
-
     return {
         getNeighbors: () => networkNode.getNeighbors(),
         getStreams: () => networkNode.getStreams(),

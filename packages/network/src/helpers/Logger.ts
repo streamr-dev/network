@@ -47,7 +47,7 @@ export class Logger {
     }
 
     private static createName(module: NodeJS.Module, context?: string) {
-
+    
         const parsedPath = path.parse(module.id)
         let fileId = parsedPath.name
         if (fileId === 'index') {
@@ -75,10 +75,10 @@ export class Logger {
         const errorInstance = args.find((arg) => (arg.constructor.name === 'Error'
             || arg.constructor.name === 'AggregateError'
             || arg.constructor.name === 'EvalError'
-            || arg.constructor.name === 'RangeError'
+            || arg.constructor.name === 'RangeError' 
             || arg.constructor.name === 'ReferenceError'
             || arg.constructor.name === 'SyntaxError'
-            || arg.constructor.name === 'TypeError'
+            || arg.constructor.name === 'TypeError' 
             || arg.constructor.name === 'URIError'
         ))
         if (errorInstance !== undefined) {
