@@ -41,7 +41,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             'package-lock.json'
-            'packages/*/package-lock.json'
       - name: npm ci
         working-directory: './'
         run: |
@@ -64,7 +63,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             'package-lock.json'
-            'packages/*/package-lock.json'
       - name: npm ci
         working-directory: './'
         run: |
@@ -184,7 +182,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             'package-lock.json'
-            'packages/*/package-lock.json'
 
       - name: npm ci
         working-directory: './'
