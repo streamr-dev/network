@@ -12,11 +12,11 @@ import { TopologyStabilizationOptions } from './Tracker'
  * 
  * We use debouncing to delay the sending. It means that we send the buffered instructions 
  * when either of these conditions is satisfied: 
- * - the topology stabilizes: no new instructions has been formed for the stream in 
+ * - the topology stabilizes: no new instructions has been formed for the stream partition in 
  *   X milliseconds
  * - the buffer times out: we have buffered an instruction for Y milliseconds
  * 
- * When an instruction is added to a stream buffer, it may overwrite an existing
+ * When an instruction is added to a stream partition buffer, it may overwrite an existing
  * instruction in the buffer if the both instructions share the same nodeId. In that 
  * situation we expect that the previous instruction is no longer valid (it has a lower
  * counterValue) and can be ignored.
@@ -36,7 +36,7 @@ export interface Instruction {
     counterValue: number
 }
 
-class StreamInstructionBuffer {
+class SPIDInstructionBuffer {
     private readonly instructions = new Map<NodeId, Instruction>()
     private readonly debouncedOnReady: () => void
 
@@ -65,7 +65,7 @@ export type SendInstructionFn = (
 ) => Promise<void>
 
 export class InstructionSender {
-    private readonly streamBuffers = new Map<SPIDKey, StreamInstructionBuffer>()
+    private readonly spidBuffers = new Map<SPIDKey, SPIDInstructionBuffer>()
     private readonly options: TopologyStabilizationOptions
     private readonly sendInstruction: SendInstructionFn
     private readonly metrics: Metrics
@@ -89,21 +89,21 @@ export class InstructionSender {
         this.getOrCreateBuffer(instruction.spidKey).addInstruction(instruction)
     }
 
-    private getOrCreateBuffer(spidKey: SPIDKey): StreamInstructionBuffer {
-        const existingBuffer = this.streamBuffers.get(spidKey)
+    private getOrCreateBuffer(spidKey: SPIDKey): SPIDInstructionBuffer {
+        const existingBuffer = this.spidBuffers.get(spidKey)
         if (existingBuffer !== undefined) {
             return existingBuffer
         } else {
-            const newBuffer = new StreamInstructionBuffer(this.options, () => {
-                this.streamBuffers.delete(spidKey)
+            const newBuffer = new SPIDInstructionBuffer(this.options, () => {
+                this.spidBuffers.delete(spidKey)
                 this.sendInstructions(newBuffer)
             })
-            this.streamBuffers.set(spidKey, newBuffer)
+            this.spidBuffers.set(spidKey, newBuffer)
             return newBuffer
         }
     }
 
-    private async sendInstructions(buffer: StreamInstructionBuffer): Promise<void> {
+    private async sendInstructions(buffer: SPIDInstructionBuffer): Promise<void> {
         const promises = Array.from(buffer.getInstructions())
             .map(async ({ nodeId, spidKey, newNeighbors, counterValue }) => {
                 this.metrics.record('instructionsSent', 1)
