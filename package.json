@@ -8,9 +8,9 @@
         "postbootstrap-pkg": "npm run versions",
         "bootstrap-pkg": "npm install --workspace",
         "versions": "zx ./show-versions.mjs",
-        "clean": "npm run clean-dist && npx lerna clean -y # remove all node_modules",
+        "clean": "npm run clean-dist && npx lerna clean -y && rm -Rf node_modules # remove all node_modules",
         "clean-dist": "npx lerna exec --no-bail 'npm run --if-present clean || rm -rf dist *.tsbuildinfo || true' # remove built files",
-        "clean-package-locks": "npx lerna exec --no-bail 'rm -f package-lock.json' # remove all package-lock files. npm run clean & npm run bootstrap to fully regenerate."
+        "clean-package-locks": "rm -f package-lock.json && npx lerna exec --no-bail 'rm -f package-lock.json' # remove all package-lock files. npm run clean & npm run bootstrap to fully regenerate."
     },
     "workspaces": [
         "packages/broker",
