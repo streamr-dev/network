@@ -5,7 +5,7 @@
         "bootstrap": "npm ci --no-workspaces # now run npm ci to install sub-packages",
         "postinstall": "npm run versions",
         "postbootstrap-pkg": "npm run versions",
-        "bootstrap-pkg": "npm install --workspace",
+        "bootstrap-pkg": "npm ci --include-workspace-root --workspace",
         "versions": "zx ./show-versions.mjs",
         "clean": "npm run clean-dist && npx lerna clean -y && rm -Rf node_modules # remove all node_modules",
         "clean-dist": "npx lerna exec --no-bail 'npm run --if-present clean || rm -rf dist *.tsbuildinfo || true' # remove built files",
@@ -24,8 +24,10 @@
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
+        "husky": "^6.0.0"
+    },
+    "devDependencies": {
         "cli-table": "^0.3.6",
-        "husky": "^6.0.0",
         "lerna": "^4.0.0",
         "node-gyp-build": "^4.3.0",
         "semver": "^7.3.5",
