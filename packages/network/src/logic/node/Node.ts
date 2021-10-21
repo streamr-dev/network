@@ -202,7 +202,7 @@ export class Node extends EventEmitter {
         const subscribePromises = nodeIds.map(async (nodeId) => {
             await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
             this.disconnectionManager.cancelScheduledDisconnection(nodeId)
-            this.subscribeToStreamOnNode(nodeId, spid, false)
+            this.subscribeToSPIDOnNode(nodeId, spid, false)
             return nodeId
         })
         return Promise.allSettled(subscribePromises)
@@ -257,7 +257,7 @@ export class Node extends EventEmitter {
         return this.trackerManager.stop()
     }
 
-    private subscribeToStreamOnNode(node: NodeId, spid: SPID, sendStatus = true): NodeId {
+    private subscribeToSPIDOnNode(node: NodeId, spid: SPID, sendStatus = true): NodeId {
         this.spidManager.addNeighbor(spid, node)
         this.propagation.onNeighborJoined(node, spid)
         if (sendStatus) {
@@ -279,9 +279,9 @@ export class Node extends EventEmitter {
 
     private onNodeDisconnected(node: NodeId): void {
         this.metrics.record('onNodeDisconnect', 1)
-        const streams = this.spidManager.removeNodeFromAllSPIDs(node)
+        const spids = this.spidManager.removeNodeFromAllSPIDs(node)
         logger.trace('removed all subscriptions of node %s', node)
-        streams.forEach((s) => {
+        spids.forEach((s) => {
             this.trackerManager.sendSPIDStatus(s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
