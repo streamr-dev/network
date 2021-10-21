@@ -236,7 +236,7 @@ export class Tracker extends EventEmitter {
         this.instructionCounter.removeNode(node)
 
         if (overlayTopology.isEmpty()) {
-            this.instructionCounter.removeStream(spidKey)
+            this.instructionCounter.removeSPID(spidKey)
             delete this.overlayPerStream[spidKey]
         } else {
             neighbors.forEach((neighbor) => {

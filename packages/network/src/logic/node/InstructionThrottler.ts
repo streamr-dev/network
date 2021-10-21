@@ -61,7 +61,7 @@ export class InstructionThrottler {
         }
     }
 
-    removeStream(spidKey: SPIDKey): void {
+    removeSPID(spidKey: SPIDKey): void {
         if (this.stopped) {
             return
         }

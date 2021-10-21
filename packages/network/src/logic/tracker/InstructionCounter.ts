@@ -27,7 +27,7 @@ export class InstructionCounter {
         delete this.counters[nodeId]
     }
 
-    removeStream(spidKey: SPIDKey): void {
+    removeSPID(spidKey: SPIDKey): void {
         Object.keys(this.counters).forEach((nodeId) => {
             delete this.counters[nodeId][spidKey]
         })

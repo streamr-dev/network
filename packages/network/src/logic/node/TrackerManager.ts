@@ -109,8 +109,8 @@ export class TrackerManager {
 
     onUnsubscribeFromStream(spid: SPID): void {
         const key = spid.toKey()
-        this.instructionThrottler.removeStream(key)
-        this.instructionRetryManager.removeStream(key)
+        this.instructionThrottler.removeSPID(key)
+        this.instructionRetryManager.removeSPID(key)
     }
 
     start(): void {

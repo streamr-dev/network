@@ -56,7 +56,7 @@ export class InstructionRetryManager {
         } catch (err) {
             this.logger.warn('instruction retry threw %s', err)
         }
-        // Check that stream has not been removed
+        // Check that stream partition has not been removed
         if (this.instructionRetryIntervals[spidKey]) {
             if (this.instructionRetryIntervals[spidKey].counter >= this.statusSendCounterLimit) {
                 this.instructionRetryIntervals[spidKey].counter = 0
@@ -71,14 +71,14 @@ export class InstructionRetryManager {
         }
     }
 
-    removeStream(spidKey: SPIDKey): void {
+    removeSPID(spidKey: SPIDKey): void {
         if (this.stopped) {
             return
         }
         if (spidKey in this.instructionRetryIntervals) {
             clearTimeout(this.instructionRetryIntervals[spidKey].interval)
             delete this.instructionRetryIntervals[spidKey]
-            this.logger.debug('stream %s successfully removed', spidKey)
+            this.logger.debug('stream partition %s successfully removed', spidKey)
         }
     }
 

@@ -98,7 +98,7 @@ describe('InstructionRetryManager', () => {
             [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
 
-        instructionRetryManager.removeStream('stream-1#0')
+        instructionRetryManager.removeSPID('stream-1#0')
         await wait(110)
         expect(handlerCb.mock.calls).toEqual([
             [createInstruction('stream-1', 1), 'tracker-1', false],

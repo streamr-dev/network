@@ -93,7 +93,7 @@ describe('InstructionCounter', () => {
         instructionCounter.setOrIncrement('node', 'stream-1')
         instructionCounter.setOrIncrement('node', 'stream-1')
         instructionCounter.setOrIncrement('node', 'stream-1')
-        instructionCounter.removeStream('stream-1')
+        instructionCounter.removeSPID('stream-1')
         const status = {
             stream: {
                 id: 'stream-1',
@@ -115,7 +115,7 @@ describe('InstructionCounter', () => {
         expect(instructionCounter.setOrIncrement('node-b', 'stream-2')).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-b', 'stream-3')).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1')).toEqual(4)
-        instructionCounter.removeStream('stream-1')
+        instructionCounter.removeSPID('stream-1')
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1')).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-b', 'stream-1')).toEqual(1)
         instructionCounter.removeNode('node-a')
