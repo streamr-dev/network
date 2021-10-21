@@ -40,7 +40,7 @@ export class TrackerConnector {
         this.connectionStates = new Map()
     }
 
-    onNewStream(spid: SPID): void {
+    onNewSPID(spid: SPID): void {
         const trackerInfo = this.trackerRegistry.getTracker(spid)
         this.connectTo(trackerInfo)
     }

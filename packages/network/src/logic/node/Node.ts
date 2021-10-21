@@ -177,9 +177,9 @@ export class Node extends EventEmitter {
         if (!this.spidManager.isSetUp(spid)) {
             logger.trace('add %s to stream partitions', spid)
             this.spidManager.setUpSPID(spid)
-            this.trackerManager.onNewStream(spid) // TODO: perhaps we should react based on event from SPIDManager?
+            this.trackerManager.onNewSPID(spid) // TODO: perhaps we should react based on event from SPIDManager?
             if (sendStatus) {
-                this.trackerManager.sendStreamStatus(spid)
+                this.trackerManager.sendSPIDStatus(spid)
             }
         }
     }
@@ -187,9 +187,9 @@ export class Node extends EventEmitter {
     unsubscribeFromStream(spid: SPID, sendStatus = true): void {
         logger.trace('remove %s from stream partitions', spid)
         this.spidManager.removeSPID(spid)
-        this.trackerManager.onUnsubscribeFromStream(spid)
+        this.trackerManager.onUnsubscribeFromSPID(spid)
         if (sendStatus) {
-            this.trackerManager.sendStreamStatus(spid)
+            this.trackerManager.sendSPIDStatus(spid)
         }
     }
 
@@ -261,7 +261,7 @@ export class Node extends EventEmitter {
         this.spidManager.addNeighbor(spid, node)
         this.propagation.onNeighborJoined(node, spid)
         if (sendStatus) {
-            this.trackerManager.sendStreamStatus(spid)
+            this.trackerManager.sendSPIDStatus(spid)
         }
         this.emit(Event.NODE_SUBSCRIBED, node, spid)
         return node
@@ -273,7 +273,7 @@ export class Node extends EventEmitter {
         this.emit(Event.NODE_UNSUBSCRIBED, node, spid)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedSPIDs(node)
         if (sendStatus) {
-            this.trackerManager.sendStreamStatus(spid)
+            this.trackerManager.sendSPIDStatus(spid)
         }
     }
 
@@ -282,7 +282,7 @@ export class Node extends EventEmitter {
         const streams = this.spidManager.removeNodeFromAllSPIDs(node)
         logger.trace('removed all subscriptions of node %s', node)
         streams.forEach((s) => {
-            this.trackerManager.sendStreamStatus(s)
+            this.trackerManager.sendSPIDStatus(s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }

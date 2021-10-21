@@ -56,13 +56,13 @@ export class TrackerManager {
     constructor(
         nodeToTracker: NodeToTracker,
         opts: TrackerManagerOptions,
-        streamManager: SPIDManager,
+        spidManager: SPIDManager,
         metrics: Metrics,
         getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
     ) {
         this.nodeToTracker =  nodeToTracker
-        this.spidManager = streamManager
+        this.spidManager = spidManager
         this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
         this.metrics = metrics
             .addRecordedMetric('unexpectedTrackerInstructions')
@@ -71,7 +71,7 @@ export class TrackerManager {
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.trackerConnector = new TrackerConnector(
-            streamManager.getSPIDs.bind(streamManager),
+            spidManager.getSPIDs.bind(spidManager),
             this.nodeToTracker.connectToTracker.bind(this.nodeToTracker),
             this.nodeToTracker.disconnectFromTracker.bind(this.nodeToTracker),
             this.trackerRegistry,
@@ -86,7 +86,7 @@ export class TrackerManager {
 
         this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => {
             logger.trace('connected to tracker %s', trackerId)
-            this.getStreamsForTracker(trackerId).forEach((spid) => {
+            this.getSPIDsForTracker(trackerId).forEach((spid) => {
                 this.sendStatus(spid, trackerId)
             })
         })
@@ -98,16 +98,16 @@ export class TrackerManager {
         })
     }
 
-    sendStreamStatus(spid: SPID): void {
+    sendSPIDStatus(spid: SPID): void {
         const trackerId = this.getTrackerId(spid)
         this.sendStatus(spid, trackerId)
     }
 
-    onNewStream(spid: SPID): void {
-        this.trackerConnector.onNewStream(spid)
+    onNewSPID(spid: SPID): void {
+        this.trackerConnector.onNewSPID(spid)
     }
 
-    onUnsubscribeFromStream(spid: SPID): void {
+    onUnsubscribeFromSPID(spid: SPID): void {
         const key = spid.toKey()
         this.instructionThrottler.removeSPID(key)
         this.instructionRetryManager.removeSPID(key)
@@ -125,7 +125,7 @@ export class TrackerManager {
         await this.nodeToTracker.stop()
     }
 
-    private getStreamsForTracker(trackerId: TrackerId): Array<SPID> {
+    private getSPIDsForTracker(trackerId: TrackerId): Array<SPID> {
         return [...this.spidManager.getSPIDKeys()]
             .map((key) => SPID.from(key))
             .filter((spid) => this.getTrackerId(spid) === trackerId)
@@ -203,16 +203,16 @@ export class TrackerManager {
             }
         })
         if (!reattempt || failedInstructions) {
-            this.sendStreamStatus(spid)
+            this.sendSPIDStatus(spid)
         }
 
-        logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
+        logger.trace('subscribed to %j and unsubscribed from %j (streamPartition=%s, counter=%d)',
             subscribedNodeIds, unsubscribedNodeIds, spid, counter)
 
         if (subscribedNodeIds.length !== nodeIds.length) {
-            logger.trace('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)', spid, counter)
+            logger.trace('error: failed to fulfill all tracker instructions (streamPartition=%s, counter=%d)', spid, counter)
         } else {
-            logger.trace('Tracker instructions fulfilled (streamId=%s, counter=%d)', spid, counter)
+            logger.trace('Tracker instructions fulfilled (streamPartition=%s, counter=%d)', spid, counter)
         }
     }
 
