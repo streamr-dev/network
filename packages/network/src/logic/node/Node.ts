@@ -271,7 +271,7 @@ export class Node extends EventEmitter {
         this.spidManager.removeNeighbor(spid, node)
         logger.trace('node %s unsubscribed from stream %s', node, spid)
         this.emit(Event.NODE_UNSUBSCRIBED, node, spid)
-        this.disconnectionManager.scheduleDisconnectionIfNoSharedStreams(node)
+        this.disconnectionManager.scheduleDisconnectionIfNoSharedSPIDs(node)
         if (sendStatus) {
             this.trackerManager.sendStreamStatus(spid)
         }

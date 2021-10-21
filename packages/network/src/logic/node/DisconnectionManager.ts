@@ -22,12 +22,12 @@ export interface DisconnectionManagerOptions {
  *
  * There are two ways this is achieved:
  *  1. Manual: a node can schedule (and cancel) disconnections that get executed after `disconnectionDelayInMs` if
- *      they still don't share streams.
+ *      they still don't share stream partitions.
  *  2. Automatic: a clean up interval is ran periodically in which any node without shared streams gets disconnected
  *      from.
  */
 export class DisconnectionManager {
-    public static DISCONNECTION_REASON = 'no shared streams'
+    public static DISCONNECTION_REASON = 'no shared stream partitions'
 
     private readonly disconnectionTimers = new Map<NodeId, NodeJS.Timeout>()
     private readonly getAllNodes: GetAllNodesFn
@@ -71,7 +71,7 @@ export class DisconnectionManager {
         })
     }
 
-    scheduleDisconnectionIfNoSharedStreams(nodeId: NodeId): void {
+    scheduleDisconnectionIfNoSharedSPIDs(nodeId: NodeId): void {
         if (!this.hasSharedSPIDs(nodeId)) {
             this.cancelScheduledDisconnection(nodeId)
             this.disconnectionTimers.set(nodeId, setTimeout(() => {

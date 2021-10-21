@@ -120,14 +120,14 @@ describe(DisconnectionManager, () => {
         })
 
         it('executed after TTL if no shared streams then', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedSPIDs('node')
             await wait(TTL + 1)
             expect(disconnect).toHaveBeenCalledTimes(1)
             expect(disconnect).toHaveBeenNthCalledWith(1, 'node', DisconnectionManager.DISCONNECTION_REASON)
         })
 
         it('not executed after TTL if has shared streams by then', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedSPIDs('node')
             hasSharedSPIDs.mockReturnValue(true)
             await wait(TTL + 1)
             expect(disconnect).toHaveBeenCalledTimes(0)
@@ -135,16 +135,16 @@ describe(DisconnectionManager, () => {
 
         it('not executed after TTL if had shared streams initially', async () => {
             hasSharedSPIDs.mockReturnValue(true)
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedSPIDs('node')
             hasSharedSPIDs.mockReturnValue(false)
             await wait(TTL + 1)
             expect(disconnect).toHaveBeenCalledTimes(0)
         })
 
         it('re-scheduling same disconnection causes debounce', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedSPIDs('node')
             await wait(TTL / 2)
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedSPIDs('node')
             await wait((TTL / 2) + 1)
             expect(disconnect).toHaveBeenCalledTimes(0)
             await wait((TTL / 2) + 1)
@@ -153,7 +153,7 @@ describe(DisconnectionManager, () => {
         })
 
         it('not executed after TTL if canceled before', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedSPIDs('node')
             await wait(TTL / 2)
             manager.cancelScheduledDisconnection('node')
             await wait((TTL / 2) + 1)
@@ -161,8 +161,8 @@ describe(DisconnectionManager, () => {
         })
 
         it('executed after TTL if canceling other (unrelated) node', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node-1')
-            manager.scheduleDisconnectionIfNoSharedStreams('node-2')
+            manager.scheduleDisconnectionIfNoSharedSPIDs('node-1')
+            manager.scheduleDisconnectionIfNoSharedSPIDs('node-2')
             await wait(TTL / 2)
             manager.cancelScheduledDisconnection('node-2')
             await wait((TTL / 2) + 1)
