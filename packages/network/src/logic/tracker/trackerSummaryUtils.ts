@@ -70,7 +70,7 @@ export function addRttsToNodeConnections(
     }
 }
 
-export function findStreamsForNode(
+export function findSPIDsForNode(
     overlayPerStream: OverlayPerStream,
     nodeId: NodeId
 ): Array<{ streamId: string, partition: number, topologySize: number}> {

@@ -3,7 +3,7 @@ import cors from 'cors'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import {
     addRttsToNodeConnections,
-    findStreamsForNode,
+    findSPIDsForNode,
     getNodeConnections,
     getTopology,
     getSPIDSizes
@@ -113,7 +113,7 @@ export function trackerHttpEndpoints(
     app.get('/nodes/:nodeId/streams', async (req: express.Request, res: express.Response) => {
         const nodeId = req.params.nodeId
         staticLogger.debug(`request to /nodes/${nodeId}/streams`)
-        const result = findStreamsForNode(tracker.getOverlayPerStream(), nodeId)
+        const result = findSPIDsForNode(tracker.getOverlayPerSPID(), nodeId)
         res.json(result)
     })
     app.get('/location/', (req: express.Request, res: express.Response) => {
