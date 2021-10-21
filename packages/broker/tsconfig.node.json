@@ -10,7 +10,7 @@
         "src/**/*.json"
     ],
     "references": [
-        { "path": "node_modules/streamr-client/tsconfig.node.json" },
-        { "path": "node_modules/streamr-network/tsconfig.node.json" }
+        { "path": "../network/tsconfig.node.json" },
+        { "path": "../client/tsconfig.node.json" }
     ]
 }

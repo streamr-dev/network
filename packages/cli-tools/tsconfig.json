@@ -10,6 +10,6 @@
         "bin/**/*"
     ],
     "references": [
-        { "path": "node_modules/streamr-client/tsconfig.node.json" }
+        { "path": "../client/tsconfig.node.json" }
     ]
 }
