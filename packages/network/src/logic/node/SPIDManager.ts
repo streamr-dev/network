@@ -68,13 +68,13 @@ export class SPIDManager {
     }
 
     getSPIDStatus(spid: SPID): SPIDStatus {
-        const streamState = this.states.get(spid.toKey())
-        if (streamState !== undefined) {
+        const spidState = this.states.get(spid.toKey())
+        if (spidState !== undefined) {
             return {
                 id: spid.streamId,
                 partition: spid.streamPartition,
-                neighbors: [...streamState.neighbors],
-                counter: streamState.counter
+                neighbors: [...spidState.neighbors],
+                counter: spidState.counter
             }
         } else {
             return {
