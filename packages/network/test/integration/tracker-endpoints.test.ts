@@ -80,7 +80,7 @@ describe('tracker endpoint', () => {
         nodeTwo.start()
 
         // @ts-expect-error private variable
-        await waitForCondition(() => Object.keys(tracker.overlayPerStream).length === 3)
+        await waitForCondition(() => Object.keys(tracker.overlayPerSPID).length === 3)
     })
 
     afterAll(async () => {

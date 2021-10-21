@@ -15,7 +15,7 @@ const createOverlayTopology = (mapping: { [key: string]: string[] }) => {
 
 test('getNodeConnections', () => {
     const nodes = ['node1', 'node2', 'node3', 'node4', 'node5', 'node6', 'nodeNotInTopology']
-    const overlayPerStream = {
+    const overlayPerSPID = {
         'stream-a#0': createOverlayTopology({
             node1: ['node2', 'node3']
         }),
@@ -30,7 +30,7 @@ test('getNodeConnections', () => {
             node6: []
         })
     }
-    const result = getNodeConnections(nodes, overlayPerStream)
+    const result = getNodeConnections(nodes, overlayPerSPID)
     expect(Object.keys(result)).toEqual(nodes)
     expect(result.node1).toEqual(new Set(['node2', 'node3', 'node5']))
     expect(result.node2).toEqual(new Set(['node1', 'node4']))

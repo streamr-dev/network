@@ -56,10 +56,10 @@ describe('check network stabilization', () => {
     it('network must become stable in less than 10 seconds',  async () => {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < 10; ++i) {
-                const beforeTopology = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
+                const beforeTopology = getTopology(tracker.getOverlayPerSPID(), tracker.getOverlayConnectionRtts())
                 // eslint-disable-next-line no-await-in-loop
                 await wait(800)
-                const afterTopology = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
+                const afterTopology = getTopology(tracker.getOverlayPerSPID(), tracker.getOverlayConnectionRtts())
                 if (areEqual(beforeTopology, afterTopology)) {
                     resolve(true)
                     return

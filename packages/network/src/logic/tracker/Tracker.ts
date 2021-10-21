@@ -36,7 +36,7 @@ export interface TrackerOptions {
     topologyStabilization?: TopologyStabilizationOptions
 }
 
-export type OverlayPerStream = Record<SPIDKey,OverlayTopology>
+export type OverlayPerSPID = Record<SPIDKey,OverlayTopology>
 
 // nodeId => connected nodeId => rtt
 export type OverlayConnectionRtts = Record<NodeId,Record<NodeId,number>>
@@ -52,7 +52,7 @@ export class Tracker extends EventEmitter {
     private readonly trackerServer: TrackerServer
     /** @internal */
     public readonly peerInfo: PeerInfo
-    private readonly overlayPerStream: OverlayPerStream
+    private readonly overlayPerSPID: OverlayPerSPID
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
@@ -78,7 +78,7 @@ export class Tracker extends EventEmitter {
         this.peerInfo = opts.peerInfo
 
         this.logger = new Logger(module)
-        this.overlayPerStream = {}
+        this.overlayPerSPID = {}
         this.overlayConnectionRtts = {}
         this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
@@ -191,23 +191,23 @@ export class Tracker extends EventEmitter {
     }
 
     private createTopology(spidKey: SPIDKey) {
-        if (this.overlayPerStream[spidKey] == null) {
-            this.overlayPerStream[spidKey] = new OverlayTopology(this.maxNeighborsPerNode)
+        if (this.overlayPerSPID[spidKey] == null) {
+            this.overlayPerSPID[spidKey] = new OverlayTopology(this.maxNeighborsPerNode)
         }
     }
 
     private updateNodeOnSPID(node: NodeId, status: SPIDStatus): void {
         const spidKey = SPID.toKey(status.id, status.partition)
         if (status.counter === COUNTER_UNSUBSCRIBE) {
-            this.leaveAndCheckEmptyOverlay(spidKey, this.overlayPerStream[spidKey], node)
+            this.leaveAndCheckEmptyOverlay(spidKey, this.overlayPerSPID[spidKey], node)
         } else {
-            this.overlayPerStream[spidKey].update(node, status.neighbors)
+            this.overlayPerSPID[spidKey].update(node, status.neighbors)
         }
     }
 
     private formAndSendInstructions(node: NodeId, spidKey: SPIDKey, forceGenerate = false): void {
-        if (this.overlayPerStream[spidKey]) {
-            const instructions = this.overlayPerStream[spidKey].formInstructions(node, forceGenerate)
+        if (this.overlayPerSPID[spidKey]) {
+            const instructions = this.overlayPerSPID[spidKey].formInstructions(node, forceGenerate)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
                 const counterValue = this.instructionCounter.setOrIncrement(nodeId, spidKey)
                 await this.instructionSender.addInstruction({
@@ -225,7 +225,7 @@ export class Tracker extends EventEmitter {
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
         delete this.extraMetadatas[node]
-        Object.entries(this.overlayPerStream)
+        Object.entries(this.overlayPerSPID)
             .forEach(([spidKey, overlayTopology]) => {
                 this.leaveAndCheckEmptyOverlay(spidKey, overlayTopology, node)
             })
@@ -237,7 +237,7 @@ export class Tracker extends EventEmitter {
 
         if (overlayTopology.isEmpty()) {
             this.instructionCounter.removeSPID(spidKey)
-            delete this.overlayPerStream[spidKey]
+            delete this.overlayPerSPID[spidKey]
         } else {
             neighbors.forEach((neighbor) => {
                 this.formAndSendInstructions(neighbor, spidKey, true)
@@ -246,7 +246,7 @@ export class Tracker extends EventEmitter {
     }
 
     getSPIDs(): Iterable<SPID> {
-        return transformIterable(Object.keys(this.overlayPerStream), (spidKey) => SPID.from(spidKey))
+        return transformIterable(Object.keys(this.overlayPerSPID), (spidKey) => SPID.from(spidKey))
     }
 
     getAllNodeLocations(): Readonly<Record<NodeId,Location>> {
@@ -269,8 +269,8 @@ export class Tracker extends EventEmitter {
         return this.overlayConnectionRtts
     }
 
-    getOverlayPerStream(): Readonly<OverlayPerStream> {
-        return this.overlayPerStream
+    getOverlayPerSPID(): Readonly<OverlayPerSPID> {
+        return this.overlayPerSPID
     }
 
     getConfigRecord(): SmartContractRecord {
