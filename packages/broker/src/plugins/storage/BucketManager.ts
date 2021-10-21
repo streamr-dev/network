@@ -1,15 +1,14 @@
 import { Client } from 'cassandra-driver'
 import Heap from 'heap'
 import { types as cassandraTypes } from 'cassandra-driver'
-import { Logger } from 'streamr-network'
+import { Logger, Protocol } from 'streamr-network'
 import { Bucket, BucketId } from './Bucket'
+import { SPIDKey } from '../../../../network/node_modules/streamr-client-protocol/dist/src'
 const { TimeUuid } = cassandraTypes
 
 const logger = new Logger(module)
 
-type StreamPartKey = string
-
-interface StreamPartState {
+interface SPIDState {
     streamId: string
     partition: number
     buckets: Heap<Bucket>
@@ -24,8 +23,6 @@ export interface BucketManagerOptions {
     bucketKeepAliveSeconds: number
 }
 
-const toKey = (streamId: string, partition: number): StreamPartKey => `${streamId}-${partition}`
-
 const instantiateNewHeap = () => new Heap((a: Bucket, b: Bucket) => {
     // @ts-expect-error TODO is dateCreate a Date object or a number?
     return b.dateCreate - a.dateCreate
@@ -34,7 +31,7 @@ const instantiateNewHeap = () => new Heap((a: Bucket, b: Bucket) => {
 export class BucketManager {
 
     opts: BucketManagerOptions
-    streams: Record<StreamPartKey,StreamPartState>
+    spids: Record<SPIDKey,SPIDState>
     buckets: Record<BucketId,Bucket>
     cassandraClient: Client
     private checkFullBucketsTimeout?: NodeJS.Timeout
@@ -54,7 +51,7 @@ export class BucketManager {
             ...opts
         }
 
-        this.streams = Object.create(null)
+        this.spids = Object.create(null)
         this.buckets = Object.create(null)
 
         this.cassandraClient = cassandraClient
@@ -69,20 +66,20 @@ export class BucketManager {
     getBucketId(streamId: string, partition: number, timestamp: number): string|undefined {
         let bucketId
 
-        const key = toKey(streamId, partition)
+        const key = Protocol.SPID.toKey(streamId, partition)
 
-        if (this.streams[key]) {
-            logger.trace(`stream ${key} found`)
+        if (this.spids[key]) {
+            logger.trace(`stream partition ${key} found`)
             bucketId = this.findBucketId(key, timestamp)
 
             if (!bucketId) {
-                const stream = this.streams[key]
-                stream.minTimestamp = stream.minTimestamp !== undefined ? Math.min(stream.minTimestamp, timestamp) : timestamp
+                const spid = this.spids[key]
+                spid.minTimestamp = spid.minTimestamp !== undefined ? Math.min(spid.minTimestamp, timestamp) : timestamp
             }
         } else {
-            logger.trace(`stream ${key} not found, create new`)
+            logger.trace(`stream partition ${key} not found, create new`)
 
-            this.streams[key] = {
+            this.spids[key] = {
                 streamId,
                 partition,
                 buckets: instantiateNewHeap(),
@@ -102,20 +99,20 @@ export class BucketManager {
         }
     }
 
-    private getLatestInMemoryBucket(key: StreamPartKey): Bucket|undefined {
-        const stream = this.streams[key]
-        if (stream) {
-            return stream.buckets.peek()
+    private getLatestInMemoryBucket(key: SPIDKey): Bucket|undefined {
+        const spid = this.spids[key]
+        if (spid) {
+            return spid.buckets.peek()
         }
         return undefined
     }
 
-    private findBucketId(key: StreamPartKey, timestamp: number): string|undefined {
+    private findBucketId(key: SPIDKey, timestamp: number): string|undefined {
         let bucketId
-        logger.trace(`checking stream: ${key}, timestamp: ${timestamp} in BucketManager state`)
+        logger.trace(`checking stream partition: ${key}, timestamp: ${timestamp} in BucketManager state`)
 
-        const stream = this.streams[key]
-        if (stream) {
+        const spid = this.spids[key]
+        if (spid) {
             const latestBucket = this.getLatestInMemoryBucket(key)
 
             if (latestBucket) {
@@ -124,7 +121,7 @@ export class BucketManager {
                     bucketId = latestBucket.getId()
                     // timestamp is in the past
                 } else if (latestBucket.dateCreate > new Date(timestamp)) {
-                    const currentBuckets = stream.buckets.toArray()
+                    const currentBuckets = spid.buckets.toArray()
                     // remove latest
                     currentBuckets.shift()
 
@@ -139,17 +136,17 @@ export class BucketManager {
         }
 
         // just for logger.debugging
-        logger.trace(`bucketId ${bucketId ? 'FOUND' : ' NOT FOUND'} for stream: ${key}, timestamp: ${timestamp}`)
+        logger.trace(`bucketId ${bucketId ? 'FOUND' : ' NOT FOUND'} for stream partition: ${key}, timestamp: ${timestamp}`)
         return bucketId
     }
 
     private async checkFullBuckets(): Promise<void> {
-        const streamIds = Object.keys(this.streams)
+        const spidKeys = Object.keys(this.spids)
 
-        for (let i = 0; i < streamIds.length; i++) {
-            const stream = this.streams[streamIds[i]]
-            const { streamId, partition } = stream
-            const { minTimestamp } = stream
+        for (let i = 0; i < spidKeys.length; i++) {
+            const spid = this.spids[spidKeys[i]]
+            const { streamId, partition } = spid
+            const { minTimestamp } = spid
 
             // minTimestamp is undefined if all buckets are found
             if (minTimestamp === undefined) {
@@ -164,16 +161,16 @@ export class BucketManager {
                 const foundBucket = foundBuckets.length ? foundBuckets[0] : undefined
 
                 if (foundBucket && !(foundBucket.getId() in this.buckets)) {
-                    stream.buckets.push(foundBucket)
+                    spid.buckets.push(foundBucket)
                     this.buckets[foundBucket.getId()] = foundBucket
-                    stream.minTimestamp = undefined
+                    spid.minTimestamp = undefined
                 } else {
                     insertNewBucket = true
                 }
             }
 
             // check in memory
-            const key = toKey(streamId, partition)
+            const key = Protocol.SPID.toKey(streamId, partition)
             const latestBucket = this.getLatestInMemoryBucket(key)
             if (latestBucket) {
                 // if latest is full or almost full - create new bucket
@@ -203,10 +200,10 @@ export class BucketManager {
                     this.opts.maxBucketSize, this.opts.maxBucketRecords, this.opts.bucketKeepAliveSeconds
                 )
 
-                stream.buckets.push(newBucket)
+                spid.buckets.push(newBucket)
                 this.buckets[newBucket.getId()] = newBucket
                 // eslint-disable-next-line require-atomic-updates
-                stream.minTimestamp = undefined
+                spid.minTimestamp = undefined
             }
         }
 
@@ -363,10 +360,10 @@ export class BucketManager {
     private removeBucket(bucketId: BucketId, streamId: string, partition: number): void {
         delete this.buckets[bucketId]
 
-        const key = toKey(streamId, partition)
-        const stream = this.streams[key]
-        if (stream) {
-            const currentBuckets = stream.buckets.toArray()
+        const key = Protocol.SPID.toKey(streamId, partition)
+        const spid = this.spids[key]
+        if (spid) {
+            const currentBuckets = spid.buckets.toArray()
             for (let i = 0; i < currentBuckets.length; i++) {
                 if (currentBuckets[i].getId() === bucketId) {
                     delete currentBuckets[i]
@@ -375,9 +372,9 @@ export class BucketManager {
             }
 
             // after removing we need to rebuild heap
-            stream.buckets = instantiateNewHeap()
+            spid.buckets = instantiateNewHeap()
             currentBuckets.forEach((bucket: Bucket) => {
-                stream.buckets.push(bucket)
+                spid.buckets.push(bucket)
             })
         }
     }

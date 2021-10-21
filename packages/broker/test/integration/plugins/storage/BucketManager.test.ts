@@ -1,4 +1,5 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
+import { Protocol } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import {  } from 'cassandra-driver'
 const { TimeUuid } = cassandraTypes
@@ -60,7 +61,7 @@ describe('BucketManager', () => {
 
         const storeBucketsSpy = jest.spyOn(bucketManager, 'storeBuckets' as any)
 
-        expect(Object.values(bucketManager.streams)).toHaveLength(0)
+        expect(Object.values(bucketManager.spids)).toHaveLength(0)
         expect(Object.values(bucketManager.buckets)).toHaveLength(0)
 
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
@@ -102,16 +103,17 @@ describe('BucketManager', () => {
 
     test('calling getBucketId() updates last know min timestamp and resets it to undefined when bucket is found', async () => {
         const timestamp = Date.now()
+        const key = Protocol.SPID.toKey(streamId, 0)
 
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
-        expect(bucketManager.streams[`${streamId}-0`].minTimestamp).toEqual(timestamp)
+        expect(bucketManager.spids[key].minTimestamp).toEqual(timestamp)
 
         await waitForCondition(() => bucketManager.getBucketId(streamId, 0, timestamp) !== undefined)
-        expect(bucketManager.streams[`${streamId}-0`].minTimestamp).toBeUndefined()
+        expect(bucketManager.spids[key].minTimestamp).toBeUndefined()
 
         // future timestamp will give latest not full bucket
         expect(bucketManager.getBucketId(streamId, 0, timestamp + 600)).not.toBeUndefined()
-        expect(bucketManager.streams[`${streamId}-0`].minTimestamp).toBeUndefined()
+        expect(bucketManager.spids[key].minTimestamp).toBeUndefined()
     })
 
     test('calling getBucketId() with timestamp in the past, will try to find correct bucket and then create buckets in the past', async () => {
