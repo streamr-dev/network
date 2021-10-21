@@ -84,6 +84,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
 
     const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
+
+    const webrtcDisallowPrivateAddresses = config.network?.webrtcDisallowPrivateAddresses || false
+
     const streamrClient = new StreamrClient({
         auth: {
             privateKey: config.ethereumPrivateKey,
@@ -97,7 +100,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             location: config.network.location,
             metricsContext,
             stunUrls: getStunTurnUrls(config),
-            webrtcDisallowPrivateAddresses: config.network?.webrtcDisallowPrivateAddresses || false
+            webrtcDisallowPrivateAddresses
         }
     })
     const publisher = new Publisher(streamrClient, metricsContext)
@@ -146,6 +149,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             logger.info(`Configured with trackers: [${trackers.map((tracker) => tracker.http).join(', ')}]`)
             logger.info(`Configured with Streamr: ${config.streamrUrl}`)
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
+
+            if (!webrtcDisallowPrivateAddresses) {
+                logger.warn('WebRTC private address probing is allowed, this might cause issues for hosted nodes.')
+            }
         },
         stop: async () => {
             if (httpServer !== undefined) {
