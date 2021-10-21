@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -53,7 +53,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: eslint
@@ -79,7 +78,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: Start Streamr Docker Stack
@@ -112,7 +110,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -121,7 +119,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}

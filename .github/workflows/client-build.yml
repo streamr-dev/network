@@ -49,7 +49,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -57,7 +57,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
@@ -86,7 +85,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -94,7 +93,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-client
       - name: test-types
         run: npm run test-types
@@ -121,7 +119,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -129,7 +127,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -163,7 +160,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -171,7 +168,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -210,7 +206,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -218,7 +214,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-client
       - name: benchmark publish
         timeout-minutes: 15

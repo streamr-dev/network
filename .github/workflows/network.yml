@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -52,7 +52,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-network
       - run: npm run eslint
       - run: npm run test-unit
@@ -76,7 +75,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -84,7 +83,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npx lerna bootstrap --scope streamr-network --include-dependencies
           sudo apt-get install xvfb
       - run: xvfb-run --auto-servernum npm run test-browser
@@ -112,7 +110,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-node-
@@ -120,7 +118,6 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
           npm run bootstrap-pkg streamr-network
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
