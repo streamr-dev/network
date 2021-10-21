@@ -45,8 +45,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: |
-            '../../package-lock.json'
-            '../*/package-lock.json'
+            'package-lock.json'
+            'packages/*/package-lock.json'
       - name: npm ci
         working-directory: './'
         run: |
@@ -70,8 +70,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: |
-            '../../package-lock.json'
-            '../*/package-lock.json'
+            'package-lock.json'
+            'packages/*/package-lock.json'
       - name: npm ci
         working-directory: './'
         run: |
@@ -109,8 +109,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: |
-            '../../package-lock.json'
-            '../*/package-lock.json'
+            'package-lock.json'
+            'packages/*/package-lock.json'
       - name: npm ci
         working-directory: './'
         run: |
@@ -150,8 +150,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: |
-            '../../package-lock.json'
-            '../*/package-lock.json'
+            'package-lock.json'
+            'packages/*/package-lock.json'
       - name: npm ci
         working-directory: './'
         run: |
@@ -185,8 +185,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: |
-            '../../package-lock.json'
-            '../*/package-lock.json'
+            'package-lock.json'
+            'packages/*/package-lock.json'
       - name: npm ci
         working-directory: './'
         run: |
