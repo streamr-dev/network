@@ -2,9 +2,8 @@
     "name": "streamr-monorepo",
     "scripts": {
         "prepare": "husky install",
-        "link": "lerna link",
-        "bootstrap": "npm install",
-        "postbootstrap": "npm run versions",
+        "bootstrap": "npm ci --no-workspaces # now run npm ci to install sub-packages",
+        "postinstall": "npm run versions",
         "postbootstrap-pkg": "npm run versions",
         "bootstrap-pkg": "npm install --workspace",
         "versions": "zx ./show-versions.mjs",
