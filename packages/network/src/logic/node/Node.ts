@@ -184,7 +184,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    unsubscribeFromStream(spid: SPID, sendStatus = true): void {
+    unsubscribeFromSPID(spid: SPID, sendStatus = true): void {
         logger.trace('remove %s from stream partitions', spid)
         this.spidManager.removeSPID(spid)
         this.trackerManager.onUnsubscribeFromSPID(spid)

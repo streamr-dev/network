@@ -34,7 +34,7 @@ export class NetworkNode extends Node {
     }
 
     unsubscribe(spid: SPID): void {
-        this.unsubscribeFromStream(spid)
+        this.unsubscribeFromSPID(spid)
     }
 
     getNeighborsForSPID(spid: SPID): ReadonlyArray<NodeId> {
