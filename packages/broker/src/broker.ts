@@ -96,7 +96,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             trackers,
             location: config.network.location,
             metricsContext,
-            stunUrls: getStunTurnUrls(config)
+            stunUrls: getStunTurnUrls(config),
+            webrtcDisallowPrivateAddresses: config.network?.webrtcDisallowPrivateAddresses || false
         }
     })
     const publisher = new Publisher(streamrClient, metricsContext)
