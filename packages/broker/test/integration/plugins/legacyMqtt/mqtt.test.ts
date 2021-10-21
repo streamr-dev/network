@@ -2,9 +2,8 @@ import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Todo } from '../../../../src/types'
 import { Broker } from '../../../broker'
-import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../../../utils'
+import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream, getSPIDKeys } from '../../../utils'
 
 const httpPort1 = 12381
 const httpPort2 = 12382
@@ -103,9 +102,9 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     it('happy-path: real-time mqtt plain text producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
@@ -189,8 +188,8 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     it('happy-path: real-time mqtt json producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
@@ -244,10 +243,10 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     it('happy-path: real-time mqtt and websocket producing and consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
-        const client4Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
+        const client4Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
 
@@ -370,14 +369,14 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => broker2.getNeighbors().length === 1)
 
         // for mqtt partition is always zero
-        expect(broker1.getStreams()).toEqual([freshStream1.id + '::0'])
-        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0'])
+        expect(getSPIDKeys(broker1)).toEqual([freshStream1.id + '#0'])
+        expect(getSPIDKeys(broker2)).toEqual([freshStream1.id + '#0'])
         await mqttClient1.unsubscribe(freshStream1.id)
 
-        await waitForCondition(() => broker1.getStreams().length === 0)
-        await waitForCondition(() => broker2.getStreams().length === 1)
+        await waitForCondition(() => getSPIDKeys(broker1).length === 0)
+        await waitForCondition(() => getSPIDKeys(broker2).length === 1)
 
-        expect(broker1.getStreams()).toEqual([])
-        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0'])
+        expect(getSPIDKeys(broker1)).toEqual([])
+        expect(getSPIDKeys(broker2)).toEqual([freshStream1.id + '#0'])
     }, 10000)
 })

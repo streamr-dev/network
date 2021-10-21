@@ -121,9 +121,9 @@ describe('Connection', () => {
                 connection.addStream(new Stream('stream2', 0, ''))
                 connection.addStream(new Stream('stream3', 0, ''))
                 expect(connection.getStreamsAsString()).toEqual([
-                    'stream1::0',
-                    'stream2::0',
-                    'stream3::0',
+                    'stream1#0',
+                    'stream2#0',
+                    'stream3#0',
                 ])
             })
         })

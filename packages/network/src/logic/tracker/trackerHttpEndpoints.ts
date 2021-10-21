@@ -51,17 +51,18 @@ const cachedJsonGet = (
 ): express.Application => {
     let cache: undefined | {
         timestamp: number
-        json: any
+        json: string
     }
     return app.get(endpoint, (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to ' + endpoint)
         if ((cache === undefined) || (Date.now() > (cache.timestamp + maxAge))) {
             cache = {
-                json: jsonFactory(),
+                json: JSON.stringify(jsonFactory()),
                 timestamp: Date.now()
             }
         }
-        res.json(cache.json)
+        res.setHeader('Content-Type', 'application/json')
+        res.send(cache.json)
     })
 }
 

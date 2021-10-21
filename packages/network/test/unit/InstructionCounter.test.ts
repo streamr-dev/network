@@ -11,7 +11,8 @@ describe('InstructionCounter', () => {
     it('if counters have not been set', () => {
         const status: Partial<Status> = {
             stream: {
-                streamKey: 'stream-1',
+                id: 'stream-1',
+                partition: 0,
                 neighbors: [],
                 counter: 123
             }
@@ -21,21 +22,23 @@ describe('InstructionCounter', () => {
     })
 
     it('stream specific', () => {
-        instructionCounter.setOrIncrement('node', 'stream-1')
-        instructionCounter.setOrIncrement('node', 'stream-1')
-        instructionCounter.setOrIncrement('node', 'stream-2')
-        instructionCounter.setOrIncrement('node', 'stream-2')
-        instructionCounter.setOrIncrement('node', 'stream-2')
+        instructionCounter.setOrIncrement('node', 'stream-1#0')
+        instructionCounter.setOrIncrement('node', 'stream-1#0')
+        instructionCounter.setOrIncrement('node', 'stream-2#0')
+        instructionCounter.setOrIncrement('node', 'stream-2#0')
+        instructionCounter.setOrIncrement('node', 'stream-2#0')
         const status1 = {
             stream: {
-                streamKey: 'stream-1',
+                id: 'stream-1',
+                partition: 0,
                 neighbors: [],
                 counter: 1
             }
         }
         const status2 = {
             stream: {
-                streamKey: 'stream-2',
+                id: 'stream-2',
+                partition: 0,
                 neighbors: [],
                 counter: 3
             }
@@ -45,21 +48,23 @@ describe('InstructionCounter', () => {
     })
 
     it('node specific', () => {
-        instructionCounter.setOrIncrement('node-1', 'stream-1')
-        instructionCounter.setOrIncrement('node-1', 'stream-1')
-        instructionCounter.setOrIncrement('node-2', 'stream-1')
-        instructionCounter.setOrIncrement('node-2', 'stream-1')
-        instructionCounter.setOrIncrement('node-2', 'stream-1')
+        instructionCounter.setOrIncrement('node-1', 'stream-1#0')
+        instructionCounter.setOrIncrement('node-1', 'stream-1#0')
+        instructionCounter.setOrIncrement('node-2', 'stream-1#0')
+        instructionCounter.setOrIncrement('node-2', 'stream-1#0')
+        instructionCounter.setOrIncrement('node-2', 'stream-1#0')
         const status1 = {
             stream: {
-                streamKey: 'stream-1',
+                id: 'stream-1',
+                partition: 0,
                 neighbors: [],
                 counter: 1
             }
         }
         const status2 = {
             stream: {
-                streamKey: 'stream-1',
+                id: 'stream-1',
+                partition: 0,
                 neighbors: [],
                 counter: 3
             }
@@ -69,13 +74,14 @@ describe('InstructionCounter', () => {
     })
 
     it('removeNode unsets counters', () => {
-        instructionCounter.setOrIncrement('node', 'stream-1')
-        instructionCounter.setOrIncrement('node', 'stream-1')
-        instructionCounter.setOrIncrement('node', 'stream-1')
+        instructionCounter.setOrIncrement('node', 'stream-1#0')
+        instructionCounter.setOrIncrement('node', 'stream-1#0')
+        instructionCounter.setOrIncrement('node', 'stream-1#0')
         instructionCounter.removeNode('node')
         const status = {
             stream: {
-                streamKey: 'stream-1',
+                id: 'stream-1',
+                partition: 0,
                 neighbors: [],
                 counter: 0
             }
@@ -90,7 +96,8 @@ describe('InstructionCounter', () => {
         instructionCounter.removeStream('stream-1')
         const status = {
             stream: {
-                streamKey: 'stream-1',
+                id: 'stream-1',
+                partition: 0,
                 neighbors: [],
                 counter: 0
             }

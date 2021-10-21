@@ -1,7 +1,6 @@
-import { Protocol, MetricsContext } from 'streamr-network'
+import { Logger, Protocol, MetricsContext } from 'streamr-network'
 import StreamrClient from 'streamr-client'
 import { Wallet } from 'ethers'
-import { Logger } from 'streamr-network'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
 import { Publisher } from './Publisher'
@@ -20,7 +19,7 @@ const logger = new Logger(module)
 
 export interface Broker {
     getNeighbors: () => readonly string[]
-    getStreams: () => readonly string[]
+    getSPIDs: () => Iterable<Protocol.SPID>
     getNodeId: () => string
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
@@ -127,7 +126,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     return {
         getNeighbors: () => networkNode.getNeighbors(),
-        getStreams: () => networkNode.getStreams(),
+        getSPIDs: () => networkNode.getSPIDs(),
         getNodeId: () => networkNode.getNodeId(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)

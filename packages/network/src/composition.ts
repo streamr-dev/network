@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
-import { MetricsContext } from './helpers/MetricsContext'
+import { Metrics, MetricsContext } from './helpers/MetricsContext'
 import { Location, TrackerInfo } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { HttpServerConfig, ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
-import { TopologyStabilizationOptions, Tracker } from './logic/tracker/Tracker'
+import { DEFAULT_MAX_NEIGHBOR_COUNT, TopologyStabilizationOptions, Tracker } from './logic/tracker/Tracker'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './logic/tracker/trackerHttpEndpoints'
 import { NodeToTracker } from './protocol/NodeToTracker'
@@ -23,6 +23,7 @@ require('setimmediate')
 
 export {
     Location,
+    Metrics,
     MetricsContext,
     NetworkNode,
     Protocol,
@@ -66,7 +67,7 @@ export const startTracker = async ({
     name,
     location,
     attachHttpEndpoints = true,
-    maxNeighborsPerNode = 4,
+    maxNeighborsPerNode = DEFAULT_MAX_NEIGHBOR_COUNT,
     metricsContext = new MetricsContext(id),
     trackerPingInterval,
     privateKeyFileName,

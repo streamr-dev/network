@@ -4,6 +4,7 @@ import { ConnectionInfo } from 'ethers/lib/utils'
 import { keyToArrayIndex } from './HashUtil'
 
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
+import { SPID } from './SPID'
 
 const { JsonRpcProvider } = providers
 
@@ -23,17 +24,8 @@ export class TrackerRegistry<T extends TrackerInfo> {
         this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(streamId: string, partition = 0): T {
-        if (typeof streamId !== 'string' || streamId.indexOf('::') >= 0) {
-            throw new Error(`invalid id: ${streamId}`)
-        }
-        if (!Number.isInteger(partition) || partition < 0) {
-            throw new Error(`invalid partition: ${partition}`)
-        }
-
-        const streamKey = `${streamId}::${partition}`
-
-        const index = keyToArrayIndex(this.records.length, streamKey)
+    getTracker(spid: SPID): T {
+        const index = keyToArrayIndex(this.records.length, spid.toKey())
         return this.records[index]
     }
 

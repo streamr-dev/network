@@ -3,7 +3,7 @@ import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 's
 import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
-import { Tracker } from 'streamr-network'
+import { Tracker, Protocol } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { StorageConfig } from '../src/plugins/storage/StorageConfig'
@@ -255,4 +255,8 @@ export class Queue<T> {
         await waitForCondition(() => this.items.length > 0, timeout)
         return this.items.shift()!
     }
+}
+
+export const getSPIDKeys = (broker: Broker): Protocol.SPIDKey[] => {
+    return Array.from(broker.getSPIDs(), (spid) => spid.toKey())
 }

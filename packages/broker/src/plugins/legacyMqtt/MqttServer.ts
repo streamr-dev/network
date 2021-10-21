@@ -1,37 +1,22 @@
-import { Server } from 'net'
+import { Server, Socket } from 'net'
 import { EventEmitter } from 'events'
-// @ts-expect-error no types for module
 import mqttCon from 'mqtt-connection'
-import { MetricsContext, NetworkNode } from 'streamr-network'
-import { StreamMessage, MessageID } from 'streamr-network/dist/streamr-protocol'
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
+import { Metrics, MetricsContext, NetworkNode, Protocol } from 'streamr-network'
 import { Logger } from 'streamr-network'
 import { partition } from '../../helpers/partition'
 import { Publisher } from '../../Publisher'
 import { StreamFetcher } from '../../StreamFetcher'
 import { StreamStateManager } from '../../StreamStateManager'
 import { SubscriptionManager } from '../../SubscriptionManager'
-import { Todo } from '../../types'
 import { Connection } from './Connection'
+import * as mqtt from "mqtt-packet"
+import { IPubackPacket } from "async-mqtt"
 
 const logger = new Logger(module)
 
-export type MQTTSubscription = {
-    topic: string,
-}
-
-export type MQTTPacket = {
-    messageId: string,
-    topic: string,
-    payload: string | Buffer,
-    qos: number,
-    subscriptions: MQTTSubscription[],
-    unsubscriptions: string[]
-}
-
 let sequenceNumber = 0
 
-function mqttPayloadToObject(payload: Todo) {
+function mqttPayloadToObject(payload: string): string | { mqttPayload: string } {
     try {
         JSON.parse(payload)
     } catch (e) {
@@ -44,7 +29,7 @@ function mqttPayloadToObject(payload: Todo) {
 
 export class MqttServer extends EventEmitter {
     mqttServer: Server
-    streamsTimeout
+    streamsTimeout: number | null
     networkNode: NetworkNode
     streamFetcher: StreamFetcher
     publisher: Publisher
@@ -103,7 +88,7 @@ export class MqttServer extends EventEmitter {
         })
     }
 
-    private createNewConnection(client: EventEmitter) {
+    private createNewConnection(client: mqttCon.Connection) {
         const connection = new Connection(client)
 
         connection.on('close', () => {
@@ -138,11 +123,13 @@ export class MqttServer extends EventEmitter {
         return connection
     }
 
-    private onNewClientConnection(mqttStream: Todo) {
+    private onNewClientConnection(mqttStream: Socket) {
         const connection = this.createNewConnection(mqttCon(mqttStream))
         this.connections.add(connection)
 
-        mqttStream.setTimeout(this.streamsTimeout)
+        if (this.streamsTimeout != null) {
+            mqttStream.setTimeout(this.streamsTimeout)
+        }
         mqttStream.once('timeout', () => {
             logger.debug('mqttStream timeout')
             this.closeConnection(connection)
@@ -174,21 +161,24 @@ export class MqttServer extends EventEmitter {
         })
     }
 
-    async handlePublishRequest(connection: Connection, packet: MQTTPacket): Promise<void> {
+    async handlePublishRequest(connection: Connection, packet: mqtt.IPublishPacket): Promise<void> {
         logger.debug('publish request %o', packet)
 
         const { topic, payload, qos } = packet
 
         try {
-            const streamObj = await this.streamFetcher.authenticate(topic, connection.token, 'stream_publish')
+            const streamObj = await this.streamFetcher.authenticate(topic, connection.token, 'stream_publish') as {
+                id: string,
+                partitions: number
+            }
 
             // No way to define partition over MQTT, so choose a random partition
             const streamPartition = this.partitionFn(streamObj.partitions)
 
             const textPayload = payload.toString()
             sequenceNumber += 1
-            const streamMessage = new StreamMessage({
-                messageId: new MessageID(streamObj.id, streamPartition, Date.now(), sequenceNumber, connection.id, connection.id),
+            const streamMessage = new Protocol.StreamMessage({
+                messageId: new Protocol.MessageID(streamObj.id, streamPartition, Date.now(), sequenceNumber, connection.id, connection.id),
                 content: mqttPayloadToObject(textPayload),
             })
 
@@ -208,7 +198,7 @@ export class MqttServer extends EventEmitter {
         }
     }
 
-    handleUnsubscribeRequest(connection: Connection, packet: MQTTPacket): void {
+    handleUnsubscribeRequest(connection: Connection, packet: mqtt.IUnsubscribePacket): void {
         logger.debug('unsubscribe request %o', packet)
 
         const topic = packet.unsubscriptions[0]
@@ -218,17 +208,21 @@ export class MqttServer extends EventEmitter {
             this.subscriptionManager.unsubscribe(stream.getId(), stream.getPartition())
             connection.removeStream(stream.getId(), stream.getPartition())
 
-            connection.client.unsuback(packet)
+            connection.client.unsuback(packet as any)
         }
     }
 
-    async handleSubscribeRequest(connection: Connection, packet: MQTTPacket): Promise<void> {
+    async handleSubscribeRequest(connection: Connection, packet: mqtt.ISubscribePacket & mqtt.ISubscription): Promise<void> {
         logger.debug('subscribe request %o', packet)
 
         const { topic } = packet.subscriptions[0]
 
         try {
-            const streamObj = await this.streamFetcher.authenticate(topic, connection.token, 'stream_subscribe')
+            const streamObj = await this.streamFetcher.authenticate(topic, connection.token, 'stream_subscribe') as {
+                id: string,
+                partitions: number,
+                name: string
+            }
             const newOrExistingStream = this.streams.getOrCreate(streamObj.id, 0, streamObj.name)
 
             // Subscribe now if the stream is not already subscribed or subscribing
@@ -262,8 +256,8 @@ export class MqttServer extends EventEmitter {
         logger.debug('closing client "%s" on streams "%o"', connection.id, connection.streamsAsString())
 
         // Unsubscribe from all streams
-        connection.forEachStream((stream: Todo) => {
-            const object = {
+        connection.forEachStream((stream) => {
+            const object: Partial<mqtt.IUnsubscribePacket> = {
                 messageId: 0,
                 unsubscriptions: [stream.getName()]
             }
@@ -290,7 +284,7 @@ export class MqttServer extends EventEmitter {
         connection.close()
     }
 
-    broadcastMessage(streamMessage: StreamMessage): void {
+    broadcastMessage(streamMessage: Protocol.StreamMessage): void {
         const streamId = streamMessage.getStreamId()
         const streamPartition = streamMessage.getStreamPartition()
         const stream = this.streams.get(streamId, 0)
@@ -303,13 +297,13 @@ export class MqttServer extends EventEmitter {
             }
 
             stream.forEachConnection((connection: Connection) => {
-                connection.client.publish(object, () => {})
+                connection.client.publish(object as Partial<IPubackPacket>, () => {})
             })
 
             this.metrics.record('outBytes', streamMessage.getSerializedContent().length * stream.getConnections().length)
             this.metrics.record('outMessages', stream.getConnections().length)
         } else {
-            logger.debug('broadcastMessage: stream "%s::%d" not found', streamId, streamPartition)
+            logger.debug('broadcastMessage: stream "%s" not found', Protocol.SPID.toKey(streamId, streamPartition))
         }
     }
 }

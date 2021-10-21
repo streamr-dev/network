@@ -3,7 +3,6 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
-import { Todo } from '../types'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
 
 const trackerPort = 17711
@@ -66,8 +65,8 @@ describe('local propagation', () => {
     })
 
     test('local propagation using StreamrClients', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
 
         await Promise.all([
             client1.subscribe({
@@ -121,8 +120,8 @@ describe('local propagation', () => {
     })
 
     test('local propagation using mqtt clients', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
@@ -172,10 +171,10 @@ describe('local propagation', () => {
     }, 10000)
 
     test('local propagation using StreamrClients and mqtt clients', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
-        const client4Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
+        const client4Messages: any[] = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)

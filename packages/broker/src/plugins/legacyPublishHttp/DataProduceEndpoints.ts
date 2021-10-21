@@ -1,20 +1,31 @@
-import express, { Router } from 'express'
+import express, { Router, Response } from 'express'
 import bodyParser from 'body-parser'
 import { Protocol } from 'streamr-network'
 import { Logger } from 'streamr-network'
 import { FailedToPublishError } from '../../errors/FailedToPublishError'
 import { partition } from '../../helpers/partition'
-import { authenticator } from '../../RequestAuthenticatorMiddleware'
+import { AuthenticatedRequest, authenticator } from '../../RequestAuthenticatorMiddleware'
 import { StreamFetcher } from '../../StreamFetcher'
 import { Publisher } from '../../Publisher'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 import { parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
-import { Todo } from '../../types'
 
 const logger = new Logger(module)
 
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 const { InvalidJsonError, ValidationError } = Protocol.Errors
+
+interface QueryParams {
+    ts?: string
+    seq?: string
+    prev_ts?: string
+    prev_seq?: string
+    signatureType?: string
+    signature?: string
+    pkey?: string
+    address?: string
+    msgChainId?: string
+}
 
 /**
  * Endpoint for POSTing data to streams
@@ -39,7 +50,7 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
         // Check write permission using middleware, writes req.stream
         authenticator(streamFetcher, 'stream_publish'),
         // Produce request handler
-        async (req: Todo, res: Todo) => {
+        async (req: AuthenticatedRequest<QueryParams>, res: Response) => {
             // Validate body
             if (!req.body || !req.body.length) {
                 const errMsg = 'No request body or invalid request body.'
@@ -77,8 +88,8 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
             try {
                 const streamMessage = new StreamMessage({
                     messageId: new MessageID(
-                        req.stream.id,
-                        partitionFn(req.stream.partitions, req.query.pkey),
+                        req.stream!.id as string,
+                        partitionFn(req.stream!.partitions as number, req.query.pkey),
                         timestamp,
                         sequenceNumber, // sequenceNumber
                         req.query.address || '', // publisherId

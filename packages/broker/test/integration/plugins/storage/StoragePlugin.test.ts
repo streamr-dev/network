@@ -1,16 +1,12 @@
-import { MetricsContext } from 'streamr-network'
+import { MetricsContext, Protocol } from 'streamr-network'
 import { StoragePlugin } from '../../../../src/plugins/storage/StoragePlugin'
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
-import { StreamPart } from '../../../../src/types'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
 import { StorageNodeRegistry } from "../../../../src/StorageNodeRegistry"
 import { Wallet } from 'ethers'
 
-const STREAM_PARTS: StreamPart[] = [
-    { id: 'foo', partition: 0 },
-    { id: 'bar', partition: 0 }
-]
+const SPIDS: Protocol.SPID[] = [new Protocol.SPID('foo', 0), new Protocol.SPID('bar', 0)]
 
 const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
     const wallet = Wallet.createRandom()
@@ -64,7 +60,7 @@ describe('StoragePlugin', () => {
             subscribe: jest.fn(),
             unsubscribe: jest.fn()
         }
-        storageConfig = createMockStorageConfig(STREAM_PARTS)
+        storageConfig = createMockStorageConfig(SPIDS)
         storageConfigFactory = jest.spyOn(StorageConfig, 'createInstance')
         storageConfigFactory.mockResolvedValue(storageConfig)
     })
@@ -76,13 +72,13 @@ describe('StoragePlugin', () => {
     test('happy path: start and stop', async () => {
         const plugin = createMockPlugin(networkNode, subscriptionManager)
         await plugin.start()
-        expect(subscriptionManager.subscribe).toBeCalledTimes(STREAM_PARTS.length)
+        expect(subscriptionManager.subscribe).toBeCalledTimes(SPIDS.length)
         expect(networkNode.addMessageListener).toBeCalledTimes(1)
         expect(storageConfig.startAssignmentEventListener).toBeCalledTimes(1)
         // @ts-expect-error private field
         const cassandraClose = jest.spyOn(plugin.cassandra!, 'close')
         await plugin.stop()
-        expect(subscriptionManager.unsubscribe).toBeCalledTimes(STREAM_PARTS.length)
+        expect(subscriptionManager.unsubscribe).toBeCalledTimes(SPIDS.length)
         expect(networkNode.removeMessageListener).toBeCalledTimes(1)
         expect(storageConfig.stopAssignmentEventListener).toBeCalledTimes(1)
         expect(storageConfig.cleanup).toBeCalledTimes(1)
