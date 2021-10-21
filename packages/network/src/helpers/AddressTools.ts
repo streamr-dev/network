@@ -20,7 +20,7 @@ export function isPrivateIPv4(address: string): boolean {
     return false
 }
 
-export function getAddressFromIceCandidate(candidate: string) : string | undefined {
+export function getAddressFromIceCandidate(candidate: string): string | undefined {
     const fields = candidate.split(' ').filter((field: string) => field.length > 0)
     return fields.length >= 5 && ipaddr.isValid(fields[4]) ? fields[4] : undefined
 }
