@@ -260,7 +260,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    private isIceCandidateAllowed(candidate: string): boolean {
+    isIceCandidateAllowed(candidate: string): boolean {
         if (this.disallowPrivateAddresses) {
             const address = getAddressFromIceCandidate(candidate)
             if (address && isPrivateIPv4(address)) {

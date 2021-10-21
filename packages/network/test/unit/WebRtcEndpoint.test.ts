@@ -444,4 +444,67 @@ describe('WebRtcEndpoint', () => {
         })
 
     })
+
+    describe('disallow private addresses', () => {
+        const createEndpoint = (webrtcDisallowPrivateAddresses: boolean) => {
+            const peerInfo = PeerInfo.newNode('node')
+            const ep = new NodeClientWsEndpoint(PeerInfo.newNode('node'))
+            const nodeToTracker = new NodeToTracker(ep)
+            const endpoint = new WebRtcEndpoint(
+                peerInfo,
+                [],
+                new RtcSignaller(peerInfo, nodeToTracker),
+                new MetricsContext(''),
+                new NegotiatedProtocolVersions(peerInfo),
+                NodeWebRtcConnectionFactory,
+                15000,    // newConnectionTimeout
+                5 * 1000, // pingInternval
+                2 ** 15,  // webrtcDatachannelBufferThresholdLow
+                2 ** 17,  // webrtcDatachannelBufferThresholdHigh
+                webrtcDisallowPrivateAddresses
+            )
+            return endpoint
+        }
+
+        const disallowedEndpoint = createEndpoint(true)
+        expect(disallowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 4134564487 10.9.8.7 4000 typ host'))
+            .toBe(false)
+        expect(disallowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 4134564487 172.16.1.1 4001 typ host'))
+            .toBe(false)
+        expect(disallowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 4134564487 192.168.120.3 4002 typ host'))
+            .toBe(false)
+        expect(disallowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 2122262783 198.51.100.130 4003 typ srflx raddr 0.0.0.0 rport 0'))
+            .toBe(true)
+        expect(disallowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 8245465162 2001:db8::a72c:ce47:531a:01bc 6000 typ host'))
+            .toBe(true)
+        expect(disallowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 2122296321 9b36eaac-bb2e-49bb-bb78-21c41c499900.local 7000 typ host'))
+            .toBe(true)
+
+        const allowedEndpoint = createEndpoint(false)
+        expect(allowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 4134564487 10.9.8.7 4000 typ host'))
+            .toBe(true)
+        expect(allowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 4134564487 172.16.1.1 4001 typ host'))
+            .toBe(true)
+        expect(allowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 4134564487 192.168.120.3 4002 typ host'))
+            .toBe(true)
+        expect(allowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 2122262783 198.51.100.130 4001 typ srflx raddr 0.0.0.0 rport 0'))
+            .toBe(true)
+        expect(allowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 8245465162 2001:db8::a72c:ce47:531a:01bc 6000 typ host'))
+            .toBe(true)
+        expect(allowedEndpoint
+            .isIceCandidateAllowed('candidate:1 1 udp 2122296321 9b36eaac-bb2e-49bb-bb78-21c41c499900.local 7000 typ host'))
+            .toBe(true)
+    })
 })
+
