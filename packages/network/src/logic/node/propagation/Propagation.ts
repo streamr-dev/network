@@ -68,8 +68,8 @@ export class Propagation {
      * Node should invoke this when it learns about a new node stream assignment
      */
     onNeighborJoined(neighborId: NodeId, spid: SPID): void {
-        const tasksOfStream = this.activeTaskStore.get(spid)
-        tasksOfStream.forEach(({ handledNeighbors, source, message}) => {
+        const tasksOfSPID = this.activeTaskStore.get(spid)
+        tasksOfSPID.forEach(({ handledNeighbors, source, message}) => {
             if (!handledNeighbors.has(neighborId) && neighborId !== source) {
                 this.sendToNeighbor(neighborId, message)
                 handledNeighbors.add(neighborId)

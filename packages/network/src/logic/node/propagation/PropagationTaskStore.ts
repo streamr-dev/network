@@ -17,7 +17,7 @@ export interface PropagationTask {
  * - Items have a TTL, after which they are considered stale and not returned when querying
 **/
 export class PropagationTaskStore {
-    private readonly streamLookup = new Map<SPIDKey, Set<MessageID>>()
+    private readonly spidLookup = new Map<SPIDKey, Set<MessageID>>()
     private readonly tasks: FifoMapWithTtl<MessageID, PropagationTask>
 
     constructor(ttlInMs: number, maxTasks: number) {
@@ -26,11 +26,11 @@ export class PropagationTaskStore {
             maxSize: maxTasks,
             onItemDropped: (messageId: MessageID) => {
                 const spid = SPID.from(messageId)
-                const messageIdsForStream = this.streamLookup.get(spid.toKey())
-                if (messageIdsForStream !== undefined) {
-                    messageIdsForStream.delete(messageId)
-                    if (messageIdsForStream.size === 0) {
-                        this.streamLookup.delete(spid.toKey())
+                const messageIdsForSPID = this.spidLookup.get(spid.toKey())
+                if (messageIdsForSPID !== undefined) {
+                    messageIdsForSPID.delete(messageId)
+                    if (messageIdsForSPID.size === 0) {
+                        this.spidLookup.delete(spid.toKey())
                     }
                 }
             }
@@ -40,10 +40,10 @@ export class PropagationTaskStore {
     add(task: PropagationTask): void {
         const messageId = task.message.messageId
         const spidKey = SPID.from(messageId).toKey()
-        if (!this.streamLookup.has(spidKey)) {
-            this.streamLookup.set(spidKey, new Set<MessageID>())
+        if (!this.spidLookup.has(spidKey)) {
+            this.spidLookup.set(spidKey, new Set<MessageID>())
         }
-        this.streamLookup.get(spidKey)!.add(messageId)
+        this.spidLookup.get(spidKey)!.add(messageId)
         this.tasks.set(messageId, task)
     }
 
@@ -52,7 +52,7 @@ export class PropagationTaskStore {
     }
 
     get(spid: SPID): Array<PropagationTask> {
-        const messageIds = this.streamLookup.get(spid.toKey())
+        const messageIds = this.spidLookup.get(spid.toKey())
         const tasks: Array<PropagationTask> = []
         if (messageIds !== undefined) {
             messageIds.forEach((messageId) => {
