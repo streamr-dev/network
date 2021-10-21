@@ -14,7 +14,7 @@ describe('Tracker reads deprecated status format', () => {
 
     let trackerServer: TrackerServer
     let createTopology: any
-    let updateNodeOnStream: any
+    let updateNodeOnSPID: any
     let formAndSendInstructions: any
 
     beforeAll(() => {
@@ -29,7 +29,7 @@ describe('Tracker reads deprecated status format', () => {
             }
         } as any)
         createTopology = jest.spyOn(tracker as any, 'createTopology').mockImplementation()
-        updateNodeOnStream = jest.spyOn(tracker as any, 'updateNodeOnStream').mockImplementation()
+        updateNodeOnSPID = jest.spyOn(tracker as any, 'updateNodeOnSPID').mockImplementation()
         formAndSendInstructions = jest.spyOn(tracker as any, 'formAndSendInstructions').mockImplementation()
     })
 
@@ -37,9 +37,9 @@ describe('Tracker reads deprecated status format', () => {
         const spidKey = SPID.toKey(STREAM_ID, STREAM_PARTITION)
         expect(createTopology).toBeCalledTimes(1)
         expect(createTopology).toBeCalledWith(spidKey)
-        expect(updateNodeOnStream).toBeCalledTimes(1)
-        expect(updateNodeOnStream.mock.calls[0][0]).toBe(SOURCE_NODE)
-        const actualStatus = updateNodeOnStream.mock.calls[0][1]
+        expect(updateNodeOnSPID).toBeCalledTimes(1)
+        expect(updateNodeOnSPID.mock.calls[0][0]).toBe(SOURCE_NODE)
+        const actualStatus = updateNodeOnSPID.mock.calls[0][1]
         expect(actualStatus).toContainEntries([
             ['id', STREAM_ID],
             ['partition', STREAM_PARTITION],

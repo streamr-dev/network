@@ -176,7 +176,7 @@ export class Tracker extends EventEmitter {
 
         // update topology
         this.createTopology(spidKey)
-        this.updateNodeOnStream(source, stream)
+        this.updateNodeOnSPID(source, stream)
         this.formAndSendInstructions(source, spidKey)
     }
 
@@ -196,7 +196,7 @@ export class Tracker extends EventEmitter {
         }
     }
 
-    private updateNodeOnStream(node: NodeId, status: SPIDStatus): void {
+    private updateNodeOnSPID(node: NodeId, status: SPIDStatus): void {
         const spidKey = SPID.toKey(status.id, status.partition)
         if (status.counter === COUNTER_UNSUBSCRIBE) {
             this.leaveAndCheckEmptyOverlay(spidKey, this.overlayPerStream[spidKey], node)
