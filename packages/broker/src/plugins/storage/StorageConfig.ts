@@ -1,14 +1,15 @@
-import fetch from 'node-fetch'
 import { Logger } from 'streamr-network'
 import { StreamPart } from '../../types'
 import { StreamMessage } from 'streamr-network/dist/src/streamr-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import StreamrClient from 'streamr-client'
+import { EthereumStorageEvent } from 'streamr-client/dist/types/src/NodeRegistry'
 
 const logger = new Logger(module)
 
 type StreamKey = string
 
+let skipPollResultSoonAfterEvent = false
 export interface StorageConfigListener {
     onStreamAdded: (streamPart: StreamPart) => void
     onStreamRemoved: (streamPart: StreamPart) => void
@@ -106,11 +107,14 @@ export class StorageConfig {
 
     async refresh(): Promise<void> {
         const streamsToStore = await this.streamrClient.getStoredStreamsOf(this.nodeId)
-        const streamKeys = new Set<StreamKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
+        if (!skipPollResultSoonAfterEvent) {
 
-            ...getKeysFromStream(stream.id, stream.partitions)
-        ])))
-        this._setStreams(streamKeys)
+            const streamKeys = new Set<StreamKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
+                
+                ...getKeysFromStream(stream.id, stream.partitions)
+            ])))
+            this._setStreams(streamKeys)
+        }
     }
 
     private _setStreams(newKeys: Set<StreamKey>): void {
@@ -165,6 +169,31 @@ export class StorageConfig {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)
+    }
+
+    async startChainEventsListener() {
+        const clientAddress = (await this.streamrClient.getAddress()).toLowerCase()
+        this.streamrClient.registerStorageEventListener(
+            async (event: EthereumStorageEvent) => {
+                skipPollResultSoonAfterEvent = true
+                if (event.nodeAddress.toLowerCase() !== clientAddress) { return }
+                const stream = await this.streamrClient.getStream(event.streamId)
+                const streamKeys = getKeysFromStream(stream.id, stream.partitions)
+                if (event.type === 'added') {
+                    this._addStreams(streamKeys)
+                }
+                if (event.type === 'removed') {
+                    this._removeStreams(streamKeys)
+                }
+                setTimeout(() => {
+                    skipPollResultSoonAfterEvent = false
+                }, 10000)
+            }
+        )
+    }
+
+    stopChainEventsListener() {
+        this.streamrClient.unRegisterStorageEventListeners()
     }
 
     private getAssignmentStreamId(streamrAddress: string) {

@@ -5,8 +5,8 @@ import { Stream, StreamOperation } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Wallet } from 'ethers'
 
-const TIMEOUT = 400 * 1000
-jest.setTimeout(30000)
+const TIMEOUT = 30 * 1000
+jest.setTimeout(60000)
 
 describeRepeats('Group Key Persistence', () => {
     let publisherPrivateKey: string
@@ -72,12 +72,8 @@ describeRepeats('Group Key Persistence', () => {
                 // subscriber will need to ask new publisher
                 // for group keys, which the new publisher will have to read from
                 // persistence
-                const storageNodeClient = await createClient({ auth: {
-                    privateKey: clientOptions.storageNode.privatekey
-                } })
-                const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
-                await stream.addToStorageNode(storageNode)
-                await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
+                const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+                await stream.addToStorageNode(await storageNodeWallet.getAddress())
 
                 published = await publishTestMessages(5, {
                     waitForLast: true,
@@ -305,26 +301,15 @@ describeRepeats('Group Key Persistence', () => {
                     },
                 })
 
-                // streams = await Promise.all(Array(NUM_STREAMS).fill(true).map(async () => {
                 for (let i = 0; i < NUM_STREAMS; i++) {
 
                     const s = await createTestStream(publisher, module)
-                    const storageNodeClient = await createClient({ auth: {
-                        privateKey: clientOptions.storageNode.privatekey
-                    } })
-                    const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
-                    stream = await createTestStream(publisher, module, {
-                        requireEncryptedData: true,
-                    })
-                    await stream.addToStorageNode(storageNode)
+                    const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+                    await s.addToStorageNode(await storageNodeWallet.getAddress())
                     // eslint-disable-next-line no-loop-func
-                    await until(async () => { return storageNodeClient.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) },
-                        100000, 1000)
-                    // return s
                     streams.push(s)
                 }
-                // }))
-            }, 2 * TIMEOUT)
+            })
 
             afterEach(() => (
                 publisher.destroy()
@@ -344,7 +329,7 @@ describeRepeats('Group Key Persistence', () => {
                 await Promise.allSettled(tasks)
                 const publishedPerStream = await Promise.all(tasks)
                 expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(20))
-            }, 2 * TIMEOUT)
+            })
         })
     })
 

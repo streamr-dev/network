@@ -1,14 +1,16 @@
 import debug from 'debug'
 import { Wallet } from 'ethers'
+import { wait } from 'streamr-test-utils'
 import { EthereumAddress, NotFoundError, StorageNode, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
+import { EthereumStorageEvent } from '../NodeRegistry'
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 // import { id } from '@ethersproject/hash'
 
 import config from './config'
 
-jest.setTimeout(300000)
+jest.setTimeout(30000)
 const log = debug('StreamrClient::NodeEndpointsIntegrationTest')
 
 /**
@@ -16,7 +18,7 @@ const log = debug('StreamrClient::NodeEndpointsIntegrationTest')
  */
 
 let client: StreamrClient
-let storageNodeClient: StreamrClient
+let newStorageNodeClient: StreamrClient
 let createdStream: Stream
 let createdNode: StorageNode
 let nodeAddress: EthereumAddress
@@ -28,26 +30,18 @@ beforeAll(async () => {
     client = await createClient({ auth: {
         privateKey: key
     } })
-    const storageNodeWallet = new Wallet(await getPrivateKey())
-    storageNodeClient = await createClient({ auth: {
-        privateKey: storageNodeWallet.privateKey
+    const newStorageNodeWallet = new Wallet(await getPrivateKey())
+    newStorageNodeClient = await createClient({ auth: {
+        privateKey: newStorageNodeWallet.privateKey
     } })
-    nodeAddress = (await storageNodeWallet.getAddress())
+    nodeAddress = (await newStorageNodeWallet.getAddress())
     createdStream = await createTestStream(client, module, {})
-    return until(async () => {
-        try {
-            return await client.streamExists(createdStream.id)
-        } catch (err) {
-            log('stream not found yet %o', err)
-            return false
-        }
-    }, 100000, 1000)
 })
 
 describe('createNode', () => {
     it('creates a node ', async () => {
-
-        createdNode = await storageNodeClient.setNode(config.storageNode.url)
+        const storageNodeUrl = 'http://asd.com'
+        createdNode = await newStorageNodeClient.setNode(storageNodeUrl)
         await until(async () => {
             try {
                 return (await client.getStorageNode(nodeAddress)) !== null
@@ -57,13 +51,29 @@ describe('createNode', () => {
             }
         }, 100000, 1000)
         expect(createdNode.getAddress()).toEqual(nodeAddress.toLowerCase())
-        return expect(createdNode.url).toEqual(config.storageNode.url)
+        return expect(createdNode.url).toEqual(storageNodeUrl)
     })
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode', async () => {
         await client.addStreamToStorageNode(createdStream.id, nodeAddress)
         await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, nodeAddress) }, 100000, 1000)
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(true)
+    })
+
+    it('addStreamToStorageNode, isStreamStoredInStorageNode, evnetlistener', async () => {
+        const promise = Promise
+        const callback = (event: EthereumStorageEvent) => {
+            expect(event).toEqual({
+                streamId: createdStream.id,
+                nodeAddress,
+                type: 'added'
+            })
+            promise.resolve()
+        }
+        await client.registerStorageEventListener(callback)
+        await client.addStreamToStorageNode(createdStream.id, nodeAddress)
+        await promise
+        await client.unRegisterStorageEventListeners()
     })
 
     it('getStorageNodesOf', async () => {
@@ -91,15 +101,16 @@ describe('createNode', () => {
     })
 
     it('addStreamToStorageNode through streamobject', async () => {
-        const storageNodeFromDevEnv = await createClient({ auth: {
+        const storageNodeClientFromDevEnv = await createClient({ auth: {
             privateKey: config.storageNode.privatekey
         } })
-        await createdStream.addToStorageNode(await storageNodeFromDevEnv.getAddress())
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, await storageNodeFromDevEnv.getAddress())).toEqual(true)
+        const storageNodeDev = await storageNodeClientFromDevEnv.setNode(config.storageNode.url)
+        await createdStream.addToStorageNode(await storageNodeDev.getAddress())
+        return expect(await client.isStreamStoredInStorageNode(createdStream.id, await storageNodeDev.getAddress())).toEqual(true)
     })
 
     it('delete a node ', async () => {
-        await storageNodeClient.removeNode()
+        await newStorageNodeClient.removeNode()
         await until(async () => {
             try {
                 const res = await client.getStorageNode(nodeAddress)

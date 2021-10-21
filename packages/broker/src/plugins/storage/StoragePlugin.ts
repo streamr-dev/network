@@ -79,6 +79,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
         const storageConfig = await StorageConfig.createInstance(brokerAddress, this.streamrClient, this.pluginConfig.storageConfig.refreshInterval)
         this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.subscriptionManager)
+        await storageConfig.startChainEventsListener()
         return storageConfig
     }
 
@@ -88,6 +89,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig!.getStreams().forEach((stream) => {
             this.subscriptionManager.unsubscribe(stream.id, stream.partition)
         })
+        this.storageConfig!.stopChainEventsListener()
         return Promise.all([
             this.cassandra!.close(),
             this.storageConfig!.cleanup()

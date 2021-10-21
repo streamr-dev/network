@@ -18,6 +18,12 @@ import { EthereumAddress, NotFoundError } from '.'
 
 const log = debug('StreamrClient:NodeRegistry')
 
+export type EthereumStorageEvent = {
+    streamId: string,
+    nodeAddress: EthereumAddress,
+    type: 'added' | 'removed'
+}
+
 export type NetworkSmartContract = {
     contractAddress: string
     jsonRpcProvider: string
@@ -205,6 +211,19 @@ export class NodeRegistry {
     parseStream(id: string, propsString: string): Stream {
         const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(propsString)
         return new Stream({ ...parsedProps, id }, this.container)
+    }
+
+    async registerStorageEventListener(callback: (arg0: EthereumStorageEvent) => any) {
+        this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: string) => {
+            callback({ streamId, nodeAddress, type: 'added' })
+        })
+        this.streamStorageRegistryContractReadonly.on('Removed', (streamId: string, nodeAddress: string) => {
+            callback({ streamId, nodeAddress, type: 'removed' })
+        })
+    }
+
+    async unRegisterStorageEventListeners() {
+        this.streamStorageRegistryContractReadonly.removeAllListeners()
     }
 
     // --------------------------------------------------------------------------------------------

@@ -5,6 +5,7 @@ import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
+import { wait } from 'streamr-test-utils'
 
 jest.setTimeout(30000)
 
@@ -13,7 +14,7 @@ const createClient = getCreateClient()
 /**
  * These tests should be run in sequential order!
  */
-function TestStreamEndpoints(getName: () => string) {
+function TestStreamEndpoints(getName: () => string, delay: number) {
     let client: StreamrClient
     let wallet: Wallet
     let createdStream: Stream
@@ -24,6 +25,7 @@ function TestStreamEndpoints(getName: () => string) {
     }
 
     beforeAll(async () => {
+        await wait(delay)
         const key = await getPrivateKey()
         wallet = new Wallet(key)
         client = await createClient({
@@ -39,12 +41,8 @@ function TestStreamEndpoints(getName: () => string) {
             requireSignedData: true,
             requireEncryptedData: false,
         })
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: clientOptions.storageNode.privatekey
-        } })
-        storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
-        // await createdStream.addToStorageNode(storageNode.getAddress())
-        // await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, storageNode.getAddress()) }, 100000, 1000)
+        const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+        storageNode = await client.getStorageNode(await storageNodeWallet.getAddress())
     })
 
     describe('createStream', () => {
@@ -420,10 +418,10 @@ function TestStreamEndpoints(getName: () => string) {
 
 describe('StreamEndpoints', () => {
     describe('using normal name', () => {
-        TestStreamEndpoints(() => uid('test-stream'))
+        TestStreamEndpoints(() => uid('test-stream'), 0)
     })
 
     describe('using name with slashes', () => {
-        TestStreamEndpoints(() => uid('test-stream/slashes'))
+        TestStreamEndpoints(() => uid('test-stream/slashes'), 4000)
     })
 })
