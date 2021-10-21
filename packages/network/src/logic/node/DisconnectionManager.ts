@@ -17,13 +17,13 @@ export interface DisconnectionManagerOptions {
 }
 
 /**
- * DisconnectionManager assists a network node in disconnecting from other nodes when streams are
+ * DisconnectionManager assists a network node in disconnecting from other nodes when stream partitions are
  * no longer shared between them.
  *
  * There are two ways this is achieved:
  *  1. Manual: a node can schedule (and cancel) disconnections that get executed after `disconnectionDelayInMs` if
  *      they still don't share stream partitions.
- *  2. Automatic: a clean up interval is ran periodically in which any node without shared streams gets disconnected
+ *  2. Automatic: a clean up interval is ran periodically in which any node without shared streams partitions gets disconnected
  *      from.
  */
 export class DisconnectionManager {

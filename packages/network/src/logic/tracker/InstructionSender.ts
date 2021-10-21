@@ -7,7 +7,7 @@ import { NodeId } from '../node/Node'
 import { TopologyStabilizationOptions } from './Tracker'
 
 /**
- * Instructions are collected to buffers and sent after a short delay. For each stream
+ * Instructions are collected to buffers and sent after a short delay. For each stream partition
  * there is a separate buffer.
  * 
  * We use debouncing to delay the sending. It means that we send the buffered instructions 

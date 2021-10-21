@@ -63,7 +63,7 @@ export class GapMisMatchError extends Error {
 
 /**
  *
- * Keeps track of a stream's message numbers and reports already seen numbers
+ * Keeps track of message numbers for a stream partition and reports already seen numbers
  * as duplicates.
  *
  * Leverages the fact that message are assigned numbers from a strictly
