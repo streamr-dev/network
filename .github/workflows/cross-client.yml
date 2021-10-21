@@ -59,8 +59,8 @@ jobs:
           node-version: "14.x"
           cache: 'npm'
           cache-dependency-path: |
-            'package-lock.json'
-            'packages/*/package-lock.json'
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |

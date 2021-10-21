@@ -42,8 +42,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: |
-            'package-lock.json'
-            'packages/*/package-lock.json'
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -87,8 +87,8 @@ jobs:
           node-version: 14
           cache: 'npm'
           cache-dependency-path: |
-            'package-lock.json'
-            'packages/*/package-lock.json'
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -118,8 +118,8 @@ jobs:
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
           cache-dependency-path: |
-            'package-lock.json'
-            'packages/*/package-lock.json'
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
