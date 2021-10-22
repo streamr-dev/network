@@ -1,3 +1,4 @@
+---
 # Any tests that need the built code should go in here.
 name: Client – Test Build
 
@@ -17,7 +18,7 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 defaults:
   run:
@@ -234,4 +235,3 @@ jobs:
           path: |
               packages/client/benchmark-publish.txt
               packages/client/benchmark-subscribe.txt
-

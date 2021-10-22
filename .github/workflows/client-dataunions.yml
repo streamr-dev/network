@@ -1,4 +1,5 @@
- #Split out DataUnion tests
+---
+# Split out DataUnion tests
 name: Client – DataUnions
 
 # Be sure to update both workflow files if you edit any env or trigger config
@@ -17,7 +18,7 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 defaults:
   run:
@@ -40,20 +41,20 @@ jobs:
       matrix:
         node-version: [14.x]
         test-name: [
-            "test-integration-dataunions",
+          "test-integration-dataunions",
         ]
         websocket-url:
-            - name: "default"
-              url:  ""
-            - name: "single-node-only"
-              url:  "ws://localhost:8690/api/v1/ws"
+          - name: "default"
+            url: ""
+          - name: "single-node-only"
+            url: "ws://localhost:8690/api/v1/ws"
 
         exclude:
           # no need to test different ws urls for dataunion tests
           - test-name: "test-integration-dataunions"
             websocket-url:
-                - name: "single-node-only"
-                - url:  "ws://localhost:8690/api/v1/ws"
+              - name: "single-node-only"
+              - url: "ws://localhost:8690/api/v1/ws"
     env:
       TEST_NAME: ${{ matrix.test-name }}
       WEBSOCKET_URL: ${{ matrix.websocket-url.url}}

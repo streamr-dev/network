@@ -1,3 +1,4 @@
+---
 name: Network – Lint, Test and Publish
 
 on:
@@ -11,7 +12,7 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 defaults:
   run:

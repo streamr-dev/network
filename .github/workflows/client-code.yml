@@ -1,3 +1,4 @@
+---
 # Any tests that can run without building should go in here.
 name: Client – Lint, Unit, Integration Tests
 
@@ -17,7 +18,7 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 defaults:
   run:
@@ -89,14 +90,14 @@ jobs:
       matrix:
         node-version: [14.x]
         test-name: [
-            "test-integration-no-resend",
-            "test-integration-resend",
+          "test-integration-no-resend",
+          "test-integration-resend",
         ]
         websocket-url:
-            - name: "default"
-              url:  ""
-            - name: "single-node-only"
-              url:  "ws://localhost:8690/api/v1/ws"
+          - name: "default"
+            url: ""
+          - name: "single-node-only"
+            url: "ws://localhost:8690/api/v1/ws"
     env:
       TEST_NAME: ${{ matrix.test-name }}
       WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
@@ -171,7 +172,7 @@ jobs:
 
   memory:
     if: ${{ false }}
-    name:  Memory Tests using Node ${{ matrix.node-version }}
+    name: Memory Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
