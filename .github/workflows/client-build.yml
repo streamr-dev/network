@@ -129,6 +129,11 @@ jobs:
           timeout_minutes: 3
           retry_on: error
           command: cd packages/client && npm run test-browser-realtime
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   browser-resend:
     if: ${{ false }}
@@ -167,6 +172,11 @@ jobs:
           timeout_minutes: 3
           retry_on: error
           command: cd packages/client && npm run test-browser-resend
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   benchmarks:
     name: Test Benchmark using Node ${{ matrix.node-version }}
@@ -204,6 +214,11 @@ jobs:
       - name: benchmark subscribe
         timeout-minutes: 15
         run: DEBUG='' npm run benchmark-subscribe > benchmark-subscribe.txt
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - uses: actions/upload-artifact@v2
         with:
           name: client-benchmarks
