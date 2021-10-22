@@ -60,15 +60,18 @@ describe('createNode', () => {
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(true)
     })
 
-    it('addStreamToStorageNode, isStreamStoredInStorageNode, evnetlistener', async () => {
+    it('addStreamToStorageNode, isStreamStoredInStorageNode, eventlistener', async () => {
         const promise = Promise
         const callback = (event: EthereumStorageEvent) => {
-            expect(event).toEqual({
-                streamId: createdStream.id,
-                nodeAddress,
-                type: 'added'
-            })
-            promise.resolve()
+            // check if they are values from this test and not other test running in parallel
+            if (event.streamId === createdStream.id && event.nodeAddress === nodeAddress) {
+                expect(event).toEqual({
+                    streamId: createdStream.id,
+                    nodeAddress,
+                    type: 'added'
+                })
+                promise.resolve()
+            }
         }
         await client.registerStorageEventListener(callback)
         await client.addStreamToStorageNode(createdStream.id, nodeAddress)

@@ -1,10 +1,12 @@
 import assert from 'assert'
 import { StreamFetcher } from '../../src/StreamFetcher'
 import { Todo } from '../types'
-import { createClient, createTestStream } from '../utils'
+import { createClient, createTestStream, getPrivateKey } from '../utils'
 import { startTracker } from 'streamr-network'
 import StreamrClient, { StreamOperation } from 'streamr-client'
 import { Wallet } from '@ethersproject/wallet'
+
+jest.setTimeout(30000)
 
 describe('StreamFetcher', () => {
     let streamFetcher: StreamFetcher
@@ -18,7 +20,7 @@ describe('StreamFetcher', () => {
             port: 29892,
             id: 'tracker-1'
         })
-        client = createClient(tracker, '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', {})
+        client = createClient(tracker, await getPrivateKey(), {})
         streamId = (await createTestStream(client, module)).streamId
 
         streamFetcher = new StreamFetcher(client)
@@ -27,13 +29,13 @@ describe('StreamFetcher', () => {
 
     describe('checkPermission', () => {
         it('returns Promise', async () => {
-            const promise = streamFetcher.checkPermission(streamId, StreamOperation.STREAM_SUBSCRIBE, null)
+            const promise = streamFetcher.checkPermission(streamId, StreamOperation.STREAM_SUBSCRIBE, await client.getAddress())
             assert(promise instanceof Promise)
             // await promise
         })
 
         it('rejects with NOT_FOUND if stream does not exist', async () => {
-            await streamFetcher.checkPermission('nonExistingStreamId', StreamOperation.STREAM_SUBSCRIBE, null).catch((err: Todo) => {
+            await streamFetcher.checkPermission('nonExistingStreamId', StreamOperation.STREAM_SUBSCRIBE, await client.getAddress()).catch((err: Todo) => {
                 assert.equal(err.errorCode, 'NOT_FOUND')
             })
         })
@@ -53,7 +55,7 @@ describe('StreamFetcher', () => {
         })
 
         it('resolves with true if session token provides privilege to stream', async () => {
-            const res = await streamFetcher.checkPermission(streamId, StreamOperation.STREAM_SUBSCRIBE, null)
+            const res = await streamFetcher.checkPermission(streamId, StreamOperation.STREAM_SUBSCRIBE, await client.getAddress())
             expect(res).toEqual(true)
         })
 

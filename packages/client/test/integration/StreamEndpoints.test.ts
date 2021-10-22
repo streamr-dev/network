@@ -7,7 +7,7 @@ import { Stream, StreamOperation } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
 import { wait } from 'streamr-test-utils'
 
-jest.setTimeout(30000)
+jest.setTimeout(40000)
 
 const createClient = getCreateClient()
 

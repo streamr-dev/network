@@ -49,8 +49,7 @@
       "nodeMetrics": null
     },
     "mqtt": {
-      "port": 9000,
-      "streamsTimeout": 300000
+      "port": 9000
     },
     "storage": {
       "cassandra": {

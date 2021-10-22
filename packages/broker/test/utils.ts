@@ -68,8 +68,7 @@ export function formConfig({
     }
     if (legacyMqttPort) {
         plugins['mqtt'] = {
-            port: legacyMqttPort,
-            streamsTimeout: 300000
+            port: legacyMqttPort
         }
     }
 
@@ -120,7 +119,6 @@ export async function getPrivateKey(): Promise<string> {
 // }
 export const startBroker = async (config: Todo): Promise<Broker> => {
     const privateKey = config.privateKey || await getPrivateKey()
-    // console.log('###################' + JSON.stringify(config))
     const broker = await createBroker(formConfig({privateKey, ...config}))
     await broker.start()
     return broker

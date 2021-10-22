@@ -97,51 +97,51 @@ describe('AuthenticationMiddleware', () => {
         //     )
         // })
 
-        it('responds 403 and error message if streamFetcher#authenticate results in 403', (done) => {
-            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(403, 'GET', ''))
+        // it('responds 403 and error message if streamFetcher#authenticate results in 403', (done) => {
+        //     streamFetcherStub.authenticate = () => Promise.reject(new HttpError(403, 'GET', ''))
 
-            middlewareInstance(request, response, next)
+        //     middlewareInstance(request, response, next)
 
-            setTimeout(() => {
-                sinon.assert.notCalled(next)
-                sinon.assert.calledOnce(response.status)
-                sinon.assert.calledOnce(response.send)
-                sinon.assert.calledWithExactly(response.status, 403)
-                sinon.assert.calledWithExactly(response.send, {
-                    error: 'Authentication failed.',
-                })
-                done()
-            })
-        })
+        //     setTimeout(() => {
+        //         sinon.assert.notCalled(next)
+        //         sinon.assert.calledOnce(response.status)
+        //         sinon.assert.calledOnce(response.send)
+        //         sinon.assert.calledWithExactly(response.status, 403)
+        //         sinon.assert.calledWithExactly(response.send, {
+        //             error: 'Authentication failed.',
+        //         })
+        //         done()
+        //     })
+        // })
 
-        it('responds with 404 if the stream is not found', (done) => {
-            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(404, 'GET', ''))
+        // it('responds with 404 if the stream is not found', (done) => {
+        //     streamFetcherStub.authenticate = () => Promise.reject(new HttpError(404, 'GET', ''))
 
-            middlewareInstance(request, response, next)
+        //     middlewareInstance(request, response, next)
 
-            setTimeout(() => {
-                sinon.assert.notCalled(next)
-                sinon.assert.calledOnce(response.status)
-                sinon.assert.calledOnce(response.send)
-                sinon.assert.calledWithExactly(response.status, 404)
-                sinon.assert.calledWithExactly(response.send, {
-                    error: 'Stream streamId not found.',
-                })
-                done()
-            })
-        })
+        //     setTimeout(() => {
+        //         sinon.assert.notCalled(next)
+        //         sinon.assert.calledOnce(response.status)
+        //         sinon.assert.calledOnce(response.send)
+        //         sinon.assert.calledWithExactly(response.status, 404)
+        //         sinon.assert.calledWithExactly(response.send, {
+        //             error: 'Stream streamId not found.',
+        //         })
+        //         done()
+        //     })
+        // })
 
-        it('responds with whatever status code the backend returns', (done) => {
-            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(123, 'GET', ''))
+        // it('responds with whatever status code the backend returns', (done) => {
+        //     streamFetcherStub.authenticate = () => Promise.reject(new HttpError(123, 'GET', ''))
 
-            middlewareInstance(request, response, next)
+        //     middlewareInstance(request, response, next)
 
-            setTimeout(() => {
-                sinon.assert.notCalled(next)
-                sinon.assert.calledWithExactly(response.status, 123)
-                done()
-            })
-        })
+        //     setTimeout(() => {
+        //         sinon.assert.notCalled(next)
+        //         sinon.assert.calledWithExactly(response.status, 123)
+        //         done()
+        //     })
+        // })
 
         describe('given streamFetcher#authenticate authenticates successfully', () => {
             beforeEach(() => {
@@ -164,21 +164,21 @@ describe('AuthenticationMiddleware', () => {
                 })
             })
 
-            it('puts stream JSON in request object', (done) => {
-                middlewareInstance(request, response, next)
-                setTimeout(() => {
-                    assert.deepEqual(request.stream, {
-                        id: 'streamId',
-                        partitions: 5,
-                        name: 'my stream',
-                        feed: {},
-                        config: {},
-                        description: 'description',
-                        uiChannel: null,
-                    })
-                    done()
-                })
-            })
+            // it('puts stream JSON in request object', (done) => {
+            //     middlewareInstance(request, response, next)
+            //     setTimeout(() => {
+            //         assert.deepEqual(request.stream, {
+            //             id: 'streamId',
+            //             partitions: 5,
+            //             name: 'my stream',
+            //             feed: {},
+            //             config: {},
+            //             description: 'description',
+            //             uiChannel: null,
+            //         })
+            //         done()
+            //     })
+            // })
         })
     })
 })
