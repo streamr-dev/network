@@ -1,10 +1,8 @@
 {
     "name": "streamr-monorepo",
     "scripts": {
-        "prepare": "husky install",
+        "prepare": "husky install && npm run versions",
         "bootstrap": "npm ci",
-        "postinstall": "npm run versions",
-        "postbootstrap-pkg": "npm run versions",
         "bootstrap-pkg": "npm ci --include-workspace-root --workspace",
         "versions": "zx ./show-versions.mjs",
         "prune-pkg": "npm prune --include-workspace-root --production --workspace",
