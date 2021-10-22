@@ -143,6 +143,7 @@ jobs:
             type=ref,event=branch
             type=semver,pattern=v{{version}}
             type=raw,value=dev
+            type=schedule,pattern=nightly
       - name: Setup qemu
         uses: docker/setup-qemu-action@v1.2.0
         with:
