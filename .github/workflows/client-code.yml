@@ -123,6 +123,11 @@ jobs:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: Run Test
         run: npm run $TEST_NAME
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
@@ -169,6 +174,11 @@ jobs:
           timeout_minutes: 15
           retry_on: error
           command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   memory:
     if: ${{ false }}
@@ -204,3 +214,8 @@ jobs:
           timeout_minutes: 20
           retry_on: error
           command: cd packages/client && npm run test-memory
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
