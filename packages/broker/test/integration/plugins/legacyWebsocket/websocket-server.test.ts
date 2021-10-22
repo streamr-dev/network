@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 import { waitForEvent } from 'streamr-test-utils'
-import { startBroker } from '../../../utils'
+import { getPrivateKey, startBroker } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 
 function getWsUrlWithControlAndMessageLayerVersions(
@@ -20,13 +20,13 @@ describe('websocket server', () => {
     beforeAll(async () => {
         brokerWithoutSSL = await startBroker({
             name: 'broker',
-            privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
+            privateKey: await getPrivateKey(),
             trackerPort: 666,
             wsPort: 12346
         })
         brokerWithSSL = await startBroker({
             name: 'broker',
-            privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
+            privateKey: await getPrivateKey(),
             networkPort: 12347,
             trackerPort: 666,
             wsPort: 12348,

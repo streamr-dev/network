@@ -11,9 +11,11 @@ import {
     StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode,
     STREAMR_DOCKER_DEV_HOST,
-    createTestStream
+    createTestStream,
+    getPrivateKey
 } from '../../../utils'
 import { Broker } from '../../../broker'
+import storagenodeConfig = require('../../storageNodeConfig.json')
 
 jest.setTimeout(30000)
 
@@ -35,11 +37,14 @@ describe('StorageConfig', () => {
     let client: StreamrClient
     let stream: Stream
     let assignmentEventManager: StorageAssignmentEventManager
-    const publisherAccount = new Wallet('0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0')
-    const storageNodeAccount = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
-    const brokerAccount = new Wallet('0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae')
+    let publisherAccount: Wallet
+    let storageNodeAccount: Wallet
+    let brokerAccount: Wallet
 
     beforeAll(async () => {
+        publisherAccount = new Wallet(await getPrivateKey())
+        storageNodeAccount = new Wallet(storagenodeConfig.ethereumPrivateKey)
+        brokerAccount = new Wallet(await getPrivateKey())
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
@@ -52,7 +57,7 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
-        const engineAndEditorAccount = new Wallet('0x633a182fb8975f22aaad41e9008cb49a432e9fdfef37f151e9e7c54e96258ef9')
+        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         tracker = await startTracker({
             host: NODE_HOST,
             port: TRACKER_PORT,

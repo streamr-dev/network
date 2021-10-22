@@ -14,7 +14,6 @@ import {
 import { Todo } from '../types'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import { Broker } from '../broker'
-import storagenodeConfig = require('./storageNodeConfig.json')
 
 const httpPort = 12341
 const wsPort1 = 12351
@@ -37,7 +36,7 @@ describe('broker: end-to-end', () => {
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
-        const storageNodeAccount = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
+        const storageNodeAccount = new Wallet(await getPrivateKey())
         const engineAndEditorAccount = new Wallet(await getPrivateKey())
         const storageNodeRegistry = {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
@@ -57,12 +56,11 @@ describe('broker: end-to-end', () => {
         storageNode = await startBroker(
             {
                 name: 'storageNode',
-                privateKey: storagenodeConfig.ethereumPrivateKey,
+                privateKey: storageNodeAccount.privateKey,
                 trackerPort,
                 httpPort,
                 wsPort1,
-                enableCassandra: true,
-                ...storagenodeConfig
+                enableCassandra: true
             }
         )       
 

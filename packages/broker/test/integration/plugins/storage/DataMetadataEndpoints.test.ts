@@ -2,7 +2,7 @@ import http from 'http'
 import { startTracker, Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream } from '../../../utils'
+import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream, getPrivateKey } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 jest.setTimeout(30000)
@@ -27,11 +27,11 @@ describe('DataMetadataEndpoints', () => {
     let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
-    const storageNodeAccount = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
+    let storageNodeAccount: Wallet
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
-
+        storageNodeAccount = new Wallet(await getPrivateKey())
         const storageNodeRegistry = {
             contractAddress: storageNodeAccount.address,
             jsonRpcProvider: `http://127.0.0.1:${httpPort1}`
@@ -41,7 +41,7 @@ describe('DataMetadataEndpoints', () => {
             port: trackerPort,
             id: 'tracker-DataMetadataEndpoints'
         })
-        const engineAndEditorAccount = new Wallet('0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0')
+        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         const trackerInfo = tracker.getConfigRecord()
         const storageNodeClient = new StreamrClient({
             auth: {
@@ -61,7 +61,7 @@ describe('DataMetadataEndpoints', () => {
             trackers: [trackerInfo],
             storageNodeConfig: { registry: storageNodeRegistry }
         })
-        client1 = createClient(tracker, '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae', {
+        client1 = createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount)

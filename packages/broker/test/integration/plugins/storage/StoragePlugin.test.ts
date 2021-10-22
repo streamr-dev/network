@@ -2,7 +2,7 @@ import { MetricsContext } from 'streamr-network'
 import { StoragePlugin } from '../../../../src/plugins/storage/StoragePlugin'
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StreamPart } from '../../../../src/types'
-import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { getPrivateKey, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
 import { Wallet } from 'ethers'
 
@@ -11,8 +11,8 @@ const STREAM_PARTS: StreamPart[] = [
     { id: 'bar', partition: 0 }
 ]
 
-const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
-    const wallet = new Wallet('0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285')
+const createMockPlugin = async (networkNode: any, subscriptionManager: any) => {
+    const wallet = new Wallet(await getPrivateKey())
     const brokerConfig: any = {
         ethereumPrivateKey: wallet.privateKey,
         plugins: {
@@ -74,17 +74,19 @@ describe('StoragePlugin', () => {
     })
 
     test('happy path: start and stop', async () => {
-        const plugin = createMockPlugin(networkNode, subscriptionManager)
+        const plugin = await createMockPlugin(networkNode, subscriptionManager)
         await plugin.start()
         expect(subscriptionManager.subscribe).toBeCalledTimes(STREAM_PARTS.length)
         expect(networkNode.addMessageListener).toBeCalledTimes(1)
         expect(storageConfig.startAssignmentEventListener).toBeCalledTimes(1)
+        expect(storageConfig.startChainEventsListener).toBeCalledTimes(1)
         // @ts-expect-error private field
         const cassandraClose = jest.spyOn(plugin.cassandra!, 'close')
         await plugin.stop()
         expect(subscriptionManager.unsubscribe).toBeCalledTimes(STREAM_PARTS.length)
         expect(networkNode.removeMessageListener).toBeCalledTimes(1)
         expect(storageConfig.stopAssignmentEventListener).toBeCalledTimes(1)
+        expect(storageConfig.stopChainEventsListener).toBeCalledTimes(1)
         expect(storageConfig.cleanup).toBeCalledTimes(1)
         expect(cassandraClose).toBeCalledTimes(1)
     }, 10 * 1000)

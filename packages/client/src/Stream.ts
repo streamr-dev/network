@@ -253,9 +253,18 @@ class StreamrStream implements StreamMetadata {
         pollInterval?: number
     } = {}) {
         try {
-            const address = (node instanceof StorageNode) ? node.getAddress() : node
+            let address: string
+            let url
+            if (node instanceof StorageNode) {
+                address = node.getAddress()
+                url = node.url
+            } else {
+                address = node
+                const storageNode = await this._nodeRegistry.getStorageNode(address)
+                url = storageNode.url
+            }
             await this._nodeRegistry.addStreamToStorageNode(this.id, address)
-            await this.waitUntilStorageAssigned(waitOptions)
+            await this.waitUntilStorageAssigned(waitOptions, url)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
@@ -267,18 +276,16 @@ class StreamrStream implements StreamMetadata {
     }: {
         timeout?: number,
         pollInterval?: number
-    } = {}) {
+    } = {}, url: string) {
         // wait for propagation: the storage node sees the database change in E&E and
         // is ready to store the any stream data which we publish
-        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, pollInterval, () => (
+        await until(() => StreamrStream.isStreamStoredInStorageNode(this.id, url), timeout, pollInterval, () => (
             `Propagation timeout when adding stream to a storage node: ${this.id}`
         ))
     }
 
-    private async isStreamStoredInStorageNode(streamId: string) {
-        const nodes = await this.getStorageNodes()
-        if (!nodes.length) { return false }
-        const url = `${nodes[0].url}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
+    private static async isStreamStoredInStorageNode(streamId: string, nodeurl: string) {
+        const url = `${nodeurl}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
         const response = await fetch(url)
         if (response.status === 200) {
             return true
