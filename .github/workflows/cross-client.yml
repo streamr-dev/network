@@ -82,6 +82,11 @@ jobs:
           timeout_minutes: 15
           retry_on: error
           command: cd packages/cross-client-testing && DEBUG='' make run
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
