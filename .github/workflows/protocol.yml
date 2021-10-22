@@ -90,6 +90,12 @@ jobs:
       - name: test-integration
         run: npm run test-integration
 
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
+
   publish:
     needs: [test-unit, test-integration]
     name: Publishing main using Node 16
