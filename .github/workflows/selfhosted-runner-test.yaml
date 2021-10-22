@@ -20,6 +20,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-broker
       - run: npm run eslint
       - run: npm run test-unit

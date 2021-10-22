@@ -53,6 +53,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: eslint
@@ -67,7 +68,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -78,6 +79,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: Start Streamr Docker Stack
@@ -119,6 +121,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}

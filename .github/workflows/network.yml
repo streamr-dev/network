@@ -52,6 +52,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-network
       - run: npm run eslint
       - run: npm run test-unit
@@ -83,6 +84,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npx lerna bootstrap --scope streamr-network --include-dependencies
           sudo apt-get install xvfb
       - run: xvfb-run --auto-servernum npm run test-browser
@@ -118,6 +120,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-network
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}

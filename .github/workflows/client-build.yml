@@ -57,6 +57,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
@@ -93,6 +94,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: test-types
         run: npm run test-types
@@ -127,6 +129,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -168,6 +171,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -214,6 +218,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: benchmark publish
         timeout-minutes: 15

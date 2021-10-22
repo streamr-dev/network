@@ -53,6 +53,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-test-utils
 
       - name: eslint
@@ -92,6 +93,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-test-utils
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
