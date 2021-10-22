@@ -1,3 +1,4 @@
+---
 # Any tests that can run without building should go in here.
 name: Client – Lint, Unit, Integration Tests
 
@@ -17,7 +18,7 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 defaults:
   run:
@@ -89,14 +90,14 @@ jobs:
       matrix:
         node-version: [14.x]
         test-name: [
-            "test-integration-no-resend",
-            "test-integration-resend",
+          "test-integration-no-resend",
+          "test-integration-resend",
         ]
         websocket-url:
-            - name: "default"
-              url:  ""
-            - name: "single-node-only"
-              url:  "ws://localhost:8690/api/v1/ws"
+          - name: "default"
+            url: ""
+          - name: "single-node-only"
+            url: "ws://localhost:8690/api/v1/ws"
     env:
       TEST_NAME: ${{ matrix.test-name }}
       WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
@@ -122,6 +123,11 @@ jobs:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: Run Test
         run: npm run $TEST_NAME
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
@@ -168,10 +174,15 @@ jobs:
           timeout_minutes: 15
           retry_on: error
           command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   memory:
     if: ${{ false }}
-    name:  Memory Tests using Node ${{ matrix.node-version }}
+    name: Memory Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -203,3 +214,8 @@ jobs:
           timeout_minutes: 20
           retry_on: error
           command: cd packages/client && npm run test-memory
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)

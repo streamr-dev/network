@@ -1,3 +1,4 @@
+---
 name: Protocol – Lint, Test and Publish
 
 on:
@@ -11,7 +12,7 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 defaults:
   run:
@@ -88,6 +89,12 @@ jobs:
 
       - name: test-integration
         run: npm run test-integration
+
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   publish:
     needs: [test-unit, test-integration]

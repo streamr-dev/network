@@ -1,3 +1,4 @@
+---
 name: Broker – Lint, Test and Publish
 
 on:
@@ -11,7 +12,7 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 defaults:
   run:
@@ -78,6 +79,11 @@ jobs:
         env:
           CI: true
           LOG_LEVEL: warn
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   docker:
     needs: [test-unit, test-integration]
@@ -128,6 +134,11 @@ jobs:
               fi;
           done;
           exit 1
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - uses: docker/login-action@v1.10.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -142,6 +153,7 @@ jobs:
             type=ref,event=branch
             type=semver,pattern=v{{version}}
             type=raw,value=dev
+            type=schedule,pattern=nightly
       - name: Setup qemu
         uses: docker/setup-qemu-action@v1.2.0
         with:
