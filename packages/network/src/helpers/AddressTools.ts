@@ -5,7 +5,7 @@ const IPv4PrivateRanges = [
     '10.0.0.0/8',
     '172.16.0.0/12',
     '192.168.0.0/16',
-].map((a: string) => ipaddr.parseCIDR(a))
+].map((a) => ipaddr.parseCIDR(a))
 
 export function isPrivateIPv4(address: string): boolean {
     if (ipaddr.IPv4.isValid(address)) {
@@ -21,7 +21,7 @@ export function isPrivateIPv4(address: string): boolean {
 }
 
 export function getAddressFromIceCandidate(candidate: string): string | undefined {
-    const fields = candidate.split(' ').filter((field: string) => field.length > 0)
+    const fields = candidate.split(' ').filter((field) => field.length > 0)
     return fields.length >= 5 && ipaddr.isValid(fields[4]) ? fields[4] : undefined
 }
 
