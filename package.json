@@ -2,14 +2,17 @@
     "name": "streamr-monorepo",
     "scripts": {
         "prepare": "husky install",
-        "bootstrap": "npm ci --no-workspaces # now run npm ci to install sub-packages",
+        "bootstrap": "npm ci",
         "postinstall": "npm run versions",
         "postbootstrap-pkg": "npm run versions",
         "bootstrap-pkg": "npm ci --include-workspace-root --workspace",
         "versions": "zx ./show-versions.mjs",
-        "clean": "npm run clean-dist && npx lerna clean -y && rm -Rf node_modules # remove all node_modules",
-        "clean-dist": "npx lerna exec --no-bail 'npm run --if-present clean || rm -rf dist *.tsbuildinfo || true' # remove built files",
-        "clean-package-locks": "rm -f package-lock.json && npx lerna exec --no-bail 'rm -f package-lock.json' # remove all package-lock files. npm run clean & npm run bootstrap to fully regenerate."
+        "prune-pkg": "npm prune --include-workspace-root --production --workspace",
+        "clean": "npm run clean-dist && npx lerna clean -y && npm run clean-root && npm run clean-cache",
+        "clean-cache": "rm -rf node_modules/.cache",
+        "clean-root": "npm ci --no-workspaces # install only packages needed by root package.json",
+        "clean-dist": "npx lerna exec --no-bail 'npm run --if-present clean || rm -rf dist *.tsbuildinfo || true' && npm run clean-cache # remove built files",
+        "clean-package-locks": "rm -f package-lock.json && npx lerna exec --no-bail 'rm -f package-lock.json'"
     },
     "workspaces": [
         "packages/broker",
