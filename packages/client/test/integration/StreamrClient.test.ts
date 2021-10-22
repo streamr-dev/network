@@ -229,9 +229,14 @@ describeRepeats('StreamrClient', () => {
                 throw err
             })
 
+            const onSubError = jest.fn()
+            sub.onError(onSubError)
+
             const published = await publishTestMessages(MAX_MESSAGES)
             await sub.onFinally()
             expect(onMessageMsgs).toEqual(published.slice(0, 1))
+            expect(onSubError).toHaveBeenCalledTimes(1)
+            expect(onSubError).toHaveBeenCalledWith(err)
         })
 
         it('publish and subscribe a sequence of messages', async () => {
