@@ -79,6 +79,11 @@ jobs:
         env:
           CI: true
           LOG_LEVEL: warn
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   docker:
     needs: [test-unit, test-integration]
@@ -129,6 +134,11 @@ jobs:
               fi;
           done;
           exit 1
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - uses: docker/login-action@v1.10.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
