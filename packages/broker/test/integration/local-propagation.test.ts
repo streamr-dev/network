@@ -5,7 +5,6 @@ import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
 import { Todo } from '../types'
 import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey } from '../utils'
-import storagenodeConfig = require('./storageNodeConfig.json')
 
 jest.setTimeout(30000)
 
@@ -35,12 +34,11 @@ describe('local propagation', () => {
 
         broker = await startBroker({
             name: 'broker1',
-            privateKey: storagenodeConfig.ethereumPrivateKey,
+            privateKey: await getPrivateKey(),
             trackerPort,
             httpPort,
             wsPort,
-            legacyMqttPort: mqttPort,
-            ...storagenodeConfig
+            legacyMqttPort: mqttPort
         })
 
         client1 = createClient(tracker, privateKey)

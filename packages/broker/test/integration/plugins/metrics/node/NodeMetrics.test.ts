@@ -3,7 +3,6 @@ import {startTracker, Tracker} from 'streamr-network'
 import { Wallet } from 'ethers'
 import { startBroker, createClient, Queue, getPrivateKey } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
-import storagenodeConfig = require('../../../storageNodeConfig.json')
 
 const httpPort = 47741
 const wsPort = 47742
@@ -20,7 +19,10 @@ describe('NodeMetrics', () => {
     beforeAll(async () => {
         const tmpAccount = new Wallet(await getPrivateKey())
         const storageNodeAccount = new Wallet(await getPrivateKey())
-        const storageNodeRegistry = storagenodeConfig.storageNodeConfig.registry
+        const storageNodeRegistry = {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            jsonRpcProvider: `http://10.200.10.1:8546`
+        }
         nodeAddress = tmpAccount.address
         tracker = await startTracker({
             host: '127.0.0.1',

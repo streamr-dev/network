@@ -33,7 +33,7 @@ describe('DataMetadataEndpoints', () => {
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await getPrivateKey())
         const storageNodeRegistry = {
-            contractAddress: storageNodeAccount.address,
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
             jsonRpcProvider: `http://127.0.0.1:${httpPort1}`
         }
         tracker = await startTracker({

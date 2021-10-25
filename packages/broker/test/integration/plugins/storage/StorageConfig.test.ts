@@ -15,7 +15,6 @@ import {
     getPrivateKey
 } from '../../../utils'
 import { Broker } from '../../../broker'
-import storagenodeConfig = require('../../storageNodeConfig.json')
 
 jest.setTimeout(30000)
 
@@ -43,7 +42,7 @@ describe('StorageConfig', () => {
 
     beforeAll(async () => {
         publisherAccount = new Wallet(await getPrivateKey())
-        storageNodeAccount = new Wallet(storagenodeConfig.ethereumPrivateKey)
+        storageNodeAccount = new Wallet(await getPrivateKey())
         brokerAccount = new Wallet(await getPrivateKey())
         cassandraClient = new cassandra.Client({
             contactPoints,

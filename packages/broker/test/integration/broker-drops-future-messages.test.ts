@@ -5,7 +5,6 @@ import { startTracker, Protocol, Tracker } from 'streamr-network'
 import { startBroker, createClient, createTestStream, getPrivateKey } from '../utils'
 import StreamrClient from 'streamr-client'
 import { Broker } from '../broker'
-import storagenodeConfig = require('./storageNodeConfig.json')
 import { Wallet } from '@ethersproject/wallet'
 
 const { ControlLayer } = Protocol
@@ -48,15 +47,15 @@ describe('broker drops future messages', () => {
             port: trackerPort,
             id: 'tracker'
         })
+        const brokerWallet = new Wallet(await getPrivateKey())
         broker = await startBroker({
             name: 'storageNode',
-            privateKey: storagenodeConfig.ethereumPrivateKey,
+            privateKey: brokerWallet.privateKey,
             trackerPort,
             httpPort,
             wsPort,
             enableCassandra: true
         })
-        const brokerWallet = new Wallet(storagenodeConfig.ethereumPrivateKey)
         const publisherWallet = new Wallet(await getPrivateKey())
         publisherAddress = publisherWallet.address
         client = createClient(tracker, publisherWallet.privateKey)
@@ -73,7 +72,7 @@ describe('broker drops future messages', () => {
 
     test('pushing message with too future timestamp to HTTP plugin returns 400 error & does not crash broker', async () => {
         const streamMessage = buildMsg(
-            streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 5) * 1000,
+            streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 15) * 1000,
             0, publisherAddress, '1', {}
         )
 
