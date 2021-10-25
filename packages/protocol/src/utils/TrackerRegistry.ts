@@ -25,7 +25,8 @@ export class TrackerRegistry<T extends TrackerInfo> {
     }
 
     getTracker(spid: SPID): T {
-        const index = keyToArrayIndex(this.records.length, spid.toKey())
+        const key = spid.toKey().replace('#', '::') // TODO temporary backwards compatibility
+        const index = keyToArrayIndex(this.records.length, key)
         return this.records[index]
     }
 
