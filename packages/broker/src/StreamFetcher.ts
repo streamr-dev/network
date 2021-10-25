@@ -1,68 +1,20 @@
-import fetch, { Response } from 'node-fetch'
 import memoize from 'memoizee'
-import { Logger } from 'streamr-network'
-import { HttpError } from './errors/HttpError'
 // TODO do all REST operations to E&E via StreamrClient
-import StreamrClient from 'streamr-client'
-import { formAuthorizationHeader } from './helpers/authentication'
-import memoizee from "memoizee"
-
-const logger = new Logger(module)
+import StreamrClient, { EthereumAddress, StreamOperation } from 'streamr-client'
+import { Todo } from './types'
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes
 
-type FetchMethod = (streamId: string, sessionToken?: string) => Promise<Record<string, unknown>>
-
-type CheckPermissionMethod = (
-    streamId: string,
-    sessionToken: string | undefined | null,
-    operation?: string
-) => Promise<true>
-
-type AuthenticateMethod = (
-    streamId: string,
-    sessionToken: string|undefined,
-    operation?: string
-) => Promise<Record<string, unknown>>
-
-async function fetchWithErrorLogging(...args: Parameters<typeof fetch>) {
-    try {
-        return await fetch(...args)
-    } catch (err) {
-        logger.error(`failed to communicate with core-api: ${err}`)
-        throw err
-    }
-}
-
-async function handleNon2xxResponse(
-    funcName: string,
-    response: Response,
-    streamId: string,
-    sessionToken: string|undefined|null,
-    method: string,
-    url: string,
-): Promise<HttpError> {
-    const errorMsg = await response.text().catch((err) => {
-        logger.warn('Error reading response text: %s', err)
-        return ''
-    })
-    logger.debug(
-        '%s failed with status %d for streamId %s, sessionToken %s: %o',
-        funcName, response.status, streamId, sessionToken, errorMsg,
-    )
-    return new HttpError(response.status, method, url)
-}
-
 export class StreamFetcher {
-    private readonly apiUrl: string
-    fetch: memoizee.Memoized<FetchMethod> & FetchMethod
-    checkPermission: memoizee.Memoized<CheckPermissionMethod> & CheckPermissionMethod
-    authenticate: memoize.Memoized<AuthenticateMethod> & AuthenticateMethod
 
-    constructor(baseUrl: string) {
-        this.apiUrl = `${baseUrl}/api/v1`
-        this.fetch = memoize<FetchMethod>(this.uncachedFetch, {
+    fetch
+    checkPermission
+    authenticate
+    client: StreamrClient
+
+    constructor(client: StreamrClient) {
+        this.fetch = memoize<StreamFetcher['_fetch']>(this._fetch, {
             maxAge: MAX_AGE,
             promise: true,
         })
@@ -74,6 +26,9 @@ export class StreamFetcher {
             maxAge: MAX_AGE_MINUTE,
             promise: true,
         })
+        this.client = client
+    }
+
     }
 
     async getToken(privateKey: string): Promise<string> {
@@ -120,35 +75,16 @@ export class StreamFetcher {
      * for the requested operation.
      * Promise always resolves to true or throws if permission has not been granted.
      */
-    private async uncachedCheckPermission(streamId: string, sessionToken: string | undefined | null, operation = 'stream_subscribe'): Promise<true> {
+    private async uncachedCheckPermission(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE,
+        user: EthereumAddress): Promise<boolean> {
         if (streamId == null) {
             throw new Error('_checkPermission: streamId can not be null!')
         }
-
-        sessionToken = sessionToken || undefined
-
-        const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}/permissions/me`
-        const headers = formAuthorizationHeader(sessionToken)
-
-        const response = await fetchWithErrorLogging(url, {
-            headers,
-        })
-
-        if (response.status !== 200) {
-            this.checkPermission.delete(streamId, sessionToken) // clear cache result
-            throw await handleNon2xxResponse('_checkPermission', response, streamId, sessionToken, 'GET', url)
+        const result = await (await this.client.getStream(streamId)).hasPermission(operation, user)
+        if (result) {
+            return result
+        } else {
+            throw new Error(`unauthorized: user ${user} does not have permission ${operation.toString()} on stream ${streamId}`)
         }
-
-        const permissions = await response.json()
-        if (permissions.some((p: Record<string, unknown>) => p.operation === operation)) {
-            return true
-        }
-
-        logger.debug(
-            'checkPermission failed for streamId %s, sessionToken %s, operation %s. permissions were: %o',
-            streamId, sessionToken, operation, permissions,
-        )
-
-        throw new HttpError(403, 'GET', url)
     }
 }

@@ -3,7 +3,9 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
-import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream, getSPIDKeys } from '../utils'
+import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey } from '../utils'
+
+jest.setTimeout(30000)
 
 const httpPort1 = 13381
 const httpPort2 = 13382
@@ -17,7 +19,6 @@ describe('SubscriptionManager', () => {
     let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
-    const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream1: Stream
@@ -36,7 +37,6 @@ describe('SubscriptionManager', () => {
 
         broker1 = await startBroker({
             name: 'broker1',
-            privateKey: '0xd622f9e4dbcd8b98f12604f0af8ac1cbc75004829e505fdd0ed04f456ef52828',
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
@@ -44,7 +44,6 @@ describe('SubscriptionManager', () => {
         })
         broker2 = await startBroker({
             name: 'broker2',
-            privateKey: '0xbaa8e6137a9474ecb6694ad3e4f1743732e38c36e9bdda628e651d36ed732241',
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
@@ -53,15 +52,15 @@ describe('SubscriptionManager', () => {
 
         await wait(2000)
 
-        client1 = createClient(tracker, privateKey)
-        client2 = createClient(tracker, privateKey)
+        client1 = createClient(tracker, await getPrivateKey())
+        client2 = createClient(tracker, await getPrivateKey())
 
-        mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
-        mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
+        mqttClient1 = createMqttClient(mqttPort1, 'localhost', await getPrivateKey())
+        mqttClient2 = createMqttClient(mqttPort2, 'localhost', await getPrivateKey())
 
         freshStream1 = await createTestStream(client1, module)
         freshStream2 = await createTestStream(client2, module)
-    }, 10 * 1000)
+    })
 
     afterEach(async () => {
         await mqttClient1.end(true)

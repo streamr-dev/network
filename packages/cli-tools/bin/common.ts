@@ -78,7 +78,7 @@ export function createFnParseInt(name: string): (s: string) => number {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const getStreamId = (streamIdOrPath: string|undefined, options: any): string|undefined => {
+export const getStreamId = (streamIdOrPath: string|undefined, options: any): string | undefined => {
     if (streamIdOrPath === undefined) {
         return undefined
     }

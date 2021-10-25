@@ -42,11 +42,11 @@ describe('Config', () => {
         }
         it('string', async () => {
             const client = createAuthenticatedClient('0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF')
-            expect(await client.getAddress()).toBe('0xFCAd0B19bB29D4674531d6f115237E16AfCE377c')
+            expect(await client.getAddress()).toBe('0xfcad0b19bb29d4674531d6f115237e16afce377c')
         })
         it('byteslike', async () => {
             const client = createAuthenticatedClient(arrayify('0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'))
-            expect(await client.getAddress()).toBe('0xFCAd0B19bB29D4674531d6f115237E16AfCE377c')
+            expect(await client.getAddress()).toBe('0xfcad0b19bb29d4674531d6f115237e16afce377c')
         })
     })
 
@@ -78,10 +78,10 @@ describe('Config', () => {
         it('can override storageNodeRegistry as array of nodes', () => {
             const clientDefaults = new StreamrClient()
             const clientOverrides = new StreamrClient({
-                storageNodeRegistry: [{
-                    address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-                    url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
-                }],
+                storageNodeRegistry: {
+                    contractAddress: '0xde1112f631486CfC759A50196853011528bC5FA0',
+                    jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
+                },
             })
             expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
         })

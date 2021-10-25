@@ -12,6 +12,7 @@ export default {
     },
     restUrl: process.env.REST_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}/api/v1`,
     streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
+    streamStorageRegistrySidechainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
     tokenAddress: process.env.TOKEN_ADDRESS || '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
     tokenSidechainAddress: process.env.TOKEN_ADDRESS_SIDECHAIN || '0x73Be21733CC5D08e1a14Ea9a399fb27DB3BEf8fF',
     withdrawServerUrl: process.env.WITHDRAW_SERVER_URL || 'http://localhost:3000',
@@ -42,6 +43,11 @@ export default {
     storageNodeRegistry: {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
+    },
+    storageNode: {
+        privatekey: 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966',
+        address: '0xde1112f631486CfC759A50196853011528bC5FA0',
+        url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
     },
     // storageNodeRegistry: [{
     // address: '0xde1112f631486CfC759A50196853011528bC5FA0',

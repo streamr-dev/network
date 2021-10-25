@@ -1,7 +1,7 @@
 import StreamrClient from 'streamr-client'
 import {startTracker, Tracker} from 'streamr-network'
 import { Wallet } from 'ethers'
-import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, Queue } from '../../../../utils'
+import { startBroker, createClient, Queue, getPrivateKey } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
 
 const httpPort = 47741
@@ -17,12 +17,12 @@ describe('NodeMetrics', () => {
     let client2: StreamrClient
 
     beforeAll(async () => {
-        const tmpAccount = Wallet.createRandom()
-        const storageNodeAccount = Wallet.createRandom()
-        const storageNodeRegistry = [{
-            address: storageNodeAccount.address,
-            url: `http://127.0.0.1:${httpPort}`
-        }]
+        const tmpAccount = new Wallet(await getPrivateKey())
+        const storageNodeAccount = new Wallet(await getPrivateKey())
+        const storageNodeRegistry = {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            jsonRpcProvider: `http://10.200.10.1:8546`
+        }
         nodeAddress = tmpAccount.address
         tracker = await startTracker({
             listen: {
@@ -31,7 +31,7 @@ describe('NodeMetrics', () => {
             },
             id: 'tracker-1'
         })
-        client1 = createClient(tracker, Wallet.createRandom().privateKey, {
+        client1 = createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
         client2 = createClient(tracker, tmpAccount.privateKey, {
@@ -47,6 +47,10 @@ describe('NodeMetrics', () => {
             storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
             // therefore StorageAssignmentEventManager test helper cannot be used
         })
+        const storageClient = createClient(tracker, storageNodeAccount.privateKey, {
+            storageNodeRegistry: storageNodeRegistry,
+        })
+        await storageClient.setNode(`http://127.0.0.1:${httpPort}`)
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
@@ -58,7 +62,7 @@ describe('NodeMetrics', () => {
                     nodeMetrics: {
                         client: {
                             wsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
-                            httpUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+                            httpUrl: `http://127.0.0.1:${httpPort}/api/v1`,
                         },
                         storageNode: storageNodeAccount.address
                     }
@@ -66,7 +70,7 @@ describe('NodeMetrics', () => {
             },
             storageNodeConfig: { registry: storageNodeRegistry }
         })
-    }, 35 * 1000)
+    }, 65 * 1000)
 
     afterAll(async () => {
         await Promise.allSettled([
@@ -84,7 +88,7 @@ describe('NodeMetrics', () => {
         await client2.subscribe(streamId, (content: any) => {
             messageQueue.push({ content })
         })
-        const message = await messageQueue.pop(10 * 1000)
+        const message = await messageQueue.pop(30 * 1000)
         expect(message.content).toMatchObject({
             broker: {
                 messagesToNetworkPerSec: expect.any(Number),

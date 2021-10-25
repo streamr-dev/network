@@ -13,9 +13,15 @@ import { until, pLimitFn } from './utils'
 import { Rest } from './Rest'
 import Resends from './Resends'
 import Publisher from './Publisher'
+import { BigNumber } from '@ethersproject/bignumber'
+import { StreamRegistry } from './StreamRegistry'
+import Ethereum from './Ethereum'
+import { NodeRegistry } from './NodeRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StorageNode } from './StorageNode'
+import { until } from './utils'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -30,28 +36,23 @@ export type StreamPartDefinition = string | StreamPartDefinitionOptions
 
 export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
 
-interface StreamPermisionBase {
-    id: number
-    operation: StreamOperation
+export interface StreamPermission {
+    streamId: string
+    userAddress: string
+    edit: boolean
+    canDelete: boolean
+    publishExpiration: BigNumber
+    subscribeExpiration: BigNumber
+    share: boolean
 }
-
-export interface UserStreamPermission extends StreamPermisionBase {
-    user: string
-}
-
-export interface AnonymousStreamPermisson extends StreamPermisionBase {
-    anonymous: true
-}
-
-export type StreamPermision = UserStreamPermission | AnonymousStreamPermisson
 
 export enum StreamOperation {
-    STREAM_GET = 'stream_get',
-    STREAM_EDIT = 'stream_edit',
-    STREAM_DELETE = 'stream_delete',
-    STREAM_PUBLISH = 'stream_publish',
-    STREAM_SUBSCRIBE = 'stream_subscribe',
-    STREAM_SHARE = 'stream_share'
+    // STREAM_GET = 'stream_get',
+    STREAM_EDIT = 'edit',
+    STREAM_DELETE = 'canDelete',
+    STREAM_PUBLISH = 'publishExpiration',
+    STREAM_SUBSCRIBE = 'subscribeExpiration',
+    STREAM_SHARE = 'share'
 }
 
 export interface StreamProperties {
@@ -114,6 +115,9 @@ class StreamrStream implements StreamMetadata {
     protected _publisher: Publisher
     protected _streamEndpoints: StreamEndpoints
     protected _streamEndpointsCached: StreamEndpointsCached
+    protected _streamRegistry: StreamRegistry
+    protected _nodeRegistry: NodeRegistry
+    protected _ethereuem: Ethereum
 
     constructor(
         props: StreamProperties,
@@ -122,61 +126,49 @@ class StreamrStream implements StreamMetadata {
         Object.assign(this, props)
         this.id = props.id
         this.streamId = this.id
+        this.partitions = props.partitions ? props.partitions : 1
         this._rest = _container.resolve<Rest>(Rest)
         this._resends = _container.resolve<Resends>(Resends)
         this._publisher = _container.resolve<Publisher>(Publisher)
         this._streamEndpoints = _container.resolve<StreamEndpoints>(StreamEndpoints)
         this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
-        // try prevent mysql race conditions in core-api when creating or removing permissions in parallel
-        this.grantPermission = pLimitFn(this.grantPermission.bind(this))
-        this.revokePermission = pLimitFn(this.revokePermission.bind(this))
+        this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
+        this._nodeRegistry = _container.resolve<NodeRegistry>(NodeRegistry)
+        this._ethereuem = _container.resolve<Ethereum>(Ethereum)
     }
 
     async update() {
         try {
-            const json = await this._rest.put<StreamProperties>(
-                ['streams', this.id],
-                this.toObject(),
-            )
-            return json ? new StreamrStream(json, this._container) : undefined
+            await this._streamRegistry.updateStream(this.toObject())
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
     }
 
-    toObject() {
+    toObject() : StreamProperties {
         const result = {}
         Object.keys(this).forEach((key) => {
             if (key.startsWith('_') || typeof key === 'function') { return }
             // @ts-expect-error
             result[key] = this[key]
         })
-        return result
+        return result as StreamProperties
     }
 
     async delete() {
         try {
-            await this._rest.del(
-                ['streams', this.id],
-            )
-        } catch (err: any) {
-            if (err.code === 'NOT_FOUND') { return } // ok if not found
-            throw err
+            await this._streamRegistry.deleteStream(this.id)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
     }
 
     async getPermissions() {
-        return this._rest.get<StreamPermision[]>(
-            ['streams', this.id, 'permissions'],
-        )
+        return this._streamRegistry.getAllPermissionsForStream(this.id)
     }
 
     async getMyPermissions() {
-        return this._rest.get<StreamPermision[]>(
-            ['streams', this.id, 'permissions', 'me'],
-        )
+        return this._streamRegistry.getPermissionsForUser(this.id, await this._ethereuem.getAddress())
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -430,15 +422,34 @@ class StreamrStream implements StreamMetadata {
         await this.update()
     }
 
-    async addToStorageNode(address: EthereumAddress, waitOptions: {
+    async revokePublicPermission(operation: StreamOperation) {
+        try {
+            await this._streamRegistry.revokePublicPermission(this.id, operation)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
+    }
+
+    async addToStorageNode(node: StorageNode | EthereumAddress, waitOptions: {
         timeout?: number,
         pollInterval?: number
     } = {}) {
-        await this._rest.post(
-            ['streams', this.id, 'storageNodes'],
-            { address }
-        )
-        await this.waitUntilStorageAssigned(waitOptions)
+        try {
+            let address: string
+            let url
+            if (node instanceof StorageNode) {
+                address = node.getAddress()
+                url = node.url
+            } else {
+                address = node
+                const storageNode = await this._nodeRegistry.getStorageNode(address)
+                url = storageNode.url
+            }
+            await this._nodeRegistry.addStreamToStorageNode(this.id, address)
+            await this.waitUntilStorageAssigned(waitOptions, url)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async waitUntilStorageAssigned({
@@ -447,19 +458,16 @@ class StreamrStream implements StreamMetadata {
     }: {
         timeout?: number,
         pollInterval?: number
-    } = {}) {
+    } = {}, url: string) {
         // wait for propagation: the storage node sees the database change in E&E and
         // is ready to store the any stream data which we publish
-        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, pollInterval, () => (
+        await until(() => StreamrStream.isStreamStoredInStorageNode(this.id, url), timeout, pollInterval, () => (
             `Propagation timeout when adding stream to a storage node: ${this.id}`
         ))
     }
 
-    private async isStreamStoredInStorageNode(streamId: string) {
-        const sid: SID = SPID.parse(streamId)
-        const nodes = await this._streamEndpoints.getStorageNodes(sid)
-        if (!nodes.length) { return false }
-        const url = `${nodes[0].url}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
+    private static async isStreamStoredInStorageNode(streamId: string, nodeurl: string) {
+        const url = `${nodeurl}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
         const response = await fetch(url)
         if (response.status === 200) {
             return true
@@ -470,18 +478,34 @@ class StreamrStream implements StreamMetadata {
         throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
-    async removeFromStorageNode(address: EthereumAddress) {
-        await this._rest.del<{ storageNodeAddress: string}[] >(
-            ['streams', this.id, 'storageNodes', address]
-        )
+    async removeFromStorageNode(node: StorageNode | EthereumAddress) {
+        try {
+            const address = (node instanceof StorageNode) ? node.getAddress() : node
+            return this._nodeRegistry.removeStreamFromStorageNode(this.id, address)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
+    // private async isStreamStoredInStorageNode(node: StorageNode | EthereumAddress) {
+    //     const address = (node instanceof StorageNode) ? node.getAddress() : node
+    //     return this._nodeRegistry.isStreamStoredInStorageNode(this.id, address)
+    // }
+
     async getStorageNodes() {
-        return this._streamEndpoints.getStorageNodes(this.id)
+        return this._nodeRegistry.getStorageNodesOf(this.id)
     }
 
     async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
         return this._publisher.publish(this.id, content, timestamp, partitionKey)
+    }
+
+    static parseStreamPropsFromJson(propsString: string): StreamProperties {
+        try {
+            return JSON.parse(propsString)
+        } catch (error) {
+            throw new Error(`Could not parse properties from onchain metadata: ${propsString}`)
+        }
     }
 }
 

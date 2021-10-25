@@ -1,10 +1,13 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
-import { STREAMR_DOCKER_DEV_HOST, createTestStream, fastPrivateKey } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST, createTestStream, getPrivateKey } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
 import { StreamrClient } from 'streamr-client'
+
+jest.setTimeout(30000)
+
 const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
 
 const { TimeUuid } = cassandraTypes
@@ -99,7 +102,7 @@ describe('CassandraNullPayloads', () => {
 
         const streamrClient = new StreamrClient({
             auth: {
-                privateKey: fastPrivateKey()
+                privateKey: await getPrivateKey()
             },
             restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
         })

@@ -1,13 +1,15 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    getCreateClient, getPublishTestMessages, getWaitForStorage, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream
+    getCreateClient, getPublishTestMessages, getWaitForStorage, describeRepeats, uid, addAfterFn, createTestStream, clientOptions, until, getPrivateKey
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
-import { StorageNode } from '../../src/StorageNode'
+// import { StorageNode } from '../../src/StorageNode'
 import { Stream, StreamOperation } from '../../src/Stream'
+import { Wallet } from 'ethers'
 
+jest.setTimeout(240000)
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
@@ -17,24 +19,23 @@ describeRepeats('PubSub with multiple clients', () => {
     let mainClient: StreamrClient
     let otherClient: StreamrClient
     let privateKey: string
-    let errors: Error[] = []
+    const errors: Error[] = []
 
     const createClient = getCreateClient()
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
-        errors = []
-        privateKey = fakePrivateKey()
-
-        mainClient = createClient({
+        privateKey = await getPrivateKey()
+        mainClient = await createClient({
             id: 'main',
             auth: {
                 privateKey
             }
         })
-        // mainClient.on('error', getOnError(errors))
+
+        const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
         stream = await createTestStream(mainClient, module)
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+        await stream.addToStorageNode(await storageNodeWallet.getAddress())
     })
 
     afterEach(async () => {
@@ -42,11 +43,11 @@ describeRepeats('PubSub with multiple clients', () => {
     })
 
     async function createPublisher(opts = {}) {
-        const pubClient = createClient({
+        const pubClient = await createClient({
             auth: {
-                privateKey: fakePrivateKey(),
+                privateKey: await getPrivateKey(),
             },
-            ...opts,
+            ...opts
         })
         const publisherId = (await pubClient.getAddress()).toLowerCase()
 
@@ -55,32 +56,26 @@ describeRepeats('PubSub with multiple clients', () => {
         })
 
         // pubClient.on('error', getOnError(errors))
-        const pubUser = await pubClient.getUserInfo()
-        await stream.grantPermission(StreamOperation.STREAM_GET, pubUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_PUBLISH, pubUser.username)
+        const pubUser = await pubClient.getAddress()
+        await stream.grantPermission(StreamOperation.STREAM_PUBLISH, pubUser)
         // needed to check last
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, pubUser.username)
-        await pubClient.session.getSessionToken()
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, pubUser)
         await pubClient.connect()
 
         return pubClient
     }
 
     async function createSubscriber(opts = {}) {
-        const client = createClient({
+        const client = await createClient({
             id: 'subscriber',
-            auth: {
-                privateKey
-            },
             ...opts,
+            auth: { privateKey: '0xd7609ae3a29375768fac8bc0f8c2f6ac81c5f2ffca2b981e6cf15460f01efe14' }
         })
 
         // client.on('error', getOnError(errors))
-        await client.session.getSessionToken()
-        const user = await client.getUserInfo()
+        const user = await client.getAddress()
 
-        await stream.grantPermission(StreamOperation.STREAM_GET, user.username)
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user.username)
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user)
         await client.connect()
         return client
     }
@@ -119,7 +114,7 @@ describeRepeats('PubSub with multiple clients', () => {
             // messages should arrive on both clients?
             expect(receivedMessagesMain).toEqual([message])
             expect(receivedMessagesOther).toEqual([message])
-        }, 60000)
+        })
         /*
         describe('subscriber disconnects after each message (uses resend)', () => {
             test('single subscriber', async () => {
@@ -297,7 +292,6 @@ describeRepeats('PubSub with multiple clients', () => {
         test('works with multiple publishers on a single stream', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
-            await mainClient.session.getSessionToken()
             await mainClient.connect()
 
             otherClient = await createSubscriber()
@@ -365,14 +359,13 @@ describeRepeats('PubSub with multiple clients', () => {
 
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
-        }, 80000)
+        })
 
         test('works with multiple publishers on one stream with late subscriber', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
             // the otherClient subscribes after the 3rd message hits storage
             otherClient = await createSubscriber()
-            await mainClient.session.getSessionToken()
             await mainClient.connect()
 
             const receivedMessagesOther: Record<string, any[]> = {}
@@ -405,7 +398,7 @@ describeRepeats('PubSub with multiple clients', () => {
             await Promise.all(publishers.map(async (pubClient) => {
                 const waitForStorage = getWaitForStorage(pubClient, {
                     stream,
-                    timeout: 15000,
+                    timeout: 35000,
                     count: MAX_MESSAGES * publishers.length,
                 })
 
@@ -416,7 +409,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
                 const publishTestMessages = getPublishTestMessages(pubClient, stream, {
                     waitForLast: true,
-                    waitForLastTimeout: 15000,
+                    waitForLastTimeout: 35000,
                     waitForLastCount: MAX_MESSAGES * publishers.length,
                     delay: 500 + Math.random() * 1000,
                     createMessage: (msg) => ({
@@ -468,22 +461,20 @@ describeRepeats('PubSub with multiple clients', () => {
                 checkMessages(published, receivedMessagesOther)
                 throw err
             })
-        }, 60000)
+        })
     })
 
     test('works with multiple publishers on one stream', async () => {
-        await mainClient.getSessionToken()
         await mainClient.connect()
 
-        otherClient = createClient({
+        otherClient = await createClient({
             auth: {
-                privateKey
+                privateKey: await getPrivateKey()
             }
         })
-        await otherClient.getSessionToken()
-        const otherUser = await otherClient.getUserInfo()
-        await stream.grantPermission(StreamOperation.STREAM_GET, otherUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser.username)
+        // otherClient.on('error', getOnError(errors))
+        const otherUser = await otherClient.getAddress()
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser)
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
@@ -520,7 +511,7 @@ describeRepeats('PubSub with multiple clients', () => {
             const publisherId = (await pubClient.getAddress()).toLowerCase()
             const publishTestMessages = getPublishTestMessages(pubClient, stream, {
                 waitForLast: true,
-                waitForLastTimeout: 15000,
+                waitForLastTimeout: 35000,
             })
 
             await publishTestMessages(MAX_MESSAGES, {
@@ -544,23 +535,21 @@ describeRepeats('PubSub with multiple clients', () => {
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
         })
-    }, 40000)
+    })
 
     test('works with multiple publishers on one stream with late subscriber', async () => {
         const published: Record<string, any[]> = {}
-        await mainClient.session.getSessionToken()
         await mainClient.connect()
 
-        otherClient = createClient({
+        otherClient = await createClient({
             auth: {
-                privateKey
+                privateKey: await getPrivateKey()
             }
         })
-        await otherClient.session.getSessionToken()
-        const otherUser = await otherClient.getUserInfo()
+        // otherClient.on('error', getOnError(errors))
+        const otherUser = await otherClient.getAddress()
 
-        await stream.grantPermission(StreamOperation.STREAM_GET, otherUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser.username)
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser)
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
@@ -590,14 +579,14 @@ describeRepeats('PubSub with multiple clients', () => {
         await Promise.all(publishers.map(async (pubClient) => {
             const waitForStorage = getWaitForStorage(pubClient, {
                 stream,
-                timeout: 15000,
+                timeout: 35000,
                 count: MAX_MESSAGES * publishers.length,
             })
 
             const publisherId = (await pubClient.getAddress()).toString().toLowerCase()
             const publishTestMessages = getPublishTestMessages(pubClient, stream, {
                 waitForLast: true,
-                waitForLastTimeout: 15000,
+                waitForLastTimeout: 35000,
                 waitForLastCount: MAX_MESSAGES * publishers.length,
                 delay: 500 + Math.random() * 1000,
             })
@@ -645,5 +634,5 @@ describeRepeats('PubSub with multiple clients', () => {
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
         })
-    }, 80000)
+    })
 })

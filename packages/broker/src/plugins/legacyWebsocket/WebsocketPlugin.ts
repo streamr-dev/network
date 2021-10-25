@@ -43,13 +43,13 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         this.websocketServer = new WebsocketServer(
             httpServer,
             this.networkNode,
-            new StreamFetcher(this.brokerConfig.streamrUrl),
+            new StreamFetcher(this.streamrClient!),
             this.publisher,
             this.metricsContext,
             this.subscriptionManager,
-            this.storageNodeRegistry,
             this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
+            this.streamrClient!
         )
         httpServer.listen(this.pluginConfig.port)
         await once(httpServer, 'listening')

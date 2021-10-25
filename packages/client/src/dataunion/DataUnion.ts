@@ -128,23 +128,25 @@ export class DataUnion {
         return this.sidechainAddress
     }
 
-    // Member functions
+    // Member functionss
 
     /**
      * Send a joinRequest, or get into data union instantly with a data union secret
      */
+    // eslint-disable-next-line
     async join(secret?: string): Promise<JoinResponse> {
-        const memberAddress = await this.client.ethereum.getAddress()
-        const body: any = {
-            memberAddress
-        }
-        if (secret) { body.secret = secret }
+        throw new Error('no implemented without core api')
+        // const memberAddress = await this.client.ethereum.getAddress()
+        // const body: any = {
+        //     memberAddress
+        // }
+        // if (secret) { body.secret = secret }
 
-        const response = await this.client.rest.post<JoinResponse>(['dataunions', this.contractAddress, 'joinRequests'], body)
-        if (secret) {
-            await until(async () => this.isMember(memberAddress))
-        }
-        return response
+        // const response = await this.client.rest.post<JoinResponse>(['dataunions', this.contractAddress, 'joinRequests'], body)
+        // if (secret) {
+        //     await until(async () => this.isMember(memberAddress))
+        // }
+        // return response
     }
 
     /**
@@ -395,11 +397,13 @@ export class DataUnion {
     /**
      * Add a new data union secret
      */
+    // eslint-disable-next-line
     async createSecret(name: string = 'Untitled Data Union Secret'): Promise<string> {
-        const res = await this.client.rest.post<{secret: string}>(['dataunions', this.contractAddress, 'secrets'], {
-            name,
-        })
-        return res?.secret
+        throw new Error('no implemented without core api')
+        // const res = await this.client.rest.post<{secret: string}>('todo', ['dataunions', this.contractAddress, 'secrets'], {
+        //     name,
+        // })
+        // return res?.secret
     }
 
     /**

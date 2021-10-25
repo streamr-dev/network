@@ -43,19 +43,18 @@ export class MetricsPublisher {
     }
 
     async ensureStreamsCreated(): Promise<void> {
-        await Promise.all(
-            Object.keys(STREAM_ID_SUFFIXES)
-                .map((periodLengthAsString: string) => this.ensureStreamCreated(Number(periodLengthAsString)))
-        )
+        for (const suffix in STREAM_ID_SUFFIXES) {
+            await this.ensureStreamCreated(Number(suffix))
+        }
     }
+
 
     private async ensureStreamCreated(periodLength: number): Promise<string> {
         const streamId = this.getStreamId(periodLength)
         const stream = await this.client.getOrCreateStream({
             id: streamId
         })
-        await stream.grantPermission('stream_get' as StreamOperation, undefined)
-        await stream.grantPermission('stream_subscribe' as StreamOperation, undefined)
+        await stream.grantPublicPermission(StreamOperation.STREAM_SUBSCRIBE)
         if (periodLength !== PERIOD_LENGTHS.FIVE_SECONDS) {
             try {
                 await stream.addToStorageNode(this.storageNodeAddress)

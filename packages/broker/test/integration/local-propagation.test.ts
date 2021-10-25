@@ -3,7 +3,9 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
-import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
+import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey } from '../utils'
+
+jest.setTimeout(30000)
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -13,7 +15,7 @@ const mqttPort = 17751
 describe('local propagation', () => {
     let tracker: Tracker
     let broker: Broker
-    const privateKey = fastPrivateKey()
+    let privateKey: string
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream: Stream
@@ -21,7 +23,8 @@ describe('local propagation', () => {
     let mqttClient1: AsyncMqttClient
     let mqttClient2: AsyncMqttClient
 
-    beforeEach(async () => {
+    beforeAll(async () => {
+        privateKey = await getPrivateKey()
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
@@ -32,7 +35,7 @@ describe('local propagation', () => {
 
         broker = await startBroker({
             name: 'broker1',
-            privateKey: '0xfe77283a570fda0e581897b18d65632c438f0d00f9440183119c1b7e4d5275e1',
+            privateKey: await getPrivateKey(),
             trackerPort,
             httpPort,
             wsPort,
@@ -51,7 +54,7 @@ describe('local propagation', () => {
         freshStreamId = freshStream.id
 
         await wait(3000)
-    }, 10 * 1000)
+    })
 
     afterEach(async () => {
         await Promise.all([
@@ -168,7 +171,7 @@ describe('local propagation', () => {
                 mqttPayload: 'key: 2'
             }
         ])
-    }, 10000)
+    })
 
     test('local propagation using StreamrClients and mqtt clients', async () => {
         const client1Messages: any[] = []
@@ -299,5 +302,5 @@ describe('local propagation', () => {
                 key: 4
             },
         ])
-    }, 10000)
+    })
 })

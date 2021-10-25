@@ -10,16 +10,17 @@ describe('MetricsPublisher', () => {
         const storageNodeAddress = '0x2222222222222222222222222222222222222222'
         const client = new StreamrClient({
             ...ConfigTest,
-            storageNodeRegistry: [{
-                address: storageNodeAddress,
-                url: 'http://storage.mock',
-            }]
+            storageNodeRegistry: {
+                contractAddress: storageNodeAddress,
+                jsonRpcProvider: 'http://storage.mock',
+            }
         })
 
         publisher = new MetricsPublisher(nodeAddress, client, storageNodeAddress)
         mockStream = {
             addToStorageNode: jest.fn(),
-            grantPermission: jest.fn()
+            // grantPermission: jest.fn(),
+            grantPublicPermission: jest.fn()
         } as any
         // @ts-expect-error private field
         publisher.client = {
@@ -37,7 +38,7 @@ describe('MetricsPublisher', () => {
         it('happy path', async () => {
             await publisher.ensureStreamsCreated()
             expect(getClient().getOrCreateStream).toBeCalledTimes(4)
-            expect(mockStream.grantPermission).toBeCalledTimes(8)
+            expect(mockStream.grantPublicPermission).toBeCalledTimes(4)
             expect(mockStream.addToStorageNode).toBeCalledTimes(3)
         })
 
@@ -47,7 +48,7 @@ describe('MetricsPublisher', () => {
                 await publisher.ensureStreamsCreated()
             } catch (e) {}
             expect(getClient().getOrCreateStream).toBeCalledTimes(4)
-            expect(mockStream.grantPermission).toBeCalledTimes(8)
+            expect(mockStream.grantPublicPermission).toBeCalledTimes(4)
         })
 
     })

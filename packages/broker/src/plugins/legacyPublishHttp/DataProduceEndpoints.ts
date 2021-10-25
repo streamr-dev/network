@@ -48,7 +48,7 @@ export const router = (streamFetcher: StreamFetcher, publisher: Publisher, parti
             type() { return true },
         }),
         // Check write permission using middleware, writes req.stream
-        authenticator(streamFetcher, 'stream_publish'),
+        // authenticator(streamFetcher, StreamOperation.STREAM_PUBLISH, ????),
         // Produce request handler
         async (req: AuthenticatedRequest<QueryParams>, res: Response) => {
             // Validate body

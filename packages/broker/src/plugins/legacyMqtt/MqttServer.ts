@@ -11,6 +11,7 @@ import { SubscriptionManager } from '../../SubscriptionManager'
 import { Connection } from './Connection'
 import * as mqtt from "mqtt-packet"
 import { IPubackPacket } from "async-mqtt"
+import { StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -143,25 +144,28 @@ export class MqttServer extends EventEmitter {
                 return
             }
 
-            const privateKey = packet.password.toString()
+            // const privateKey = packet.password.toString()
 
-            this.streamFetcher.getToken(privateKey)
-                .then((sessionToken) => {
-                    connection.sendConnectionAccepted()
-                    connection.setClientId(packet.clientId).setToken(sessionToken)
-                    logger.debug('onNewClientConnection: mqtt "%s" connected', connection.id)
-                }, (err) => {
-                    logger.warn('onNewClientConnection: error fetching token %s', err.stack)
-                    if (err.code === 'INVALID_ARGUMENT') {
-                        connection.sendConnectionRefused()
-                    } else {
-                        connection.sendConnectionRefusedServerUnavailable()
-                    }
-                })
-        })
-    }
+            // this.streamFetcher.getToken(privateKey)
+            //     .then((sessionToken) => {
+            try {
+                connection.sendConnectionAccepted()
+                connection.setClientId(packet.clientId)
+                logger.debug('onNewClientConnection: mqtt "%s" connected', connection.id)
+                // })
 
-    async handlePublishRequest(connection: Connection, packet: mqtt.IPublishPacket): Promise<void> {
+            } catch {(err: any) => {
+                logger.warn('onNewClientConnection: error fetching token %s', err.stack)
+                if (err.code === 'INVALID_ARGUMENT') {
+                    connection.sendConnectionRefused()
+                } else {
+                    connection.sendConnectionRefusedServerUnavailable()
+                }
+            }
+            }
+        })}
+
+    async handlePublishRequest(connection: Todo, packet: Todo) {
         logger.debug('publish request %o', packet)
 
         const { topic, payload, qos } = packet
@@ -173,6 +177,9 @@ export class MqttServer extends EventEmitter {
             }
 
             // No way to define partition over MQTT, so choose a random partition
+            // const streamObj = await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_PUBLISH, )
+            const streamObj = await this.streamFetcher.fetch(topic)
+
             const streamPartition = this.partitionFn(streamObj.partitions)
 
             const textPayload = payload.toString()
@@ -181,6 +188,7 @@ export class MqttServer extends EventEmitter {
                 messageId: new Protocol.MessageID(streamObj.id, streamPartition, Date.now(), sequenceNumber, connection.id, connection.id),
                 content: mqttPayloadToObject(textPayload),
             })
+            await this.streamFetcher.authenticate(topic, StreamOperation.STREAM_PUBLISH, streamMessage.getPublisherId())
 
             await this.publisher.validateAndPublish(streamMessage)
 

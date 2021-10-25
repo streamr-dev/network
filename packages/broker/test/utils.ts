@@ -1,16 +1,16 @@
 import crypto from 'crypto'
-import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
+import StreamrClient, { MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
-import { StorageConfig } from '../src/plugins/storage/StorageConfig'
-import { ApiAuthenticationConfig, Config, StorageNodeConfig } from '../src/config'
+// import { StorageConfig } from '../src/plugins/storage/StorageConfig'
+import { Config } from '../src/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
-const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
+// const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
 interface TestConfig {
     name: string
@@ -48,12 +48,20 @@ export const formConfig = ({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeConfig = { registry: [] },
-    storageConfigRefreshInterval = 0,
-}: TestConfig): Config => {
+    storageNodeConfig = {
+        // privatekey: '0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285',
+        // address: '0x505D48552Ac17FfD0845FFA3783C2799fd4aaD78',
+        // url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`,
+        registry: {
+            contractAddress: "0xbAA81A0179015bE47Ad439566374F2Bae098686F",
+            jsonRpcProvider: "http://10.200.10.1:8546"
+        }
+    },
+    storageConfigRefreshInterval = 5000,
+}: Todo): Config {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
-        plugins['legacyPublishHttp'] = {}
+        plugins['publishHttp'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -78,9 +86,8 @@ export const formConfig = ({
         }
     }
     if (legacyMqttPort) {
-        plugins['legacyMqtt'] = {
-            port: legacyMqttPort,
-            streamsTimeout: 300000
+        plugins['mqtt'] = {
+            port: legacyMqttPort
         }
     }
 
@@ -118,8 +125,14 @@ export const formConfig = ({
     }
 }
 
-export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
-    const broker = await createBroker(formConfig(testConfig))
+export async function getPrivateKey(): Promise<string> {
+    const response = await fetch('http://localhost:45454/key')
+    return response.text()
+}
+
+export const startBroker = async (config: Todo): Promise<Broker> => {
+    const privateKey = config.privateKey || await getPrivateKey()
+    const broker = await createBroker(formConfig({privateKey, ...config}))
     await broker.start()
     return broker
 }
@@ -178,22 +191,13 @@ export class StorageAssignmentEventManager {
 
     async createStream(): Promise<void> {
         this.eventStream = await this.client.createStream({
-            id: this.engineAndEditorAccount.address + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
+            id: '/' + this.engineAndEditorAccount.address + '/' + getTestName(module) + '/' + Date.now(),
         })
     }
 
-    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient): Promise<void> {
-        await fetch(`${API_URL}/streams/${encodeURIComponent(streamId)}/storageNodes`, {
-            body: JSON.stringify({
-                address: storageNodeAddress
-            }),
-            headers: {
-                // eslint-disable-next-line quote-props
-                'Authorization': 'Bearer ' + await client.session.getSessionToken(),
-                'Content-Type': 'application/json',
-            },
-            method: 'POST'
-        })
+    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient) {
+        await client.addStreamToStorageNode(streamId, storageNodeAddress)
+        await until(async () => { return client.isStreamStoredInStorageNode(streamId, storageNodeAddress) }, 100000, 1000)
         this.publishAddEvent(streamId)
     }
 
@@ -233,15 +237,18 @@ const getTestName = (module: NodeModule) => {
     return (groups !== null) ? groups[1] : module.filename
 }
 
-export const createTestStream = (
+export const createTestStream = async (
     streamrClient: StreamrClient,
     module: NodeModule,
     props?: Partial<StreamProperties>
 ): Promise<Stream> => {
-    return streamrClient.createStream({
-        id: '/test/' + getTestName(module) + '/' + Date.now(),
+    const id = (await streamrClient.getAddress()) + '/test/' + getTestName(module) + '/' + Date.now()
+    const stream = await streamrClient.createStream({
+        id,
         ...props
     })
+    await until(async () => { return streamrClient.streamExistsOnTheGraph(id) }, 100000, 1000)
+    return stream
 }
 
 export class Queue<T> {
@@ -260,3 +267,53 @@ export class Queue<T> {
 export const getSPIDKeys = (broker: Broker): Protocol.SPIDKey[] => {
     return Array.from(broker.getSPIDs(), (spid) => spid.toKey())
 }
+
+export async function sleep(ms = 0): Promise<void> {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms)
+    })
+}
+
+/**
+ * Wait until a condition is true
+ * @param condition - wait until this callback function returns true
+ * @param timeOutMs - stop waiting after that many milliseconds, -1 for disable
+ * @param pollingIntervalMs - check condition between so many milliseconds
+ * @param failedMsgFn - append the string return value of this getter function to the error message, if given
+ * @return the (last) truthy value returned by the condition function
+ */
+export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000,
+    pollingIntervalMs = 100, failedMsgFn?: () => string): Promise<boolean> {
+    // condition could as well return any instead of boolean, could be convenient
+    // sometimes if waiting until a value is returned. Maybe change if such use
+    // case emerges.
+    const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
+    let isTimedOut = false
+    let t!: ReturnType<typeof setTimeout>
+    if (timeOutMs > 0) {
+        t = setTimeout(() => { isTimedOut = true }, timeOutMs)
+    }
+
+    try {
+        // Promise wrapped condition function works for normal functions just the same as Promises
+        let wasDone = false
+        while (!wasDone && !isTimedOut) { // eslint-disable-line no-await-in-loop
+            wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
+            if (!wasDone && !isTimedOut) {
+                await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+            }
+        }
+
+        if (isTimedOut) {
+            if (failedMsgFn) {
+                err.message += ` ${failedMsgFn()}`
+            }
+            throw err
+        }
+
+        return wasDone
+    } finally {
+        clearTimeout(t)
+    }
+}
+

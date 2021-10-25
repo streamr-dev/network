@@ -15,16 +15,16 @@ const trackerPort = 12410
 const mqttPort1 = 12551
 const mqttPort2 = 12552
 const mqttPort3 = 12553
-const broker1Key = '0x0d4f33e0e76e9f7c26178db90319617a798819acd51004693f65bd9b86444e4b'
-const broker2Key = '0xd2672dce1578d6b75a58e11fa96c978b3b500750be287fc4e7f1e894eb179da7'
-const broker3Key = '0xa417da20e3afeb69544585c6b44b95ad4d987f38cf257f4a53eab415cc12334f'
+const broker1Key = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
+const broker2Key = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
+const broker3Key = '0x633a182fb8975f22aaad41e9008cb49a432e9fdfef37f151e9e7c54e96258ef9'
 
-describe('mqtt: end-to-end', () => {
+describe.skip('mqtt: end-to-end', () => {
     let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
     let broker3: Broker
-    const privateKey = fastPrivateKey()
+    const privateKey = '0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285'
     let client1: StreamrClient
     let client2: StreamrClient
     let client3: StreamrClient

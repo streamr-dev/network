@@ -9,7 +9,7 @@ import { Publisher } from "../../../../src/Publisher"
 
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 
-describe('DataProduceEndpoints', () => {
+describe.skip('DataProduceEndpoints', () => {
     const stream = {
         id: 'streamId',
         partitions: 1,

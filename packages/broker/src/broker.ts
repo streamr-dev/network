@@ -8,7 +8,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, NetworkSmartContract, StorageNodeRegistryItem, TrackerRegistryItem } from './config'
+import { Config, NetworkSmartContract, TrackerRegistryItem } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -37,17 +37,17 @@ const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
     }
 }
 
-const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[]> => {
-    if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
-        const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
-            contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
-            jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
-        })
-        return registry.getAllStorageNodes()
-    } else {
-        return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
-    }
-}
+// const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[]> => {
+//     if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
+//         const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
+//             contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
+//             jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
+//         })
+//         return registry.getAllStorageNodes()
+//     } else {
+//         return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
+//     }
+// }
 
 const getStunTurnUrls = (config: Config): string[] | undefined => {
     if (!config.network.stun && !config.network.turn) {

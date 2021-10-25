@@ -5,10 +5,12 @@ import { waitForEvent } from 'streamr-test-utils'
 import { Broker } from '../../../../src/broker'
 import { startBroker, createMqttClient } from '../../../utils'
 
+jest.setTimeout(30000)
+
 const trackerPort = 12411
 const mqttPort = 12413
 
-describe('MQTT error handling', () => {
+describe.skip('MQTT error handling', () => {
     let tracker: Tracker
     let broker: Broker
     let mqttClient: AsyncMqttClient

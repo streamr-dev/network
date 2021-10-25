@@ -13,7 +13,6 @@ export * from './Stream'
 export * from './encryption/Encryption'
 export * from './StorageNode'
 export * from './Subscriber'
-export * from './LoginEndpoints'
 export * from './StreamEndpoints'
 import ConfigTest from './ConfigTest'
 

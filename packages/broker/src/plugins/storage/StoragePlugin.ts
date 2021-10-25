@@ -57,7 +57,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             onSPIDRemoved: (spid: Protocol.SPID) => this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
         })
         this.networkNode.addMessageListener(this.messageListener)
-        const streamFetcher = new StreamFetcher(this.brokerConfig.streamrUrl)
+        const streamFetcher = new StreamFetcher(this.streamrClient!)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, streamFetcher, this.metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
@@ -80,14 +80,9 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     private async createStorageConfig(): Promise<StorageConfig> {
         const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
-        const apiUrl = this.brokerConfig.streamrUrl + '/api/v1'
-        const storageConfig = await StorageConfig.createInstance(
-            this.pluginConfig.cluster.clusterAddress || brokerAddress,
-            this.pluginConfig.cluster.clusterSize,
-            this.pluginConfig.cluster.myIndexInCluster,
-            apiUrl,
-            this.pluginConfig.storageConfig.refreshInterval)
+        const storageConfig = await StorageConfig.createInstance(brokerAddress, this.streamrClient, this.pluginConfig.storageConfig.refreshInterval)
         this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.subscriptionManager)
+        await storageConfig.startChainEventsListener()
         return storageConfig
     }
 
@@ -97,6 +92,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig!.getSPIDs().forEach((spid) => {
             this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
         })
+        this.storageConfig!.stopChainEventsListener()
         await Promise.all([
             this.cassandra!.close(),
             this.storageConfig!.cleanup()

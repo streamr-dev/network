@@ -9,7 +9,7 @@ export class PublishHttpPlugin extends Plugin<void> {
     }
 
     async start(): Promise<void> {
-        const streamFetcher = new StreamFetcher(this.brokerConfig.streamrUrl)
+        const streamFetcher = new StreamFetcher(this.streamrClient!)
         this.addHttpServerRouter(dataProduceEndpoints(streamFetcher, this.publisher))
     }
 

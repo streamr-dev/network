@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { HttpError } from './errors/HttpError'
 import { Logger } from 'streamr-network'
 import { StreamFetcher } from './StreamFetcher'
+import { EthereumAddress, StreamOperation } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -12,11 +13,8 @@ export interface AuthenticatedRequest<Q> extends Request<Record<string,any>,any,
 /**
  * Middleware used to authenticate REST API requests
  */
-export const authenticator = (
-    streamFetcher: StreamFetcher,
-    permission = 'stream_subscribe'
-) => (req: AuthenticatedRequest<any>, res: Response, next: NextFunction): void => {
-    let sessionToken
+export const authenticator = (streamFetcher: StreamFetcher, permission = StreamOperation.STREAM_SUBSCRIBE,
+    user: EthereumAddress) => (req: Todo, res: Todo, next: Todo) => {
 
     // Try to parse authorization header if defined
     if (req.headers.authorization !== undefined) {
@@ -30,31 +28,30 @@ export const authenticator = (
             })
             return
         }
-        sessionToken = req.headers.authorization
-            .substring(7)
-            .trim()
     }
 
-    streamFetcher.authenticate(req.params.id, sessionToken, permission)
-        .then((streamJson: Record<string, unknown>) => {
-            req.stream = streamJson
-            next()
-        })
-        .catch((err: any) => {
-            let errorMsg
-            if (err instanceof HttpError && err.code === 403) {
-                errorMsg = 'Authentication failed.'
-            } else if (err instanceof HttpError && err.code === 404) {
-                errorMsg = `Stream ${req.params.id} not found.`
-            } else {
-                errorMsg = 'Request failed.'
-            }
+    req.stream = streamFetcher.authenticate(req.params.id, permission, user)
+    next()
+    // streamFetcher.authenticate(req.params.id, permission, user)
+    //     .then((streamJson: Todo) => {
+    //         req.stream = streamJson
+    //         next()
+    //     })
+    //     .catch((err: Todo) => {
+    //         let errorMsg
+    //         if (err instanceof HttpError && err.code === 403) {
+    //             errorMsg = 'Authentication failed.'
+    //         } else if (err instanceof HttpError && err.code === 404) {
+    //             errorMsg = `Stream ${req.params.id} not found.`
+    //         } else {
+    //             errorMsg = 'Request failed.'
+    //         }
 
-            logger.error(err)
-            logger.error(errorMsg)
+    //         logger.error(err)
+    //         logger.error(errorMsg)
 
-            res.status(err.code || 503).send({
-                error: errorMsg,
-            })
-        })
+    //         res.status(err.code || 503).send({
+    //             error: errorMsg,
+    //         })
+    //     })
 }

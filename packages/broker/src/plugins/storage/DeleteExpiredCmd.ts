@@ -1,6 +1,7 @@
 import cassandra, { Client } from 'cassandra-driver'
 import fetch from 'node-fetch'
 import pLimit, { Limit } from 'p-limit'
+import StreamrClient, { Stream } from 'streamr-client'
 import { Logger } from 'streamr-network'
 
 const logger = new Logger(module)
@@ -73,12 +74,12 @@ export class DeleteExpiredCmd {
         this.limit = pLimit(5)
     }
 
-    async run(): Promise<void> {
-        const streams = await this.getStreams()
+    async run(client: StreamrClient) {
+        const streams = await this._getStreams()
         logger.info(`Found ${streams.length} unique streams`)
 
-        const streamsInfo = await this.fetchStreamsInfo(streams)
-        const potentialBuckets = await this.getPotentiallyExpiredBuckets(streamsInfo)
+        const streamsInfo = await this._fetchStreamsInfo(streams, client)
+        const potentialBuckets = await this._getPotentiallyExpiredBuckets(streamsInfo)
         logger.info('Found %d potentially expired buckets', potentialBuckets.length)
 
         const cutPotentialBuckets = potentialBuckets.slice(0, this.bucketLimit)
@@ -111,14 +112,14 @@ export class DeleteExpiredCmd {
     private async fetchStreamsInfo(streams: StreamPart[]): Promise<(StreamPartInfo|void)[]> {
         const tasks = streams.filter(Boolean).map((stream: StreamPart) => {
             return this.limit(async () => {
-                const url = `${this.streamrBaseUrl}/api/v1/streams/${encodeURIComponent(stream.streamId)}/validation`
-                return fetch(url).then((res) => res.json()).then((json) => {
+                try {
+                    const streamFromChain = await client.getStream(stream.streamId)
                     return {
                         streamId: stream.streamId,
                         partition: stream.partition,
-                        storageDays: json.storageDays != null ? parseInt(json.storageDays) : 365,
+                        storageDays: streamFromChain.storageDays != null ? streamFromChain.storageDays : 365,
                     }
-                }).catch((err) => logger.error(err))
+                } catch (err) { logger.error(err) }
             })
         })
 

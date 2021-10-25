@@ -15,18 +15,18 @@ import MessageStream, { MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 import { authRequest } from './authFetch'
 
-import Session from './Session'
-import NodeRegistry from './StorageNodeRegistry'
+import { NodeRegistry } from './NodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
+import { StreamRegistry } from './StreamRegistry'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
-async function fetchStream(url: string, session: Session, opts = {}, abortController = new AbortController()) {
+async function fetchStream(url: string, opts = {}, abortController = new AbortController()) {
     const startTime = Date.now()
-    const response = await authRequest(url, session, {
+    const response = await authRequest(url, undefined, {
         signal: abortController.signal,
         ...opts,
     })
@@ -115,10 +115,10 @@ export default class Resend implements Context {
 
     constructor(
         context: Context,
-        private storageNodeRegistry: NodeRegistry,
+        private nodeRegistry: NodeRegistry,
+        private streamRegistry: StreamRegistry,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
-        private session: Session,
-        @inject(BrubeckContainer) private container: DependencyContainer
+        @inject(BrubeckContainer) private container: DependencyContainer,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -176,10 +176,16 @@ export default class Resend implements Context {
         throw new ContextError(this, `can not resend without valid resend options: ${inspect({ spid, options })}`)
     }
 
+    async getStreamNodes(sidLike: SIDLike) {
+        const sid = SPID.parse(sidLike)
+        const stream = await this.streamRegistry.getStream(sid.streamId)
+        return stream.getStorageNodes()
+    }
+
     private async fetchStream<T>(endpointSuffix: 'last' | 'range' | 'from', spid: SPID, query: QueryDict = {}) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, spid.key, query)
-        const nodes = await this.streamEndpoints.getStorageNodes(spid)
+        const nodes = await this.getStreamNodes(spid)
         if (!nodes.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(spid)}`)
             err.code = 'NO_STORAGE_NODES'
@@ -201,10 +207,10 @@ export default class Resend implements Context {
             count += 1
         })
 
-        messageStream.pull((async function* readStream(this: Resend) {
+        messageStream.pull(async function* readStream(this: Resend) {
             let dataStream
             try {
-                dataStream = await fetchStream(url, this.session)
+                dataStream = await fetchStream(url)
                 yield* dataStream
             } finally {
                 debug('resent %s messages.', count)
@@ -212,7 +218,7 @@ export default class Resend implements Context {
                     dataStream.destroy()
                 }
             }
-        }.bind(this)()))
+        }.bind(this)())
         return messageStream
     }
 
@@ -270,6 +276,6 @@ export default class Resend implements Context {
     }
 
     async stop() {
-        await this.storageNodeRegistry.stop()
+        await this.nodeRegistry.stop()
     }
 }

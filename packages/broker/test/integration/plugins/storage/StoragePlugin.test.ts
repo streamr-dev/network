@@ -3,13 +3,12 @@ import { StoragePlugin } from '../../../../src/plugins/storage/StoragePlugin'
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
-import { StorageNodeRegistry } from "../../../../src/StorageNodeRegistry"
 import { Wallet } from 'ethers'
 
 const SPIDS: Protocol.SPID[] = [new Protocol.SPID('foo', 0), new Protocol.SPID('bar', 0)]
 
-const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
-    const wallet = Wallet.createRandom()
+const createMockPlugin = async (networkNode: any, subscriptionManager: any) => {
+    const wallet = new Wallet(await getPrivateKey())
     const brokerConfig: any = {
         ethereumPrivateKey: wallet.privateKey,
         plugins: {
@@ -38,7 +37,7 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
         brokerConfig,
-        storageNodeRegistry: StorageNodeRegistry.createInstance(brokerConfig, []),
+        // storageNodeRegistry: StorageNodeRegistry.createInstance(brokerConfig, []),
         nodeId: wallet.address
     })
 }
@@ -70,17 +69,19 @@ describe('StoragePlugin', () => {
     })
 
     test('happy path: start and stop', async () => {
-        const plugin = createMockPlugin(networkNode, subscriptionManager)
+        const plugin = await createMockPlugin(networkNode, subscriptionManager)
         await plugin.start()
         expect(subscriptionManager.subscribe).toBeCalledTimes(SPIDS.length)
         expect(networkNode.addMessageListener).toBeCalledTimes(1)
         expect(storageConfig.startAssignmentEventListener).toBeCalledTimes(1)
+        expect(storageConfig.startChainEventsListener).toBeCalledTimes(1)
         // @ts-expect-error private field
         const cassandraClose = jest.spyOn(plugin.cassandra!, 'close')
         await plugin.stop()
         expect(subscriptionManager.unsubscribe).toBeCalledTimes(SPIDS.length)
         expect(networkNode.removeMessageListener).toBeCalledTimes(1)
         expect(storageConfig.stopAssignmentEventListener).toBeCalledTimes(1)
+        expect(storageConfig.stopChainEventsListener).toBeCalledTimes(1)
         expect(storageConfig.cleanup).toBeCalledTimes(1)
         expect(cassandraClose).toBeCalledTimes(1)
     }, 10 * 1000)

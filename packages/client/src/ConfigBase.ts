@@ -16,6 +16,7 @@ import { EthereumAddress, Todo } from './types'
 
 import { AuthConfig, EthereumConfig } from './Ethereum'
 import { EncryptionConfig } from './encryption/KeyExchangeUtils'
+import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 
 export type CacheConfig = {
     maxSize: number,
@@ -43,6 +44,8 @@ export type SubscribeConfig = {
 export type ConnectionConfig = {
     /** Core HTTP API calls go here */
     restUrl: string
+    /** Some TheGraph instance, that indexes the streamr registries */
+    theGraphUrl: string
     /** Automatically connect on first subscribe */
     autoConnect: boolean
     /**  Automatically disconnect on last unsubscribe */
@@ -76,6 +79,10 @@ export type StrictStreamrClientConfig = {
     auth: AuthConfig
     /** joinPartAgent when using EE for join part handling */
     streamrNodeAddress: EthereumAddress
+    streamRegistrySidechainAddress: EthereumAddress,
+    nodeRegistrySidechainAddress: EthereumAddress,
+    streamStorageRegistrySidechainAddress: EthereumAddress,
+    ensCacheSidechainAddress: EthereumAddress,
     keyExchange: Todo
     dataUnion: DataUnionConfig
     cache: CacheConfig,
@@ -110,6 +117,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Streamr Core options
     restUrl: 'https://streamr.network/api/v1',
+    theGraphUrl: 'http://127.0.0.1:8000/subgraphs/name/githubname/subgraphname',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
 
     // P2P Streamr Network options
@@ -135,8 +143,10 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
     mainnet: undefined, // Default to ethers.js default provider settings
     sidechain: {
-        url: 'https://rpc.xdaichain.com/',
-        chainId: 100
+        // url: 'https://rpc.xdaichain.com/',
+        // chainId: 100
+        url: 'http://10.200.10.1:8546/',
+        chainId: 8997
     },
     binanceRPC: {
         url: 'https://bsc-dataseed.binance.org/',
@@ -147,6 +157,10 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     binanceAdapterAddress: '0x0c1aF6edA561fbDA48E9A7B1Dd46D216F31A97cC',
     binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
     withdrawServerUrl: 'https://streamr.com:3000',
+    streamRegistrySidechainAddress: '0xa86863053cECFD9f6f861e0Fd39a042238411b75',
+    nodeRegistrySidechainAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+    streamStorageRegistrySidechainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
+    ensCacheSidechainAddress: '',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
         payForTransport: true,

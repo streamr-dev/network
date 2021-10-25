@@ -41,8 +41,9 @@ export class Rest implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    getUrl(urlParts: UrlParts, query = {}, restUrl = this.options.restUrl) {
-        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), restUrl + '/')
+    getUrl(urlParts: UrlParts, query = {}, restUrl?: string) {
+        const baseUrl = restUrl ? restUrl + '/api/v1/' : this.options.restUrl
+        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl)
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
         return url
@@ -78,7 +79,7 @@ export class Rest implements Context {
         )
     }
 
-    post<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
+    post<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}, restUrl?: string) {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
@@ -89,21 +90,23 @@ export class Rest implements Context {
                 },
                 method: 'POST',
                 body: serialize(body),
-            }
+            },
+            restUrl
         })
     }
 
-    get<T extends object>(urlParts: UrlParts, options: FetchOptions = {}) {
+    get<T extends object>(urlParts: UrlParts, options: FetchOptions = {}, restUrl?: string) {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
                 ...options.options,
                 method: 'GET',
-            }
+            },
+            restUrl
         })
     }
 
-    put<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
+    put<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}, restUrl?: string) {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
@@ -114,7 +117,8 @@ export class Rest implements Context {
                 },
                 method: 'PUT',
                 body: serialize(body),
-            }
+            },
+            restUrl
         })
     }
 

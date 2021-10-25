@@ -36,12 +36,13 @@ describe.skip('ping-pong test between broker and clients', () => {
         websocketServer = new WebsocketServer(
             http.createServer().listen(wsPort),
             networkNode,
-            new StreamFetcher('http://127.0.0.1'),
+            new StreamFetcher(client1),
             new Publisher(client1, metricsContext),
             metricsContext,
             new SubscriptionManager(networkNode),
             undefined as any,
-            undefined as any
+            undefined as any,
+            client1
         )
 
         await Promise.all([

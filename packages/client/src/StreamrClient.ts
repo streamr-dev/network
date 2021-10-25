@@ -22,6 +22,7 @@ import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 import NodeRegistry, { register as registerNodeRegistry } from './StorageNodeRegistry'
+import { StreamRegistry } from './StreamRegistry'
 import { Methods, Plugin } from './utils/Plugin'
 
 let uid: string = process.pid != null
@@ -37,6 +38,7 @@ export interface StreamrClient extends Ethereum,
     Methods<StreamEndpoints>,
     Methods<Omit<Subscriber, 'subscribe'>>,
     Methods<ResendSubscribe>,
+    Methods<StreamRegistry>,
     // connect/pOnce in BrubeckNode are pOnce, we override them anyway
     Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
     Methods<LoginEndpoints>,
@@ -66,7 +68,6 @@ class StreamrClientBase implements Context {
         @inject(Config.Root) public options: StrictBrubeckClientConfig,
         public node: BrubeckNode,
         public ethereum: Ethereum,
-        public storageNodeRegistry: NodeRegistry,
         public session: Session,
         public loginEndpoints: LoginEndpoints,
         public streamEndpoints: StreamEndpoints,
@@ -78,13 +79,14 @@ class StreamrClientBase implements Context {
         public groupKeyStore: GroupKeyStoreFactory,
         protected destroySignal: DestroySignal,
         public dataunions: DataUnions,
+        streamRegistry: StreamRegistry,
+        nodeRegistry: NodeRegistry
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug
         Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
-        Plugin(this, this.storageNodeRegistry)
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
         Plugin(this, this.resends)
@@ -93,6 +95,8 @@ class StreamrClientBase implements Context {
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
         Plugin(this, this.dataunions)
+        Plugin(this, this.streamRegistry)
+        Plugin(this, this.nodeRegistry)
 
         // override subscribe with resendSubscriber's subscribe+resend
         this.subscribe = resendSubscriber.subscribe.bind(resendSubscriber)
@@ -121,7 +125,6 @@ class StreamrClientBase implements Context {
             this.destroySignal.destroy().then(() => undefined),
             this.resends.stop(),
             this.publisher.stop(),
-            this.storageNodeRegistry.stop(),
             this.subscriber.stop(),
         ]
 
@@ -178,7 +181,7 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
         c.register(token, { useValue })
     })
 
-    registerNodeRegistry(c)
+    // registerNodeRegistry(c)
     return {
         config,
         childContainer: c,
@@ -195,7 +198,6 @@ export class StreamrClient extends StreamrClientBase {
             config,
             c.resolve<BrubeckNode>(BrubeckNode),
             c.resolve<Ethereum>(Ethereum),
-            c.resolve<NodeRegistry>(NodeRegistry as any),
             c.resolve<Session>(Session),
             c.resolve<LoginEndpoints>(LoginEndpoints),
             c.resolve<StreamEndpoints>(StreamEndpoints),
@@ -207,6 +209,8 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
             c.resolve<DataUnions>(DataUnions),
+            c.resolve<StreamRegistry>(StreamRegistry),
+            c.resolve<NodeRegistry>(NodeRegistry),
         )
     }
 }

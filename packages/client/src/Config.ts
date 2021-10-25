@@ -8,9 +8,8 @@ import Config, { StrictStreamrClientConfig, StreamrClientConfig } from './Config
 import cloneDeep from 'lodash/cloneDeep'
 import merge from 'lodash/merge'
 import { NetworkNodeOptions } from 'streamr-network'
-import { NodeRegistryOptions } from './StorageNodeRegistry'
+import { NodeRegistryOptions } from './NodeRegistry'
 import { InspectOptions } from 'util'
-import { StorageNode } from './StorageNode'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Partial<NetworkNodeOptions>
@@ -68,10 +67,10 @@ const BRUBECK_CLIENT_DEFAULTS = {
             maxStringLength: 512
         }
     },
-    storageNodeRegistry: [{
-        address: StorageNode.STREAMR_GERMANY,
-        url: 'https://testnet2.streamr.network:8001',
-    }],
+    storageNodeRegistry: {
+        contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+        jsonRpcProvider: 'http://127.0.0.1:8546',
+    },
     network: {
         trackers: [
             {

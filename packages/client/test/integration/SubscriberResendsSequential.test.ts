@@ -2,7 +2,7 @@ import {
     Msg,
     clientOptions,
     describeRepeats,
-    fakePrivateKey,
+    await getPrivateKey,
     getWaitForStorage,
     getPublishTestStreamMessages,
     createTestStream,
@@ -29,7 +29,7 @@ describeRepeats('sequential resend subscribe', () => {
         client = new StreamrClient({
             ...clientOptions,
             auth: {
-                privateKey: fakePrivateKey(),
+                privateKey: await getPrivateKey(),
             },
         })
 

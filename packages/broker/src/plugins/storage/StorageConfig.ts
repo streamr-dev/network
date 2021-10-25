@@ -1,6 +1,9 @@
-import fetch from 'node-fetch'
-import { Logger, Protocol } from 'streamr-network'
+import { Logger } from 'streamr-network'
+import { StreamPart } from '../../types'
+import { StreamMessage } from 'streamr-network/dist/src/streamr-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
+import StreamrClient from 'streamr-client'
+import { EthereumStorageEvent } from 'streamr-client/dist/types/src/NodeRegistry'
 
 const logger = new Logger(module)
 
@@ -98,21 +101,15 @@ export class StorageConfig {
     }
 
     async refresh(): Promise<void> {
-        const res = await fetch(`${this.apiUrl}/storageNodes/${this.clusterId}/streams`)
-        if (!res.ok) {
-            throw new Error(`Refresh failed: ${res.status} ${await res.text()}`)
-        }
-        const json = await res.json()
-        if (!Array.isArray(json)) {
-            throw new Error(`Invalid response. Refresh failed: ${json}`)
-        }
+        const streamsToStore = await this.streamrClient.getStoredStreamsOf(this.nodeId)
+        if (!skipPollResultSoonAfterEvent) {
 
-        const spidKeys = new Set<Protocol.SPIDKey>(
-            json.flatMap((stream: { id: string, partitions: number }) => ([
-                ...getSPIDKeys(stream.id, stream.partitions)
-            ])).filter ((key: Protocol.SPIDKey) => this.belongsToMeInCluster(key))
-        )
-        this.setSPIDKeys(spidKeys)
+            const streamKeys = new Set<StreamKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
+                
+                ...getKeysFromStream(stream.id, stream.partitions)
+            ])))
+            this._setStreams(streamKeys)
+        }
     }
 
     private setSPIDKeys(newKeys: Set<Protocol.SPIDKey>): void {
@@ -201,6 +198,31 @@ export class StorageConfig {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)
+    }
+
+    async startChainEventsListener() {
+        const clientAddress = (await this.streamrClient.getAddress()).toLowerCase()
+        this.streamrClient.registerStorageEventListener(
+            async (event: EthereumStorageEvent) => {
+                skipPollResultSoonAfterEvent = true
+                if (event.nodeAddress.toLowerCase() !== clientAddress) { return }
+                const stream = await this.streamrClient.getStream(event.streamId)
+                const streamKeys = getKeysFromStream(stream.id, stream.partitions)
+                if (event.type === 'added') {
+                    this._addStreams(streamKeys)
+                }
+                if (event.type === 'removed') {
+                    this._removeStreams(streamKeys)
+                }
+                setTimeout(() => {
+                    skipPollResultSoonAfterEvent = false
+                }, 10000)
+            }
+        )
+    }
+
+    stopChainEventsListener() {
+        this.streamrClient.unRegisterStorageEventListeners()
     }
 
     private getAssignmentStreamId(streamrAddress: string) {

@@ -1,0 +1,42 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "runtimeVersion": "16.2.0", // If i need to run node 4.8.7
+            "request": "launch",
+            "name": "Jest single test",
+            "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+            // "env": { "CI": "true", "STREAMR_DOCKER_DEV_HOST": "192.168.0.8", "DEBUG": "*" },
+            "env": { "CI": "true", "STREAMR_DOCKER_DEV_HOST": "localhost", "DEBUG": "*" },
+            "args": [
+            //   "-c",
+            //   "./config/test/jest.json",
+              "--verbose",
+              "-i",
+              "--no-cache",
+              "--detectOpenHandles",
+              // "test/integration/Stream.test.ts",
+              // "test/integration/StreamEndpoints.test.ts",
+              // "test/integration/NodeEndpoints.test.ts",
+              // "test/integration/GapFill.test.ts",
+              // "test/integration/GroupKeyPersistence.test.ts",
+              // "test/integration/Validation.test.ts",
+              // "test/integration/Encryption.test.ts",
+              // "test/integration/MultipleClients.test.ts",
+              "test/integration/Resends.test.ts",
+              // "test/integration/StreamrClientResends.test.js",
+              // "test/integration/StreamrClient.test.ts",
+              "-t",
+              "gives zero results for last 0"
+            ],
+            "cwd": "${workspaceRoot}",
+            "protocol": "inspector",
+            "console": "integratedTerminal",
+            // "internalConsoleOptions": "neverOpen"
+          }
+    ]
+}

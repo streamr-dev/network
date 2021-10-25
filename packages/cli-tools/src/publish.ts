@@ -35,7 +35,7 @@ export const publishStream = (
         }
     })
 
-    client.on('error', (err) => writable.emit('error', err))
+    // client.on('error', (err) => writable.emit('error', err))
     // disconnect client when upstream pipe ends and data flushed
     writable.once('finish', () => client.disconnect())
     return writable
