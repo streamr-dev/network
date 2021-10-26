@@ -71,6 +71,14 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '8'
+      - uses: actions/cache@v2.1.6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -94,7 +102,7 @@ jobs:
           dest: 'packages/cross-client-testing/logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         with:
           name: docker-logs-${{ github.job }}-${{ github.run_number }}-${{ github.run_id }}
           path: packages/cross-client-testing/logs
