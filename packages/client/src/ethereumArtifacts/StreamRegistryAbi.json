@@ -618,6 +618,30 @@
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "streamId",
+        "type": "string"
+      },
+      {
+        "internalType": "enum StreamRegistry.PermissionType",
+        "name": "permissionType",
+        "type": "uint8"
+      }
+    ],
+    "name": "hasPublicPermission",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "userHasPermission",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"

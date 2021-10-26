@@ -44,11 +44,10 @@ export function formStreamrOptionsWithEnv(
 
     if (dev) {
         options.restUrl = 'http://localhost/api/v1'
-        options.storageNodeRegistry = [{
-            // "broker-node-storage-1" on Docker environment
-            address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-            url: 'http://10.200.10.1:8891'
-        }]
+        options.storageNodeRegistry = {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            jsonRpcProvider: `http://10.200.10.1:8546`
+        }
     } else if (stg) {
         options.restUrl = 'https://staging.streamr.com/api/v1/'
     }

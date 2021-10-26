@@ -7,7 +7,7 @@ import {
     getStreamId
 } from './common'
 import pkg from '../package.json'
-import { StreamPermission, StreamOperation, StreamrClient } from 'streamr-client'
+import { StreamPermissions, StreamOperation, StreamrClient } from 'streamr-client'
 import EasyTable from 'easy-table'
 
 const PUBLIC_PERMISSION_ID = 'public'
@@ -55,9 +55,9 @@ envOptions(program)
         const streamId = getStreamId(streamIdOrPath, options)!
         const stream = await client.getStream(streamId)
         const tasks = operations.map((operation: StreamOperation) => 
-            target ? stream.grantPermission(operation, target) : stream.grantPublicPermission(operation)
+            target ? stream.grantUserPermission(operation, target) : stream.grantPublicPermission(operation)
         )
-        const permissions = (await Promise.all(tasks)) as unknown as StreamPermission[]
+        const permissions = (await Promise.all(tasks)) as unknown as StreamPermissions[]
         console.info(EasyTable.print(permissions))
     })
     .parseAsync(process.argv)

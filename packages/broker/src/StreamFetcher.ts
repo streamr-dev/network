@@ -1,20 +1,30 @@
 import memoize from 'memoizee'
-// TODO do all REST operations to E&E via StreamrClient
-import StreamrClient, { EthereumAddress, StreamOperation } from 'streamr-client'
-import { Todo } from './types'
+import StreamrClient, { EthereumAddress, Stream, StreamOperation } from 'streamr-client'
+import memoizee from "memoizee"
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes
 
-export class StreamFetcher {
+type FetchMethod = (streamId: string, sessionToken?: string) => Promise<Stream>
 
-    fetch
-    checkPermission
-    authenticate
+type CheckPermissionMethod = (
+    streamId: string,
+    user: EthereumAddress,
+    operation?: StreamOperation,
+) => Promise<true>
+
+type AuthenticateMethod = (
+    streamId: string,
+    operation?: string
+) => Promise<Stream>
+export class StreamFetcher {
+    fetch: memoizee.Memoized<FetchMethod> & FetchMethod
+    checkPermission: memoizee.Memoized<CheckPermissionMethod> & CheckPermissionMethod
+    authenticate: memoize.Memoized<AuthenticateMethod> & AuthenticateMethod
     client: StreamrClient
 
     constructor(client: StreamrClient) {
-        this.fetch = memoize<StreamFetcher['_fetch']>(this._fetch, {
+        this.fetch = memoize<FetchMethod>(this.uncachedFetch, {
             maxAge: MAX_AGE,
             promise: true,
         })
@@ -29,45 +39,31 @@ export class StreamFetcher {
         this.client = client
     }
 
-    }
-
-    async getToken(privateKey: string): Promise<string> {
-        const client = new StreamrClient({
-            auth: {
-                privateKey,
-            },
-            restUrl: this.apiUrl,
-            autoConnect: false
-        })
-        return client.session.getSessionToken()
-    }
+    // async getToken(privateKey: string): Promise<string> {
+    //     const client = new StreamrClient({
+    //         auth: {
+    //             privateKey,
+    //         },
+    //         restUrl: this.apiUrl,
+    //         autoConnect: false
+    //     })
+    //     return client.session.getSessionToken()
+    // }
 
     private async uncachedAuthenticate(
         streamId: string,
         sessionToken: string|undefined,
-        operation = 'stream_subscribe'
-    ): Promise<Record<string, unknown>>  {
-        await this.checkPermission(streamId, sessionToken, operation)
+        operation = StreamOperation.STREAM_SUBSCRIBE
+    ): Promise<Stream>  {
+        await this.checkPermission(streamId, operation)
         return this.fetch(streamId, sessionToken)
     }
 
     /**
      * Returns a Promise that resolves with the stream json.
      */
-    private async uncachedFetch(streamId: string, sessionToken?: string): Promise<Record<string, unknown>> {
-        const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}`
-        const headers = formAuthorizationHeader(sessionToken)
-
-        const response = await fetchWithErrorLogging(url, {
-            headers,
-        })
-
-        if (response.status !== 200) {
-            this.fetch.delete(streamId, sessionToken) // clear cache result
-            throw await handleNon2xxResponse('_fetch', response, streamId, sessionToken, 'GET', url)
-        }
-
-        return response.json()
+    private async uncachedFetch(streamId: string): Promise<Stream> {
+        return this.client.getStream(streamId)
     }
 
     /**
@@ -75,12 +71,12 @@ export class StreamFetcher {
      * for the requested operation.
      * Promise always resolves to true or throws if permission has not been granted.
      */
-    private async uncachedCheckPermission(streamId: string, operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE,
-        user: EthereumAddress): Promise<boolean> {
+    private async uncachedCheckPermission(streamId: string, user: EthereumAddress,
+        operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE): Promise<true> {
         if (streamId == null) {
             throw new Error('_checkPermission: streamId can not be null!')
         }
-        const result = await (await this.client.getStream(streamId)).hasPermission(operation, user)
+        const result = await (await this.client.getStream(streamId)).hasUserPermission(operation, user)
         if (result) {
             return result
         } else {

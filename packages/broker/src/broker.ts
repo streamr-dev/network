@@ -13,7 +13,6 @@ import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
-import { StorageNodeRegistry } from "./StorageNodeRegistry"
 
 const logger = new Logger(module)
 
@@ -80,16 +79,17 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const trackers = await getTrackers(config)
 
-    const storageNodes = await getStorageNodes(config)
-    const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
+    // const storageNodes = await getStorageNodes(config)
 
     const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
+    const storageNodeRegistryContract = (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress ?
+        config.storageNodeConfig.registry as NetworkSmartContract: undefined
     const streamrClient = new StreamrClient({
         auth: {
             privateKey: config.ethereumPrivateKey,
         },
         restUrl: `${config.streamrUrl}/api/v1`,
-        storageNodeRegistry: config.storageNodeConfig?.registry,
+        storageNodeRegistry: storageNodeRegistryContract,
         network: {
             id: usePredeterminedNetworkId ? brokerAddress : undefined,
             name: networkNodeName,
@@ -116,7 +116,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             apiAuthenticator,
             metricsContext,
             brokerConfig: config,
-            storageNodeRegistry,
             nodeId,
         }
         return createPlugin(name, pluginOptions)

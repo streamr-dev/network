@@ -38,7 +38,7 @@ export interface StorageNodeRegistryItem {
 }
 
 export interface StorageNodeConfig {
-    registry: NetworkSmartContract
+    registry: StorageNodeRegistryItem[] | NetworkSmartContract
 }
 
 export type ApiAuthenticationConfig = { keys: string[] } | null

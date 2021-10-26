@@ -204,6 +204,14 @@ export class StreamEndpoints implements Context {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }
 
+    async getStreamValidationInfo(streamId: string) {
+        this.debug('getStreamValidationInfo %o', {
+            streamId,
+        })
+        const json = await this.rest.get<StreamValidationInfo>(['streams', streamId, 'validation'])
+        return json
+    }
+
     async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject> {
         const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
         this.debug('getStreamLast %o', {

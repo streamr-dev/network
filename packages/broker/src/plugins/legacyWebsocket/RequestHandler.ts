@@ -95,7 +95,7 @@ export class RequestHandler {
             if (!streamMessage.signature) {
                 // checkPermission is cached
                 await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(),
-                    StreamOperation.STREAM_PUBLISH, streamMessage.getPublisherId())
+                    streamMessage.getPublisherId(), StreamOperation.STREAM_PUBLISH)
             }
 
             await this.publisher.validateAndPublish(streamMessage)

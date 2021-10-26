@@ -21,7 +21,7 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
-import NodeRegistry, { register as registerNodeRegistry } from './StorageNodeRegistry'
+import { NodeRegistry } from './NodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
 import { Methods, Plugin } from './utils/Plugin'
 
@@ -79,8 +79,8 @@ class StreamrClientBase implements Context {
         public groupKeyStore: GroupKeyStoreFactory,
         protected destroySignal: DestroySignal,
         public dataunions: DataUnions,
-        streamRegistry: StreamRegistry,
-        nodeRegistry: NodeRegistry
+        public streamRegistry: StreamRegistry,
+        public nodeRegistry: NodeRegistry
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug

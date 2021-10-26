@@ -40,6 +40,7 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     "grantRole(bytes32,address)": FunctionFragment;
     "hasDirectPermission(string,address,uint8)": FunctionFragment;
     "hasPermission(string,address,uint8)": FunctionFragment;
+    "hasPublicPermission(string,uint8)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
     "isTrustedForwarder(address)": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
@@ -129,6 +130,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "hasPermission",
     values: [string, string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "hasPublicPermission",
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "hasRole",
@@ -284,6 +289,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "hasPermission",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "hasPublicPermission",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
@@ -672,6 +681,18 @@ export class StreamRegistry extends Contract {
     "hasPermission(string,address,uint8)"(
       streamId: string,
       user: string,
+      permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[boolean] & { userHasPermission: boolean }>;
+
+    hasPublicPermission(
+      streamId: string,
+      permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[boolean] & { userHasPermission: boolean }>;
+
+    "hasPublicPermission(string,uint8)"(
+      streamId: string,
       permissionType: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[boolean] & { userHasPermission: boolean }>;
@@ -1150,6 +1171,18 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  hasPublicPermission(
+    streamId: string,
+    permissionType: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  "hasPublicPermission(string,uint8)"(
+    streamId: string,
+    permissionType: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   hasRole(
     role: BytesLike,
     account: string,
@@ -1617,6 +1650,18 @@ export class StreamRegistry extends Contract {
     "hasPermission(string,address,uint8)"(
       streamId: string,
       user: string,
+      permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    hasPublicPermission(
+      streamId: string,
+      permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    "hasPublicPermission(string,uint8)"(
+      streamId: string,
       permissionType: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
@@ -2132,6 +2177,18 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    hasPublicPermission(
+      streamId: string,
+      permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "hasPublicPermission(string,uint8)"(
+      streamId: string,
+      permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     hasRole(
       role: BytesLike,
       account: string,
@@ -2570,6 +2627,18 @@ export class StreamRegistry extends Contract {
     "hasPermission(string,address,uint8)"(
       streamId: string,
       user: string,
+      permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    hasPublicPermission(
+      streamId: string,
+      permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "hasPublicPermission(string,uint8)"(
+      streamId: string,
       permissionType: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

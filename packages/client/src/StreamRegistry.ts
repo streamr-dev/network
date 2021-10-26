@@ -7,7 +7,7 @@ import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryAbi.json'
 // import { Provider } from '@ethersproject/abstract-provider'
 import fetch from 'node-fetch'
 // import { BigNumber, ethers } from 'ethers'
-import { AddressZero } from '@ethersproject/constants'
+import constants from '@ethersproject/constants'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
@@ -16,11 +16,10 @@ import Ethereum from './Ethereum'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 import { Config, StrictStreamrClientConfig } from './Config'
-import { Stream, StreamOperation, StreamPermission, StreamProperties } from './Stream'
+import { Stream, StreamOperation, StreamPermissions, StreamProperties } from './Stream'
 import { NotFoundError, ValidationError } from './authFetch'
 import { EthereumAddress } from './types'
 import { StreamListQuery } from './StreamEndpoints'
-import { constants } from 'ethers'
 
 // const { ValidationError } = Errors
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
@@ -103,23 +102,32 @@ export class StreamRegistry implements Context {
         throw new NotFoundError('Stream: id=' + id)
     }
 
-    async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermission> {
-        try {
-            await this.connectToStreamRegistryContract()
-            log('Getting permissions for stream %s for user %s', streamId, userAddress)
-            const permissions = await this.streamRegistryContract!.getPermissionsForUser(streamId, userAddress || AddressZero)
-            return {
-                streamId,
-                userAddress: userAddress || AddressZero,
-                edit: permissions?.edit || false,
-                canDelete: permissions?.canDelete || false,
-                publishExpiration: permissions?.publishExpiration || BigNumber.from(0),
-                subscribeExpiration: permissions?.subscribeExpiration || BigNumber.from(0),
-                share: permissions?.share || false
-            }
-        } catch (err) {
-            console.log(err)
-            throw err
+    async hasPermission(streamId: string, userAddess: EthereumAddress, operation: StreamOperation) {
+        return this.streamRegistryContractReadonly.hasPermission(streamId, userAddess,
+            StreamRegistry.streamOperationToSolidityType(operation))
+    }
+
+    async hasPublicPermission(streamId: string, userAddess: EthereumAddress) {
+        return this.streamRegistryContractReadonly.hasPublicPermission(streamId, userAddess)
+    }
+
+    async hasDirectPermission(streamId: string, userAddess: EthereumAddress, operation: StreamOperation) {
+        return this.streamRegistryContractReadonly.hasDirectPermission(streamId, userAddess,
+            StreamRegistry.streamOperationToSolidityType(operation))
+    }
+
+    async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
+        await this.connectToStreamRegistryContract()
+        log('Getting permissions for stream %s for user %s', streamId, userAddress)
+        const permissions = await this.streamRegistryContract!.getPermissionsForUser(streamId, userAddress || constants.AddressZero)
+        return {
+            edit: permissions?.edit || false,
+            canDelete: permissions?.canDelete || false,
+            // publishExpiration: permissions?.publishExpiration || BigNumber.from(0),
+            // subscribeExpiration: permissions?.subscribeExpiration || BigNumber.from(0),
+            publishExpiration: permissions?.publishExpiration.gt(Date.now()),
+            subscribeExpiration: permissions?.subscribeExpiration.gt(Date.now()),
+            share: permissions?.share || false
         }
     }
 
@@ -222,12 +230,26 @@ export class StreamRegistry implements Context {
         const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, await this.ethereum.getAddress())
         await tx.wait()
     }
+    async revokeAllUserPermission(streamId: string, userId: EthereumAddress) {
+        log('Revoking all permissions user %s on stream %s', userId, streamId)
+        await this.connectToStreamRegistryContract()
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, userId)
+        await tx.wait()
+    }
 
     async revokePublicPermission(streamId: string, operation: StreamOperation) {
         log('Revoking PUBLIC Permission %o on stream %s', operation, streamId)
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.revokePublicPermission(streamId,
             StreamRegistry.streamOperationToSolidityType(operation))
+        await tx.wait()
+    }
+
+    async revokeAllPublicPermissions(streamId: string) {
+        log('Revoking all PUBLIC Permissions stream %s', streamId)
+        await this.connectToStreamRegistryContract()
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId,
+            constants.AddressZero)
         await tx.wait()
     }
 
@@ -324,13 +346,19 @@ export class StreamRegistry implements Context {
         return response.streams.map(({ id, metadata }) => this.parseStream(id, metadata))
     }
 
-    async getAllPermissionsForStream(streamid: string): Promise<StreamPermission[]> {
+    async getAllPermissionsForStream(streamid: string): Promise<StreamPermissions[]> {
         log('Getting all permissions for stream %s', streamid)
         const response = await this.sendStreamQuery(StreamRegistry.buildGetSingleStreamQuery(streamid)) as SingleStreamQueryResult
         if (!response.stream) {
             throw new NotFoundError('stream not found: id: ' + streamid)
         }
-        return response.stream.permissions.map(({ id, ...permissionobj }) => ({ ...permissionobj, streamId: id }))
+        return response.stream.permissions.map((permissionResult) => ({
+            edit: permissionResult.edit,
+            canDelete: permissionResult.canDelete,
+            publishExpiration: permissionResult.publishExpiration.gt(Date.now()),
+            subscribeExpiration: permissionResult.subscribeExpiration.gt(Date.now()),
+            share: permissionResult.share
+        }))
     }
 
     async listStreams(filter: StreamListQuery = {}): Promise<Stream[]> {

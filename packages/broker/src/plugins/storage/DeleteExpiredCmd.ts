@@ -1,7 +1,6 @@
 import cassandra, { Client } from 'cassandra-driver'
-import fetch from 'node-fetch'
 import pLimit, { Limit } from 'p-limit'
-import StreamrClient, { Stream } from 'streamr-client'
+import StreamrClient from 'streamr-client'
 import { Logger } from 'streamr-network'
 
 const logger = new Logger(module)
@@ -74,12 +73,12 @@ export class DeleteExpiredCmd {
         this.limit = pLimit(5)
     }
 
-    async run(client: StreamrClient) {
-        const streams = await this._getStreams()
+    async run(client: StreamrClient): Promise<void> {
+        const streams = await this.getStreams()
         logger.info(`Found ${streams.length} unique streams`)
 
-        const streamsInfo = await this._fetchStreamsInfo(streams, client)
-        const potentialBuckets = await this._getPotentiallyExpiredBuckets(streamsInfo)
+        const streamsInfo = await this.fetchStreamsInfo(streams, client)
+        const potentialBuckets = await this.getPotentiallyExpiredBuckets(streamsInfo)
         logger.info('Found %d potentially expired buckets', potentialBuckets.length)
 
         const cutPotentialBuckets = potentialBuckets.slice(0, this.bucketLimit)
@@ -109,7 +108,7 @@ export class DeleteExpiredCmd {
         }))
     }
 
-    private async fetchStreamsInfo(streams: StreamPart[]): Promise<(StreamPartInfo|void)[]> {
+    private async fetchStreamsInfo(streams: StreamPart[], client: StreamrClient): Promise<(StreamPartInfo|void)[]> {
         const tasks = streams.filter(Boolean).map((stream: StreamPart) => {
             return this.limit(async () => {
                 try {

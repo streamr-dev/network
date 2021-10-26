@@ -3,17 +3,15 @@
  */
 import fetch from 'node-fetch'
 import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
-import { SPID, SID } from 'streamr-client-protocol'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
 import { EthereumAddress } from './types'
-import { until, pLimitFn } from './utils'
+import { until } from './utils'
 
 import { Rest } from './Rest'
 import Resends from './Resends'
 import Publisher from './Publisher'
-import { BigNumber } from '@ethersproject/bignumber'
 import { StreamRegistry } from './StreamRegistry'
 import Ethereum from './Ethereum'
 import { NodeRegistry } from './NodeRegistry'
@@ -21,7 +19,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { StorageNode } from './StorageNode'
-import { until } from './utils'
+import { constants } from 'ethers'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -36,18 +34,15 @@ export type StreamPartDefinition = string | StreamPartDefinitionOptions
 
 export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
 
-export interface StreamPermission {
-    streamId: string
-    userAddress: string
+export interface StreamPermissions {
     edit: boolean
     canDelete: boolean
-    publishExpiration: BigNumber
-    subscribeExpiration: BigNumber
+    publishExpiration: boolean // BigNumber to have expiring permissions
+    subscribeExpiration: boolean // BigNumber to have expiring permissions
     share: boolean
 }
 
 export enum StreamOperation {
-    // STREAM_GET = 'stream_get',
     STREAM_EDIT = 'edit',
     STREAM_DELETE = 'canDelete',
     STREAM_PUBLISH = 'publishExpiration',
@@ -171,6 +166,14 @@ class StreamrStream implements StreamMetadata {
         return this._streamRegistry.getPermissionsForUser(this.id, await this._ethereuem.getAddress())
     }
 
+    async getUserPermissions(userId: EthereumAddress) {
+        return this._streamRegistry.getPermissionsForUser(this.id, userId)
+    }
+
+    async getPublicPermissions() {
+        return this._streamRegistry.getPermissionsForUser(this.id, constants.AddressZero)
+    }
+
     // eslint-disable-next-line class-methods-use-this
     assertUserId(userId: string) {
         if (!userId || typeof userId !== 'string') {
@@ -191,89 +194,54 @@ class StreamrStream implements StreamMetadata {
 
     async hasUserPermission(operation: StreamOperation, userId: string) {
         this.assertUserId(userId)
-        return this.hasPermission(operation, userId)
+        return this._streamRegistry.hasPermission(this.id, userId, operation)
     }
 
     async hasPublicPermission(operation: StreamOperation) {
-        return this.hasPermission(operation, undefined)
+        return this._streamRegistry.hasPublicPermission(this.id, operation)
     }
 
-    async hasUserPermissions(operations: StreamOperation[], userId: string) {
-        this.assertUserId(userId)
-        return this.hasPermissions(operations, userId)
-    }
+    // async hasUserPermissions(operations: StreamOperation[], userId: string) {
+    //     this.assertUserId(userId)
+    //     const permissions = this._streamRegistry.getPermissionsForUser(this.id, userId, )
+    //     return this.hasPermissions(operations, userId)
+    // }
+    // async hasPermissions(operations: StreamOperation[], userId: string) {
+    //     const permissions = await this._streamRegistry.getPermissionsForUser(this.id, userId)
 
-    async hasPublicPermissions(operations: StreamOperation[]) {
-        return this.hasPermissions(operations, undefined)
-    }
+    //     if (operation === StreamOperation.STREAM_PUBLISH || operation === StreamOperation.STREAM_SUBSCRIBE) {
+    //         return permissions[operation].gt(Date.now())
+    //     }
+    //     return permissions[operation]
+    // }
 
-    async hasPermissions(operations: StreamOperation[], userId: string|undefined) {
-        this.assertUserIdOrPublic(userId)
-
-        const matchingPermissions = await this.getMatchingPermissions(operations, userId)
-        if (!matchingPermissions.length) { return undefined }
-        return matchingPermissions
-    }
-
-    async hasPermission(operation: StreamOperation, userId: string|undefined) {
-        const permissions = await this.hasPermissions([operation], userId)
-        if (!Array.isArray(permissions) || !permissions.length) { return undefined }
-        return permissions[0]
-    }
+    // async hasPermission(operation: StreamOperation, userId: string|undefined) {
+    //     const permissions = await this.hasPermissions([operation], userId)
+    //     if (!Array.isArray(permissions) || !permissions.length) { return undefined }
+    //     return permissions[0]
+    // }
 
     async grantUserPermission(operation: StreamOperation, userId: string) {
-        this.assertUserId(userId)
+        try {
+            await this._streamRegistry.grantPermission(this.id, operation, userId)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
+    }
 
-        return this.grantPermission(operation, userId)
+    private async grantUserPermissions(permissions: StreamPermissions, userId: string) {
+        this.assertUserIdOrPublic(userId)
+        try {
+            await this.setPermissions(userId, permissions.edit, permissions.canDelete,
+                permissions.publishExpiration, permissions.subscribeExpiration, permissions.share)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async grantPublicPermission(operation: StreamOperation) {
-        return this.grantPermission(operation, undefined)
-    }
-
-    async grantUserPermissions(operations: StreamOperation[], userId: string) {
-        this.assertUserId(userId)
-        return this.grantPermissions(operations, userId)
-    }
-
-    async grantPublicPermissions(operations: StreamOperation[]) {
-        return this.grantPermissions(operations, undefined)
-    }
-
-    async grantPermissions(operations: StreamOperation[], userId: string|undefined) {
-        this.assertUserIdOrPublic(userId)
-        const tasks = operations.map(async (operation) => {
-            return this.grantPermission(operation, userId)
-        })
-        await Promise.allSettled(tasks)
-        return Promise.all(tasks)
-    }
-
-    async grantPermission(operation: StreamOperation, userId: string|undefined) {
-        this.assertUserIdOrPublic(userId)
-
         try {
-            const existingPermission = await this.hasPermission(operation, userId)
-            if (existingPermission) {
-                return existingPermission
-            }
-
-            const permissionObject: any = {
-                operation,
-            }
-
-            const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined
-
-            if (userIdCaseInsensitive !== undefined) {
-                permissionObject.user = userIdCaseInsensitive
-            } else {
-                permissionObject.anonymous = true
-            }
-
-            return await this._rest.post<StreamPermision>(
-                ['streams', this.id, 'permissions'],
-                permissionObject
-            )
+            await this._streamRegistry.grantPublicPermission(this.id, operation)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
@@ -281,114 +249,94 @@ class StreamrStream implements StreamMetadata {
 
     async revokeUserPermission(operation: StreamOperation, userId: string) {
         this.assertUserId(userId)
-        return this.revokeMatchingPermissions([operation], userId)
+        try {
+            return this._streamRegistry.revokePermission(this.id, operation, userId)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async revokePublicPermission(operation: StreamOperation) {
-        return this.revokeMatchingPermissions([operation], undefined)
-    }
-
-    async revokeUserPermissions(operations: StreamOperation[], userId: string) {
-        this.assertUserId(userId)
-        return this.revokePermissions(operations, userId)
-    }
-
-    async revokePublicPermissions(operations: StreamOperation[]) {
-        return this.revokePermissions(operations, undefined)
-    }
-
-    async revokePermissions(operations: StreamOperation[], userId: string|undefined) {
-        this.assertUserIdOrPublic(userId)
-        const permissions = await this.getMatchingPermissions(operations, userId)
-        const tasks = permissions.map(async (p) => {
-            return this.revokePermission(p.id)
-        })
-        await Promise.allSettled(tasks)
-        return Promise.all(tasks)
-    }
-
-    async getUserPermissions(userId: string) {
-        this.assertUserId(userId)
-        return this.getMatchingPermissions(false, userId)
-    }
-
-    async getPublicPermissions() {
-        return this.getMatchingPermissions(false, undefined)
-    }
-
-    async getMatchingPermissions(operations: StreamOperation[]|false, userId: string|undefined|false): Promise<StreamPermision[]> {
-        if (operations && !operations.length) { return [] }
-
-        if (userId !== false) {
-            this.assertUserIdOrPublic(userId)
+        try {
+            return this._streamRegistry.revokePublicPermission(this.id, operation)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
         }
-
-        const permissions = await this.getPermissions()
-        // eth addresses may be in checksumcase, but userId from server has no case
-        const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
-        const operationSet = new Set<StreamOperation>(operations === false ? [] : operations)
-        return permissions.filter((p) => {
-            if (operations !== false) {
-                if (!operationSet.has(p.operation)) {
-                    return false
-                }
-            }
-
-            if (userId !== false) {
-                if (userIdCaseInsensitive === undefined) {
-                    return !!('anonymous' in p && p.anonymous) // match nullish userId against p.anonymous
-                }
-                return 'user' in p && p.user && p.user.toLowerCase() === userIdCaseInsensitive // match against userId
-            }
-
-            return true
-        })
     }
 
-    async revokeMatchingPermissions(operations: StreamOperation[], userId: string|undefined) {
-        this.assertUserIdOrPublic(userId)
-        const matchingPermissions = await this.getMatchingPermissions(operations, userId)
+    // async getMatchingPermissions(operations: StreamOperation[]|false, userId: string|undefined|false): Promise<StreamPermision[]> {
+    //     if (operations && !operations.length) { return [] }
 
-        const tasks = matchingPermissions.map(async (p: any) => {
-            await this.revokePermission(p.id)
-        })
-        await Promise.allSettled(tasks)
-        await Promise.all(tasks)
-    }
+    //     if (userId !== false) {
+    //         this.assertUserIdOrPublic(userId)
+    //     }
+
+    //     const permissions = await this.getPermissions()
+    //     // eth addresses may be in checksumcase, but userId from server has no case
+    //     const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
+    //     const operationSet = new Set<StreamOperation>(operations === false ? [] : operations)
+    //     return permissions.filter((p) => {
+    //         if (operations !== false) {
+    //             if (!operationSet.has(p.operation)) {
+    //                 return false
+    //             }
+    //         }
+
+    //         if (userId !== false) {
+    //             if (userIdCaseInsensitive === undefined) {
+    //                 return !!('anonymous' in p && p.anonymous) // match nullish userId against p.anonymous
+    //             }
+    //             return 'user' in p && p.user && p.user.toLowerCase() === userIdCaseInsensitive // match against userId
+    //         }
+
+    //         return true
+    //     })
+    // }
+
+    // async revokeMatchingPermissions(operations: StreamOperation[], userId: string|undefined) {
+    //     this.assertUserIdOrPublic(userId)
+    //     const matchingPermissions = await this.getMatchingPermissions(operations, userId)
+
+    //     const tasks = matchingPermissions.map(async (p: any) => {
+    //         await this.revokePermission(p.id)
+    //     })
+    //     await Promise.allSettled(tasks)
+    //     await Promise.all(tasks)
+    // }
 
     async revokeAllUserPermissions(userId: string) {
         this.assertUserId(userId)
-        return this.revokeAllPermissions(userId)
+        try {
+            return this._streamRegistry.revokeAllUserPermission(this.id, userId)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     async revokeAllPublicPermissions() {
-        return this.revokeAllPermissions(undefined)
-    }
-
-    protected async revokeAllPermissions(userId: string|undefined) {
-        this.assertUserIdOrPublic(userId)
-
-        const matchingPermissions = await this.getMatchingPermissions(false, userId)
-        const tasks = matchingPermissions.map(async (p: any) => {
-            await this.revokePermission(p.id)
-        })
-        await Promise.allSettled(tasks)
-        await Promise.all(tasks)
-    }
-
-    async revokePermission(permissionId: number) {
-        if (!Number.isSafeInteger(permissionId) || permissionId < 0) {
-            throw new Error(`Invalid permissionId: ${permissionId}`)
-        }
-
         try {
+            return this._streamRegistry.revokeAllPublicPermissions(this.id)
+        } finally {
             this._streamEndpointsCached.clearStream(this.id)
-            return await this._rest.del<StreamPermision>(
-                ['streams', this.id, 'permissions', String(permissionId)],
-            )
-        } catch (err: any) {
-            if (err.code === 'NOT_FOUND') { return Promise.resolve() } // ok if not found
-            throw err
+        }
+    }
+
+    // protected async revokeAllPermissions(userId: string|undefined) {
+    //     this.assertUserIdOrPublic(userId)
+
+    //     const matchingPermissions = await this.getMatchingPermissions(false, userId)
+    //     const tasks = matchingPermissions.map(async (p: any) => {
+    //         await this.revokePermission(p.id)
+    //     })
+    //     await Promise.allSettled(tasks)
+    //     await Promise.all(tasks)
+    // }
+
+    async setPermissions(recipientId: EthereumAddress, edit: boolean,
+        deletePerm: boolean, publish: boolean, subscribe: boolean, share: boolean) {
+        try {
+            await this._streamRegistry.setPermissions(this.id, recipientId, edit,
+                deletePerm, publish, subscribe, share)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
@@ -420,14 +368,6 @@ class StreamrStream implements StreamMetadata {
         // Save field config back to the stream
         this.config.fields = fields
         await this.update()
-    }
-
-    async revokePublicPermission(operation: StreamOperation) {
-        try {
-            await this._streamRegistry.revokePublicPermission(this.id, operation)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
     }
 
     async addToStorageNode(node: StorageNode | EthereumAddress, waitOptions: {
@@ -486,11 +426,6 @@ class StreamrStream implements StreamMetadata {
             this._streamEndpointsCached.clearStream(this.id)
         }
     }
-
-    // private async isStreamStoredInStorageNode(node: StorageNode | EthereumAddress) {
-    //     const address = (node instanceof StorageNode) ? node.getAddress() : node
-    //     return this._nodeRegistry.isStreamStoredInStorageNode(this.id, address)
-    // }
 
     async getStorageNodes() {
         return this._nodeRegistry.getStorageNodesOf(this.id)
