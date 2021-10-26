@@ -145,7 +145,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3.5.0
+        uses: docker/metadata-action@v3.6.0
         with:
           images: streamr/broker-node
           tags: |
