@@ -19,20 +19,14 @@ on:
   schedule:
     # run every day at 00:00
     - cron: '0 0 * * *'
-
+concurrency:
+  group: client-dataunions-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/client
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
   data-unions-integration:
     name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest

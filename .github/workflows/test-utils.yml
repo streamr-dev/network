@@ -13,21 +13,14 @@ on:
   schedule:
     # run every day at 00:00
     - cron: '0 0 * * *'
-
+concurrency:
+  group: test-utils-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/test-utils
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
-
   test-unit:
     name: Lint & Unit Test on Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
