@@ -54,7 +54,7 @@ describeRepeats('Group Key Persistence', () => {
                 }
             })
             const otherUser = await subscriber.getAddress()
-            await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser)
+            await stream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser)
             const groupKey = GroupKey.generate()
             await publisher.setNextGroupKey(stream.id, groupKey)
         })

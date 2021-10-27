@@ -108,16 +108,16 @@ describeRepeats('decryption', () => {
         stream: s = stream,
         client: c = subscriber,
     }: { stream?: Stream, client?: StreamrClient } = {}) => {
-        const p2 = await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
+        const p2 = await s.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
         await until(async () => {
             try {
-                return await s.hasPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
+                return await s.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, await c.getAddress())
             } catch (err) {
                 return false
             }
         }, 100000, 1000)
         return [p2]
-    }
+    })
 
     describe('using default config', () => {
         beforeEach(async () => {
@@ -761,7 +761,7 @@ describeRepeats('decryption', () => {
 
             await publisher.rotateGroupKey(stream.id)
 
-            await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
+            await stream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
 
             const sub = await subscriber.subscribe({
                 stream: stream.id,
@@ -787,7 +787,7 @@ describeRepeats('decryption', () => {
                     publisher.debug('PUBLISHED %d of %d', count, maxMessages)
                     if (count === revokeAfter) {
                         await gotMessages
-                        await stream.revokePermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
+                        await stream.revokeUserPermission(StreamOperation.STREAM_SUBSCRIBE, await subscriber.getAddress())
                         await publisher.rekey(stream.id)
                     }
                 }

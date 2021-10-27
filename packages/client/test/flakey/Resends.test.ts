@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, describeRepeats, fakePrivateKey, createTestStream } from '../utils'
+import { getPublishTestMessages, describeRepeats, createTestStream, getPrivateKey } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 
@@ -15,11 +15,11 @@ describeRepeats('StreamrClient resends', () => {
         let expectErrors = 0 // check no errors by default
         let onError = jest.fn()
 
-        const createClient = (opts: any = {}) => {
+        const createClient = async (opts: any = {}) => {
             const c = new StreamrClient({
                 ...config,
                 auth: {
-                    privateKey: fakePrivateKey(),
+                    privateKey: await getPrivateKey(),
                 },
                 autoConnect: false,
                 autoDisconnect: false,
@@ -35,7 +35,7 @@ describeRepeats('StreamrClient resends', () => {
         let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
         beforeEach(async () => {
-            client = createClient()
+            client = await createClient()
             await client.connect()
             expectErrors = 0
             onError = jest.fn()

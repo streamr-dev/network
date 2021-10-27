@@ -129,9 +129,7 @@ describeRepeats.skip('resends', () => {
         describe('resendSubscribe', () => {
             it('sees realtime when no resend', async () => {
                 const stream2 = await createTestStream(client, module)
-                await stream2.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
-                    timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
-                })
+                await stream2.addToStorageNode(storageNodeAddress)
 
                 const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2)
 
@@ -163,9 +161,7 @@ describeRepeats.skip('resends', () => {
 
             it('handles errors in resend', async () => {
                 const stream2 = await createTestStream(client, module)
-                await stream2.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
-                    timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
-                })
+                await stream2.addToStorageNode(storageNodeAddress)
 
                 const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2)
 
@@ -196,9 +192,7 @@ describeRepeats.skip('resends', () => {
 
             it('can ignore errors in resend', async () => {
                 const stream2 = await createTestStream(client, module)
-                await stream2.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV, {
-                    timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
-                })
+                await stream2.addToStorageNode(storageNodeAddress)
 
                 const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2)
 

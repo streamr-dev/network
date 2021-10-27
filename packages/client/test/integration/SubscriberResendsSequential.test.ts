@@ -2,7 +2,7 @@ import {
     Msg,
     clientOptions,
     describeRepeats,
-    await getPrivateKey,
+    getPrivateKey,
     getWaitForStorage,
     getPublishTestStreamMessages,
     createTestStream,

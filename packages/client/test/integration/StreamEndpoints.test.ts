@@ -20,7 +20,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
     let createdStream: Stream
     let otherWallet: Wallet
 
-    beforeAll(() => {
+    beforeAll(async () => {
         wallet = new Wallet(await getPrivateKey())
         otherWallet = new Wallet(await getPrivateKey())
         client = new StreamrClient({
@@ -324,8 +324,8 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
 
         describe('Stream.hasPermission', () => {
             it('gets permission', async () => {
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, wallet.address)).toBeTruthy()
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).not.toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SHARE, wallet.address)).toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).not.toBeTruthy()
             })
 
             it('errors if invalid userId', async () => {
@@ -333,7 +333,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                     // eslint-disable-next-line no-await-in-loop, no-loop-func
                     await expect(async () => {
                         // @ts-expect-error should require userId, this is part of the test
-                        await createdStream.hasPermission(StreamOperation.STREAM_SHARE, invalidId)
+                        await createdStream.hasUserPermission(StreamOperation.STREAM_SHARE, invalidId)
                     }).rejects.toThrow()
                 }
             })
@@ -341,39 +341,39 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
 
         describe('Stream.grantPermission', () => {
             it('creates public permissions when passed undefined', async () => {
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).toBeTruthy()
+                await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).toBeTruthy()
             })
 
             it('creates user permissions when passed user id', async () => {
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address) // user read
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)).toBeTruthy()
+                await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address) // user read
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)).toBeTruthy()
             })
 
             it('does not error if creating multiple permissions in parallel', async () => {
                 await Promise.all([
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                    createdStream.grantPermission(StreamOperation.STREAM_SHARE, otherWallet.address),
+                    createdStream.grantUserPermission(StreamOperation.STREAM_GET, otherWallet.address),
+                    createdStream.grantUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address),
                 ])
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_GET, otherWallet.address)).toBeTruthy()
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_GET, otherWallet.address)).toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).toBeTruthy()
             })
 
             it('does not error or create duplicates if creating multiple identical permissions in parallel', async () => {
                 await createdStream.revokeAllUserPermissions(otherWallet.address)
                 await Promise.all([
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
+                    createdStream.grantUserPermission(StreamOperation.STREAM_GET, otherWallet.address),
+                    createdStream.grantUserPermission(StreamOperation.STREAM_GET, otherWallet.address),
+                    createdStream.grantUserPermission(StreamOperation.STREAM_GET, otherWallet.address),
+                    createdStream.grantUserPermission(StreamOperation.STREAM_GET, otherWallet.address),
                 ])
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_GET, otherWallet.address)).toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_GET, otherWallet.address)).toBeTruthy()
                 expect(await createdStream.getUserPermissions(otherWallet.address)).toHaveLength(1)
             })
 
             it('does not grant multiple permissions for same operation + user', async () => {
                 const previousPermissions = await createdStream.getPermissions()
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
+                await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
                 const permissions = await createdStream.getPermissions()
                 expect(permissions).toHaveLength(previousPermissions.length)
                 expect(permissions).toEqual(previousPermissions)
@@ -384,7 +384,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                     // eslint-disable-next-line no-await-in-loop, no-loop-func
                     await expect(async () => {
                         // @ts-expect-error should require userId, this is part of the test
-                        await createdStream.grantPermission(StreamOperation.STREAM_SHARE, invalidId)
+                        await createdStream.grantUserPermission(StreamOperation.STREAM_SHARE, invalidId)
                     }).rejects.toThrow()
                 }
             })
@@ -392,31 +392,31 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
 
         describe('Stream.revokePermission', () => {
             it('removes permission by id', async () => {
-                const publicRead = await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
-                await createdStream.revokePermission(publicRead!.id)
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).not.toBeTruthy()
+                const publicRead = await createdStream.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
+                await createdStream.revokeUserPermission(publicRead!.id)
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).not.toBeTruthy()
             })
 
             it('does not error if not found', async () => {
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
-                const publicRead = await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
-                await createdStream.revokePermission(publicRead!.id)
-                await createdStream.revokePermission(publicRead!.id)
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).not.toBeTruthy()
+                await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
+                const publicRead = await createdStream.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
+                await createdStream.revokeUserPermission(publicRead!.id)
+                await createdStream.revokeUserPermission(publicRead!.id)
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).not.toBeTruthy()
             })
 
             it('does not error if revoking multiple permissions in parallel', async () => {
-                const p1 = await createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address)
-                const p2 = await createdStream.grantPermission(StreamOperation.STREAM_SHARE, otherWallet.address)
+                const p1 = await createdStream.grantUserPermission(StreamOperation.STREAM_GET, otherWallet.address)
+                const p2 = await createdStream.grantUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address)
                 await Promise.all([
-                    createdStream.revokePermission(p1.id),
-                    createdStream.revokePermission(p1.id), // also try multiple of same id
-                    createdStream.revokePermission(p2.id),
-                    createdStream.revokePermission(p2.id),
-                    createdStream.revokePermission(p2.id),
+                    createdStream.revokeUserPermission(p1.id),
+                    createdStream.revokeUserPermission(p1.id), // also try multiple of same id
+                    createdStream.revokeUserPermission(p2.id),
+                    createdStream.revokeUserPermission(p2.id),
+                    createdStream.revokeUserPermission(p2.id),
                 ])
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_GET, otherWallet.address)).not.toBeTruthy()
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).not.toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_GET, otherWallet.address)).not.toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).not.toBeTruthy()
             })
 
             it('errors if invalid permission id', async () => {
@@ -441,7 +441,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                     // eslint-disable-next-line no-await-in-loop, no-loop-func
                     await expect(async () => {
                         // @ts-expect-error should require valid id, this is part of the test
-                        await createdStream.revokePermission(invalidId)
+                        await createdStream.revokeUserPermission(invalidId)
                     }).rejects.toThrow()
                 }
             })
@@ -449,7 +449,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
 
         describe('Stream.revokePublicPermission', () => {
             it('removes permission', async () => {
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
+                await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
                 await createdStream.revokePublicPermission(StreamOperation.STREAM_SUBSCRIBE)
                 expect(await createdStream.hasPublicPermission(StreamOperation.STREAM_SUBSCRIBE)).not.toBeTruthy()
             })
