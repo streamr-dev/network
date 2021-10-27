@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
-import { HttpError } from './errors/HttpError'
 import { Logger } from 'streamr-network'
 import { StreamFetcher } from './StreamFetcher'
-import { EthereumAddress, StreamOperation } from 'streamr-client'
+import { EthereumAddress, StreamOperation, Todo } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -14,7 +13,7 @@ export interface AuthenticatedRequest<Q> extends Request<Record<string,any>,any,
  * Middleware used to authenticate REST API requests
  */
 export const authenticator = (streamFetcher: StreamFetcher, permission = StreamOperation.STREAM_SUBSCRIBE,
-    user: EthereumAddress) => (req: Todo, res: Todo, next: Todo) => {
+    user: EthereumAddress) => (req: Todo, res: Response, next: NextFunction): void => {
 
     // Try to parse authorization header if defined
     if (req.headers.authorization !== undefined) {
@@ -30,7 +29,7 @@ export const authenticator = (streamFetcher: StreamFetcher, permission = StreamO
         }
     }
 
-    req.stream = streamFetcher.authenticate(req.params.id, permission, user)
+    req.stream = streamFetcher.authenticate(req.params.id, user, permission)
     next()
     // streamFetcher.authenticate(req.params.id, permission, user)
     //     .then((streamJson: Todo) => {

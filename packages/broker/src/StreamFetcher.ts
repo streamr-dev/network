@@ -15,7 +15,8 @@ type CheckPermissionMethod = (
 
 type AuthenticateMethod = (
     streamId: string,
-    operation?: string
+    user: EthereumAddress,
+    operation?: StreamOperation,
 ) => Promise<Stream>
 export class StreamFetcher {
     fetch: memoizee.Memoized<FetchMethod> & FetchMethod
@@ -52,11 +53,11 @@ export class StreamFetcher {
 
     private async uncachedAuthenticate(
         streamId: string,
-        sessionToken: string|undefined,
+        user: EthereumAddress,
         operation = StreamOperation.STREAM_SUBSCRIBE
     ): Promise<Stream>  {
-        await this.checkPermission(streamId, operation)
-        return this.fetch(streamId, sessionToken)
+        await this.checkPermission(streamId, user, operation)
+        return this.fetch(streamId)
     }
 
     /**
