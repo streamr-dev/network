@@ -6,8 +6,7 @@ import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
-// import { StorageConfig } from '../src/plugins/storage/StorageConfig'
-import { Config } from '../src/config'
+import { ApiAuthenticationConfig, Config, StorageNodeConfig } from '../src/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 // const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -58,7 +57,7 @@ export const formConfig = ({
         }
     },
     storageConfigRefreshInterval = 5000,
-}: Todo): Config {
+}: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         plugins['publishHttp'] = {}
@@ -130,9 +129,8 @@ export async function getPrivateKey(): Promise<string> {
     return response.text()
 }
 
-export const startBroker = async (config: Todo): Promise<Broker> => {
-    const privateKey = config.privateKey || await getPrivateKey()
-    const broker = await createBroker(formConfig({privateKey, ...config}))
+export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
+    const broker = await createBroker(formConfig(testConfig))
     await broker.start()
     return broker
 }
@@ -195,7 +193,7 @@ export class StorageAssignmentEventManager {
         })
     }
 
-    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient) {
+    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient): Promise<void> {
         await client.addStreamToStorageNode(streamId, storageNodeAddress)
         await until(async () => { return client.isStreamStoredInStorageNode(streamId, storageNodeAddress) }, 100000, 1000)
         this.publishAddEvent(streamId)

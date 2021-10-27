@@ -225,8 +225,8 @@ describe('ConfigWizard', () => {
     })
 
     describe('identity', () => {
-        it ('happy path', async () => {
-            const privateKey = await getPrivateTestKey()
+        it ('happy path', () => {
+            const privateKey = '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
             const identity = getNodeIdentity(privateKey)
             expect(identity.mnemonic).toBe('Mountain Until Gun')
             expect(identity.networkExplorerUrl).toBe('https://streamr.network/network-explorer/nodes/0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc')
@@ -237,7 +237,7 @@ describe('ConfigWizard', () => {
         it ('should exercise the happy path', async () => {
             const tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
             const configPath = tmpDataDir + 'test-config.json'
-            const privateKey = await getPrivateTestKey()
+            const privateKey = '0x1234567890123456789012345678901234567890123456789012345678901234'
             const websocketPort = '3170'
             const mqttPort = '3171'
             const publishHttpPort = '3172'
