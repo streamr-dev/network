@@ -92,7 +92,7 @@ jobs:
           dest: 'packages/client/logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
           path: packages/client/logs

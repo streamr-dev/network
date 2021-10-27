@@ -57,7 +57,7 @@ jobs:
           npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: client-build
           path: packages/client/dist
@@ -122,7 +122,7 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
+      - uses: nick-invision/retry@v2.4.1
         name: Run Realtime Test
         with:
           max_attempts: 3
@@ -165,7 +165,7 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
+      - uses: nick-invision/retry@v2.4.1
         name: Run Resend Test
         with:
           max_attempts: 3
@@ -195,7 +195,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/*/package-lock.json
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v2.0.10
         with:
           name: client-build
           path: packages/client/dist
@@ -219,7 +219,7 @@ jobs:
         run: |
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: client-benchmarks
           path: |
