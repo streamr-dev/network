@@ -18,17 +18,12 @@ on:
   schedule:
     # run every day at 00:00
     - cron: '0 0 * * *'
-
 # Be sure to update both workflow files if you edit any env or trigger config
+concurrency:
+  group: cross-client-testing-build-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
   cross-client-testing:
     name: ${{ matrix.config-name }} ${{ matrix.test-name }}
     runs-on: ubuntu-latest
