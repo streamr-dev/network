@@ -1,6 +1,6 @@
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../src/helpers/AddressTools'
 
-describe(getAddressFromIceCandidate, () => {
+describe('getAddressFromIceCandidate', () => {
     it('extract IPv4 address from ICE host candidate', () => {
         expect(getAddressFromIceCandidate('candidate:1 1 udp 2122262783 203.0.113.180 4444 typ host'))
             .toEqual('203.0.113.180')
@@ -21,7 +21,7 @@ describe(getAddressFromIceCandidate, () => {
     })
 })
 
-describe(isPrivateIPv4, () => {
+describe('isPrivateIPv4', () => {
     it('return true for range 10.0.0.0/8', () => {
         expect(isPrivateIPv4('10.11.12.13')).toBe(true)
     })
