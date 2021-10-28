@@ -151,7 +151,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
             if (!webrtcDisallowPrivateAddresses) {
-                logger.warn('WebRTC private address probing is allowed. This can trigger false-positives for port scanning detection on some web hosts. More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')
+                logger.warn('WebRTC private address probing is allowed. ' +
+                    'This can trigger false-positives for port scanning detection on some web hosts. ' +
+                    'More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')
             }
         },
         stop: async () => {
