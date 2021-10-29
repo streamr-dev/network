@@ -14,18 +14,18 @@ describe('Session', () => {
             }).rejects.toThrow('no longer supported')
         })
 
-        it('gets the token using private key', async () => {
-            const token = await (await createClient()).session.getSessionToken()
-            expect(token).toBeTruthy()
-        })
+        // it('gets the token using private key', async () => {
+        //     const token = await (await createClient()).session.getSessionToken()
+        //     expect(token).toBeTruthy()
+        // })
 
-        it('can handle multiple client instances', async () => {
-            const client1 = await createClient()
-            const client2 = await createClient()
-            const token1 = await client1.session.getSessionToken()
-            const token2 = await client2.session.getSessionToken()
-            expect(token1).not.toEqual(token2)
-        })
+        // it('can handle multiple client instances', async () => {
+        //     const client1 = await createClient()
+        //     const client2 = await createClient()
+        //     const token1 = await client1.session.getSessionToken()
+        //     const token2 = await client2.session.getSessionToken()
+        //     expect(token1).not.toEqual(token2)
+        // })
 
         it('fails if trying to get the token using username and password', async () => {
             await expect(async () => {

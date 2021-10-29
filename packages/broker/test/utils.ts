@@ -19,7 +19,7 @@ interface TestConfig {
     generateSessionId?: boolean
     httpPort?: null | number
     wsPort?: null | number
-    legacyMqttPort?: null | number
+    mqttPort?: null | number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: ApiAuthenticationConfig
     enableCassandra?: boolean
@@ -39,7 +39,7 @@ export const formConfig = ({
     generateSessionId = false,
     httpPort = null,
     wsPort = null,
-    legacyMqttPort = null,
+    mqttPort = null,
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
@@ -84,9 +84,9 @@ export const formConfig = ({
             certFileName
         }
     }
-    if (legacyMqttPort) {
+    if (mqttPort) {
         plugins['mqtt'] = {
-            port: legacyMqttPort
+            port: mqttPort
         }
     }
 
@@ -314,4 +314,3 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
         clearTimeout(t)
     }
 }
-

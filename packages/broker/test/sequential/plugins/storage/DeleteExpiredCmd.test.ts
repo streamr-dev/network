@@ -12,6 +12,8 @@ const keyspace = 'streamr_dev_v2'
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24
 
+jest.setTimeout(30000)
+
 const insertBucket = async (cassandraClient: Client, streamId: string, dateCreate: number) => {
     const bucketId = TimeUuid.fromDate(new Date(dateCreate)).toString()
     const query = 'INSERT INTO bucket (stream_id, partition, date_create, id, records, size)'

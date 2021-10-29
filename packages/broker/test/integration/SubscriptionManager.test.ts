@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
-import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey } from '../utils'
+import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey, getSPIDKeys } from '../utils'
 
 jest.setTimeout(30000)
 
@@ -37,17 +37,19 @@ describe('SubscriptionManager', () => {
 
         broker1 = await startBroker({
             name: 'broker1',
+            privateKey: await getPrivateKey(),
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
-            legacyMqttPort: mqttPort1
+            mqttPort: mqttPort1
         })
         broker2 = await startBroker({
             name: 'broker2',
+            privateKey: await getPrivateKey(),
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
-            legacyMqttPort: mqttPort2
+            mqttPort: mqttPort2
         })
 
         await wait(2000)

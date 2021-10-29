@@ -29,7 +29,7 @@ describe('preloaded stream data', () => {
         })
 
         it('works with getStreamValidationInfo', async () => {
-            const getStreamMock = jest.spyOn(client.streamEndpoints, 'getStreamValidationInfo')
+            const getStreamMock = jest.spyOn(client.streamEndpoints, 'getStream')
             await client.cached.getStream(stream.id)
             expect(getStreamMock).toHaveBeenCalledTimes(1)
 

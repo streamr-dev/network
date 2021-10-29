@@ -1,6 +1,5 @@
 import assert from 'assert'
 import { StreamFetcher } from '../../src/StreamFetcher'
-import { Todo } from '../types'
 import { createClient, createTestStream, getPrivateKey } from '../utils'
 import { startTracker } from 'streamr-network'
 import StreamrClient, { StreamOperation } from 'streamr-client'
@@ -16,8 +15,10 @@ describe('StreamFetcher', () => {
     beforeAll(async() => {
 
         const tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 29892,
+            listen: {
+                hostname: '127.0.0.1',
+                port: 29892
+            },
             id: 'tracker-1'
         })
         client = createClient(tracker, await getPrivateKey(), {})
@@ -29,33 +30,34 @@ describe('StreamFetcher', () => {
 
     describe('checkPermission', () => {
         it('returns Promise', async () => {
-            const promise = streamFetcher.checkPermission(streamId, StreamOperation.STREAM_SUBSCRIBE, await client.getAddress())
+            const promise = streamFetcher.checkPermission(streamId, await client.getAddress(), StreamOperation.STREAM_SUBSCRIBE)
             assert(promise instanceof Promise)
             // await promise
         })
 
         it('rejects with NOT_FOUND if stream does not exist', async () => {
-            await streamFetcher.checkPermission('nonExistingStreamId', StreamOperation.STREAM_SUBSCRIBE, await client.getAddress()).catch((err: Todo) => {
+            await streamFetcher.checkPermission('nonExistingStreamId', await client.getAddress(),
+                StreamOperation.STREAM_SUBSCRIBE).catch((err: any) => {
                 assert.equal(err.errorCode, 'NOT_FOUND')
             })
         })
         it('rejects with err if address does not grant access to stream', async () => {
             const wallet = Wallet.createRandom()
-            streamFetcher.checkPermission(streamId, StreamOperation.STREAM_SUBSCRIBE, await wallet.getAddress()).catch((err: Todo) => {
+            streamFetcher.checkPermission(streamId, await wallet.getAddress(), StreamOperation.STREAM_SUBSCRIBE).catch((err: any) => {
                 expect(err).toContain('does not have permission')
             })
         })
 
         it('rejects with unauthorized if session token does not provide (desired level) privilege to stream', async () => {
             const wallet = Wallet.createRandom()
-            await streamFetcher.checkPermission(streamId, StreamOperation.STREAM_PUBLISH, await wallet.getAddress()).catch((err: Todo) => {
-                expect(err).toContain('unauthorized')
-                expect(err).toContain('does not have permission')
+            await streamFetcher.checkPermission(streamId, await wallet.getAddress(), StreamOperation.STREAM_PUBLISH).catch((err: any) => {
+                expect(err.message).toContain('unauthorized')
+                expect(err.message).toContain('does not have permission')
             })
         })
 
         it('resolves with true if session token provides privilege to stream', async () => {
-            const res = await streamFetcher.checkPermission(streamId, StreamOperation.STREAM_SUBSCRIBE, await client.getAddress())
+            const res = await streamFetcher.checkPermission(streamId, await client.getAddress(), StreamOperation.STREAM_SUBSCRIBE)
             expect(res).toEqual(true)
         })
 
@@ -63,7 +65,7 @@ describe('StreamFetcher', () => {
             const stream = await client.getStream(streamId)
             const wallet = Wallet.createRandom()
             await stream.grantPublicPermission(StreamOperation.STREAM_SUBSCRIBE)
-            await streamFetcher.checkPermission(streamId, StreamOperation.STREAM_SUBSCRIBE, await wallet.getAddress()).then((response: Todo) => {
+            await streamFetcher.checkPermission(streamId, await wallet.getAddress(), StreamOperation.STREAM_SUBSCRIBE).then((response: any) => {
                 return assert.deepEqual(response, true)
             })
         })
@@ -125,7 +127,7 @@ describe('StreamFetcher', () => {
         })
 
         it('rejects with NOT_FOUND if stream does not exist', async () => {
-            await streamFetcher.fetch('nonExistingStreamId').catch((err: Todo) => {
+            await streamFetcher.fetch('nonExistingStreamId').catch((err: any) => {
                 assert.equal(err.errorCode, 'NOT_FOUND')
             })
         })

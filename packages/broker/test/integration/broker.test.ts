@@ -20,7 +20,7 @@ const wsPort2 = 12352
 const wsPort3 = 12353
 const trackerPort = 12370
 
-jest.setTimeout(60000)
+jest.setTimeout(6000000)
 
 describe('broker: end-to-end', () => {
     let tracker: Tracker
@@ -54,19 +54,19 @@ describe('broker: end-to-end', () => {
             },
         })
         await storageNodeClient.setNode('http://127.0.0.1:' + httpPort)
-        storageNode = await startBroker(
-            {
-                name: 'storageNode',
-                privateKey: storageNodeAccount.privateKey,
-                trackerPort,
-                httpPort,
-                wsPort1,
-                enableCassandra: true
-            }
-        )       
-
+        storageNode = await startBroker({
+            name: 'storageNode',
+            privateKey: storageNodeAccount.privateKey,
+            trackerPort,
+            httpPort: httpPort,
+            wsPort: wsPort1,
+            streamrAddress: engineAndEditorAccount.address,
+            enableCassandra: true,
+            storageNodeConfig: { registry: storageNodeRegistry }
+        })
         brokerNode1 = await startBroker({
             name: 'brokerNode1',
+            privateKey: await getPrivateKey(),
             trackerPort,
             wsPort: wsPort2,
             streamrAddress: engineAndEditorAccount.address,
@@ -75,6 +75,7 @@ describe('broker: end-to-end', () => {
         })
         brokerNode2 = await startBroker({
             name: 'brokerNode2',
+            privateKey: await getPrivateKey(),
             trackerPort,
             wsPort: wsPort3,
             streamrAddress: engineAndEditorAccount.address,
@@ -101,9 +102,8 @@ describe('broker: end-to-end', () => {
         freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
         await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
-        await until(async () => { return client1.isStreamStoredInStorageNode(freshStreamId, storageNodeAccount.address) }, 100000, 1000)
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort)
-        await freshStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
+        await freshStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
     })
 
     afterAll(async () => {
@@ -324,8 +324,8 @@ describe('broker: end-to-end', () => {
             })
         ])
 
-        await waitForCondition(() => client2Messages.length === 2 && client3Messages.length === 2)
-        await waitForCondition(() => client1Messages.length === 2)
+        await waitForCondition(() => client2Messages.length === 2 && client3Messages.length === 2, 10000)
+        await waitForCondition(() => client1Messages.length === 2, 10000)
 
         expect(client1Messages).toEqual([
             {
@@ -605,7 +605,7 @@ describe('broker: end-to-end', () => {
             key: 4
         })
 
-        await wait(8000) // wait for propagation
+        await wait(3000) // wait for propagation
         const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/last?count=2`
         const response = await fetch(url, {
             method: 'get',
