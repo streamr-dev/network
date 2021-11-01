@@ -24,6 +24,7 @@ export interface Status {
     rtts: Rtts | null
     location: Location
     started: string
+    version?: string
     extra: Record<string, unknown>
 }
 

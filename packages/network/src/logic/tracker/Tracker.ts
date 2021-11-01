@@ -10,12 +10,11 @@ import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerId, PeerInfo } from '../../connection/PeerInfo'
 import { Location, Status, StreamStatus } from '../../identifiers'
-import { statusSchema } from "../../helpers/schemas"
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
 import { DisconnectionCode, DisconnectionReason } from '../../connection/ws/AbstractWsEndpoint'
-import Ajv from 'ajv'
 import { transformIterable } from '../../helpers/transformIterable'
+import { StatusValidator } from '../../helpers/SchemaValidators'
 
 export type TrackerId = string
 
@@ -63,7 +62,7 @@ export class Tracker extends EventEmitter {
     private readonly logger: Logger
     private readonly metrics: Metrics
     private readonly statusMeter: any
-    private readonly statusSchemaValidator: any
+    private readonly statusSchemaValidator: StatusValidator
 
     constructor(opts: TrackerOptions) {
         super()
@@ -87,8 +86,7 @@ export class Tracker extends EventEmitter {
         this.instructionCounter = new InstructionCounter()
         this.extraMetadatas = Object.create(null)
 
-        const ajv = new Ajv()
-        this.statusSchemaValidator = ajv.compile(statusSchema)
+        this.statusSchemaValidator = new StatusValidator()
         this.trackerServer.on(TrackerServerEvent.NODE_CONNECTED, (nodeId) => {
             this.onNodeConnected(nodeId)
         })
@@ -96,7 +94,7 @@ export class Tracker extends EventEmitter {
             this.onNodeDisconnected(nodeId)
         })
         this.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            const valid = this.statusSchemaValidator(statusMessage.status)
+            const valid = this.statusSchemaValidator.validate(statusMessage.status, statusMessage.version)
             if (valid) {
                 this.processNodeStatus(statusMessage, nodeId)
             } else {
