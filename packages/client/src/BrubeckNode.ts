@@ -50,8 +50,7 @@ export default class BrubeckNode implements Context {
 
         // generate id if none supplied
         if (id == null || id === '') {
-            const address = await this.ethereum.getAddress()
-            id = `${address}#${uuid()}`
+            id = await this.generateId()
         }
 
         this.debug('initNode', id)
@@ -67,6 +66,11 @@ export default class BrubeckNode implements Context {
         }
 
         return node
+    }
+
+    private async generateId() {
+        const address = this.ethereum.isAuthenticated() ? await this.ethereum.getAddress() : Ethereum.generateEthereumAccount().address
+        return `${address}#${uuid()}`
     }
 
     /**
