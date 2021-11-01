@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
+import { SPID, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
-import { RtcSubTypes, StreamIdAndPartition } from '../identifiers'
+import { RtcSubTypes } from '../identifiers'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 import { ServerWsEndpoint } from "../connection/ws/ServerWsEndpoint"
@@ -43,13 +43,13 @@ export class TrackerServer extends EventEmitter {
 
     async sendInstruction(
         receiverNodeId: NodeId, 
-        streamId: StreamIdAndPartition, 
+        spid: SPID, 
         nodeIds: NodeId[], counter: number
     ): Promise<void> {
         await this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
             requestId: uuidv4(),
-            streamId: streamId.id,
-            streamPartition: streamId.partition,
+            streamId: spid.streamId,
+            streamPartition: spid.streamPartition,
             nodeIds,
             counter
         }))

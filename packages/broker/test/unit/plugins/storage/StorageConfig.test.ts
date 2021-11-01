@@ -1,6 +1,7 @@
 /* eslint-disable no-underscore-dangle, object-curly-newline */
 import { StorageConfig, StorageConfigListener } from '../../../../src/plugins/storage/StorageConfig'
 import nock from 'nock'
+import { Protocol } from 'streamr-network'
 
 describe('StorageConfig', () => {
 
@@ -18,43 +19,43 @@ describe('StorageConfig', () => {
         beforeEach(() => {
             config = new StorageConfig('nodeId', 1, 0, 'http://api-url.com/path')
             // @ts-expect-error private
-            config.setStreams(new Set(['existing1::0', 'existing2::0', 'existing2::1', 'existing3::0']))
+            config.setSPIDKeys(new Set(['existing1#0', 'existing2#0', 'existing2#1', 'existing3#0']))
             listener = {
-                onStreamAdded: jest.fn(),
-                onStreamRemoved: jest.fn()
+                onSPIDAdded: jest.fn(),
+                onSPIDRemoved: jest.fn()
             }
             config.addChangeListener(listener)
         })
 
         it('setStreams', () => {
             // @ts-expect-error private
-            config.setStreams(new Set(['existing2::0', 'existing3::0', 'new1::0', 'new2::0']))
-            expect(listener.onStreamAdded).toBeCalledTimes(2)
-            expect(listener.onStreamAdded).toHaveBeenCalledWith({ id: 'new1', partition: 0 })
-            expect(listener.onStreamAdded).toHaveBeenCalledWith({ id: 'new2', partition: 0 })
-            expect(listener.onStreamRemoved).toBeCalledTimes(2)
-            expect(listener.onStreamRemoved).toHaveBeenCalledWith({ id: 'existing1', partition: 0 })
-            expect(listener.onStreamRemoved).toHaveBeenCalledWith({ id: 'existing2', partition: 1 })
-            expect(config.hasStream({ id: 'new1', partition: 0 })).toBeTruthy()
-            expect(config.hasStream({ id: 'existing1', partition: 0 })).toBeFalsy()
-            expect(config.hasStream({ id: 'other', partition: 0 })).toBeFalsy()
+            config.setSPIDKeys(new Set(['existing2#0', 'existing3#0', 'new1#0', 'new2#0']))
+            expect(listener.onSPIDAdded).toBeCalledTimes(2)
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('new1', 0))
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('new2', 0))
+            expect(listener.onSPIDRemoved).toBeCalledTimes(2)
+            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing1', 0))
+            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 1))
+            expect(config.hasSPID(new Protocol.SPID('new1', 0))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('existing1', 0))).toBeFalsy()
+            expect(config.hasSPID(new Protocol.SPID('other', 0))).toBeFalsy()
         })
 
         it('addStream', () => {
             // @ts-expect-error private
-            config.addStreams(new Set(['loremipsum::0', 'foo::0', 'bar::0']))
-            expect(listener.onStreamAdded).toBeCalledTimes(3)
-            expect(listener.onStreamAdded).toHaveBeenCalledWith({ id: 'loremipsum', partition: 0 })
-            expect(listener.onStreamAdded).toHaveBeenCalledWith({ id: 'foo', partition: 0 })
-            expect(listener.onStreamAdded).toHaveBeenCalledWith({ id: 'bar', partition: 0 })
+            config.addSPIDKeys(new Set(['loremipsum#0', 'foo#0', 'bar#0']))
+            expect(listener.onSPIDAdded).toBeCalledTimes(3)
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('loremipsum', 0))
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('foo', 0))
+            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('bar', 0))
         })
 
         it('removeStreams', () => {
             // @ts-expect-error private
-            config.removeStreams(new Set(['existing2::0', 'existing2::1']))
-            expect(listener.onStreamRemoved).toBeCalledTimes(2)
-            expect(listener.onStreamRemoved).toHaveBeenCalledWith({ id: 'existing2', partition: 0 })
-            expect(listener.onStreamRemoved).toHaveBeenCalledWith({ id: 'existing2', partition: 1 })
+            config.removeSPIDKeys(new Set(['existing2#0', 'existing2#1']))
+            expect(listener.onSPIDRemoved).toBeCalledTimes(2)
+            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 0))
+            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 1))
         })
 
         it('refresh', async () => {
@@ -72,9 +73,9 @@ describe('StorageConfig', () => {
                 ])
 
             await config.refresh()
-            expect(config.hasStream({ id: 'foo', partition: 0 })).toBeTruthy()
-            expect(config.hasStream({ id: 'foo', partition: 1 })).toBeTruthy()
-            expect(config.hasStream({ id: 'bar', partition: 0 })).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('foo', 0))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('foo', 1))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('bar', 0))).toBeTruthy()
         })
 
         it('onAssignmentEvent', () => {
@@ -86,8 +87,8 @@ describe('StorageConfig', () => {
                 }, 
                 event: 'STREAM_ADDED'
             })
-            expect(config.hasStream({ id: 'foo', partition: 0 })).toBeTruthy()
-            expect(config.hasStream({ id: 'foo', partition: 1 })).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('foo', 0))).toBeTruthy()
+            expect(config.hasSPID(new Protocol.SPID('foo', 1))).toBeTruthy()
         })
     })
 
@@ -118,9 +119,12 @@ describe('StorageConfig', () => {
                 ]))
 
             await Promise.all(configs.map((config) => config.refresh()))
-            expect(configs[0].streamKeys.size).toBe(69)
-            expect(configs[1].streamKeys.size).toBe(57)
-            expect(configs[2].streamKeys.size).toBe(74)
+            // @ts-expect-error private field
+            expect(configs[0].spidKeys.size).toBe(61)
+            // @ts-expect-error private field
+            expect(configs[1].spidKeys.size).toBe(67)
+            // @ts-expect-error private field
+            expect(configs[2].spidKeys.size).toBe(72)
         })
 
         it('onAssignmentEvent', () => {
@@ -132,9 +136,12 @@ describe('StorageConfig', () => {
                 }, 
                 event: 'STREAM_ADDED'
             }))
-            expect(configs[0].streamKeys.size).toBe(38)
-            expect(configs[1].streamKeys.size).toBe(30)
-            expect(configs[2].streamKeys.size).toBe(32)
+            // @ts-expect-error private field
+            expect(configs[0].spidKeys.size).toBe(23)
+            // @ts-expect-error private field
+            expect(configs[1].spidKeys.size).toBe(42)
+            // @ts-expect-error private field
+            expect(configs[2].spidKeys.size).toBe(35)
         })
     })
 })

@@ -22,5 +22,9 @@ ENV LOG_LEVEL=info
 
 RUN ln -s packages/broker/tracker.js tracker.js
 
+EXPOSE 1883/tcp
+EXPOSE 7170/tcp
+EXPOSE 7171/tcp
+
 WORKDIR /usr/src/monorepo/packages/broker
 CMD ./bin/broker.js # start broker from default config

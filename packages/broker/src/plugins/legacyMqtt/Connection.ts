@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
-import { Logger } from 'streamr-network'
+import { Logger, Protocol } from 'streamr-network'
 import mqttCon from "mqtt-connection"
 import { Stream } from "../../Stream"
 import * as mqtt from "mqtt-packet"
@@ -134,8 +134,8 @@ export class Connection extends ConnectionEmitter {
         return this.streams.slice() // return copy
     }
 
-    streamsAsString(): string[] {
-        return this.streams.map((s) => s.toString())
+    streamsAsString(): Protocol.SPIDKey[] {
+        return this.streams.map((s) => s.getSPIDKey())
     }
 }
 

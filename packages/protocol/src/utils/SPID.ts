@@ -13,6 +13,8 @@ import ValidationError from '../errors/ValidationError'
 
 type RequiredKeys<T, Keys extends keyof T> = Omit<T, Keys> & Required<Pick<T, Keys>>
 
+export type SPIDKey = string
+
 /**
  * Has both streamId & partition
  */
@@ -22,7 +24,7 @@ export type SPIDShape = {
 }
 
 export type SPIDKeyShape = SPIDShape & {
-    key: string
+    key: SPIDKey
 }
 
 /**
@@ -30,7 +32,7 @@ export type SPIDKeyShape = SPIDShape & {
  * Object cases can be typechecked
  * TODO: SPID string type safety
  */
-export type SPIDLike = string | SPIDShape
+export type SPIDLike = SPIDKey | SPIDShape
 
 /**
  * Must have something that looks like an id.
@@ -70,7 +72,7 @@ export class SPID implements SPIDKeyShape {
     protected static readonly SEPARATOR = '#'
 
     /** string key representing SPID */
-    public readonly key: string
+    public readonly key: SPIDKey
 
     /**
      * @param id - stream id
@@ -224,14 +226,14 @@ export class SPID implements SPIDKeyShape {
     /**
      * String representation of SPID id + partition
      */
-    toString(): string {
+    toString(): SPIDKey {
         return this.key
     }
 
     /**
      * Alias of toString.
      */
-    toKey(): string {
+    toKey(): SPIDKey {
         return this.toString()
     }
 
@@ -242,8 +244,14 @@ export class SPID implements SPIDKeyShape {
      * const key = SPID.toKey({ streamId, streamPartition })
      * ```
      */
-    static toKey(spidLike: SPIDLike): string {
-        return SPID.from(spidLike).key
+    static toKey(spidLike: SPIDLike): SPIDKey
+    static toKey(streamId: string, streamPartition: number): SPIDKey
+    static toKey(param1: string|SPIDLike, param2?: number): SPIDKey {
+        if ((typeof param1 === 'string') && (param2 !== undefined)) {
+            return new SPID(param1, param2).key
+        } else {
+            return SPID.from(param1).key
+        }
     }
 }
 

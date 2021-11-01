@@ -1,6 +1,25 @@
 const streamStatusSchema = {
     type: "object",
     properties: {
+        id: {
+            type: "string"
+        },
+        partition: {
+            type: "number"
+        },
+        neighbors: {
+            type: "array"
+        },
+        counter: {
+            type: "number"
+        }
+    },
+    required: ["id", "partition", "neighbors", "counter"]
+}
+
+const streamStatusSchemaOld = {
+    type: "object",
+    properties: {
         streamKey: {
             type: "string"
         },

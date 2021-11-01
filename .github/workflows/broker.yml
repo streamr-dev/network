@@ -1,3 +1,4 @@
+---
 name: Broker – Lint, Test and Publish
 
 on:
@@ -11,21 +12,15 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
-
+    - cron: '0 0 * * *'
+concurrency:
+  group: broker-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/broker
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
   test-unit:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -33,20 +28,15 @@ jobs:
       matrix:
         node-version: [ 14.x ]
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v2.3.5
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}
-            ${{ runner.os }}-node-
-            ${{ runner.os }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -61,20 +51,15 @@ jobs:
       matrix:
         node-version: [ 14.x ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.5
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -88,6 +73,11 @@ jobs:
         env:
           CI: true
           LOG_LEVEL: warn
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   docker:
     needs: [test-unit, test-integration]
@@ -97,7 +87,7 @@ jobs:
     # run job only for main and tags
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v2.3.5
       - name: Cache Docker layers
         uses: actions/cache@v2.1.6
         with:
@@ -138,13 +128,18 @@ jobs:
               fi;
           done;
           exit 1
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - uses: docker/login-action@v1.10.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3.5.0
+        uses: docker/metadata-action@v3.6.0
         with:
           images: streamr/broker-node
           tags: |
@@ -152,6 +147,7 @@ jobs:
             type=ref,event=branch
             type=semver,pattern=v{{version}}
             type=raw,value=dev
+            type=schedule,pattern=nightly
       - name: Setup qemu
         uses: docker/setup-qemu-action@v1.2.0
         with:
@@ -186,21 +182,15 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/setup-node@v2.1.5
+      - uses: actions/checkout@v2.3.5
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
-
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}
-            ${{ runner.os }}-node-
-            ${{ runner.os }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
 
       - name: npm ci
         working-directory: './'

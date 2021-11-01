@@ -1,5 +1,5 @@
-import { Utils } from 'streamr-client-protocol'
-import { StreamIdAndPartition, TrackerInfo } from '../../identifiers'
+import { SPID, Utils } from 'streamr-client-protocol'
+import { TrackerInfo } from '../../identifiers'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { TrackerId } from '../tracker/Tracker'
@@ -12,12 +12,12 @@ enum ConnectionState {
     ERROR
 }
 
-type GetStreamsFn = () => Iterable<StreamIdAndPartition>
+type GetSPIDsFn = () => Iterable<SPID>
 type ConnectToTrackerFn = (trackerAddress: string, trackerPeerInfo: PeerInfo) => Promise<unknown>
 type DisconnectFromTrackerFn = (trackerId: TrackerId) => void
 
 export class TrackerConnector {
-    private readonly getStreams: GetStreamsFn
+    private readonly getSPIDs: GetSPIDsFn
     private readonly connectToTracker: ConnectToTrackerFn
     private readonly disconnectFromTracker: DisconnectFromTrackerFn
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
@@ -26,13 +26,13 @@ export class TrackerConnector {
     private connectionStates: Map<TrackerId, ConnectionState>
 
     constructor(
-        getStreams: GetStreamsFn,
+        getSPIDs: GetSPIDsFn,
         connectToTracker: ConnectToTrackerFn,
         disconnectFromTracker: DisconnectFromTrackerFn,
         trackerRegistry: Utils.TrackerRegistry<TrackerInfo>,
         maintenanceInterval: number
     ) {
-        this.getStreams = getStreams
+        this.getSPIDs = getSPIDs
         this.connectToTracker = connectToTracker
         this.disconnectFromTracker = disconnectFromTracker
         this.trackerRegistry = trackerRegistry
@@ -40,8 +40,8 @@ export class TrackerConnector {
         this.connectionStates = new Map()
     }
 
-    onNewStream(streamId: StreamIdAndPartition): void {
-        const trackerInfo = this.trackerRegistry.getTracker(streamId.id, streamId.partition)
+    onNewStream(spid: SPID): void {
+        const trackerInfo = this.trackerRegistry.getTracker(spid)
         this.connectTo(trackerInfo)
     }
 
@@ -90,8 +90,8 @@ export class TrackerConnector {
     }
 
     private isActiveTracker(trackerId: TrackerId): boolean {
-        for (const { id: streamId, partition } of this.getStreams()) {
-            if (this.trackerRegistry.getTracker(streamId, partition).id === trackerId) {
+        for (const { streamId, streamPartition } of this.getSPIDs()) {
+            if (this.trackerRegistry.getTracker(new SPID(streamId, streamPartition)).id === trackerId) {
                 return true
             }
         }
