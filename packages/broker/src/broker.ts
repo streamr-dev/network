@@ -85,7 +85,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
 
-    const webrtcDisallowPrivateAddresses = config.network?.webrtcDisallowPrivateAddresses || false
+    const webrtcDisallowPrivateAddresses = config.network.webrtcDisallowPrivateAddresses
 
     const streamrClient = new StreamrClient({
         auth: {
