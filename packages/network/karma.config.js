@@ -15,7 +15,6 @@ module.exports = function (config) {
           
         files: [
             './karma-setup.js',
-
             './test/browser/BrowserWebRtcConnection.test.ts',
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
             './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*|UnixSocketWsServer*).ts/',
