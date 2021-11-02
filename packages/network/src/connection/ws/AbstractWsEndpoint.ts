@@ -19,7 +19,7 @@ export enum DisconnectionCode {
     FAILED_HANDSHAKE = 4000,
     DEAD_CONNECTION = 4001,
     DUPLICATE_SOCKET = 4002,
-    INVALID_STATUS = 4003
+    INVALID_PROTOCOL_MESSAGE = 4003
 }
 
 export enum DisconnectionReason {
@@ -27,7 +27,7 @@ export enum DisconnectionReason {
     DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
     NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
     DEAD_CONNECTION = 'dead connection',
-    INVALID_STATUS = 'streamr:protocol:invalid-status'
+    INVALID_PROTOCOL_MESSAGE = 'streamr:protocol:invalid-protocol-message'
 }
 
 export class UnknownPeerError extends Error {

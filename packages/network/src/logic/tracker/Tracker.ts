@@ -99,7 +99,11 @@ export class Tracker extends EventEmitter {
                 this.processNodeStatus(statusMessage, nodeId)
             } else {
                 this.logger.warn(`Status message with invalid format received from ${nodeId}`)
-                this.trackerServer.disconnectFromPeer(nodeId, DisconnectionCode.INVALID_STATUS, DisconnectionReason.INVALID_STATUS)
+                this.trackerServer.disconnectFromPeer(
+                    nodeId,
+                    DisconnectionCode.INVALID_PROTOCOL_MESSAGE,
+                    DisconnectionReason.INVALID_PROTOCOL_MESSAGE
+                )
             }
         })
         attachRtcSignalling(this.trackerServer)
