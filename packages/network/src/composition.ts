@@ -56,6 +56,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     newWebrtcConnectionTimeout?: number,
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
+    webrtcDisallowPrivateAddresses?: boolean,
     stunUrls?: string[],
     rttUpdateTimeout?: number,
     trackerConnectionMaintenanceInterval?: number
@@ -108,6 +109,7 @@ export const createNetworkNode = ({
     rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
+    webrtcDisallowPrivateAddresses = false,
     stunUrls = ['stun:stun.l.google.com:19302'],
     trackerConnectionMaintenanceInterval
 }: NetworkNodeOptions): NetworkNode => {
@@ -128,6 +130,7 @@ export const createNetworkNode = ({
         peerPingInterval,
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
+        webrtcDisallowPrivateAddresses,
     ))
 
     return new NetworkNode({
