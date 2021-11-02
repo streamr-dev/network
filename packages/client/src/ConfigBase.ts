@@ -150,11 +150,11 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
         payForTransport: true,
-        factoryMainnetAddress: '0x7d55f9981d4E10A193314E001b96f72FCc901e40',
-        factorySidechainAddress: '0x1b55587Beea0b5Bc96Bb2ADa56bD692870522e9f',
-        templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',
-        templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
-    },
+        factoryMainnetAddress: '0xe41439bf434f9cfbf0153f5231c205d4ae0c22e3',
+        factorySidechainAddress: '0xFCE1FBFAaE61861B011B379442c8eE1DC868ABd0',
+        templateMainnetAddress: '0x67352e3f7dba907af877020ae7e9450c0029c70c',
+        templateSidechainAddress: '0xacf9e8134047edc671162d9404bf63a587435baa',
+    },    
     cache: {
         maxSize: 10000,
         maxAge: 30 * 60 * 1000, // 30 minutes
