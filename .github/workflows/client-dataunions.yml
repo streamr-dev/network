@@ -55,7 +55,7 @@ jobs:
       TEST_REPEATS: 2
 
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
