@@ -6,7 +6,7 @@ import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
 import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey } from '../utils'
 
-jest.setTimeout(3000000)
+jest.setTimeout(30000)
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -46,7 +46,7 @@ describe('local propagation', () => {
         })
 
         client1 = createClient(tracker, privateKey)
-        // client2 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
 
         mqttClient1 = createMqttClient(mqttPort, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort, 'localhost', privateKey)
@@ -183,18 +183,18 @@ describe('local propagation', () => {
         await mqttClient1.subscribe(freshStreamId)
         await mqttClient2.subscribe(freshStreamId)
 
-        // await Promise.all([
-        //     client1.subscribe({
-        //         stream: freshStreamId
-        //     }, (message) => {
-        //         client3Messages.push(message)
-        //     }),
-        //     client2.subscribe({
-        //         stream: freshStreamId
-        //     }, (message) => {
-        //         client4Messages.push(message)
-        //     })
-        // ])
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client3Messages.push(message)
+            }),
+            client2.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client4Messages.push(message)
+            })
+        ])
 
         await mqttClient1.publish(freshStreamId, JSON.stringify({
             key: 1
@@ -202,7 +202,8 @@ describe('local propagation', () => {
             qos: 1
         })
 
-        await waitForCondition(() => client1Messages.length === 10000, 10000000)
+
+        await waitForCondition(() => client1Messages.length === 2, 10000000)
         await waitForCondition(() => client2Messages.length === 1, 100000)
         await waitForCondition(() => client3Messages.length === 1, 100000)
         await waitForCondition(() => client4Messages.length === 1, 100000)

@@ -44,7 +44,7 @@ describe('StreamFetcher', () => {
         it('rejects with err if address does not grant access to stream', async () => {
             const wallet = Wallet.createRandom()
             streamFetcher.checkPermission(streamId, await wallet.getAddress(), StreamOperation.STREAM_SUBSCRIBE).catch((err: any) => {
-                expect(err).toContain('does not have permission')
+                expect(err.message).toContain('does not have permission')
             })
         })
 
