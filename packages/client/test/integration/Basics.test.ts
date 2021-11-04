@@ -5,7 +5,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
 
-jest.setTimeout(1500000)
+jest.setTimeout(15000)
 
 describeRepeats('StreamrClient', () => {
     const MAX_MESSAGES = 10

@@ -9,10 +9,9 @@ import { ContentType, EncryptionType, SignatureType } from 'streamr-client-proto
 import { StreamMessageType, SIDLike, SPID } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
-import { Context, ContextError } from './utils/Context'
+import { Context } from './utils/Context'
 
-import { Stream, StreamOperation, StreamProperties } from './Stream'
-import { isKeyExchangeStream } from './encryption/KeyExchangeUtils'
+import { Stream, StreamOperation } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
 import { EthereumAddress } from './types'
@@ -174,11 +173,11 @@ export class StreamEndpoints implements Context {
         }
     }
 
-    async getStreamPublishers(streamId: string) {
+    async getStreamPublishers(streamId: string, pagesize: number = 1000) {
         this.debug('getStreamPublishers %o', {
             streamId,
         })
-        return this.streamRegistry.getStreamPublishers(streamId)
+        return this.streamRegistry.getStreamPublishers(streamId, pagesize)
     }
 
     async isStreamPublisher(streamId: string, ethAddress: EthereumAddress) {
@@ -189,11 +188,11 @@ export class StreamEndpoints implements Context {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
 
-    async getStreamSubscribers(streamId: string) {
+    async getStreamSubscribers(streamId: string, pagesize: number = 1000) {
         this.debug('getStreamSubscribers %o', {
             streamId,
         })
-        return this.streamRegistry.getStreamSubscribers(streamId)
+        return this.streamRegistry.getStreamSubscribers(streamId, pagesize)
     }
 
     async isStreamSubscriber(streamId: string, ethAddress: EthereumAddress) {

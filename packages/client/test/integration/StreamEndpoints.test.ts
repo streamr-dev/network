@@ -98,6 +98,12 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             const streamid = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
             return expect(() => client.getStream(streamid)).rejects.toThrow(NotFoundError)
         })
+
+        it('get all Streams', async () => {
+            const streams = await client.getAllStreams()
+            const streamsPagesize2 = await client.getAllStreams(2)
+            expect(streams).toEqual(streamsPagesize2)
+        })
     })
 
     describe('getStreamByName', () => {
@@ -250,6 +256,13 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             const address = await client.getAddress()
             return expect(publishers).toEqual([address])
         })
+        it('retrieves a list of publishers, pagination', async () => {
+            await createdStream.grantUserPermission(StreamOperation.STREAM_PUBLISH, fakeAddress())
+            await createdStream.grantUserPermission(StreamOperation.STREAM_PUBLISH, fakeAddress())
+            const allPublishers = await client.getStreamPublishers(createdStream.id, 1000)
+            const pagedPublishers = await client.getStreamPublishers(createdStream.id, 2)
+            return expect(pagedPublishers).toEqual(allPublishers)
+        })
     })
 
     describe('isStreamPublisher', () => {
@@ -268,10 +281,17 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
     })
 
     describe('getStreamSubscribers', () => {
-        it('retrieves a list of publishers', async () => {
+        it('retrieves a list of subscribers', async () => {
             const subscribers = await client.getStreamSubscribers(createdStream.id)
             const address = await client.getAddress()
             return expect(subscribers).toEqual([address])
+        })
+        it('retrieves a list of subscribers, pagination', async () => {
+            await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, fakeAddress())
+            await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, fakeAddress())
+            const allSubscribers = await client.getStreamPublishers(createdStream.id, 1000)
+            const pagedSubscribers = await client.getStreamPublishers(createdStream.id, 2)
+            return expect(pagedSubscribers).toEqual(allSubscribers)
         })
     })
 
@@ -326,7 +346,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
 
         it('Stream.getPermissions', async () => {
             const permissions = await createdStream.getPermissions()
-            return expect(permissions.length).toBe(1)
+            return expect(permissions.length).toBeGreaterThan(0)
         })
 
         describe('Stream.hasPermission', () => {
