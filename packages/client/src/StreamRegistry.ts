@@ -337,10 +337,11 @@ export class StreamRegistry implements Context {
         if (streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)) {
             return new Stream({ id: streamId, partitions: 1 }, this.container)
         }
-        const response = await this.sendStreamQuery(StreamRegistry.buildGetSingleStreamQuery(streamId)) as { stream: StreamPermissionsQueryResult }
-        if (!response.stream) { throw new NotFoundError('Stream not found: id=' + streamId) }
-        const { id, metadata } = response.stream
-        return this.parseStream(id, metadata)
+        let metadata
+        try {
+            metadata = await this.streamRegistryContractReadonly.getStreamMetadata(streamId)
+        } catch { throw new NotFoundError('Stream not found: id=' + streamId) }
+        return this.parseStream(streamId, metadata)
     }
 
     async getAllStreams(pagesize: number = 1000): Promise<Stream[]> {
@@ -361,7 +362,7 @@ export class StreamRegistry implements Context {
 
     async getAllPermissionsForStream(streamid: string): Promise<StreamPermissions[]> {
         log('Getting all permissions for stream %s', streamid)
-        const response = await this.sendStreamQuery(StreamRegistry.buildGetSingleStreamQuery(streamid)) as SingleStreamQueryResult
+        const response = await this.sendStreamQuery(StreamRegistry.buildGetStremWithPermissionsQuery(streamid)) as SingleStreamQueryResult
         if (!response.stream) {
             throw new NotFoundError('stream not found: id: ' + streamid)
         }
@@ -410,20 +411,27 @@ export class StreamRegistry implements Context {
 
     async isStreamPublisher(streamId: string, userAddress: EthereumAddress): Promise<boolean> {
         log('Checking isStreamPublisher for stream %s for address %s', streamId, userAddress)
-        const response = await this.sendStreamQuery(StreamRegistry.buildIsPublisherQuery(streamId, userAddress)) as SingleStreamQueryResult
-        if (!response.stream) {
+        // const response = await this.sendStreamQuery(StreamRegistry.buildIsPublisherQuery(streamId, userAddress)) as SingleStreamQueryResult
+        let response
+        try {
+            response = await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
+                StreamRegistry.streamOperationToSolidityType(StreamOperation.STREAM_PUBLISH))
+        } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
-        return response.stream.permissions?.length > 0
+        return response
     }
 
     async isStreamSubscriber(streamId: string, userAddress: EthereumAddress): Promise<boolean> {
         log('Checking isStreamSubscriber for stream %s for address %s', streamId, userAddress)
-        const response = await this.sendStreamQuery(StreamRegistry.buildIsSubscriberQuery(streamId, userAddress)) as SingleStreamQueryResult
-        if (!response.stream) {
+        let response
+        try {
+            response = await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
+                StreamRegistry.streamOperationToSolidityType(StreamOperation.STREAM_SUBSCRIBE))
+        } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
-        return response.stream.permissions?.length > 0
+        return response
     }
 
     // --------------------------------------------------------------------------------------------
@@ -444,7 +452,7 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    private static buildGetSingleStreamQuery(streamid: string): string {
+    private static buildGetStremWithPermissionsQuery(streamid: string): string {
         const query = `{
             stream (id: "${streamid}") {
                 id,
@@ -499,34 +507,12 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    private static buildIsPublisherQuery(streamId: string, userAddess: EthereumAddress): string {
-        const query = `{
-            stream (id: "${streamId}") {
-                permissions (first:1000, where: {userAddress: "${userAddess}", publishExpiration_gt: "${Date.now()}"}) {
-                    id,
-                }
-            }
-        }`
-        return JSON.stringify({ query })
-    }
-
     private static buildGetStreamSubscribersQuery(streamId: string, pagesize: number, lastId?: string): string {
         const startIDFilter = lastId ? `, id_gt: "${lastId}"` : ''
         const query = `{
             stream (id: "${streamId}") {
                 permissions (first:${pagesize}, where: {subscribeExpiration_gt: "${Date.now()}"${startIDFilter}}) {
                     userAddress,
-                }
-            }
-        }`
-        return JSON.stringify({ query })
-    }
-
-    private static buildIsSubscriberQuery(streamId: string, userAddess: EthereumAddress): string {
-        const query = `{
-            stream (id: "${streamId}") {
-                permissions (first:1000, where: {userAddress: "${userAddess}", subscribeExpiration_gt: "${Date.now()}"}) {
-                    id
                 }
             }
         }`

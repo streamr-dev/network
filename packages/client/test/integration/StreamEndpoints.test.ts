@@ -1,6 +1,6 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getCreateClient, getPrivateKey } from '../utils'
+import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/Stream'
@@ -275,7 +275,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, '0x00')
+            const valid = await client.isStreamPublisher(createdStream.id, fakeAddress())
             return expect(!valid).toBeTruthy()
         })
     })
@@ -305,7 +305,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, '0x00')
+            const valid = await client.isStreamSubscriber(createdStream.id, fakeAddress())
             return expect(!valid).toBeTruthy()
         })
     })
