@@ -103,7 +103,8 @@ export const formConfig = ({
                 city: 'Helsinki'
             },
             stun: null,
-            turn : null
+            turn: null,
+            webrtcDisallowPrivateAddresses: false
         },
         streamrUrl,
         streamrAddress,
