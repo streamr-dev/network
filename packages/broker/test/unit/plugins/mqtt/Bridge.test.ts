@@ -6,6 +6,8 @@ const MOCK_TOPIC = 'mock-topic'
 const MOCK_STREAM_ID_DOMAIN = 'mock.ens'
 const MOCK_STREAM_ID = `${MOCK_STREAM_ID_DOMAIN}/${MOCK_TOPIC}`
 const MOCK_CONTENT = { foo: 'bar' }
+const MOCK_CLIENT_ID = 'mock-client-id'
+
 const MOCK_MESSAGE_ID = {
     streamId: MOCK_STREAM_ID,
     streamPartition: 0,
@@ -22,13 +24,18 @@ describe('MQTT Bridge', () => {
 
         let bridge: Bridge
         let streamrClient: Partial<StreamrClient>
+        let subscription: any
 
         beforeEach(() => {
+            subscription = {
+                streamId: MOCK_STREAM_ID,
+                unsubscribe: jest.fn().mockResolvedValue(undefined)
+            }
             streamrClient = {
                 publish: jest.fn().mockResolvedValue({
                     messageId: MOCK_MESSAGE_ID
                 }),
-                subscribe: jest.fn().mockResolvedValue(undefined),
+                subscribe: jest.fn().mockResolvedValue(subscription),
                 unsubscribe: jest.fn().mockResolvedValue(undefined)
             }
             bridge = new Bridge(streamrClient as any, undefined as any, new PlainPayloadFormat(), streamIdDomain)
@@ -39,18 +46,15 @@ describe('MQTT Bridge', () => {
             expect(streamrClient.publish).toBeCalledWith(MOCK_STREAM_ID, MOCK_CONTENT, undefined)
         })
 
-        it('onSubscribed', () => {
-            bridge.onSubscribed(topic)
+        it('onSubscribed', async () => {
+            await bridge.onSubscribed(topic, MOCK_CLIENT_ID)
             expect(streamrClient.subscribe).toBeCalledWith(MOCK_STREAM_ID, expect.anything())
         })
 
-        it('onUnsubscribed', () => {
-            const subscription = {
-                streamId: MOCK_STREAM_ID
-            }
-            streamrClient.getSubscriptions = jest.fn().mockReturnValue([subscription])
-            bridge.onUnsubscribed(topic)
-            expect(streamrClient.unsubscribe).toBeCalledWith(subscription)
+        it('onUnsubscribed', async () => {
+            await bridge.onSubscribed(topic, MOCK_CLIENT_ID)
+            await bridge.onUnsubscribed(topic, MOCK_CLIENT_ID)
+            expect(subscription.unsubscribe).toBeCalled()
         })
     
     })

@@ -1,9 +1,15 @@
+import _ from 'lodash'
 import { StreamrClient, Subscription } from 'streamr-client'
 import { Logger, Protocol } from 'streamr-network'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 import { MqttServer, MqttServerListener } from './MqttServer'
 
 const logger = new Logger(module)
+
+interface StreamSubscription {
+    streamrClientSubscription: Subscription,
+    clientIds: string[]
+}
 
 type MessageChainKey = string
 
@@ -19,6 +25,7 @@ export class Bridge implements MqttServerListener {
     private readonly mqttServer: MqttServer
     private readonly payloadFormat: PayloadFormat
     private readonly streamIdDomain?: string
+    private subscriptions: StreamSubscription[] = []
     private publishMessageChains = new Set<MessageChainKey>()
 
     constructor(streamrClient: StreamrClient, mqttServer: MqttServer, payloadFormat: PayloadFormat, streamIdDomain?: string) {
@@ -41,14 +48,24 @@ export class Bridge implements MqttServerListener {
         this.publishMessageChains.add(createMessageChainKey(publishedMessage))
     }
 
-    onSubscribed(topic: string): void {
+    async onSubscribed(topic: string, clientId: string): Promise<void> {
         logger.info('Client subscribed: ' + topic)
-        this.streamrClient.subscribe(this.getStreamId(topic), (content: any, metadata: Protocol.StreamMessage) => {
-            if (!this.isSelfPublishedMessage(metadata)) {
-                const payload = this.payloadFormat.createPayload(content, metadata.messageId)
-                this.mqttServer.publish(topic, payload)    
-            }
-        })
+        const streamId = this.getStreamId(topic)
+        const existingSubscription = this.getSubscription(streamId) 
+        if (existingSubscription === undefined) {
+            const streamrClientSubscription = await this.streamrClient.subscribe(streamId, (content: any, metadata: Protocol.StreamMessage) => {
+                if (!this.isSelfPublishedMessage(metadata)) {
+                    const payload = this.payloadFormat.createPayload(content, metadata.messageId)
+                    this.mqttServer.publish(topic, payload)    
+                }
+            })
+            this.subscriptions.push({
+                streamrClientSubscription,
+                clientIds: [clientId]
+            })
+        } else {
+            existingSubscription.clientIds.push(clientId)
+        }
     }
 
     /**
@@ -76,12 +93,17 @@ export class Bridge implements MqttServerListener {
         return this.publishMessageChains.has(messageChainKey)
     }
 
-    onUnsubscribed(topic: string): void {
+    onUnsubscribed(topic: string, clientId: string): void {
         logger.info('Client unsubscribed: ' + topic)
         const streamId = this.getStreamId(topic)
-        this.streamrClient!.getSubscriptions()
-            .filter((subscription: Subscription) => (subscription.streamId === streamId))
-            .forEach((subscription: Subscription) => this.streamrClient!.unsubscribe(subscription))
+        const existingSubscription = this.getSubscription(streamId)
+        if (existingSubscription !== undefined) {
+            existingSubscription.clientIds = _.without(existingSubscription.clientIds, clientId)
+            if (existingSubscription.clientIds.length === 0) {
+                existingSubscription.streamrClientSubscription.unsubscribe()
+                this.subscriptions = _.without(this.subscriptions, existingSubscription)
+            }
+        }
     }
 
     private getStreamId(topic: string): string {
@@ -90,5 +112,9 @@ export class Bridge implements MqttServerListener {
         } else {
             return topic
         }
+    }
+
+    private getSubscription(streamId: string): StreamSubscription|undefined {
+        return this.subscriptions.find((s: StreamSubscription) => s.streamrClientSubscription.streamId === streamId)
     }
 }

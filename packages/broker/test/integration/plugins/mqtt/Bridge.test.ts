@@ -95,4 +95,64 @@ describe('MQTT Bridge', () => {
 
         await subscriber.end(true)
     })
+
+    test('message should be delivered once per client if subscribed by multiple clients', async () => {
+        const expected = {
+            foo: Date.now()
+        }
+        const messageQueue1 = new Queue<any>()
+        const messageQueue2 = new Queue<any>()
+        const subscriber1 = await createSubscriber(messageQueue1)
+        const subscriber2 = await createSubscriber(messageQueue2)
+        streamrClient.publish(stream.id, expected)
+
+        await wait(2000)
+        expect(messageQueue1.items).toEqual([expected])
+        expect(messageQueue2.items).toEqual([expected])
+
+        await Promise.allSettled([
+            subscriber1.end(true),
+            subscriber2.end(true)
+        ])
+    })
+
+    it('subscription should not be unsubcribed if it was not subscribed by that client', async () => {
+        const expected = {
+            foo: Date.now()
+        }
+        const messageQueue = new Queue<any>()
+        const subscriber1 = await createSubscriber(messageQueue)
+        const subscriber2 = await createMqttClient()
+        subscriber2.unsubscribe(stream.id)
+        streamrClient.publish(stream.id, expected)
+
+        await wait(2000)
+        expect(messageQueue.items).toEqual([expected])
+
+        await Promise.allSettled([
+            subscriber1.end(true),
+            subscriber2.end(true)
+        ])
+    })
+
+    test('message should be delivered to remaining subscribers if one subscriber unsubcribes', async () => {
+        const expected = {
+            foo: Date.now()
+        }
+        const messageQueue1 = new Queue<any>()
+        const messageQueue2 = new Queue<any>()
+        const subscriber1 = await createSubscriber(messageQueue1)
+        const subscriber2 = await createSubscriber(messageQueue2)
+        subscriber2.unsubscribe(stream.id)
+        streamrClient.publish(stream.id, expected)
+
+        await wait(2000)
+        expect(messageQueue1.items).toEqual([expected])
+        expect(messageQueue2.items).toEqual([])
+
+        await Promise.allSettled([
+            subscriber1.end(true),
+            subscriber2.end(true)
+        ])
+    })
 })
