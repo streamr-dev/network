@@ -6,6 +6,12 @@ const MOCK_TOPIC = 'mock-topic'
 const MOCK_STREAM_ID_DOMAIN = 'mock.ens'
 const MOCK_STREAM_ID = `${MOCK_STREAM_ID_DOMAIN}/${MOCK_TOPIC}`
 const MOCK_CONTENT = { foo: 'bar' }
+const MOCK_MESSAGE_ID = {
+    streamId: MOCK_STREAM_ID,
+    streamPartition: 0,
+    publisherId: 'mock-publisher-id',
+    msgChainId: 'mock-msgChain-id'
+}
 
 describe('MQTT Bridge', () => {
 
@@ -19,15 +25,17 @@ describe('MQTT Bridge', () => {
 
         beforeEach(() => {
             streamrClient = {
-                publish: jest.fn().mockResolvedValue(undefined),
+                publish: jest.fn().mockResolvedValue({
+                    messageId: MOCK_MESSAGE_ID
+                }),
                 subscribe: jest.fn().mockResolvedValue(undefined),
                 unsubscribe: jest.fn().mockResolvedValue(undefined)
             }
             bridge = new Bridge(streamrClient as any, undefined as any, new PlainPayloadFormat(), streamIdDomain)
         })
 
-        it('onMessageReceived', () => {
-            bridge.onMessageReceived(topic, JSON.stringify(MOCK_CONTENT))
+        it('onMessageReceived', async () => {
+            await bridge.onMessageReceived(topic, JSON.stringify(MOCK_CONTENT))
             expect(streamrClient.publish).toBeCalledWith(MOCK_STREAM_ID, MOCK_CONTENT, undefined)
         })
 
