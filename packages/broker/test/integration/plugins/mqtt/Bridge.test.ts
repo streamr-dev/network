@@ -116,7 +116,7 @@ describe('MQTT Bridge', () => {
         ])
     })
 
-    it('subscription should not be unsubcribed if it was not subscribed by that client', async () => {
+    it('subscription should not be unsubscribed if it was not subscribed by that client', async () => {
         const expected = {
             foo: Date.now()
         }
@@ -135,7 +135,7 @@ describe('MQTT Bridge', () => {
         ])
     })
 
-    test('message should be delivered to remaining subscribers if one subscriber unsubcribes', async () => {
+    test('message should be delivered to remaining subscribers if one subscriber unsubscribes', async () => {
         const expected = {
             foo: Date.now()
         }
