@@ -72,6 +72,7 @@ export default class BrubeckNode implements Context {
         if (this.ethereum.isAuthenticated()) {
             const address = await this.ethereum.getAddress()
             return `${address}#${uuid()}`
+            // eslint-disable-next-line no-else-return
         } else {
             return Ethereum.generateEthereumAccount().address
         }
