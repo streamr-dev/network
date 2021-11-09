@@ -129,7 +129,7 @@ jobs:
           dest: 'packages/client/logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
           path: packages/client/logs
@@ -161,7 +161,7 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
+      - uses: nick-invision/retry@v2.4.1
         name: Run Test
         with:
           max_attempts: 2
@@ -201,7 +201,7 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
+      - uses: nick-invision/retry@v2.4.1
         name: Run Test
         with:
           max_attempts: 2

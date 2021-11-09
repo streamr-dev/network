@@ -76,7 +76,7 @@ describe(TrackerConnector, () => {
         setUpConnector(TTL_IN_MS)
         connector.start()
         await wait(TTL_IN_MS * 2)
-        expect(activeConnections).toBeEmpty()
+        expect(Object.keys(activeConnections).length).toEqual(0)
     })
 
     it('maintains tracker connections based on active streams', async () => {
@@ -85,7 +85,7 @@ describe(TrackerConnector, () => {
 
         streams = []
         await wait(TTL_IN_MS + 1)
-        expect(activeConnections).toBeEmpty()
+        expect(Object.keys(activeConnections).length).toEqual(0)
 
         streams = [T1_STREAM]
         await wait(TTL_IN_MS + 1)
@@ -93,7 +93,7 @@ describe(TrackerConnector, () => {
 
         streams = []
         await wait(TTL_IN_MS + 1)
-        expect(activeConnections).toBeEmpty()
+        expect(Object.keys(activeConnections).length).toEqual(0)
 
         streams = [T2_STREAM, T3_STREAM]
         await wait(TTL_IN_MS + 1)
@@ -109,7 +109,7 @@ describe(TrackerConnector, () => {
 
         streams = []
         await wait(TTL_IN_MS + 1)
-        expect(activeConnections).toBeEmpty()
+        expect(Object.keys(activeConnections).length).toEqual(0)
     })
 
     it('onNewStream can be used to form immediate connections', () => {
