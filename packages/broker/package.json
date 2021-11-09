@@ -71,7 +71,7 @@
     "pino-pretty": "^5.0.2",
     "qs": "^6.10.1",
     "split2": "^3.2.2",
-    "streamr-client": "^6.0.0-alpha.11",
+   "streamr-client": "^6.1.0-decentralised-registries-experimental.0",
     "streamr-network": "^30.0.1",
     "streamr-test-utils": "^2.0.0",
     "strict-event-emitter-types": "^2.0.0",
