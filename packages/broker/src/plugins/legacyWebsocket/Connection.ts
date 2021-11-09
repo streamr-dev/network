@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { Logger } from 'streamr-network'
-import { ControlMessage, ControlLayer } from 'streamr-client-protocol'
+import { ControlMessage, ControlLayer, SPIDKey } from 'streamr-client-protocol'
 import { Stream } from '../../Stream'
 import WebSocket from "ws"
 import stream from "stream"
@@ -121,7 +121,7 @@ export class Connection extends EventEmitter {
         this.getStreams().forEach(cb)
     }
 
-    getStreamsAsString(): Protocol.SPIDKey[] {
+    getStreamsAsString(): SPIDKey[] {
         return this.streams.map((s: Stream<Connection>) => s.getSPIDKey())
     }
 

@@ -1,4 +1,4 @@
-import type { StreamMessage } from 'streamr-client-protocol'
+import type { StreamMessage, SPID } from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
@@ -53,8 +53,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             this.subscriptionManager.subscribe(spid.streamId, spid.streamPartition)
         })
         this.storageConfig.addChangeListener({
-            onSPIDAdded: (spid: Protocol.SPID) => this.subscriptionManager.subscribe(spid.streamId, spid.streamPartition),
-            onSPIDRemoved: (spid: Protocol.SPID) => this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
+            onSPIDAdded: (spid: SPID) => this.subscriptionManager.subscribe(spid.streamId, spid.streamPartition),
+            onSPIDRemoved: (spid: SPID) => this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
         })
         this.networkNode.addMessageListener(this.messageListener)
         const streamFetcher = new StreamFetcher(this.brokerConfig.streamrUrl)

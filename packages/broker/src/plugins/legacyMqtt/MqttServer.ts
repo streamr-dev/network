@@ -2,7 +2,7 @@ import { Server, Socket } from 'net'
 import { EventEmitter } from 'events'
 import mqttCon from 'mqtt-connection'
 import { Metrics, MetricsContext, NetworkNode } from 'streamr-network'
-import { StreamMessage, MessageID } from 'streamr-client-protocol'
+import { StreamMessage, MessageID, SPID } from 'streamr-client-protocol'
 import { Logger } from 'streamr-network'
 import { partition } from '../../helpers/partition'
 import { Publisher } from '../../Publisher'
@@ -178,8 +178,8 @@ export class MqttServer extends EventEmitter {
 
             const textPayload = payload.toString()
             sequenceNumber += 1
-            const streamMessage = new Protocol.StreamMessage({
-                messageId: new Protocol.MessageID(streamObj.id, streamPartition, Date.now(), sequenceNumber, connection.id, connection.id),
+            const streamMessage = new StreamMessage({
+                messageId: new MessageID(streamObj.id, streamPartition, Date.now(), sequenceNumber, connection.id, connection.id),
                 content: mqttPayloadToObject(textPayload),
             })
 
@@ -285,7 +285,7 @@ export class MqttServer extends EventEmitter {
         connection.close()
     }
 
-    broadcastMessage(streamMessage: Protocol.StreamMessage): void {
+    broadcastMessage(streamMessage: StreamMessage): void {
         const streamId = streamMessage.getStreamId()
         const streamPartition = streamMessage.getStreamPartition()
         const stream = this.streams.get(streamId, 0)
@@ -304,7 +304,7 @@ export class MqttServer extends EventEmitter {
             this.metrics.record('outBytes', streamMessage.getSerializedContent().length * stream.getConnections().length)
             this.metrics.record('outMessages', stream.getConnections().length)
         } else {
-            logger.debug('broadcastMessage: stream "%s" not found', Protocol.SPID.toKey(streamId, streamPartition))
+            logger.debug('broadcastMessage: stream "%s" not found', SPID.toKey(streamId, streamPartition))
         }
     }
 }
