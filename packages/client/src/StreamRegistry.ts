@@ -105,17 +105,17 @@ export class StreamRegistry implements Context {
 
     async hasPermission(streamId: string, userAddess: EthereumAddress, permission: StreamPermission) {
         return this.streamRegistryContractReadonly.hasPermission(streamId, userAddess,
-            StreamRegistry.StreamPermissionToSolidityType(permission))
+            StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
     async hasPublicPermission(streamId: string, permission: StreamPermission) {
         return this.streamRegistryContractReadonly.hasPublicPermission(streamId,
-            StreamRegistry.StreamPermissionToSolidityType(permission))
+            StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
     async hasDirectPermission(streamId: string, userAddess: EthereumAddress, permission: StreamPermission) {
         return this.streamRegistryContractReadonly.hasDirectPermission(streamId, userAddess,
-            StreamRegistry.StreamPermissionToSolidityType(permission))
+            StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
     async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
@@ -195,7 +195,7 @@ export class StreamRegistry implements Context {
         log('Granting Permission %o for user %s on stream %s', permission, recievingUser, streamId)
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.grantPermission(streamId, recievingUser,
-            StreamRegistry.StreamPermissionToSolidityType(permission))
+            StreamRegistry.streamPermissionToSolidityType(permission))
         await tx.wait()
     }
 
@@ -203,7 +203,7 @@ export class StreamRegistry implements Context {
         log('Granting PUBLIC Permission %o on stream %s', permission, streamId)
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.grantPublicPermission(streamId,
-            StreamRegistry.StreamPermissionToSolidityType(permission))
+            StreamRegistry.streamPermissionToSolidityType(permission))
         await tx.wait()
     }
 
@@ -223,7 +223,7 @@ export class StreamRegistry implements Context {
         log('Revoking Permission %o for user %s on stream %s', permission, recievingUser, streamId)
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.revokePermission(streamId, recievingUser,
-            StreamRegistry.StreamPermissionToSolidityType(permission))
+            StreamRegistry.streamPermissionToSolidityType(permission))
         await tx.wait()
     }
 
@@ -244,7 +244,7 @@ export class StreamRegistry implements Context {
         log('Revoking PUBLIC Permission %o on stream %s', permission, streamId)
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.revokePublicPermission(streamId,
-            StreamRegistry.StreamPermissionToSolidityType(permission))
+            StreamRegistry.streamPermissionToSolidityType(permission))
         await tx.wait()
     }
 
@@ -282,7 +282,7 @@ export class StreamRegistry implements Context {
         }
     }
 
-    private static StreamPermissionToSolidityType(permission: StreamPermission): BigNumber {
+    private static streamPermissionToSolidityType(permission: StreamPermission): BigNumber {
         switch (permission) {
             case StreamPermission.EDIT:
                 return BigNumber.from(0)
@@ -415,7 +415,7 @@ export class StreamRegistry implements Context {
         let response
         try {
             response = await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
-                StreamRegistry.StreamPermissionToSolidityType(StreamPermission.PUBLISH))
+                StreamRegistry.streamPermissionToSolidityType(StreamPermission.PUBLISH))
         } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
@@ -427,7 +427,7 @@ export class StreamRegistry implements Context {
         let response
         try {
             response = await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
-                StreamRegistry.StreamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
+                StreamRegistry.streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
         } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
