@@ -2,7 +2,7 @@ import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Broker } from '../../../src/broker'
+import { Broker } from '../../../../src/broker'
 import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream, getSPIDKeys } from '../../../utils'
 
 const httpPort1 = 12381
