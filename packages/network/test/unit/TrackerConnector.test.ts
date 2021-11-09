@@ -1,8 +1,8 @@
-import { Utils } from 'streamr-client-protocol'
-import { TrackerConnector } from '../../src/logic/node/TrackerConnector'
-import { StreamIdAndPartition, TrackerInfo } from '../../src/identifiers'
-import { TrackerId } from '../../src/logic/tracker/Tracker'
 import { wait } from 'streamr-test-utils'
+import { SPID, Utils } from 'streamr-client-protocol'
+import { TrackerConnector } from '../../src/logic/node/TrackerConnector'
+import { TrackerInfo } from '../../src/identifiers'
+import { TrackerId } from '../../src/logic/tracker/Tracker'
 
 const TTL_IN_MS = 10
 
@@ -29,21 +29,21 @@ const TRACKERS = [
     },
 ]
 
-const T1_STREAM = new StreamIdAndPartition('streamOne', 0)
-const T2_STREAM = new StreamIdAndPartition('streamOne', 15)
-const T3_STREAM = new StreamIdAndPartition('streamSix', 0)
-const T4_STREAM = new StreamIdAndPartition('streamTwo', 0)
+const T1_STREAM = SPID.from('streamOne#0')
+const T2_STREAM = SPID.from('streamOne#15')
+const T3_STREAM = SPID.from('streamSix#0')
+const T4_STREAM = SPID.from('streamTwo#0')
 
 describe(TrackerConnector, () => {
-    let streams: Array<StreamIdAndPartition>
+    let streams: Array<SPID>
     let activeConnections: Set<TrackerId>
     let connector: TrackerConnector
 
     beforeAll(() => {
         // sanity check stream hash assignments
         const trackerRegistry = new Utils.TrackerRegistry<TrackerInfo>(TRACKERS)
-        function checkTrackerAssignment({ id, partition }: StreamIdAndPartition, expectedTracker: TrackerInfo): void {
-            expect(trackerRegistry.getTracker(id, partition)).toEqual(expectedTracker)
+        function checkTrackerAssignment(spid: SPID, expectedTracker: TrackerInfo): void {
+            expect(trackerRegistry.getTracker(spid)).toEqual(expectedTracker)
         }
         checkTrackerAssignment(T1_STREAM, TRACKERS[0])
         checkTrackerAssignment(T2_STREAM, TRACKERS[1])
@@ -76,7 +76,7 @@ describe(TrackerConnector, () => {
         setUpConnector(TTL_IN_MS)
         connector.start()
         await wait(TTL_IN_MS * 2)
-        expect(activeConnections).toBeEmpty()
+        expect(Object.keys(activeConnections).length).toEqual(0)
     })
 
     it('maintains tracker connections based on active streams', async () => {
@@ -85,7 +85,7 @@ describe(TrackerConnector, () => {
 
         streams = []
         await wait(TTL_IN_MS + 1)
-        expect(activeConnections).toBeEmpty()
+        expect(Object.keys(activeConnections).length).toEqual(0)
 
         streams = [T1_STREAM]
         await wait(TTL_IN_MS + 1)
@@ -93,7 +93,7 @@ describe(TrackerConnector, () => {
 
         streams = []
         await wait(TTL_IN_MS + 1)
-        expect(activeConnections).toBeEmpty()
+        expect(Object.keys(activeConnections).length).toEqual(0)
 
         streams = [T2_STREAM, T3_STREAM]
         await wait(TTL_IN_MS + 1)
@@ -109,7 +109,7 @@ describe(TrackerConnector, () => {
 
         streams = []
         await wait(TTL_IN_MS + 1)
-        expect(activeConnections).toBeEmpty()
+        expect(Object.keys(activeConnections).length).toEqual(0)
     })
 
     it('onNewStream can be used to form immediate connections', () => {

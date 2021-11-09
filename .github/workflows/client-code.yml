@@ -1,3 +1,4 @@
+---
 # Any tests that can run without building should go in here.
 name: Client – Lint, Unit, Integration Tests
 
@@ -17,21 +18,15 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
-
+    - cron: '0 0 * * *'
+concurrency:
+  group: client-code-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/client
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
   lint:
     name: Run linter using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -39,19 +34,14 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
-      - uses: actions/checkout@v2.3.5
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -69,19 +59,14 @@ jobs:
     env:
       TEST_REPEATS: 5
     steps:
-      - uses: actions/checkout@v2.3.5
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -99,33 +84,28 @@ jobs:
       matrix:
         node-version: [14.x]
         test-name: [
-            "test-integration-no-resend",
-            "test-integration-resend",
+          "test-integration-no-resend",
+          "test-integration-resend",
         ]
         websocket-url:
-            - name: "default"
-              url:  ""
-            - name: "single-node-only"
-              url:  "ws://localhost:8690/api/v1/ws"
+          - name: "default"
+            url: ""
+          - name: "single-node-only"
+            url: "ws://localhost:8690/api/v1/ws"
     env:
       TEST_NAME: ${{ matrix.test-name }}
       WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
       TEST_REPEATS: 2
 
     steps:
-      - uses: actions/checkout@v2.3.5
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -137,6 +117,11 @@ jobs:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: Run Test
         run: npm run $TEST_NAME
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
@@ -144,7 +129,7 @@ jobs:
           dest: 'packages/client/logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
           path: packages/client/logs
@@ -159,19 +144,14 @@ jobs:
         node-version: [14.x, 16.x]
 
     steps:
-      - uses: actions/checkout@v2.3.5
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -181,17 +161,22 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
+      - uses: nick-invision/retry@v2.4.1
         name: Run Test
         with:
           max_attempts: 2
           timeout_minutes: 15
           retry_on: error
           command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   memory:
     if: ${{ false }}
-    name:  Memory Tests using Node ${{ matrix.node-version }}
+    name: Memory Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -199,19 +184,14 @@ jobs:
         node-version: [14.x, 16.x]
 
     steps:
-      - uses: actions/checkout@v2.3.5
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -221,10 +201,15 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
+      - uses: nick-invision/retry@v2.4.1
         name: Run Test
         with:
           max_attempts: 2
           timeout_minutes: 20
           retry_on: error
           command: cd packages/client && npm run test-memory
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)

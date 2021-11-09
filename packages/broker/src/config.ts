@@ -17,13 +17,14 @@ export interface NetworkConfig {
     name: string,
     trackers: TrackerRegistryItem[] | NetworkSmartContract,
     stun: string | null,
-    turn: TurnConfig | null
+    turn: TurnConfig | null,
     location: {
         latitude: number,
         longitude: number,
         country: string,
         city: string
-    } | null
+    } | null,
+    webrtcDisallowPrivateAddresses: boolean
 }
 
 export interface HttpServerConfig {

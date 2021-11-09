@@ -4,6 +4,7 @@ import {
     validateIsArray
 } from '../../../utils/validations'
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
+import { SPID } from '../../../utils/SPID'
 
 export interface Options extends TrackerMessageOptions {
     streamId: string
@@ -31,5 +32,9 @@ export default class InstructionMessage extends TrackerMessage {
         this.streamPartition = streamPartition
         this.nodeIds = nodeIds
         this.counter = counter
+    }
+
+    getSPID(): SPID {
+        return SPID.from(this)
     }
 }

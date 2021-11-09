@@ -1,4 +1,5 @@
 import express from 'express'
+import { Protocol } from 'streamr-network'
 import request from 'supertest'
 import { router } from '../../../../src/plugins/storage/StorageConfigEndpoints'
 import { createMockStorageConfig } from '../../../integration/plugins/storage/MockStorageConfig'
@@ -8,10 +9,7 @@ const createRequest = (streamId: string, partition: number, app: express.Applica
 }
 
 describe('StorageConfigEndpoints', () => {
-    const storageConfig = createMockStorageConfig([{
-        id: 'existing',
-        partition: 123,
-    }])
+    const storageConfig = createMockStorageConfig([new Protocol.SPID('existing', 123)])
 
     it('stream in storage config', async () => {
         const app = express()

@@ -8,7 +8,6 @@ import { Plugin, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig, AssignmentMessage } from './StorageConfig'
-import { StreamPart } from '../../types'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
 
@@ -46,20 +45,16 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.cassandra = await this.getCassandraStorage()
         this.storageConfig = await this.createStorageConfig()
         this.messageListener = (msg) => {
-            const streamPart = {
-                id: msg.messageId.streamId,
-                partition: msg.messageId.streamPartition
-            }
-            if (this.storageConfig!.hasStream(streamPart)) {
+            if (this.storageConfig!.hasSPID(msg.getSPID())) {
                 this.cassandra!.store(msg)
             }
         }
-        this.storageConfig.getStreams().forEach((stream) => {
-            this.subscriptionManager.subscribe(stream.id, stream.partition)
+        this.storageConfig.getSPIDs().forEach((spid) => {
+            this.subscriptionManager.subscribe(spid.streamId, spid.streamPartition)
         })
         this.storageConfig.addChangeListener({
-            onStreamAdded: (stream: StreamPart) => this.subscriptionManager.subscribe(stream.id, stream.partition),
-            onStreamRemoved: (stream: StreamPart) => this.subscriptionManager.unsubscribe(stream.id, stream.partition)
+            onSPIDAdded: (spid: Protocol.SPID) => this.subscriptionManager.subscribe(spid.streamId, spid.streamPartition),
+            onSPIDRemoved: (spid: Protocol.SPID) => this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
         })
         this.networkNode.addMessageListener(this.messageListener)
         const streamFetcher = new StreamFetcher(this.brokerConfig.streamrUrl)
@@ -99,8 +94,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     async stop(): Promise<void> {
         this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, this.brokerConfig.streamrAddress, this.subscriptionManager)
         this.networkNode.removeMessageListener(this.messageListener!)
-        this.storageConfig!.getStreams().forEach((stream) => {
-            this.subscriptionManager.unsubscribe(stream.id, stream.partition)
+        this.storageConfig!.getSPIDs().forEach((spid) => {
+            this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
         })
         await Promise.all([
             this.cassandra!.close(),

@@ -1,11 +1,10 @@
+import { MessageIDStrict, SPID, StreamMessage } from 'streamr-client-protocol'
+import { NodeId } from '../../src/logic/node/Node'
+import { wait } from 'streamr-test-utils'
 import {
     PropagationTaskStore,
     PropagationTask
 } from '../../src/logic/node/propagation/PropagationTaskStore'
-import { MessageIDStrict, StreamMessage } from 'streamr-client-protocol'
-import { NodeId } from '../../src/logic/node/Node'
-import { StreamIdAndPartition } from '../../src/identifiers'
-import { wait } from 'streamr-test-utils'
 
 function makeTask(streamId: string, partition: number, ts: number, neighbors: string[]): PropagationTask {
     // Contents (apart from messageId) not so important here, but generate some for variety
@@ -48,50 +47,50 @@ describe(PropagationTaskStore, () => {
     })
 
     it('get tasks by streamId', () => {
-        expect(store.get(new StreamIdAndPartition('s1', 0))).toEqual([TASKS[0], TASKS[1]])
-        expect(store.get(new StreamIdAndPartition('s1', 1))).toEqual([TASKS[2]])
-        expect(store.get(new StreamIdAndPartition('s2', 0))).toEqual([TASKS[3]])
-        expect(store.get(new StreamIdAndPartition('s3', 0))).toEqual([TASKS[4]])
-        expect(store.get(new StreamIdAndPartition('non-existing', 0))).toEqual([])
+        expect(store.get(new SPID('s1', 0))).toEqual([TASKS[0], TASKS[1]])
+        expect(store.get(new SPID('s1', 1))).toEqual([TASKS[2]])
+        expect(store.get(new SPID('s2', 0))).toEqual([TASKS[3]])
+        expect(store.get(new SPID('s3', 0))).toEqual([TASKS[4]])
+        expect(store.get(new SPID('non-existing', 0))).toEqual([])
     })
 
     it('fifo dropping when full', () => {
         store.add(TASKS[5])
         store.add(TASKS[6])
 
-        expect(store.get(new StreamIdAndPartition('s1', 0))).toEqual([TASKS[5]])
-        expect(store.get(new StreamIdAndPartition('s1', 1))).toEqual([TASKS[2], TASKS[6]])
-        expect(store.get(new StreamIdAndPartition('s2', 0))).toEqual([TASKS[3]])
-        expect(store.get(new StreamIdAndPartition('s3', 0))).toEqual([TASKS[4]])
+        expect(store.get(new SPID('s1', 0))).toEqual([TASKS[5]])
+        expect(store.get(new SPID('s1', 1))).toEqual([TASKS[2], TASKS[6]])
+        expect(store.get(new SPID('s2', 0))).toEqual([TASKS[3]])
+        expect(store.get(new SPID('s3', 0))).toEqual([TASKS[4]])
 
         store.add(TASKS[7])
         store.add(TASKS[8])
 
-        expect(store.get(new StreamIdAndPartition('s1', 0))).toEqual([TASKS[5]])
-        expect(store.get(new StreamIdAndPartition('s1', 1))).toEqual([TASKS[6]])
-        expect(store.get(new StreamIdAndPartition('s2', 0))).toEqual([])
-        expect(store.get(new StreamIdAndPartition('s3', 0))).toEqual([TASKS[4]])
-        expect(store.get(new StreamIdAndPartition('s4', 0))).toEqual([TASKS[7]])
-        expect(store.get(new StreamIdAndPartition('s5', 0))).toEqual([TASKS[8]])
+        expect(store.get(new SPID('s1', 0))).toEqual([TASKS[5]])
+        expect(store.get(new SPID('s1', 1))).toEqual([TASKS[6]])
+        expect(store.get(new SPID('s2', 0))).toEqual([])
+        expect(store.get(new SPID('s3', 0))).toEqual([TASKS[4]])
+        expect(store.get(new SPID('s4', 0))).toEqual([TASKS[7]])
+        expect(store.get(new SPID('s5', 0))).toEqual([TASKS[8]])
 
         store.add(TASKS[9])
 
-        expect(store.get(new StreamIdAndPartition('s1', 0))).toEqual([TASKS[5]])
-        expect(store.get(new StreamIdAndPartition('s1', 1))).toEqual([TASKS[6]])
-        expect(store.get(new StreamIdAndPartition('s2', 0))).toEqual([TASKS[9]])
-        expect(store.get(new StreamIdAndPartition('s3', 0))).toEqual([])
-        expect(store.get(new StreamIdAndPartition('s4', 0))).toEqual([TASKS[7]])
-        expect(store.get(new StreamIdAndPartition('s5', 0))).toEqual([TASKS[8]])
+        expect(store.get(new SPID('s1', 0))).toEqual([TASKS[5]])
+        expect(store.get(new SPID('s1', 1))).toEqual([TASKS[6]])
+        expect(store.get(new SPID('s2', 0))).toEqual([TASKS[9]])
+        expect(store.get(new SPID('s3', 0))).toEqual([])
+        expect(store.get(new SPID('s4', 0))).toEqual([TASKS[7]])
+        expect(store.get(new SPID('s5', 0))).toEqual([TASKS[8]])
     })
 
     it('deleting tasks', () => {
         store.delete(TASKS[3].message.messageId)
         store.delete(TASKS[0].message.messageId)
 
-        expect(store.get(new StreamIdAndPartition('s1', 0))).toEqual([TASKS[1]])
-        expect(store.get(new StreamIdAndPartition('s1', 1))).toEqual([TASKS[2]])
-        expect(store.get(new StreamIdAndPartition('s2', 0))).toEqual([])
-        expect(store.get(new StreamIdAndPartition('s3', 0))).toEqual([TASKS[4]])
+        expect(store.get(new SPID('s1', 0))).toEqual([TASKS[1]])
+        expect(store.get(new SPID('s1', 1))).toEqual([TASKS[2]])
+        expect(store.get(new SPID('s2', 0))).toEqual([])
+        expect(store.get(new SPID('s3', 0))).toEqual([TASKS[4]])
     })
 
     it('stale tasks are not returned', async () => {
@@ -104,9 +103,9 @@ describe(PropagationTaskStore, () => {
         store.add(TASKS[3])
         store.add(TASKS[4])
         await wait((TTL / 2) + 1)
-        expect(store.get(new StreamIdAndPartition('s1', 0))).toEqual([TASKS[1]])
-        expect(store.get(new StreamIdAndPartition('s1', 1))).toEqual([])
-        expect(store.get(new StreamIdAndPartition('s2', 0))).toEqual([TASKS[3]])
-        expect(store.get(new StreamIdAndPartition('s3', 0))).toEqual([TASKS[4]])
+        expect(store.get(new SPID('s1', 0))).toEqual([TASKS[1]])
+        expect(store.get(new SPID('s1', 1))).toEqual([])
+        expect(store.get(new SPID('s2', 0))).toEqual([TASKS[3]])
+        expect(store.get(new SPID('s3', 0))).toEqual([TASKS[4]])
     })
 })
