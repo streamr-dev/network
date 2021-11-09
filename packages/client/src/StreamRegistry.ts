@@ -284,15 +284,15 @@ export class StreamRegistry implements Context {
 
     private static StreamPermissionToSolidityType(permission: StreamPermission): BigNumber {
         switch (permission) {
-            case StreamPermission.STREAM_EDIT:
+            case StreamPermission.EDIT:
                 return BigNumber.from(0)
-            case StreamPermission.STREAM_DELETE:
+            case StreamPermission.DELETE:
                 return BigNumber.from(1)
-            case StreamPermission.STREAM_PUBLISH:
+            case StreamPermission.PUBLISH:
                 return BigNumber.from(2)
-            case StreamPermission.STREAM_SUBSCRIBE:
+            case StreamPermission.SUBSCRIBE:
                 return BigNumber.from(3)
-            case StreamPermission.STREAM_SHARE:
+            case StreamPermission.SHARE:
                 return BigNumber.from(4)
             default:
                 break
@@ -415,7 +415,7 @@ export class StreamRegistry implements Context {
         let response
         try {
             response = await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
-                StreamRegistry.StreamPermissionToSolidityType(StreamPermission.STREAM_PUBLISH))
+                StreamRegistry.StreamPermissionToSolidityType(StreamPermission.PUBLISH))
         } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
@@ -427,7 +427,7 @@ export class StreamRegistry implements Context {
         let response
         try {
             response = await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
-                StreamRegistry.StreamPermissionToSolidityType(StreamPermission.STREAM_SUBSCRIBE))
+                StreamRegistry.StreamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
         } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }

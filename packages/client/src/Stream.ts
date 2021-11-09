@@ -43,11 +43,11 @@ export interface StreamPermissions {
 }
 
 export enum StreamPermission {
-    STREAM_EDIT = 'edit',
-    STREAM_DELETE = 'canDelete',
-    STREAM_PUBLISH = 'publishExpiration',
-    STREAM_SUBSCRIBE = 'subscribeExpiration',
-    STREAM_SHARE = 'share'
+    EDIT = 'edit',
+    DELETE = 'canDelete',
+    PUBLISH = 'publishExpiration',
+    SUBSCRIBE = 'subscribeExpiration',
+    SHARE = 'share'
 }
 
 export interface StreamProperties {
@@ -209,7 +209,7 @@ class StreamrStream implements StreamMetadata {
     // async hasPermissions(operations: StreamPermission[], userId: string) {
     //     const permissions = await this._streamRegistry.getPermissionsForUser(this.id, userId)
 
-    //     if (operation === StreamPermission.STREAM_PUBLISH || operation === StreamPermission.STREAM_SUBSCRIBE) {
+    //     if (operation === StreamPermission.PUBLISH || operation === StreamPermission.SUBSCRIBE) {
     //         return permissions[operation].gt(Date.now())
     //     }
     //     return permissions[operation]

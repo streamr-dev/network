@@ -57,9 +57,9 @@ describeRepeats('PubSub with multiple clients', () => {
 
         // pubClient.on('error', getOnError(errors))
         const pubUser = await pubClient.getAddress()
-        await stream.grantUserPermission(StreamPermission.STREAM_PUBLISH, pubUser)
+        await stream.grantUserPermission(StreamPermission.PUBLISH, pubUser)
         // needed to check last
-        await stream.grantUserPermission(StreamPermission.STREAM_SUBSCRIBE, pubUser)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, pubUser)
         await pubClient.connect()
 
         return pubClient
@@ -75,7 +75,7 @@ describeRepeats('PubSub with multiple clients', () => {
         // client.on('error', getOnError(errors))
         const user = await client.getAddress()
 
-        await stream.grantUserPermission(StreamPermission.STREAM_SUBSCRIBE, user)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, user)
         await client.connect()
         return client
     }
@@ -474,7 +474,7 @@ describeRepeats('PubSub with multiple clients', () => {
         })
         // otherClient.on('error', getOnError(errors))
         const otherUser = await otherClient.getAddress()
-        await stream.grantUserPermission(StreamPermission.STREAM_SUBSCRIBE, otherUser)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, otherUser)
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
@@ -549,7 +549,7 @@ describeRepeats('PubSub with multiple clients', () => {
         // otherClient.on('error', getOnError(errors))
         const otherUser = await otherClient.getAddress()
 
-        await stream.grantUserPermission(StreamPermission.STREAM_SUBSCRIBE, otherUser)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, otherUser)
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
