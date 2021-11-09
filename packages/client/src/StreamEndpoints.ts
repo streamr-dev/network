@@ -11,7 +11,7 @@ import { StreamMessageType, SIDLike, SPID } from 'streamr-client-protocol'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 
-import { Stream, StreamOperation } from './Stream'
+import { Stream, StreamPermission } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
 import { EthereumAddress } from './types'
@@ -53,7 +53,7 @@ export interface StreamListQuery {
     offset?: number
     grantedAccess?: boolean
     publicAccess?: boolean
-    operation?: StreamOperation
+    operation?: StreamPermission
 }
 
 export interface StreamValidationInfo {

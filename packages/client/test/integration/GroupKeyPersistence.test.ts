@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { clientOptions, describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, until, getPrivateKey } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Stream, StreamOperation } from '../../src/Stream'
+import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Wallet } from 'ethers'
 
@@ -54,7 +54,7 @@ describeRepeats('Group Key Persistence', () => {
                 }
             })
             const otherUser = await subscriber.getAddress()
-            await stream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser)
+            await stream.grantUserPermission(StreamPermission.STREAM_SUBSCRIBE, otherUser)
             const groupKey = GroupKey.generate()
             await publisher.setNextGroupKey(stream.id, groupKey)
         })
