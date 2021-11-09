@@ -9,7 +9,7 @@ import { counterId } from '../../src/utils'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { Wallet } from 'ethers'
 
-jest.setTimeout(240000)
+jest.setTimeout(30000)
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
@@ -68,8 +68,10 @@ describeRepeats('PubSub with multiple clients', () => {
     async function createSubscriber(opts = {}) {
         const client = await createClient({
             id: 'subscriber',
+            auth: {
+                privateKey
+            },
             ...opts,
-            auth: { privateKey: '0xd7609ae3a29375768fac8bc0f8c2f6ac81c5f2ffca2b981e6cf15460f01efe14' }
         })
 
         // client.on('error', getOnError(errors))
