@@ -113,9 +113,9 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: real-time websocket producing and websocket consuming (unsigned messages)', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         const subs = await Promise.all([
             client1.subscribe({
@@ -188,9 +188,9 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: real-time HTTP producing and websocket consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await Promise.all([
             client1.subscribe({
@@ -293,9 +293,9 @@ describe('broker: end-to-end', () => {
 
         await wait(3000) // wait for propagation
 
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await Promise.all([
             client1.resend({
@@ -388,9 +388,9 @@ describe('broker: end-to-end', () => {
 
         await wait(1500) // wait for propagation
 
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
         await Promise.all([
             client1.resend({
                 stream: freshStreamId,
@@ -500,9 +500,9 @@ describe('broker: end-to-end', () => {
 
         await wait(1500) // wait for propagation
 
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await Promise.all([
             client1.resend({
@@ -615,7 +615,7 @@ describe('broker: end-to-end', () => {
             },
         })
         const messagesAsObjects = await response.json()
-        const messageContents = messagesAsObjects.map((msgAsObject: Todo) => msgAsObject.content)
+        const messageContents = messagesAsObjects.map((msgAsObject: any) => msgAsObject.content)
 
         expect(messageContents).toEqual([
             {
@@ -651,7 +651,7 @@ describe('broker: end-to-end', () => {
             },
         })
         const messagesAsObjects = await response.json()
-        const messages = messagesAsObjects.map((msgAsObject: Todo) => msgAsObject.content)
+        const messages = messagesAsObjects.map((msgAsObject: any) => msgAsObject.content)
 
         expect(sentMessages).toEqual(messages)
     })
@@ -712,7 +712,7 @@ describe('broker: end-to-end', () => {
             },
         })
         const messagesAsObjects = await response.json()
-        const messageContents = messagesAsObjects.map((msgAsObject: Todo) => msgAsObject.content)
+        const messageContents = messagesAsObjects.map((msgAsObject: any) => msgAsObject.content)
 
         expect(messageContents).toEqual([
             {
@@ -773,7 +773,7 @@ describe('broker: end-to-end', () => {
             },
         })
         const messagesAsObjects = await response.json()
-        const messageContents = messagesAsObjects.map((msgAsObject: Todo) => msgAsObject.content)
+        const messageContents = messagesAsObjects.map((msgAsObject: any) => msgAsObject.content)
 
         expect(messageContents).toEqual([
             {

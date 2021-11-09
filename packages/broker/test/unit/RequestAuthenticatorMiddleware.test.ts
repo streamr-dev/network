@@ -5,11 +5,11 @@ import { HttpError } from '../../src/errors/HttpError'
 import { Todo } from '../../src/types'
 
 describe('AuthenticationMiddleware', () => {
-    let request: Todo
-    let response: Todo
-    let next: Todo
-    let streamFetcherStub: Todo
-    let middlewareInstance: Todo
+    let request: any
+    let response: any
+    let next: any
+    let streamFetcherStub: any
+    let middlewareInstance: any
 
     beforeEach(() => {
         request = {
