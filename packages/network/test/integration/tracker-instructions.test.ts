@@ -1,12 +1,10 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
-import { TrackerLayer } from 'streamr-client-protocol'
-
+import { SPID, TrackerLayer } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
-import { StreamIdAndPartition } from '../../src/identifiers'
 import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 
 describe('check tracker, nodes and statuses from nodes', () => {
@@ -16,7 +14,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
     let node1: NetworkNode
     let node2: NetworkNode
 
-    const s1 = new StreamIdAndPartition('stream-1', 0)
+    const s1 = new SPID('stream-1', 0)
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -64,16 +62,16 @@ describe('check tracker, nodes and statuses from nodes', () => {
     it('if failed to follow tracker instructions, inform tracker about current status', async () => {
         const trackerInstruction1 = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: s1.id,
-            streamPartition: s1.partition,
+            streamId: s1.streamId,
+            streamPartition: s1.streamPartition,
             nodeIds: ['node2', 'unknown'],
             counter: 0
         })
 
         const trackerInstruction2 = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: s1.id,
-            streamPartition: s1.partition,
+            streamId: s1.streamId,
+            streamPartition: s1.streamPartition,
             nodeIds: ['node1', 'unknown'],
             counter: 0
         })
@@ -101,7 +99,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         await waitForCondition(() => node2.getNeighbors().length > 0)
 
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
-            'stream-1::0': {
+            'stream-1#0': {
                 node1: [{neighborId: 'node2', rtt: null}],
                 node2: [{neighborId: 'node1', rtt: null}],
             }

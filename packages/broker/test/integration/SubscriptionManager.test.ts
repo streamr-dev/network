@@ -2,8 +2,8 @@ import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Broker } from '../../src/broker'
-import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream } from '../utils'
+import { Broker } from '../src/broker'
+import { startBroker, fastPrivateKey, createClient, createMqttClient, createTestStream, getSPIDKeys } from '../utils'
 
 const httpPort1 = 13381
 const httpPort2 = 13382
@@ -80,20 +80,20 @@ describe('SubscriptionManager', () => {
         await mqttClient1.subscribe(freshStream1.id)
         await mqttClient2.subscribe(freshStream2.id)
 
-        await waitForCondition(() => broker1.getStreams().length === 1)
-        await waitForCondition(() => broker2.getStreams().length === 1)
+        await waitForCondition(() => getSPIDKeys(broker1).length === 1)
+        await waitForCondition(() => getSPIDKeys(broker2).length === 1)
 
-        expect(broker1.getStreams()).toEqual([freshStream1.id + '::0'])
-        expect(broker2.getStreams()).toEqual([freshStream2.id + '::0'])
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream1.id + '#0'])
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream2.id + '#0'])
 
         await mqttClient1.subscribe(freshStream2.id)
         await mqttClient2.subscribe(freshStream1.id)
 
-        await waitForCondition(() => broker1.getStreams().length === 2)
-        await waitForCondition(() => broker2.getStreams().length === 2)
+        await waitForCondition(() => getSPIDKeys(broker1).length === 2)
+        await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
-        expect(broker1.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
-        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
 
         // client boots own node, so broker streams should not change
         await client1.subscribe(freshStream1, () => {})
@@ -102,23 +102,23 @@ describe('SubscriptionManager', () => {
 
         await wait(500) // give some time for client1 to subscribe.
 
-        expect(broker1.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
-        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
 
         await mqttClient1.unsubscribe(freshStream1.id)
 
-        await waitForCondition(() => broker1.getStreams().length === 1)
-        await waitForCondition(() => broker2.getStreams().length === 2)
+        await waitForCondition(() => getSPIDKeys(broker1).length === 1)
+        await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
-        expect(broker1.getStreams()).toEqual([freshStream2.id + '::0'])
-        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream2.id + '#0'])
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
 
         await mqttClient1.unsubscribe(freshStream2.id)
 
-        await waitForCondition(() => broker1.getStreams().length === 0)
-        await waitForCondition(() => broker2.getStreams().length === 2)
+        await waitForCondition(() => getSPIDKeys(broker1).length === 0)
+        await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
-        expect(broker1.getStreams()).toEqual([])
-        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0', freshStream2.id + '::0'].sort())
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([])
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
     }, 10000)
 })

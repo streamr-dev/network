@@ -1,3 +1,4 @@
+---
 name: Network – Lint, Test and Publish
 
 on:
@@ -11,21 +12,15 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
-
+    - cron: '0 0 * * *'
+concurrency:
+  group: network-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/network
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
   test:
     name: Lint & Test on Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -35,20 +30,15 @@ jobs:
         node-version: [ 16.x ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.4.0
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -58,7 +48,49 @@ jobs:
       - run: npm run test-unit
         env:
           CI: true
-      - run: npm run test-integration
+      - name: Run test-integration
+        run: |
+          ulimit -c unlimited
+          mkdir -p /tmp/cores
+          chmod a+rwx /tmp/cores
+          echo "/tmp/cores/core.%p" | sudo tee /proc/sys/kernel/core_pattern
+          npm run test-integration
+        env:
+          CI: true
+      - if: failure()
+        name: Print core dump
+        run: |
+          if ls /tmp/cores/core.* 1> /dev/null 2>&1; then
+            echo "Core dump found, printing stack trace..."
+            sudo apt-get install -y gdb > /dev/null
+            for c in /tmp/cores/core.*; do
+              gdb node --core=$c --eval-command="set pagination off" --eval-command="info threads" --eval-command="backtrace" --eval-command="quit"
+              done
+          else
+            echo "No core dump found."
+          fi
+
+  test-browser:
+    name: Test on Browser Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2.4.1
+        with:
+          node-version: 16
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
+      - name: npm ci
+        working-directory: './'
+        run: |
+          npm ci
+          npx lerna bootstrap --scope streamr-network --include-dependencies
+          sudo apt-get install xvfb
+      - run: xvfb-run --auto-servernum npm run test-browser
         env:
           CI: true
 
@@ -74,20 +106,15 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |

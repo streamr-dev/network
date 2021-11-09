@@ -4,6 +4,7 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import { keyToArrayIndex } from './HashUtil'
 
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
+import { SPID } from './SPID'
 
 type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
 
@@ -23,17 +24,9 @@ export class TrackerRegistry<T extends TrackerInfo> {
         this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(streamId: string, partition = 0): T {
-        if (typeof streamId !== 'string' || streamId.indexOf('::') >= 0) {
-            throw new Error(`invalid id: ${streamId}`)
-        }
-        if (!Number.isInteger(partition) || partition < 0) {
-            throw new Error(`invalid partition: ${partition}`)
-        }
-
-        const streamKey = `${streamId}::${partition}`
-
-        const index = keyToArrayIndex(this.records.length, streamKey)
+    getTracker(spid: SPID): T {
+        const key = spid.toKey().replace('#', '::') // TODO temporary backwards compatibility
+        const index = keyToArrayIndex(this.records.length, key)
         return this.records[index]
     }
 

@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 
-import { MessageLayer } from 'streamr-client-protocol'
+import { MessageLayer, SPIDKey } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -60,9 +60,9 @@ describe('node unsubscribing from a stream', () => {
     })
 
     test('node still receives data for subscribed streams thru existing connections', async () => {
-        const actual: string[] = []
+        const actual: SPIDKey[] = []
         nodeB.addMessageListener((streamMessage) => {
-            actual.push(`${streamMessage.getStreamId()}::${streamMessage.getStreamPartition()}`)
+            actual.push(`${streamMessage.getStreamId()}#${streamMessage.getStreamPartition()}`)
         })
 
         nodeB.unsubscribe('s', 2)
@@ -77,7 +77,7 @@ describe('node unsubscribing from a stream', () => {
             content: {},
         }))
         await waitForEvent(nodeB, NodeEvent.UNSEEN_MESSAGE_RECEIVED)
-        expect(actual).toEqual(['s::1'])
+        expect(actual).toEqual(['s#1'])
     })
 
     test('connection between nodes is not kept if no shared streams', async () => {
