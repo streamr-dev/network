@@ -124,37 +124,6 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.streamMessage.signature).toEqual('signature')
     })
 
-    it('sendUnicast is delivered', async () => {
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID('stream', 10, 666, 0, 'publisherId', 'msgChainId'),
-            prevMsgRef: new MessageRef(665, 0),
-            content: {
-                hello: 'world'
-            },
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-            signature: 'signature',
-        })
-        const unicastMessage = new ControlLayer.UnicastMessage({
-            requestId: 'requestId',
-            streamMessage,
-        })
-        nodeToNode2.send('node1', unicastMessage)
-        const [msg, source]: any = await waitForEvent(nodeToNode1, NodeToNodeEvent.UNICAST_RECEIVED)
-
-        expect(msg).toBeInstanceOf(ControlLayer.UnicastMessage)
-        expect(source).toEqual('node2')
-        expect(msg.requestId).toEqual('requestId')
-        expect(msg.streamMessage.messageId).toEqual(new MessageID('stream', 10, 666, 0, 'publisherId', 'msgChainId'))
-        expect(msg.streamMessage.prevMsgRef).toEqual(new MessageRef(665, 0))
-        expect(msg.streamMessage.getParsedContent()).toEqual({
-            hello: 'world'
-        })
-        expect(msg.streamMessage.signature).toEqual('signature')
-        expect(msg.streamMessage.signatureType).toEqual(MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)
-        expect(msg.requestId).toEqual('requestId')
-    })
-
     it('sendInstruction is delivered', async () => {
         trackerServer.sendInstruction('node1', new StreamIdAndPartition('stream', 10), ['node1'], 15)
         const [msg, trackerId]: any = await waitForEvent(nodeToTracker, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
