@@ -12,7 +12,6 @@ import {
 } from '../utils'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import { Broker } from '../../src/broker'
-import { Todo } from '../../src/types'
 
 const httpPort = 12341
 const wsPort1 = 12351
