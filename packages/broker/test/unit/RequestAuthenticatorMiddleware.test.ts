@@ -2,7 +2,6 @@ import assert from 'assert'
 import sinon from 'sinon'
 import { authenticator } from '../../src/RequestAuthenticatorMiddleware'
 import { HttpError } from '../../src/errors/HttpError'
-import { Todo } from '../../src/types'
 
 describe('AuthenticationMiddleware', () => {
     let request: any
