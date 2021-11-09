@@ -158,7 +158,7 @@ And publish data with the same library:
 
 ```
 import mqtt from 'async-mqtt'
-const client = mqtt.connectAsync(`mqtt://localhost:${port}`)
+const client = await mqtt.connectAsync(`mqtt://localhost:${port}`)
 await client.publish(streamId, JSON.stringify(msg))
 ```
 

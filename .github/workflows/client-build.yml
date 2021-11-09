@@ -19,20 +19,15 @@ on:
   schedule:
     # run every day at 00:00
     - cron: '0 0 * * *'
-
+concurrency:
+  group: client-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/client
 # Be sure to update both workflow files if you edit any env or trigger config
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
   build:
     name: Build using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -42,7 +37,7 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -57,7 +52,7 @@ jobs:
           npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: client-build
           path: packages/client/dist
@@ -70,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -101,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -122,7 +117,7 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
+      - uses: nick-invision/retry@v2.4.1
         name: Run Realtime Test
         with:
           max_attempts: 3
@@ -144,7 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -165,7 +160,7 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2
+      - uses: nick-invision/retry@v2.4.1
         name: Run Resend Test
         with:
           max_attempts: 3
@@ -187,7 +182,7 @@ jobs:
       matrix:
         node-version: [14.x, 16.x]
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -195,7 +190,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/*/package-lock.json
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v2.0.10
         with:
           name: client-build
           path: packages/client/dist
@@ -219,7 +214,7 @@ jobs:
         run: |
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: client-benchmarks
           path: |
