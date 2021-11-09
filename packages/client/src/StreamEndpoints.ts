@@ -53,7 +53,7 @@ export interface StreamListQuery {
     offset?: number
     grantedAccess?: boolean
     publicAccess?: boolean
-    operation?: StreamPermission
+    permission?: StreamPermission
 }
 
 export interface StreamValidationInfo {
