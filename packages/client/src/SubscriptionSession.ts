@@ -102,7 +102,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
         const { streamId, streamPartition } = this.spid
-        node.subscribe(streamId, streamPartition)
+        node.unsubscribe(streamId, streamPartition)
     }
 
     updateNodeSubscriptions = (() => {
