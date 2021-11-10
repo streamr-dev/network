@@ -84,8 +84,6 @@ jobs:
     name: Build, test, and publish Docker images
     runs-on: self-hosted
 
-    # run job only for main and tags
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v2.4.0
       - name: Cache Docker layers
@@ -157,7 +155,9 @@ jobs:
         with:
           driver-opts: |
             network=host
-      - name: Build
+      - name: Build & Push
+        # only push for main and tags
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         uses: docker/build-push-action@v2.7.0
         with:
           context: .
