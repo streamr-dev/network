@@ -30,7 +30,7 @@ const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
     }
 }
 
-describe('SubscriptionManager', () => {
+describe('broker subscriptions', () => {
     let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
@@ -101,7 +101,7 @@ describe('SubscriptionManager', () => {
         await tracker.stop()
     })
 
-    it('SubscriptionManager correctly handles subscribe/unsubscribe requests across all plugins', async () => {
+    it('manage list of subscribed stream partitions when plugins subscribe/unsubscribe', async () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
