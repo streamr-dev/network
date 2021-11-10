@@ -60,11 +60,11 @@ describe('local propagation', () => {
         await wait(3000)
     })
 
-    afterEach(async () => {
+    afterAll(async () => {
         await Promise.all([
             tracker.stop(),
             client1.destroy(),
-            // client2.destroy(),
+            client2.destroy(),
             mqttClient2.end(true),
             mqttClient1.end(true),
             broker.stop()
@@ -130,8 +130,8 @@ describe('local propagation', () => {
         const client1Messages: any[] = []
         const client2Messages: any[] = []
 
-        await waitForCondition(() => mqttClient1.connected)
-        await waitForCondition(() => mqttClient2.connected)
+        await waitForCondition(() => mqttClient1.connected, 10000)
+        await waitForCondition(() => mqttClient2.connected, 10000)
 
         mqttClient1.on('message', (_topic, message) => {
             client1Messages.push(message.toString())
@@ -169,8 +169,8 @@ describe('local propagation', () => {
         const client3Messages: any[] = []
         const client4Messages: any[] = []
 
-        await waitForCondition(() => mqttClient1.connected)
-        await waitForCondition(() => mqttClient2.connected)
+        await waitForCondition(() => mqttClient1.connected, 10000)
+        await waitForCondition(() => mqttClient2.connected, 10000)
 
         mqttClient1.on('message', (_topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
@@ -224,9 +224,9 @@ describe('local propagation', () => {
 
         await wait(500)
 
-        // await client2.publish(freshStreamId, {
-        //     key: 4
-        // })
+        await client2.publish(freshStreamId, {
+            key: 4
+        })
 
         await waitForCondition(() => client1Messages.length === 4, 10000)
         await waitForCondition(() => client2Messages.length === 4, 10000)

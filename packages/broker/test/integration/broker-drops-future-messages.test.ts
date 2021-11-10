@@ -72,7 +72,7 @@ describe('broker drops future messages', () => {
         await client.destroy()
     })
 
-    // http plugin does not check for timestamps, like legacyhttp plugin did
+    // http plugin does not check for timestamps, like legacyHttp plugin did
     // test('pushing message with too future timestamp to HTTP plugin returns 400 error & does not crash broker', async () => {
     //     const streamMessage = buildMsg(
     //         streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 15) * 1000,
