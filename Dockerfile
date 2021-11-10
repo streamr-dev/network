@@ -7,7 +7,10 @@ RUN npm set unsafe-perm true && \
 	npm ci && \
 	npm run bootstrap-pkg streamr-broker && \
 	# image contains all packages, remove devDeps to keep image size down
-	npx lerna exec -- npm prune --production && \
+	# --ignore-scripts as sqlite package in the client tries running its
+	# 'install' script, which uses node-pre-gyp, which is a devDependency that
+	# gets removed by prune.
+	npx lerna exec -- npm prune --production --ignore-scripts && \
 	# restore inter-package symlinks removed by npm prune
 	npx lerna link
 
