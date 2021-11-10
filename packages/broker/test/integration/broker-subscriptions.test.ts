@@ -6,8 +6,6 @@ import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
 import { startBroker, fastPrivateKey, createClient, createTestStream, getSPIDKeys, createMockUser } from '../utils'
 
-const httpPort1 = 13381
-const httpPort2 = 13382
 const wsPort1 = 13391
 const wsPort2 = 13392
 const trackerPort = 13410
@@ -57,7 +55,6 @@ describe('broker subscriptions', () => {
             name: 'broker1',
             privateKey: broker1User.privateKey,
             trackerPort,
-            httpPort: httpPort1,
             wsPort: wsPort1,
             extraPlugins: {
                 mqtt: {
@@ -69,7 +66,6 @@ describe('broker subscriptions', () => {
             name: 'broker2',
             privateKey: broker2User.privateKey,
             trackerPort,
-            httpPort: httpPort2,
             wsPort: wsPort2,
             extraPlugins: {
                 mqtt: {

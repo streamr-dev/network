@@ -50,7 +50,6 @@ export const formConfig = ({
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
-        plugins['legacyPublishHttp'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
