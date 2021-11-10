@@ -85,19 +85,19 @@ jobs:
           timeout_minutes: 15
           retry_on: error
           command: cd packages/cross-client-testing && DEBUG='' make run
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2.0.2
+        with:
+          dest: 'logs'
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: docker-logs-${{ matrix.test-name }}-${{ matrix.config-name }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          path: logs
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
-      - name: Collect docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v2.0.2
-        with:
-          dest: 'packages/cross-client-testing/logs'
-      - name: Upload logs to GitHub
-        if: failure()
-        uses: actions/upload-artifact@v2
-        with:
-          name: docker-logs-${{ github.job }}-${{ github.run_number }}-${{ github.run_id }}
-          path: packages/cross-client-testing/logs
