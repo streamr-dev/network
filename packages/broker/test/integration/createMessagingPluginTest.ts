@@ -90,7 +90,7 @@ export const createMessagingPluginTest = <T>(
         })
 
         beforeEach(async () => {
-            streamrClient = createClient(tracker, brokerUser.privateKey)
+            streamrClient = await createClient(tracker, brokerUser.privateKey)
             stream = await createTestStream(streamrClient, testModule)
             messageQueue = new Queue<Message>()
         })

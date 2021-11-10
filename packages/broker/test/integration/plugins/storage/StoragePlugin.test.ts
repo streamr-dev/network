@@ -1,7 +1,7 @@
 import { MetricsContext, Protocol } from 'streamr-network'
 import { StoragePlugin } from '../../../../src/plugins/storage/StoragePlugin'
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
-import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { getPrivateKey, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
 import { Wallet } from 'ethers'
 

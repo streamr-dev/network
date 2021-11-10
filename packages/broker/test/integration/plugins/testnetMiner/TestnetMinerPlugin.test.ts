@@ -78,7 +78,7 @@ describe('TestnetMinerPlugin', () => {
                 port: TRACKER_PORT
             },
         })
-        client = createClient(tracker, rewardPublisherPrivateKey)
+        client = await createClient(tracker, rewardPublisherPrivateKey)
         const rewardStream = await createRewardStream(client)
         rewardStreamId = rewardStream.id
         claimServer = new MockClaimServer()

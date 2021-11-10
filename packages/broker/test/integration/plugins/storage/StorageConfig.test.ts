@@ -72,7 +72,7 @@ describe('StorageConfig', () => {
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true
         })
-        const storageNodeClient = createClient(tracker, storageNodeAccount.privateKey)
+        const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
         await storageNodeClient.setNode(`http://127.0.0.1:${HTTP_PORT}`)
         broker = await startBroker({
             name: 'broker',
@@ -82,7 +82,7 @@ describe('StorageConfig', () => {
             streamrUrl: STREAMR_URL,
             enableCassandra: false
         })
-        client = createClient(tracker, publisherAccount.privateKey)
+        client = await createClient(tracker, publisherAccount.privateKey)
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     })

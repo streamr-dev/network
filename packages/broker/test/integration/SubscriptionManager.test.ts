@@ -54,8 +54,8 @@ describe('SubscriptionManager', () => {
 
         await wait(2000)
 
-        client1 = createClient(tracker, await getPrivateKey())
-        client2 = createClient(tracker, await getPrivateKey())
+        client1 = await createClient(tracker, await getPrivateKey())
+        client2 = await createClient(tracker, await getPrivateKey())
 
         mqttClient1 = createMqttClient(mqttPort1, 'localhost', await getPrivateKey())
         mqttClient2 = createMqttClient(mqttPort2, 'localhost', await getPrivateKey())
@@ -108,18 +108,14 @@ describe('SubscriptionManager', () => {
 
         await mqttClient1.unsubscribe(freshStream1.id)
 
-        await waitForCondition(() => getSPIDKeys(broker1).length === 1)
         await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
-        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream2.id + '#0'])
         expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
 
         await mqttClient1.unsubscribe(freshStream2.id)
 
-        await waitForCondition(() => getSPIDKeys(broker1).length === 0)
         await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
-        expect(getSPIDKeys(broker1)).toIncludeSameMembers([])
         expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
     }, 10000)
 })

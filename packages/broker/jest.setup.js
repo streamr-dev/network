@@ -14,6 +14,7 @@ export default async () => {
         const hexString = c.toString(16)
         const privkey = '0x' + hexString.padStart(64, '0')
         log('key endpoint called, returning key ' + privkey)
+        if (c > 1000 ) { c = 0 }
         res.send(privkey)
     })
     app.listen(45454)

@@ -28,9 +28,9 @@ describe.skip('ping-pong test between broker and clients', () => {
             },
             id: 'tracker'
         })
-        client1 = createClient(tracker)
-        client2 = createClient(tracker)
-        client3 = createClient(tracker)
+        client1 = await createClient(tracker)
+        client2 = await createClient(tracker)
+        client3 = await createClient(tracker)
         metricsContext = new MetricsContext(null as any)
         networkNode = await client1.getNode()
         websocketServer = new WebsocketServer(

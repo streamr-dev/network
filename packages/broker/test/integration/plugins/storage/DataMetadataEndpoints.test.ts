@@ -62,7 +62,7 @@ describe('DataMetadataEndpoints', () => {
             streamrAddress: engineAndEditorAccount.address,
             storageNodeConfig: { registry: storageNodeRegistry }
         })
-        client1 = createClient(tracker, await getPrivateKey(), {
+        client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
