@@ -1,11 +1,12 @@
 FROM node:16-buster as build
 WORKDIR /usr/src/monorepo
-COPY . .
 RUN npm set unsafe-perm true && \
 	# explicitly use npm v6
-	npm install -g npm@6 && \
-	npm ci && \
-	npm run bootstrap-pkg streamr-broker
+	npm install -g npm@6 --prefer-offline
+COPY ["./*.json", "./*.js", "./*.mjs", ".npmrc",  ".gitignore", "./"]
+RUN npm ci
+COPY ["./packages", "./packages"]
+RUN npm run bootstrap-pkg -- streamr-broker
 
 # image contains all packages, remove devDeps to keep image size down
 # --ignore-scripts as sqlite package in the client tries running its
@@ -31,4 +32,6 @@ EXPOSE 7170/tcp
 EXPOSE 7171/tcp
 
 WORKDIR /usr/src/monorepo/packages/broker
-CMD ./bin/broker.js # start broker from default config
+
+# start broker from default config
+CMD ["./bin/broker.js"]
