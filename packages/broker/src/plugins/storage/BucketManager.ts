@@ -3,7 +3,6 @@ import Heap from 'heap'
 import { types as cassandraTypes } from 'cassandra-driver'
 import { Logger, Protocol } from 'streamr-network'
 import { Bucket, BucketId } from './Bucket'
-import { SPIDKey } from '../../../../network/node_modules/streamr-client-protocol/dist/src'
 const { TimeUuid } = cassandraTypes
 
 const logger = new Logger(module)
@@ -31,7 +30,7 @@ const instantiateNewHeap = () => new Heap((a: Bucket, b: Bucket) => {
 export class BucketManager {
 
     opts: BucketManagerOptions
-    spids: Record<SPIDKey,SPIDState>
+    spids: Record<Protocol.SPIDKey,SPIDState>
     buckets: Record<BucketId,Bucket>
     cassandraClient: Client
     private checkFullBucketsTimeout?: NodeJS.Timeout
@@ -99,7 +98,7 @@ export class BucketManager {
         }
     }
 
-    private getLatestInMemoryBucket(key: SPIDKey): Bucket|undefined {
+    private getLatestInMemoryBucket(key: Protocol.SPIDKey): Bucket|undefined {
         const spid = this.spids[key]
         if (spid) {
             return spid.buckets.peek()
@@ -107,7 +106,7 @@ export class BucketManager {
         return undefined
     }
 
-    private findBucketId(key: SPIDKey, timestamp: number): string|undefined {
+    private findBucketId(key: Protocol.SPIDKey, timestamp: number): string|undefined {
         let bucketId
         logger.trace(`checking stream partition: ${key}, timestamp: ${timestamp} in BucketManager state`)
 
