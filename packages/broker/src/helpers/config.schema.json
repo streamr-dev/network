@@ -191,6 +191,11 @@
               }
             }
           ]
+        },
+        "webrtcDisallowPrivateAddresses": {
+            "type": "boolean",
+            "description": "If true, disallow WebRTC from probing private addresses",
+            "default": false
         }
       }
     },
@@ -277,7 +282,7 @@
         },
         "url": {
           "type": "string"
-        }  
+        }
       }
     },
     "smartContractConfig": {

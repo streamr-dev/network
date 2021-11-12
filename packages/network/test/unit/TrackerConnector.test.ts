@@ -29,10 +29,10 @@ const TRACKERS = [
     },
 ]
 
-const T1_STREAM = SPID.from('a#0')
-const T2_STREAM = SPID.from('b#10')
-const T3_STREAM = SPID.from('c#12')
-const T4_STREAM = SPID.from('d#4')
+const T1_STREAM = SPID.from('streamOne#0')
+const T2_STREAM = SPID.from('streamOne#15')
+const T3_STREAM = SPID.from('streamSix#0')
+const T4_STREAM = SPID.from('streamTwo#0')
 
 describe(TrackerConnector, () => {
     let streams: Array<SPID>

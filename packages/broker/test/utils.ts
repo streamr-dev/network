@@ -1,6 +1,5 @@
 import crypto from 'crypto'
 import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
-import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'
@@ -20,7 +19,6 @@ interface TestConfig {
     generateSessionId?: boolean
     httpPort?: null | number
     wsPort?: null | number
-    legacyMqttPort?: null | number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: ApiAuthenticationConfig
     enableCassandra?: boolean
@@ -40,7 +38,6 @@ export const formConfig = ({
     generateSessionId = false,
     httpPort = null,
     wsPort = null,
-    legacyMqttPort = null,
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
@@ -53,7 +50,6 @@ export const formConfig = ({
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
-        plugins['legacyPublishHttp'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -77,12 +73,6 @@ export const formConfig = ({
             certFileName
         }
     }
-    if (legacyMqttPort) {
-        plugins['legacyMqtt'] = {
-            port: legacyMqttPort,
-            streamsTimeout: 300000
-        }
-    }
 
     return {
         ethereumPrivateKey: privateKey,
@@ -103,7 +93,8 @@ export const formConfig = ({
                 city: 'Helsinki'
             },
             stun: null,
-            turn : null
+            turn: null,
+            webrtcDisallowPrivateAddresses: false
         },
         streamrUrl,
         streamrAddress,
@@ -152,15 +143,6 @@ export const createClient = (
             trackers: [tracker.getConfigRecord()]
         },
         ...clientOptions,
-    })
-}
-
-export const createMqttClient = (mqttPort = 9000, host = 'localhost', privateKey = fastPrivateKey()): mqtt.AsyncClient => {
-    return mqtt.connect({
-        hostname: host,
-        port: mqttPort,
-        username: '',
-        password: privateKey
     })
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "5.0.1",
+  "version": "6.0.0-alpha.0",
   "description": "Command line tools for Streamr.",
   "bin": {
     "streamr": "dist/bin/streamr.js"
@@ -33,7 +33,7 @@
     "easy-table": "^1.1.1",
     "ethers": "^5.3.1",
     "event-stream": "^4.0.1",
-    "streamr-client": "^6.0.0-alpha.11"
+    "streamr-client": "6.0.0-alpha.17"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",

@@ -50,6 +50,7 @@
     "express": "^4.17.1",
     "geoip-lite": "^1.4.2",
     "heap": "^0.2.6",
+    "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
     "node-datachannel": "^0.1.11",

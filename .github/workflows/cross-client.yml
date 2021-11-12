@@ -1,3 +1,4 @@
+---
 name: Cross-Client Testing
 
 # Be sure to update both workflow files if you edit any env or trigger config
@@ -16,18 +17,13 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
-
+    - cron: '0 0 * * *'
 # Be sure to update both workflow files if you edit any env or trigger config
+concurrency:
+  group: cross-client-testing-build-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
   cross-client-testing:
     name: ${{ matrix.config-name }} ${{ matrix.test-name }}
     runs-on: ubuntu-latest
@@ -53,19 +49,14 @@ jobs:
       TEST_NAME: ${{ matrix.test-name }}
       CONFIG_NAME: ${{ matrix.config-name }}
     steps:
-      - uses: actions/checkout@v2.3.5
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: "14.x"
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
@@ -75,6 +66,14 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '8'
+      - uses: actions/cache@v2.1.6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -86,6 +85,11 @@ jobs:
           timeout_minutes: 15
           retry_on: error
           command: cd packages/cross-client-testing && DEBUG='' make run
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
@@ -93,7 +97,7 @@ jobs:
           dest: 'packages/cross-client-testing/logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         with:
           name: docker-logs-${{ github.job }}-${{ github.run_number }}-${{ github.run_id }}
           path: packages/cross-client-testing/logs

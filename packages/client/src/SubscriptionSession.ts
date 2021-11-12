@@ -100,7 +100,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
-        node.subscribe(this.spid)
+        node.unsubscribe(this.spid)
     }
 
     updateNodeSubscriptions = (() => {

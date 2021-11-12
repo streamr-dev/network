@@ -133,6 +133,10 @@ export default class StreamrEthereum {
         }
     }
 
+    isAuthenticated() {
+        return (this._getAddress !== undefined)
+    }
+
     canEncrypt() {
         return !!(this._getAddress && this._getSigner)
     }
