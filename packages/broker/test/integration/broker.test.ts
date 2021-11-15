@@ -53,7 +53,10 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeConfig: { registry: storageNodeRegistry },
+            extraPlugins: {
+                publishHttp: {}
+            }
         })
         brokerNode1 = await startBroker({
             name: 'brokerNode1',
@@ -96,6 +99,7 @@ describe('broker: end-to-end', () => {
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort)
         await freshStream.grantPermission(StreamOperation.STREAM_GET, user2.address)
         await freshStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
+        await freshStream.grantPermission(StreamOperation.STREAM_PUBLISH, storageNodeAccount.address)
     }, 30 * 1000)
 
     afterAll(async () => {
@@ -211,11 +215,8 @@ describe('broker: end-to-end', () => {
 
         for (let i = 1; i <= 3; ++i) {
             // eslint-disable-next-line no-await-in-loop
-            await fetch(`http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data`, {
-                method: 'post',
-                headers: {
-                    Authorization: 'Bearer ' + await client1.session.getSessionToken()
-                },
+            await fetch(`http://localhost:${httpPort}/streams/${encodeURIComponent(freshStreamId)}`, {
+                method: 'POST',
                 body: JSON.stringify({
                     key: i
                 })
