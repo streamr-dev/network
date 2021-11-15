@@ -1,6 +1,4 @@
-import url from 'url'
 import WebSocket from 'ws'
-import fetch from 'node-fetch'
 import { startTracker, Protocol, Tracker } from 'streamr-network'
 import { startBroker, createClient, createTestStream } from '../utils'
 import StreamrClient from 'streamr-client'
@@ -12,7 +10,6 @@ const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
 const trackerPort = 19420
 const httpPort = 19422
 const wsPort = 19423
-const mqttPort = 19424
 
 const thresholdForFutureMessageSeconds = 5 * 60
 
@@ -51,8 +48,7 @@ describe('broker drops future messages', () => {
             privateKey: '0x0381aa979c2b85ce409f70f6c64c66f70677596c7acad0b58763b0990cd5fbff',
             trackerPort,
             httpPort,
-            wsPort,
-            legacyMqttPort: mqttPort
+            wsPort
         })
 
         client = createClient(tracker)
@@ -65,48 +61,6 @@ describe('broker drops future messages', () => {
         await broker.stop()
         await tracker.stop()
         await client.destroy()
-    })
-
-    test('pushing message with too future timestamp to HTTP plugin returns 400 error & does not crash broker', async () => {
-        const streamMessage = buildMsg(
-            streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 5) * 1000,
-            0, 'publisher', '1', {}
-        )
-
-        const query = {
-            ts: streamMessage.getTimestamp(),
-            address: streamMessage.getPublisherId(),
-            msgChainId: streamMessage.messageId.msgChainId,
-            signatureType: streamMessage.signatureType,
-            signature: streamMessage.signature,
-        }
-
-        const streamUrl = url.format({
-            protocol: 'http',
-            hostname: '127.0.0.1',
-            port: httpPort,
-            pathname: `/api/v1/streams/${encodeURIComponent(streamId)}/data`,
-            query
-        })
-
-        const settings = {
-            method: 'POST',
-            body: streamMessage.serialize(),
-            headers: {
-                Authorization: 'Bearer ' + token,
-                Accept: 'application/json',
-                'Content-Type': 'application/json'
-            }
-        }
-
-        return fetch(streamUrl, settings)
-            .then((res) => {
-                expect(res.status).toEqual(400)
-                return res.json()
-            })
-            .then((json) => {
-                expect(json.error).toContain('future timestamps are not allowed')
-            })
     })
 
     test('pushing message with too future timestamp to Websocket plugin returns error & does not crash broker', (done) => {

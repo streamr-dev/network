@@ -473,7 +473,7 @@ These are available for everyone and anyone, to query publicly available info fr
 | Name                                                       | Returns                                        | Description                             |
 | :--------------------------------------------------------- | :--------------------------------------------- | :-------------------------------------- |
 | getStats()                                                 | {activeMemberCount, totalEarnings, ...}        | Get Data Union's statistics             |
-| getMemberStats(memberAddress)                              | {earnings, proof, ...}                         | Get member's stats                      |
+| getMemberStats(memberAddress)                              | {status, totalEarnings, withdrawableEarnings}  | Get member's stats                      |
 | getWithdrawableEarnings(memberAddress)                     | `BigNumber` withdrawable DATA tokens in the DU |                                         |
 | getAdminFee()                                              | `Number` between 0.0 and 1.0 (inclusive)       | Admin's cut from revenues               |
 | getAdminAddress()                                          | Ethereum address                               | Data union admin's address              |
