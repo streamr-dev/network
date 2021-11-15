@@ -44,6 +44,7 @@ jobs:
           npm run bootstrap-pkg streamr-broker
       - run: npm run eslint
       - run: npm run test-unit
+
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
@@ -79,13 +80,10 @@ jobs:
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
-  docker:
-    needs: [test-unit, test-integration]
-    name: Build, test, and publish Docker images
+  test-docker:
+    name: Build + Test Docker images
     runs-on: self-hosted
-
-    # run job only for main and tags
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v2.4.0
       - name: Cache Docker layers
@@ -114,7 +112,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "broker-node-no-storage-1 parity-node0 parity-sidechain-node0"
+          services-to-start: "nginx trackers parity-node0 parity-sidechain-node0 broker-node-no-storage-1"
       - run: |
           for (( i=0; i < 5; i=i+1 )); do
               curl -s http://localhost:8791/api/v1/volume;
@@ -128,18 +126,65 @@ jobs:
               fi;
           done;
           exit 1
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2.0.2
+        with:
+          dest: 'logs'
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          path: 'logs'
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
+
+  docker-push:
+    name: Build + Push Docker images
+    needs: [test-unit, test-integration, test-docker]
+    runs-on: self-hosted
+    # only push for main and tags
+    if: ${{ always() && github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
+
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.6
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          driver-opts: |
+            network=host
       - uses: docker/login-action@v1.10.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Docker meta
-        id: docker_meta
+        id: docker_meta_failure
         uses: docker/metadata-action@v3.6.0
+        # if test steps failed, push sha anyway
+        if: ${{ always() && (needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
+        with:
+          images: streamr/broker-node
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=raw,value=debug
+      - name: Docker meta
+        id: docker_meta_success
+        uses: docker/metadata-action@v3.6.0
+        # if test steps succeeded
+        if: ${{ always() && !(needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
         with:
           images: streamr/broker-node
           tags: |
@@ -157,7 +202,7 @@ jobs:
         with:
           driver-opts: |
             network=host
-      - name: Build
+      - name: Build & Push
         uses: docker/build-push-action@v2.7.0
         with:
           context: .
@@ -165,13 +210,14 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           load: false
-          tags: ${{ steps.docker_meta.outputs.tags }}
+          # only one of these should have tags
+          tags: ${{ steps.docker_meta_success.outputs.tags }}${{ steps.docker_meta_failure.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
   publish:
-    needs: [test-unit, test-integration]
+    needs: [test-unit, test-integration, test-docker, docker-push]
     name: Publishing main using Node 16
     runs-on: ubuntu-latest
 
