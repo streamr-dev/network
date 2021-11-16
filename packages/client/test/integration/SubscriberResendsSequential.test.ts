@@ -1,5 +1,4 @@
 import {
-    Msg,
     clientOptions,
     describeRepeats,
     fakePrivateKey,
@@ -12,7 +11,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
 
-const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 12000 : 6000
+const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 25000 : 6000
 const MAX_MESSAGES = 5
 const ITERATIONS = 6
 
@@ -47,7 +46,6 @@ describeRepeats('sequential resend subscribe', () => {
             timeout: WAIT_FOR_STORAGE_TIMEOUT,
         })
 
-        await client.connect()
         // initialize resend data by publishing some messages and waiting for
         // them to land in storage
         published = await publishTestMessages(MAX_MESSAGES, {
@@ -56,16 +54,11 @@ describeRepeats('sequential resend subscribe', () => {
         })
     }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
-    beforeEach(async () => {
-        await client.connect()
-    })
-
     afterEach(async () => {
-        await client.connect()
         // ensure last message is in storage
         const last = published[published.length - 1]
         await waitForStorage(last)
-    })
+    }, WAIT_FOR_STORAGE_TIMEOUT)
 
     for (let i = 0; i < ITERATIONS; i++) {
         // keep track of which messages were published in previous tests
@@ -82,15 +75,15 @@ describeRepeats('sequential resend subscribe', () => {
 
             const onResent = jest.fn()
             sub.onResent(onResent)
+            // eslint-disable-next-line require-atomic-updates
+            published = await publishTestMessages(1, {
+                waitForLast: true,
+                timestamp: id,
+            })
 
-            const message = Msg()
-            // eslint-disable-next-line no-await-in-loop
-            const streamMessage = await client.publish(stream.id, message, id) // should be realtime
-            // keep track of published messages so we can check they are resent in next test(s)
-            published.push(streamMessage)
             const msgs = await sub.collect(published.length)
             expect(msgs).toHaveLength(published.length)
             expect(msgs).toEqual(published)
-        })
+        }, WAIT_FOR_STORAGE_TIMEOUT)
     }
 })
