@@ -2,6 +2,7 @@ import { Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
+import Contracts from '../../../src/dataunion/Contracts'
 import { clientOptions, providerMainnet, providerSidechain } from '../devEnvironment'
 import { getRandomClient, expectInvalidAddress } from '../../utils'
 
@@ -22,16 +23,17 @@ describe('DataUnion calculate', () => {
         log('Connected to sidechain network: ', JSON.stringify(network2))
 
         const adminClient = new StreamrClient(clientOptions as any)
-
         const dataUnionName = 'test-' + Date.now()
-        // eslint-disable-next-line no-underscore-dangle
-        const dataUnionPredicted = adminClient._getDataUnionFromName({ dataUnionName, deployerAddress: adminWalletMainnet.address })
+
+        const contracts = new Contracts(adminClient)
+        const mainnetAddressPredicted = contracts.calculateDataUnionMainnetAddress(dataUnionName, adminWalletMainnet.address)
+        const sidechainAddressPredicted = contracts.calculateDataUnionSidechainAddress(mainnetAddressPredicted)
 
         const dataUnionDeployed = await adminClient.deployDataUnion({ dataUnionName })
         const version = await dataUnionDeployed.getVersion()
 
-        expect(dataUnionPredicted.getAddress()).toBe(dataUnionDeployed.getAddress())
-        expect(dataUnionPredicted.getSidechainAddress()).toBe(dataUnionDeployed.getSidechainAddress())
+        expect(dataUnionDeployed.getAddress()).toBe(mainnetAddressPredicted)
+        expect(dataUnionDeployed.getSidechainAddress()).toBe(sidechainAddressPredicted)
         expect(version).toBe(2)
     }, 60000)
 

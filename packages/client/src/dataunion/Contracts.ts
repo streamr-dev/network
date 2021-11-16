@@ -20,6 +20,7 @@ function validateAddress(name: string, address: EthereumAddress) {
     }
 }
 
+/* TODO: remove this class and inline its functions into DataUnion.ts */
 export default class Contracts {
 
     ethereum: StreamrEthereum
@@ -50,10 +51,13 @@ export default class Contracts {
         return factoryMainnet.mainnetAddress(deployerAddress, dataUnionName)
     }
 
-    getDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress) {
+    /** NOTE: if template address is not given, calculation only works for the newest currently deployed factory, i.e. can be used for "future deployments" but not necessarily old deployments */
+    calculateDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress, templateMainnetAddress?: EthereumAddress) {
         validateAddress("deployer's address", deployerAddress)
+        const templateAddress = templateMainnetAddress || this.templateMainnetAddress
+        validateAddress('DU template mainnet address', templateAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateMainnetAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
+        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
         const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
         return getCreate2Address(this.factoryMainnetAddress, salt, codeHash)
     }
@@ -64,10 +68,13 @@ export default class Contracts {
         return factoryMainnet.sidechainAddress(duMainnetAddress)
     }
 
-    getDataUnionSidechainAddress(mainnetAddress: EthereumAddress) {
+    /** NOTE: if template address is not given, calculation only works for the newest currently deployed factory, i.e. can be used for "future deployments" but not necessarily old deployments */
+    calculateDataUnionSidechainAddress(mainnetAddress: EthereumAddress, templateSidechainAddress?: EthereumAddress) {
         validateAddress('DU mainnet address', mainnetAddress)
+        const templateAddress = templateSidechainAddress || this.templateSidechainAddress
+        validateAddress('DU template sidechain address', templateAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const code = `0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateSidechainAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`
+        const code = `0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`
         const codeHash = keccak256(code)
         return getCreate2Address(this.factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
     }
@@ -87,7 +94,7 @@ export default class Contracts {
     async getSidechainContract(contractAddress: EthereumAddress) {
         const signer = await this.ethereum.getSidechainSigner()
         const duMainnet = this.getMainnetContractReadOnly(contractAddress)
-        const duSidechainAddress = this.getDataUnionSidechainAddress(duMainnet.address)
+        const duSidechainAddress = await this.fetchDataUnionSidechainAddress(duMainnet.address)
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, signer)
         return duSidechain
     }
@@ -95,7 +102,7 @@ export default class Contracts {
     async getSidechainContractReadOnly(contractAddress: EthereumAddress) {
         const provider = this.ethereum.getSidechainProvider()
         const duMainnet = this.getMainnetContractReadOnly(contractAddress)
-        const duSidechainAddress = this.getDataUnionSidechainAddress(duMainnet.address)
+        const duSidechainAddress = await this.fetchDataUnionSidechainAddress(duMainnet.address)
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, provider)
         return duSidechain
     }

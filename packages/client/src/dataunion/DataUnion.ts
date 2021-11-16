@@ -734,21 +734,7 @@ export class DataUnion {
 
     // Internal functions
 
-    /** @internal */
-    static _fromContractAddress(contractAddress: string, client: StreamrClient) {
-        const contracts = new Contracts(client)
-        const sidechainAddress = contracts.getDataUnionSidechainAddress(contractAddress) // throws if bad address
-        return new DataUnion(contractAddress, sidechainAddress, client)
-    }
-
-    /** @internal */
-    static _fromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}, client: StreamrClient) {
-        const contracts = new Contracts(client)
-        const contractAddress = contracts.getDataUnionMainnetAddress(dataUnionName, deployerAddress) // throws if bad address
-        return DataUnion._fromContractAddress(contractAddress, client) // eslint-disable-line no-underscore-dangle
-    }
-
-    /** @internal */
+    /** @internal  TODO: remove, inline into the tests that use this */
     async _getContract() {
         const ret = this.getContracts().getMainnetContract(this.contractAddress)
         // @ts-expect-error
