@@ -566,6 +566,14 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return DataUnion._createSetBinanceRecipientSignature(to, signer, new Contracts(this)) // eslint-disable-line no-underscore-dangle
     }
 
+    /** @internal used by Marketplace to predict deployed address */
+    _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: EthereumAddress}) {
+        const contracts = new Contracts(this)
+        const mainnetAddressPredicted = contracts.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress)
+        const sidechainAddressPredicted = contracts.calculateDataUnionSidechainAddress(mainnetAddressPredicted)
+        return new DataUnion(mainnetAddressPredicted, sidechainAddressPredicted, this)
+    }
+
     /**
      * @category Important
      */
