@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
     env:
       TEST_REPEATS: 5
     steps:
@@ -78,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
         test-name: [
           "test-integration-no-resend",
           "test-integration-resend",
