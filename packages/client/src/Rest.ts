@@ -9,7 +9,7 @@ import { ConnectionConfig, Config } from './Config'
 import authFetch, { authRequest } from './authFetch'
 import { Context } from './utils/Context'
 import { Readable } from 'stream'
-import { ConvertBrowserStream } from './utils/ConvertBrowserStream'
+import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 
 import Session from './Session'
 import { BrubeckContainer } from './Container'
@@ -144,7 +144,7 @@ export class Rest implements Context {
             throw new Error('No Response Body')
         }
 
-        const stream = ConvertBrowserStream(response.body as unknown as (ReadableStream | Readable))
+        const stream = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
 
         stream.once('close', () => {
             abortController.abort()
