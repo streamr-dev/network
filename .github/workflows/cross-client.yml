@@ -52,11 +52,9 @@ jobs:
       - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
-          node-version: "14.x"
+          node-version: "16.x"
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
