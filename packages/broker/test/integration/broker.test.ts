@@ -12,7 +12,7 @@ import {
     waitForStreamPersistedInStorageNode
 } from '../utils'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
-import { Broker } from '../broker'
+import { Broker } from '../../src/broker'
 
 const httpPort = 12341
 const wsPort1 = 12351
@@ -62,7 +62,10 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeConfig: { registry: storageNodeRegistry },
+            extraPlugins: {
+                publishHttp: {}
+            }
         })
         brokerNode1 = await startBroker({
             name: 'brokerNode1',
@@ -103,7 +106,8 @@ describe('broker: end-to-end', () => {
         freshStreamId = freshStream.id
         await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort)
-        await freshStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
+        await freshStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
+        await freshStream.grantPermission(StreamOperation.STREAM_PUBLISH, storageNodeAccount.address)
     })
 
     afterAll(async () => {

@@ -199,7 +199,13 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             const newStream = await client.getOrCreateStream({
                 id: newPath,
             })
-            return expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+            expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+
+            // ensure can get after create i.e. doesn't try create again
+            const sameStream = await client.getOrCreateStream({
+                id: newPath,
+            })
+            expect(sameStream.id).toEqual(newStream.id)
         })
 
         it('fails if stream prefixed with other users address', async () => {
@@ -377,25 +383,6 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)).toBeTruthy()
             })
 
-            // it('does not error if creating multiple permissions in parallel', async () => {
-            //     await Promise.all([
-            //         createdStream.grantUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address),
-            //     ])
-            //     expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).toBeTruthy()
-            // })
-
-            // it('does not error or create duplicates if creating multiple identical permissions in parallel', async () => {
-            //     await createdStream.revokeAllUserPermissions(otherWallet.address)
-            //     await Promise.all([
-            //         createdStream.grantUserPermission(StreamOperation.STREAM_PUBLISH, otherWallet.address),
-            //         createdStream.grantUserPermission(StreamOperation.STREAM_PUBLISH, otherWallet.address),
-            //         createdStream.grantUserPermission(StreamOperation.STREAM_PUBLISH, otherWallet.address),
-            //         createdStream.grantUserPermission(StreamOperation.STREAM_PUBLISH, otherWallet.address),
-            //     ])
-            //     expect(await createdStream.hasUserPermission(StreamOperation.STREAM_PUBLISH, otherWallet.address)).toBeTruthy()
-            //     expect(await createdStream.getUserPermissions(otherWallet.address)).toHaveLength(1)
-            // })
-
             it('does not grant multiple permissions for same operation + user', async () => {
                 await createdStream.grantPublicPermission(StreamOperation.STREAM_SUBSCRIBE) // public read
                 const previousPermissions = await createdStream.getPermissions()
@@ -429,16 +416,6 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 await createdStream.revokePublicPermission(StreamOperation.STREAM_SUBSCRIBE)
                 expect(await createdStream.hasPublicPermission(StreamOperation.STREAM_SUBSCRIBE)).not.toBeTruthy()
             })
-
-            // it('does not error if revoking multiple permissions in parallel', async () => {
-            //     await createdStream.grantUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address)
-            //     await Promise.all([
-            //         createdStream.revokeUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address),
-            //         createdStream.revokeUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address),
-            //         createdStream.revokeUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address),
-            //     ])
-            //     expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).not.toBeTruthy()
-            // })
 
             it('errors if invalid permission id', async () => {
                 const INVALID_PERMISSION_IDS = [

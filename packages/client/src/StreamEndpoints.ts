@@ -154,10 +154,11 @@ export class StreamEndpoints implements Context {
         this.debug('getOrCreateStream %o', {
             props,
         })
+        const id = props.id ? await createStreamId(props.id, () => this.ethereum.getAddress()) : ''
         // Try looking up the stream by id or name, whichever is defined
         try {
             if (props.id) {
-                return await this.getStream(props.id)
+                return await this.getStream(id)
             }
             return await this.getStreamByName(props.name!)
         } catch (err: any) {

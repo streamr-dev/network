@@ -41,6 +41,14 @@ if (typeof window === 'undefined') {
     })
 }
 
+// e.g. in browser
+if (typeof util.formatWithOptions === 'undefined') {
+    util.formatWithOptions = (_opts, ...args) => {
+        // just ignore opts
+        return util.format(...args)
+    }
+}
+
 const streamrDebug = Debug('Streamr')
 
 const StreamrDebug = Object.assign(streamrDebug.extend.bind(streamrDebug), {

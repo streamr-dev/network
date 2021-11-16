@@ -1,7 +1,7 @@
 import { Client } from 'cassandra-driver'
 import { EventEmitter } from 'events'
-import { Protocol } from 'streamr-network'
 import { Logger } from 'streamr-network'
+import type { StreamMessage } from 'streamr-client-protocol'
 import { Batch, BatchId, DoneCallback } from './Batch'
 import { BucketId } from './Bucket'
 
@@ -62,7 +62,7 @@ export class BatchManager extends EventEmitter {
         this.logger.trace('create %o', this.opts)
     }
 
-    store(bucketId: BucketId, streamMessage: Protocol.StreamMessage, doneCb?: DoneCallback): void {
+    store(bucketId: BucketId, streamMessage: StreamMessage, doneCb?: DoneCallback): void {
         const batch = this.batches[bucketId]
 
         if (batch && batch.isFull()) {

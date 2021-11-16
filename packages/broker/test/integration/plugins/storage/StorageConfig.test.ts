@@ -13,7 +13,7 @@ import {
     createTestStream,
     getPrivateKey
 } from '../../../utils'
-import { Broker } from '../../../broker'
+import { Broker } from '../../../../src/broker'
 
 jest.setTimeout(30000)
 

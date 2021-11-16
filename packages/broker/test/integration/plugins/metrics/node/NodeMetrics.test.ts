@@ -37,6 +37,7 @@ describe('NodeMetrics', () => {
         client2 = await createClient(tracker, tmpAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -74,11 +75,11 @@ describe('NodeMetrics', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            tracker.stop(),
-            broker1.stop(),
-            storageNode.stop(),
-            client1.destroy(),
-            client2.destroy()
+            tracker?.stop(),
+            broker1?.stop(),
+            storageNode?.stop(),
+            client1?.destroy(),
+            client2?.destroy()
         ])
     }, 30 * 1000)
 

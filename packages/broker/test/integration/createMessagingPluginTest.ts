@@ -18,13 +18,13 @@ interface Ports {
     tracker: number
 }
 
-const MOCK_MESSAGE = { 
-    content: { 
-        foo: 'bar' 
-    }, 
+const MOCK_MESSAGE = {
+    content: {
+        foo: 'bar'
+    },
     metadata: {
         timestamp: 11111111
-    } 
+    }
 }
 const MOCK_API_KEY = 'mock-api-key'
 let brokerUser: Wallet
@@ -39,9 +39,9 @@ const assertReceivedMessage = (message: Message) => {
 }
 
 export const createMessagingPluginTest = <T>(
-    pluginName: string, 
-    api: MessagingPluginApi<T>, 
-    ports: Ports, 
+    pluginName: string,
+    api: MessagingPluginApi<T>,
+    ports: Ports,
     testModule: NodeJS.Module,
     pluginConfig: any = {}
 ): any => {

@@ -1,9 +1,11 @@
 // Add important parts of Jest to the Karma/Jasmine browser-test runtime's global scope
 // the jest.fn() API
+import 'jest-extended'
 import * as jestMock from 'jest-mock'
 import { ModernFakeTimers } from '@jest/fake-timers'
 // The matchers API
 import expect from 'expect'
+import jestExtendedMatchers from 'jest-extended/dist/matchers'
 
 let jest = jestMock
 const timers = new ModernFakeTimers({global: window, config: null })
@@ -26,6 +28,8 @@ jest.useRealTimers = timers.useRealTimers
 jest._checkFakeTimers = timers._checkFakeTimers
 
 Object.assign(jest,timers)
+
+expect.extend(jestExtendedMatchers)
 
 // Add missing Jest functions
 window.test = window.it

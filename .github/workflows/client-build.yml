@@ -48,7 +48,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
@@ -80,7 +80,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: test-types
         run: npm run test-types
@@ -88,7 +88,6 @@ jobs:
         run: npm run test-exports
 
   browser-realtime:
-    if: ${{ false }}
     name: Test Browser Realtime using Node ${{ matrix.node-version }}
     strategy:
       matrix:
@@ -111,13 +110,13 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2.4.1
+      - uses: nick-invision/retry@v2
         name: Run Realtime Test
         with:
           max_attempts: 3
@@ -131,7 +130,6 @@ jobs:
           docker rm $(docker ps -a -q)
 
   browser-resend:
-    if: ${{ false }}
     name: Test Browser Realtime + Resend using Node ${{ matrix.node-version }}
     strategy:
       matrix:
@@ -154,13 +152,13 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - uses: nick-invision/retry@v2.4.1
+      - uses: nick-invision/retry@v2
         name: Run Resend Test
         with:
           max_attempts: 3
@@ -201,7 +199,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8
           npm run bootstrap-pkg streamr-client
       - name: benchmark publish
         timeout-minutes: 15

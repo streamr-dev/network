@@ -1,5 +1,6 @@
-import { Logger, Protocol, MetricsContext } from 'streamr-network'
+import { Logger, MetricsContext } from 'streamr-network'
 import StreamrClient from 'streamr-client'
+import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'

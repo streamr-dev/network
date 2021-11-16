@@ -12,7 +12,6 @@ module.exports = function (config) {
         basePath: '.',
         frameworks: ['jasmine'],
         reporters: ['spec'],
-          
         files: [
             './karma-setup.js',
             './test/browser/BrowserWebRtcConnection.test.ts',

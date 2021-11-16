@@ -1,6 +1,7 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.node.json",
     "compilerOptions": {
+        "composite": true,
         "declarationDir": "dist/types",
         "outDir": "dist",
         "lib": [
@@ -19,8 +20,16 @@
         "strictBindCallApply": true
     },
     "include": [
+        "package.json",
         "src/**/*",
         "vendor/**/*",
-        "contracts/**/*"
+        "contracts/**/*.json"
+    ],
+    "exclude": [
+        "src/shim/*"
+    ],
+    "references": [
+        { "path": "../network/tsconfig.node.json" },
+        { "path": "../protocol/tsconfig.node.json" }
     ]
 }

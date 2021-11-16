@@ -1,6 +1,5 @@
 import crypto from 'crypto'
-import StreamrClient, { MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
-import mqtt from 'async-mqtt'
+import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'
@@ -19,7 +18,6 @@ interface TestConfig {
     generateSessionId?: boolean
     httpPort?: null | number
     wsPort?: null | number
-    mqttPort?: null | number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: ApiAuthenticationConfig
     enableCassandra?: boolean
@@ -39,7 +37,6 @@ export const formConfig = ({
     generateSessionId = false,
     httpPort = null,
     wsPort = null,
-    mqttPort = null,
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
@@ -60,7 +57,6 @@ export const formConfig = ({
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
-        plugins['publishHttp'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -82,11 +78,6 @@ export const formConfig = ({
             pingInterval: 3000,
             privateKeyFileName,
             certFileName
-        }
-    }
-    if (mqttPort) {
-        plugins['mqtt'] = {
-            port: mqttPort
         }
     }
 
@@ -165,15 +156,6 @@ export const createClient = async (
             trackers: [tracker.getConfigRecord()]
         },
         ...clientOptions,
-    })
-}
-
-export const createMqttClient = (mqttPort = 9000, host = 'localhost', privateKey = fastPrivateKey()): mqtt.AsyncClient => {
-    return mqtt.connect({
-        hostname: host,
-        port: mqttPort,
-        username: '',
-        password: privateKey
     })
 }
 

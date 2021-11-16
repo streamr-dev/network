@@ -8,6 +8,8 @@ import { instanceId } from './utils'
 import { ConnectionConfig, Config } from './Config'
 import authFetch, { authRequest } from './authFetch'
 import { Context } from './utils/Context'
+import { Readable } from 'stream'
+import { ConvertBrowserStream } from './utils/ConvertBrowserStream'
 
 import Session from './Session'
 import { BrubeckContainer } from './Container'
@@ -132,7 +134,7 @@ export class Rest implements Context {
         })
     }
 
-    async stream(urlParts: UrlParts, options: FetchOptions = {}, abortController = new AbortController()) {
+    async stream(urlParts: UrlParts, options: FetchOptions = {}, abortController = new AbortController()): Promise<Readable> {
         const startTime = Date.now()
         const response = await this.request(urlParts, {
             ...options,
@@ -142,10 +144,16 @@ export class Rest implements Context {
             }
         })
 
-        const stream = response.body
+        if (!response.body) {
+            throw new Error('No Response Body')
+        }
+
+        const stream = ConvertBrowserStream(response.body as unknown as (ReadableStream | Readable))
+
         stream.once('close', () => {
             abortController.abort()
         })
+
         return Object.assign(stream, {
             startTime,
         })

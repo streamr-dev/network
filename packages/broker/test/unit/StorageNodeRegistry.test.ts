@@ -3,6 +3,9 @@ import { Server } from 'http'
 import { once } from 'events'
 import express, { Request, Response} from 'express'
 
+import { Config } from '../../src/config'
+import { StorageNodeRegistry } from '../../src/StorageNodeRegistry'
+
 const mockCoreApiServerPort = 17755
 
 const createMockCoreApiServer = async () => {
@@ -38,7 +41,7 @@ describe.skip('StorageNodeRegistry', () => {
         mockCoreApiServer.close()
         await once(mockCoreApiServer, 'close')
     })
-    
+
     beforeEach(() => {
         const storageNodes = [{
             address: '0x1111111111111111111111111111111111111111',

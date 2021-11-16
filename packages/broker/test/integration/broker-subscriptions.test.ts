@@ -1,5 +1,6 @@
-import { AsyncMqttClient } from 'async-mqtt'
-import StreamrClient, { Stream } from 'streamr-client'
+import { Wallet } from '@ethersproject/wallet'
+import mqtt, { AsyncMqttClient } from 'async-mqtt'
+import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../broker'
@@ -8,14 +9,30 @@ import { startBroker, createClient, createMqttClient, createTestStream, getPriva
 jest.setTimeout(30000)
 
 const httpPort1 = 13381
-const httpPort2 = 13382
+
 const wsPort1 = 13391
 const wsPort2 = 13392
 const trackerPort = 13410
 const mqttPort1 = 13551
 const mqttPort2 = 13552
 
-describe('SubscriptionManager', () => {
+const createMqttClient = (mqttPort: number) => {
+    return mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
+}
+
+const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
+    // TODO we could run these permission grants in parallel, but Core API can fail with
+    // error Duplicate entry '...' for key 'username_idx' when it creates the
+    // target users
+    for await (const s of streams) {
+        for await (const u of brokerUsers) {
+            await s.grantPermission(StreamOperation.STREAM_GET, u.address)
+            await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, u.address)
+        }
+    }
+}
+
+describe('broker subscriptions', () => {
     let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
@@ -39,17 +56,23 @@ describe('SubscriptionManager', () => {
             name: 'broker1',
             privateKey: await getPrivateKey(),
             trackerPort,
-            httpPort: httpPort1,
             wsPort: wsPort1,
-            mqttPort: mqttPort1
+            extraPlugins: {
+                mqtt: {
+                    port: mqttPort1
+                }
+            }
         })
         broker2 = await startBroker({
             name: 'broker2',
-            privateKey: await getPrivateKey(),
+            privateKey: broker2User.privateKey,
             trackerPort,
-            httpPort: httpPort2,
             wsPort: wsPort2,
-            mqttPort: mqttPort2
+            extraPlugins: {
+                mqtt: {
+                    port: mqttPort2
+                }
+            }
         })
 
         await wait(2000)
@@ -57,12 +80,16 @@ describe('SubscriptionManager', () => {
         client1 = await createClient(tracker, await getPrivateKey())
         client2 = await createClient(tracker, await getPrivateKey())
 
-        mqttClient1 = createMqttClient(mqttPort1, 'localhost', await getPrivateKey())
-        mqttClient2 = createMqttClient(mqttPort2, 'localhost', await getPrivateKey())
+        client1 = createClient(tracker, privateKey)
+        client2 = createClient(tracker, privateKey)
+
+        mqttClient1 = await createMqttClient(mqttPort1)
+        mqttClient2 = await createMqttClient(mqttPort2)
 
         freshStream1 = await createTestStream(client1, module)
         freshStream2 = await createTestStream(client2, module)
-    })
+        await grantPermissions([freshStream1, freshStream2], [broker1User, broker2User])
+    }, 10 * 1000)
 
     afterEach(async () => {
         await mqttClient1.end(true)
@@ -74,7 +101,7 @@ describe('SubscriptionManager', () => {
         await tracker.stop()
     })
 
-    it('SubscriptionManager correctly handles subscribe/unsubscribe requests across all plugins', async () => {
+    it('manage list of subscribed stream partitions when plugins subscribe/unsubscribe', async () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
@@ -93,8 +120,8 @@ describe('SubscriptionManager', () => {
         await waitForCondition(() => getSPIDKeys(broker1).length === 2)
         await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
-        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
-        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         // client boots own node, so broker streams should not change
         await client1.subscribe(freshStream1, () => {})
@@ -103,19 +130,21 @@ describe('SubscriptionManager', () => {
 
         await wait(500) // give some time for client1 to subscribe.
 
-        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
-        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         await mqttClient1.unsubscribe(freshStream1.id)
 
         await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
-        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream2.id + '#0'])
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         await mqttClient1.unsubscribe(freshStream2.id)
 
         await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
-        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'].sort())
+        expect(getSPIDKeys(broker1)).toIncludeSameMembers([])
+        expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
     }, 10000)
 })

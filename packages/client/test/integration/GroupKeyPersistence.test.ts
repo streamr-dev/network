@@ -147,10 +147,10 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             published.push(...await publishTestMessages(3))
-            const received2 = await sub2.collect(3)
+            const received2 = await sub2.collect(4)
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
-            expect(received2).toEqual(published.slice(1))
             expect(received).toEqual(published.slice(0, 1))
+            expect(received2).toEqual(published)
         }, 2 * TIMEOUT)
 
         it('subscriber persists group key with resend last', async () => {

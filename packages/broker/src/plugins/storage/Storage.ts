@@ -6,7 +6,7 @@ import { EventEmitter } from 'events'
 import { pipeline } from 'stream'
 import { v1 as uuidv1 } from 'uuid'
 import merge2 from 'merge2'
-import { Protocol } from 'streamr-network'
+import { StreamMessage } from 'streamr-client-protocol'
 import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { Logger } from 'streamr-network'
 import { Bucket, BucketId } from './Bucket'
@@ -24,18 +24,18 @@ export interface StartCassandraOptions {
     opts?: Partial<BucketManagerOptions & { useTtl: boolean }>
 }
 
-export type MessageFilter = (streamMessage: Protocol.StreamMessage) => boolean
+export type MessageFilter = (streamMessage: StreamMessage) => boolean
 
 const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => bucket.getId())
 
 // NET-329
 interface ResendDebugInfo {
-    streamId: string, 
+    streamId: string,
     partition?: number,
     limit?: number,
     fromTimestamp?: number,
     toTimestamp?: number,
-    fromSequenceNo?: number | null, 
+    fromSequenceNo?: number | null,
     toSequenceNo?: number | null,
     publisherId?: string | null,
     msgChainId?: string | null
@@ -75,7 +75,7 @@ export class Storage extends EventEmitter {
         this.pendingStores = new Map()
     }
 
-    async store(streamMessage: Protocol.StreamMessage): Promise<boolean> {
+    async store(streamMessage: StreamMessage): Promise<boolean> {
         logger.debug('Store message')
 
         const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
@@ -238,11 +238,11 @@ export class Storage extends EventEmitter {
             .addRecordedMetric('writeCount')
             .addRecordedMetric('writeBytes')
             .addQueriedMetric('batchManager', () => this.batchManager.metrics())
-        this.on('read', (streamMessage: Protocol.StreamMessage) => {
+        this.on('read', (streamMessage: StreamMessage) => {
             cassandraMetrics.record('readCount', 1)
             cassandraMetrics.record('readBytes', streamMessage.getContent(false).length)
         })
-        this.on('write', (streamMessage: Protocol.StreamMessage) => {
+        this.on('write', (streamMessage: StreamMessage) => {
             cassandraMetrics.record('writeCount', 1)
             cassandraMetrics.record('writeBytes', streamMessage.getContent(false).length)
         })
@@ -468,13 +468,13 @@ export class Storage extends EventEmitter {
         }) as Readable
     }
 
-    private parseRow(row: types.Row, debugInfo: ResendDebugInfo): Protocol.StreamMessage | null {
+    private parseRow(row: types.Row, debugInfo: ResendDebugInfo): StreamMessage | null {
         if (row.payload === null) {
             logger.error(`Found message with NULL payload on cassandra; debug info: ${JSON.stringify(debugInfo)}`)
             return null
         }
 
-        const streamMessage = Protocol.StreamMessage.deserialize(row.payload.toString())
+        const streamMessage = StreamMessage.deserialize(row.payload.toString())
         this.emit('read', streamMessage)
         return streamMessage
     }

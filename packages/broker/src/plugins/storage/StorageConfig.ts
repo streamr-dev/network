@@ -1,4 +1,6 @@
-import { Logger, Protocol } from 'streamr-network'
+import fetch from 'node-fetch'
+import { Logger } from 'streamr-network'
+import { StreamMessage, keyToArrayIndex, SPID, SPIDKey } from 'streamr-client-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import StreamrClient from 'streamr-client'
 import { EthereumStorageEvent } from 'streamr-client/dist/types/src/NodeRegistry'
@@ -7,14 +9,14 @@ const logger = new Logger(module)
 
 let skipPollResultSoonAfterEvent = false
 export interface StorageConfigListener {
-    onSPIDAdded: (spid: Protocol.SPID) => void
-    onSPIDRemoved: (spid: Protocol.SPID) => void
+    onSPIDAdded: (spid: SPID) => void
+    onSPIDRemoved: (spid: SPID) => void
 }
 
-const getSPIDKeys = (streamId: string, partitions: number): Protocol.SPIDKey[] => {
-    const keys: Protocol.SPIDKey[] = []
+const getSPIDKeys = (streamId: string, partitions: number): SPIDKey[] => {
+    const keys: SPIDKey[] = []
     for (let i = 0; i < partitions; i++) {
-        keys.push(Protocol.SPID.toKey(streamId, i))
+        keys.push(SPID.toKey(streamId, i))
     }
     return keys
 }
@@ -31,7 +33,7 @@ export class StorageConfig {
 
     static ASSIGNMENT_EVENT_STREAM_ID_SUFFIX = '/storage-node-assignments'
 
-    private spidKeys: Set<Protocol.SPIDKey>
+    private spidKeys: Set<SPIDKey>
     listeners: StorageConfigListener[]
     clusterId: string
     clusterSize: number
@@ -43,7 +45,7 @@ export class StorageConfig {
 
     // use createInstance method instead: it fetches the up-to-date config from API
     constructor(clusterId: string, clusterSize: number, myIndexInCluster: number, apiUrl: string, streamrClient: StreamrClient) {
-        this.spidKeys = new Set<Protocol.SPIDKey>()
+        this.spidKeys = new Set<SPIDKey>()
         this.listeners = []
         this.clusterId = clusterId
         this.clusterSize = clusterSize
@@ -90,13 +92,13 @@ export class StorageConfig {
         this.poller = setTimeout(() => this.poll(pollInterval), pollInterval)
     }
 
-    hasSPID(spid: Protocol.SPID): boolean {
-        const key = Protocol.SPID.toKey(spid.streamId, spid.streamPartition)
+    hasSPID(spid: SPID): boolean {
+        const key = SPID.toKey(spid.streamId, spid.streamPartition)
         return this.spidKeys.has(key)
     }
 
-    getSPIDs(): Protocol.SPID[] {
-        return Array.from(this.spidKeys, (key) => Protocol.SPID.from(key))
+    getSPIDs(): SPID[] {
+        return Array.from(this.spidKeys, (key) => SPID.from(key))
     }
 
     addChangeListener(listener: StorageConfigListener): void {
@@ -114,7 +116,7 @@ export class StorageConfig {
         }
     }
 
-    private setSPIDKeys(newKeys: Set<Protocol.SPIDKey>): void {
+    private setSPIDKeys(newKeys: Set<SPIDKey>): void {
         const oldKeys = this.spidKeys
         const added = new Set([...newKeys].filter((x) => !oldKeys.has(x)))
         const removed = new Set([...oldKeys].filter((x) => !newKeys.has(x)))
@@ -128,33 +130,33 @@ export class StorageConfig {
         }
     }
 
-    private addSPIDKeys(keysToAdd: Set<Protocol.SPIDKey>): void {
+    private addSPIDKeys(keysToAdd: Set<SPIDKey>): void {
         logger.info('Add %d partitions to storage config: %s', keysToAdd.size, Array.from(keysToAdd).join(','))
         this.spidKeys = new Set([...this.spidKeys, ...keysToAdd])
         this.listeners.forEach((listener) => {
-            keysToAdd.forEach((key: Protocol.SPIDKey) => listener.onSPIDAdded(Protocol.SPID.from(key)))
+            keysToAdd.forEach((key: SPIDKey) => listener.onSPIDAdded(SPID.from(key)))
         })
     }
 
-    private removeSPIDKeys(keysToRemove: Set<Protocol.SPIDKey>): void {
+    private removeSPIDKeys(keysToRemove: Set<SPIDKey>): void {
         logger.info('Remove %d partitions from storage config: %s', keysToRemove.size, Array.from(keysToRemove).join(','))
         this.spidKeys = new Set([...this.spidKeys].filter((x) => !keysToRemove.has(x)))
         this.listeners.forEach((listener) => {
-            keysToRemove.forEach((key: Protocol.SPIDKey) => listener.onSPIDRemoved(Protocol.SPID.from(key)))
+            keysToRemove.forEach((key: SPIDKey) => listener.onSPIDRemoved(SPID.from(key)))
         })
     }
 
-    private belongsToMeInCluster(key: Protocol.SPIDKey): boolean {
-        const hashedIndex = Protocol.keyToArrayIndex(this.clusterSize, key.toString())
+    private belongsToMeInCluster(key: SPIDKey): boolean {
+        const hashedIndex = keyToArrayIndex(this.clusterSize, key.toString())
         return hashedIndex === this.myIndexInCluster
     }
 
     startAssignmentEventListener(
-        streamrAddress: string, 
-        subscriptionManager: SubscriptionManager): (msg: Protocol.StreamMessage<AssignmentMessage>
+        streamrAddress: string,
+        subscriptionManager: SubscriptionManager): (msg: StreamMessage<AssignmentMessage>
     ) => void {
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
-        const messageListener = (msg: Protocol.StreamMessage<AssignmentMessage>) => {
+        const messageListener = (msg: StreamMessage<AssignmentMessage>) => {
             if (msg.messageId.streamId === assignmentStreamId) {
                 const content = msg.getParsedContent() as any
                 const keys = new Set(getSPIDKeys(content.stream.id, content.stream.partitions))
@@ -175,7 +177,7 @@ export class StorageConfig {
             logger.trace('Received storage assignment message: %o', content)
             const keys = new Set(
                 getSPIDKeys(content.stream.id, content.stream.partitions)
-                    .filter ((key: Protocol.SPIDKey) => this.belongsToMeInCluster(key))
+                    .filter ((key: SPIDKey) => this.belongsToMeInCluster(key))
             )
 
             logger.trace('Adding %d of %d partitions in stream %s to this instance', keys.size, content.stream.partitions, content.stream.id)
@@ -193,7 +195,7 @@ export class StorageConfig {
     }
 
     stopAssignmentEventListener(
-        messageListener: (msg: Protocol.StreamMessage<AssignmentMessage>) => void,
+        messageListener: (msg: StreamMessage<AssignmentMessage>) => void,
         streamrAddress: string,
         subscriptionManager: SubscriptionManager
     ): void {
