@@ -62,35 +62,30 @@ describe(Logger, () => {
 
     describe('name', () => {
         it('short', () => {
-            // @ts-expect-error private method
             expect(Logger.createName(module)).toBe('Logger.test         ')
         })
         it('short with context', () => {
-            // @ts-expect-error private method
             expect(Logger.createName(module, 'foobar')).toBe('Logger.test:foobar  ')
         })
         it('long with context', () => {
-            // @ts-expect-error private method
-            expect(Logger.createName(module, 'loremipsum')).toBe('Logger.test:loremips')    
+            expect(Logger.createName(module, 'loremipsum')).toBe('Logger.test:loremips')
         })
         it('application id', () => {
             process.env.STREAMR_APPLICATION_ID = 'APP'
-            // @ts-expect-error private method
             expect(Logger.createName(module)).toBe('APP:Logger.test     ')
             delete process.env.STREAMR_APPLICATION_ID
         })
         it('index', () => {
-            // @ts-expect-error private method
             expect(Logger.createName({
                 id: ['foo', 'bar', 'mock', 'index'].join(path.sep)
-            } as any)).toBe('mock                ') 
+            } as any)).toBe('mock                ')
         })
     })
 
     test('error object', async () => {
-        // According to the pino documentation  
-        // "However, there are some special instances where pino.destination 
-        // is not used as the default: When something, e.g a process manager, 
+        // According to the pino documentation
+        // "However, there are some special instances where pino.destination
+        // is not used as the default: When something, e.g a process manager,
         // has monkey-patched process.stdout.write." This is the case
         // in our browser tests.
 
