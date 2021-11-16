@@ -40,7 +40,7 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: eslint
@@ -68,7 +68,7 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: Start Streamr Docker Stack
@@ -110,7 +110,7 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}

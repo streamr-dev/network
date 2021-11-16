@@ -2,13 +2,13 @@
     "name": "streamr-monorepo",
     "scripts": {
         "prepare": "husky install && npm run versions",
-        "bootstrap": "npm ci",
-        "bootstrap-pkg": "npm ci --include-workspace-root --workspace",
+        "bootstrap": "npm ci --prefer-offline --no-audit",
+        "bootstrap-pkg": "npm ci --prefer-offline --no-audit --include-workspace-root --workspace",
         "versions": "zx ./show-versions.mjs",
-        "prune-pkg": "npm prune --include-workspace-root --production --workspace",
+        "prune-pkg": "npm prune --prefer-offline --no-audit --include-workspace-root --production --workspace",
         "clean": "npm run clean-dist && npx lerna clean -y && npm run clean-root && npm run clean-cache",
         "clean-cache": "rm -rf node_modules/.cache",
-        "clean-root": "npm ci --no-workspaces # install only packages needed by root package.json",
+        "clean-root": "npm ci --prefer-offline --no-audit --no-workspaces # install only packages needed by root package.json",
         "clean-dist": "npx lerna exec --no-bail 'npm run --if-present clean || rm -rf dist *.tsbuildinfo || true' && npm run clean-cache # remove built files",
         "clean-package-locks": "rm -f package-lock.json && npx lerna exec --no-bail 'rm -f package-lock.json'"
     },

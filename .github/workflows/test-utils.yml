@@ -40,7 +40,7 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-test-utils
 
       - name: eslint
@@ -72,7 +72,7 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-test-utils
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
