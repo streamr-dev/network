@@ -37,7 +37,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8
@@ -65,7 +65,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8
@@ -107,7 +107,7 @@ jobs:
             package-lock.json
             packages/*/package-lock.json
 
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8

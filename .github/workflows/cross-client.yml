@@ -55,7 +55,7 @@ jobs:
           node-version: "16.x"
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8

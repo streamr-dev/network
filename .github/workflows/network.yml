@@ -37,7 +37,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8
@@ -82,7 +82,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/*/package-lock.json
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm ci
@@ -111,7 +111,7 @@ jobs:
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8
