@@ -28,7 +28,7 @@ if (typeof window === 'undefined') {
             // @ts-expect-error inspectOpts/useColors not in debug types
             this.inspectOpts.colors = this.useColors // need this to get colours when no placeholder
         }
-        return process.stderr.write(util.formatWithOptions({
+        return process.stderr.write(formatWithOptions({
             // @ts-expect-error inspectOpts not in debug types
             ...this.inspectOpts,
         }, ...args) + '\n')
@@ -39,14 +39,6 @@ if (typeof window === 'undefined') {
     Object.assign(Debug.inspectOpts, {
         ...DEFAULT_INSPECT_OPTS,
     })
-}
-
-// e.g. in browser
-if (typeof util.formatWithOptions === 'undefined') {
-    util.formatWithOptions = (_opts, ...args) => {
-        // just ignore opts
-        return util.format(...args)
-    }
 }
 
 const streamrDebug = Debug('Streamr')
@@ -71,6 +63,11 @@ export function inspect(value: any, inspectOptions: Parameters<typeof util.inspe
 }
 
 export function formatWithOptions(inspectOptions: Parameters<typeof util.formatWithOptions>[0], msgFormat?: any, ...param: any[]): string {
+    if (typeof util.formatWithOptions !== 'function') {
+        // util.formatWithOptions is not browserified, use util.format instead
+        return util.format(msgFormat, ...param)
+    }
+
     return util.formatWithOptions({
         ...DEFAULT_INSPECT_OPTS,
         ...inspectOptions,
