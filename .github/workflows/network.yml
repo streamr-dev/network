@@ -85,8 +85,8 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
+          npm install -g npm@8
+          npm run bootstrap-pkg streamr-network
           sudo apt-get install xvfb
       - run: xvfb-run --auto-servernum npm run test-browser
         env:
