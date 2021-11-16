@@ -11,45 +11,32 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
+
+concurrency:
+  group: network-browser-${{ github.head_ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
     working-directory: packages/network
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
   test-browser:
     name: Test on Browser Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2.4.1
         with:
-          node-version: 14
-      - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
       - name: npm ci
         working-directory: './'
         run: |
           npm install -g npm@8
-          npx lerna bootstrap --scope streamr-network --include-dependencies
+          npm run bootstrap-pkg streamr-network
           sudo apt-get install xvfb
       - run: xvfb-run --auto-servernum npm run test-browser
         env:
