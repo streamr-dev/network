@@ -56,6 +56,7 @@ module.exports = {
             argsIgnorePattern: '^_',
             varsIgnorePattern: '^_',
         }],
+        'import/no-extraneous-dependencies': ['error', { devDependencies: ['**/*.test.*', 'test/**/*'] }],
         'no-redeclare': 'off',
         '@typescript-eslint/no-redeclare': ['error'],
         'no-dupe-class-members': 'off',
