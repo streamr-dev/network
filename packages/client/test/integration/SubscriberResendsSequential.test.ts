@@ -23,8 +23,14 @@ describeRepeats('sequential resend subscribe', () => {
     let waitForStorage: (...args: any[]) => Promise<void>
 
     let published: any[] = [] // keeps track of stream message data so we can verify they were resent
+    let ranOnce = false
+    beforeEach(async () => {
+        if (ranOnce) {
+            return
+        }
 
-    beforeAll(async () => {
+        ranOnce = true
+
         client = new StreamrClient({
             ...clientOptions,
             auth: {
@@ -76,11 +82,12 @@ describeRepeats('sequential resend subscribe', () => {
             const onResent = jest.fn()
             sub.onResent(onResent)
             // eslint-disable-next-line require-atomic-updates
-            published = await publishTestMessages(1, {
+            const newMessages = await publishTestMessages(1, {
                 waitForLast: true,
                 timestamp: id,
             })
 
+            published.push(...newMessages)
             const msgs = await sub.collect(published.length)
             expect(msgs).toHaveLength(published.length)
             expect(msgs).toEqual(published)
