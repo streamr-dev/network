@@ -64,7 +64,7 @@ module.exports = (env, argv) => {
             ],
         },
         resolve: {
-            modules: [path.resolve('./node_modules'), path.resolve('./vendor'), path.resolve('./src')],
+            modules: [ 'node_modules', ...require.resolve.paths(''), path.resolve('./vendor') ],
             extensions: ['.json', '.js', '.ts'],
         },
         plugins: [
@@ -104,29 +104,26 @@ module.exports = (env, argv) => {
             globalObject: 'globalThis',
         },
         resolve: {
-            modules: [
-                'node_modules', // without this symlinked protocol won't find own dependencies
-            ],
             alias: {
                 stream: 'readable-stream',
                 util: 'util',
-                http: path.resolve(__dirname, './src/shim/http-https.ts'),
-                '@ethersproject/wordlists': path.resolve(__dirname, 'node_modules', '@ethersproject/wordlists/lib.esm/browser-wordlists.js'),
-                https: path.resolve(__dirname, './src/shim/http-https.ts'),
-                crypto: path.resolve(__dirname, 'node_modules', 'crypto-browserify'),
-                buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
-                'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.ts'),
-                'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.ts'),
-                'streamr-client-protocol/dist/contracts/NodeRegistry.json': path.resolve(__dirname, 'node_modules/streamr-client-protocol/contracts/NodeRegistry.json'),
-                'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/src'),
-                'streamr-network': path.join(__dirname, '../network/src/browser.ts'),
-                [path.join(__dirname, '../network/src/connection/NodeWebRtcConnection.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/BrowserWebRtcConnection.ts'),
-                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
-                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
-                [path.join(__dirname, '../network/src/helpers/logger/LoggerNode.ts$')]: path.resolve(__dirname, 'node_modules/streamr-network/src/helpers/logger/LoggerBrowser.ts'),
+                http: path.resolve('./src/shim/http-https.ts'),
+                '@ethersproject/wordlists': require.resolve('@ethersproject/wordlists/lib/browser-wordlists.js'),
+                https: path.resolve('./src/shim/http-https.ts'),
+                crypto: require.resolve('crypto-browserify'),
+                buffer: require.resolve('buffer/'),
+                'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
+                'node-webcrypto-ossl': path.resolve('./src/shim/crypto.ts'),
+                'streamr-client-protocol/dist/contracts/NodeRegistry.json': require.resolve('streamr-client-protocol/contracts/NodeRegistry.json'),
+                'streamr-client-protocol': path.resolve('../protocol/src'),
+                'streamr-network': path.resolve('../network/src/browser.ts'),
+                [path.join(__dirname, '../network/src/connection/NodeWebRtcConnection.ts$')]: require.resolve('streamr-network/src/connection/BrowserWebRtcConnection.ts'),
+                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
+                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
+                [path.join(__dirname, '../network/src/helpers/logger/LoggerNode.ts$')]: require.resolve('streamr-network/src/helpers/logger/LoggerBrowser.ts'),
                 // swap out ServerPersistentStore for BrowserPersistentStore
-                [path.resolve(__dirname, 'src/encryption/ServerPersistentStore')]: (
-                    path.resolve(__dirname, 'src/encryption/BrowserPersistentStore.ts')
+                [path.resolve('./src/encryption/ServerPersistentStore')]: (
+                    path.resolve('./src/encryption/BrowserPersistentStore.ts')
                 ),
             },
             fallback: {

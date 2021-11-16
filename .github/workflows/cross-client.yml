@@ -60,7 +60,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8
           npm run bootstrap-pkg @streamr/cross-client-testing
       - uses: actions/setup-java@v2.3.1
         with:

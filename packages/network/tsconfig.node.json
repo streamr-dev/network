@@ -12,6 +12,6 @@
         "src/**/BrowserWebRtcConnection.ts"
     ],
     "references": [
-        { "path": "node_modules/streamr-client-protocol/tsconfig.node.json" }
+        { "path": "../protocol/tsconfig.node.json" }
     ]
 }

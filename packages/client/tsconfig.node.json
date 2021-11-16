@@ -29,7 +29,7 @@
         "src/shim/*"
     ],
     "references": [
-        { "path": "node_modules/streamr-network/tsconfig.node.json" },
-        { "path": "node_modules/streamr-client-protocol/tsconfig.node.json" }
+        { "path": "../network/tsconfig.node.json" },
+        { "path": "../protocol/tsconfig.node.json" }
     ]
 }

@@ -3,9 +3,7 @@ WORKDIR /usr/src/monorepo
 RUN npm set unsafe-perm true && \
 	# explicitly use npm v8
 	npm install -g npm@8 --no-audit --progress=false
-COPY ["./*.json", "./*.js", "./*.mjs", ".npmrc",  ".gitignore", "./"]
-RUN npm ci
-COPY ["./packages", "./packages"]
+COPY . .
 RUN npm run bootstrap-pkg -- streamr-broker
 
 # image contains all packages, remove devDeps to keep image size down
