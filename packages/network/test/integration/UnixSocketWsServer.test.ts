@@ -13,7 +13,7 @@ describe('ServerWsEndpoint', () => {
         }
     })
 
-    it('WS connection can established with unix sockets', async () => {
+    test('WS connection can established with unix sockets', async () => {
         const listen = "/tmp/server1.sock"
         const httpsServer = await startHttpServer(
             listen,

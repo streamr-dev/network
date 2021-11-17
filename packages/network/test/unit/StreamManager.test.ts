@@ -10,12 +10,12 @@ describe('StreamManager', () => {
         manager = new StreamManager()
     })
 
-    it('starts out empty', () => {
+    test('starts out empty', () => {
         expect(manager.isSetUp(new SPID('streamId', 0))).toEqual(false)
         expect(Array.from(manager.getSPIDKeys())).toEqual([])
     })
 
-    it('setting up streams and testing values', () => {
+    test('setting up streams and testing values', () => {
         manager.setUpStream(new SPID('stream-1', 0))
         manager.setUpStream(new SPID('stream-2', 0))
         manager.setUpStream(new SPID('stream-1', 1))
@@ -31,7 +31,7 @@ describe('StreamManager', () => {
         expect(manager.getNeighborsForStream(new SPID('stream-2', 0))).toBeEmpty()
     })
 
-    it('cannot re-setup same stream', () => {
+    test('cannot re-setup same stream', () => {
         manager.setUpStream(new SPID('stream-id', 0))
 
         expect(() => {
@@ -39,7 +39,7 @@ describe('StreamManager', () => {
         }).toThrowError('Stream stream-id#0 already set up')
     })
 
-    it('can duplicate detect on previously set up stream', () => {
+    test('can duplicate detect on previously set up stream', () => {
         manager.setUpStream(new SPID('stream-id', 0))
 
         expect(() => {
@@ -50,7 +50,7 @@ describe('StreamManager', () => {
         }).not.toThrowError()
     })
 
-    it('cannot duplicate detect on non-existing stream', () => {
+    test('cannot duplicate detect on non-existing stream', () => {
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
                 new MessageID('stream-id', 0, 10, 0, 'publisher-id', 'session-id'),
@@ -59,7 +59,7 @@ describe('StreamManager', () => {
         }).toThrowError('Stream stream-id#0 is not set up')
     })
 
-    it('duplicate detection is per publisher, msgChainId', () => {
+    test('duplicate detection is per publisher, msgChainId', () => {
         manager.setUpStream(new SPID('stream-id', 0))
         manager.markNumbersAndCheckThatIsNotDuplicate(
             new MessageID('stream-id', 0, 10, 0, 'publisher-1', 'session-1'),
@@ -87,7 +87,7 @@ describe('StreamManager', () => {
         )).toEqual(true)
     })
 
-    it('adding neighbor nodes to a set-up stream', () => {
+    test('adding neighbor nodes to a set-up stream', () => {
         const streamId = new SPID('stream-id', 0)
         const streamId2 = new SPID('stream-id-2', 0)
 
@@ -113,7 +113,7 @@ describe('StreamManager', () => {
         expect(manager.isNodePresent('node-not-present')).toEqual(false)
     })
 
-    it('removing node from stream removes it from neighbors', () => {
+    test('removing node from stream removes it from neighbors', () => {
         const streamId = new SPID('stream-id', 0)
         const streamId2 = new SPID('stream-id-2', 0)
 
@@ -147,7 +147,7 @@ describe('StreamManager', () => {
         expect(manager.isNodePresent('node-1')).toEqual(false)
     })
 
-    it('remove node from all streams', () => {
+    test('remove node from all streams', () => {
         manager.setUpStream(new SPID('stream-1', 0))
         manager.setUpStream(new SPID('stream-1', 1))
         manager.setUpStream(new SPID('stream-2', 0))
@@ -174,7 +174,7 @@ describe('StreamManager', () => {
         expect(manager.isNodePresent('node')).toEqual(false)
     })
 
-    it('remove stream', () => {
+    test('remove stream', () => {
         manager.setUpStream(new SPID('stream-1', 0))
         manager.setUpStream(new SPID('stream-2', 0))
 
@@ -189,7 +189,7 @@ describe('StreamManager', () => {
         expect(Array.from(manager.getSPIDKeys())).toEqual(['stream-2#0'])
     })
 
-    it('updating counter', () => {
+    test('updating counter', () => {
         manager.setUpStream(new SPID('stream-1', 0))
         manager.setUpStream(new SPID('stream-2', 0))
 

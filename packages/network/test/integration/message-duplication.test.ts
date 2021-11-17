@@ -114,11 +114,11 @@ describe('duplicate message detection and avoidance', () => {
         ])
     })
 
-    it('same message is emitted by a node exactly once', () => {
+    test('same message is emitted by a node exactly once', () => {
         expect(numOfReceivedMessages).toEqual([2, 2, 2, 2, 2])
     })
 
-    it('maximum times a node receives duplicates of message is bounded by total number of repeaters', async () => {
+    test('maximum times a node receives duplicates of message is bounded by total number of repeaters', async () => {
         const numOfDuplicates = await Promise.all(otherNodes.map(async (n) => {
             // @ts-expect-error private field
             const report = await n.metrics.report()

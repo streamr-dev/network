@@ -20,7 +20,7 @@ describe('ServerWsEndpoint', () => {
         }
     })
 
-    it('receives unencrypted connections', async () => {
+    test('receives unencrypted connections', async () => {
         const listen = {
             hostname: '127.0.0.1',
             port: wssPort1
@@ -46,7 +46,7 @@ describe('ServerWsEndpoint', () => {
         await waitForCondition(() => webSocketClient.readyState === webSocketClient.CLOSED)
     })
 
-    it('receives encrypted connections', async () => {
+    test('receives encrypted connections', async () => {
         if (typeof _streamr_electron_test !== 'undefined') {
             return
         }

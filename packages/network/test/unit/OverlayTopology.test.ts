@@ -3,7 +3,7 @@ import { OverlayTopology } from '../../src/logic/tracker/OverlayTopology'
 const maxNeighborsPerNodeArray = [4, 8, 12, 16]
 
 describe('overlay creation', () => {
-    it('forming overlay topology', () => {
+    test('forming overlay topology', () => {
         const topology = new OverlayTopology(3, (arr) => arr, (arr) => arr[0])
 
         expect(topology.hasNode('node-1')).toEqual(false)
@@ -237,7 +237,7 @@ describe('overlay creation', () => {
         })
     })
 
-    it('unknown nodes are discarded', () => {
+    test('unknown nodes are discarded', () => {
         maxNeighborsPerNodeArray.forEach((maxNeighborsPerNode) => {
             const topology = new OverlayTopology(maxNeighborsPerNode)
 
@@ -261,7 +261,7 @@ describe('overlay creation', () => {
         })
     })
 
-    it('self-connections are discarded', () => {
+    test('self-connections are discarded', () => {
         const topology = new OverlayTopology(4, (arr) => arr, (arr) => arr[0])
 
         topology.update('node-1', [])
@@ -284,7 +284,7 @@ describe('overlay creation', () => {
         })
     })
 
-    it('test case when all nodes leave topology', () => {
+    test('test case when all nodes leave topology', () => {
         const topology = new OverlayTopology(3, (arr) => arr, (arr) => arr[0])
 
         expect(topology.isEmpty()).toBeTruthy()
@@ -300,7 +300,7 @@ describe('overlay creation', () => {
     })
 
     // TODO: remove or write better, since not the best way to test randomness
-    it('100 rounds of typical operation does not lead to invariant exception', () => {
+    test('100 rounds of typical operation does not lead to invariant exception', () => {
         maxNeighborsPerNodeArray.forEach((maxNeighborsPerNode) => {
             for (let i = 0; i < 100; ++i) {
                 const topology = new OverlayTopology(maxNeighborsPerNode)

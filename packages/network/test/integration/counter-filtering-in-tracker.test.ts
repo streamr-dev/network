@@ -64,7 +64,7 @@ describe('tracker: instruction counter filtering', () => {
         await tracker.stop()
     })
 
-    it('handles status messages with counters equal or more to current counter(s)', async () => {
+    test('handles status messages with counters equal or more to current counter(s)', async () => {
         await runAndWaitForEvents(
             () => {
                 nodeToTracker1.sendStatus('tracker', formStatus(1, []) as Status)
@@ -75,7 +75,7 @@ describe('tracker: instruction counter filtering', () => {
         )
     })
 
-    it('ignores status messages with counters less than current counter(s)', async () => {
+    test('ignores status messages with counters less than current counter(s)', async () => {
         let numOfInstructions = 0
         nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
@@ -86,7 +86,7 @@ describe('tracker: instruction counter filtering', () => {
         expect(numOfInstructions).toEqual(0)
     })
 
-    it('partly handles status messages with mixed counters compared to current counters', async () => {
+    test('partly handles status messages with mixed counters compared to current counters', async () => {
         let numOfInstructions = 0
         nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
@@ -97,7 +97,7 @@ describe('tracker: instruction counter filtering', () => {
         expect(numOfInstructions).toEqual(1)
     })
 
-    it('NET-36: tracker receiving status with old counter should not affect topology', async () => {
+    test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
         await runAndWaitForEvents(
             () => { nodeToTracker1.sendStatus('tracker', formStatus(0, []) as Status) },
@@ -107,7 +107,7 @@ describe('tracker: instruction counter filtering', () => {
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
     })
 
-    it('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
+    test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
         await runAndWaitForEvents(
             () => {

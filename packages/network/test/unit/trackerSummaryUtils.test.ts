@@ -13,7 +13,7 @@ const createOverlayTopology = (mapping: { [key: string]: string[] }) => {
     return overlayTopology
 }
 
-it('getNodeConnections', () => {
+test('getNodeConnections', () => {
     const nodes = ['node1', 'node2', 'node3', 'node4', 'node5', 'node6', 'nodeNotInTopology']
     const overlayPerStream = {
         'stream-a#0': createOverlayTopology({
