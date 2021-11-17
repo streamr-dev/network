@@ -5,7 +5,7 @@ import semver from 'semver'
 import Table from 'cli-table'
 $.verbose = false
 
-const root = JSON.parse(await $`npm ls --depth=0 --workspaces --long --json`)
+const root = JSON.parse(await $`npm ls --depth=0 --workspaces --long --json --silent`)
 const packages = Object.entries(root.dependencies).reverse().map(([name, value]) => {
     return {
         name,
