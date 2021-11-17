@@ -65,7 +65,7 @@
     "memoizee": "^0.4.15",
     "merge2": "^1.4.1",
     "nat-type-identifier": "^2.0.9",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.6",
     "p-limit": "^3.1.0",
     "pino": "^6.11.3",
     "pino-pretty": "^5.0.2",
