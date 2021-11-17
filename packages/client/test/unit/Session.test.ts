@@ -137,7 +137,7 @@ describe('Session', () => {
         describe('sendLogin rejects', () => {
             beforeEach(() => {
                 msg = 'Need either "privateKey", "ethereum" or "sessionToken" to login.'
-                loginFunction = jest.fn(async () => { throw new Error(msg) })
+                loginFunction.mockReset().mockImplementation(async () => { throw new Error(msg) })
             })
 
             it('should fail simultaneous requests with one call to sendLogin', async () => {
