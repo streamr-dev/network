@@ -45,8 +45,8 @@ jobs:
         run: |
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
-      - name: npm run eslint
-        run: npm run eslint
+      - run: npm run eslint
+      - run: npm run test-exports
 
   test:
     name: Test Unit using Node ${{ matrix.node-version }}
