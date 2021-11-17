@@ -1,5 +1,4 @@
 import 'reflect-metadata'
-import sinon from 'sinon'
 import { container, DependencyContainer } from 'tsyringe'
 
 import { StreamrClient } from '../../src/StreamrClient'
@@ -11,10 +10,10 @@ import { LoginEndpoints } from '../../src/LoginEndpoints'
 
 describe('Session', () => {
     let session: Session
-    let msg: Todo
-    let clientSessionToken: Todo
-    let loginFunction: Todo
-    let logoutFunction: Todo
+    let msg: any
+    let clientSessionToken: StreamrClient
+    let loginFunction: jest.MockedFunction
+    let logoutFunction: jest.MockedFunction
 
     const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => new StreamrClient({
         ...clientOptions,
@@ -25,12 +24,10 @@ describe('Session', () => {
 
     function setup(opts?: any) {
         const childContainer = container.createChildContainer()
-        logoutFunction = sinon.stub().resolves()
-        loginFunction = sinon.stub().resolves()
-        loginFunction.onCall(0).resolves({
+        logoutFunction = jest.fn(async () => {})
+        loginFunction = jest.fn(async () => {}).mockImplementationOnce(async () => ({
             token: 'session-token1',
-        })
-        loginFunction.onCall(1).resolves({
+        })).mockImplementationOnce(async () => ({
             token: 'session-token2',
         })
         childContainer.register<LoginEndpoints>(LoginEndpoints, {
@@ -102,20 +99,20 @@ describe('Session', () => {
     describe('getSessionToken', () => {
         it('should set sessionToken', async () => {
             await session.getSessionToken()
-            expect(loginFunction.calledOnce).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(1)
             expect(session.options.sessionToken === 'session-token1').toBeTruthy()
         })
 
         it('should not call sendLogin if token set', async () => {
             session.options.sessionToken = 'session-token1'
             await session.getSessionToken()
-            expect(loginFunction.notCalled).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(0)
         })
 
         it('should call sendLogin if new token required', async () => {
             session.options.sessionToken = 'expired-session-token'
             await session.getSessionToken(true)
-            expect(loginFunction.calledOnce).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(1)
             expect(session.options.sessionToken === 'session-token1').toBeTruthy()
         })
     })
@@ -126,7 +123,7 @@ describe('Session', () => {
                 const p1 = session.getSessionToken()
                 const p2 = session.getSessionToken()
                 const [sessionToken1, sessionToken2] = await Promise.all([p1, p2])
-                expect(loginFunction.calledOnce).toBeTruthy()
+                expect(loginFunction).toHaveBeenCalledTimes(1)
                 expect(sessionToken1).toEqual(sessionToken2)
             })
 
@@ -140,8 +137,7 @@ describe('Session', () => {
         describe('sendLogin rejects', () => {
             beforeEach(() => {
                 msg = 'Need either "privateKey", "ethereum" or "sessionToken" to login.'
-                loginFunction.resetBehavior()
-                loginFunction.rejects(new Error(msg))
+                loginFunction = jest.fn(async () => { throw new Error(msg) })
             })
 
             it('should fail simultaneous requests with one call to sendLogin', async () => {
@@ -153,7 +149,7 @@ describe('Session', () => {
                         session.getSessionToken()
                     )).rejects.toThrow(msg)
                 ])
-                expect(loginFunction.calledOnce).toBeTruthy()
+                expect(loginFunction).toHaveBeenCalledTimes(1)
             })
 
             it('should fail both requests with two calls to sendLogin', async () => {
@@ -163,7 +159,7 @@ describe('Session', () => {
                 await expect(async () => (
                     session.getSessionToken()
                 )).rejects.toThrow(msg)
-                expect(loginFunction.calledTwice).toBeTruthy()
+                expect(loginFunction).toHaveBeenCalledTimes(2)
             })
         })
     })
@@ -172,7 +168,7 @@ describe('Session', () => {
         it('should call the logout endpoint', async () => {
             await session.getSessionToken()
             await session.logout()
-            expect(logoutFunction.calledOnce).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(1)
         })
 
         it('should call the logout endpoint again', async () => {
@@ -181,7 +177,7 @@ describe('Session', () => {
             await session.logout()
             await session.getSessionToken()
             await session.logout()
-            expect(logoutFunction.calledTwice).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(2)
         })
 
         it('should throw if already logging out', async () => {

@@ -1,5 +1,4 @@
 import { Server } from 'http'
-import sinon from 'sinon'
 import express, { Application } from 'express'
 import { wait } from 'streamr-test-utils'
 
@@ -24,9 +23,14 @@ describeRepeats('utils', () => {
         const testUrl = '/some-test-url'
 
         beforeEach((done) => {
-            session = sinon.stub()
-            session.options = {}
-            session.isUnauthenticated = () => false
+            session = {
+                options: {},
+                isUnauthenticated() {
+                    return false
+                },
+                getSessionToken: () => {}
+            }
+
             expressApp = express()
 
             function handle(req: any, res: any) {
@@ -65,21 +69,21 @@ describeRepeats('utils', () => {
 
         describe('authFetch', () => {
             it('should return normally when valid session token is passed', async () => {
-                session.getSessionToken = sinon.stub().resolves('session-token')
+                session.getSessionToken = jest.fn(async () => 'session-token')
                 const res = await authFetch<TestResponse>(baseUrl + testUrl, session)
-                expect(session.getSessionToken.calledOnce).toBeTruthy()
+                expect(session.getSessionToken).toHaveBeenCalledTimes(1)
                 expect(res.test).toBeTruthy()
             })
 
             it('should return 401 error when invalid session token is passed twice', async () => {
-                session.getSessionToken = sinon.stub().resolves('invalid token')
+                session.getSessionToken = jest.fn(async () => 'invalid-token')
                 const onCaught = jest.fn()
                 const err = await authFetch<TestResponse>(baseUrl + testUrl, session).catch((error) => {
                     onCaught()
                     return error
                 })
 
-                expect(session.getSessionToken.calledTwice).toBeTruthy()
+                expect(session.getSessionToken).toHaveBeenCalledTimes(2)
                 expect(err.toString()).toMatch(
                     '401. \'Unauthorized\'',
                 )
@@ -88,12 +92,12 @@ describeRepeats('utils', () => {
             })
 
             it('should return normally when valid session token is passed after expired session token', async () => {
-                session.getSessionToken = sinon.stub()
-                session.getSessionToken.onCall(0).resolves('expired-session-token')
-                session.getSessionToken.onCall(1).resolves('session-token')
+                session.getSessionToken = jest.fn(async () => {})
+                .mockImplementationOnce(async () => 'expired-session-token')
+                .mockImplementationOnce(async () => 'session-token')
 
                 const res = await authFetch<TestResponse>(baseUrl + testUrl, session)
-                expect(session.getSessionToken.calledTwice).toBeTruthy()
+                expect(session.getSessionToken).toHaveBeenCalledTimes(2)
                 expect(res.test).toBeTruthy()
             })
         })

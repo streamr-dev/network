@@ -1,5 +1,4 @@
 node_modules/**
-examples/**
 coverage/**
 dist/**
 test/unit/StubbedStreamrClient.js

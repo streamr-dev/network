@@ -132,6 +132,9 @@ class StreamrStream implements StreamMetadata {
         this.revokePermission = pLimitFn(this.revokePermission.bind(this))
     }
 
+    /**
+     * Persist stream metadata updates.
+     */
     async update() {
         try {
             const json = await this._rest.put<StreamProperties>(
