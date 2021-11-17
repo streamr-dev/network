@@ -352,10 +352,17 @@ export class StreamRegistry implements Context {
         do {
             // eslint-disable-next-line no-await-in-loop
             const queryResponse = await this.sendStreamQuery(StreamRegistry.buildGetAllStreamsQuery(pagesize, lastID)) as AllStreamsQueryResult
-            const resStreams = queryResponse.streams.map(({ id, metadata }) => this.parseStream(id, metadata))
+            // const resStreams = queryResponse.streams.map(({ id, metadata }) => this.parseStream(id, metadata))
+            const resStreams: Stream[] = []
+            queryResponse.streams.forEach(({ id, metadata }) => {
+                try {
+                    const stream = this.parseStream(id, metadata)
+                    resStreams.push(stream)
+                } catch (err) { log(`Skipping stream ${id} cannot parse metadata: ${metadata}`) }
+            })
             results = results.concat(resStreams)
             lastResultSize = queryResponse.streams.length
-            lastID = results[results.length - 1].streamId
+            lastID = queryResponse.streams[queryResponse.streams.length - 1].id
         } while (lastResultSize === pagesize)
         return results
     }
