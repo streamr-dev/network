@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import { Logger } from 'streamr-network'
 import { StreamMessage, keyToArrayIndex, SPID, SPIDKey } from 'streamr-client-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
@@ -109,9 +108,9 @@ export class StorageConfig {
         const streamsToStore = await this.streamrClient.getStoredStreamsOf(this.clusterId)
         if (!skipPollResultSoonAfterEvent) {
 
-            const spidKeys = new Set<Protocol.SPIDKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
+            const spidKeys = new Set<SPIDKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
                 ...getSPIDKeys(stream.id, stream.partitions)
-            ])).filter ((key: Protocol.SPIDKey) => this.belongsToMeInCluster(key)))
+            ])).filter ((key: SPIDKey) => this.belongsToMeInCluster(key)))
             this.setSPIDKeys(spidKeys)
         }
     }
@@ -213,7 +212,7 @@ export class StorageConfig {
                 const stream = await this.streamrClient.getStream(event.streamId)
                 const streamKeys = new Set(
                     getSPIDKeys(stream.id, stream.partitions)
-                        .filter ((key: Protocol.SPIDKey) => this.belongsToMeInCluster(key))
+                        .filter ((key: SPIDKey) => this.belongsToMeInCluster(key))
                 )
                 if (event.type === 'added') {
                     this.addSPIDKeys(streamKeys)
