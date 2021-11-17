@@ -10,7 +10,7 @@ import merge from 'lodash/merge'
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
-import { NodeRegistryOptions } from './NodeRegistry'
+import type { NodeRegistryOptions } from './NodeRegistry'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Partial<NetworkNodeOptions>
