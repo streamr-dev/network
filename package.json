@@ -6,7 +6,7 @@
         "bootstrap-pkg": "npm ci --prefer-offline --no-audit --include-workspace-root --workspace",
         "versions": "zx ./show-versions.mjs",
         "prune-pkg": "npm prune --prefer-offline --no-audit --include-workspace-root --production --workspace",
-        "clean": "npm run clean-dist && npx lerna clean -y && npm run clean-root && npm run clean-cache",
+        "clean": "npm run clean-dist && npx --workspaces --include-workspace-root -c 'rm -rf node_modules || true' && npm run clean-root",
         "eslint": "npm run eslint --workspaces --if-present",
         "clean-cache": "npx --workspaces --include-workspace-root -c 'rm -rf node_modules/.cache || true'",
         "clean-root": "npm ci --prefer-offline --no-audit --no-workspaces # install only packages needed by root package.json",
@@ -30,7 +30,6 @@
     },
     "devDependencies": {
         "cli-table": "^0.3.6",
-        "lerna": "^4.0.0",
         "node-gyp-build": "^4.3.0",
         "semver": "^7.3.5",
         "zx": "^1.14.1"

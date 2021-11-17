@@ -1,11 +1,18 @@
 #!/usr/bin/env npx zx
 
-import { join } from 'path'
+import { join, resolve } from 'path'
 import semver from 'semver'
 import Table from 'cli-table'
 $.verbose = false
 
-const packages = JSON.parse(await $`lerna list --all --json --loglevel=silent --toposort`)
+const root = JSON.parse(await $`npm ls --depth=0 --workspaces --long --json`)
+const packages = Object.entries(root.dependencies).reverse().map(([name, value]) => {
+    return {
+        name,
+        version: value.version,
+        location: value.path,
+    }
+})
 const pkgNames = new Set(packages.map(({ name }) => name))
 const pkgVersions = packages.map(({ version }) => version)
 const pkgJSONs = packages.reduce((obj, info) => {
