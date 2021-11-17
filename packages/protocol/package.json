@@ -16,7 +16,7 @@
     "watch": "tsc --watch",
     "benchmark": "jest test/benchmarks --detectOpenHandles",
     "prepare": "npm run build",
-    "eslint": "eslint '{src,test}/**/*.ts'",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
     "test-unit": "jest test/unit --detectOpenHandles",
     "test-integration": "jest test/integration --detectOpenHandles",

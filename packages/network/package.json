@@ -36,7 +36,7 @@
     "test-flakey": "jest test/flakey",
     "test-types": "tsc --noEmit -b ./tsconfig.json ",
     "test-browser": "npm run build-browser && karma start karma.config.js",
-    "eslint": "eslint --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "network": "node $NODE_DEBUG_OPTION bin/network.js",
     "docs": "typedoc --options typedoc.js"
   },
