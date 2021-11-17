@@ -96,7 +96,6 @@ describe('BrubeckNode', () => {
                         client.destroy(),
                     ]
                     await Promise.allSettled(tasks)
-                    // @ts-expect-error ts wants getNode to be Promise<void>, seems wrong.
                     await Promise.all(tasks)
                 }).rejects.toThrow('destroy')
             })
