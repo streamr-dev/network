@@ -23,6 +23,9 @@ defaults:
 
 jobs:
   test-browser:
+    strategy:
+      matrix:
+        node-version: [16.x]
     name: Test on Browser Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     steps:
