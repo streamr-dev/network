@@ -501,12 +501,21 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return token.balanceOf(addr)
     }
 
-    getDataUnion(contractAddress: EthereumAddress) {
-        return DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
+    /* TODO: in v6, rename this to unsafeGetDataUnion */
+    getDataUnion(mainnetAddress: EthereumAddress, sidechainAddress?: EthereumAddress) {
+        if (!sidechainAddress) {
+            const contracts = new Contracts(this)
+            const calculatedSidechainAddress = contracts.calculateDataUnionSidechainAddress(mainnetAddress)
+            return new DataUnion(mainnetAddress, calculatedSidechainAddress, this)
+        }
+        return new DataUnion(mainnetAddress, sidechainAddress, this)
     }
 
+    /* TODO: in v6, rename this to getDataUnion */
     async safeGetDataUnion(contractAddress: EthereumAddress) {
-        const du = DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
+        const contracts = new Contracts(this)
+        const sidechainAddress = await contracts.fetchDataUnionSidechainAddress(contractAddress)
+        const du = new DataUnion(contractAddress, sidechainAddress, this)
         const version = await du.getVersion()
         if (version === 0) {
             throw new Error(`${contractAddress} is not a Data Union!`)
@@ -515,7 +524,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         } else if (version === 2) {
             return du
         }
-        throw new Error(`${contractAddress} is an unknown Data Union version "${version}"`)
+        throw new Error(`${contractAddress} is of unknown Data Union version: ${version}`)
     }
 
     async deployDataUnion(options?: DataUnionDeployOptions) {
@@ -557,12 +566,12 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return DataUnion._createSetBinanceRecipientSignature(to, signer, new Contracts(this)) // eslint-disable-line no-underscore-dangle
     }
 
-    /** @internal */
+    /** @internal used by Marketplace to predict deployed address */
     _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: EthereumAddress}) {
-        return DataUnion._fromName({ // eslint-disable-line no-underscore-dangle
-            dataUnionName,
-            deployerAddress
-        }, this)
+        const contracts = new Contracts(this)
+        const mainnetAddressPredicted = contracts.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress)
+        const sidechainAddressPredicted = contracts.calculateDataUnionSidechainAddress(mainnetAddressPredicted)
+        return new DataUnion(mainnetAddressPredicted, sidechainAddressPredicted, this)
     }
 
     /**
