@@ -127,7 +127,7 @@ export default class Resend implements Context {
         private nodeRegistry: NodeRegistry,
         private streamRegistry: StreamRegistry,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
-        @inject(BrubeckContainer) private container: DependencyContainer,
+        @inject(BrubeckContainer) private container: DependencyContainer
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -216,20 +216,15 @@ export default class Resend implements Context {
             count += 1
         })
 
-        messageStream.pull(async function* readStream(this: Resend) {
-            let dataStream
+        const dataStream = await fetchStream(url)
+        messageStream.pull((async function* readStream() {
             try {
-                dataStream = await fetchStream(url)
                 yield* dataStream
             } finally {
                 debug('resent %s messages.', count)
                 dataStream.destroy()
             }
-                if (dataStream) {
-                    dataStream.destroy()
-                }
-            }
-        }.bind(this)())
+        }()))
         return messageStream
     }
 

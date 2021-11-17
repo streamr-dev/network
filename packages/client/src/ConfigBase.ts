@@ -14,11 +14,8 @@ import cloneDeep from 'lodash/cloneDeep'
 
 import type { EthereumAddress, Todo } from './types'
 
-import { EthereumAddress, Todo } from './types'
-
 import { AuthConfig, EthereumConfig } from './Ethereum'
 import { EncryptionConfig } from './encryption/KeyExchangeUtils'
-import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 
 export type CacheConfig = {
     maxSize: number,
