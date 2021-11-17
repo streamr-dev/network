@@ -1,11 +1,11 @@
 import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from '../../src/logic/node/DuplicateMessageDetector'
 
-test('starts empty', () => {
+it('starts empty', () => {
     const detector = new DuplicateMessageDetector()
     expect(detector.toString()).toEqual('')
 })
 
-test('first check initializes default gap', () => {
+it('first check initializes default gap', () => {
     const detector = new DuplicateMessageDetector()
     const result = detector.markAndCheck(new NumberPair(1, 5), new NumberPair(10, 10))
     const state = detector.toString()
@@ -13,7 +13,7 @@ test('first check initializes default gap', () => {
     expect(state).toEqual('(10|10, Infinity|Infinity]')
 })
 
-test('checking numbers in order introduces no new gaps', () => {
+it('checking numbers in order introduces no new gaps', () => {
     const detector = new DuplicateMessageDetector()
     detector.markAndCheck(null, new NumberPair(10, 0))
     expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0))).toEqual(true)
@@ -24,7 +24,7 @@ test('checking numbers in order introduces no new gaps', () => {
     expect(state).toEqual('(30|5, Infinity|Infinity]')
 })
 
-test('skipping next expected messages creates gaps', () => {
+it('skipping next expected messages creates gaps', () => {
     const detector = new DuplicateMessageDetector()
     detector.markAndCheck(null, new NumberPair(10, 0))
 
@@ -38,7 +38,7 @@ test('skipping next expected messages creates gaps', () => {
     expect(detector.toString()).toEqual('(10|0, 15|0], (20|0, 30|0], (40|0, 40|10], (80|20, Infinity|Infinity]')
 })
 
-test('only last gap is checked if no previous number given', () => {
+it('only last gap is checked if no previous number given', () => {
     const detector = new DuplicateMessageDetector()
     detector.markAndCheck(null, new NumberPair(10, 0))
     detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0))
@@ -59,7 +59,7 @@ describe('gap handling', () => {
         expect(detector.toString()).toEqual('(10|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
     })
 
-    test('gap division', () => {
+    it('gap division', () => {
         expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(18, 0)))
         expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
@@ -67,7 +67,7 @@ describe('gap handling', () => {
         expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 60|0], (79|5, 80|10], (100|0, Infinity|Infinity]')
     })
 
-    test('left-side gap contraction', () => {
+    it('left-side gap contraction', () => {
         expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(15, 0))).toEqual(true)
         expect(detector.toString()).toEqual('(15|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
@@ -75,7 +75,7 @@ describe('gap handling', () => {
         expect(detector.toString()).toEqual('(15|0, 20|0], (80|9, 80|10], (100|0, Infinity|Infinity]')
     })
 
-    test('right-side gap contraction', () => {
+    it('right-side gap contraction', () => {
         expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(20, 0))).toEqual(true)
         expect(detector.toString()).toEqual('(10|0, 15|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
@@ -83,7 +83,7 @@ describe('gap handling', () => {
         expect(detector.toString()).toEqual('(10|0, 15|0], (40|0, 40|1], (100|0, Infinity|Infinity]')
     })
 
-    test('full contraction', () => {
+    it('full contraction', () => {
         expect(detector.markAndCheck(new NumberPair(40, 0), new NumberPair(80, 10)))
         expect(detector.toString()).toEqual('(10|0, 20|0], (100|0, Infinity|Infinity]')
 
@@ -169,7 +169,7 @@ describe('erroneous messages that overlap gaps', () => {
     })
 })
 
-test('checks that number > previousNumber', () => {
+it('checks that number > previousNumber', () => {
     const detector = new DuplicateMessageDetector()
     expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(1, 0)))
         .toThrowError(InvalidNumberingError)
@@ -177,7 +177,7 @@ test('checks that number > previousNumber', () => {
         .toThrowError(InvalidNumberingError)
 })
 
-test('lowest gaps get dropped when reaching maximum number of gaps', () => {
+it('lowest gaps get dropped when reaching maximum number of gaps', () => {
     const detector = new DuplicateMessageDetector(3)
     detector.markAndCheck(new NumberPair(1, 0), new NumberPair(10, 0))
     detector.markAndCheck(new NumberPair(20, 0), new NumberPair(40, 0))

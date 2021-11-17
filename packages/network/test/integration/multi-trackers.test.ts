@@ -83,7 +83,7 @@ describe('multi trackers', () => {
         await trackerThree.stop()
     })
 
-    test('node sends stream status to specific tracker', async () => {
+    it('node sends stream status to specific tracker', async () => {
         // first stream, first tracker
         nodeOne.subscribe(FIRST_STREAM, 0)
 
@@ -112,7 +112,7 @@ describe('multi trackers', () => {
         expect(getSPIDKeys(trackerThree)).toContain(`${THIRD_STREAM}#0`)
     })
 
-    test('only one specific tracker sends instructions about stream', async () => {
+    it('only one specific tracker sends instructions about stream', async () => {
         // first stream, first tracker
         nodeOne.subscribe(FIRST_STREAM_2, 0)
         nodeTwo.subscribe(FIRST_STREAM_2, 0)
@@ -171,7 +171,7 @@ describe('multi trackers', () => {
         expect(nodeTwoEvents[1][2]).toEqual('trackerThree')
     })
 
-    test('node ignores instructions from unexpected tracker', async () => {
+    it('node ignores instructions from unexpected tracker', async () => {
         const unexpectedInstruction = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
             streamId: 'stream-2',

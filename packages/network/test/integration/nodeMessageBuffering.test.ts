@@ -45,7 +45,7 @@ describe('message buffering of Node', () => {
         await tracker.stop()
     })
 
-    test('first message to unknown stream eventually gets delivered', (done) => {
+    it('first message to unknown stream eventually gets delivered', (done) => {
         destinationNode.addMessageListener((streamMessage) => {
             expect(streamMessage.messageId).toEqual(
                 new MessageID('id', 0, 1, 0, 'publisher-id', 'session-id')

@@ -105,7 +105,7 @@ describe('InstructionCounter', () => {
         expect(instructionCounter.isMostRecent(status as any, 'node')).toEqual(true)
     })
 
-    test('setOrIncrement returns node/stream-specific counter value', () => {
+    it('setOrIncrement returns node/stream-specific counter value', () => {
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1')).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1')).toEqual(2)
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1')).toEqual(3)

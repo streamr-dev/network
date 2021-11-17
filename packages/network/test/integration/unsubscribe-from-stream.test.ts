@@ -59,7 +59,7 @@ describe('node unsubscribing from a stream', () => {
         await tracker.stop()
     })
 
-    test('node still receives data for subscribed streams thru existing connections', async () => {
+    it('node still receives data for subscribed streams thru existing connections', async () => {
         const actual: SPIDKey[] = []
         nodeB.addMessageListener((streamMessage) => {
             actual.push(`${streamMessage.getStreamId()}#${streamMessage.getStreamPartition()}`)
@@ -80,7 +80,7 @@ describe('node unsubscribing from a stream', () => {
         expect(actual).toEqual(['s#1'])
     })
 
-    test('connection between nodes is not kept if no shared streams', async () => {
+    it('connection between nodes is not kept if no shared streams', async () => {
         nodeB.unsubscribe('s', 2)
         await waitForEvent(nodeA, NodeEvent.NODE_UNSUBSCRIBED)
 
