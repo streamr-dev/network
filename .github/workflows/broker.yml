@@ -78,7 +78,7 @@ jobs:
 
   test-docker:
     name: Build + Test Docker images
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@v2.4.0
