@@ -30,6 +30,7 @@
     },
     "devDependencies": {
         "cli-table": "^0.3.6",
+        "lerna": "^4.0.0",
         "node-gyp-build": "^4.3.0",
         "semver": "^7.3.5",
         "zx": "^1.14.1"

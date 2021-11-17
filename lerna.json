@@ -1,0 +1,12 @@
+{
+  "packages": [
+    "packages/*"
+  ],
+  "version": "independent",
+  "npmClient": "npm",
+  "npmClientArgs": [
+    "--prefer-offline",
+    "--no-audit",
+    "--progress=false"
+  ]
+}
