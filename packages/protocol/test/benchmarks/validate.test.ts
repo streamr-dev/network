@@ -47,7 +47,7 @@ describe('validate', () => {
             resultString += `${key} ${Math.round((used[key] as number) / 1024 / 1024 * 100) / 100} MB\n`
             /* eslint-enable no-mixed-operators */
         })
-        console.log(resultString)
+        console.info(resultString)
     }
 
     it('no signature checking at all', async () => {

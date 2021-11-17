@@ -27,9 +27,15 @@ const deleteExpiredCommand = new DeleteExpiredCmd({
     bucketLimit: program.opts().bucketLimit,
     dryRun: !program.opts().realRun
 })
-deleteExpiredCommand.run()
-    .then(() => {})
-    .catch((e) => {
-        console.error(e)
+
+async function run() {
+    try {
+        await deleteExpiredCommand.run()
+        return {}
+    } catch (err) {
+        console.error(err)
         process.exit(1)
-    })
+    }
+}
+
+run()

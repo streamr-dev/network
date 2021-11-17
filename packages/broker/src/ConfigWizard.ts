@@ -15,11 +15,9 @@ import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.s
 const createLogger = () => {
     return {
         info: (...args: any[]) => {
-            // eslint-disable-next-line no-console
-            console.log(chalk.bgWhite.black(':'), ...args)
+            console.info(chalk.bgWhite.black(':'), ...args)
         },
         error: (...args: any[]) => {
-            // eslint-disable-next-line no-console
             console.error(chalk.bgRed.black('!'), ...args)
         }
     }
@@ -304,7 +302,7 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     if (!answers.parentDirExists) {
         mkdirSync(answers.parentDirPath)
     }
-   
+
     writeFileSync(answers.selectStoragePath, JSON.stringify(config, null, 2))
     chmodSync(answers.selectStoragePath, '0600')
     return answers.selectStoragePath

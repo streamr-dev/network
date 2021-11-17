@@ -13,7 +13,12 @@ export const binanceAdapterABI = [
     // },
     // {
     //     anonymous: false,
-    //     inputs: [{ indexed: true, type: 'address' }, { indexed: true, type: 'address' }, { indexed: false, type: 'uint256' }, { indexed: false, type: 'uint256' }],
+    //     inputs: [
+    //         { indexed: true, type: 'address' },
+    //         { indexed: true, type: 'address' },
+    //         { indexed: false, type: 'uint256' },
+    //         { indexed: false, type: 'uint256' }
+    //     ],
     //     name: 'WithdrawToBinance',
     //     type: 'event'
     // },
