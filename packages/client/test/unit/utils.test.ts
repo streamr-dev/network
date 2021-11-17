@@ -92,7 +92,7 @@ describeRepeats('utils', () => {
             })
 
             it('should return normally when valid session token is passed after expired session token', async () => {
-                session.getSessionToken = jest.fn(async () => {})
+                session.getSessionToken = jest.fn()
                     .mockImplementationOnce(async () => 'expired-session-token')
                     .mockImplementationOnce(async () => 'session-token')
 
