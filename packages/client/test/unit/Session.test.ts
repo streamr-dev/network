@@ -5,15 +5,14 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
 import clientOptions from '../../src/ConfigTest'
-import { Todo } from '../../src/types'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
 
 describe('Session', () => {
     let session: Session
     let msg: any
     let clientSessionToken: StreamrClient
-    let loginFunction: jest.MockedFunction
-    let logoutFunction: jest.MockedFunction
+    let loginFunction: jest.MockedFunction<any>
+    let logoutFunction: jest.MockedFunction<any>
 
     const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => new StreamrClient({
         ...clientOptions,
@@ -25,11 +24,12 @@ describe('Session', () => {
     function setup(opts?: any) {
         const childContainer = container.createChildContainer()
         logoutFunction = jest.fn(async () => {})
-        loginFunction = jest.fn(async () => {}).mockImplementationOnce(async () => ({
+        loginFunction = jest.fn().mockImplementationOnce(async () => ({
             token: 'session-token1',
         })).mockImplementationOnce(async () => ({
             token: 'session-token2',
-        })
+        }))
+
         childContainer.register<LoginEndpoints>(LoginEndpoints, {
             useValue: {
                 loginWithChallengeResponse: loginFunction as LoginEndpoints['loginWithChallengeResponse'],
@@ -172,7 +172,6 @@ describe('Session', () => {
         })
 
         it('should call the logout endpoint again', async () => {
-            clientSessionToken.onError = () => {}
             await session.getSessionToken()
             await session.logout()
             await session.getSessionToken()
@@ -183,7 +182,6 @@ describe('Session', () => {
         it('should throw if already logging out', async () => {
             await session.getSessionToken()
             session.logout()
-            clientSessionToken.onError = () => {}
             await expect(async () => (
                 session.logout()
             )).rejects.toThrow('Already logging out!')
@@ -191,7 +189,6 @@ describe('Session', () => {
 
         it('should throw if already logged out', async () => {
             await session.getSessionToken()
-            clientSessionToken.onError = () => {}
             await session.logout()
             await expect(async () => (
                 session.logout()
