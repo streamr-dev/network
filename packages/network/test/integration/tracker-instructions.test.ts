@@ -1,6 +1,6 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents, waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { SPID, TrackerLayer } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
@@ -39,17 +39,16 @@ describe('check tracker, nodes and statuses from nodes', () => {
             disconnectionWaitTime: 200
         })
 
-        node1.subscribeToStreamIfHaveNotYet(s1)
-        node2.subscribeToStreamIfHaveNotYet(s1)
-
-        node1.start()
-        node2.start()
-
-        await Promise.all([
+        await runAndWaitForEvents([
+            () => {node1.subscribeToStreamIfHaveNotYet(s1)},
+            () => {node2.subscribeToStreamIfHaveNotYet(s1)},
+            () => {node1.start()},
+            () => {node2.start()}
+        ], [
             // @ts-expect-error private variable
-            waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
+            [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED],
             // @ts-expect-error private variable
-            waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
+            [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         ])
     })
 

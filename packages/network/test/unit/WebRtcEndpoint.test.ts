@@ -34,14 +34,14 @@ describe('WebRtcEndpoint', () => {
             const ep2 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
             nodeToTracker1 = new NodeToTracker(ep1)
             nodeToTracker2 = new NodeToTracker(ep2)
-            await Promise.all([
-                nodeToTracker1.connectToTracker(tracker.getUrl(), trackerPeerInfo),
-                waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
-            ])
-            await Promise.all([
-                nodeToTracker2.connectToTracker(tracker.getUrl(), trackerPeerInfo),
-                waitForEvent(tracker, TrackerEvent.NODE_CONNECTED)
-            ])
+            await runAndWaitForEvents(
+                () => {nodeToTracker1.connectToTracker(tracker.getUrl(), trackerPeerInfo)},[
+                    [tracker, TrackerEvent.NODE_CONNECTED]
+                ])
+            await runAndWaitForEvents(
+                () => {nodeToTracker2.connectToTracker(tracker.getUrl(), trackerPeerInfo)}, [
+                    [tracker, TrackerEvent.NODE_CONNECTED]
+                ])
 
             const peerInfo1 = PeerInfo.newNode('node-1')
             const peerInfo2 = PeerInfo.newNode('node-2')
@@ -442,6 +442,6 @@ describe('WebRtcEndpoint', () => {
                 await endpoint1.send('node-2', payload)
             }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)
         })
-
+    
     })
 })

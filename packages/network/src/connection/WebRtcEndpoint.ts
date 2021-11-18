@@ -16,7 +16,7 @@ import {
 import { Rtts } from '../identifiers'
 import { MessageQueue } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
-import { NegotiatedProtocolVersions } from "./NegotiatedProtocolVersions"
+import { NegotiatedProtocolVersions } from './NegotiatedProtocolVersions'
 import { v4 as uuidv4 } from 'uuid'
 
 class WebRtcError extends Error {
@@ -363,10 +363,15 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
 
         const deferredAttempt = connection.getDeferredConnectionAttempt() 
+        
+        if (connection.getLastState() == 'connected') {
+            return Promise.resolve(targetPeerId)
+        }
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
-        } else {
-            throw new Error(`disconnected ${connection.getPeerId()}`)
+        } 
+        else { 
+            return Promise.reject(new WebRtcError(`disconnected ${connection.getPeerId()}`))
         }
     }
 

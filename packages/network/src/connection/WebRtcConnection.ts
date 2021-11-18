@@ -165,11 +165,12 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         if (this.isFinished) {
             throw new Error('Connection already closed.')
         }
-        this.doConnect()
+       
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
+        this.doConnect()
     }
 
     getDeferredConnectionAttempt(): DeferredConnectionAttempt | null {
@@ -219,10 +220,11 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.baseLogger.warn(`doClose (subclass) threw: %s`, e)
         }
 
+        if (!this.hasOpened) {
+            this.emit('failed')
+        }
+
         if (err) {
-            if (!this.hasOpened) {
-                this.emit('failed')
-            }
             this.emitClose(err)
             return
         }
@@ -275,6 +277,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             if (this.pingAttempts >= this.maxPingPongAttempts) {
                 this.baseLogger.debug(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
                 this.close(new Error('pong not received'))
+                return
             } else {
                 this.rttStart = Date.now()
                 try {
