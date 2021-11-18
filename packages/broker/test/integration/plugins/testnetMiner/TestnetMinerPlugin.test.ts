@@ -7,7 +7,7 @@ import { Stream, StreamOperation, StreamrClient } from 'streamr-client'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { Broker } from '../../../../src/broker'
-import { createClient, createTestStream, fastPrivateKey, startBroker } from '../../../utils'
+import { createClient, createTestStream, startBroker } from '../../../utils'
 import { version as CURRENT_VERSION } from '../../../../package.json'
 
 jest.setTimeout(30000)

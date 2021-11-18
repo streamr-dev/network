@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { clientOptions, describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, until, getPrivateKey } from '../utils'
+import { clientOptions, describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, getPrivateKey } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamOperation } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'

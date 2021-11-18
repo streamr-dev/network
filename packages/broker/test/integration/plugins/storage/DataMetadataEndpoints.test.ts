@@ -2,7 +2,8 @@ import http from 'http'
 import { startTracker, Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream, getPrivateKey } from '../../../utils'
+import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
+    createTestStream, getPrivateKey } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 jest.setTimeout(30000)

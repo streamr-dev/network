@@ -8,7 +8,6 @@ import {
     MAX_SEQUENCE_NUMBER_VALUE
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { HttpError } from '../../../../src/errors/HttpError'
 import { PassThrough } from 'stream'
 import { StreamFetcher } from "../../../../src/StreamFetcher"
 
@@ -46,7 +45,7 @@ describe('DataQueryEndpoints', () => {
         app = express()
         storage = {} as Storage
         streamFetcher = {
-            authenticate(streamId: string, sessionToken: string|undefined) {
+            authenticate() {
                 return new Promise(((resolve) => {
                     // if (sessionToken === 'mock-session-token') {
                     resolve({})

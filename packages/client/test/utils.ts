@@ -34,7 +34,6 @@ export function mockContext() {
 
 export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
-
 export function fakeAddress() {
     return crypto.randomBytes(32).toString('hex').slice(0, 40)
 }

@@ -1,7 +1,6 @@
 /* eslint-disable no-underscore-dangle, object-curly-newline */
 import StreamrClient, { Stream } from 'streamr-client'
 import { StorageConfig, StorageConfigListener } from '../../../../src/plugins/storage/StorageConfig'
-import nock from 'nock'
 import { Protocol } from 'streamr-network'
 
 describe('StorageConfig', () => {

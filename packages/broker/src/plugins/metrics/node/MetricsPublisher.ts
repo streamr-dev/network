@@ -48,7 +48,6 @@ export class MetricsPublisher {
         }
     }
 
-
     private async ensureStreamCreated(periodLength: number): Promise<string> {
         const streamId = this.getStreamId(periodLength)
         const stream = await this.client.getOrCreateStream({

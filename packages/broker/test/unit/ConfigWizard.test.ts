@@ -13,7 +13,6 @@ import {
     start
 } from '../../src/ConfigWizard'
 import { readFileSync } from 'fs'
-import { getPrivateKey as getPrivateTestKey } from '../utils'
 
 const createMockLogger = () => {
     const messages: string[] = []

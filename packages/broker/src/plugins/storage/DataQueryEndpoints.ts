@@ -6,7 +6,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { Logger, Metrics, MetricsContext } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Storage } from './Storage'
-import { AuthenticatedRequest, authenticator } from '../../RequestAuthenticatorMiddleware'
+import { AuthenticatedRequest } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 import { StreamFetcher } from "../../StreamFetcher"
