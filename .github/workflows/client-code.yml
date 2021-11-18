@@ -34,7 +34,7 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -59,7 +59,7 @@ jobs:
     env:
       TEST_REPEATS: 5
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -98,7 +98,7 @@ jobs:
       TEST_REPEATS: 2
 
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -117,22 +117,22 @@ jobs:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: Run Test
         run: npm run $TEST_NAME
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2.0.2
+        with:
+          dest: 'logs'
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          path: 'logs'
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
-      - name: Collect docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v2.0.2
-        with:
-          dest: 'packages/client/logs'
-      - name: Upload logs to GitHub
-        if: failure()
-        uses: actions/upload-artifact@master
-        with:
-          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
-          path: packages/client/logs
 
   flakey:
     if: ${{ false }}
@@ -144,7 +144,7 @@ jobs:
         node-version: [14.x, 16.x]
 
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -184,7 +184,7 @@ jobs:
         node-version: [14.x, 16.x]
 
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}

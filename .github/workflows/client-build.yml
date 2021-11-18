@@ -37,7 +37,7 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -52,7 +52,7 @@ jobs:
           npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: client-build
           path: packages/client/dist
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -139,7 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -182,7 +182,7 @@ jobs:
       matrix:
         node-version: [14.x, 16.x]
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
@@ -190,7 +190,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/*/package-lock.json
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v2.0.10
         with:
           name: client-build
           path: packages/client/dist
@@ -214,7 +214,7 @@ jobs:
         run: |
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: client-benchmarks
           path: |
