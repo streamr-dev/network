@@ -6,7 +6,7 @@ import Subscription from '../../src/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
 import clientOptions from './config'
-import { StrictBrubeckClientConfig } from '../Config'
+import { StrictBrubeckClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 
 const MAX_MESSAGES = 5

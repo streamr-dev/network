@@ -157,6 +157,9 @@ export class StreamEndpoints implements Context {
         // Try looking up the stream by id or name, whichever is defined
         try {
             if (props.id) {
+                if (props.id && props.id.startsWith('/')) {
+                    return await this.getStream(await this.ethereum.getAddress() + props.id)
+                }
                 return await this.getStream(props.id)
             }
             return await this.getStreamByName(props.name!)

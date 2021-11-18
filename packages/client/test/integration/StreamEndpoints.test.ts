@@ -574,7 +574,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 try {
                     await client.getStream(stream.id)
                     return false
-                } catch (err) {
+                } catch (err: any) {
                     return err.errorCode === 'NOT_FOUND'
                 }
             }, 100000, 1000)
