@@ -3,12 +3,10 @@ import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Broker } from '../broker'
-import { startBroker, createClient, createMqttClient, createTestStream, getPrivateKey, getSPIDKeys } from '../utils'
+import { Broker } from '../../src/broker'
+import { startBroker, createClient, createTestStream, getPrivateKey, getSPIDKeys } from '../utils'
 
 jest.setTimeout(30000)
-
-const httpPort1 = 13381
 
 const wsPort1 = 13391
 const wsPort2 = 13392
@@ -26,8 +24,7 @@ const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
     // target users
     for await (const s of streams) {
         for await (const u of brokerUsers) {
-            await s.grantPermission(StreamOperation.STREAM_GET, u.address)
-            await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, u.address)
+            await s.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, u.address)
         }
     }
 }
@@ -44,6 +41,8 @@ describe('broker subscriptions', () => {
     let mqttClient2: AsyncMqttClient
 
     beforeEach(async () => {
+        const broker1User = new Wallet(await getPrivateKey())
+        const broker2User = new Wallet(await getPrivateKey())
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
@@ -54,7 +53,7 @@ describe('broker subscriptions', () => {
 
         broker1 = await startBroker({
             name: 'broker1',
-            privateKey: await getPrivateKey(),
+            privateKey: broker1User.privateKey,
             trackerPort,
             wsPort: wsPort1,
             extraPlugins: {
@@ -80,8 +79,8 @@ describe('broker subscriptions', () => {
         client1 = await createClient(tracker, await getPrivateKey())
         client2 = await createClient(tracker, await getPrivateKey())
 
-        client1 = createClient(tracker, privateKey)
-        client2 = createClient(tracker, privateKey)
+        client1 = await createClient(tracker, await getPrivateKey())
+        client2 = await createClient(tracker, await getPrivateKey())
 
         mqttClient1 = await createMqttClient(mqttPort1)
         mqttClient2 = await createMqttClient(mqttPort2)
@@ -89,7 +88,8 @@ describe('broker subscriptions', () => {
         freshStream1 = await createTestStream(client1, module)
         freshStream2 = await createTestStream(client2, module)
         await grantPermissions([freshStream1, freshStream2], [broker1User, broker2User])
-    }, 10 * 1000)
+
+    })
 
     afterEach(async () => {
         await mqttClient1.end(true)
@@ -146,5 +146,5 @@ describe('broker subscriptions', () => {
 
         expect(getSPIDKeys(broker1)).toIncludeSameMembers([])
         expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
-    }, 10000)
+    })
 })

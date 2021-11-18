@@ -2,7 +2,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { Stream, StreamrClient } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { Broker } from '../../src/broker'
-import { Message } from '../helpers/PayloadFormat'
+import { Message } from '../../src/helpers/PayloadFormat'
 import { createClient, startBroker, createTestStream, Queue, getPrivateKey } from '../utils'
 
 interface MessagingPluginApi<T> {

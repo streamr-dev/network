@@ -16,8 +16,8 @@ export const authenticator = (streamFetcher: StreamFetcher, permission = StreamO
     user: EthereumAddress) => (req: Todo, res: Response, next: NextFunction): void => {
 
     // Try to parse authorization header if defined
-    if (headers.authorization !== undefined) {
-        const sessionTokenHeaderValid = headers.authorization.toLowerCase().startsWith('bearer ')
+    if (req.headers.authorization !== undefined) {
+        const sessionTokenHeaderValid = req.headers.authorization.toLowerCase().startsWith('bearer ')
         if (!sessionTokenHeaderValid) {
             const errMsg = 'Authorization header malformed. Should be of form "Bearer session-token".'
             logger.debug(errMsg)

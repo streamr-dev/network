@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
+import StreamrClient, { MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'

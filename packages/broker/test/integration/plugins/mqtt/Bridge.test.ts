@@ -9,6 +9,8 @@ import { Wallet } from '@ethersproject/wallet'
 const MQTT_PLUGIN_PORT = 12470
 const TRACKER_PORT = 12471
 
+jest.setTimeout(30000)
+
 const createMqttClient = () => {
     return mqtt.connectAsync('mqtt://localhost:' + MQTT_PLUGIN_PORT)
 }

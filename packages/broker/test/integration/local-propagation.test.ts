@@ -1,8 +1,11 @@
-import StreamrClient, { Stream } from 'streamr-client'
+import { Wallet } from '@ethersproject/wallet'
+import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, fastPrivateKey, createClient, createTestStream } from '../utils'
+import { startBroker, createClient, createTestStream, getPrivateKey } from '../utils'
+
+jest.setTimeout(30000)
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -16,6 +19,7 @@ describe('local propagation', () => {
     let client2: StreamrClient
     let freshStream: Stream
     let freshStreamId: string
+    let brokerWallet: Wallet
 
     beforeAll(async () => {
         privateKey = await getPrivateKey()
@@ -36,8 +40,8 @@ describe('local propagation', () => {
             wsPort
         })
 
-        client1 = createClient(tracker, privateKey)
-        client2 = createClient(tracker, privateKey)
+        client1 = await createClient(tracker, privateKey)
+        client2 = await createClient(tracker, privateKey)
     })
 
     beforeEach(async () => {
