@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 16.x ]
+        node-version: [16.x]
     steps:
       - uses: actions/checkout@v2.4.0
       - name: Use Node.js ${{ matrix.node-version }}
@@ -34,13 +34,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-broker
       - run: npm run eslint
       - run: npm run test-unit
@@ -50,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 16.x ]
+        node-version: [16.x]
     steps:
       - uses: actions/checkout@v2.4.0
       - name: Use Node.js ${{ matrix.node-version }}
@@ -58,13 +56,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-broker
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -82,7 +78,7 @@ jobs:
 
   test-docker:
     name: Build + Test Docker images
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@v2.4.0
@@ -234,14 +230,12 @@ jobs:
           node-version: 16
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-broker
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}

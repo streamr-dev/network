@@ -100,7 +100,7 @@ export function addAfterFn() {
     }
 }
 
-export function Msg<T extends object>(opts?: T) {
+export function Msg<T extends object = object>(opts?: T) {
     return {
         value: uid('msg'),
         ...opts,

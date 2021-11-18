@@ -28,31 +28,14 @@ defaults:
 
 jobs:
   data-unions-integration:
-    name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
+    name: DataUnions Integration Test using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14.x]
-        test-name: [
-          "test-integration-dataunions",
-        ]
-        websocket-url:
-          - name: "default"
-            url: ""
-          - name: "single-node-only"
-            url: "ws://localhost:8690/api/v1/ws"
-
-        exclude:
-          # no need to test different ws urls for dataunion tests
-          - test-name: "test-integration-dataunions"
-            websocket-url:
-              - name: "single-node-only"
-              - url: "ws://localhost:8690/api/v1/ws"
+        node-version: [16.x]
     env:
-      TEST_NAME: ${{ matrix.test-name }}
-      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
-      TEST_REPEATS: 2
+      TEST_REPEATS: 1
 
     steps:
       - uses: actions/checkout@v2.4.0
@@ -60,20 +43,18 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
       - name: Run Test
-        run: npm run $TEST_NAME
+        run: npm run test-integration-dataunions
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
@@ -83,7 +64,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
       - name: Stop Streamr Docker Stack
         if: always()

@@ -149,8 +149,10 @@ describe.skip('ping-pong test between broker and clients', () => {
 
             // @ts-expect-error accessing private method
             websocketServer.pingConnections()
+            return undefined
         }).catch((err) => {
             done(err)
+            return undefined
         })
     })
 })

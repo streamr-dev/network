@@ -39,23 +39,20 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
-      - name: npm run eslint
-        run: npm run eslint
+      - run: npm run eslint
 
   test:
     name: Test Unit using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
     env:
       TEST_REPEATS: 5
     steps:
@@ -64,13 +61,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: test-unit
         timeout-minutes: 7
@@ -82,7 +77,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
         test-name: [
           "test-integration-no-resend",
           "test-integration-resend",
@@ -103,13 +98,38 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      # >> use monorepo brokers/trackers with streamr-docker-dev
+      # For now, builds docker image and runs with streamr-docker-dev so we
+      # don't have to worry about backgrounding processes
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.6
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          driver-opts: |
+            network=host
+      - name: Build
+        uses: docker/build-push-action@v2.7.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: streamr/broker-node:dev
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      # << use monorepo brokers/trackers with streamr-docker-dev
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -149,13 +169,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -189,13 +207,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3

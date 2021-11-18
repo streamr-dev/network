@@ -67,7 +67,10 @@ export class StorageConfig {
         // eslint-disable-next-line no-underscore-dangle
         if (pollInterval !== 0) {
             await instance.poll(pollInterval)
+        } else {
+            await instance.refresh()
         }
+
         return instance
     }
 
@@ -125,8 +128,42 @@ export class StorageConfig {
         }
 
         if (removed.size > 0) {
-            this.removeSPIDKeys(removed)
+            this.prepareToRemoveStreams(removed)
         }
+    }
+
+    private removeConfirmations = new Map<SPIDKey, number>()
+
+    private prepareToRemoveStreams(keysToRemove: Set<SPIDKey>): void {
+        // only remove streams after removed for REMOVE_CONFIRMATIONS polls
+        // works around timing issue between storage assignment events and storage endpoint
+        // i.e. poll result may be outdated, so storage can be added, removed in
+        // outdated poll, then added again in next poll
+        const REMOVE_CONFIRMATIONS = 2
+        for (const key of keysToRemove) {
+            // count confirmations
+            const confirmations = (Number(this.removeConfirmations.get(key)) + 1) || 1
+            this.removeConfirmations.set(key, confirmations)
+        }
+
+        const confirmedForRemoval = new Set<SPIDKey>()
+        for (const [key, confirmations] of this.removeConfirmations) {
+            if (confirmations >= REMOVE_CONFIRMATIONS) {
+                // got enough confirmations, remove
+                confirmedForRemoval.add(key)
+                this.removeConfirmations.delete(key)
+            }
+
+            if (!keysToRemove.has(key)) {
+                if (confirmations === 1) {
+                    this.removeConfirmations.delete(key)
+                } else {
+                    this.removeConfirmations.set(key, confirmations - 1)
+                }
+            }
+        }
+
+        return this.removeSPIDKeys(confirmedForRemoval)
     }
 
     private addSPIDKeys(keysToAdd: Set<SPIDKey>): void {

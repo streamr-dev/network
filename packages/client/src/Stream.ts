@@ -132,6 +132,9 @@ class StreamrStream implements StreamMetadata {
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
     }
 
+    /**
+     * Persist stream metadata updates.
+     */
     async update() {
         try {
             await this._streamRegistry.updateStream(this.toObject())

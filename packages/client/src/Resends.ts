@@ -19,7 +19,7 @@ import { NodeRegistry } from './NodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
 import { StreamRegistry } from './StreamRegistry'
-import { ConvertBrowserStream } from './utils/ConvertBrowserStream'
+import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -36,7 +36,8 @@ async function fetchStream(url: string, opts = {}, abortController = new AbortCo
     }
 
     try {
-        const source: Readable = ConvertBrowserStream(response.body as unknown as (ReadableStream | Readable))
+        // in the browser, response.body will be a web stream. Convert this into a node stream.
+        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
 
         const stream = source.pipe(split2((message: string) => {
             return StreamMessage.deserialize(message)

@@ -45,10 +45,10 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/*/package-lock.json
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
@@ -77,10 +77,10 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: test-types
         run: npm run test-types
@@ -107,10 +107,10 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -149,10 +149,10 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
@@ -196,10 +196,10 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: benchmark publish
         timeout-minutes: 15
