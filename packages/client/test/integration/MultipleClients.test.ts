@@ -561,7 +561,6 @@ describeRepeats('PubSub with multiple clients', () => {
 
         await stream.grantPermission(StreamOperation.STREAM_GET, otherUser.username)
         await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser.username)
-        await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
         const receivedMessagesMain: Record<string, any[]> = {}
