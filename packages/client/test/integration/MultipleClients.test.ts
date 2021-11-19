@@ -437,13 +437,18 @@ describeRepeats('PubSub with multiple clients', () => {
                     })
                 }
 
-                const msgs = await publishTestMessages(1) // ensure first message stored
+                let firstMessage: StreamMessage
+                const msgs = await publishTestMessages(1, {
+                    async afterEach(streamMessage) {
+                        firstMessage = streamMessage
+                    }
+                }) // ensure first message stored
                 published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
                     waitForLast: true,
-                    async afterEach(streamMessage) {
+                    async afterEach() {
                         counter += 1
                         if (counter === 3) {
-                            await addLateSubscriber(streamMessage)
+                            await addLateSubscriber(firstMessage)
                         }
                     }
                 }))
@@ -608,19 +613,21 @@ describeRepeats('PubSub with multiple clients', () => {
                 })
             }
 
-            published[publisherId] = await publishTestMessages(1) // ensure first message stored
-            await publishTestMessages(MAX_MESSAGES, {
+            let firstMessage: StreamMessage
+            const msgs = await publishTestMessages(1, {
                 async afterEach(streamMessage) {
+                    firstMessage = streamMessage
+                }
+            }) // ensure first message stored
+            published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
+                async afterEach() {
                     counter += 1
-                    published[publisherId] = published[publisherId] || []
-                    published[publisherId].push(streamMessage.getParsedContent())
-
                     if (counter === 3) {
                         // late subscribe to stream from other client instance
-                        await addLateSubscriber(streamMessage)
+                        await addLateSubscriber(firstMessage)
                     }
                 }
-            })
+            }))
         }))
 
         await waitForCondition(() => {
