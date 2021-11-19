@@ -102,7 +102,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             package-lock.json
-            packages/*/package-lock.json
       - uses: actions/download-artifact@v2
         with:
           name: client-build
