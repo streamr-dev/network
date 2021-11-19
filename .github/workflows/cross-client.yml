@@ -36,11 +36,6 @@ jobs:
           node-version: "16.x"
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - name: bootstrap-pkg
-        working-directory: './'
-        run: |
-          npm install -g npm@8 --prefer-offline --no-audit
-          npm run bootstrap-pkg @streamr/cross-client-testing
       - name: Cache Broker Docker Image
         id: cache-broker-image
         uses: actions/cache@v2.1.6
