@@ -437,7 +437,8 @@ describeRepeats('PubSub with multiple clients', () => {
                     })
                 }
 
-                published[publisherId] = await publishTestMessages(MAX_MESSAGES, {
+                const msgs = await publishTestMessages(1) // ensure first message stored
+                published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
                     waitForLast: true,
                     async afterEach(streamMessage) {
                         counter += 1
@@ -445,7 +446,7 @@ describeRepeats('PubSub with multiple clients', () => {
                             await addLateSubscriber(streamMessage)
                         }
                     }
-                })
+                }))
             }))
 
             await waitForCondition(() => {
@@ -607,6 +608,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 })
             }
 
+            published[publisherId] = await publishTestMessages(1) // ensure first message stored
             await publishTestMessages(MAX_MESSAGES, {
                 async afterEach(streamMessage) {
                     counter += 1
