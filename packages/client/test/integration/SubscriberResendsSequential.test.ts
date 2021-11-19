@@ -9,15 +9,16 @@ import {
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
-import { Stream } from '../../src/Stream'
+import { Stream, StreamOperation } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
 
-const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 12000 : 6000
+const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 6000
 const MAX_MESSAGES = 5
 const ITERATIONS = 4
 
 describeRepeats('sequential resend subscribe', () => {
-    let client: StreamrClient
+    let publisher: StreamrClient
+    let subscriber: StreamrClient
     let stream: Stream
 
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -26,28 +27,33 @@ describeRepeats('sequential resend subscribe', () => {
     let published: any[] = [] // keeps track of stream message data so we can verify they were resent
 
     beforeAll(async () => {
-        client = new StreamrClient({
+        publisher = new StreamrClient({
             ...clientOptions,
+            id: 'TestPublisher',
             auth: {
                 privateKey: fakePrivateKey(),
             },
         })
 
-        // eslint-disable-next-line require-atomic-updates
-        await Promise.all([
-            client.connect(),
-        ])
-        stream = await createTestStream(client, module)
+        subscriber = new StreamrClient({
+            ...clientOptions,
+            id: 'TestSubscriber',
+            auth: {
+                privateKey: fakePrivateKey(),
+            },
+        })
+
+        stream = await createTestStream(publisher, module)
         await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
-        publishTestMessages = getPublishTestStreamMessages(client, stream)
+        publishTestMessages = getPublishTestStreamMessages(publisher, stream)
+        await stream.grantPermissions([StreamOperation.STREAM_GET, StreamOperation.STREAM_SUBSCRIBE], await subscriber.getAddress())
 
-        waitForStorage = getWaitForStorage(client, {
+        waitForStorage = getWaitForStorage(publisher, {
             stream,
             timeout: WAIT_FOR_STORAGE_TIMEOUT,
         })
 
-        await client.connect()
         // initialize resend data by publishing some messages and waiting for
         // them to land in storage
         published = await publishTestMessages(MAX_MESSAGES, {
@@ -56,12 +62,12 @@ describeRepeats('sequential resend subscribe', () => {
         })
     }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
-    beforeEach(async () => {
-        await client.connect()
+    afterAll(async () => {
+        await publisher?.destroy()
+        await subscriber?.destroy()
     })
 
     afterEach(async () => {
-        await client.connect()
         // ensure last message is in storage
         const last = published[published.length - 1]
         await waitForStorage(last)
@@ -75,7 +81,7 @@ describeRepeats('sequential resend subscribe', () => {
         const id = (i + 2) * 111111 // start at 222222
         // eslint-disable-next-line no-loop-func
         test(`test ${id}`, async () => {
-            const sub = await client.resendSubscribe({
+            const sub = await subscriber.resendSubscribe({
                 streamId: stream.id,
                 last: published.length,
             })
@@ -85,7 +91,7 @@ describeRepeats('sequential resend subscribe', () => {
 
             const message = Msg()
             // eslint-disable-next-line no-await-in-loop
-            const streamMessage = await client.publish(stream.id, message, id) // should be realtime
+            const streamMessage = await publisher.publish(stream.id, message, id) // should be realtime
             // keep track of published messages so we can check they are resent in next test(s)
             published.push(streamMessage)
             const msgs = await sub.collect(published.length)
