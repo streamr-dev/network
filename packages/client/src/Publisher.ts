@@ -6,7 +6,7 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from './utils'
 import { inspect } from './utils/log'
-import { Context } from './utils/Context'
+import { Context, ContextError } from './utils/Context'
 import { CancelableGenerator, ICancelable } from './utils/iterators'
 
 import { StreamEndpoints } from './StreamEndpoints'
@@ -147,6 +147,9 @@ export default class BrubeckPublisher implements Context, Stoppable {
         count?: number
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
     } = {}) {
+        if (!streamMessage || !streamMessage.spid) {
+            throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
+        }
 
         const { spid } = streamMessage
 

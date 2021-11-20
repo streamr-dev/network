@@ -35,14 +35,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: eslint
@@ -57,7 +55,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
 
     steps:
       - uses: actions/checkout@v2.4.0
@@ -65,14 +63,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: Start Streamr Docker Stack
@@ -111,10 +107,10 @@ jobs:
             package-lock.json
             packages/*/package-lock.json
 
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}

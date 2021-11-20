@@ -128,6 +128,12 @@ function TestStreamEndpoints(getName: () => string) {
                 id: newPath,
             })
             expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+
+            // ensure can get after create i.e. doesn't try create again
+            const sameStream = await client.getOrCreateStream({
+                id: newPath,
+            })
+            expect(sameStream.id).toEqual(newStream.id)
         })
 
         it('fails if stream prefixed with other users address', async () => {

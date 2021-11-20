@@ -70,6 +70,9 @@ module.exports = (env, argv) => {
     const isProduction = environment === 'production'
 
     const config = {
+        cache: {
+            type: 'filesystem',
+        },
         mode: isProduction ? 'production' : 'development',
         entry: './src/browser.ts',
         devtool: "source-map",
@@ -98,7 +101,8 @@ module.exports = (env, argv) => {
         },
         output: {
             filename: `${libraryName}.js`,
-            sourceMapFilename: `${libraryName}.js.map`,
+            sourceMapFilename: `[name].[contenthash].js.map`,
+            chunkFilename: '[id].[contenthash].js',
             path: path.resolve(__dirname, 'dist'),
             library: 'StreamrNetwork',
             libraryTarget: 'umd2',

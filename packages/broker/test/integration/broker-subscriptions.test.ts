@@ -3,7 +3,7 @@ import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Broker } from '../broker'
+import { Broker } from '../../src/broker'
 import { startBroker, fastPrivateKey, createClient, createTestStream, getSPIDKeys, createMockUser } from '../utils'
 
 const wsPort1 = 13391
@@ -130,7 +130,7 @@ describe('broker subscriptions', () => {
         expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         await mqttClient1.unsubscribe(freshStream1.id)
-        
+
         await waitForCondition(() => getSPIDKeys(broker1).length === 1)
         await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 

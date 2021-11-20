@@ -33,7 +33,11 @@ describe('StorageConfig', () => {
             expect(listener.onSPIDAdded).toBeCalledTimes(2)
             expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('new1', 0))
             expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('new2', 0))
-            expect(listener.onSPIDRemoved).toBeCalledTimes(2)
+            // doesn't remove immediately
+            expect(listener.onSPIDRemoved).toBeCalledTimes(0)
+            // calling it again will remove it
+            // @ts-expect-error private
+            config.setSPIDKeys(new Set(['existing2#0', 'existing3#0', 'new1#0', 'new2#0']))
             expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing1', 0))
             expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 1))
             expect(config.hasSPID(new Protocol.SPID('new1', 0))).toBeTruthy()
@@ -79,12 +83,12 @@ describe('StorageConfig', () => {
         })
 
         it('onAssignmentEvent', () => {
-            config.onAssignmentEvent({ 
-                storageNode: 'nodeId', 
-                stream: { 
-                    id: 'foo', 
+            config.onAssignmentEvent({
+                storageNode: 'nodeId',
+                stream: {
+                    id: 'foo',
                     partitions: 2
-                }, 
+                },
                 event: 'STREAM_ADDED'
             })
             expect(config.hasSPID(new Protocol.SPID('foo', 0))).toBeTruthy()
@@ -128,12 +132,12 @@ describe('StorageConfig', () => {
         })
 
         it('onAssignmentEvent', () => {
-            configs.forEach((config) => config.onAssignmentEvent({ 
-                storageNode: 'nodeId', 
-                stream: { 
-                    id: 'foo', 
+            configs.forEach((config) => config.onAssignmentEvent({
+                storageNode: 'nodeId',
+                stream: {
+                    id: 'foo',
                     partitions: 100
-                }, 
+                },
                 event: 'STREAM_ADDED'
             }))
             // @ts-expect-error private field

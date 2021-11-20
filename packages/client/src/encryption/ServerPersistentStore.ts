@@ -7,7 +7,7 @@ import sqlite3 from 'sqlite3'
 import { instanceId, pOnce } from '../utils'
 import { Context } from '../utils/Context'
 
-import { PersistentStore } from './GroupKeyStore'
+import { PersistentStore } from './PersistentStore'
 
 // eslint-disable-next-line promise/param-names
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
