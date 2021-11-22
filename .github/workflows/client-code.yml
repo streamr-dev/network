@@ -139,7 +139,7 @@ jobs:
         name: Run Test
         with:
           max_attempts: 3
-          timeout_minutes: 30
+          timeout_minutes: 10
           retry_on: error
           command: cd packages/client && npm run $TEST_NAME
 
@@ -163,13 +163,24 @@ jobs:
           docker rm $(docker ps -a -q)
 
   flakey:
-    if: ${{ false }}
-    name: Flakey Tests using Node ${{ matrix.node-version }}
+    name: Flakey ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [16.x]
+        test-name: [
+          "test-flakey",
+        ]
+        websocket-url:
+          - name: "default"
+            url: ""
+          - name: "single-node-only"
+            url: "ws://localhost:8690/api/v1/ws"
+    env:
+      TEST_NAME: ${{ matrix.test-name }}
+      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
+      TEST_REPEATS: 2
 
     steps:
       - uses: actions/checkout@v2.4.0
@@ -178,6 +189,33 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: package-lock.json
+      # >> use monorepo brokers/trackers with streamr-docker-dev
+      # For now, builds docker image and runs with streamr-docker-dev so we
+      # don't have to worry about backgrounding processes
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.6
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          driver-opts: |
+            network=host
+      - name: Build
+        uses: docker/build-push-action@v2.7.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: streamr/broker-node:dev
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      # << use monorepo brokers/trackers with streamr-docker-dev
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -190,10 +228,24 @@ jobs:
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
-          max_attempts: 2
-          timeout_minutes: 15
+          max_attempts: 3
+          timeout_minutes: 30
           retry_on: error
-          command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
+          command: cd packages/client && npm run $TEST_NAME
+
+      - name: Run Test
+        run: npm run $TEST_NAME
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2.0.2
+        with:
+          dest: 'logs'
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          path: 'logs'
       - name: Stop Streamr Docker Stack
         if: always()
         run: |

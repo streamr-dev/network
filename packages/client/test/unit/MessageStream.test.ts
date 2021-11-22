@@ -20,6 +20,7 @@ describe('MessageStream', () => {
 
     afterEach(async () => {
         await leaksDetector.checkNoLeaks()
+        leaksDetector.clear()
     })
 
     it('works', async () => {

@@ -20,7 +20,7 @@ const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
 const NUM_MESSAGES = 5
 
-describeRepeats('decryption', () => {
+describeRepeats('decryption (slow)', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let expectErrors = 0 // check no errors by default
     let errors: Error[] = []

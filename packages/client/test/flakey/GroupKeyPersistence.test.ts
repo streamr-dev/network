@@ -5,8 +5,9 @@ import { GroupKey } from '../../src/encryption/Encryption'
 import { StorageNode } from '../../src/StorageNode'
 
 const TIMEOUT = 20 * 1000
+const NUM_STREAMS = 8
 
-describeRepeats('Group Key Persistence', () => {
+describeRepeats('Group Key Persistence (slow)', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -220,7 +221,7 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             const publishTestMessages2 = getPublishTestStreamMessages(publisher2, stream)
-            const MAX_MESSAGES = 16
+            const MAX_MESSAGES = 8
             const [published1, published2] = await Promise.all([
                 publishTestMessages(MAX_MESSAGES - 1),
                 publishTestMessages2(MAX_MESSAGES), // use different lengths so we can differentiate who published what
@@ -248,7 +249,6 @@ describeRepeats('Group Key Persistence', () => {
         }, 3 * TIMEOUT)
 
         describe('publisher does not complain about group key when many concurrent publishes', () => {
-            const NUM_STREAMS = 20
             let streams: Stream[]
 
             beforeEach(async () => {
@@ -271,21 +271,20 @@ describeRepeats('Group Key Persistence', () => {
                 const tasks = streams.map(async (s) => {
                     const publish = getPublishTestStreamMessages(publisher, s)
                     const published = await Promise.all([
-                        publish(5),
-                        publish(5),
-                        publish(5),
-                        publish(5),
+                        publish(4),
+                        publish(4),
+                        publish(4),
+                        publish(4),
                     ])
                     return published.flat()
                 })
                 await Promise.allSettled(tasks)
                 const publishedPerStream = await Promise.all(tasks)
-                expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(20))
+                expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(4 * 4))
             }, 2 * TIMEOUT)
         })
 
         describe('publisher does not complain about group key when many concurrent publishes with storage', () => {
-            const NUM_STREAMS = 20
             let streams: Stream[]
 
             beforeEach(async () => {
@@ -312,22 +311,21 @@ describeRepeats('Group Key Persistence', () => {
                 const tasks = streams.map(async (s) => {
                     const publish = getPublishTestStreamMessages(publisher, s)
                     const published = await Promise.all([
-                        publish(5),
-                        publish(5),
-                        publish(5),
-                        publish(5),
+                        publish(4),
+                        publish(4),
+                        publish(4),
+                        publish(4),
                     ])
                     return published.flat()
                 })
                 await Promise.allSettled(tasks)
                 const publishedPerStream = await Promise.all(tasks)
-                expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(20))
+                expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(4 * 4))
             }, 2 * TIMEOUT)
         })
     })
 
     describe('with requireEncryptedData = false', () => {
-        const NUM_STREAMS = 20
         let streams: Stream[]
 
         beforeEach(async () => {
@@ -354,17 +352,17 @@ describeRepeats('Group Key Persistence', () => {
             const tasks = streams.map(async (stream) => {
                 const publish = getPublishTestStreamMessages(publisher, stream)
                 const published = await Promise.all([
-                    publish(5),
-                    publish(5),
-                    publish(5),
-                    publish(5),
+                    publish(4),
+                    publish(4),
+                    publish(4),
+                    publish(4),
                 ])
                 return published.flat()
             })
 
             await Promise.allSettled(tasks)
             const publishedPerStream = await Promise.all(tasks)
-            expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(20))
+            expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(4 * 4))
         }, 2 * TIMEOUT)
     })
 })

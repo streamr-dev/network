@@ -1,12 +1,12 @@
 import { wait } from 'streamr-test-utils'
+import prettyBytes from 'pretty-bytes'
+import { MessageLayer } from 'streamr-client-protocol'
+
 import { Debug } from '../../src/utils/log'
 import { StreamrClient } from '../../src/StreamrClient'
-import { MessageLayer } from 'streamr-client-protocol'
 import { Stream } from '../../src/stream'
-import { Subscription } from '../../src/subscribe'
+import Subscription from '../../src/Subscription'
 import { fakePrivateKey, addAfterFn } from '../utils'
-import Connection from '../../src/Connection'
-import prettyBytes from 'pretty-bytes'
 
 const TRAM_DEMO_STREAM = '7wa7APtlTq6EC5iTCBy6dw'
 
@@ -28,8 +28,6 @@ function logMemory() {
 describe.skip('no memleaks when processing a high quantity of large messages', () => {
     let client: StreamrClient
     let stream: Stream
-    let expectErrors = 0 // check no errors by default
-    let onError = jest.fn()
     const afterFn = addAfterFn()
 
     const createClient = (opts = {}) => new StreamrClient({
@@ -48,10 +46,6 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
     })
 
     beforeEach(async () => {
-        expectErrors = 0
-        onError = jest.fn()
-        client.onError = jest.fn()
-        client.on('error', onError)
         stream = await client.getStream(TRAM_DEMO_STREAM)
     })
 
@@ -68,25 +62,10 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
     })
 
     afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
-        if (client) {
-            expect(client.onError).toHaveBeenCalledTimes(expectErrors)
-        }
-    })
-
-    afterEach(async () => {
         await wait(500)
         if (client) {
             client.debug('disconnecting after test')
             await client.destroy()
-        }
-
-        const openSockets = Connection.getOpen()
-        if (openSockets !== 0) {
-            await Connection.closeOpen()
-            throw new Error(`sockets not closed: ${openSockets}`)
         }
     })
 
@@ -115,7 +94,7 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
                 }, () => {
                     count += 1
                 })
-                await sub.onDone()
+                await sub.onFinally()
                 client.debug(id, { count })
                 if (size < MAX_RESEND_SIZE) {
                     expect(count).toBe(size)
@@ -147,7 +126,8 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
             }
 
             if (count === maxMessages) {
-                sub.unsubscribe()
+                sub.end()
+                sub.return()
             } else {
                 count += 1
             }
@@ -201,7 +181,7 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
                 afterFn(() => {
                     clearTimeout(t)
                 })
-                await sub.onDone()
+                await sub.onFinally()
                 clearTimeout(t)
                 validate(MAX_MEMORY_USAGE)
                 expect(count).toBeGreaterThanOrEqual(MIN_RECEIVED_MESSAGES)
@@ -220,9 +200,9 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
                 afterFn(() => {
                     clearTimeout(t)
                 })
-                await sub.onDone()
+                await sub.onFinally()
                 clearTimeout(t)
-                await sub.onDone()
+                await sub.onFinally()
                 validate(MAX_MEMORY_USAGE)
                 expect(count).toBeGreaterThanOrEqual(MIN_RECEIVED_MESSAGES)
             }, MAX_TEST_TIME * 2)
@@ -237,7 +217,7 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
             it('works', async () => {
                 const end = 1616509054932
                 const start = end - (1 * 60 * 60 * 1000) // 1 hour
-                sub = await client.resend({
+                const resendStream = await client.resend({
                     stream: stream.id,
                     resend: {
                         from: {
@@ -250,12 +230,14 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
                 }, onMessage(MAX_MESSAGES, MAX_MEMORY_USAGE))
 
                 const t = setTimeout(() => {
-                    sub.unsubscribe()
+                    resendStream.end()
+                    resendStream.return()
                 }, MAX_TEST_TIME)
+
                 afterFn(() => {
                     clearTimeout(t)
                 })
-                await sub.onDone()
+                await resendStream.onFinally()
                 validate(MAX_MEMORY_USAGE)
                 expect(count).toBeGreaterThanOrEqual(MIN_RECEIVED_MESSAGES)
             }, MAX_TEST_TIME * 2)
