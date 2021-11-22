@@ -330,7 +330,7 @@ export class DataUnion {
         // for uint[6] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x71586e2eb532612F0ae61b624cb0a9c26e2F4c3B/contracts
         return defaultAbiCoder.decode(['uint[9]'], getStatsResponse)
             .then(([totalRevenue, totalEarnings, totalAdminFees, totalDataUnionFees, totalWithdrawn,
-                activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount]) => (
+                activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount]: BigNumber[]) => (
                 {
                     totalRevenue, // == earnings (that go to members) + adminFees + dataUnionFees
                     totalAdminFees,
@@ -344,7 +344,8 @@ export class DataUnion {
                     lifetimeMemberEarnings,
                 }))
             .catch(() => defaultAbiCoder.decode(['uint[6]'], getStatsResponse))
-            .then(([totalEarnings, totalEarningsWithdrawn, activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount]) => (
+            .then(([totalEarnings, totalEarningsWithdrawn, activeMemberCount, inactiveMemberCount,
+                lifetimeMemberEarnings, joinPartAgentCount]: BigNumber[]) => (
                 {
                     totalEarnings,
                     totalWithdrawable: totalEarnings.sub(totalEarningsWithdrawn),
