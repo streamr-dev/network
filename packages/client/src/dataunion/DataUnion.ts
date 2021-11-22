@@ -749,7 +749,12 @@ export class DataUnion {
     }
 
     /** @internal */
-    static async _setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike, client: StreamrClient) {
+    static async _setBinanceDepositAddressFromSignature(
+        from: EthereumAddress,
+        binanceRecipient: EthereumAddress,
+        signature: BytesLike,
+        client: StreamrClient
+    ) {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
         const tx = await adapter.setBinanceRecipientFromSig(from, binanceRecipient, signature)
@@ -852,7 +857,12 @@ export class DataUnion {
     /**
      * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
      */
-    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000, ethersOptions: EthersOptions = {}) {
+    async transportMessage(
+        messageHash: AmbMessageHash,
+        pollingIntervalMs: number = 1000,
+        retryTimeoutMs: number = 300000,
+        ethersOptions: EthersOptions = {}
+    ) {
         const helper = this.getContracts()
         const [sidechainAmb, mainnetAmb] = await Promise.all([
             helper.getSidechainAmb(),
