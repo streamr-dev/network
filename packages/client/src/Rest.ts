@@ -44,7 +44,9 @@ export class Rest implements Context {
     }
 
     getUrl(urlParts: UrlParts, query = {}, restUrl?: string) {
-        const baseUrl = restUrl ? restUrl + '/api/v1/' : this.options.restUrl
+        let optionsRestUrl = this.options.restUrl
+        if (!optionsRestUrl.endsWith('/')) { optionsRestUrl += '/' }
+        const baseUrl = restUrl ? restUrl + '/api/v1/' : optionsRestUrl
         const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl)
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
