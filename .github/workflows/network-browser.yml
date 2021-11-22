@@ -21,6 +21,9 @@ defaults:
   run:
     working-directory: packages/network
 
+env:
+  CI: true
+
 jobs:
   test-browser:
     strategy:
@@ -41,6 +44,10 @@ jobs:
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-network
           sudo apt-get install xvfb
-      - run: xvfb-run --auto-servernum npm run test-browser
-        env:
-          CI: true
+      - uses: nick-invision/retry@v2
+        name: Run Test
+        with:
+          max_attempts: 3
+          timeout_minutes: 5
+          retry_on: error
+          command: cd packages/network && xvfb-run --auto-servernum npm run test-browser
