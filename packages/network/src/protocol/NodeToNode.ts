@@ -29,8 +29,8 @@ export interface NodeToNode {
     on(event: Event.DATA_RECEIVED, listener: (message: ControlLayer.BroadcastMessage, nodeId: NodeId) => void): this
     on(event: Event.LOW_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
     on(event: Event.HIGH_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
-    on(event: Event.PUBLISH_STREAM_REQUEST_RECEIVED, listener: (nodeId: NodeId, spid: SPID) => void): this
-    on(event: Event.PUBLISH_STREAM_RESPONSE_RECEIVED, listener: (nodeId: NodeId, spid: SPID, accepted: boolean) => void): this
+    on(event: Event.PUBLISH_STREAM_REQUEST_RECEIVED, listener: (message: ControlLayer.PublishStreamConnectionRequest, nodeId: NodeId) => void): this
+    on(event: Event.PUBLISH_STREAM_RESPONSE_RECEIVED, listener: (message: ControlLayer.PublishStreamConnectionResponse, nodeId: NodeId) => void): this
 
 }
 
@@ -139,9 +139,11 @@ export class NodeToNode extends EventEmitter {
             streamPartition: spid.streamPartition
         }))
 
-        return promiseTimeout(5000, new Promise((resolve, reject) => {
-            this.on(Event.PUBLISH_STREAM_RESPONSE_RECEIVED, (targetNodeId, recvSpid, accepted) => {
-                if (targetNodeId === nodeId && spid.key === recvSpid.key) {
+        return promiseTimeout(10000, new Promise((resolve, reject) => {
+            this.on(Event.PUBLISH_STREAM_RESPONSE_RECEIVED, (message, targetNodeId) => {
+                const { streamId, streamPartition, accepted } = message
+                console.log(accepted)
+                if (targetNodeId === nodeId && spid.streamId === streamId && spid.streamPartition === streamPartition) {
                     if (accepted) {
                         resolve()
                     } else {

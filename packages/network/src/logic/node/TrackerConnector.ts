@@ -70,7 +70,6 @@ export class TrackerConnector {
             if (this.isActiveTracker(trackerInfo.id)) {
                 this.connectTo(trackerInfo)
             } else {
-                console.log(trackerInfo.id, 'disconnected')
                 this.disconnectFromTracker(trackerInfo.id)
             }
         })

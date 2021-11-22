@@ -11,7 +11,7 @@ export default class PublishStreamConnectionRequestSerializerV1 extends Serializ
     toArray(publishStreamConnectionRequest: PublishStreamConnectionRequest, streamMessageVersion = StreamMessage.LATEST_VERSION): any[] {
         return [
             VERSION,
-            ControlMessage.TYPES.PublishRequest,
+            ControlMessage.TYPES.PublishStreamConnectionRequest,
             publishStreamConnectionRequest.streamId,
             publishStreamConnectionRequest.streamPartition,
             publishStreamConnectionRequest.senderId

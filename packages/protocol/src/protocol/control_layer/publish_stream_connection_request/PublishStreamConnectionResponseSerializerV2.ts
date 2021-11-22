@@ -9,11 +9,12 @@ export default class PublishStreamConnectionResponseSerializerV2 extends Seriali
     toArray(publishStreamConnectionResponse: PublishStreamConnectionResponse): any[] {
         return [
             VERSION,
-            ControlMessage.TYPES.PublishRequest,
+            ControlMessage.TYPES.PublishStreamConnectionResponse,
             publishStreamConnectionResponse.requestId,
             publishStreamConnectionResponse.streamId,
             publishStreamConnectionResponse.streamPartition,
             publishStreamConnectionResponse.senderId,
+            publishStreamConnectionResponse.accepted
         ]
     }
 

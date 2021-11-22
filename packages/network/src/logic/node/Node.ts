@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { MessageLayer, SPID, StreamMessage } from 'streamr-client-protocol'
+import {MessageLayer, PublishStreamConnectionRequest, SPID, StreamMessage} from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../protocol/NodeToNode'
 import { NodeToTracker } from '../../protocol/NodeToTracker'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
@@ -155,7 +155,7 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
-        this.nodeToNode.on(NodeToNodeEvent.PUBLISH_STREAM_REQUEST_RECEIVED, (nodeId, spid) => this.processPublishStreamRequest(nodeId, spid))
+        this.nodeToNode.on(NodeToNodeEvent.PUBLISH_STREAM_REQUEST_RECEIVED, (message,  nodeId) => this.processPublishStreamRequest(message, nodeId))
         let avgLatency = -1
 
         this.on(Event.UNSEEN_MESSAGE_RECEIVED, (message) => {
@@ -226,7 +226,10 @@ export class Node extends EventEmitter {
         }
     }
 
-    async processPublishStreamRequest(nodeId: string, spid: SPID): Promise<void> {
+    async processPublishStreamRequest(message: PublishStreamConnectionRequest, nodeId: string): Promise<void> {
+        const { streamId, streamPartition } = message
+        const spid = new SPID(streamId, streamPartition)
+
         // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way streams
         const isAccepted = this.streams.isSetUp(spid) && this.acceptOneWayConnections
         if (isAccepted) {

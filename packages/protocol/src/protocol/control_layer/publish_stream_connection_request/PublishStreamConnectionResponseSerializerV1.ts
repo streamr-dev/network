@@ -11,7 +11,7 @@ export default class PublishStreamConnectionResponseSerializerV1 extends Seriali
     toArray(publishStreamConnectionResponse: PublishStreamConnectionResponse, streamMessageVersion = StreamMessage.LATEST_VERSION): any[] {
         return [
             VERSION,
-            ControlMessage.TYPES.PublishRequest,
+            ControlMessage.TYPES.PublishStreamConnectionResponse,
             publishStreamConnectionResponse.streamId,
             publishStreamConnectionResponse.streamPartition,
             publishStreamConnectionResponse.senderId,
