@@ -180,7 +180,7 @@ export const dataUnionSidechainABI = [{
 }, {
     inputs: [],
     name: 'getStats',
-    outputs: [{ type: 'uint256[6]' }],
+    outputs: [{ type: 'uint256[9]' }],
     stateMutability: 'view',
     type: 'function'
 }, {

@@ -1,9 +1,10 @@
+import { defaultAbiCoder } from '@ethersproject/abi'
 import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import { arrayify, hexZeroPad, BytesLike } from '@ethersproject/bytes'
+import { AddressZero } from '@ethersproject/constants'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
-import { AddressZero } from '@ethersproject/constants'
 import type { Overrides as EthersOptions } from '@ethersproject/contracts'
 import type { Signer } from '@ethersproject/abstract-signer'
 
@@ -312,25 +313,47 @@ export class DataUnion {
 
     // Query functions
 
+    /**
+     * Get stats for the Data Union (version 2).
+     * Most of the interface has remained stable, but getStats has been implemented in functions that return
+     *   a different number of stats, hence the need for the more complex and very manually decoded query.
+     */
     async getStats(): Promise<DataUnionStats> {
-        const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
-        const [
-            totalEarnings,
-            totalEarningsWithdrawn,
-            activeMemberCount,
-            inactiveMemberCount,
-            lifetimeMemberEarnings,
-            joinPartAgentCount,
-        ] = await duSidechain.getStats()
-        const totalWithdrawable = totalEarnings.sub(totalEarningsWithdrawn)
-        return {
-            activeMemberCount,
-            inactiveMemberCount,
-            joinPartAgentCount,
-            totalEarnings,
-            totalWithdrawable,
-            lifetimeMemberEarnings,
-        }
+        const provider = this.client.ethereum.getSidechainProvider()
+        const getStatsResponse = await provider.call({
+            to: this.sidechainAddress,
+            data: '0xc59d4847', // getStats()
+        })
+
+        // Attempt to decode longer response first; if that fails, try the shorter one. Decoding too little won't throw, but decoding too much will
+        // for uint[9] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x15287E573007d5FbD65D87ed46c62Cf4C71Dd66d/contracts
+        // for uint[6] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x71586e2eb532612F0ae61b624cb0a9c26e2F4c3B/contracts
+        return defaultAbiCoder.decode(['uint[9]'], getStatsResponse)
+            .then(([totalRevenue, totalEarnings, totalAdminFees, totalDataUnionFees, totalWithdrawn,
+                activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount]) => (
+                {
+                    totalRevenue, // == earnings (that go to members) + adminFees + dataUnionFees
+                    totalAdminFees,
+                    totalDataUnionFees,
+                    totalEarnings,
+                    totalWithdrawn,
+                    totalWithdrawable: totalEarnings.sub(totalWithdrawn),
+                    activeMemberCount,
+                    inactiveMemberCount,
+                    joinPartAgentCount,
+                    lifetimeMemberEarnings,
+                }))
+            .catch(() => defaultAbiCoder.decode(['uint[6]'], getStatsResponse))
+            .then(([totalEarnings, totalEarningsWithdrawn, activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount]) => (
+                {
+                    totalEarnings,
+                    totalWithdrawable: totalEarnings.sub(totalEarningsWithdrawn),
+                    activeMemberCount,
+                    inactiveMemberCount,
+                    joinPartAgentCount,
+                    lifetimeMemberEarnings,
+                }))
+        // TODO: maybe catch and re-throw with a better error message
     }
 
     /**
