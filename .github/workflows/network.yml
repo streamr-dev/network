@@ -55,6 +55,11 @@ jobs:
           mkdir -p /tmp/cores
           chmod a+rwx /tmp/cores
           echo "/tmp/cores/core.%p" | sudo tee /proc/sys/kernel/core_pattern
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('../../package-lock.json') }}
       - uses: nick-invision/retry@v2
         name: Run Test
         with:

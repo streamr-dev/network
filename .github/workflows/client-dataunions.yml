@@ -53,6 +53,11 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+      - uses: actions/cache@v1
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('../../package-lock.json') }}
       - name: Run Test
         run: npm run test-integration-dataunions
       - name: Collect docker logs on failure

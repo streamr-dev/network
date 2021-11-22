@@ -45,6 +45,11 @@ jobs:
         run: |
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('../../package-lock.json') }}
       - run: npm run eslint
 
   test:
@@ -67,6 +72,11 @@ jobs:
         run: |
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('../../package-lock.json') }}
       - name: test-unit
         timeout-minutes: 7
         run: npm run test-unit
@@ -135,6 +145,11 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('../../package-lock.json') }}
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -142,9 +157,6 @@ jobs:
           timeout_minutes: 10
           retry_on: error
           command: cd packages/client && npm run $TEST_NAME
-
-      - name: Run Test
-        run: npm run $TEST_NAME
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
@@ -225,6 +237,11 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('../../package-lock.json') }}
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -232,9 +249,6 @@ jobs:
           timeout_minutes: 30
           retry_on: error
           command: cd packages/client && npm run $TEST_NAME
-
-      - name: Run Test
-        run: npm run $TEST_NAME
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2

@@ -43,6 +43,12 @@ jobs:
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client-protocol
 
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('../../package-lock.json') }}
+
       - name: eslint
         run: npm run eslint
 
@@ -75,6 +81,11 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "parity-node0 parity-sidechain-node0"
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('../../package-lock.json') }}
 
       - name: test-integration
         run: npm run test-integration
