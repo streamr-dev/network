@@ -48,14 +48,20 @@ jobs:
         env:
           CI: true
       - name: Run test-integration
+        env:
+          CI: true
         run: |
           ulimit -c unlimited
           mkdir -p /tmp/cores
           chmod a+rwx /tmp/cores
           echo "/tmp/cores/core.%p" | sudo tee /proc/sys/kernel/core_pattern
-          npm run test-integration
-        env:
-          CI: true
+      - uses: nick-invision/retry@v2
+        name: Run Test
+        with:
+          max_attempts: 3
+          timeout_minutes: 3
+          retry_on: error
+          command: cd packages/network && CI=true npm run test-integration
       - if: failure()
         name: Print core dump
         run: |
