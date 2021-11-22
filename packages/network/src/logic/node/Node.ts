@@ -23,7 +23,7 @@ export enum Event {
     MESSAGE_RECEIVED = 'streamr:node:message-received',
     UNSEEN_MESSAGE_RECEIVED = 'streamr:node:unseen-message-received',
     NODE_SUBSCRIBED = 'streamr:node:subscribed-successfully',
-    NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed'
+    NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed',
 }
 
 export interface NodeOptions extends TrackerManagerOptions {
@@ -37,6 +37,7 @@ export interface NodeOptions extends TrackerManagerOptions {
     bufferMaxSize?: number
     disconnectionWaitTime?: number
     nodeConnectTimeout?: number
+    acceptOneWayConnections?: boolean
 }
 
 export interface Node {
@@ -62,6 +63,7 @@ export class Node extends EventEmitter {
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
+    private readonly acceptOneWayConnections: boolean
 
     constructor(opts: NodeOptions) {
         super()
@@ -71,6 +73,7 @@ export class Node extends EventEmitter {
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.consecutiveDeliveryFailures = {}
         this.started = new Date().toLocaleString()
+        this.acceptOneWayConnections = opts.acceptOneWayConnections || false
 
         const metricsContext = opts.metricsContext || new MetricsContext('')
         this.metrics = metricsContext.create('node')
@@ -93,7 +96,7 @@ export class Node extends EventEmitter {
             cleanUpIntervalInMs: 2 * 60 * 1000
         })
         this.propagation = new Propagation({
-            getNeighbors: this.streams.getNeighborsForStream.bind(this.streams),
+            getNeighbors: this.streams.getOutboundNodesForStream.bind(this.streams),
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
@@ -152,6 +155,7 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
+        this.nodeToNode.on(NodeToNodeEvent.PUBLISH_STREAM_REQUEST_RECEIVED, (nodeId, spid) => this.processPublishStreamRequest(nodeId, spid))
         let avgLatency = -1
 
         this.on(Event.UNSEEN_MESSAGE_RECEIVED, (message) => {
@@ -208,6 +212,29 @@ export class Node extends EventEmitter {
         return Promise.allSettled(subscribePromises)
     }
 
+    async openOutgoingStreamConnection(spid: SPID, targetNodeId: string): Promise<void> {
+        const trackerId = this.trackerManager.getTrackerId(spid)
+        try {
+            this.streams.setUpStream(spid, true)
+            await this.trackerManager.connectToTrackerForStream(spid)
+            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
+            await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
+            this.streams.addOutOnlyNeighbor(spid, targetNodeId)
+        } catch (err) {
+            logger.warn(`Failed to create an Outgoing stream connection to ${targetNodeId} for stream ${spid.key}:\n${err}`)
+            this.streams.removeNodeFromStream(spid, targetNodeId)
+        }
+    }
+
+    async processPublishStreamRequest(nodeId: string, spid: SPID): Promise<void> {
+        // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way streams
+        const isAccepted = this.streams.isSetUp(spid) && this.acceptOneWayConnections
+        if (isAccepted) {
+            this.streams.addInOnlyNeighbor(spid, nodeId)
+        }
+        return await this.nodeToNode.respondToPublishOnlyStreamConnectionRequest(nodeId, spid, isAccepted)
+    }
+
     onDataReceived(streamMessage: MessageLayer.StreamMessage, source: NodeId | null = null): void | never {
         this.metrics.record('onDataReceived', 1)
         const spid = new SPID(
@@ -216,7 +243,6 @@ export class Node extends EventEmitter {
         )
 
         this.emit(Event.MESSAGE_RECEIVED, streamMessage, source)
-
         this.subscribeToStreamIfHaveNotYet(spid)
 
         // Check duplicate

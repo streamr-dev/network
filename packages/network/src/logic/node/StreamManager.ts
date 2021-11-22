@@ -9,7 +9,10 @@ import { transformIterable } from '../../helpers/transformIterable'
 interface StreamState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
     neighbors: Set<NodeId>
-    counter: number
+    counter: number,
+    inOnly: Set<NodeId>,
+    outOnly: Set<NodeId>,
+    oneDirectional: boolean
 }
 
 function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
@@ -18,8 +21,10 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
 
 export class StreamManager {
     private readonly streams: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
+    private readonly inOnly: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
+    private readonly outOnly: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
 
-    setUpStream(spid: SPID): void {
+    setUpStream(spid: SPID, oneDirectional = false): void {
         if (!(spid instanceof SPID)) {
             throw new Error('streamId not instance of SPID')
         }
@@ -29,7 +34,10 @@ export class StreamManager {
         this.streams.set(spid.toKey(), {
             detectors: new Map(),
             neighbors: new Set(),
-            counter: 0
+            counter: 0,
+            inOnly: new Set(),
+            outOnly: new Set(),
+            oneDirectional
         })
     }
 
@@ -61,6 +69,18 @@ export class StreamManager {
     addNeighbor(spid: SPID, node: NodeId): void {
         this.verifyThatIsSetUp(spid)
         const { neighbors } = this.streams.get(spid.toKey())!
+        neighbors.add(node)
+    }
+
+    addInOnlyNeighbor(spid: SPID, node: NodeId): void {
+        this.verifyThatIsSetUp(spid)
+        const { neighbors } = this.inOnly.get(spid.toKey())!
+        neighbors.add(node)
+    }
+
+    addOutOnlyNeighbor(spid: SPID, node: NodeId): void {
+        this.verifyThatIsSetUp(spid)
+        const { neighbors } = this.outOnly.get(spid.toKey())!
         neighbors.add(node)
     }
 
@@ -128,6 +148,16 @@ export class StreamManager {
         return [...this.streams.get(spid.toKey())!.neighbors]
     }
 
+    getOutboundNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
+        this.verifyThatIsSetUp(spid)
+        return [...this.streams.get(spid.toKey())!.neighbors, ...this.streams.get(spid.toKey())!.outOnly]
+    }
+
+    getInboundNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
+        this.verifyThatIsSetUp(spid)
+        return [...this.streams.get(spid.toKey())!.neighbors, ...this.streams.get(spid.toKey())!.inOnly]
+    }
+
     getAllNodes(): ReadonlyArray<NodeId> {
         const nodes: NodeId[] = []
         this.streams.forEach(({ neighbors }) => {
@@ -139,6 +169,16 @@ export class StreamManager {
     hasNeighbor(spid: SPID, node: NodeId): boolean {
         this.verifyThatIsSetUp(spid)
         return this.streams.get(spid.toKey())!.neighbors.has(node)
+    }
+
+    isOneDirectional(spid: SPID): boolean {
+        try {
+            this.verifyThatIsSetUp(spid)
+            return this.streams.get(spid.toKey())!.oneDirectional
+        }
+        catch (err) {
+            return false
+        }
     }
 
     private verifyThatIsSetUp(spid: SPID): void | never {

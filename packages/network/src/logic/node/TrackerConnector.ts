@@ -45,6 +45,11 @@ export class TrackerConnector {
         this.connectTo(trackerInfo)
     }
 
+    async createTrackerConnectionForStream(spid: SPID): Promise<void> {
+        const { ws, id } = this.trackerRegistry.getTracker(spid)
+        await this.connectToTracker(ws, PeerInfo.newTracker(id))
+    }
+
     start(): void {
         this.maintainConnections()
         this.maintenanceTimer = setInterval(
@@ -65,6 +70,7 @@ export class TrackerConnector {
             if (this.isActiveTracker(trackerInfo.id)) {
                 this.connectTo(trackerInfo)
             } else {
+                console.log(trackerInfo.id, 'disconnected')
                 this.disconnectFromTracker(trackerInfo.id)
             }
         })

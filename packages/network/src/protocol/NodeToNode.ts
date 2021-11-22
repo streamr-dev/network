@@ -1,11 +1,12 @@
 import { EventEmitter } from 'events'
-import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import { ControlLayer, MessageLayer, SPID } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
 import { Rtts } from "../identifiers"
 import { NodeId } from '../logic/node/Node'
+import { promiseTimeout } from "../helpers/PromiseTools"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',
@@ -13,10 +14,14 @@ export enum Event {
     DATA_RECEIVED = 'streamr:node-node:stream-data',
     LOW_BACK_PRESSURE = 'streamr:node-node:low-back-pressure',
     HIGH_BACK_PRESSURE = 'streamr:node-node:high-back-pressure',
+    PUBLISH_STREAM_REQUEST_RECEIVED = 'node-node:publish-only-stream-request-received',
+    PUBLISH_STREAM_RESPONSE_RECEIVED = 'node-node:publish-only-stream-response-received'
+
 }
 
 const eventPerType: { [key: number]: string } = {}
 eventPerType[ControlLayer.ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.PublishStreamConnectionRequest] = Event.PUBLISH_STREAM_REQUEST_RECEIVED
 
 export interface NodeToNode {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
@@ -24,6 +29,9 @@ export interface NodeToNode {
     on(event: Event.DATA_RECEIVED, listener: (message: ControlLayer.BroadcastMessage, nodeId: NodeId) => void): this
     on(event: Event.LOW_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
     on(event: Event.HIGH_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
+    on(event: Event.PUBLISH_STREAM_REQUEST_RECEIVED, listener: (nodeId: NodeId, spid: SPID) => void): this
+    on(event: Event.PUBLISH_STREAM_RESPONSE_RECEIVED, listener: (nodeId: NodeId, spid: SPID, accepted: boolean) => void): this
+
 }
 
 export class NodeToNode extends EventEmitter {
@@ -121,6 +129,37 @@ export class NodeToNode extends EventEmitter {
         const controlLayerVersion = this.endpoint.getNegotiatedControlLayerProtocolVersionOnNode(nodeId)
             || this.endpoint.getDefaultControlLayerProtocolVersion()
         return [controlLayerVersion, messageLayerVersion]
+    }
+
+    requestPublishOnlyStreamConnection(nodeId: NodeId, spid: SPID): Promise<void> {
+        this.send(nodeId, new ControlLayer.PublishStreamConnectionRequest({
+            requestId: '',
+            senderId: nodeId,
+            streamId: spid.streamId,
+            streamPartition: spid.streamPartition
+        }))
+
+        return promiseTimeout(5000, new Promise((resolve, reject) => {
+            this.on(Event.PUBLISH_STREAM_RESPONSE_RECEIVED, (targetNodeId, recvSpid, accepted) => {
+                if (targetNodeId === nodeId && spid.key === recvSpid.key) {
+                    if (accepted) {
+                        resolve()
+                    } else {
+                        reject()
+                    }
+                }
+            })
+        }))
+    }
+
+    async respondToPublishOnlyStreamConnectionRequest(nodeId: NodeId, spid: SPID, accepted: boolean): Promise<void> {
+        await this.send(nodeId, new ControlLayer.PublishStreamConnectionResponse({
+            requestId: '',
+            senderId: nodeId,
+            streamId: spid.streamId,
+            streamPartition: spid.streamPartition,
+            accepted
+        }))
     }
 
     getAllConnectionNodeIds(): NodeId[] {

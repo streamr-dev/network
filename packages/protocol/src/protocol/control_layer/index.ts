@@ -2,6 +2,8 @@ import BroadcastMessage from "./broadcast_message/BroadcastMessage"
 import ErrorResponse from "./error_response/ErrorResponse"
 import { ErrorCode } from "./error_response/ErrorResponse"
 import PublishRequest from "./publish_request/PublishRequest"
+import PublishStreamConnectionRequest from "./publish_stream_connection_request/PublishStreamConnectionRequest"
+import PublishStreamConnectionResponse from "./publish_stream_connection_request/PublishStreamConnectionResponse"
 import ResendFromRequest from "./resend_request/ResendFromRequest"
 import ResendLastRequest from "./resend_request/ResendLastRequest"
 import ResendRangeRequest from "./resend_request/ResendRangeRequest"
@@ -45,6 +47,10 @@ import './unsubscribe_request/UnsubscribeRequestSerializerV1'
 import './unsubscribe_request/UnsubscribeRequestSerializerV2'
 import './unsubscribe_response/UnsubscribeResponseSerializerV1'
 import './unsubscribe_response/UnsubscribeResponseSerializerV2'
+import './publish_stream_connection_request/PublishStreamConnectionRequestSerializerV1'
+import './publish_stream_connection_request/PublishStreamConnectionRequestSerializerV2'
+import './publish_stream_connection_request/PublishStreamConnectionResponseSerializerV1'
+import './publish_stream_connection_request/PublishStreamConnectionResponseSerializerV2'
 
 export {
     BroadcastMessage,
@@ -63,5 +69,7 @@ export {
     UnsubscribeRequest,
     UnsubscribeResponse,
     ControlMessage,
-    ControlMessageType
+    ControlMessageType,
+    PublishStreamConnectionRequest,
+    PublishStreamConnectionResponse
 }

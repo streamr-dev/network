@@ -56,7 +56,7 @@
     "node-datachannel": "^0.1.11",
     "pino": "^6.11.3",
     "setimmediate": "^1.0.5",
-    "streamr-client-protocol": "^9.1.0",
+    "streamr-client-protocol": "^9.1.1",
     "strict-event-emitter-types": "^2.0.0",
     "uuid": "^8.3.2",
     "websocket": "^1.0.34",
