@@ -43,12 +43,11 @@ npm ci # installs dependencies for all packages and links them together
 
 The script `bootstrap-pkg` script installs all dependencies of a
 sub-package, links internal packages, builds sub-deps and the target dep
-by running their `prepare` scripts. Make sure you've at least run `npm
-run bootstrap` first though.
+by running their `prepare` scripts.
 
 ### Important: Do not use `npm ci` or `npm install` in monorepo sub-package directories.
 
-Normal `npm ci` and `npm install` commmands *will not work* within a sub-package e.g. `packages/streamr-client`, because `npm` doesn't know how to deal with the monorepo sub-package linking.
+Normal `npm ci` and `npm install` commmands will not work properly within a sub-package e.g. `packages/streamr-client`, because `npm` doesn't know how to deal with the monorepo sub-package linking.
 
 ```bash
 # from top level
@@ -59,12 +58,12 @@ npm run bootstrap-pkg streamr-client
 npm run bootstrap-pkg streamr-network
 ```
 
-## Regenerate lockfiles
+## Regenerate lockfile
 
 ```bash
 # from top level
-rm -f package-lock.json
-npm install
+npm run clean-lockfiles
+
 ```
 
 ## Clean Cached/Built Files
