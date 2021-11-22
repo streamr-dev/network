@@ -52,7 +52,7 @@
         "test-integration-resend": "jest --verbose --useStderr --forceExit --testTimeout=40000 --testNamePattern='(resend|Resend|resent|Resent)' test/integration/*.test.*",
         "test-integration-dataunions": "jest --verbose --useStderr --forceExit --testTimeout=15000 --runInBand test/integration/dataunion",
         "test-memory": "node --gc-global --predictable-gc-schedule node_modules/.bin/jest test/memory",
-        "test-flakey": "jest --verbose --useStderr --forceExit test/flakey/*",
+        "test-flakey": "jest --verbose --useStderr --forceExit --testTimeout=40000 --forceExit test/flakey/*",
         "presetup-browser": "npm run teardown-browser",
         "setup-browser": "(node ./test/browser/server.js &); sleep 1",
         "teardown-browser": "node -e 'http.request(\"http://localhost:8880/stop\").on(\"error\", console.log).end()' || true",

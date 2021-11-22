@@ -154,7 +154,7 @@ jobs:
         name: Run Test
         with:
           max_attempts: 3
-          timeout_minutes: 10
+          timeout_minutes: 25
           retry_on: error
           command: cd packages/client && npm run $TEST_NAME
       - name: Collect docker logs on failure
