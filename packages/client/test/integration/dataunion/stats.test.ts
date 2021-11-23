@@ -32,12 +32,12 @@ describe('DataUnion stats', () => {
 
     it('DataUnion stats', async () => {
         const stats = await queryClient.getDataUnion(dataUnion.getAddress()).getStats()
-        expect(stats.activeMemberCount).toEqual(BigNumber.from(3))
-        expect(stats.inactiveMemberCount).toEqual(BigNumber.from(1))
-        expect(stats.joinPartAgentCount).toEqual(BigNumber.from(2))
-        expect(stats.totalEarnings).toEqual(BigNumber.from(0))
-        expect(stats.totalWithdrawable).toEqual(BigNumber.from(0))
-        expect(stats.lifetimeMemberEarnings).toEqual(BigNumber.from(0))
+        expect(+stats.activeMemberCount).toEqual(3)
+        expect(+stats.inactiveMemberCount).toEqual(1)
+        expect(+stats.joinPartAgentCount).toEqual(2)
+        expect(+stats.totalEarnings).toEqual(0)
+        expect(+stats.totalWithdrawable).toEqual(0)
+        expect(+stats.lifetimeMemberEarnings).toEqual(0)
     }, 150000)
 
     it('member stats', async () => {

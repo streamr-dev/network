@@ -13,7 +13,8 @@ export const binanceAdapterABI = [
     // },
     // {
     //     anonymous: false,
-    //     inputs: [{ indexed: true, type: 'address' }, { indexed: true, type: 'address' }, { indexed: false, type: 'uint256' }, { indexed: false, type: 'uint256' }],
+    //     inputs: [{ indexed: true, type: 'address' }, { indexed: true, type: 'address' },
+    //              { indexed: false, type: 'uint256' }, { indexed: false, type: 'uint256' }],
     //     name: 'WithdrawToBinance',
     //     type: 'event'
     // },
@@ -180,7 +181,7 @@ export const dataUnionSidechainABI = [{
 }, {
     inputs: [],
     name: 'getStats',
-    outputs: [{ type: 'uint256[6]' }],
+    outputs: [{ type: 'uint256[9]' }],
     stateMutability: 'view',
     type: 'function'
 }, {

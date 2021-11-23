@@ -51,7 +51,10 @@ export default class Contracts {
         return factoryMainnet.mainnetAddress(deployerAddress, dataUnionName)
     }
 
-    /** NOTE: if template address is not given, calculation only works for the newest currently deployed factory, i.e. can be used for "future deployments" but not necessarily old deployments */
+    /**
+     * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
+     * i.e. can be used for "future deployments" but not necessarily old deployments
+     */
     calculateDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress, templateMainnetAddress?: EthereumAddress) {
         validateAddress("deployer's address", deployerAddress)
         const templateAddress = templateMainnetAddress || this.templateMainnetAddress
@@ -68,7 +71,10 @@ export default class Contracts {
         return factoryMainnet.sidechainAddress(duMainnetAddress)
     }
 
-    /** NOTE: if template address is not given, calculation only works for the newest currently deployed factory, i.e. can be used for "future deployments" but not necessarily old deployments */
+    /**
+     * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
+     * i.e. can be used for "future deployments" but not necessarily old deployments
+     */
     calculateDataUnionSidechainAddress(mainnetAddress: EthereumAddress, templateSidechainAddress?: EthereumAddress) {
         validateAddress('DU mainnet address', mainnetAddress)
         const templateAddress = templateSidechainAddress || this.templateSidechainAddress

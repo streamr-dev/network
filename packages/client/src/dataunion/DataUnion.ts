@@ -1,9 +1,10 @@
+import { defaultAbiCoder } from '@ethersproject/abi'
 import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import { arrayify, hexZeroPad, BytesLike } from '@ethersproject/bytes'
+import { AddressZero } from '@ethersproject/constants'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
-import { AddressZero } from '@ethersproject/constants'
 import type { Overrides as EthersOptions } from '@ethersproject/contracts'
 import type { Signer } from '@ethersproject/abstract-signer'
 
@@ -48,12 +49,18 @@ export interface DataUnionWithdrawOptions {
 }
 
 export interface DataUnionStats {
+    // new stats added in 2.2 (admin & data union fees)
+    totalRevenue?: BigNumber,
+    totalAdminFees?: BigNumber,
+    totalDataUnionFees?: BigNumber,
+
+    // stats that already existed in 2.0
     activeMemberCount: BigNumber,
     inactiveMemberCount: BigNumber,
     joinPartAgentCount: BigNumber,
     totalEarnings: BigNumber,
     totalWithdrawable: BigNumber,
-    lifetimeMemberEarnings: BigNumber
+    lifetimeMemberEarnings: BigNumber,
 }
 
 export enum MemberStatus {
@@ -312,25 +319,52 @@ export class DataUnion {
 
     // Query functions
 
+    /**
+     * Get stats for the Data Union (version 2).
+     * Most of the interface has remained stable, but getStats has been implemented in functions that return
+     *   a different number of stats, hence the need for the more complex and very manually decoded query.
+     */
     async getStats(): Promise<DataUnionStats> {
-        const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
-        const [
-            totalEarnings,
-            totalEarningsWithdrawn,
-            activeMemberCount,
-            inactiveMemberCount,
-            lifetimeMemberEarnings,
-            joinPartAgentCount,
-        ] = await duSidechain.getStats()
-        const totalWithdrawable = totalEarnings.sub(totalEarningsWithdrawn)
-        return {
-            activeMemberCount,
-            inactiveMemberCount,
-            joinPartAgentCount,
-            totalEarnings,
-            totalWithdrawable,
-            lifetimeMemberEarnings,
-        }
+        const provider = this.client.ethereum.getSidechainProvider()
+        const getStatsResponse = await provider.call({
+            to: this.sidechainAddress,
+            data: '0xc59d4847', // getStats()
+        })
+        log('getStats raw response (length = %d) %s', getStatsResponse.length, getStatsResponse)
+
+        // Attempt to decode longer response first; if that fails, try the shorter one. Decoding too little won't throw, but decoding too much will
+        // for uint[9] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x15287E573007d5FbD65D87ed46c62Cf4C71Dd66d/contracts
+        // for uint[6] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x71586e2eb532612F0ae61b624cb0a9c26e2F4c3B/contracts
+        try {
+            const [[
+                totalRevenue, totalEarnings, totalAdminFees, totalDataUnionFees, totalWithdrawn,
+                activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount
+            ]] = defaultAbiCoder.decode(['uint256[9]'], getStatsResponse) as BigNumber[][]
+            return {
+                totalRevenue, // == earnings (that go to members) + adminFees + dataUnionFees
+                totalAdminFees,
+                totalDataUnionFees,
+                totalEarnings,
+                totalWithdrawable: totalEarnings.sub(totalWithdrawn),
+                activeMemberCount,
+                inactiveMemberCount,
+                joinPartAgentCount,
+                lifetimeMemberEarnings,
+            }
+        } catch (e) {
+            const [[
+                totalEarnings, totalEarningsWithdrawn, activeMemberCount, inactiveMemberCount,
+                lifetimeMemberEarnings, joinPartAgentCount
+            ]] = defaultAbiCoder.decode(['uint256[6]'], getStatsResponse) as BigNumber[][]
+            return {
+                totalEarnings,
+                totalWithdrawable: totalEarnings.sub(totalEarningsWithdrawn),
+                activeMemberCount,
+                inactiveMemberCount,
+                joinPartAgentCount,
+                lifetimeMemberEarnings,
+            }
+        } // TODO: maybe catch and re-throw with a better error message
     }
 
     /**
@@ -725,7 +759,12 @@ export class DataUnion {
     }
 
     /** @internal */
-    static async _setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike, client: StreamrClient) {
+    static async _setBinanceDepositAddressFromSignature(
+        from: EthereumAddress,
+        binanceRecipient: EthereumAddress,
+        signature: BytesLike,
+        client: StreamrClient
+    ) {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
         const tx = await adapter.setBinanceRecipientFromSig(from, binanceRecipient, signature)
@@ -828,7 +867,12 @@ export class DataUnion {
     /**
      * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
      */
-    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000, ethersOptions: EthersOptions = {}) {
+    async transportMessage(
+        messageHash: AmbMessageHash,
+        pollingIntervalMs: number = 1000,
+        retryTimeoutMs: number = 300000,
+        ethersOptions: EthersOptions = {}
+    ) {
         const helper = this.getContracts()
         const [sidechainAmb, mainnetAmb] = await Promise.all([
             helper.getSidechainAmb(),
