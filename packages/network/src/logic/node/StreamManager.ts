@@ -21,8 +21,6 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
 
 export class StreamManager {
     private readonly streams: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
-    private readonly inOnly: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
-    private readonly outOnly: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
 
     setUpStream(spid: SPID, oneDirectional = false): void {
         if (!(spid instanceof SPID)) {
@@ -74,20 +72,22 @@ export class StreamManager {
 
     addInOnlyNeighbor(spid: SPID, node: NodeId): void {
         this.verifyThatIsSetUp(spid)
-        const { neighbors } = this.inOnly.get(spid.toKey())!
-        neighbors.add(node)
+        const { inOnly } = this.streams.get(spid.toKey())!
+        inOnly.add(node)
     }
 
     addOutOnlyNeighbor(spid: SPID, node: NodeId): void {
         this.verifyThatIsSetUp(spid)
-        const { neighbors } = this.outOnly.get(spid.toKey())!
-        neighbors.add(node)
+        const { outOnly } = this.streams.get(spid.toKey())!
+        outOnly.add(node)
     }
 
     removeNodeFromStream(spid: SPID, node: NodeId): void {
         this.verifyThatIsSetUp(spid)
-        const { neighbors } = this.streams.get(spid.toKey())!
+        const { neighbors, inOnly, outOnly } = this.streams.get(spid.toKey())!
         neighbors.delete(node)
+        inOnly.delete(node)
+        outOnly.delete(node)
     }
 
     getStreamStatus(spid: SPID): StreamStatus {
@@ -111,11 +111,13 @@ export class StreamManager {
 
     removeNodeFromAllStreams(node: NodeId): SPID[] {
         const streams: SPID[] = []
-        this.streams.forEach(({ neighbors }, spidKey) => {
+        this.streams.forEach(({ neighbors, inOnly, outOnly }, spidKey) => {
             const isRemoved = neighbors.delete(node)
             if (isRemoved) {
                 streams.push(SPID.from(spidKey))
             }
+            // inOnly.delete(node)
+            // outOnly.delete(node)
         })
         return streams
     }
@@ -130,8 +132,8 @@ export class StreamManager {
     }
 
     isNodePresent(node: NodeId): boolean {
-        return [...this.streams.values()].some(({ neighbors }) => {
-            return neighbors.has(node)
+        return [...this.streams.values()].some(({ neighbors, inOnly, outOnly }) => {
+            return neighbors.has(node) || inOnly.has(node) || outOnly.has(node)
         })
     }
 
@@ -158,6 +160,11 @@ export class StreamManager {
         return [...this.streams.get(spid.toKey())!.neighbors, ...this.streams.get(spid.toKey())!.inOnly]
     }
 
+    getAllNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
+        this.verifyThatIsSetUp(spid)
+        return [...this.streams.get(spid.toKey())!.neighbors, ...this.streams.get(spid.toKey())!.inOnly, ...this.streams.get(spid.toKey())!.outOnly]
+    }
+
     getAllNodes(): ReadonlyArray<NodeId> {
         const nodes: NodeId[] = []
         this.streams.forEach(({ neighbors }) => {
@@ -169,6 +176,16 @@ export class StreamManager {
     hasNeighbor(spid: SPID, node: NodeId): boolean {
         this.verifyThatIsSetUp(spid)
         return this.streams.get(spid.toKey())!.neighbors.has(node)
+    }
+
+    hasOutOnlyConnection(spid: SPID, node: NodeId): boolean {
+        this.verifyThatIsSetUp(spid)
+        return this.streams.get(spid.toKey())!.outOnly.has(node)
+    }
+
+    hasInOnlyConnection(spid: SPID, node: NodeId): boolean {
+        this.verifyThatIsSetUp(spid)
+        return this.streams.get(spid.toKey())!.inOnly.has(node)
     }
 
     isOneDirectional(spid: SPID): boolean {

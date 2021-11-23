@@ -1,5 +1,11 @@
 import { EventEmitter } from 'events'
-import {MessageLayer, PublishStreamConnectionRequest, SPID, StreamMessage} from 'streamr-client-protocol'
+import {
+    MessageLayer,
+    PublishStreamConnectionRequest,
+    PublishStreamConnectionResponse,
+    SPID,
+    StreamMessage, UnsubscribeRequest
+} from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../protocol/NodeToNode'
 import { NodeToTracker } from '../../protocol/NodeToTracker'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
@@ -12,6 +18,7 @@ import { DEFAULT_MAX_NEIGHBOR_COUNT, TrackerId } from '../tracker/Tracker'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
+import {clearTimeout} from "timers";
 
 const logger = new Logger(module)
 
@@ -24,6 +31,9 @@ export enum Event {
     UNSEEN_MESSAGE_RECEIVED = 'streamr:node:unseen-message-received',
     NODE_SUBSCRIBED = 'streamr:node:subscribed-successfully',
     NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed',
+    PUBLISH_STREAM_ACCEPTED = 'streamr:node:publish-stream-accepted',
+    PUBLISH_STREAM_REJECTED = 'streamr:node:node-stream-rejected',
+    ONE_WAY_CONNECTION_CLOSED = 'stream:node-one-way-connection-closed'
 }
 
 export interface NodeOptions extends TrackerManagerOptions {
@@ -47,6 +57,9 @@ export interface Node {
     on<T>(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: NodeId, spid: SPID) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, spid: SPID) => void): this
+    on(event: Event.PUBLISH_STREAM_ACCEPTED, listener: (nodeId: NodeId, spid: SPID) => void): this
+    on(event: Event.PUBLISH_STREAM_REJECTED, listener: (nodeId: NodeId, spid: SPID, reason?: string) => void): this
+    on(event: Event.ONE_WAY_CONNECTION_CLOSED, listener: (nodeId: NodeId, spid: SPID) => void): this
 }
 
 export class Node extends EventEmitter {
@@ -64,7 +77,7 @@ export class Node extends EventEmitter {
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptOneWayConnections: boolean
-
+    private readonly attemptedPublishOnlyStreamConnections: Record<string, Record<NodeId, NodeJS.Timeout>>
     constructor(opts: NodeOptions) {
         super()
 
@@ -151,11 +164,14 @@ export class Node extends EventEmitter {
                 unsubscribeFromStreamOnNode: this.unsubscribeFromStreamOnNode.bind(this)
             }
         )
+        this.attemptedPublishOnlyStreamConnections = {}
 
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
         this.nodeToNode.on(NodeToNodeEvent.PUBLISH_STREAM_REQUEST_RECEIVED, (message,  nodeId) => this.processPublishStreamRequest(message, nodeId))
+        this.nodeToNode.on(NodeToNodeEvent.PUBLISH_STREAM_RESPONSE_RECEIVED, (message, nodeId) => this.processPublishStreamResponse(message, nodeId))
+        this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => this.processLeaveRequest(message, nodeId))
         let avgLatency = -1
 
         this.on(Event.UNSEEN_MESSAGE_RECEIVED, (message) => {
@@ -185,6 +201,8 @@ export class Node extends EventEmitter {
             if (sendStatus) {
                 this.trackerManager.sendStreamStatus(spid)
             }
+        } else if (this.streams.isSetUp(spid) && this.streams.isOneDirectional(spid)) {
+            logger.warn(`Could not join stream ${spid.key} as stream is set to one-directional`)
         }
     }
 
@@ -212,17 +230,97 @@ export class Node extends EventEmitter {
         return Promise.allSettled(subscribePromises)
     }
 
+    addAttemtedPublishOnlyStreamConnection(spid: SPID, nodeId: NodeId): void {
+        if (!this.attemptedPublishOnlyStreamConnections[spid.key]) {
+            this.attemptedPublishOnlyStreamConnections[spid.key] = {}
+        }
+        this.attemptedPublishOnlyStreamConnections[spid.key][nodeId] = setTimeout(() => {
+            delete this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]
+            if (Object.keys(this.attemptedPublishOnlyStreamConnections[spid.key]).length === 0) {
+                delete this.attemptedPublishOnlyStreamConnections[spid.key]
+            }
+        }, this.nodeConnectTimeout * 2)
+    }
+
+    clearAttemptedPublishOnlyStreamConnection(spid: SPID, nodeId: NodeId): void {
+        if (this.attemptedPublishOnlyStreamConnections[spid.key] && this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]) {
+            clearTimeout(this.attemptedPublishOnlyStreamConnections[spid.key][nodeId])
+            delete this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]
+            if (Object.keys(this.attemptedPublishOnlyStreamConnections[spid.key]).length === 0) {
+                delete this.attemptedPublishOnlyStreamConnections[spid.key]
+            }
+        }
+    }
+
+    checkIfAttemptedPublishOnlyConnectionExists(spid: SPID, nodeId: NodeId): boolean {
+        if (!this.attemptedPublishOnlyStreamConnections[spid.key]) {
+            return false
+        } else if (!this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]) {
+            return false
+        }
+        return true
+    }
+
     async openOutgoingStreamConnection(spid: SPID, targetNodeId: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(spid)
         try {
-            this.streams.setUpStream(spid, true)
+            if (!this.streams.isSetUp(spid)) {
+                this.streams.setUpStream(spid, true)
+            } else if (this.streams.isSetUp(spid) && !this.streams.isOneDirectional(spid)) {
+                const reason = `Could not open outgoing stream connection ${spid.key}, bidirectional stream already exists`
+                logger.warn(reason)
+                this.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, reason)
+                return
+            } else if (this.streams.isSetUp(spid) && this.streams.hasOutOnlyConnection(spid, targetNodeId)) {
+                const reason = `Could not open outgoing stream connection ${spid.key}, publish only stream connection already exists`
+                logger.warn(reason)
+                this.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, reason)
+                return
+            } else if (this.streams.isSetUp(spid) && this.checkIfAttemptedPublishOnlyConnectionExists(spid, targetNodeId)) {
+                const reason = `Could not open outgoing stream connection ${spid.key}, an attempted connection already exists`
+                logger.warn(reason)
+                return
+            }
+            this.addAttemtedPublishOnlyStreamConnection(spid, targetNodeId)
             await this.trackerManager.connectToTrackerForStream(spid)
             await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
-            await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
-            this.streams.addOutOnlyNeighbor(spid, targetNodeId)
+            this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
         } catch (err) {
             logger.warn(`Failed to create an Outgoing stream connection to ${targetNodeId} for stream ${spid.key}:\n${err}`)
-            this.streams.removeNodeFromStream(spid, targetNodeId)
+            this.clearAttemptedPublishOnlyStreamConnection(spid, targetNodeId)
+            this.removeOneWayStreamConnection(spid, targetNodeId)
+            this.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, err)
+        }
+    }
+
+    removeOneWayStreamConnection(spid: SPID, nodeId: NodeId): void {
+        this.streams.removeNodeFromStream(spid, nodeId)
+        if (this.streams.isSetUp(spid)
+            && this.streams.getAllNodesForStream(spid).length === 0
+            && !this.attemptedPublishOnlyStreamConnections[spid.key]
+        ) {
+            this.streams.removeStream(spid)
+        }
+    }
+
+    closeOutgoingStreamConnection(spid: SPID, targetNodeId: NodeId): boolean {
+        if (this.streams.isSetUp(spid) && this.streams.hasOutOnlyConnection(spid, targetNodeId)) {
+            this.nodeToNode.leaveStreamOnNode(targetNodeId, spid)
+            this.removeOneWayStreamConnection(spid, targetNodeId)
+            this.emit(Event.ONE_WAY_CONNECTION_CLOSED, targetNodeId, spid)
+            return true
+        } else {
+            logger.warn(`An outgoing stream connection for ${spid.key} on node ${targetNodeId} does not exist`)
+            return false
+        }
+    }
+
+    processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
+        const { streamId, streamPartition } = message
+        const spid = new SPID(streamId, streamPartition)
+        if (this.streams.isSetUp(spid) && this.streams.hasInOnlyConnection(spid, nodeId)) {
+            this.removeOneWayStreamConnection(spid, nodeId)
+            this.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, spid)
         }
     }
 
@@ -236,6 +334,21 @@ export class Node extends EventEmitter {
             this.streams.addInOnlyNeighbor(spid, nodeId)
         }
         return await this.nodeToNode.respondToPublishOnlyStreamConnectionRequest(nodeId, spid, isAccepted)
+    }
+
+    processPublishStreamResponse(message: PublishStreamConnectionResponse, nodeId: string): void {
+        const { streamId, streamPartition, accepted } = message
+        const spid = new SPID(streamId, streamPartition)
+        this.clearAttemptedPublishOnlyStreamConnection(spid, nodeId)
+        if (accepted) {
+            this.streams.addOutOnlyNeighbor(spid, nodeId)
+            this.emit(Event.PUBLISH_STREAM_ACCEPTED, nodeId, spid)
+        } else {
+            if (this.streams.isSetUp(spid) && this.streams.isOneDirectional(spid) && !this.attemptedPublishOnlyStreamConnections[spid.key]) {
+                this.streams.removeStream(spid)
+            }
+            this.emit(Event.PUBLISH_STREAM_REJECTED, nodeId, spid, `Target node ${nodeId} rejected publish only stream connection ${spid.key}`)
+        }
     }
 
     onDataReceived(streamMessage: MessageLayer.StreamMessage, source: NodeId | null = null): void | never {
@@ -281,6 +394,12 @@ export class Node extends EventEmitter {
     }
 
     stop(): Promise<unknown> {
+        Object.keys(this.attemptedPublishOnlyStreamConnections).forEach((stream) => {
+            Object.values(this.attemptedPublishOnlyStreamConnections[stream]).forEach((timeout) => {
+                clearTimeout(timeout)
+            })
+            delete this.attemptedPublishOnlyStreamConnections[stream]
+        })
         this.disconnectionManager.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()

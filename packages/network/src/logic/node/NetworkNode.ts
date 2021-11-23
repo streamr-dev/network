@@ -25,6 +25,10 @@ export class NetworkNode extends Node {
         await this.openOutgoingStreamConnection(new SPID(streamId, streamPartition), contactNodeId)
     }
 
+    leavePurePublishingStream(streamId: string, streamPartition: number, contactNodeId: string): boolean {
+        return this.closeOutgoingStreamConnection(new SPID(streamId, streamPartition), contactNodeId)
+    }
+
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
         this.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }
