@@ -1,14 +1,15 @@
 import { Contract } from '@ethersproject/contracts'
 import { Wallet } from '@ethersproject/wallet'
+import { parseEther } from '@ethersproject/units'
+import debug from 'debug'
+import { BigNumber, providers } from 'ethers'
+
 import { getRandomClient, createMockAddress } from '../utils'
 
 import * as Token from '../../contracts/TestToken.json'
 import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from './devEnvironment'
-import { BigNumber, providers } from 'ethers'
-import { parseEther } from 'ethers/lib/utils'
 import { EthereumAddress } from '../../src/types'
 import { until } from '../../src/utils'
-import debug from 'debug'
 import StreamrClient from '../../src'
 
 const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)

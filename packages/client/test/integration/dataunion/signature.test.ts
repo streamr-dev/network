@@ -1,5 +1,6 @@
-import { BigNumber, Contract, Wallet } from 'ethers'
-import { parseEther } from 'ethers/lib/utils'
+import { BigNumber, Wallet } from 'ethers'
+import { Contract } from '@ethersproject/contracts'
+import { parseEther } from '@ethersproject/units'
 import debug from 'debug'
 
 import { getEndpointUrl } from '../../../src/utils'

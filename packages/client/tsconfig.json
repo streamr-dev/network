@@ -2,7 +2,8 @@
     "extends": "@streamr/dev-config/ts/tsconfig.browser.json",
     "compilerOptions": {
         "outDir": "dist",
-        "rootDirs": ["src", "test"]
+        "rootDirs": ["src", "test"],
+        "resolveJsonModule": true
     },
     "include": [
         "src/**/*",

@@ -153,6 +153,7 @@
     "@ethersproject/transactions": "^5.1.1",
     "@ethersproject/wallet": "^5.1.0",
     "@ethersproject/web": "^5.1.0",
+    "@ethersproject/units": "^5.5.0",
     "debug": "^4.3.2",
     "env-paths": "^2.2.1",
     "eventemitter3": "^4.0.7",

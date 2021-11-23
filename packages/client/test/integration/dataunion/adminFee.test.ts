@@ -1,5 +1,6 @@
-import { Contract, providers, Wallet } from 'ethers'
-import { parseEther, formatEther } from 'ethers/lib/utils'
+import { providers, Wallet } from 'ethers'
+import { Contract } from '@ethersproject/contracts'
+import { formatEther, parseEther } from '@ethersproject/units'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
