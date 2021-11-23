@@ -527,7 +527,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
                 return du
             }
         } catch (e) { /* ignore */ }
-        throw new Error(`${contractAddress} is not a Data Union`)
+        throw new Error(`${contractAddress} is not a Data Union!`)
     }
 
     async deployDataUnion(options?: DataUnionDeployOptions) {
