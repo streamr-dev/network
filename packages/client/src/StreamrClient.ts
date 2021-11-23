@@ -514,8 +514,8 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /* TODO: in v6, rename this to getDataUnion */
     async safeGetDataUnion(contractAddress: EthereumAddress) {
         const contracts = new Contracts(this)
-        const sidechainAddress = await contracts.fetchDataUnionSidechainAddress(contractAddress)
-        const du = new DataUnion(contractAddress, sidechainAddress, this)
+        const sidechainContract = await contracts.getSidechainContractReadOnly(contractAddress)
+        const du = new DataUnion(contractAddress, sidechainContract.address, this)
         const version = await du.getVersion()
         if (version === 0) {
             throw new Error(`${contractAddress} is not a Data Union!`)
