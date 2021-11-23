@@ -49,12 +49,18 @@ export interface DataUnionWithdrawOptions {
 }
 
 export interface DataUnionStats {
+    // new stats added in 2.2 (admin & data union fees)
+    totalRevenue?: BigNumber,
+    totalAdminFees?: BigNumber,
+    totalDataUnionFees?: BigNumber,
+
+    // stats that already existed in 2.0
     activeMemberCount: BigNumber,
     inactiveMemberCount: BigNumber,
     joinPartAgentCount: BigNumber,
     totalEarnings: BigNumber,
     totalWithdrawable: BigNumber,
-    lifetimeMemberEarnings: BigNumber
+    lifetimeMemberEarnings: BigNumber,
 }
 
 export enum MemberStatus {
@@ -324,37 +330,41 @@ export class DataUnion {
             to: this.sidechainAddress,
             data: '0xc59d4847', // getStats()
         })
+        log('getStats raw response (length = %d) %s', getStatsResponse.length, getStatsResponse)
 
         // Attempt to decode longer response first; if that fails, try the shorter one. Decoding too little won't throw, but decoding too much will
         // for uint[9] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x15287E573007d5FbD65D87ed46c62Cf4C71Dd66d/contracts
         // for uint[6] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x71586e2eb532612F0ae61b624cb0a9c26e2F4c3B/contracts
-        return defaultAbiCoder.decode(['uint[9]'], getStatsResponse)
-            .then(([totalRevenue, totalEarnings, totalAdminFees, totalDataUnionFees, totalWithdrawn,
-                activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount]: BigNumber[]) => (
-                {
-                    totalRevenue, // == earnings (that go to members) + adminFees + dataUnionFees
-                    totalAdminFees,
-                    totalDataUnionFees,
-                    totalEarnings,
-                    totalWithdrawn,
-                    totalWithdrawable: totalEarnings.sub(totalWithdrawn),
-                    activeMemberCount,
-                    inactiveMemberCount,
-                    joinPartAgentCount,
-                    lifetimeMemberEarnings,
-                }))
-            .catch(() => defaultAbiCoder.decode(['uint[6]'], getStatsResponse))
-            .then(([totalEarnings, totalEarningsWithdrawn, activeMemberCount, inactiveMemberCount,
-                lifetimeMemberEarnings, joinPartAgentCount]: BigNumber[]) => (
-                {
-                    totalEarnings,
-                    totalWithdrawable: totalEarnings.sub(totalEarningsWithdrawn),
-                    activeMemberCount,
-                    inactiveMemberCount,
-                    joinPartAgentCount,
-                    lifetimeMemberEarnings,
-                }))
-        // TODO: maybe catch and re-throw with a better error message
+        try {
+            const [[
+                totalRevenue, totalEarnings, totalAdminFees, totalDataUnionFees, totalWithdrawn,
+                activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount
+            ]] = defaultAbiCoder.decode(['uint256[9]'], getStatsResponse) as BigNumber[][]
+            return {
+                totalRevenue, // == earnings (that go to members) + adminFees + dataUnionFees
+                totalAdminFees,
+                totalDataUnionFees,
+                totalEarnings,
+                totalWithdrawable: totalEarnings.sub(totalWithdrawn),
+                activeMemberCount,
+                inactiveMemberCount,
+                joinPartAgentCount,
+                lifetimeMemberEarnings,
+            }
+        } catch (e) {
+            const [[
+                totalEarnings, totalEarningsWithdrawn, activeMemberCount, inactiveMemberCount,
+                lifetimeMemberEarnings, joinPartAgentCount
+            ]] = defaultAbiCoder.decode(['uint256[6]'], getStatsResponse) as BigNumber[][]
+            return {
+                totalEarnings,
+                totalWithdrawable: totalEarnings.sub(totalEarningsWithdrawn),
+                activeMemberCount,
+                inactiveMemberCount,
+                joinPartAgentCount,
+                lifetimeMemberEarnings,
+            }
+        } // TODO: maybe catch and re-throw with a better error message
     }
 
     /**
