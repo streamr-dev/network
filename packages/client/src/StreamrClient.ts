@@ -20,7 +20,7 @@ import { StreamEndpoints } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
 import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
 import { BigNumber } from '@ethersproject/bignumber'
-import { getAddress } from '@ethersproject/address'
+import { getAddress, isAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
 import { GroupKey, StreamPartDefinition } from './stream'
 import { BytesLike } from '@ethersproject/bytes'
@@ -513,18 +513,21 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
 
     /* TODO: in v6, rename this to getDataUnion */
     async safeGetDataUnion(contractAddress: EthereumAddress) {
-        const contracts = new Contracts(this)
-        const sidechainContract = await contracts.getSidechainContractReadOnly(contractAddress)
-        const du = new DataUnion(contractAddress, sidechainContract.address, this)
-        const version = await du.getVersion()
-        if (version === 0) {
-            throw new Error(`${contractAddress} is not a Data Union!`)
-        } else if (version === 1) {
-            throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
-        } else if (version === 2) {
-            return du
+        if (!isAddress(contractAddress)) {
+            throw new Error(`Can't get Data Union, invalid Ethereum address: ${contractAddress}`)
         }
-        throw new Error(`${contractAddress} is of unknown Data Union version: ${version}`)
+        try {
+            const contracts = new Contracts(this)
+            const sidechainContract = await contracts.getSidechainContractReadOnly(contractAddress)
+            const du = new DataUnion(contractAddress, sidechainContract.address, this)
+            const version = await du.getVersion()
+            if (version === 1) {
+                throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
+            } else if (version === 2) {
+                return du
+            }
+        } catch (e) { /* ignore */ }
+        throw new Error(`${contractAddress} is not a Data Union`)
     }
 
     async deployDataUnion(options?: DataUnionDeployOptions) {
