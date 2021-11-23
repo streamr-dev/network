@@ -98,6 +98,12 @@ export const binanceAdapterABI = [
 ]
 
 export const dataUnionMainnetABI = [{
+    name: 'sidechainAddress',
+    inputs: [],
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
     name: 'sendTokensToBridge',
     inputs: [],
     outputs: [{ type: 'uint256' }],

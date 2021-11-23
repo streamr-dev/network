@@ -42,18 +42,10 @@ export default class Contracts {
         this.binanceSmartChainAMBAddress = client.options.binanceSmartChainAMBAddress
     }
 
-    async fetchDataUnionMainnetAddress(
-        dataUnionName: string,
-        deployerAddress: EthereumAddress
-    ): Promise<EthereumAddress> {
-        const provider = this.ethereum.getMainnetProvider()
-        const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, provider)
-        return factoryMainnet.mainnetAddress(deployerAddress, dataUnionName)
-    }
-
     /**
      * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
-     * i.e. can be used for "future deployments" but not necessarily old deployments
+     *       i.e. can be used for "future deployments" but not necessarily old deployments
+     * This can be used when deploying, but not for getDataUnion
      */
     calculateDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress, templateMainnetAddress?: EthereumAddress) {
         validateAddress("deployer's address", deployerAddress)
@@ -65,15 +57,10 @@ export default class Contracts {
         return getCreate2Address(this.factoryMainnetAddress, salt, codeHash)
     }
 
-    async fetchDataUnionSidechainAddress(duMainnetAddress: EthereumAddress): Promise<EthereumAddress> {
-        const provider = this.ethereum.getMainnetProvider()
-        const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, provider)
-        return factoryMainnet.sidechainAddress(duMainnetAddress)
-    }
-
     /**
      * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
-     * i.e. can be used for "future deployments" but not necessarily old deployments
+     *       i.e. can be used for "future deployments" but not necessarily old deployments
+     * This can be used when deploying, but not for getDataUnion
      */
     calculateDataUnionSidechainAddress(mainnetAddress: EthereumAddress, templateSidechainAddress?: EthereumAddress) {
         validateAddress('DU mainnet address', mainnetAddress)
@@ -100,7 +87,7 @@ export default class Contracts {
     async getSidechainContract(contractAddress: EthereumAddress) {
         const signer = await this.ethereum.getSidechainSigner()
         const duMainnet = this.getMainnetContractReadOnly(contractAddress)
-        const duSidechainAddress = await this.fetchDataUnionSidechainAddress(duMainnet.address)
+        const duSidechainAddress = await duMainnet.sidechainAddress()
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, signer)
         return duSidechain
     }
@@ -108,7 +95,7 @@ export default class Contracts {
     async getSidechainContractReadOnly(contractAddress: EthereumAddress) {
         const provider = this.ethereum.getSidechainProvider()
         const duMainnet = this.getMainnetContractReadOnly(contractAddress)
-        const duSidechainAddress = await this.fetchDataUnionSidechainAddress(duMainnet.address)
+        const duSidechainAddress = await duMainnet.sidechainAddress()
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, provider)
         return duSidechain
     }
@@ -275,8 +262,8 @@ export default class Contracts {
         const mainnetWallet = this.ethereum.getSigner()
         const sidechainProvider = this.ethereum.getSidechainProvider()
 
-        const duMainnetAddress = await this.fetchDataUnionMainnetAddress(duName, deployerAddress)
-        const duSidechainAddress = await this.fetchDataUnionSidechainAddress(duMainnetAddress)
+        const duMainnetAddress = this.calculateDataUnionMainnetAddress(duName, deployerAddress)
+        const duSidechainAddress = this.calculateDataUnionSidechainAddress(duMainnetAddress)
 
         if (await mainnetProvider.getCode(duMainnetAddress) !== '0x') {
             throw new Error(`Mainnet data union "${duName}" contract ${duMainnetAddress} already exists!`)
