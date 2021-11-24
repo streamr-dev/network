@@ -1,5 +1,4 @@
 import ControlMessage, { PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 } from '../ControlMessage'
-import StreamMessage from '../../message_layer/StreamMessage'
 
 import PublishStreamConnectionRequest from './PublishStreamConnectionRequest'
 
@@ -8,7 +7,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 1
 
 export default class PublishStreamConnectionRequestSerializerV1 extends Serializer<PublishStreamConnectionRequest> {
-    toArray(publishStreamConnectionRequest: PublishStreamConnectionRequest, streamMessageVersion = StreamMessage.LATEST_VERSION): any[] {
+    toArray(publishStreamConnectionRequest: PublishStreamConnectionRequest): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.PublishStreamConnectionRequest,

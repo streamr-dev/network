@@ -15,7 +15,14 @@ const message = new PublishStreamConnectionRequest({
     senderId,
     requestId: 'requestId'
 })
-const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.PublishStreamConnectionRequest, 'requestId', streamId, streamPartition, senderId])
+const serializedMessage = JSON.stringify([
+    VERSION,
+    ControlMessage.TYPES.PublishStreamConnectionRequest,
+    'requestId',
+    streamId,
+    streamPartition,
+    senderId
+])
 
 describe('PublishStreamConnectionRequestSerializerV2', () => {
     describe('deserialize', () => {

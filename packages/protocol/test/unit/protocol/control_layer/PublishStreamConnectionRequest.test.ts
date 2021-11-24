@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
-import { PublishStreamConnectionRequest, ControlMessage, PublishRequest } from '../../../../src/index'
+import { PublishStreamConnectionRequest, ControlMessage } from '../../../../src/index'
 
 describe('PublishStreamConnectionRequest', () => {
     const streamId = 'stream'

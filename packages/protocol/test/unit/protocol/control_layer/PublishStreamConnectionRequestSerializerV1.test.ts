@@ -16,7 +16,13 @@ const message = new PublishStreamConnectionRequest({
     senderId,
     requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1
 })
-const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.PublishStreamConnectionRequest, streamId, streamPartition, senderId])
+const serializedMessage = JSON.stringify([
+    VERSION,
+    ControlMessage.TYPES.PublishStreamConnectionRequest,
+    streamId,
+    streamPartition,
+    senderId
+])
 
 describe('PublishStreamConnectionRequestSerializerV1', () => {
     describe('deserialize', () => {

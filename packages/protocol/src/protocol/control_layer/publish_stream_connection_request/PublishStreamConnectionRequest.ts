@@ -1,5 +1,5 @@
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
-import {validateIsInteger, validateIsNotNullOrUndefined, validateIsString} from '../../../utils/validations'
+import { validateIsInteger, validateIsNotNullOrUndefined, validateIsString } from '../../../utils/validations'
 
 interface Options extends ControlMessageOptions {
     senderId: string
