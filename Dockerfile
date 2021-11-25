@@ -2,19 +2,11 @@ FROM node:16-buster as build
 WORKDIR /usr/src/monorepo
 RUN npm set unsafe-perm true && \
 	# explicitly use npm v8
-	npm install -g npm@8 --no-audit --progress=false
-COPY ["./*.json", "./*.js", "./*.mjs", ".npmrc",  ".gitignore", "./"]
-RUN npm ci
-COPY ["./packages", "./packages"]
+	npm install -g npm@8 --no-audit
+COPY . .
 RUN npm run bootstrap-pkg -- streamr-broker
 
-# image contains all packages, remove devDeps to keep image size down
-# --ignore-scripts as sqlite package in the client tries running its
-# 'install' script, which uses node-pre-gyp, which is a devDependency that
-# gets removed by prune.
-RUN npx lerna exec --parallel --include-dependencies --scope "streamr-broker" -- npm prune --production --ignore-scripts --prefer-offline --no-audit && \
-	# restore inter-package symlinks removed by npm prune
-	npx lerna link
+RUN npm run prune-pkg -- streamr-broker
 
 FROM node:16-buster-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \

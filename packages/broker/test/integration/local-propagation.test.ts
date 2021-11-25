@@ -1,7 +1,7 @@
 import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { Broker } from '../broker'
+import { Broker } from '../../src/broker'
 import { startBroker, fastPrivateKey, createClient, createTestStream } from '../utils'
 
 const trackerPort = 17711

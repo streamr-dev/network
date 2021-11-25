@@ -9,7 +9,7 @@
     "test": "npm run test-commonjs && npm run test-esm && npm run test-ts # skip && npm run webpack",
     "build-ts": "tsc --project ./tsconfig.json",
     "pretest-ts": "npm run build-ts",
-    "test-ts": "node dist/typescript.js",
+    "test-ts": "node dist/tests/typescript.js",
     "test-esm": "node tests/esm.mjs",
     "test-commonjs": "node tests/commonjs.js",
     "webpack": "../../node_modules/.bin/webpack --progress",

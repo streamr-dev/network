@@ -1,11 +1,11 @@
-import { Protocol } from 'streamr-network'
+import { SmartContractRecord } from 'streamr-client-protocol'
 
 export interface NetworkSmartContract {
     contractAddress: string
     jsonRpcProvider: string
 }
 
-export type TrackerRegistryItem = Protocol.SmartContractRecord
+export type TrackerRegistryItem = SmartContractRecord
 
 export interface TurnConfig {
     url: string,

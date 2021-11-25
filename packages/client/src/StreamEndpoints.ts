@@ -197,17 +197,18 @@ export class StreamEndpoints implements Context {
         this.debug('getOrCreateStream %o', {
             props,
         })
+        const id = props.id ? await createStreamId(props.id, () => this.ethereum.getAddress()) : ''
         // Try looking up the stream by id or name, whichever is defined
         try {
             if (props.id) {
-                return await this.getStream(props.id)
+                return await this.getStream(id)
             }
             return await this.getStreamByName(props.name!)
         } catch (err: any) {
             // try create stream if NOT_FOUND + also supplying an id.
             if (props.id && err.errorCode === ErrorCode.NOT_FOUND) {
                 const stream = await this.createStream(props)
-                this.debug('Created stream: %s %o', props.id, stream.toObject())
+                this.debug('Created stream: %s %o', id, stream.toObject())
                 return stream
             }
 

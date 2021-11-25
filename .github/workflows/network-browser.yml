@@ -1,0 +1,46 @@
+name: Network Browser Build
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+  schedule:
+    # run every day at 00:00
+    - cron: '0 0 * * *'
+
+concurrency:
+  group: network-browser-${{ github.head_ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: packages/network
+
+jobs:
+  test-browser:
+    strategy:
+      matrix:
+        node-version: [16.x]
+    name: Test on Browser Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2.4.1
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
+        working-directory: './'
+        run: |
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-network
+          sudo apt-get install xvfb
+      - run: xvfb-run --auto-servernum npm run test-browser
+        env:
+          CI: true

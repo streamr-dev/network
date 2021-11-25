@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto'
 import assert from 'assert'
 
-import { ethers } from 'ethers'
+import { verifyMessage } from '@ethersproject/wallet'
 import Web3EthAccounts from 'web3-eth-accounts'
 import secp256k1 from 'secp256k1'
 
@@ -47,7 +47,7 @@ describe('validate', () => {
             resultString += `${key} ${Math.round((used[key] as number) / 1024 / 1024 * 100) / 100} MB\n`
             /* eslint-enable no-mixed-operators */
         })
-        console.log(resultString)
+        console.info(resultString)
     }
 
     it('no signature checking at all', async () => {
@@ -59,10 +59,10 @@ describe('validate', () => {
         await run(() => validator.validate(streamMessage), 'no signature checking', 10000)
     })
 
-    it('using ethers.js', async () => {
+    it('using ethers.js verifyMessage', async () => {
         const validator = new StreamMessageValidator({
             verify: async (addr: string, payload: string, signature: string) => {
-                return ethers.utils.verifyMessage(payload, signature).toLowerCase() === addr.toLowerCase()
+                return verifyMessage(payload, signature).toLowerCase() === addr.toLowerCase()
             },
             ...mocks,
         })

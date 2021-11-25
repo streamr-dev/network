@@ -57,7 +57,10 @@ export class ResendSubscription<T> extends Subscription<T> {
         try {
             yield* await this.getResent()
         } catch (err) {
-            await this.handleError(err)
+            if (err.code !== 'NO_STORAGE_NODES') {
+                // ignore NO_STORAGE_NODES errors
+                await this.handleError(err)
+            }
         }
 
         await this.onResent.trigger()

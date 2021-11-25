@@ -3,74 +3,143 @@
 <title>Test StreamrClient in Chrome Browser</title>
 <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
 <script src="/static/streamr-client.web.js"></script>
+<style>
+  html {
+      --primary: #515151;
+      --secondary: #FFFFFF;
+      margin: 0;
+      padding: 0;
+  }
+
+  body {
+      background: var(--primary);
+      color: var(--secondary);
+      display: grid;
+      grid-template-columns: minmax(300px, auto) 1fr;
+      grid-column-gap: 2rem;
+      font-family: monospace;
+  }
+  button {
+      font-family: monospace;
+      background: var(--secondary);
+      color: var(--primary);
+      font-size: 1.3em;
+      border-radius: 0.5em;
+  }
+  nav {
+      display: grid;
+      grid-row-gap: 1rem;
+      grid-template-columns: auto;
+  }
+  article {
+      display: grid;
+      grid-row-gap: 1rem;
+      grid-template-rows: auto auto;
+  }
+
+  #error {
+      color: #ffb3ba;
+      white-space: pre-wrap;
+  }
+
+</style>
+</head>
+<body>
+    <nav>
+        <button id="connect">Connect</button>
+        <button id="create">Create</button>
+        <button id="permissions">Grant Permissions</button>
+        <button id="store">Store Stream</button>
+        <button id="subscribe">Subscribe</button>
+        <button id="publish">Publish</button>
+        <button id="resend">Resend</button>
+        <button id="disconnect">Disconnect</button>
+    </nav>
+    <article>
+        <div id="result"></div>
+        <div id="error"></div>
+    </article>
+</body>
 <script>
+    const onError = ({ message, source, lineno, colno, error, reason }) => {
+        document.querySelector('#error').innerHTML = `Error: ${error ? error.stack : reason.stack}`
+    }
+
+    window.addEventListener('error', onError)
+    window.addEventListener('unhandledrejection', onError)
+
     const urlParams = new URLSearchParams(window.location.search)
     const streamName = urlParams.get('streamName')
     const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v1/ws'
     const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v1'
-    const { privateKey } = StreamrClient.generateEthereumAccount()
+
+    const publisherAuth = StreamrClient.generateEthereumAccount()
+    const subscriberAuth = StreamrClient.generateEthereumAccount()
     console.info('Creating streamr client connecting to:', {
         url,
         restUrl,
     })
 
-    const client = new StreamrClient({
-        auth: {
-            privateKey,
-        },
-        url,
-        restUrl,
-        storageNode: {
-            address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-            url: 'http://10.200.10.1:8891'
-        },
-        autoConnect: false,
-        autoDisconnect: false
+    const publisher = new StreamrClient({
+        ...StreamrClient.ConfigTest,
+        id: 'publisher',
+        auth: publisherAuth,
     })
-    client.enableDebugLogging()
+    const subscriber = new StreamrClient({
+        ...StreamrClient.ConfigTest,
+        id: 'subscriber',
+        auth: subscriberAuth,
+    })
+    publisher.enableDebugLogging()
+    subscriber.enableDebugLogging()
 </script>
-</head>
-<body>
-    <div id="result"></div>
-    <button id="connect">Connect</button>
-    <button id="create">Create</button>
-    <button id="subscribe">Subscribe</button>
-    <button id="publish">Publish</button>
-    <button id="resend">Resend</button>
-    <button id="disconnect">Disconnect</button>
-</body>
 <script>
 let stream
 let messages = []
 
-const resetResults = () => $('#result').html('')
+const resetResults = () => {
+    $('#result').html('')
+    $('#error').html('')
+}
 
-client.on('error', (err) => {
-    console.error(err)
-    $('#result').html('Error: ' + err)
-})
 
 $('#connect').on('click', async () => {
     resetResults()
-    await client.connect()
-    $('#result').html(client.connection.getState())
+    await publisher.connect()
+    await subscriber.connect()
+    $('#result').html('connected')
 })
 
 $('#create').on('click', async () => {
     resetResults()
-    stream = await client.createStream({
+    stream = await publisher.createStream({
         id: '/' + streamName,
         requireEncryptedData: true,
     })
-    await stream.addToStorageNode(client.options.storageNode.address)
     $('#result').html(stream.name)
+})
+
+$('#store').on('click', async () => {
+    resetResults()
+    await stream.addToStorageNode(StreamrClient.StorageNode.STREAMR_DOCKER_DEV)
+    $('#result').html(JSON.stringify(await stream.getStorageNodes()))
+})
+
+$('#permissions').on('click', async () => {
+    resetResults()
+    await stream.grantUserPermissions([
+        StreamrClient.StreamOperation.STREAM_GET,
+        StreamrClient.StreamOperation.STREAM_SUBSCRIBE
+    ], await subscriber.getAddress())
+    $('#result').html(JSON.stringify(await stream.getUserPermissions(await subscriber.getAddress())))
 })
 
 $('#subscribe').on('click', async () => {
     resetResults()
-    await client.subscribe({
+    await subscriber.subscribe({
         stream: stream.id
     }, (message, metadata) => {
+        console.log({ message, metadata })
         messages.push(message)
     })
     $('#result').html('subscribed')
@@ -82,17 +151,17 @@ $('#publish').on('click', async () => {
         const msg = {
             msg: i
         }
-        await client.publish(stream.id, msg)
+        await publisher.publish(stream.id, msg)
     }
 
-    setTimeout(() => $('#result').html(JSON.stringify(messages)), 3000)
+    setTimeout(() => $('#result').html(JSON.stringify(messages)), 6000)
 })
 
 $('#resend').on('click', async () => {
     resetResults()
     messages = []
 
-    const sub = await client.resend({
+    const sub = await subscriber.resend({
         stream: stream.id,
         resend: {
             last: 10,
@@ -101,14 +170,15 @@ $('#resend').on('click', async () => {
         messages.push(message)
     })
 
-    sub.on('resent', () => {
+    sub.onConsumed(() => {
         $('#result').html('Resend: ' + JSON.stringify(messages))
     })
 })
 
 $('#disconnect').on('click', async () => {
-    await client.disconnect()
-    $('#result').html(client.connection.getState())
+    await publisher.disconnect()
+    await subscriber.disconnect()
+    $('#result').html('disconnected')
 })
 </script>
 </html>

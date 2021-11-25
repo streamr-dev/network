@@ -24,7 +24,59 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build-image:
+    # >> use monorepo brokers/trackers with streamr-docker-dev
+    # For now, builds docker image and runs with streamr-docker-dev so we
+    # don't have to worry about backgrounding processes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
+        with:
+          node-version: "16.x"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Cache Broker Docker Image
+        id: cache-broker-image
+        uses: actions/cache@v2.1.6
+        env:
+          cache-name: cache-broker-docker-image
+        with:
+          path: /tmp/docker-cache
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.6
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          driver-opts: |
+            network=host
+      - run: mkdir -p /tmp/docker-cache
+      - name: Build
+        uses: docker/build-push-action@v2.7.0
+        if: steps.cache-broker-image.outputs.cache-hit != 'true'
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          outputs: type=docker,dest=/tmp/docker-cache/broker-image.tar
+          tags: streamr/broker-node:dev
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      # << use monorepo brokers/trackers with streamr-docker-dev
+
   cross-client-testing:
+    needs: [build-image]
     name: ${{ matrix.config-name }} ${{ matrix.test-name }}
     runs-on: ubuntu-latest
     strategy:
@@ -52,15 +104,13 @@ jobs:
       - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.4.1
         with:
-          node-version: "14.x"
+          node-version: "16.x"
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg @streamr/cross-client-testing
       - uses: actions/setup-java@v2.3.1
         with:
@@ -74,6 +124,17 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+      - name: Cache Broker Docker Image
+        uses: actions/cache@v2.1.6
+        env:
+          cache-name: cache-broker-docker-image
+        with:
+          path: /tmp/docker-cache
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+      - name: Restore Broker Image
+        run: docker load --input /tmp/docker-cache/broker-image.tar
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:

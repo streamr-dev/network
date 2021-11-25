@@ -2,7 +2,7 @@ import WebSocket from 'ws'
 import { startTracker, Protocol, Tracker } from 'streamr-network'
 import { startBroker, createClient, createTestStream } from '../utils'
 import StreamrClient from 'streamr-client'
-import { Broker } from '../broker'
+import { Broker } from '../../src/broker'
 
 const { ControlLayer } = Protocol
 const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer

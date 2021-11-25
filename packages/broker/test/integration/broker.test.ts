@@ -11,7 +11,7 @@ import {
     waitForStreamPersistedInStorageNode
 } from '../utils'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
-import { Broker } from '../broker'
+import { Broker } from '../../src/broker'
 
 const httpPort = 12341
 const wsPort1 = 12351
