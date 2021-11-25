@@ -3,6 +3,7 @@ import { arrayify, BytesLike, hexZeroPad } from '@ethersproject/bytes'
 import { Contract, ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
+import { parseEther } from '@ethersproject/units'
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { Debug } from '../utils/log'
 import { EthereumAddress, Todo } from '../types'
@@ -280,9 +281,13 @@ export default class Contracts {
         if (gasPrice) {
             ethersOptions.gasPrice = gasPrice
         }
+        const duFeeFraction = parseEther('0') // TODO: decide what the default values should be
+        const duBeneficiary = '0x0000000000000000000000000000000000000000' // TODO: decide what the default values should be
         const tx = await factoryMainnet.deployNewDataUnion(
             ownerAddress,
             adminFeeBN,
+            duFeeFraction,
+            duBeneficiary,
             agentAddressList,
             duName,
             ethersOptions
