@@ -188,6 +188,10 @@ export class StreamManager {
         return this.streams.get(spid.toKey())!.inOnly.has(node)
     }
 
+    hasInboundConnection(spid: SPID, node: NodeId): boolean {
+        return this.hasInOnlyConnection(spid, node) || this.hasNeighbor(spid, node)
+    }
+
     isOneDirectional(spid: SPID): boolean {
         try {
             this.verifyThatIsSetUp(spid)

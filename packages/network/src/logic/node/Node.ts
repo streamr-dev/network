@@ -350,12 +350,18 @@ export class Node extends EventEmitter {
         }
     }
 
+    // Null source is used when a message is published by the node itself
     onDataReceived(streamMessage: MessageLayer.StreamMessage, source: NodeId | null = null): void | never {
         this.metrics.record('onDataReceived', 1)
         const spid = new SPID(
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
         )
+        // Check that node has an inbound connection, if not the node will ignore the message
+        if (source && !this.streams.hasInboundConnection(spid, source)) {
+            // Perhaps the node should be disconnected here if bad behaviour is repeated
+            return
+        }
 
         this.emit(Event.MESSAGE_RECEIVED, streamMessage, source)
         this.subscribeToStreamIfHaveNotYet(spid)
