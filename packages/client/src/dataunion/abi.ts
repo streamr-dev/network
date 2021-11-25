@@ -269,7 +269,7 @@ export const factoryMainnetABI = [{
     type: 'function'
 }, {
     name: 'deployNewDataUnion',
-    inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'address[]' }, { type: 'string' }],
+    inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'uint256' }, { type: 'address' }, { type: 'address[]' }, { type: 'string' }],
     outputs: [{ type: 'address' }],
     stateMutability: 'nonpayable',
     type: 'function'
