@@ -88,6 +88,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const webrtcDisallowPrivateAddresses = config.network.webrtcDisallowPrivateAddresses
 
+    const acceptProxyConnections = config.network.acceptProxyConnections
+
     const streamrClient = new StreamrClient({
         auth: {
             privateKey: config.ethereumPrivateKey,
@@ -101,7 +103,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             location: config.network.location,
             metricsContext,
             stunUrls: getStunTurnUrls(config),
-            webrtcDisallowPrivateAddresses
+            webrtcDisallowPrivateAddresses,
+            acceptProxyConnections
         }
     })
     const publisher = new Publisher(streamrClient, metricsContext)

@@ -23,7 +23,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     rttUpdateTimeout?: number,
     trackerConnectionMaintenanceInterval?: number
     webrtcDisallowPrivateAddresses?: boolean,
-    acceptOneWayConnections?: boolean
+    acceptProxyConnections?: boolean
 }
 
 export const createNetworkNode = ({
@@ -42,7 +42,7 @@ export const createNetworkNode = ({
     stunUrls = ['stun:stun.l.google.com:19302'],
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses = false,
-    acceptOneWayConnections
+    acceptProxyConnections
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, trackerPingInterval)
@@ -75,6 +75,6 @@ export const createNetworkNode = ({
         disconnectionWaitTime,
         rttUpdateTimeout,
         trackerConnectionMaintenanceInterval,
-        acceptOneWayConnections
+        acceptProxyConnections
     })
 }

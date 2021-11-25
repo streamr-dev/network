@@ -32,7 +32,7 @@ describe('Publish only connection tests', () => {
             id: 'contact-node',
             trackers: [trackerInfo],
             stunUrls: [],
-            acceptOneWayConnections: true
+            acceptProxyConnections: true
         })
         await contactNode.start()
 
@@ -40,7 +40,7 @@ describe('Publish only connection tests', () => {
             id: 'contact-node-2',
             trackers: [trackerInfo],
             stunUrls: [],
-            acceptOneWayConnections: true
+            acceptProxyConnections: true
         })
         await contactNode2.start()
 

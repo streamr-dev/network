@@ -47,7 +47,7 @@ export interface NodeOptions extends TrackerManagerOptions {
     bufferMaxSize?: number
     disconnectionWaitTime?: number
     nodeConnectTimeout?: number
-    acceptOneWayConnections?: boolean
+    acceptProxyConnections?: boolean
 }
 
 export interface Node {
@@ -76,7 +76,7 @@ export class Node extends EventEmitter {
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
-    private readonly acceptOneWayConnections: boolean
+    private readonly acceptProxyConnections: boolean
     private readonly attemptedPublishOnlyStreamConnections: Record<string, Record<NodeId, NodeJS.Timeout>>
 
     constructor(opts: NodeOptions) {
@@ -87,7 +87,7 @@ export class Node extends EventEmitter {
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.consecutiveDeliveryFailures = {}
         this.started = new Date().toLocaleString()
-        this.acceptOneWayConnections = opts.acceptOneWayConnections || false
+        this.acceptProxyConnections = opts.acceptProxyConnections || false
 
         const metricsContext = opts.metricsContext || new MetricsContext('')
         this.metrics = metricsContext.create('node')
@@ -328,7 +328,7 @@ export class Node extends EventEmitter {
         const spid = new SPID(streamId, streamPartition)
 
         // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way streams
-        const isAccepted = this.streams.isSetUp(spid) && this.acceptOneWayConnections
+        const isAccepted = this.streams.isSetUp(spid) && this.acceptProxyConnections
         if (isAccepted) {
             this.streams.addInOnlyNeighbor(spid, nodeId)
         }
