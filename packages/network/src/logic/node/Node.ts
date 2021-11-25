@@ -237,7 +237,6 @@ export class Node extends EventEmitter {
             this.attemptedPublishOnlyStreamConnections[spid.key] = {}
         }
         this.attemptedPublishOnlyStreamConnections[spid.key][nodeId] = setTimeout(() => {
-            console.log("TRIGGGGERED")
             delete this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]
             if (Object.keys(this.attemptedPublishOnlyStreamConnections[spid.key]).length === 0) {
                 delete this.attemptedPublishOnlyStreamConnections[spid.key]
