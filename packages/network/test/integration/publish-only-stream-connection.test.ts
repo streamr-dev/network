@@ -1,7 +1,7 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { MessageLayer, SPID } from 'streamr-client-protocol'
-import { waitForEvent } from 'streamr-test-utils'
+import {wait, waitForEvent} from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from "../../src/logic/node/Node"
@@ -69,11 +69,13 @@ describe('Publish only connection tests', () => {
     })
 
     afterEach(async () => {
-        await tracker.stop()
-        await contactNode.stop()
-        await contactNode2.stop()
-        await nonContactNode.stop()
-        await publisherNode.stop()
+        await Promise.all([
+            publisherNode.stop(),
+            contactNode.stop(),
+            contactNode2.stop(),
+            nonContactNode.stop(),
+            tracker.stop()
+        ])
     })
 
     it('publisher node can form one-way connections', async () => {
@@ -109,6 +111,7 @@ describe('Publish only connection tests', () => {
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
             publisherNode.leavePurePublishingStream('stream-0', 0, 'contact-node'),
         ])
+
         // @ts-expect-error private
         expect(publisherNode.streams.hasOutOnlyConnection(streamSPID, 'contact-node')).toBeFalse()
         // @ts-expect-error private
@@ -117,6 +120,7 @@ describe('Publish only connection tests', () => {
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
             publisherNode.leavePurePublishingStream('stream-0', 0, 'contact-node-2'),
         ])
+
         // @ts-expect-error private
         expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
         // @ts-expect-error private

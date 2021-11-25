@@ -116,8 +116,8 @@ export class StreamManager {
             if (isRemoved) {
                 streams.push(SPID.from(spidKey))
             }
-            // inOnly.delete(node)
-            // outOnly.delete(node)
+            inOnly.delete(node)
+            outOnly.delete(node)
         })
         return streams
     }

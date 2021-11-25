@@ -132,8 +132,8 @@ export class NodeToNode extends EventEmitter {
         return [controlLayerVersion, messageLayerVersion]
     }
 
-    requestPublishOnlyStreamConnection(nodeId: NodeId, spid: SPID): void {
-        this.send(nodeId, new ControlLayer.PublishStreamConnectionRequest({
+    async requestPublishOnlyStreamConnection(nodeId: NodeId, spid: SPID): Promise<void> {
+        await this.send(nodeId, new ControlLayer.PublishStreamConnectionRequest({
             requestId: '',
             senderId: nodeId,
             streamId: spid.streamId,
@@ -141,8 +141,8 @@ export class NodeToNode extends EventEmitter {
         }))
     }
 
-    leaveStreamOnNode(nodeId: NodeId, spid: SPID): void {
-        this.send(nodeId, new ControlLayer.UnsubscribeRequest({
+    async leaveStreamOnNode(nodeId: NodeId, spid: SPID): Promise<void> {
+        await this.send(nodeId, new ControlLayer.UnsubscribeRequest({
             requestId: '',
             streamId: spid.streamId,
             streamPartition: spid.streamPartition

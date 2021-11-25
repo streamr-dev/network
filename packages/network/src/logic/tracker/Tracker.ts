@@ -61,6 +61,7 @@ export class Tracker extends EventEmitter {
     private readonly logger: Logger
     private readonly metrics: Metrics
     private readonly statusMeter: any
+    private stopped: boolean
 
     constructor(opts: TrackerOptions) {
         super()
@@ -83,6 +84,7 @@ export class Tracker extends EventEmitter {
         this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
         this.extraMetadatas = Object.create(null)
+        this.stopped = false
 
         this.trackerServer.on(TrackerServerEvent.NODE_CONNECTED, (nodeId) => {
             this.onNodeConnected(nodeId)
@@ -122,6 +124,9 @@ export class Tracker extends EventEmitter {
     }
 
     processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
+        if (this.stopped) {
+            return
+        }
         this.metrics.record('processNodeStatus', 1)
         this.statusMeter.mark()
         const status = statusMessage.status as Status
@@ -181,6 +186,7 @@ export class Tracker extends EventEmitter {
     }
 
     stop(): Promise<void> {
+        this.stopped = true
         this.logger.debug('stopping')
         return this.trackerServer.stop()
     }
@@ -221,6 +227,9 @@ export class Tracker extends EventEmitter {
     }
 
     private removeNode(node: NodeId): void {
+        if (this.stopped) {
+            return
+        }
         this.metrics.record('_removeNode', 1)
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
