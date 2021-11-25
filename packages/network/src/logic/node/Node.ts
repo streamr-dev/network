@@ -78,7 +78,7 @@ export class Node extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptOneWayConnections: boolean
     private readonly attemptedPublishOnlyStreamConnections: Record<string, Record<NodeId, NodeJS.Timeout>>
-    private stopped: boolean
+
     constructor(opts: NodeOptions) {
         super()
 
@@ -88,7 +88,6 @@ export class Node extends EventEmitter {
         this.consecutiveDeliveryFailures = {}
         this.started = new Date().toLocaleString()
         this.acceptOneWayConnections = opts.acceptOneWayConnections || false
-        this.stopped = false
 
         const metricsContext = opts.metricsContext || new MetricsContext('')
         this.metrics = metricsContext.create('node')
@@ -316,9 +315,6 @@ export class Node extends EventEmitter {
     }
 
     processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
-        if (this.stopped) {
-            return
-        }
         const { streamId, streamPartition } = message
         const spid = new SPID(streamId, streamPartition)
         if (this.streams.isSetUp(spid) && this.streams.hasInOnlyConnection(spid, nodeId)) {
@@ -328,9 +324,6 @@ export class Node extends EventEmitter {
     }
 
     async processPublishStreamRequest(message: PublishStreamConnectionRequest, nodeId: string): Promise<void> {
-        if (this.stopped) {
-            return
-        }
         const { streamId, streamPartition } = message
         const spid = new SPID(streamId, streamPartition)
 
@@ -343,9 +336,6 @@ export class Node extends EventEmitter {
     }
 
     processPublishStreamResponse(message: PublishStreamConnectionResponse, nodeId: string): void {
-        if (this.stopped) {
-            return
-        }
         const { streamId, streamPartition, accepted } = message
         const spid = new SPID(streamId, streamPartition)
         this.clearAttemptedPublishOnlyStreamConnection(spid, nodeId)
@@ -361,9 +351,6 @@ export class Node extends EventEmitter {
     }
 
     onDataReceived(streamMessage: MessageLayer.StreamMessage, source: NodeId | null = null): void | never {
-        if (this.stopped) {
-            return
-        }
         this.metrics.record('onDataReceived', 1)
         const spid = new SPID(
             streamMessage.getStreamId(),
@@ -406,7 +393,6 @@ export class Node extends EventEmitter {
     }
 
     stop(): Promise<unknown> {
-        this.stopped = true
         Object.keys(this.attemptedPublishOnlyStreamConnections).forEach((stream) => {
             Object.values(this.attemptedPublishOnlyStreamConnections[stream]).forEach((timeout) => {
                 clearTimeout(timeout)
@@ -439,9 +425,6 @@ export class Node extends EventEmitter {
     }
 
     private onNodeDisconnected(node: NodeId): void {
-        if (this.stopped) {
-            return
-        }
         this.metrics.record('onNodeDisconnect', 1)
         const streams = this.streams.removeNodeFromAllStreams(node)
         logger.trace('removed all subscriptions of node %s', node)
