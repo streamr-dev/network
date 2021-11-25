@@ -126,7 +126,7 @@ export class TrackerManager {
         this.instructionRetryManager.stop()
         this.trackerConnector.stop()
         Object.values(this.rttUpdateTimeoutsOnTrackers).forEach((timeout) => clearTimeout(timeout))
-        return this.nodeToTracker.stop()
+        await this.nodeToTracker.stop()
     }
 
     private getStreamsForTracker(trackerId: TrackerId): Array<SPID> {
