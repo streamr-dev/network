@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
-import { Logger, Protocol } from 'streamr-network'
+import { Logger } from 'streamr-network'
+import type { StreamMessage } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
 import { BucketId } from './Bucket'
 
@@ -27,7 +28,7 @@ export class Batch extends EventEmitter {
     private closeTimeout: number
     private timeout: NodeJS.Timeout
     createdAt: number
-    streamMessages: Protocol.StreamMessage[]
+    streamMessages: StreamMessage[]
     size: number
     retries: number
     state: State
@@ -121,7 +122,7 @@ export class Batch extends EventEmitter {
         this.setState(Batch.states.INSERTED)
     }
 
-    push(streamMessage: Protocol.StreamMessage, doneCb?: DoneCallback): void {
+    push(streamMessage: StreamMessage, doneCb?: DoneCallback): void {
         this.streamMessages.push(streamMessage)
         this.size += Buffer.byteLength(streamMessage.serialize())
         if (doneCb) {

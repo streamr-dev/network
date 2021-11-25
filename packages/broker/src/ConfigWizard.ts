@@ -3,9 +3,9 @@ import { Wallet } from 'ethers'
 import path from 'path'
 import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
 import * as os from 'os'
-import chalk from "chalk"
+import chalk from 'chalk'
 import { v4 as uuid } from 'uuid'
-import { Protocol } from 'streamr-network'
+import * as Protocol from 'streamr-client-protocol'
 
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
@@ -15,7 +15,7 @@ import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.s
 const createLogger = () => {
     return {
         info: (...args: any[]) => {
-            console.log(chalk.bgWhite.black(':'), ...args)
+            console.info(chalk.bgWhite.black(':'), ...args)
         },
         error: (...args: any[]) => {
             console.error(chalk.bgRed.black('!'), ...args)
@@ -302,7 +302,7 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     if (!answers.parentDirExists) {
         mkdirSync(answers.parentDirPath)
     }
-   
+
     writeFileSync(answers.selectStoragePath, JSON.stringify(config, null, 2))
     chmodSync(answers.selectStoragePath, '0600')
     return answers.selectStoragePath

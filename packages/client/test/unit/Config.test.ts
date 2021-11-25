@@ -2,6 +2,7 @@ import set from 'lodash/set'
 import { arrayify, BytesLike } from '@ethersproject/bytes'
 
 import { StreamrClient } from '../../src/StreamrClient'
+import { DEFAULTS } from '../../src/Config'
 import config from '../../src/ConfigTest'
 
 describe('Config', () => {
@@ -85,5 +86,83 @@ describe('Config', () => {
             })
             expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
         })
+
+        it('network can be empty', () => {
+            const clientDefaults = new StreamrClient()
+            const clientOverrides = new StreamrClient({
+                network: {}
+            })
+            expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
+            expect(Array.isArray(clientOverrides.options.network.trackers)).toBeTruthy()
+            expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
+        })
+
+        it('passes metricsContext by reference', () => {
+            const clientDefaults = new StreamrClient()
+            const clientOverrides = new StreamrClient({
+                network: {
+                    metricsContext: clientDefaults.options.network.metricsContext,
+                }
+            })
+            // network object is different
+            expect(clientOverrides.options.network).not.toBe(clientDefaults.options.network)
+            // but metricsContext is same instance
+            expect(clientOverrides.options.network.metricsContext).toBe(clientDefaults.options.network.metricsContext)
+        })
+
+        it('can override trackers', () => {
+            const trackers = [
+                {
+                    id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
+                    ws: 'wss://testnet3.streamr.network:30401',
+                    http: 'https://testnet3.streamr.network:30401'
+                },
+            ]
+            const clientOverrides = new StreamrClient({
+                network: {
+                    trackers,
+                }
+            })
+            expect(clientOverrides.options.network.trackers).toEqual(trackers)
+            expect(clientOverrides.options.network.trackers).not.toBe(trackers)
+            expect(clientOverrides.options.network.trackers[0]).not.toBe(trackers[0])
+        })
+
+        it('can override debug settings', () => {
+            const debugPartial = {
+                inspectOpts: {
+                    depth: 99,
+                }
+            }
+            const debugFull = {
+                inspectOpts: {
+                    depth: 88,
+                    maxStringLength: 3
+                }
+            }
+
+            const clientDefaults = new StreamrClient()
+            const clientOverrides1 = new StreamrClient({
+                debug: debugPartial,
+            })
+            const clientOverrides2 = new StreamrClient({
+                debug: debugFull,
+            })
+            expect(clientOverrides1.options.debug).toEqual({
+                ...clientDefaults.options.debug,
+                inspectOpts: {
+                    ...clientDefaults.options.debug.inspectOpts,
+                    ...debugPartial.inspectOpts,
+                }
+            })
+            expect(clientOverrides2.options.debug).toEqual({
+                ...clientDefaults.options.debug,
+                inspectOpts: {
+                    ...clientDefaults.options.debug.inspectOpts,
+                    ...debugFull.inspectOpts,
+                }
+            })
+        })
+
     })
 })

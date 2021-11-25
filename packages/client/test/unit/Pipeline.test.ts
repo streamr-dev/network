@@ -362,6 +362,32 @@ describe('Pipeline', () => {
                 expect(received).toEqual(expected)
             })
 
+            it('handles immediate errors in source', async () => {
+                const err = new Error('expected')
+
+                // eslint-disable-next-line require-yield
+                const p = new Pipeline((async function* generateError() {
+                    throw err
+                }()))
+                    .pipe(async function* Step1(s) {
+                        yield* s
+                    })
+                    .pipe(async function* Step2(s) {
+                        yield* s
+                        yield await new Promise<number>(() => {}) // would wait forever
+                    })
+                    .onFinally(onFinally)
+
+                const received: number[] = []
+                await expect(async () => {
+                    for await (const msg of p) {
+                        received.push(msg)
+                    }
+                }).rejects.toThrow(err)
+
+                expect(received).toEqual([])
+            })
+
             it('handles errors after', async () => {
                 const err = new Error('expected')
 
@@ -788,6 +814,46 @@ describe('Pipeline', () => {
 
                 pipeline.pull(generate())
                 return pipeline
+            })
+
+            it('errors if pull generator errors', async () => {
+                const err = new Error('expected')
+                const pipeline = new PushPipeline<number>().pipe(async function* Step1(s) {
+                    yield* s
+                }).onFinally(onFinally)
+
+                pipeline.pull((async function* generateError() {
+                    yield* generate()
+                    throw err
+                }()))
+                const received: number[] = []
+                await expect(async () => {
+                    for await (const msg of pipeline) {
+                        received.push(msg)
+                    }
+                }).rejects.toThrow(err)
+
+                expect(received).toEqual(expected)
+            })
+
+            it('errors if pull generator immediately errors', async () => {
+                const err = new Error('expected')
+                const pipeline = new PushPipeline().pipe(async function* Step1(s) {
+                    yield* s
+                }).onFinally(onFinally)
+
+                // eslint-disable-next-line require-yield
+                pipeline.pull((async function* generateError() {
+                    throw err
+                }()))
+                const received: any[] = []
+                await expect(async () => {
+                    for await (const msg of pipeline) {
+                        received.push(msg)
+                    }
+                }).rejects.toThrow(err)
+
+                expect(received).toEqual([])
             })
         })
     })

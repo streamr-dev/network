@@ -15,8 +15,7 @@
         "moduleResolution": "node",
         "resolveJsonModule": true,
         "types": [
-            "node",
-            "jest"
+            "node"
         ],
         "incremental": true,
         "sourceMap": true

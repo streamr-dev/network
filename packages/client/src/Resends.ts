@@ -5,7 +5,7 @@ import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { SPID, SIDLike, MessageRef, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import split2 from 'split2'
-import { Transform } from 'stream'
+import { Readable } from 'stream'
 
 import { instanceId, counterId } from './utils'
 import { Context, ContextError } from './utils/Context'
@@ -19,24 +19,34 @@ import Session from './Session'
 import NodeRegistry from './StorageNodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
+import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
-async function fetchStream(url: string, session: Session, opts = {}, abortController = new AbortController()) {
+async function fetchStream(url: string, session: Session, opts = {}, abortController = new AbortController()): Promise<Readable> {
     const startTime = Date.now()
     const response = await authRequest(url, session, {
         signal: abortController.signal,
         ...opts,
     })
+    if (!response.body) {
+        throw new Error('No Response Body')
+    }
+
     try {
-        const stream: Transform = response.body.pipe(split2((message: string) => {
+        // in the browser, response.body will be a web stream. Convert this into a node stream.
+        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+
+        const stream = source.pipe(split2((message: string) => {
             return StreamMessage.deserialize(message)
         }))
+
         stream.once('close', () => {
             abortController.abort()
         })
+
         return Object.assign(stream, {
             startTime,
         })
@@ -201,18 +211,15 @@ export default class Resend implements Context {
             count += 1
         })
 
-        messageStream.pull((async function* readStream(this: Resend) {
-            let dataStream
+        const dataStream = await fetchStream(url, this.session)
+        messageStream.pull((async function* readStream() {
             try {
-                dataStream = await fetchStream(url, this.session)
                 yield* dataStream
             } finally {
                 debug('resent %s messages.', count)
-                if (dataStream) {
-                    dataStream.destroy()
-                }
+                dataStream.destroy()
             }
-        }.bind(this)()))
+        }()))
         return messageStream
     }
 

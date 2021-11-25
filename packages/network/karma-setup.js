@@ -1,13 +1,21 @@
 // Add important parts of Jest to the Karma/Jasmine browser-test runtime's global scope
 // the jest.fn() API
 import * as jestMock from 'jest-mock'
-import { ModernFakeTimers } from '@jest/fake-timers'
-// The matchers API
 import expect from 'expect'
+import { ModernFakeTimers } from '@jest/fake-timers'
+
+// importing jest-extended directly relies on global.expect to be set
+// importing the matchers and calling expect.extend manually
+// prevents tests failing due to global.expect not being set
 import jestExtendedMatchers from 'jest-extended/dist/matchers'
 
 let jest = jestMock
 const timers = new ModernFakeTimers({global: window, config: null })
+
+// prevent navigation
+// without this karma fails the suite with "Some of your tests did a full page reload!"
+// not clear what is causing the reload.
+window.onbeforeunload = () => 'unload prevented'
 
 jest.advanceTimersByTime = timers.advanceTimersByTime
 jest.advanceTimersToNextTimer = timers.advanceTimersToNextTimer
@@ -26,7 +34,7 @@ jest.useRealTimers = timers.useRealTimers
 // eslint-disable-next-line no-underscore-dangle
 jest._checkFakeTimers = timers._checkFakeTimers
 
-Object.assign(jest,timers)
+Object.assign(jest, timers)
 
 expect.extend(jestExtendedMatchers)
 
@@ -37,5 +45,8 @@ window.test.each = (inputs) => (testName, test) =>
 window.test.todo = function () {
     return undefined
 }
-window.jest = jest
+
 window.expect = expect
+window.setImmediate = setTimeout
+window.clearImmediate = clearTimeout
+window.jest = jestMock

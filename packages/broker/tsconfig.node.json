@@ -1,0 +1,18 @@
+{
+    "extends": "@streamr/dev-config/ts/tsconfig.node.json",
+    "compilerOptions": {
+        "composite": true,
+        "outDir": "dist"
+    },
+    "include": [
+        "package.json",
+        "src/**/*",
+        "src/**/*.json"
+    ],
+    "references": [
+        { "path": "../test-utils/tsconfig.node.json" },
+        { "path": "../protocol/tsconfig.node.json" },
+        { "path": "../network/tsconfig.node.json" },
+        { "path": "../client/tsconfig.node.json" }
+    ]
+}

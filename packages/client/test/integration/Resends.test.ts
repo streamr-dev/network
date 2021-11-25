@@ -544,6 +544,26 @@ describeRepeats('resends', () => {
                 expect(msgs).toEqual(published.slice(0, END_AFTER))
                 expect(client.count(stream.id)).toBe(0)
             })
+
+            it('does not error if no storage assigned', async () => {
+                const nonStoredStream = await createTestStream(client, module)
+                const sub = await client.resendSubscribe({
+                    streamId: nonStoredStream.id,
+                    last: 5,
+                })
+                expect(client.count(nonStoredStream.id)).toBe(1)
+
+                const onResent = jest.fn()
+                sub.onResent(onResent)
+
+                const publishedMessages = await getPublishTestStreamMessages(client, nonStoredStream)(2)
+
+                const receivedMsgs = await sub.collect(publishedMessages.length)
+                expect(receivedMsgs).toHaveLength(publishedMessages.length)
+                expect(onResent).toHaveBeenCalledTimes(1)
+                expect(receivedMsgs).toEqual(publishedMessages)
+                expect(client.count(nonStoredStream.id)).toBe(0)
+            })
         })
     })
 })
