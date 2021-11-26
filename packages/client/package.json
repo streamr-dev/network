@@ -60,7 +60,7 @@
         "test-browser-resend": "npm run build-browser && npm run setup-browser; nightwatch ./test/browser/resend.js",
         "posttest-browser-realtime": "npm run teardown-browser",
         "posttest-browser-resend": "npm run teardown-browser",
-        "clean": "jest --clearCache || true; rm -rf dist vendor *.tsbuildinfo node_modules/.cache || true",
+        "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
         "docs": "typedoc --options typedoc.js"
     },
     "engines": {
