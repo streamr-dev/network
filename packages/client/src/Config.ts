@@ -147,3 +147,4 @@ export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubec
 
     return result
 }
+
