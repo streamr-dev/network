@@ -393,11 +393,19 @@ export class DataUnion {
 
     /**
      * Get data union admin fee fraction (between 0.0 and 1.0) that admin gets from each revenue event
+     * Version 2.2: admin fee is collected in DataUnionSidechain
+     * Version 2.0: admin fee was collected in DataUnionMainnet
      */
     async getAdminFee(): Promise<number> {
-        let adminFeeBN = BigNumber.from(0)
-        const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
-        adminFeeBN = await duSidechain.adminFeeFraction()
+        let adminFeeBN: BigNumber
+        try {
+            // v2.0, this did not exist and thus will fail for old DataUnionSidechain contracts
+            const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
+            adminFeeBN = await duSidechain.adminFeeFraction()
+        } catch (e) {
+            const duMainnet = await this.getContracts().getMainnetContractReadOnly(this.contractAddress)
+            adminFeeBN = await duMainnet.adminFeeFraction()
+        }
         return +adminFeeBN.toString() / 1e18
     }
 
@@ -586,17 +594,27 @@ export class DataUnion {
 
     /**
      * Admin: set admin fee (between 0.0 and 1.0) for the data union
+     * Version 2.2: admin fee is collected in DataUnionSidechain
+     * Version 2.0: admin fee was collected in DataUnionMainnet
      */
     async setAdminFee(newFeeFraction: number) {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
-        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
 
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
-        const duFeeBN = await duSidechain.dataUnionFeeFraction()
-        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
-        const tx = await duSidechain.setFees(adminFeeBN, duFeeBN, ethersOverrides)
+        let tx: ContractTransaction
+        try {
+            // v2.0, this did not exist and thus will fail for old DataUnionSidechain contracts
+            const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+            const duFeeBN = await duSidechain.dataUnionFeeFraction()
+            const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+            tx = await duSidechain.setFees(adminFeeBN, duFeeBN, ethersOverrides)
+        } catch (e) {
+            const duMainnet = await this.getContracts().getMainnetContract(this.contractAddress)
+            const ethersOverrides = this.client.ethereum.getMainnetOverrides()
+            tx = await duMainnet.setAdminFee(adminFeeBN, ethersOverrides)
+        }
         return waitForTx(tx)
     }
 
