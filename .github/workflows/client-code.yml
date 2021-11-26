@@ -55,6 +55,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: npm run eslint
@@ -85,6 +86,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: test-unit
@@ -129,6 +131,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: Start Streamr Docker Stack
@@ -174,6 +177,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: Start Streamr Docker Stack
@@ -213,6 +217,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm ci
           npx lerna bootstrap --scope streamr-client --include-dependencies
       - name: Start Streamr Docker Stack

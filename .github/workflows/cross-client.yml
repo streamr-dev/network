@@ -71,6 +71,7 @@ jobs:
       - name: npm ci
         working-directory: './'
         run: |
+          npm install -g npm@8
           npm ci
           npx lerna bootstrap --scope @streamr/cross-client-testing --include-dependencies
       - uses: actions/setup-java@v1
