@@ -401,10 +401,19 @@ export class DataUnion {
 
     /**
      * Get data union admin fee fraction (between 0.0 and 1.0) that admin gets from each revenue event
+     * Version 2.0: admin fee was collected in DataUnionMainnet
+     * Version 2.2: admin fee is collected in DataUnionSidechain
      */
     async getAdminFee(): Promise<number> {
-        const duMainnet = this.getContracts().getMainnetContractReadOnly(this.contractAddress)
-        const adminFeeBN = await duMainnet.adminFeeFraction()
+        let adminFeeBN = BigNumber.from(0)
+        try {
+            // v2.0, this will not exist and thus will fail for v2.2 DataUnionMainnet contracts
+            const duMainnet = this.getContracts().getMainnetContractReadOnly(this.contractAddress)
+            adminFeeBN = await duMainnet.adminFeeFraction()
+        } catch (e) {
+            const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
+            adminFeeBN = await duSidechain.adminFeeFraction()
+        }
         return +adminFeeBN.toString() / 1e18
     }
 
@@ -610,14 +619,23 @@ export class DataUnion {
 
     /**
      * Admin: set admin fee (between 0.0 and 1.0) for the data union
+     * Version 2.0: admin fee was collected in DataUnionMainnet
+     * Version 2.2: admin fee is collected in DataUnionSidechain
      */
     async setAdminFee(newFeeFraction: number, ethersOptions: EthersOptions = {}) {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
-        const duMainnet = this.getContracts().getMainnetContract(this.contractAddress)
-        const tx = await duMainnet.setAdminFee(adminFeeBN, ethersOptions)
+        let tx: ContractTransaction
+        try {
+            // v2.0, this will not exist and thus will fail for v2.2 DataUnionMainnet contracts
+            const duMainnet = this.getContracts().getMainnetContract(this.contractAddress)
+            tx = await duMainnet.setAdminFee(adminFeeBN, ethersOptions)
+        } catch (e) {
+            const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+            tx = await duSidechain.setFees(adminFeeBN, BigNumber.from(0), ethersOptions) // DU DAO fee is zero for now
+        }
         return waitForTx(tx)
     }
 

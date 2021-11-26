@@ -122,20 +122,39 @@ export const dataUnionMainnetABI = [{
     stateMutability: 'view',
     type: 'function'
 }, {
-    name: 'setAdminFee',
+    name: 'setAdminFee', // NOT AVAILABLE since v2.2, moved to sidechain (see below)
     inputs: [{ type: 'uint256' }],
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'
 }, {
-    name: 'adminFeeFraction',
+    name: 'adminFeeFraction', // NOT AVAILABLE since v2.2, moved to sidechain (see below)
     inputs: [],
     outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
     type: 'function'
 }]
 
+// In DU v2.2, fees were moved to the sidechain (admin fee and added DU fee that goes to the DU DAO)
 export const dataUnionSidechainABI = [{
+    name: 'adminFeeFraction',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'dataUnionFeeFraction',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'setFees',
+    inputs: [{ type: 'uint256' }, { type: 'uint256' }], // newAdminfee, newDataUnionFee
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, { // The rest of the functions are common to DU v2.0 and v2.2
     name: 'addMembers',
     inputs: [{ type: 'address[]', internalType: 'address payable[]', }],
     outputs: [],
