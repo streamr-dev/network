@@ -165,4 +165,30 @@ export default class BrubeckNode implements Context {
             this.debug('publishToNode << %o', streamMessage.getMessageID())
         }
     }
+
+    openPublishProxyConnectionOnStream(streamId: string, streamPartition: number | undefined, nodeId: string): void | Promise<void> {
+        const partition = streamPartition || 0
+        try {
+            if (!this.cachedNode || !this.startNodeComplete) {
+                return this.startNode().then((node) => {
+                    return node.joinStreamAsPurePublisher(streamId, partition, nodeId)
+                })
+            }
+            return this.cachedNode.joinStreamAsPurePublisher(streamId, partition, nodeId)
+        } finally {
+            this.debug('openProxyConnectionOnStream << %o', streamId, partition, nodeId)
+        }
+    }
+
+    closePublishProxyConnectionOnStream(streamId: string, streamPartition: number | undefined, nodeId: string): void {
+        const partition = streamPartition || 0
+        try {
+            if (!this.cachedNode || !this.startNodeComplete) {
+                return
+            }
+            this.cachedNode.leavePurePublishingStream(streamId, partition, nodeId)
+        } finally {
+            this.debug('closeProxyConnectionOnStream << %o', streamId, partition, nodeId)
+        }
+    }
 }

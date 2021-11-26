@@ -203,7 +203,7 @@ export class Node extends EventEmitter {
                 this.trackerManager.sendStreamStatus(spid)
             }
         } else if (this.streams.isSetUp(spid) && this.streams.isOneDirectional(spid)) {
-            logger.warn(`Could not join stream ${spid.key} as stream is set to one-directional`)
+            logger.trace(`Could not join stream ${spid.key} as stream is set as one-directional`)
         }
     }
 
