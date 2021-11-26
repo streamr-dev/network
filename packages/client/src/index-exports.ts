@@ -9,6 +9,8 @@ export * from './StorageNode'
 export * from './Subscriber'
 export * from './LoginEndpoints'
 export * from './StreamEndpoints'
+export * from './Subscriber'
+export * from './ResendSubscribe'
 import ConfigTest from './ConfigTest'
 
 export { ConfigTest }
