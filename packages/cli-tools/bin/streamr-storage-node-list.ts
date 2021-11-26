@@ -15,7 +15,7 @@ const getStorageNodes = async (streamId: string | undefined, client: StreamrClie
     if (streamId !== undefined) {
         const stream = await client.getStream(streamId)
         const storageNodes = await stream.getStorageNodes()
-        return storageNodes.map((storageNode) => storageNode.getAddress())
+        return storageNodes.map((storageNode) => storageNode.address)
     } else {
         // all storage nodes (currently there is only one)
         return [client.options.storageNode.address]
