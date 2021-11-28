@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { Metrics, MetricsContext, NetworkNode, Protocol } from 'streamr-network'
-const { ControlLayer, MessageLayer, Errors } = Protocol
+import { MetricsContext, Metrics, NetworkNode } from 'streamr-network'
+import { StreamMessage, ControlLayer, ControlMessage, Errors } from 'streamr-client-protocol'
 import WebSocket from "ws"
 import { RequestHandler } from './RequestHandler'
 import { Connection } from './Connection'
@@ -30,15 +30,15 @@ export class WebsocketServer extends EventEmitter {
         }
 
         // Validate that the requested versions are supported
-        if (ControlLayer.ControlMessage.getSupportedVersions().indexOf(controlLayerVersion) < 0) {
+        if (ControlMessage.getSupportedVersions().indexOf(controlLayerVersion) < 0) {
             throw new Errors.UnsupportedVersionError(controlLayerVersion, `Supported ControlLayer versions: ${
-                JSON.stringify(ControlLayer.ControlMessage.getSupportedVersions())
+                JSON.stringify(ControlMessage.getSupportedVersions())
             }. Are you using an outdated library?`)
         }
 
-        if (MessageLayer.StreamMessage.getSupportedVersions().indexOf(messageLayerVersion) < 0) {
+        if (StreamMessage.getSupportedVersions().indexOf(messageLayerVersion) < 0) {
             throw new Errors.UnsupportedVersionError(messageLayerVersion, `Supported MessageLayer versions: ${
-                JSON.stringify(MessageLayer.StreamMessage.getSupportedVersions())
+                JSON.stringify(StreamMessage.getSupportedVersions())
             }. Are you using an outdated library?`)
         }
     }
@@ -114,7 +114,7 @@ export class WebsocketServer extends EventEmitter {
             storageNodeRegistry,
             streamrUrl
         )
-        networkNode.addMessageListener((msg: Protocol.MessageLayer.StreamMessage) => this.broadcastMessage(msg, streams))
+        networkNode.addMessageListener((msg: StreamMessage) => this.broadcastMessage(msg, streams))
 
         this.wss = new WebSocket.Server({
             server: httpServer,
@@ -288,7 +288,7 @@ export class WebsocketServer extends EventEmitter {
         })
     }
 
-    private broadcastMessage(streamMessage: Protocol.StreamMessage, streams: StreamStateManager<Connection>) {
+    private broadcastMessage(streamMessage: StreamMessage, streams: StreamStateManager<Connection>) {
         const streamId = streamMessage.getStreamId()
         const streamPartition = streamMessage.getStreamPartition()
         const stream = streams.get(streamId, streamPartition)

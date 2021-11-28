@@ -286,9 +286,9 @@ describeRepeats('Subscriber', () => {
 
                 const sub2 = await M.subscribe(stream.id)
 
-                const onError1 = jest.fn((error) => { throw error })
+                const onError1 = jest.fn()
                 sub1.onError(onError1)
-                const onError2 = jest.fn((error) => { throw error })
+                const onError2 = jest.fn()
                 sub2.onError(onError2)
 
                 const published = await publishTestMessages(NUM_MESSAGES, {
@@ -298,6 +298,7 @@ describeRepeats('Subscriber', () => {
                 const received = await sub2.collectContent(NUM_MESSAGES)
                 expect(received).toEqual(published)
                 expect(onError1).toHaveBeenCalledTimes(1)
+                expect(onError1).toHaveBeenCalledWith(err)
                 expect(onError2).toHaveBeenCalledTimes(0)
                 expect(count).toEqual(MAX_ITEMS)
                 expect(M.count(stream.id)).toBe(0)

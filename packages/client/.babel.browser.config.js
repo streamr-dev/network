@@ -1,6 +1,7 @@
 module.exports = {
     presets: [
         ['@babel/preset-env', {
+            modules: false,
             useBuiltIns: 'usage',
             corejs: 3,
             bugfixes: true,
@@ -10,7 +11,10 @@ module.exports = {
                     'supports async-functions',
                     'supports cryptography',
                     'supports es6',
+                    'supports promises',
+                    'supports promise-finally',
                     'supports es6-generators',
+                    'supports rtcpeerconnection',
                     'not dead',
                     'not ie <= 11',
                     'not ie_mob <= 11'
@@ -25,14 +29,6 @@ module.exports = {
          ["@babel/plugin-proposal-decorators", { "legacy": true }],
         'lodash',
          'add-module-exports',
-        ['@babel/plugin-transform-runtime', {
-            corejs: 3,
-            helpers: true,
-            regenerator: false
-        }],
          "@babel/plugin-transform-modules-commonjs",
-        ['@babel/plugin-proposal-class-properties', {
-            loose: false
-        }]
     ]
 }

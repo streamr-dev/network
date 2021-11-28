@@ -31,12 +31,15 @@ describe('NodeMetrics', () => {
             },
             id: 'tracker-1'
         })
+
         client1 = createClient(tracker, Wallet.createRandom().privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+
         client2 = createClient(tracker, tmpAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -47,6 +50,7 @@ describe('NodeMetrics', () => {
             storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
             // therefore StorageAssignmentEventManager test helper cannot be used
         })
+
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
@@ -70,11 +74,11 @@ describe('NodeMetrics', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            tracker.stop(),
-            broker1.stop(),
-            storageNode.stop(),
-            client1.destroy(),
-            client2.destroy()
+            tracker?.stop(),
+            broker1?.stop(),
+            storageNode?.stop(),
+            client1?.destroy(),
+            client2?.destroy()
         ])
     }, 30 * 1000)
 

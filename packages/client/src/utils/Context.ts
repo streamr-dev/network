@@ -12,7 +12,7 @@ export class ContextError extends Error {
     code?: string
     constructor(context: Context, message: string = '', ...args: any[]) {
         // @ts-expect-error inspectOpts not in debug types
-        super(`${context.id}: ${formatWithOptions({ ...context.debug.inspectOpts, colors: false }, message, ...args)}`)
+        super(`${context?.id}: ${formatWithOptions({ ...(context?.debug?.inspectOpts || {}), colors: false }, message, ...args)}`)
         this.context = context
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)

@@ -4,12 +4,14 @@
  * TODO: Disolve ConfigBase.
  */
 import 'reflect-metadata'
-import Config, { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
+import Config from './ConfigBase'
 import cloneDeep from 'lodash/cloneDeep'
 import merge from 'lodash/merge'
-import { NetworkNodeOptions } from 'streamr-network'
-import { NodeRegistryOptions } from './StorageNodeRegistry'
-import { InspectOptions } from 'util'
+import type { NetworkNodeOptions } from 'streamr-network'
+import type { InspectOptions } from 'util'
+import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
+import type { NodeRegistryOptions } from './StorageNodeRegistry'
+
 import { StorageNode } from './StorageNode'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
@@ -127,6 +129,8 @@ const BRUBECK_CLIENT_DEFAULTS = {
         ]
     },
 }
+
+export { BRUBECK_CLIENT_DEFAULTS as DEFAULTS }
 
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
     const clonedConfig = cloneDeep(config)
