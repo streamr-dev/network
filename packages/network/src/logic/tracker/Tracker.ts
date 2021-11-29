@@ -187,7 +187,10 @@ export class Tracker extends EventEmitter {
         this.logger.debug('stopping')
 
         this.instructionSender.stop()
-        io.destroy()
+        
+        if (typeof io.destroy == 'function') {
+            io.destroy()
+        }
 
         await this.trackerServer.stop()
         this.stopped = true
