@@ -53,16 +53,9 @@ describe('PubSub with proxy connections', () => {
         const proxyUser = await proxyClient1.getUserInfo()
         const proxyUser2 = await proxyClient2.getUserInfo()
 
-        await stream.grantPermission(StreamOperation.STREAM_GET, pubUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_PUBLISH, pubUser.username)
-
-        await stream.grantPermission(StreamOperation.STREAM_GET, proxyUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_PUBLISH, proxyUser.username)
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, proxyUser.username)
-
-        await stream.grantPermission(StreamOperation.STREAM_GET, proxyUser2.username)
-        await stream.grantPermission(StreamOperation.STREAM_PUBLISH, proxyUser2.username)
-        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, proxyUser2.username)
+        await stream.grantPermissions([StreamOperation.STREAM_GET, StreamOperation.STREAM_PUBLISH], pubUser.username)
+        await stream.grantPermissions([StreamOperation.STREAM_GET, StreamOperation.STREAM_PUBLISH, StreamOperation.STREAM_SUBSCRIBE], proxyUser.username)
+        await stream.grantPermissions([StreamOperation.STREAM_GET, StreamOperation.STREAM_PUBLISH, StreamOperation.STREAM_SUBSCRIBE], proxyUser2.username)
     })
 
     it('Publish only connections work', async () => {
