@@ -1,8 +1,7 @@
-import { addAfterFn, createTestStream, fakePrivateKey, getCreateClient } from '../utils'
+import { createTestStream, fakePrivateKey, getCreateClient } from '../utils'
 import { ConfigTest, Stream, StreamOperation, StreamrClient } from '../../src'
 import { wait } from 'streamr-test-utils'
 import { SPID } from 'streamr-client-protocol'
-import {hasSubscribers} from "diagnostics_channel";
 
 describe('PubSub with proxy connections', () => {
     let stream: Stream
