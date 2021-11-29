@@ -213,7 +213,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
 
     async setPublishProxies(streamObjectOrId: SIDLike, nodeIds: string[]) {
         const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
-        await Promise.all([
+        await Promise.allSettled([
             ...nodeIds.map((nodeId) => {
                 this.node.openPublishProxyConnectionOnStream(streamId, streamPartition, nodeId)
             })
@@ -222,7 +222,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
 
     async removePublishProxies(streamObjectOrId: SIDLike, nodeIds: string[]) {
         const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
-        await Promise.all([
+        await Promise.allSettled([
             ...nodeIds.map(async (nodeId) => {
                 await this.node.closePublishProxyConnectionOnStream(streamId, streamPartition, nodeId)
             })
