@@ -72,13 +72,13 @@ describe('PubSub with proxy connections', () => {
         })
         await wait(1000)
         await publishingClient.setPublishProxy(stream, proxyNodeId1)
-        publishingClient.publish(stream, {
+        await publishingClient.publish(stream, {
             msg: 'hellow'
         })
-        publishingClient.publish(stream, {
+        await publishingClient.publish(stream, {
             msg: 'hellow'
         })
-        publishingClient.publish(stream, {
+        await publishingClient.publish(stream, {
             msg: 'hellow'
         })
         await wait(2500)
