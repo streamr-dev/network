@@ -12,11 +12,21 @@ const { webcrypto } = crypto
 
 // @ts-expect-error webcrypto.subtle does not currently exist in node types
 if (typeof window === 'undefined' && !webcrypto?.subtle) {
-    throw new Error('Node WebCrypto support required. Please update to at least Node 16. https://nodejs.org/api/webcrypto.html')
+    const url = 'https://nodejs.org/api/webcrypto.html'
+    throw new Error(`Node WebCrypto support required. Please update to Node 16+. ${url}`)
 }
 
-// @ts-expect-error webcrypto.subtle does not currently exist in node types
-const subtle = (typeof window !== 'undefined' && window?.crypto?.subtle) ?? webcrypto.subtle
+function getSubtle() {
+    // @ts-expect-error webcrypto.subtle does not currently exist in node types
+    const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
+    if (!subtle) {
+        const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
+        throw new Error(`SubtleCrypto not supported. This feature is available only in secure contexts (HTTPS) & Node 16+. ${url}`)
+    }
+    return subtle
+}
+
+getSubtle()
 
 export class StreamMessageProcessingError extends StreamMessageError {
     constructor(message = '', streamMessage: StreamMessage) {
@@ -202,7 +212,7 @@ function btoa(str: string | Uint8Array) {
 
 async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}) {
     const keyType = isPrivate ? 'pkcs8' : 'spki'
-    const exported = await subtle.exportKey(keyType, key)
+    const exported = await getSubtle().exportKey(keyType, key)
     const exportedAsString = ab2str(exported)
     const exportedAsBase64 = btoa(exportedAsString)
     const TYPE = isPrivate ? 'PRIVATE' : 'PUBLIC'
@@ -429,7 +439,7 @@ export default class EncryptionUtil extends EncryptionUtilBase {
     }
 
     async _keyPairBrowser() {
-        const { publicKey, privateKey } = await subtle.generateKey({
+        const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,
             publicExponent: new Uint8Array([1, 0, 1]), // 65537
