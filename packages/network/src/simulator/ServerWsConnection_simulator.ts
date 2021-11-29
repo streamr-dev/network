@@ -38,6 +38,7 @@ export class ServerWsConnection extends AbstractWsConnection {
 
     sendPing(): void {
         Simulator.instance().wsSend(this.ownAddress, this.ownPeerInfo, this.remoteAddress, "ping").then(() => {
+            return
         }).catch(() => {
         })
     }

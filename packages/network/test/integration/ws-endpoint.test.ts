@@ -116,7 +116,7 @@ describe('ws-endpoint', () => {
             await client1.connect(server.getUrl(), PeerInfo.newTracker('server'))
            
             const disconnectPromise = waitForEvent(client2, Event.PEER_DISCONNECTED)
-            client2.connect(server.getUrl(), PeerInfo.newTracker('server')).then(()=>{}).catch((_ue) => {})
+            client2.connect(server.getUrl(), PeerInfo.newTracker('server')).then(()=>{ return }).catch((_ue) => {})
         
             await disconnectPromise
 

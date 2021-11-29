@@ -53,7 +53,7 @@ export class NodeClientWsConnection extends AbstractWsConnection {
     }
 
     sendPing(): void {
-        Simulator.instance().wsSend(this.ownAddress, this.ownPeerInfo, this.remoteAddress, "ping").then(() => {}).catch((_ue) => {})
+        Simulator.instance().wsSend(this.ownAddress, this.ownPeerInfo, this.remoteAddress, "ping").then(() => { return }).catch((_ue) => {})
     }
 
     async send(message: string): Promise<void> {
