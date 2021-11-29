@@ -299,6 +299,7 @@ export class Node extends EventEmitter {
         if (this.streams.isSetUp(spid)
             && this.streams.getAllNodesForStream(spid).length === 0
             && !this.attemptedPublishOnlyStreamConnections[spid.key]
+            && this.streams.isOneDirectional(spid)
         ) {
             this.streams.removeStream(spid)
         }

@@ -2,6 +2,7 @@ import { addAfterFn, createTestStream, fakePrivateKey, getCreateClient } from '.
 import { ConfigTest, Stream, StreamOperation, StreamrClient } from '../../src'
 import { wait } from 'streamr-test-utils'
 import { SPID } from 'streamr-client-protocol'
+import {hasSubscribers} from "diagnostics_channel";
 
 describe('PubSub with proxy connections', () => {
     let stream: Stream
@@ -81,8 +82,8 @@ describe('PubSub with proxy connections', () => {
 
         await publishingClient.removePublishProxy(stream, proxyNodeId)
         await wait(2500)
+
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode()).streams.isSetUp(new SPID(stream.streamId, 0))).toEqual(false)
-
-    }, 10000)
+    }, 15000)
 })
