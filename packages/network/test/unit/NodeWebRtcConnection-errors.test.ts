@@ -58,6 +58,9 @@ describe('NodeWebRtcConnection', () => {
         NodeWebRtcConnectionFactory.cleanUp()
     })
 
+    it('can connect', async () => {
+        
+    })
     /*
     it('can connect', async () => {
         expect(conn1.isOpen()).toEqual(true)
