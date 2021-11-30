@@ -192,18 +192,11 @@ export class Storage extends EventEmitter {
         return resultStream
     }
 
-    requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId: string|null): Readable {
+    requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: string): Readable {
         logger.trace('requestFrom %o', { streamId, partition, fromTimestamp, fromSequenceNo, publisherId })
 
-        if (publisherId != null) {
-            return this.fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp,
-                fromSequenceNo, publisherId)
-        }
-        if (publisherId == null) { // TODO should add fromSequenceNo to this call (NET-268)
-            return this.fetchFromTimestamp(streamId, partition, fromTimestamp)
-        }
-
-        throw new Error('Invalid combination of requestFrom arguments')
+        return this.fetchFrom(streamId, partition, fromTimestamp,
+            fromSequenceNo, publisherId)
     }
 
     requestRange(
@@ -256,58 +249,26 @@ export class Storage extends EventEmitter {
         return this.cassandraClient.shutdown()
     }
 
-    private fetchFromTimestamp(streamId: string, partition: number, fromTimestamp: number) {
-        const resultStream = this.createResultStream({streamId, partition, fromTimestamp})
-
-        const query = 'SELECT payload FROM stream_data WHERE '
-            + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
-
-        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
-            if (buckets.length === 0) {
-                resultStream.end()
-                return
-            }
-
-            const bucketsForQuery = bucketsToIds(buckets)
-
-            const queryParams = [streamId, partition, bucketsForQuery, fromTimestamp]
-            const cassandraStream = this.queryWithStreamingResults(query, queryParams)
-
-            return pipeline(
-                cassandraStream,
-                resultStream,
-                (err?: Error | null) => {
-                    if (err) {
-                        resultStream.destroy(err)
-                    }
-                }
-            )
-        })
-            .catch((e) => {
-                resultStream.destroy(e)
-            })
-
-        return resultStream
-    }
-
-    private fetchFromMessageRefForPublisher(
+    private fetchFrom(
         streamId: string,
         partition: number,
         fromTimestamp: number,
-        fromSequenceNo: number | null,
-        publisherId?: string | null
+        fromSequenceNo: number,
+        publisherId?: string
     ) {
         const resultStream = this.createResultStream({streamId, partition, fromTimestamp, fromSequenceNo, publisherId})
 
+        const hasPublisher = (publisherId !== undefined)
+        const publisherQuerySuffix = hasPublisher ? ' AND publisher_id = ?' : ''
         const query1 = [
             'SELECT payload FROM stream_data',
             'WHERE stream_id = ? AND partition = ? AND bucket_id IN ?',
-            'AND ts = ? AND sequence_no >= ? AND publisher_id = ?',
+            'AND ts = ? AND sequence_no >= ?' + publisherQuerySuffix,
             'ALLOW FILTERING'
         ].join(' ')
         const query2 = [
             'SELECT payload FROM stream_data',
-            'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND publisher_id = ?',
+            'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ?' + publisherQuerySuffix,
             'ALLOW FILTERING'
         ].join(' ')
 
@@ -319,8 +280,11 @@ export class Storage extends EventEmitter {
 
             const bucketsForQuery = bucketsToIds(buckets)
 
-            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo, publisherId]
-            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, publisherId]
+            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo]
+            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp]
+            if (hasPublisher) {
+                [queryParams1, queryParams2].forEach((p) => p.push(publisherId))
+            }
             const stream1 = this.queryWithStreamingResults(query1, queryParams1)
             const stream2 = this.queryWithStreamingResults(query2, queryParams2)
 

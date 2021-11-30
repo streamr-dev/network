@@ -219,7 +219,7 @@ describe('DataQueryEndpoints', () => {
                     0,
                     1496408255672,
                     MIN_SEQUENCE_NUMBER_VALUE,
-                    null
+                    undefined
                 )
             })
 
@@ -394,8 +394,8 @@ describe('DataQueryEndpoints', () => {
                     1,
                     2000,
                     2,
-                    null,
-                    null,
+                    undefined,
+                    undefined,
                 )
             })
 

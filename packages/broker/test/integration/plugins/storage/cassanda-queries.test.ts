@@ -179,7 +179,7 @@ describe('cassanda-queries', () => {
             const minMockTimestamp = MOCK_MESSAGES[0].getTimestamp()
             const maxMockTimestamp = MOCK_MESSAGES[MOCK_MESSAGES.length - 1].getTimestamp()
             if (requestType === REQUEST_TYPE_FROM) {
-                return storage.requestFrom(streamId, 0, minMockTimestamp, 0, publisherId ?? null)
+                return storage.requestFrom(streamId, 0, minMockTimestamp, 0, publisherId)
             } else if (requestType === REQUEST_TYPE_RANGE) {
                 return storage.requestRange(streamId, 0, minMockTimestamp, 0, maxMockTimestamp, 0, publisherId, msgChainId)
             } else {
