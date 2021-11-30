@@ -93,7 +93,7 @@ describe('Publish only connection tests', () => {
         expect(publisherNode.streams.getNeighborsForStream(streamSPID)).toBeArrayOfSize(0)
     })
 
-    it.only('publisher node can close one way connections', async () => {
+    it('publisher node can close one way connections', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
             publisherNode.joinStreamAsPurePublisher('stream-0', 0, 'contact-node-2'),
