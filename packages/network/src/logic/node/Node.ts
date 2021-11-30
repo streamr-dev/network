@@ -358,8 +358,8 @@ export class Node extends EventEmitter {
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
         )
-        // Check that node has an inbound connection, if not the node will ignore the message
-        if (source && this.streams.isSetUp(spid) && !this.streams.hasInboundConnection(spid, source)) {
+        // Check if the stream is set as one-directional and has inbound connection
+        if (source && this.streams.isSetUp(spid) && this.streams.isOneDirectional(spid) && !this.streams.hasInboundConnection(spid, source)) {
             // Perhaps the node should be disconnected here if bad behaviour is repeated
             return
         }
