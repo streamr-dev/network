@@ -169,17 +169,17 @@ describe('cassanda-queries', () => {
     })
 
     describe.each([
-        [REQUEST_TYPE_FROM, null, null],
-        [REQUEST_TYPE_FROM, MOCK_PUBLISHER_ID, null],
-        [REQUEST_TYPE_RANGE, null, null],
+        [REQUEST_TYPE_FROM, undefined, undefined],
+        [REQUEST_TYPE_FROM, MOCK_PUBLISHER_ID, undefined],
+        [REQUEST_TYPE_RANGE, undefined, undefined],
         [REQUEST_TYPE_RANGE, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID],
-    ])('%s, publisher: %p', (requestType: string, publisherId: string|null, msgChainId: string|null) => {
+    ])('%s, publisher: %p', (requestType: string, publisherId: string|undefined, msgChainId: string|undefined) => {
 
         const getResultStream = (streamId: string): Readable => {
             const minMockTimestamp = MOCK_MESSAGES[0].getTimestamp()
             const maxMockTimestamp = MOCK_MESSAGES[MOCK_MESSAGES.length - 1].getTimestamp()
             if (requestType === REQUEST_TYPE_FROM) {
-                return storage.requestFrom(streamId, 0, minMockTimestamp, 0, publisherId)
+                return storage.requestFrom(streamId, 0, minMockTimestamp, 0, publisherId ?? null)
             } else if (requestType === REQUEST_TYPE_RANGE) {
                 return storage.requestRange(streamId, 0, minMockTimestamp, 0, maxMockTimestamp, 0, publisherId, msgChainId)
             } else {

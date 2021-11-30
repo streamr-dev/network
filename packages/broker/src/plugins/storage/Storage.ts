@@ -213,22 +213,17 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number,
         toTimestamp: number,
         toSequenceNo: number,
-        publisherId: string|null,
-        msgChainId: string|null
+        publisherId: string|undefined,
+        msgChainId: string|undefined
     ): Readable {
         logger.trace('requestRange %o', { streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId })
 
-        if (publisherId != null && msgChainId != null) {
-            return this.fetchBetweenMessageRefsForPublisher(streamId, partition, fromTimestamp,
-                fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId)
+        const isValidRequest = (publisherId !== undefined && msgChainId !== undefined) || (publisherId === undefined && msgChainId === undefined)
+        if (!isValidRequest) {
+            throw new Error('Invalid combination of requestFrom arguments')
         }
-
-        if (publisherId == null && msgChainId == null) {
-            // TODO should add fromSequenceNo and toSequenceNo to this call (NET-268)
-            return this.fetchBetweenTimestamps(streamId, partition, fromTimestamp, toTimestamp)
-        }
-
-        throw new Error('Invalid combination of requestFrom arguments')
+        return this.fetchRange(streamId, partition, fromTimestamp,
+            fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId)
     }
 
     enableMetrics(metricsContext: MetricsContext): void {
@@ -349,49 +344,15 @@ export class Storage extends EventEmitter {
         return resultStream
     }
 
-    private fetchBetweenTimestamps(streamId: string, partition: number, fromTimestamp: number, toTimestamp: number) {
-        const resultStream = this.createResultStream({streamId, partition, fromTimestamp, toTimestamp})
-
-        const query = 'SELECT payload FROM stream_data WHERE '
-            + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
-
-        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
-            if (buckets.length === 0) {
-                resultStream.end()
-                return
-            }
-
-            const bucketsForQuery = bucketsToIds(buckets)
-
-            const queryParams = [streamId, partition, bucketsForQuery, fromTimestamp, toTimestamp]
-            const cassandraStream = this.queryWithStreamingResults(query, queryParams)
-
-            return pipeline(
-                cassandraStream,
-                resultStream,
-                (err: Error | null) => {
-                    if (err) {
-                        resultStream.destroy(err)
-                    }
-                }
-            )
-        })
-            .catch((e) => {
-                resultStream.destroy(e)
-            })
-
-        return resultStream
-    }
-
-    private fetchBetweenMessageRefsForPublisher(
+    private fetchRange(
         streamId: string,
         partition: number,
         fromTimestamp: number,
-        fromSequenceNo: number|null|undefined,
+        fromSequenceNo: number,
         toTimestamp: number,
-        toSequenceNo: number|null|undefined,
-        publisherId?: string|null,
-        msgChainId?: string|null
+        toSequenceNo: number,
+        publisherId?: string,
+        msgChainId?: string
     ) {
         const resultStream = this.createResultStream({
             streamId,
@@ -404,22 +365,24 @@ export class Storage extends EventEmitter {
             msgChainId,
         })
 
+        const hasPublisher = (msgChainId !== undefined)
+        const publisherQuerySuffix = hasPublisher ? ' AND publisher_id = ? AND msg_chain_id = ?' : ''
         const query1 = [
             'SELECT payload FROM stream_data',
             'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ?',
-            'AND sequence_no >= ? AND publisher_id = ? AND msg_chain_id = ?',
+            'AND sequence_no >= ?' + publisherQuerySuffix,
             'ALLOW FILTERING'
         ].join(' ')
         const query2 = [
             'SELECT payload FROM stream_data',
             'WHERE stream_id = ? AND partition = ? AND bucket_id IN ?',
-            'AND ts > ? AND ts < ? AND publisher_id = ? AND msg_chain_id = ?',
+            'AND ts > ? AND ts < ?' + publisherQuerySuffix,
             'ALLOW FILTERING'
         ].join(' ')
         const query3 = [
             'SELECT payload FROM stream_data',
             'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ?',
-            'AND sequence_no <= ? AND publisher_id = ?  AND msg_chain_id = ?',
+            'AND sequence_no <= ?' + publisherQuerySuffix,
             'ALLOW FILTERING'
         ].join(' ')
 
@@ -431,9 +394,12 @@ export class Storage extends EventEmitter {
 
             const bucketsForQuery = bucketsToIds(buckets)
 
-            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo, publisherId, msgChainId]
-            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, toTimestamp, publisherId, msgChainId]
-            const queryParams3 = [streamId, partition, bucketsForQuery, toTimestamp, toSequenceNo, publisherId, msgChainId]
+            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo]
+            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, toTimestamp]
+            const queryParams3 = [streamId, partition, bucketsForQuery, toTimestamp, toSequenceNo]
+            if (hasPublisher) {
+                [queryParams1, queryParams2, queryParams3].forEach((p) => p.push(publisherId!, msgChainId))
+            }
             const stream1 = this.queryWithStreamingResults(query1, queryParams1)
             const stream2 = this.queryWithStreamingResults(query2, queryParams2)
             const stream3 = this.queryWithStreamingResults(query3, queryParams3)

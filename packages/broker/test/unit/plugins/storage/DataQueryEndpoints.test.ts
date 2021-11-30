@@ -362,8 +362,8 @@ describe('DataQueryEndpoints', () => {
                     MIN_SEQUENCE_NUMBER_VALUE,
                     1496415670909,
                     MAX_SEQUENCE_NUMBER_VALUE,
-                    null,
-                    null,
+                    undefined,
+                    undefined,
                 )
             })
 
