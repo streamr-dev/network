@@ -42,7 +42,6 @@ export class NetworkNode extends Node {
     }
 
     unsubscribe(streamId: string, streamPartition: number): void {
-        console.log("THIS IS IT", this.peerInfo)
         this.unsubscribeFromStream(new SPID(streamId, streamPartition))
     }
 

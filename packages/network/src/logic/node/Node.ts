@@ -359,7 +359,7 @@ export class Node extends EventEmitter {
             streamMessage.getStreamPartition()
         )
         // Check that node has an inbound connection, if not the node will ignore the message
-        if (source && !this.streams.hasInboundConnection(spid, source)) {
+        if (source && this.streams.isSetUp(spid) && !this.streams.hasInboundConnection(spid, source)) {
             // Perhaps the node should be disconnected here if bad behaviour is repeated
             return
         }

@@ -123,7 +123,6 @@ export class StreamManager {
     }
 
     removeStream(spid: SPID): void {
-        console.log("HERE")
         this.verifyThatIsSetUp(spid)
         this.streams.delete(spid.toKey())
     }
