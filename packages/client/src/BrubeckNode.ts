@@ -6,7 +6,7 @@ import { NetworkNodeOptions, createNetworkNode, NetworkNode } from 'streamr-netw
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { Config } from './Config'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, SPID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 
@@ -166,29 +166,29 @@ export default class BrubeckNode implements Context {
         }
     }
 
-    openPublishProxyConnectionOnStream(streamId: string, streamPartition: number | undefined, nodeId: string): void | Promise<void> {
-        const partition = streamPartition || 0
+    openPublishProxyConnectionOnStreamPartition(spid: SPID, nodeId: string): void | Promise<void> {
+        const { streamId, streamPartition } = spid
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
                 return this.startNode().then((node) => {
-                    return node.joinStreamAsPurePublisher(streamId, partition, nodeId)
+                    return node.joinStreamAsPurePublisher(streamId, streamPartition, nodeId)
                 })
             }
-            return this.cachedNode.joinStreamAsPurePublisher(streamId, partition, nodeId)
+            return this.cachedNode.joinStreamAsPurePublisher(streamId, streamPartition, nodeId)
         } finally {
-            this.debug('openProxyConnectionOnStream << %o', streamId, partition, nodeId)
+            this.debug('openProxyConnectionOnStream << %o', streamId, streamPartition, nodeId)
         }
     }
 
-    closePublishProxyConnectionOnStream(streamId: string, streamPartition: number | undefined, nodeId: string): void {
-        const partition = streamPartition || 0
+    closePublishProxyConnectionOnStreamPartition(spid: SPID, nodeId: string): void {
+        const { streamId, streamPartition } = spid
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
                 return
             }
-            this.cachedNode.leavePurePublishingStream(streamId, partition, nodeId)
+            this.cachedNode.leavePurePublishingStream(streamId, streamPartition, nodeId)
         } finally {
-            this.debug('closeProxyConnectionOnStream << %o', streamId, partition, nodeId)
+            this.debug('closeProxyConnectionOnStream << %o', streamId, streamPartition, nodeId)
         }
     }
 }
