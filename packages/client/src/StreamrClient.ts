@@ -516,17 +516,14 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         if (!isAddress(contractAddress)) {
             throw new Error(`Can't get Data Union, invalid Ethereum address: ${contractAddress}`)
         }
-        try {
+        const version = await DataUnion.getVersion(this.ethereum.getMainnetProvider(), contractAddress)
+        if (version === 1) {
+            throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
+        } else if (version === 2) {
             const contracts = new Contracts(this)
             const sidechainContract = await contracts.getSidechainContractReadOnly(contractAddress)
-            const du = new DataUnion(contractAddress, sidechainContract.address, this)
-            const version = await du.getVersion()
-            if (version === 1) {
-                throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
-            } else if (version === 2) {
-                return du
-            }
-        } catch (e) { /* ignore */ }
+            return new DataUnion(contractAddress, sidechainContract.address, this)
+        }
         throw new Error(`${contractAddress} is not a Data Union!`)
     }
 

@@ -5,8 +5,9 @@ import { arrayify, hexZeroPad, BytesLike } from '@ethersproject/bytes'
 import { AddressZero } from '@ethersproject/constants'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
-import type { Overrides as EthersOptions } from '@ethersproject/contracts'
+import type { Provider } from '@ethersproject/abstract-provider'
 import type { Signer } from '@ethersproject/abstract-signer'
+import type { Overrides as EthersOptions } from '@ethersproject/contracts'
 
 import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
@@ -426,15 +427,14 @@ export class DataUnion {
      * Figure out if given mainnet address is old DataUnion (v 1.0) or current 2.0
      * NOTE: Current version of streamr-client-javascript can only handle current version!
      */
-    async getVersion(): Promise<number> {
-        const provider = this.client.ethereum.getMainnetProvider()
-        const du = new Contract(this.contractAddress, [{
+    static async getVersion(ethereumProvider: Provider, contractAddress: EthereumAddress): Promise<number> {
+        const du = new Contract(contractAddress, [{
             name: 'version',
             inputs: [],
             outputs: [{ type: 'uint256' }],
             stateMutability: 'view',
             type: 'function'
-        }], provider)
+        }], ethereumProvider)
         try {
             const version = await du.version()
             return +version
@@ -442,6 +442,10 @@ export class DataUnion {
             // "not a data union"
             return 0
         }
+    }
+
+    async getVersion(): Promise<number> {
+        return DataUnion.getVersion(this.client.ethereum.getMainnetProvider(), this.contractAddress)
     }
 
     // Admin functions
