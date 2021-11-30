@@ -60,17 +60,22 @@ describeRepeats('sequential resend subscribe', () => {
             waitForLast: true,
             timestamp: 111111,
         })
+
     }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
     afterAll(async () => {
+        console.log("here")
         await publisher?.destroy()
         await subscriber?.destroy()
+        console.log("here")
     })
 
     afterEach(async () => {
+        console.log("here2")
         // ensure last message is in storage
         const last = published[published.length - 1]
         await waitForStorage(last)
+        console.log("here2")
     })
 
     for (let i = 0; i < ITERATIONS; i++) {
