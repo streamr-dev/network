@@ -30,7 +30,7 @@ describe('NodeWebRtcConnection', () => {
     conn1.on('localCandidate', (candidate, mid) => {
         conn2.addRemoteCandidate(candidate, mid)
     })
-    conn2.on('localCandidate', (candidate, mid) => {
+    conn2.on('localCandidate', (_ucandidate, _umid) => {
         //conn1.addRemoteCandidate(candidate, mid)
     })
     conn1.on('localDescription', (type, description) => {
