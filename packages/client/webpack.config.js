@@ -64,7 +64,7 @@ module.exports = (env, argv) => {
             ],
         },
         resolve: {
-            modules: [ 'node_modules', ...require.resolve.paths(''), path.resolve('./vendor') ],
+            modules: ['node_modules', ...require.resolve.paths(''), path.resolve('./vendor')],
             extensions: ['.json', '.js', '.ts'],
         },
         plugins: [
@@ -100,7 +100,7 @@ module.exports = (env, argv) => {
             // `window.StreamrClient = { default: StreamrClient, … }`
             // which is wrong for browser builds.
             // see: https://github.com/webpack/webpack/issues/706#issuecomment-438007763
-            //libraryExport: 'StreamrClient', // This fixes the above.
+            // libraryExport: 'StreamrClient', // This fixes the above.
             globalObject: 'globalThis',
         },
         resolve: {
@@ -113,7 +113,6 @@ module.exports = (env, argv) => {
                 crypto: require.resolve('crypto-browserify'),
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
-                'node-webcrypto-ossl': path.resolve('./src/shim/crypto.ts'),
                 'streamr-client-protocol/dist/contracts/NodeRegistry.json': require.resolve('streamr-client-protocol/contracts/NodeRegistry.json'),
                 'streamr-client-protocol': path.resolve('../protocol/src'),
                 'streamr-network': path.resolve('../network/src/browser.ts'),
@@ -127,13 +126,13 @@ module.exports = (env, argv) => {
                 ),
             },
             fallback: {
-                'module': false,
-                'fs': false,
-                'net': false,
-                'http': false,
-                'https': false,
-                'express': false,
-                'ws': false,
+                module: false,
+                fs: false,
+                net: false,
+                http: false,
+                https: false,
+                express: false,
+                ws: false,
             }
         },
         plugins: [
