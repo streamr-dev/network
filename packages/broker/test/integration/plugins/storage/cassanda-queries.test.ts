@@ -169,11 +169,11 @@ describe('cassanda-queries', () => {
     })
 
     describe.each([
-        [REQUEST_TYPE_FROM, null, null],
-        [REQUEST_TYPE_FROM, MOCK_PUBLISHER_ID, null],
-        [REQUEST_TYPE_RANGE, null, null],
+        [REQUEST_TYPE_FROM, undefined, undefined],
+        [REQUEST_TYPE_FROM, MOCK_PUBLISHER_ID, undefined],
+        [REQUEST_TYPE_RANGE, undefined, undefined],
         [REQUEST_TYPE_RANGE, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID],
-    ])('%s, publisher: %p', (requestType: string, publisherId: string|null, msgChainId: string|null) => {
+    ])('%s, publisher: %p', (requestType: string, publisherId: string|undefined, msgChainId: string|undefined) => {
 
         const getResultStream = (streamId: string): Readable => {
             const minMockTimestamp = MOCK_MESSAGES[0].getTimestamp()

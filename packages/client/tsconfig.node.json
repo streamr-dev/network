@@ -27,11 +27,13 @@
         "vendor/**/*",
         "contracts/**/*.json"
     ],
-    "exclude": [
-        "src/shim/*"
-    ],
+    "exclude": ["src/index-esm.mjs"],
     "references": [
-        { "path": "../network/tsconfig.node.json" },
-        { "path": "../protocol/tsconfig.node.json" }
+        {
+            "path": "../network/tsconfig.node.json"
+        },
+        {
+            "path": "../protocol/tsconfig.node.json"
+        }
     ]
 }

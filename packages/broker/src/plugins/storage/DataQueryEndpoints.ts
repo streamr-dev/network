@@ -181,7 +181,7 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
                 partition,
                 fromTimestamp,
                 fromSequenceNumber,
-                publisherId || null
+                publisherId
             ))
         }
     })
@@ -214,8 +214,8 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
                 fromSequenceNumber,
                 toTimestamp,
                 toSequenceNumber,
-                (publisherId as string) || null,
-                (msgChainId as string) || null
+                publisherId,
+                msgChainId
             ))
         }
     })

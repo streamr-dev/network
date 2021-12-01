@@ -31,10 +31,14 @@
         "test/legacy/*",
         "test/memory/*",
         "test/exports/*",
-        "src/shim/*"
+        "src/index-esm.mjs"
     ],
     "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "./tsconfig.node.json" }
+        {
+            "path": "../test-utils/tsconfig.node.json"
+        },
+        {
+            "path": "./tsconfig.node.json"
+        }
     ]
 }

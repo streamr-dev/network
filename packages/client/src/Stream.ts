@@ -232,15 +232,15 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    private async grantUserPermissions(permissions: StreamPermissions, userId: string) {
-        this.assertUserIdOrPublic(userId)
-        try {
-            await this.setPermissions(userId, permissions.edit, permissions.canDelete,
-                permissions.publishExpiration, permissions.subscribeExpiration, permissions.share)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
+    // private async grantUserPermissions(permissions: StreamPermissions, userId: string) {
+    //     this.assertUserIdOrPublic(userId)
+    //     try {
+    //         await this.setPermissions(userId, permissions.edit, permissions.canDelete,
+    //             permissions.publishExpiration, permissions.subscribeExpiration, permissions.share)
+    //     } finally {
+    //         this._streamEndpointsCached.clearStream(this.id)
+    //     }
+    // }
 
     async grantPublicPermission(permission: StreamPermission) {
         try {
