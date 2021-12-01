@@ -42,12 +42,12 @@ export interface StreamPermissions {
     share: boolean
 }
 
-export enum StreamOperation {
-    STREAM_EDIT = 'edit',
-    STREAM_DELETE = 'canDelete',
-    STREAM_PUBLISH = 'publishExpiration',
-    STREAM_SUBSCRIBE = 'subscribeExpiration',
-    STREAM_SHARE = 'share'
+export enum StreamPermission {
+    EDIT = 'edit',
+    DELETE = 'canDelete',
+    PUBLISH = 'publishExpiration',
+    SUBSCRIBE = 'subscribeExpiration',
+    SHARE = 'share'
 }
 
 export interface StreamProperties {
@@ -195,38 +195,38 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async hasUserPermission(operation: StreamOperation, userId: string) {
+    async hasUserPermission(permission: StreamPermission, userId: string) {
         this.assertUserId(userId)
-        return this._streamRegistry.hasPermission(this.id, userId, operation)
+        return this._streamRegistry.hasPermission(this.id, userId, permission)
     }
 
-    async hasPublicPermission(operation: StreamOperation) {
-        return this._streamRegistry.hasPublicPermission(this.id, operation)
+    async hasPublicPermission(permission: StreamPermission) {
+        return this._streamRegistry.hasPublicPermission(this.id, permission)
     }
 
-    // async hasUserPermissions(operations: StreamOperation[], userId: string) {
+    // async hasUserPermissions(operations: StreamPermission[], userId: string) {
     //     this.assertUserId(userId)
     //     const permissions = this._streamRegistry.getPermissionsForUser(this.id, userId, )
     //     return this.hasPermissions(operations, userId)
     // }
-    // async hasPermissions(operations: StreamOperation[], userId: string) {
+    // async hasPermissions(operations: StreamPermission[], userId: string) {
     //     const permissions = await this._streamRegistry.getPermissionsForUser(this.id, userId)
 
-    //     if (operation === StreamOperation.STREAM_PUBLISH || operation === StreamOperation.STREAM_SUBSCRIBE) {
+    //     if (operation === StreamPermission.PUBLISH || operation === StreamPermission.SUBSCRIBE) {
     //         return permissions[operation].gt(Date.now())
     //     }
     //     return permissions[operation]
     // }
 
-    // async hasPermission(operation: StreamOperation, userId: string|undefined) {
+    // async hasPermission(operation: StreamPermission, userId: string|undefined) {
     //     const permissions = await this.hasPermissions([operation], userId)
     //     if (!Array.isArray(permissions) || !permissions.length) { return undefined }
     //     return permissions[0]
     // }
 
-    async grantUserPermission(operation: StreamOperation, userId: string) {
+    async grantUserPermission(permission: StreamPermission, userId: string) {
         try {
-            await this._streamRegistry.grantPermission(this.id, operation, userId)
+            await this._streamRegistry.grantPermission(this.id, permission, userId)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
@@ -242,32 +242,32 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async grantPublicPermission(operation: StreamOperation) {
+    async grantPublicPermission(permission: StreamPermission) {
         try {
-            await this._streamRegistry.grantPublicPermission(this.id, operation)
+            await this._streamRegistry.grantPublicPermission(this.id, permission)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
     }
 
-    async revokeUserPermission(operation: StreamOperation, userId: string) {
+    async revokeUserPermission(permission: StreamPermission, userId: string) {
         this.assertUserId(userId)
         try {
-            return this._streamRegistry.revokePermission(this.id, operation, userId)
+            return this._streamRegistry.revokePermission(this.id, permission, userId)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
     }
 
-    async revokePublicPermission(operation: StreamOperation) {
+    async revokePublicPermission(permission: StreamPermission) {
         try {
-            return this._streamRegistry.revokePublicPermission(this.id, operation)
+            return this._streamRegistry.revokePublicPermission(this.id, permission)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
     }
 
-    // async getMatchingPermissions(operations: StreamOperation[]|false, userId: string|undefined|false): Promise<StreamPermision[]> {
+    // async getMatchingPermissions(operations: StreamPermission[]|false, userId: string|undefined|false): Promise<StreamPermision[]> {
     //     if (operations && !operations.length) { return [] }
 
     //     if (userId !== false) {
@@ -277,7 +277,7 @@ class StreamrStream implements StreamMetadata {
     //     const permissions = await this.getPermissions()
     //     // eth addresses may be in checksumcase, but userId from server has no case
     //     const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
-    //     const operationSet = new Set<StreamOperation>(operations === false ? [] : operations)
+    //     const operationSet = new Set<StreamPermission>(operations === false ? [] : operations)
     //     return permissions.filter((p) => {
     //         if (operations !== false) {
     //             if (!operationSet.has(p.operation)) {
@@ -296,7 +296,7 @@ class StreamrStream implements StreamMetadata {
     //     })
     // }
 
-    // async revokeMatchingPermissions(operations: StreamOperation[], userId: string|undefined) {
+    // async revokeMatchingPermissions(operations: StreamPermission[], userId: string|undefined) {
     //     this.assertUserIdOrPublic(userId)
     //     const matchingPermissions = await this.getMatchingPermissions(operations, userId)
 
