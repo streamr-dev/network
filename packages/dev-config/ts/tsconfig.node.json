@@ -1,6 +1,6 @@
 {
     "$schema": "https://json.schemastore.org/tsconfig",
-    "display": "Node 14 – Streamr",
+    "display": "Node 16 – Streamr",
     "extends": "@tsconfig/node16/tsconfig.json",
     "compilerOptions": {
         "allowJs": true,
