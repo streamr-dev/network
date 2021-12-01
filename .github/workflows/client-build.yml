@@ -38,7 +38,7 @@ jobs:
         node-version: [16.x]
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -66,7 +66,7 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -96,7 +96,7 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -137,7 +137,7 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -180,7 +180,7 @@ jobs:
         node-version: [16.x]
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
