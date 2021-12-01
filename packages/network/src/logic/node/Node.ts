@@ -203,7 +203,7 @@ export class Node extends EventEmitter {
                 this.trackerManager.sendStreamStatus(spid)
             }
         } else if (this.streams.isSetUp(spid) && this.streams.isOneDirectional(spid)) {
-            logger.warn(`Could not join stream ${spid.key} as stream is set to one-directional`)
+            logger.trace(`Could not join stream ${spid.key} as stream is set as one-directional`)
         }
     }
 
@@ -299,6 +299,7 @@ export class Node extends EventEmitter {
         if (this.streams.isSetUp(spid)
             && this.streams.getAllNodesForStream(spid).length === 0
             && !this.attemptedPublishOnlyStreamConnections[spid.key]
+            && this.streams.isOneDirectional(spid)
         ) {
             this.streams.removeStream(spid)
         }
@@ -357,8 +358,8 @@ export class Node extends EventEmitter {
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition()
         )
-        // Check that node has an inbound connection, if not the node will ignore the message
-        if (source && !this.streams.hasInboundConnection(spid, source)) {
+        // Check if the stream is set as one-directional and has inbound connection
+        if (source && this.streams.isSetUp(spid) && this.streams.isOneDirectional(spid) && !this.streams.hasInboundConnection(spid, source)) {
             // Perhaps the node should be disconnected here if bad behaviour is repeated
             return
         }

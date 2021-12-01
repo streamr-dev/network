@@ -213,4 +213,25 @@ describe('Publish only connection tests', () => {
         // @ts-expect-error private
         expect(publisherNode.streams.getNeighborsForStream(streamSPID)).toBeArrayOfSize(0)
     })
+
+    it('If publish only connection is the only stream connection on contact node it will not unsubscribe', async () => {
+        await Promise.all([
+            waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
+            nonContactNode.unsubscribe('stream-0', 0)
+        ])
+        await Promise.all([
+            waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
+            contactNode2.unsubscribe('stream-0', 0)
+        ])
+        await Promise.all([
+            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
+            publisherNode.joinStreamAsPurePublisher('stream-0', 0, 'contact-node'),
+        ])
+        await Promise.all([
+            waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
+            publisherNode.leavePurePublishingStream('stream-0', 0, 'contact-node'),
+        ])
+        // @ts-expect-error private
+        expect(contactNode.streams.isSetUp(streamSPID)).toBeTrue()
+    })
 })

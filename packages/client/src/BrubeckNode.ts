@@ -6,7 +6,7 @@ import { NetworkNodeOptions, createNetworkNode, NetworkNode } from 'streamr-netw
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { Config } from './Config'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, SPID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 
@@ -163,6 +163,32 @@ export default class BrubeckNode implements Context {
             return this.cachedNode.publish(streamMessage)
         } finally {
             this.debug('publishToNode << %o', streamMessage.getMessageID())
+        }
+    }
+
+    openPublishProxyConnectionOnStreamPartition(spid: SPID, nodeId: string): void | Promise<void> {
+        const { streamId, streamPartition } = spid
+        try {
+            if (!this.cachedNode || !this.startNodeComplete) {
+                return this.startNode().then((node) => {
+                    return node.joinStreamAsPurePublisher(streamId, streamPartition, nodeId)
+                })
+            }
+            return this.cachedNode.joinStreamAsPurePublisher(streamId, streamPartition, nodeId)
+        } finally {
+            this.debug('openProxyConnectionOnStream << %o', streamId, streamPartition, nodeId)
+        }
+    }
+
+    closePublishProxyConnectionOnStreamPartition(spid: SPID, nodeId: string): void {
+        const { streamId, streamPartition } = spid
+        try {
+            if (!this.cachedNode || !this.startNodeComplete) {
+                return
+            }
+            this.cachedNode.leavePurePublishingStream(streamId, streamPartition, nodeId)
+        } finally {
+            this.debug('closeProxyConnectionOnStream << %o', streamId, streamPartition, nodeId)
         }
     }
 }

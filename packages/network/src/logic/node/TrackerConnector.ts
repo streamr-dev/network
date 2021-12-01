@@ -47,6 +47,7 @@ export class TrackerConnector {
 
     async createTrackerConnectionForStream(spid: SPID): Promise<void> {
         const { ws, id } = this.trackerRegistry.getTracker(spid)
+        logger.info('Connecting to tracker %s for stream %s', NameDirectory.getName(id), spid.key)
         await this.connectToTracker(ws, PeerInfo.newTracker(id))
     }
 
