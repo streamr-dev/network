@@ -262,7 +262,7 @@ export class Node extends EventEmitter {
         return true
     }
 
-    async openOutgoingStreamConnection(spid: SPID, targetNodeId: string, reattempt = false): Promise<void> {
+    async openOutgoingStreamConnection(spid: SPID, targetNodeId: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(spid)
         const trackerAddress = this.trackerManager.getTrackerAddress(spid)
         try {
