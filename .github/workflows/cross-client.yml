@@ -38,7 +38,7 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Cache Broker Docker Image
         id: cache-broker-image
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         env:
           cache-name: cache-broker-docker-image
         with:
@@ -48,7 +48,7 @@ jobs:
             ${{ runner.os }}-build-
 
       - name: Cache Docker layers
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -116,7 +116,7 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '8'
-      - uses: actions/cache@v2.1.6
+      - uses: actions/cache@v2.1.7
         with:
           path: |
             ~/.gradle/caches
@@ -125,7 +125,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Cache Broker Docker Image
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         env:
           cache-name: cache-broker-docker-image
         with:
