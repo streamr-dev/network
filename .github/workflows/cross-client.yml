@@ -112,7 +112,7 @@ jobs:
         run: |
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg @streamr/cross-client-testing
-      - uses: actions/setup-java@v2.3.1
+      - uses: actions/setup-java@v2.4.0
         with:
           distribution: 'zulu'
           java-version: '8'
