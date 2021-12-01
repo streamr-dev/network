@@ -262,8 +262,9 @@ export class Node extends EventEmitter {
         return true
     }
 
-    async openOutgoingStreamConnection(spid: SPID, targetNodeId: string): Promise<void> {
+    async openOutgoingStreamConnection(spid: SPID, targetNodeId: string, reattempt = false): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(spid)
+        const trackerAddress = this.trackerManager.getTrackerAddress(spid)
         try {
             if (!this.streams.isSetUp(spid)) {
                 this.streams.setUpStream(spid, true)
@@ -283,7 +284,7 @@ export class Node extends EventEmitter {
                 return
             }
             this.addAttemtedPublishOnlyStreamConnection(spid, targetNodeId)
-            await this.trackerManager.connectToTrackerForStream(spid)
+            await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
             await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
             await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
         } catch (err) {
@@ -291,6 +292,8 @@ export class Node extends EventEmitter {
             this.clearAttemptedPublishOnlyStreamConnection(spid, targetNodeId)
             this.removeOneWayStreamConnection(spid, targetNodeId)
             this.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, err)
+        } finally {
+            await this.trackerManager.disconnectFromSignallingOnlyTracker(trackerId)
         }
     }
 

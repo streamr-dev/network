@@ -4,7 +4,8 @@ import { MessageLayer, SPID } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as NodeEvent } from "../../src/logic/node/Node"
+import { Event as NodeEvent } from '../../src/logic/node/Node'
+import { TrackerInfo } from '../../src/identifiers'
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -15,8 +16,8 @@ describe('Publish only connection tests', () => {
     let tracker: Tracker
     let contactNode: NetworkNode
     let contactNode2: NetworkNode
-    let nonContactNode: NetworkNode
     let publisherNode: NetworkNode
+    let trackerInfo: TrackerInfo
     const streamSPID = new SPID('stream-0', 0)
 
     beforeEach(async () => {
@@ -27,7 +28,7 @@ describe('Publish only connection tests', () => {
             },
             id: 'tracker'
         })
-        const trackerInfo = {id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl()}
+        trackerInfo = {id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl()}
         contactNode = createNetworkNode({
             id: 'contact-node',
             trackers: [trackerInfo],
@@ -44,20 +45,11 @@ describe('Publish only connection tests', () => {
         })
         await contactNode2.start()
 
-        nonContactNode = createNetworkNode({
-            id: 'non-contact-node',
-            trackers: [trackerInfo],
-            stunUrls: []
-        })
-        await nonContactNode.start()
-
         await Promise.all([
             contactNode.subscribe('stream-0', 0),
             contactNode2.subscribe('stream-0', 0),
-            nonContactNode.subscribe('stream-0', 0),
             waitForEvent(contactNode, NodeEvent.NODE_SUBSCRIBED),
             waitForEvent(contactNode2, NodeEvent.NODE_SUBSCRIBED),
-            waitForEvent(nonContactNode, NodeEvent.NODE_SUBSCRIBED)
         ])
 
         publisherNode = createNetworkNode({
@@ -73,9 +65,8 @@ describe('Publish only connection tests', () => {
             publisherNode.stop(),
             contactNode.stop(),
             contactNode2.stop(),
-            nonContactNode.stop(),
-            tracker.stop()
         ])
+        await tracker.stop()
     })
 
     it('publisher node can form one-way connections', async () => {
@@ -124,18 +115,33 @@ describe('Publish only connection tests', () => {
         // @ts-expect-error private
         expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
         // @ts-expect-error private
-        expect(contactNode.streams.getInboundNodesForStream(streamSPID)).toContainValues(['contact-node-2', 'non-contact-node'])
+        expect(contactNode.streams.getInboundNodesForStream(streamSPID)).toContainValues(['contact-node-2'])
         // @ts-expect-error private
         expect(contactNode.streams.hasInOnlyConnection(streamSPID, 'publisher')).toBeFalse()
     })
 
     it('publisher cannot connect to non-contact node', async () => {
+        const nonContactNode = createNetworkNode({
+            id: 'non-contact-node',
+            trackers: [trackerInfo],
+            stunUrls: []
+        })
+        await nonContactNode.start()
+
+        await Promise.all([
+            waitForEvent(nonContactNode, NodeEvent.NODE_SUBSCRIBED),
+            nonContactNode.subscribe('stream-0', 0)
+        ])
+
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
             publisherNode.joinStreamAsPurePublisher('stream-0', 0, 'non-contact-node')
         ])
         // @ts-expect-error private
         expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
+
+        await nonContactNode.stop()
+
     })
 
     it('Published data is received using one-way stream connections', async () => {
@@ -215,10 +221,6 @@ describe('Publish only connection tests', () => {
     })
 
     it('If publish only connection is the only stream connection on contact node it will not unsubscribe', async () => {
-        await Promise.all([
-            waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
-            nonContactNode.unsubscribe('stream-0', 0)
-        ])
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
             contactNode2.unsubscribe('stream-0', 0)
