@@ -8,6 +8,8 @@ const MQTT_PORT = 12430
 const LEGACY_WEBSOCKET_PORT = 12431
 const TRACKER_PORT = 12432
 
+jest.setTimeout(30000)
+
 createMessagingPluginTest('mqtt',
     {
         createClient: async (_action: 'publish'|'subscribe', _streamId: string, apiKey: string): Promise<AsyncMqttClient> => {

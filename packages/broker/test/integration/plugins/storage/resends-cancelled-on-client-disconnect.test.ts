@@ -56,7 +56,7 @@ it.skip('resend cancellation', () => {
             },
             id: 'tracker-DataMetadataEndpoints'
         })
-        client = createClient(tracker)
+        client = await createClient(tracker)
     })
 
     beforeAll(async () => {

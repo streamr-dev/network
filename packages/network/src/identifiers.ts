@@ -1,5 +1,6 @@
 import { SmartContractRecord, TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from './logic/node/Node'
+import { MetricsContext } from './helpers/MetricsContext'
 
 export interface Rtts {
     [key: string]: number
@@ -79,3 +80,11 @@ export interface RtcErrorMessage {
 }
 
 export type TrackerInfo = SmartContractRecord
+
+export interface AbstractNodeOptions {
+    id?: NodeId
+    name?: string
+    location?: Location | null
+    metricsContext?: MetricsContext
+    trackerPingInterval?: number
+}

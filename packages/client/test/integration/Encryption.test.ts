@@ -18,7 +18,7 @@ import { Stream, StreamPermission } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
 
 const debug = Debug('StreamrClient::test')
-const TIMEOUT = 60 * 1000
+const TIMEOUT = 15 * 1000
 const NUM_MESSAGES = 5
 
 jest.setTimeout(30000)

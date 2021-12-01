@@ -9,8 +9,8 @@ const logger = new Logger(module)
 
 export interface MqttServerListener {
     onMessageReceived(topic: string, payload: string): void
-    onSubscribed(topics: string): void
-    onUnsubscribed(topics: string): void
+    onSubscribed(topics: string, clientId: string): void
+    onUnsubscribed(topics: string, clientId: string): void
 }
 
 export class MqttServer {
@@ -34,12 +34,12 @@ export class MqttServer {
                 this.listener?.onMessageReceived(packet.topic, packet.payload.toString())
             }
         })
-        this.aedes.on('subscribe', (subscriptions: ISubscription[]) => {
+        this.aedes.on('subscribe', (subscriptions: ISubscription[], client: aedes.Client) => {
             const topics = subscriptions.map((subscription) => subscription.topic)
-            topics.forEach((topic) => this.listener?.onSubscribed(topic))
+            topics.forEach((topic) => this.listener?.onSubscribed(topic, client.id))
         })
-        this.aedes.on('unsubscribe', (topics: string[]) => {
-            topics.forEach((topic) => this.listener?.onUnsubscribed(topic))
+        this.aedes.on('unsubscribe', (topics: string[], client: aedes.Client) => {
+            topics.forEach((topic) => this.listener?.onUnsubscribed(topic, client.id))
         })
     }
 

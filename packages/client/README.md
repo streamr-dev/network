@@ -351,7 +351,7 @@ All the below functions return a Promise which gets resolved with the result.
 
 ## Data Unions
 
-This library provides functions for working with Data Unions. Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for auto-generated documentation on each Data Union endpoint.
+This library provides functions for working with Data Unions. Please see the [TypeScript generated function documentation](https://streamr-dev.github.io/streamr-client-javascript/classes/dataunion_dataunion.dataunion.html) for information on each Data Union endpoint.
 
 To deploy a new DataUnion with default [deployment options](#deployment-options):
 ```js
@@ -473,7 +473,7 @@ These are available for everyone and anyone, to query publicly available info fr
 | Name                                                       | Returns                                        | Description                             |
 | :--------------------------------------------------------- | :--------------------------------------------- | :-------------------------------------- |
 | getStats()                                                 | {activeMemberCount, totalEarnings, ...}        | Get Data Union's statistics             |
-| getMemberStats(memberAddress)                              | {earnings, proof, ...}                         | Get member's stats                      |
+| getMemberStats(memberAddress)                              | {status, totalEarnings, withdrawableEarnings}  | Get member's stats                      |
 | getWithdrawableEarnings(memberAddress)                     | `BigNumber` withdrawable DATA tokens in the DU |                                         |
 | getAdminFee()                                              | `Number` between 0.0 and 1.0 (inclusive)       | Admin's cut from revenues               |
 | getAdminAddress()                                          | Ethereum address                               | Data union admin's address              |

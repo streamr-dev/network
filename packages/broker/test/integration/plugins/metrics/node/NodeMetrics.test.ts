@@ -31,12 +31,13 @@ describe('NodeMetrics', () => {
             },
             id: 'tracker-1'
         })
-        client1 = createClient(tracker, await getPrivateKey(), {
+        client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
-        client2 = createClient(tracker, tmpAccount.privateKey, {
+        client2 = await createClient(tracker, tmpAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -47,7 +48,7 @@ describe('NodeMetrics', () => {
             storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
             // therefore StorageAssignmentEventManager test helper cannot be used
         })
-        const storageClient = createClient(tracker, storageNodeAccount.privateKey, {
+        const storageClient = await createClient(tracker, storageNodeAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
         await storageClient.setNode(`http://127.0.0.1:${httpPort}`)
@@ -74,11 +75,11 @@ describe('NodeMetrics', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            tracker.stop(),
-            broker1.stop(),
-            storageNode.stop(),
-            client1.destroy(),
-            client2.destroy()
+            tracker?.stop(),
+            broker1?.stop(),
+            storageNode?.stop(),
+            client1?.destroy(),
+            client2?.destroy()
         ])
     }, 30 * 1000)
 

@@ -1,6 +1,6 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { getPublishTestMessages, getCreateClient, createTestStream, until, clientOptions } from '../utils'
+import { getPublishTestMessages, getCreateClient, createTestStream, clientOptions } from '../utils'
 import { Wallet } from 'ethers'
 
 jest.setTimeout(30000)

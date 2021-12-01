@@ -1,12 +1,13 @@
 import { Server } from 'http'
 import { once } from 'events'
-import { Logger, startTracker, Tracker } from 'streamr-network'
-import { waitForCondition } from 'streamr-test-utils'
-import express, { Request, Response} from 'express'
-import { Broker } from '../../../../src/broker'
-import { createClient, createTestStream, fastPrivateKey, startBroker } from '../../../utils'
-import { Stream, StreamOperation, StreamrClient } from 'streamr-client'
 import { Wallet } from 'ethers'
+import express, { Request, Response} from 'express'
+import { Logger, startTracker, Tracker } from 'streamr-network'
+import { Stream, StreamOperation, StreamrClient } from 'streamr-client'
+import { waitForCondition } from 'streamr-test-utils'
+
+import { Broker } from '../../../../src/broker'
+import { createClient, createTestStream, startBroker } from '../../../utils'
 import { version as CURRENT_VERSION } from '../../../../package.json'
 
 jest.setTimeout(30000)
@@ -78,7 +79,7 @@ describe('TestnetMinerPlugin', () => {
                 port: TRACKER_PORT
             },
         })
-        client = createClient(tracker, rewardPublisherPrivateKey)
+        client = await createClient(tracker, rewardPublisherPrivateKey)
         const rewardStream = await createRewardStream(client)
         rewardStreamId = rewardStream.id
         claimServer = new MockClaimServer()

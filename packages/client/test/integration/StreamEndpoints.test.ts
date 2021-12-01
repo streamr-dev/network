@@ -199,7 +199,13 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             const newStream = await client.getOrCreateStream({
                 id: newPath,
             })
-            return expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+            expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+
+            // ensure can get after create i.e. doesn't try create again
+            const sameStream = await client.getOrCreateStream({
+                id: newPath,
+            })
+            expect(sameStream.id).toEqual(newStream.id)
         })
 
         it('fails if stream prefixed with other users address', async () => {
@@ -430,16 +436,6 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 expect(await createdStream.hasPublicPermission(StreamPermission.SUBSCRIBE)).not.toBeTruthy()
             })
 
-            // it('does not error if revoking multiple permissions in parallel', async () => {
-            //     await createdStream.grantUserPermission(StreamPermission.SHARE, otherWallet.address)
-            //     await Promise.all([
-            //         createdStream.revokeUserPermission(StreamPermission.SHARE, otherWallet.address),
-            //         createdStream.revokeUserPermission(StreamPermission.SHARE, otherWallet.address),
-            //         createdStream.revokeUserPermission(StreamPermission.SHARE, otherWallet.address),
-            //     ])
-            //     expect(await createdStream.hasUserPermission(StreamPermission.SHARE, otherWallet.address)).not.toBeTruthy()
-            // })
-
             it('errors if invalid permission id', async () => {
                 const INVALID_PERMISSION_IDS = [
                     '',
@@ -597,7 +593,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 try {
                     await client.getStream(stream.id)
                     return false
-                } catch (err) {
+                } catch (err: any) {
                     return err.errorCode === 'NOT_FOUND'
                 }
             }, 100000, 1000)

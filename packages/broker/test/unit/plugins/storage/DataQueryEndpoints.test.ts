@@ -8,7 +8,6 @@ import {
     MAX_SEQUENCE_NUMBER_VALUE
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { HttpError } from '../../../../src/errors/HttpError'
 import { PassThrough } from 'stream'
 import { StreamFetcher } from "../../../../src/StreamFetcher"
 
@@ -46,7 +45,7 @@ describe('DataQueryEndpoints', () => {
         app = express()
         storage = {} as Storage
         streamFetcher = {
-            authenticate(streamId: string, sessionToken: string|undefined) {
+            authenticate() {
                 return new Promise(((resolve) => {
                     // if (sessionToken === 'mock-session-token') {
                     resolve({})
@@ -151,15 +150,10 @@ describe('DataQueryEndpoints', () => {
                     .expect(streamMessages.map((msg) => msg.serialize(30)).join('\n'), done)
             })
 
-            it('invokes storage#requestLast once with correct arguments', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
-                    .then(() => {
-                        expect(storage.requestLast).toHaveBeenCalledTimes(1)
-                        expect((storage.requestLast as jest.Mock).mock.calls[0])
-                            .toEqual(['streamId', 0, 1])
-                        done()
-                    })
-                    .catch(done)
+            it('invokes storage#requestLast once with correct arguments', async () => {
+                await testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
+                expect(storage.requestLast).toHaveBeenCalledTimes(1)
+                expect((storage.requestLast as jest.Mock).mock.calls[0]).toEqual(['streamId', 0, 1])
             })
 
             it('responds 500 and error message if storage signals error', (done) => {

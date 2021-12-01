@@ -1,10 +1,10 @@
 import debug from 'debug'
 import { Wallet } from 'ethers'
-import { wait } from 'streamr-test-utils'
+// import { wait } from 'streamr-test-utils'
 import { EthereumAddress, NotFoundError, StorageNode, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
-import { EthereumStorageEvent } from '../NodeRegistry'
+import { EthereumStorageEvent } from '../../src/NodeRegistry'
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 // import { id } from '@ethersproject/hash'
 

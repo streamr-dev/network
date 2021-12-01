@@ -2,11 +2,11 @@
  * Endpoints for RESTful data requests
  */
 import express, { Request, Response, Router } from 'express'
-import { Metrics, MetricsContext, Protocol } from 'streamr-network'
-import { Logger } from 'streamr-network'
+import { StreamMessage } from 'streamr-client-protocol'
+import { Logger, Metrics, MetricsContext } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Storage } from './Storage'
-import { AuthenticatedRequest, authenticator } from '../../RequestAuthenticatorMiddleware'
+import { AuthenticatedRequest } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 import { StreamFetcher } from "../../StreamFetcher"
@@ -31,7 +31,7 @@ class ResponseTransform extends Transform {
         this.version = version
     }
 
-    _transform(input: Protocol.MessageLayer.StreamMessage, _encoding: string, done: () => void) {
+    _transform(input: StreamMessage, _encoding: string, done: () => void) {
         if (this.firstMessage) {
             this.firstMessage = false
             this.push(this.format.header)
@@ -65,7 +65,7 @@ const sendError = (message: string, res: Response) => {
 const createEndpointRoute = (
     name: string,
     router: express.Router,
-    metrics: Metrics, 
+    metrics: Metrics,
     processRequest: (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => void
 ) => {
     router.get(`${LEGACY_API_ROUTE_PREFIX}/streams/:id/data/partitions/:partition/${name}`, (req: Request, res: Response) => {
@@ -222,4 +222,3 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
 
     return router
 }
-

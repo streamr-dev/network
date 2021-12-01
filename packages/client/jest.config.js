@@ -1,6 +1,6 @@
 const path = require('path')
 
-process.env.DEBUG = '*'
+// process.env.DEBUG = '*'
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
@@ -61,7 +61,6 @@ module.exports = {
     globals: {
         'ts-jest': {
             babelConfig: false,
-            // tsConfig: 'tsconfig.test.json',
         }
     },
 

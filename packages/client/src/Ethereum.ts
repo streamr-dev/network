@@ -3,14 +3,15 @@
  */
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
-import { ExternalProvider, getDefaultProvider, JsonRpcProvider, Provider, Web3Provider } from '@ethersproject/providers'
+import { getDefaultProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
+import type { ExternalProvider, Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
-import { ConnectionInfo } from '@ethersproject/web'
-import { BytesLike } from '@ethersproject/bytes'
+import type { ConnectionInfo } from '@ethersproject/web'
+import type { BytesLike } from '@ethersproject/bytes'
 
-import { EthereumAddress } from './types'
+import type { EthereumAddress } from './types'
 import { Config } from './Config'
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
@@ -66,7 +67,7 @@ export abstract class EthereumConfig {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class StreamrEthereum {
+class StreamrEthereum {
     static generateEthereumAccount() {
         const wallet = Wallet.createRandom()
         return {
@@ -133,6 +134,10 @@ export default class StreamrEthereum {
         }
     }
 
+    isAuthenticated() {
+        return (this._getAddress !== undefined)
+    }
+
     canEncrypt() {
         return !!(this._getAddress && this._getSigner)
     }
@@ -190,3 +195,5 @@ export default class StreamrEthereum {
         return new JsonRpcProvider(this.ethereumConfig.sidechain)
     }
 }
+
+export default StreamrEthereum

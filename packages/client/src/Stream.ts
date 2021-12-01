@@ -19,7 +19,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { StorageNode } from './StorageNode'
-import { constants } from 'ethers'
+import { AddressZero } from '@ethersproject/constants'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -132,6 +132,9 @@ class StreamrStream implements StreamMetadata {
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
     }
 
+    /**
+     * Persist stream metadata updates.
+     */
     async update() {
         try {
             await this._streamRegistry.updateStream(this.toObject())
@@ -171,7 +174,7 @@ class StreamrStream implements StreamMetadata {
     }
 
     async getPublicPermissions() {
-        return this._streamRegistry.getPermissionsForUser(this.id, constants.AddressZero)
+        return this._streamRegistry.getPermissionsForUser(this.id, AddressZero)
     }
 
     // eslint-disable-next-line class-methods-use-this

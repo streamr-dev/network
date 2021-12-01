@@ -8,6 +8,8 @@ import { instanceId } from './utils'
 import { ConnectionConfig, Config } from './Config'
 import authFetch, { authRequest } from './authFetch'
 import { Context } from './utils/Context'
+import { Readable } from 'stream'
+import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 
 import Session from './Session'
 import { BrubeckContainer } from './Container'
@@ -42,7 +44,9 @@ export class Rest implements Context {
     }
 
     getUrl(urlParts: UrlParts, query = {}, restUrl?: string) {
-        const baseUrl = restUrl ? restUrl + '/api/v1/' : this.options.restUrl
+        let optionsRestUrl = this.options.restUrl
+        if (!optionsRestUrl.endsWith('/')) { optionsRestUrl += '/' }
+        const baseUrl = restUrl ? restUrl + '/api/v1/' : optionsRestUrl
         const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl)
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
@@ -132,7 +136,7 @@ export class Rest implements Context {
         })
     }
 
-    async stream(urlParts: UrlParts, options: FetchOptions = {}, abortController = new AbortController()) {
+    async stream(urlParts: UrlParts, options: FetchOptions = {}, abortController = new AbortController()): Promise<Readable> {
         const startTime = Date.now()
         const response = await this.request(urlParts, {
             ...options,
@@ -142,10 +146,16 @@ export class Rest implements Context {
             }
         })
 
-        const stream = response.body
+        if (!response.body) {
+            throw new Error('No Response Body')
+        }
+
+        const stream = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+
         stream.once('close', () => {
             abortController.abort()
         })
+
         return Object.assign(stream, {
             startTime,
         })

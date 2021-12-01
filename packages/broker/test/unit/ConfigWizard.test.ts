@@ -13,14 +13,13 @@ import {
     start
 } from '../../src/ConfigWizard'
 import { readFileSync } from 'fs'
-import { getPrivateKey as getPrivateTestKey } from '../utils'
 
 const createMockLogger = () => {
     const messages: string[] = []
     return {
         info: (message: string) => messages.push(message),
-        warn: console.log,
-        error: console.log,
+        warn: console.warn,
+        error: console.error,
         messages
     }
 }

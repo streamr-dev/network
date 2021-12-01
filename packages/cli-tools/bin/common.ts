@@ -23,7 +23,6 @@ export function envOptions(program: commander.Command): commander.Command {
 export function authOptions(program: commander.Command): commander.Command {
     return program
         .option('--private-key <key>', 'use an Ethereum private key to authenticate')
-        .option('--api-key <key>', 'use an API key to authenticate (deprecated)')
 }
 
 export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: number, max: number): void {

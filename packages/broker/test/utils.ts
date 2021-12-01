@@ -1,6 +1,5 @@
 import crypto from 'crypto'
 import StreamrClient, { MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
-import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'
@@ -19,7 +18,6 @@ interface TestConfig {
     generateSessionId?: boolean
     httpPort?: null | number
     wsPort?: null | number
-    mqttPort?: null | number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: ApiAuthenticationConfig
     enableCassandra?: boolean
@@ -39,7 +37,6 @@ export const formConfig = ({
     generateSessionId = false,
     httpPort = null,
     wsPort = null,
-    mqttPort = null,
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
@@ -60,7 +57,6 @@ export const formConfig = ({
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
-        plugins['publishHttp'] = {}
         if (enableCassandra) {
             plugins['storage'] = {
                 cassandra: {
@@ -84,11 +80,6 @@ export const formConfig = ({
             certFileName
         }
     }
-    if (mqttPort) {
-        plugins['mqtt'] = {
-            port: mqttPort
-        }
-    }
 
     return {
         ethereumPrivateKey: privateKey,
@@ -109,7 +100,8 @@ export const formConfig = ({
                 city: 'Helsinki'
             },
             stun: null,
-            turn : null
+            turn: null,
+            webrtcDisallowPrivateAddresses: false
         },
         streamrUrl,
         streamrAddress,
@@ -149,14 +141,15 @@ export const fastPrivateKey = (): string => {
 
 export const createMockUser = (): Wallet => Wallet.createRandom()
 
-export const createClient = (
+export const createClient = async (
     tracker: Tracker,
-    privateKey = fastPrivateKey(),
+    privateKey?: string,
     clientOptions?: StreamrClientOptions
-): StreamrClient => {
+): Promise<StreamrClient> => {
+    const newPrivateKey = privateKey ? privateKey :  await getPrivateKey()
     return new StreamrClient({
         auth: {
-            privateKey
+            privateKey: newPrivateKey
         },
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
         network: {
@@ -166,19 +159,10 @@ export const createClient = (
     })
 }
 
-export const createMqttClient = (mqttPort = 9000, host = 'localhost', privateKey = fastPrivateKey()): mqtt.AsyncClient => {
-    return mqtt.connect({
-        hostname: host,
-        port: mqttPort,
-        username: '',
-        password: privateKey
-    })
-}
-
 export class StorageAssignmentEventManager {
     storageNodeAccount: Wallet
     engineAndEditorAccount: Wallet
-    client: StreamrClient
+    client: Promise<StreamrClient>
     eventStream?: Stream
 
     constructor(tracker: Tracker, engineAndEditorAccount: Wallet, storageNodeAccount: Wallet) {
@@ -188,7 +172,7 @@ export class StorageAssignmentEventManager {
     }
 
     async createStream(): Promise<void> {
-        this.eventStream = await this.client.createStream({
+        this.eventStream = await (await this.client).createStream({
             id: '/' + this.engineAndEditorAccount.address + '/' + getTestName(module) + '/' + Date.now(),
         })
     }
@@ -211,7 +195,7 @@ export class StorageAssignmentEventManager {
     }
 
     async close(): Promise<void> {
-        await this.client.destroy()
+        await (await this.client).destroy()
     }
 }
 

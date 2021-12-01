@@ -1,7 +1,5 @@
-import assert from 'assert'
 import sinon from 'sinon'
 import { authenticator } from '../../src/RequestAuthenticatorMiddleware'
-import { HttpError } from '../../src/errors/HttpError'
 import { StreamOperation } from 'streamr-client'
 
 describe('AuthenticationMiddleware', () => {

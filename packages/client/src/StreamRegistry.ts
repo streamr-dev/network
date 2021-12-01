@@ -20,7 +20,7 @@ import { NotFoundError, ValidationError } from './authFetch'
 import { EthereumAddress } from './types'
 import { StreamListQuery } from './StreamEndpoints'
 import { SIDLike, SPID } from 'streamr-client-protocol'
-import { ethers } from 'ethers'
+import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 
 // const { ValidationError } = Errors
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
@@ -121,7 +121,7 @@ export class StreamRegistry implements Context {
     async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
         await this.connectToStreamRegistryContract()
         log('Getting permissions for stream %s for user %s', streamId, userAddress)
-        const permissions = await this.streamRegistryContract!.getPermissionsForUser(streamId, userAddress || ethers.constants.AddressZero)
+        const permissions = await this.streamRegistryContract!.getPermissionsForUser(streamId, userAddress || AddressZero)
         return {
             edit: permissions.edit,
             canDelete: permissions.canDelete,
@@ -212,8 +212,8 @@ export class StreamRegistry implements Context {
         log(`Setting Permissions for user ${recievingUser} on stream ${streamId}:
         edit: ${edit}, delete: ${deletePermission}, publish: ${publish}, subscribe: ${subscribe}, share: ${share}`)
         await this.connectToStreamRegistryContract()
-        const publishExpiration = publish ? ethers.constants.MaxInt256 : 0
-        const subscribeExpiration = subscribe ? ethers.constants.MaxUint256 : 0
+        const publishExpiration = publish ? MaxInt256 : 0
+        const subscribeExpiration = subscribe ? MaxInt256 : 0
         const tx = await this.streamRegistryContract!.setPermissionsForUser(streamId, recievingUser,
             edit, deletePermission, publishExpiration, subscribeExpiration, share)
         await tx.wait()
@@ -252,7 +252,7 @@ export class StreamRegistry implements Context {
         log('Revoking all PUBLIC Permissions stream %s', streamId)
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId,
-            ethers.constants.AddressZero)
+            AddressZero)
         await tx.wait()
     }
 
@@ -352,10 +352,17 @@ export class StreamRegistry implements Context {
         do {
             // eslint-disable-next-line no-await-in-loop
             const queryResponse = await this.sendStreamQuery(StreamRegistry.buildGetAllStreamsQuery(pagesize, lastID)) as AllStreamsQueryResult
-            const resStreams = queryResponse.streams.map(({ id, metadata }) => this.parseStream(id, metadata))
+            // const resStreams = queryResponse.streams.map(({ id, metadata }) => this.parseStream(id, metadata))
+            const resStreams: Stream[] = []
+            queryResponse.streams.forEach(({ id, metadata }) => {
+                try {
+                    const stream = this.parseStream(id, metadata)
+                    resStreams.push(stream)
+                } catch (err) { log(`Skipping stream ${id} cannot parse metadata: ${metadata}`) }
+            })
             results = results.concat(resStreams)
             lastResultSize = queryResponse.streams.length
-            lastID = results[results.length - 1].streamId
+            lastID = queryResponse.streams[queryResponse.streams.length - 1].id
         } while (lastResultSize === pagesize)
         return results
     }

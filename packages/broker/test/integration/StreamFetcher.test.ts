@@ -21,7 +21,7 @@ describe('StreamFetcher', () => {
             },
             id: 'tracker-1'
         })
-        client = createClient(tracker, await getPrivateKey(), {})
+        client = await createClient(tracker, await getPrivateKey(), {})
         streamId = (await createTestStream(client, module)).streamId
 
         streamFetcher = new StreamFetcher(client)

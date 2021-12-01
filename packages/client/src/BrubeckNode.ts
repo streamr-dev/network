@@ -10,8 +10,6 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 
-const uid = process.pid != null ? `p${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
-
 /**
  * Wrap a network node.
  * Lazily creates & starts node on first call to getNode().
@@ -32,7 +30,7 @@ export default class BrubeckNode implements Context {
         @inject(Config.Network) options: NetworkNodeOptions
     ) {
         this.options = options
-        this.id = instanceId(this, uid)
+        this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         destroySignal.onDestroy(this.destroy)
     }
@@ -50,8 +48,7 @@ export default class BrubeckNode implements Context {
 
         // generate id if none supplied
         if (id == null || id === '') {
-            const address = await this.ethereum.getAddress()
-            id = `${address}#${uuid()}`
+            id = await this.generateId()
         }
 
         this.debug('initNode', id)
@@ -67,6 +64,16 @@ export default class BrubeckNode implements Context {
         }
 
         return node
+    }
+
+    private async generateId() {
+        if (this.ethereum.isAuthenticated()) {
+            const address = await this.ethereum.getAddress()
+            return `${address}#${uuid()}`
+            // eslint-disable-next-line no-else-return
+        } else {
+            return Ethereum.generateEthereumAccount().address
+        }
     }
 
     /**

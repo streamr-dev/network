@@ -1,10 +1,8 @@
-import url from 'url'
 import WebSocket from 'ws'
-import fetch from 'node-fetch'
 import { startTracker, Protocol, Tracker } from 'streamr-network'
 import { startBroker, createClient, createTestStream, getPrivateKey } from '../utils'
 import StreamrClient from 'streamr-client'
-import { Broker } from '../broker'
+import { Broker } from '../../src/broker'
 import { Wallet } from '@ethersproject/wallet'
 
 const { ControlLayer } = Protocol
@@ -15,7 +13,6 @@ jest.setTimeout(30000)
 const trackerPort = 19429
 const httpPort = 19422
 const wsPort = 19423
-// const mqttPort = 19424
 
 const thresholdForFutureMessageSeconds = 5 * 60
 
@@ -60,7 +57,7 @@ describe('broker drops future messages', () => {
         })
         const publisherWallet = new Wallet(await getPrivateKey())
         publisherAddress = publisherWallet.address
-        client = createClient(tracker, publisherWallet.privateKey)
+        client = await createClient(tracker, publisherWallet.privateKey)
         const freshStream = await createTestStream(client, module)
         await freshStream.setPermissions(await brokerWallet.getAddress(), true, true, true, true, true)
         streamId = freshStream.id
@@ -70,47 +67,6 @@ describe('broker drops future messages', () => {
         await broker.stop()
         await tracker.stop()
         await client.destroy()
-    })
-
-    test('pushing message with too future timestamp to HTTP plugin returns 400 error & does not crash broker', async () => {
-        const streamMessage = buildMsg(
-            streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 15) * 1000,
-            0, publisherAddress, '1', {}
-        )
-
-        const query = {
-            timestamp: streamMessage.getTimestamp(),
-            address: streamMessage.getPublisherId(),
-            msgChainId: streamMessage.messageId.msgChainId,
-            signatureType: streamMessage.signatureType,
-            signature: streamMessage.signature,
-        }
-
-        const streamUrl = url.format({
-            protocol: 'http',
-            hostname: '127.0.0.1',
-            port: httpPort,
-            pathname: `/streams/${encodeURIComponent(streamId)}`,
-            query
-        })
-
-        const settings = {
-            method: 'POST',
-            body: JSON.stringify(streamMessage),
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json'
-            }
-        }
-
-        return fetch(streamUrl, settings)
-            .then((res) => {
-                // expect(res.status).toEqual(400)
-                return res.json()
-            })
-            .then((json) => {
-                expect(json.error).toContain('future timestamps are not allowed')
-            })
     })
 
     test('pushing message with too future timestamp to Websocket plugin returns error & does not crash broker', (done) => {

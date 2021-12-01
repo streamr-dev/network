@@ -34,7 +34,6 @@ describe('StorageNode', () => {
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
             trackerId: trackerInfo.id,
-            httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,

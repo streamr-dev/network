@@ -10,12 +10,11 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
 import config from './config'
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 32000 : 30000
 const MAX_MESSAGES = 5
-const ITERATIONS = 1
+const ITERATIONS = 4
 
 jest.setTimeout(30000)
 

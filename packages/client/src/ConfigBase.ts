@@ -6,17 +6,16 @@
  * TODO: Disolve ConfigBase.
  */
 
-import { BigNumber } from '@ethersproject/bignumber'
+import type { BigNumber } from '@ethersproject/bignumber'
 import { isAddress } from '@ethersproject/address'
 import has from 'lodash/has'
 import get from 'lodash/get'
 import cloneDeep from 'lodash/cloneDeep'
 
-import { EthereumAddress, Todo } from './types'
+import type { EthereumAddress, Todo } from './types'
 
 import { AuthConfig, EthereumConfig } from './Ethereum'
 import { EncryptionConfig } from './encryption/KeyExchangeUtils'
-import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 
 export type CacheConfig = {
     maxSize: number,
@@ -116,7 +115,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 
     // Streamr Core options
-    restUrl: 'https://streamr.network/api/v1',
+    restUrl: 'https://streamr.network/api/v1/',
     theGraphUrl: 'http://127.0.0.1:8000/subgraphs/name/githubname/subgraphname',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
 

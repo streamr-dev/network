@@ -1,6 +1,7 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.node.json",
     "compilerOptions": {
+        "composite": true,
         "declarationDir": "dist/types",
         "outDir": "dist",
         "lib": [
@@ -16,11 +17,21 @@
         ],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "strictBindCallApply": true
+        "strictBindCallApply": true,
+        "resolveJsonModule": true
     },
     "include": [
+        "package.json",
         "src/**/*",
+        "src/*/*.json",
         "vendor/**/*",
-        "contracts/**/*"
+        "contracts/**/*.json"
+    ],
+    "exclude": [
+        "src/shim/*"
+    ],
+    "references": [
+        { "path": "../network/tsconfig.node.json" },
+        { "path": "../protocol/tsconfig.node.json" }
     ]
 }

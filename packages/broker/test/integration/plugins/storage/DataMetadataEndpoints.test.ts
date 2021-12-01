@@ -2,7 +2,8 @@ import http from 'http'
 import { startTracker, Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream, getPrivateKey } from '../../../utils'
+import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
+    createTestStream, getPrivateKey } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 jest.setTimeout(30000)
@@ -62,7 +63,7 @@ describe('DataMetadataEndpoints', () => {
             streamrAddress: engineAndEditorAccount.address,
             storageNodeConfig: { registry: storageNodeRegistry }
         })
-        client1 = createClient(tracker, await getPrivateKey(), {
+        client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)

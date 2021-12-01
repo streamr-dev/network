@@ -1,4 +1,8 @@
-import { createNetworkNode, Protocol, NameDirectory, Logger, MetricsContext, NetworkNodeOptions, AbstractNodeOptions } from "./composition"
-require('setimmediate')
-
-export { createNetworkNode, Protocol, NameDirectory, Logger, MetricsContext, NetworkNodeOptions, AbstractNodeOptions }
+import 'setimmediate'
+export * as Protocol from 'streamr-client-protocol'
+export { NameDirectory } from './NameDirectory'
+export { Logger } from './helpers/Logger'
+export { MetricsContext, Metrics } from './helpers/MetricsContext'
+export { Location, AbstractNodeOptions } from './identifiers'
+export { createNetworkNode, NetworkNodeOptions } from './createNetworkNode'
+export { NetworkNode } from './logic/node/NetworkNode'
