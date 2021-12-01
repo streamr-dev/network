@@ -295,7 +295,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
     private onConnectFromSignaller({ originatorInfo, routerId }: ConnectOptions): void {
         const { peerId } = originatorInfo
-
         if (this.connections[peerId]) {
             this.replaceConnection(peerId, routerId, uuidv4())
         } else {

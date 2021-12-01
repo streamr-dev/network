@@ -101,7 +101,6 @@ export class Tracker extends EventEmitter {
         this.statusMeter = io.meter({
             name: 'statuses/sec'
         })
-
         this.instructionSender = new InstructionSender(
             opts.topologyStabilization,
             this.trackerServer.sendInstruction.bind(this.trackerServer),
