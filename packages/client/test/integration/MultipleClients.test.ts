@@ -6,7 +6,7 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
 import { StorageNode } from '../../src/StorageNode'
-import { Stream, StreamOperation } from '../../src/Stream'
+import { Stream, StreamPermission } from '../../src/Stream'
 
 jest.setTimeout(30000)
 // this number should be at least 10, otherwise late subscribers might not join

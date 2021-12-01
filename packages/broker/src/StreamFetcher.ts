@@ -1,5 +1,5 @@
 import memoize from 'memoizee'
-import StreamrClient, { EthereumAddress, Stream, StreamOperation } from 'streamr-client'
+import StreamrClient, { StreamPermission, EthereumAddress, Stream } from 'streamr-client'
 import memoizee from "memoizee"
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
@@ -10,13 +10,13 @@ type FetchMethod = (streamId: string, sessionToken?: string) => Promise<Stream>
 type CheckPermissionMethod = (
     streamId: string,
     user: EthereumAddress,
-    operation?: StreamOperation,
+    permission?: StreamPermission,
 ) => Promise<true>
 
 type AuthenticateMethod = (
     streamId: string,
     user: EthereumAddress,
-    operation?: StreamOperation,
+    permission?: StreamPermission,
 ) => Promise<Stream>
 export class StreamFetcher {
     fetch: memoizee.Memoized<FetchMethod> & FetchMethod
@@ -54,9 +54,9 @@ export class StreamFetcher {
     private async uncachedAuthenticate(
         streamId: string,
         user: EthereumAddress,
-        operation = StreamOperation.STREAM_SUBSCRIBE
+        permission = StreamPermission.SUBSCRIBE
     ): Promise<Stream>  {
-        await this.checkPermission(streamId, user, operation)
+        await this.checkPermission(streamId, user, permission)
         return this.fetch(streamId)
     }
 
@@ -73,15 +73,15 @@ export class StreamFetcher {
      * Promise always resolves to true or throws if permission has not been granted.
      */
     private async uncachedCheckPermission(streamId: string, user: EthereumAddress,
-        operation: StreamOperation = StreamOperation.STREAM_SUBSCRIBE): Promise<true> {
+        permission: StreamPermission = StreamPermission.SUBSCRIBE): Promise<true> {
         if (streamId == null) {
             throw new Error('_checkPermission: streamId can not be null!')
         }
-        const result = await (await this.client.getStream(streamId)).hasUserPermission(operation, user)
+        const result = await (await this.client.getStream(streamId)).hasUserPermission(permission, user)
         if (result) {
             return result
         } else {
-            throw new Error(`unauthorized: user ${user} does not have permission ${operation.toString()} on stream ${streamId}`)
+            throw new Error(`unauthorized: user ${user} does not have permission ${permission.toString()} on stream ${streamId}`)
         }
     }
 }

@@ -24,7 +24,7 @@ import { Connection } from './Connection'
 import { StreamFetcher } from '../../StreamFetcher'
 import { createResponse as createHistoricalDataResponse, HistoricalDataResponse } from './historicalData'
 import { GenericError } from '../../errors/GenericError'
-import StreamrClient, { StreamOperation } from 'streamr-client'
+import StreamrClient, { StreamPermission } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -102,7 +102,7 @@ export class RequestHandler {
             if (!streamMessage.signature) {
                 // checkPermission is cached
                 await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(),
-                    streamMessage.getPublisherId(), StreamOperation.STREAM_PUBLISH)
+                    streamMessage.getPublisherId(), StreamPermission.PUBLISH)
             }
 
             await this.publisher.validateAndPublish(streamMessage)

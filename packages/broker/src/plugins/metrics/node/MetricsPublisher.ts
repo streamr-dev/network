@@ -1,4 +1,4 @@
-import { StreamOperation, StreamrClient } from 'streamr-client'
+import { StreamPermission, StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
 import { StorageNodeRegistryItem } from '../../../config'
 import { PERIOD_LENGTHS, Sample } from './Sample'
@@ -53,7 +53,7 @@ export class MetricsPublisher {
         const stream = await this.client.getOrCreateStream({
             id: streamId
         })
-        await stream.grantPublicPermission(StreamOperation.STREAM_SUBSCRIBE)
+        await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
         if (periodLength !== PERIOD_LENGTHS.FIVE_SECONDS) {
             try {
                 await stream.addToStorageNode(this.storageNodeAddress)

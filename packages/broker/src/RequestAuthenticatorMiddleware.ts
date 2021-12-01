@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { Logger } from 'streamr-network'
 import { StreamFetcher } from './StreamFetcher'
-import { EthereumAddress, StreamOperation, Todo } from 'streamr-client'
+import { EthereumAddress, StreamPermission, Todo } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -12,7 +12,7 @@ export interface AuthenticatedRequest<Q> extends Request<Record<string,any>,any,
 /**
  * Middleware used to authenticate REST API requests
  */
-export const authenticator = (streamFetcher: StreamFetcher, permission = StreamOperation.STREAM_SUBSCRIBE,
+export const authenticator = (streamFetcher: StreamFetcher, permission = StreamPermission.SUBSCRIBE,
     user: EthereumAddress) => (req: Todo, res: Response, next: NextFunction): void => {
 
     // Try to parse authorization header if defined
