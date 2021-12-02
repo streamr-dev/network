@@ -101,7 +101,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
 
         it('get all Streams', async () => {
             const streams = await client.getAllStreams()
-            const streamsPagesize2 = await client.getAllStreams(2)
+            const streamsPagesize2 = await client.getAllStreams(1)
             expect(streams).toEqual(streamsPagesize2)
         })
     })

@@ -50,11 +50,11 @@ export type StreamQueryResult = {
 }
 
 export type AllStreamsQueryResult = {
-    streams: [StreamQueryResult]
+    streams: StreamQueryResult[]
 }
 
 export type FilteredStreamListQueryResult = {
-    streams: [StreamPermissionsQueryResult]
+    streams: StreamPermissionsQueryResult[]
 }
 
 export type SingleStreamQueryResult = {
@@ -353,6 +353,9 @@ export class StreamRegistry implements Context {
             // eslint-disable-next-line no-await-in-loop
             const queryResponse = await this.sendStreamQuery(StreamRegistry.buildGetAllStreamsQuery(pagesize, lastID)) as AllStreamsQueryResult
             // const resStreams = queryResponse.streams.map(({ id, metadata }) => this.parseStream(id, metadata))
+            if (queryResponse.streams.length === 0) {
+                break
+            }
             const resStreams: Stream[] = []
             queryResponse.streams.forEach(({ id, metadata }) => {
                 try {
@@ -409,6 +412,9 @@ export class StreamRegistry implements Context {
                 throw new NotFoundError('stream not found: id: ' + streamId)
             }
             const resStreams = response.stream.permissions.map((permission) => permission.userAddress)
+            if (resStreams.length === 0) {
+                break
+            }
             results = results.concat(resStreams)
             lastResultSize = resStreams.length
             lastID = response.stream.permissions[resStreams.length - 1].id
