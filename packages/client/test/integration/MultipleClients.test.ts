@@ -1,14 +1,15 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    getCreateClient, getPublishTestMessages, describeRepeats, uid, fakePrivateKey, addAfterFn, createTestStream
+    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, getPrivateKey, clientOptions, getWaitForStorage
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
-import { StorageNode } from '../../src/StorageNode'
 import { Stream, StreamPermission } from '../../src/Stream'
+import { Wallet } from '@ethersproject/wallet'
+import { StreamMessage } from 'streamr-client-protocol'
 
-jest.setTimeout(30000)
+jest.setTimeout(50000)
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
@@ -352,7 +353,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 } catch (err) {
                     return false
                 }
-            }, 25000).catch((err) => {
+            }, 35000).catch((err) => {
                 checkMessages(published, receivedMessagesMain)
                 checkMessages(published, receivedMessagesOther)
                 throw err
@@ -399,11 +400,11 @@ describeRepeats('PubSub with multiple clients', () => {
             let counter = 0
             const published: Record<string, any[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const waitForStorage = getWaitForStorage(pubClient, {
-                    stream,
-                    timeout: 35000,
-                    count: MAX_MESSAGES * publishers.length,
-                })
+                // const vaitForStorage = getWaitForStorage(pubClient, {
+                //     stream,
+                //     timeout: 35000,
+                //     count: MAX_MESSAGES * publishers.length,
+                // })
 
                 const publisherId = (await pubClient.getAddress()).toLowerCase()
                 addAfter(() => {
@@ -444,6 +445,7 @@ describeRepeats('PubSub with multiple clients', () => {
                         firstMessage = streamMessage
                     }
                 }) // ensure first message stored
+                // await waitForStorage
                 published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
                     waitForLast: true,
                     async afterEach() {
@@ -463,7 +465,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 } catch (err) {
                     return false
                 }
-            }, 20000, 300).catch((err) => {
+            }, 30000, 300).catch((err) => {
                 // convert timeout to actual error
                 checkMessages(published, receivedMessagesMain)
                 checkMessages(published, receivedMessagesOther)
@@ -587,11 +589,11 @@ describeRepeats('PubSub with multiple clients', () => {
         let counter = 0
         /* eslint-enable no-await-in-loop */
         await Promise.all(publishers.map(async (pubClient) => {
-            const waitForStorage = getWaitForStorage(pubClient, {
-                stream,
-                timeout: 35000,
-                count: MAX_MESSAGES * publishers.length,
-            })
+            // const waitForStorage = getWaitForStorage(pubClient, {
+            //     stream,
+            //     timeout: 35000,
+            //     count: MAX_MESSAGES * publishers.length,
+            // })
 
             const publisherId = (await pubClient.getAddress()).toString().toLowerCase()
             const publishTestMessages = getPublishTestMessages(pubClient, stream, {
@@ -624,6 +626,7 @@ describeRepeats('PubSub with multiple clients', () => {
                     firstMessage = streamMessage
                 }
             }) // ensure first message stored
+            // await waitForStorage
             published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
                 async afterEach() {
                     counter += 1
