@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
+import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
@@ -24,7 +24,7 @@ const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
     // target users
     for await (const s of streams) {
         for await (const u of brokerUsers) {
-            await s.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, u.address)
+            await s.grantUserPermission(StreamPermission.SUBSCRIBE, u.address)
         }
     }
 }

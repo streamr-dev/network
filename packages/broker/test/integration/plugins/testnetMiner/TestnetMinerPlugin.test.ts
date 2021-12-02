@@ -3,7 +3,7 @@ import { once } from 'events'
 import { Wallet } from 'ethers'
 import express, { Request, Response} from 'express'
 import { Logger, startTracker, Tracker } from 'streamr-network'
-import { Stream, StreamOperation, StreamrClient } from 'streamr-client'
+import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { Broker } from '../../../../src/broker'
@@ -53,7 +53,7 @@ class MockClaimServer {
 
 const createRewardStream = async (client: StreamrClient): Promise<Stream> => {
     const stream = await createTestStream(client, module)
-    await stream.grantPublicPermission(StreamOperation.STREAM_SUBSCRIBE)
+    await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
     return stream
 }
 

@@ -1,6 +1,6 @@
 import sinon from 'sinon'
 import { authenticator } from '../../src/RequestAuthenticatorMiddleware'
-import { StreamOperation } from 'streamr-client'
+import { StreamPermission } from 'streamr-client'
 
 describe('AuthenticationMiddleware', () => {
     let request: any
@@ -23,7 +23,7 @@ describe('AuthenticationMiddleware', () => {
         response.status.returns(response)
         next = sinon.spy()
         streamFetcherStub = {}
-        middlewareInstance = authenticator(streamFetcherStub, StreamOperation.STREAM_SUBSCRIBE, 'fakeaddress')
+        middlewareInstance = authenticator(streamFetcherStub, StreamPermission.SUBSCRIBE, 'fakeaddress')
     })
 
     // to get stream no session is needed any more, streamFetcher is getting streams from chain

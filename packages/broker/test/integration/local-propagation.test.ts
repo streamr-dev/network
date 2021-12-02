@@ -1,5 +1,5 @@
 import { Wallet } from '@ethersproject/wallet'
-import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
+import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
 import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
@@ -47,7 +47,7 @@ describe('local propagation', () => {
     beforeEach(async () => {
         freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
-        await freshStream.grantUserPermission(StreamOperation.STREAM_PUBLISH, brokerWallet.address)
+        await freshStream.grantUserPermission(StreamPermission.PUBLISH, brokerWallet.address)
 
         await wait(3000)
     })

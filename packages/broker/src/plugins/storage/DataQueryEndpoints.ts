@@ -149,7 +149,7 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
             }
         },
         // authentication
-        // authenticator(streamFetcher, StreamOperation.STREAM_SUBSCRIBE, ???),
+        // authenticator(streamFetcher, StreamPermission.SUBSCRIBE, ???),
     )
 
     // eslint-disable-next-line max-len

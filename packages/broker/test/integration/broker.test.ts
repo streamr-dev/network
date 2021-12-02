@@ -10,7 +10,7 @@ import {
     StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode
 } from '../utils'
-import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
+import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
 import { Broker } from '../../src/broker'
 
 const httpPort = 12341
@@ -105,7 +105,7 @@ describe('broker: end-to-end', () => {
         freshStreamId = freshStream.id
         await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort)
-        await freshStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
+        await freshStream.grantUserPermission(StreamPermission.SUBSCRIBE, user2.address)
     })
 
     afterAll(async () => {
