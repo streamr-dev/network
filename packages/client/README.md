@@ -18,10 +18,6 @@ By using this client, you can easily interact with the [Streamr](https://streamr
 Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
 
 
-### Breaking changes notice
-
-* Support for unsigned data will be dropped in the second half of 2021 or in 2022. This means that every data point will require a signature using the publisher's private key.
-
 ----
 
 ## TOC
