@@ -101,7 +101,8 @@ export const formConfig = ({
             },
             stun: null,
             turn: null,
-            webrtcDisallowPrivateAddresses: false
+            webrtcDisallowPrivateAddresses: false,
+            acceptProxyConnections: false
         },
         streamrUrl,
         streamrAddress,

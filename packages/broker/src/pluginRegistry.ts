@@ -6,6 +6,7 @@ import { WebsocketPlugin as LegacyWebsocketPlugin } from './plugins/legacyWebsoc
 import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
 import { StoragePlugin } from './plugins/storage/StoragePlugin'
 import { TestnetMinerPlugin } from './plugins/testnetMiner/TestnetMinerPlugin'
+import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
 
 export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any>|never => {
     switch (name) {
@@ -23,6 +24,8 @@ export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin
             return new StoragePlugin(pluginOptions)
         case 'testnetMiner':
             return new TestnetMinerPlugin(pluginOptions)
+        case 'subscriber':
+            return new SubscriberPlugin(pluginOptions)
         default:
             throw new Error(`Unknown plugin: ${name}`)
     }

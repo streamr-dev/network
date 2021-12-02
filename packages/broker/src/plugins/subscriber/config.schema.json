@@ -1,0 +1,30 @@
+{
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Testnet miner plugin configuration",
+  "additionalProperties": false,
+  "properties": {
+    "streams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "streamId": {
+            "type": "string"
+          },
+          "streamPartition": {
+            "type": "number"
+          },
+          "additionalProperties": false
+        }
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "subscriptionRetryInterval": {
+      "type": "number",
+      "default": 30000
+    }
+  }
+}

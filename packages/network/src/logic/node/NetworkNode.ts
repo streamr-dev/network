@@ -21,6 +21,14 @@ export class NetworkNode extends Node {
         this.onDataReceived(streamMessage)
     }
 
+    async joinStreamAsPurePublisher(streamId: string, streamPartition: number, contactNodeId: string): Promise<void> {
+        await this.openOutgoingStreamConnection(new SPID(streamId, streamPartition), contactNodeId)
+    }
+
+    leavePurePublishingStream(streamId: string, streamPartition: number, contactNodeId: string): void {
+        this.closeOutgoingStreamConnection(new SPID(streamId, streamPartition), contactNodeId)
+    }
+
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
         this.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }

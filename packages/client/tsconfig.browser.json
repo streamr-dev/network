@@ -20,7 +20,6 @@
             "crypto": ["crypto-browserify"],
             "buffer": ["buffer/"],
             "node-fetch": ["./src/shim/node-fetch.ts"],
-            "node-webcrypto-ossl": ["./src/shim/crypto.ts"],
             "streamr-client-protocol/dist/contracts/NodeRegistry.json": [
                 "streamr-client-protocol/dist/contracts/NodeRegistry.json"
             ],

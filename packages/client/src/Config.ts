@@ -124,7 +124,8 @@ const BRUBECK_CLIENT_DEFAULTS = {
                 ws: 'wss://testnet4.streamr.network:30405',
                 http: 'https://testnet4.streamr.network:30405'
             }
-        ]
+        ],
+        acceptProxyConnections: false
     },
 }
 

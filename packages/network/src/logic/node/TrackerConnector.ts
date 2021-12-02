@@ -24,6 +24,7 @@ export class TrackerConnector {
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
     private connectionStates: Map<TrackerId, ConnectionState>
+    private readonly signallingOnlyTrackers: Set<TrackerId>
 
     constructor(
         getSPIDs: GetSPIDsFn,
@@ -38,11 +39,23 @@ export class TrackerConnector {
         this.trackerRegistry = trackerRegistry
         this.maintenanceInterval = maintenanceInterval
         this.connectionStates = new Map()
+        this.signallingOnlyTrackers = new Set()
     }
 
     onNewStream(spid: SPID): void {
         const trackerInfo = this.trackerRegistry.getTracker(spid)
         this.connectTo(trackerInfo)
+    }
+
+    async createSignallingOnlyTrackerConnection(trackerId: TrackerId, trackerAddress: string): Promise<void> {
+        this.signallingOnlyTrackers.add(trackerId)
+        await this.connectToTracker(trackerAddress, PeerInfo.newTracker(trackerId))
+        logger.info('Connected to tracker %s for signalling only', NameDirectory.getName(trackerId))
+    }
+
+    removeSignallingOnlyTrackerConnection(trackerId: TrackerId): void {
+        this.signallingOnlyTrackers.delete(trackerId)
+        this.disconnectFromTracker(trackerId)
     }
 
     start(): void {
@@ -90,6 +103,9 @@ export class TrackerConnector {
     }
 
     private isActiveTracker(trackerId: TrackerId): boolean {
+        if (this.signallingOnlyTrackers.has(trackerId)) {
+            return true
+        }
         for (const { streamId, streamPartition } of this.getSPIDs()) {
             if (this.trackerRegistry.getTracker(new SPID(streamId, streamPartition)).id === trackerId) {
                 return true

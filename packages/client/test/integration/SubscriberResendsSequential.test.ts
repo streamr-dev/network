@@ -63,6 +63,7 @@ describeRepeats('sequential resend subscribe', () => {
             waitForLast: true,
             timestamp: 111111,
         })
+
     }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
     afterAll(async () => {
