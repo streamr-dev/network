@@ -6,6 +6,8 @@ import { Stream } from '../../src/Stream'
 import { getCreateClient, createTestStream } from '../utils'
 import { preloadStreams, preloadPublishers } from '../../src/StreamEndpointsCached'
 
+jest.setTimeout(30000)
+
 describe('preloaded stream data', () => {
     const createClient = getCreateClient()
     let client: StreamrClient

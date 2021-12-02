@@ -116,7 +116,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Streamr Core options
     restUrl: 'https://streamr.network/api/v1/',
-    theGraphUrl: 'http://127.0.0.1:8000/subgraphs/name/githubname/subgraphname',
+    theGraphUrl: 'http://10.200.10.1:8000/subgraphs/name/githubname/subgraphname',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
 
     // P2P Streamr Network options
