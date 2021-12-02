@@ -107,8 +107,12 @@ export class TrackerManager {
         this.trackerConnector.onNewStream(spid)
     }
 
-    async connectToTrackerForStream(spid: SPID): Promise<void> {
-        await this.trackerConnector.createTrackerConnectionForStream(spid)
+    async connectToSignallingOnlyTracker(trackerId: TrackerId, trackerAddress: string): Promise<void> {
+        await this.trackerConnector.createSignallingOnlyTrackerConnection(trackerId, trackerAddress)
+    }
+
+    disconnectFromSignallingOnlyTracker(trackerId: string): void {
+        this.trackerConnector.removeSignallingOnlyTrackerConnection(trackerId)
     }
 
     onUnsubscribeFromStream(spid: SPID): void {
@@ -224,5 +228,9 @@ export class TrackerManager {
 
     getTrackerId(spid: SPID): TrackerId {
         return this.trackerRegistry.getTracker(spid).id
+    }
+
+    getTrackerAddress(spid: SPID): TrackerId {
+        return this.trackerRegistry.getTracker(spid).ws
     }
 }
