@@ -1,9 +1,10 @@
 /* eslint-disable no-await-in-loop */
-import { clientOptions, describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, getPrivateKey } from '../utils'
+import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, getPrivateKey } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Wallet } from 'ethers'
+import { storageNodeTestConfig } from './devEnvironment'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)
@@ -30,7 +31,7 @@ describeRepeats('Group Key Persistence', () => {
                 requireEncryptedData: true,
                 ...streamOpts,
             })
-            const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+            const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
             await stream.addToStorageNode(await storageNodeWallet.getAddress())
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
@@ -72,7 +73,7 @@ describeRepeats('Group Key Persistence', () => {
                 // subscriber will need to ask new publisher
                 // for group keys, which the new publisher will have to read from
                 // persistence
-                const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+                const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
                 await stream.addToStorageNode(await storageNodeWallet.getAddress())
 
                 published = await publishTestMessages(5, {
@@ -304,7 +305,7 @@ describeRepeats('Group Key Persistence', () => {
                 for (let i = 0; i < NUM_STREAMS; i++) {
 
                     const s = await createTestStream(publisher, module)
-                    const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+                    const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
                     await s.addToStorageNode(await storageNodeWallet.getAddress())
                     // eslint-disable-next-line no-loop-func
                     streams.push(s)

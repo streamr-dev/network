@@ -6,6 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { StorageNode } from '../../src/StorageNode'
 import { wait } from 'streamr-test-utils'
+import { storageNodeTestConfig } from './devEnvironment'
 
 jest.setTimeout(40000)
 
@@ -37,14 +38,14 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             requireSignedData: true,
             requireEncryptedData: false,
         })
-        const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
         const storageNodeClient = new StreamrClient({
             ...clientOptions,
             auth: {
                 privateKey: storageNodeWallet.privateKey,
             },
         })
-        storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
+        storageNode = await storageNodeClient.setNode(storageNodeTestConfig.url)
         // storageNode = await client.getStorageNode(await storageNodeWallet.getAddress())
     })
 

@@ -2,7 +2,6 @@ import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
-    clientOptions,
     describeRepeats,
     getPublishTestStreamMessages,
     getWaitForStorage,
@@ -14,6 +13,7 @@ import Resend from '../../src/Resends'
 
 import { Stream } from '../../src/Stream'
 import { Wallet } from 'ethers'
+import { storageNodeTestConfig } from './devEnvironment'
 // import { EthereumAddress } from '../types'
 
 /* eslint-disable no-await-in-loop */
@@ -52,7 +52,7 @@ describeRepeats.skip('resends', () => {
         stream = await createTestStream(client, module)
         client.debug('createStream <<')
         client.debug('addToStorageNode >>')
-        const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
         storageNodeAddress = await storageNodeWallet.getAddress()
         await stream.addToStorageNode(await storageNodeWallet.getAddress())
         client.debug('addToStorageNode <<')

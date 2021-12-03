@@ -7,7 +7,8 @@ import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/Subscriber'
 import Subscription from '../../src/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg, clientOptions } from '../utils'
+import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../utils'
+import { storageNodeTestConfig } from './devEnvironment'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(30000)
@@ -52,9 +53,9 @@ describeRepeats('GapFill', () => {
             requireSignedData: true
         })
         const storageNodeClient = await createClient({ auth: {
-            privateKey: clientOptions.storageNode.privatekey
+            privateKey: storageNodeTestConfig.privatekey
         } })
-        const storageNode = await storageNodeClient.setNode(clientOptions.storageNode.url)
+        const storageNode = await storageNodeClient.setNode(storageNodeTestConfig.url)
         await stream.addToStorageNode(storageNode)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream, { waitForLast: true })

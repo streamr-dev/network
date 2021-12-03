@@ -1,13 +1,14 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, getPrivateKey, clientOptions, getWaitForStorage
+    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, getPrivateKey,
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from 'streamr-client-protocol'
+import { storageNodeTestConfig } from './devEnvironment'
 
 jest.setTimeout(50000)
 // this number should be at least 10, otherwise late subscribers might not join
@@ -33,7 +34,7 @@ describeRepeats('PubSub with multiple clients', () => {
             }
         })
 
-        const storageNodeWallet = new Wallet(clientOptions.storageNode.privatekey)
+        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
         stream = await createTestStream(mainClient, module)
         await stream.addToStorageNode(await storageNodeWallet.getAddress())
     })

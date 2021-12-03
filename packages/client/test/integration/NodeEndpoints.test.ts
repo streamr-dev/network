@@ -8,7 +8,7 @@ import { EthereumStorageEvent } from '../../src/NodeRegistry'
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 // import { id } from '@ethersproject/hash'
 
-import config from './config'
+import { storageNodeTestConfig } from './devEnvironment'
 
 jest.setTimeout(30000)
 const log = debug('StreamrClient::NodeEndpointsIntegrationTest')
@@ -105,9 +105,9 @@ describe('createNode', () => {
 
     it('addStreamToStorageNode through streamobject', async () => {
         const storageNodeClientFromDevEnv = await createClient({ auth: {
-            privateKey: config.storageNode.privatekey
+            privateKey: storageNodeTestConfig.privatekey
         } })
-        const storageNodeDev = await storageNodeClientFromDevEnv.setNode(config.storageNode.url)
+        const storageNodeDev = await storageNodeClientFromDevEnv.setNode(storageNodeTestConfig.url)
         await createdStream.addToStorageNode(await storageNodeDev.getAddress())
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, await storageNodeDev.getAddress())).toEqual(true)
     })

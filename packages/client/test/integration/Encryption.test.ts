@@ -8,7 +8,6 @@ import {
     publishTestMessagesGenerator,
     createTestStream,
     getCreateClient,
-    clientOptions,
     getPrivateKey
 } from '../utils'
 import { Defer, pLimitFn, until } from '../../src/utils'
@@ -16,6 +15,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamPermission } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
+import { storageNodeTestConfig } from './devEnvironment'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -73,7 +73,7 @@ describeRepeats('decryption', () => {
 
     async function setupStream() {
         const storageNodeClient = await createClient({ auth: {
-            privateKey: clientOptions.storageNode.privatekey
+            privateKey: storageNodeTestConfig.privatekey
         } })
 
         stream = await createTestStream(publisher, module, {

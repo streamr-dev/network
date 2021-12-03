@@ -83,17 +83,15 @@ export default class DataUnionAPI {
     }
 
     // TODO: define returned object's type
-    // eslint-disable-next-line
     async setBinanceDepositAddressViaWithdrawServer(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike): Promise<object> {
-        throw new Error('no implemented without core api')
-        // const body = {
-        //     memberAddress: from,
-        //     binanceRecipientAddress: binanceRecipient,
-        //     signature
-        // }
-        // return this.rest.post(['binanceAdapterSetRecipient'], body, {
-        //     restUrl: this.options.withdrawServerUrl,
-        // })
+        const body = {
+            memberAddress: from,
+            binanceRecipientAddress: binanceRecipient,
+            signature
+        }
+        return this.rest.post(['binanceAdapterSetRecipient'], body, {
+            restUrl: this.options.withdrawServerUrl,
+        })
     }
 
     async getBinanceDepositAddress(userAddress: EthereumAddress) {

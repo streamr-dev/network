@@ -21,8 +21,8 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
 
-import clientOptions from './config'
 import { Stream } from '../../src/Stream'
+import { storageNodeTestConfig } from './devEnvironment'
 // import Subscription from '../../src/brubeck/Subscription'
 
 jest.setTimeout(60000)
@@ -535,9 +535,9 @@ describeRepeats('StreamrClient', () => {
 
         it('decodes resent messages correctly', async () => {
             const storageNodeClient = await createClient({ auth: {
-                privateKey: clientOptions.storageNode.privatekey
+                privateKey: storageNodeTestConfig.privatekey
             } })
-            const node = await storageNodeClient.setNode(clientOptions.storageNode.url)
+            const node = await storageNodeClient.setNode(storageNodeTestConfig.url)
             await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
             await until(async () => { return client.isStreamStoredInStorageNode(stream.id, node.getAddress()) }, 100000, 1000)
 

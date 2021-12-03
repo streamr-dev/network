@@ -324,17 +324,6 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    // protected async revokeAllPermissions(userId: string|undefined) {
-    //     this.assertUserIdOrPublic(userId)
-
-    //     const matchingPermissions = await this.getMatchingPermissions(false, userId)
-    //     const tasks = matchingPermissions.map(async (p: any) => {
-    //         await this.revokePermission(p.id)
-    //     })
-    //     await Promise.allSettled(tasks)
-    //     await Promise.all(tasks)
-    // }
-
     async setPermissions(recipientId: EthereumAddress, edit: boolean,
         deletePerm: boolean, publish: boolean, subscribe: boolean, share: boolean) {
         try {
