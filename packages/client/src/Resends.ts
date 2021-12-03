@@ -204,7 +204,7 @@ export default class Resend implements Context {
 
         // just pick first node
         // TODO: handle multiple nodes
-        const url = createUrl(`${nodes[0].url}/api/v1`, endpointSuffix, spid, query)
+        const url = createUrl(nodes[0].url, endpointSuffix, spid, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
             spid,

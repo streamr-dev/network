@@ -10,7 +10,6 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream, StreamPermission } from '../../src/Stream'
-import config from './config'
 import { StorageNode } from '../../src/StorageNode'
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 12000

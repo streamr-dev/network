@@ -369,11 +369,11 @@ class StreamrStream implements StreamMetadata {
         try {
             let address: string
             let url
-            if (node instanceof StorageNode) {
+            if (node instanceof StorageNode && node.url) {
                 address = node.getAddress()
                 url = node.url
             } else {
-                address = node
+                address = (node instanceof StorageNode) ? node.getAddress() : node
                 const storageNode = await this._nodeRegistry.getStorageNode(address)
                 url = storageNode.url
             }
@@ -399,7 +399,7 @@ class StreamrStream implements StreamMetadata {
     }
 
     private static async isStreamStoredInStorageNode(streamId: string, nodeurl: string) {
-        const url = `${nodeurl}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
+        const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
         const response = await fetch(url)
         if (response.status === 200) {
             return true

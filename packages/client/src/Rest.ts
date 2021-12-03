@@ -43,11 +43,8 @@ export class Rest implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    getUrl(urlParts: UrlParts, query = {}, restUrl?: string) {
-        let optionsRestUrl = this.options.restUrl
-        if (!optionsRestUrl.endsWith('/')) { optionsRestUrl += '/' }
-        const baseUrl = restUrl ? restUrl + '/api/v1/' : optionsRestUrl
-        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), baseUrl)
+    getUrl(urlParts: UrlParts, query = {}, restUrl = this.options.restUrl) {
+        const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), restUrl + '/')
         const searchParams = new URLSearchParams(query)
         url.search = searchParams.toString()
         return url
@@ -83,7 +80,7 @@ export class Rest implements Context {
         )
     }
 
-    post<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}, restUrl?: string) {
+    post<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
@@ -94,23 +91,21 @@ export class Rest implements Context {
                 },
                 method: 'POST',
                 body: serialize(body),
-            },
-            restUrl
+            }
         })
     }
 
-    get<T extends object>(urlParts: UrlParts, options: FetchOptions = {}, restUrl?: string) {
+    get<T extends object>(urlParts: UrlParts, options: FetchOptions = {}) {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
                 ...options.options,
                 method: 'GET',
-            },
-            restUrl
+            }
         })
     }
 
-    put<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}, restUrl?: string) {
+    put<T extends object>(urlParts: UrlParts, body?: any, options: FetchOptions = {}) {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
@@ -121,8 +116,7 @@ export class Rest implements Context {
                 },
                 method: 'PUT',
                 body: serialize(body),
-            },
-            restUrl
+            }
         })
     }
 

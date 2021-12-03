@@ -229,10 +229,9 @@ export class StreamEndpoints implements Context {
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
             query: { count },
-            useSession: false
-        },
-        storageNode.url)
-
+            useSession: false,
+            restUrl: storageNode.url
+        })
         return json
     }
 
@@ -267,8 +266,8 @@ export class StreamEndpoints implements Context {
             {
                 ...requestOptions,
                 agent: keepAlive ? getKeepAliveAgentForUrl(nodeUrl) : undefined,
-            },
-            nodeUrl
+                restUrl: nodeUrl
+            }
         )
     }
 }
