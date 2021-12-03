@@ -1,5 +1,7 @@
 import nodeDataChannel, { DataChannel } from 'node-datachannel'
 
+/* eslint-disable no-console */
+
 let dc1: DataChannel
 let dc2: DataChannel
 
@@ -71,3 +73,5 @@ describe('NodeDataChannel', () => {
         expect(true)
     })
 })
+
+/* eslint-enable no-console */
