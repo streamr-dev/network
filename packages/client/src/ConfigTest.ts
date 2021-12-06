@@ -10,6 +10,7 @@ export default {
     auth: {
         privateKey: process.env.ETHEREUM_PRIVATE_KEY || '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb',
     },
+    theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/githubname/subgraphname`,
     restUrl: process.env.REST_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}/api/v1`,
     streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamStorageRegistrySidechainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
@@ -56,4 +57,3 @@ export default {
     autoDisconnect: false,
     maxRetries: 2,
 }
-

@@ -37,18 +37,6 @@ const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
     }
 }
 
-// const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[]> => {
-//     if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
-//         const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
-//             contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
-//             jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
-//         })
-//         return registry.getAllStorageNodes()
-//     } else {
-//         return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
-//     }
-// }
-
 const getStunTurnUrls = (config: Config): string[] | undefined => {
     if (!config.network.stun && !config.network.turn) {
         return undefined
@@ -79,8 +67,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const brokerAddress = wallet.address
 
     const trackers = await getTrackers(config)
-
-    // const storageNodes = await getStorageNodes(config)
 
     const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
     const storageNodeRegistryContract = (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress ?

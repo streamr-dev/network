@@ -40,17 +40,6 @@ export class StreamFetcher {
         this.client = client
     }
 
-    // async getToken(privateKey: string): Promise<string> {
-    //     const client = new StreamrClient({
-    //         auth: {
-    //             privateKey,
-    //         },
-    //         restUrl: this.apiUrl,
-    //         autoConnect: false
-    //     })
-    //     return client.session.getSessionToken()
-    // }
-
     private async uncachedAuthenticate(
         streamId: string,
         user: EthereumAddress,

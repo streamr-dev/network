@@ -66,7 +66,6 @@ export const createResponse = async (
     const stream = await client.getStream(request.streamId)
     const nodes = await stream.getStorageNodes()
     const storageNodeUrls = nodes.map((node: StorageNode) => node.url)
-    // const storageNodeUrls = await storageNodeRegistry.getUrlsByStreamId(request.streamId)
 
     // Form data query endpoints and shuffle the resulting array
     const urls = storageNodeUrls.map((storageNodeUrl) => {

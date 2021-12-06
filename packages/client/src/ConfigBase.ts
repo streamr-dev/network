@@ -14,8 +14,8 @@ import cloneDeep from 'lodash/cloneDeep'
 
 import type { EthereumAddress, Todo } from './types'
 
-import { AuthConfig, EthereumConfig } from './Ethereum'
-import { EncryptionConfig } from './encryption/KeyExchangeUtils'
+import type { AuthConfig, EthereumConfig } from './Ethereum'
+import type { EncryptionConfig } from './encryption/KeyExchangeUtils'
 
 export type CacheConfig = {
     maxSize: number,
@@ -116,7 +116,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Streamr Core options
     restUrl: 'https://streamr.network/api/v1/',
-    theGraphUrl: 'http://10.200.10.1:8000/subgraphs/name/githubname/subgraphname',
+    theGraphUrl: 'needs chaging once server is up in production',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
 
     // P2P Streamr Network options
@@ -142,10 +142,8 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
     mainnet: undefined, // Default to ethers.js default provider settings
     sidechain: {
-        // url: 'https://rpc.xdaichain.com/',
-        // chainId: 100
-        url: 'http://10.200.10.1:8546/',
-        chainId: 8997
+        url: 'https://rpc.xdaichain.com/',
+        chainId: 100
     },
     binanceRPC: {
         url: 'https://bsc-dataseed.binance.org/',

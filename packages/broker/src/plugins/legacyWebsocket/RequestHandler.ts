@@ -344,13 +344,12 @@ export class RequestHandler {
         }
     }
 
+    // TODO rename method
     private async validateSubscribeOrResendRequest(request: SubscribeRequest|ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
         if (Utils.StreamMessageValidator.isKeyExchangeStream(request.streamId)) {
             if (request.streamPartition !== 0) {
                 throw new Error(`Key exchange streams only have partition 0. Tried to subscribe to ${request.streamId}:${request.streamPartition}`)
             }
-        } else {
-            // await this.streamFetcher.checkPermission(request.streamId, StreamPermission.SUBSCRIBE, ???)
         }
     }
 

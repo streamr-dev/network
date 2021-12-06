@@ -43,8 +43,8 @@ export class MetricsPublisher {
     }
 
     async ensureStreamsCreated(): Promise<void> {
-        for (const suffix in STREAM_ID_SUFFIXES) {
-            await this.ensureStreamCreated(Number(suffix))
+        for (const periodLength of Object.keys(STREAM_ID_SUFFIXES)) {
+            await this.ensureStreamCreated(Number(periodLength))
         }
     }
 

@@ -194,7 +194,6 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
         c.register(token, { useValue })
     })
 
-    // registerNodeRegistry(c)
     return {
         config,
         childContainer: c,
