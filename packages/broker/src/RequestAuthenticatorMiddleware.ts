@@ -31,26 +31,4 @@ export const authenticator = (streamFetcher: StreamFetcher, permission = StreamP
 
     req.stream = streamFetcher.authenticate(req.params.id, user, permission)
     next()
-    // streamFetcher.authenticate(req.params.id, permission, user)
-    //     .then((streamJson: Todo) => {
-    //         req.stream = streamJson
-    //         next()
-    //     })
-    //     .catch((err: Todo) => {
-    //         let errorMsg
-    //         if (err instanceof HttpError && err.code === 403) {
-    //             errorMsg = 'Authentication failed.'
-    //         } else if (err instanceof HttpError && err.code === 404) {
-    //             errorMsg = `Stream ${req.params.id} not found.`
-    //         } else {
-    //             errorMsg = 'Request failed.'
-    //         }
-
-    //         logger.error(err)
-    //         logger.error(errorMsg)
-
-    //         res.status(err.code || 503).send({
-    //             error: errorMsg,
-    //         })
-    //     })
 }
