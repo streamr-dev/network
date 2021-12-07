@@ -53,8 +53,8 @@ const getStunTurnUrls = (config: Config): string[] | undefined => {
     return urls
 }
 
-export const createBroker = async (config: Config): Promise<Broker> => {
-    validateConfig(config, BROKER_CONFIG_SCHEMA)
+export const createBroker = async (config: any): Promise<Broker> => {
+    /// validateConfig(config, BROKER_CONFIG_SCHEMA)
 
     const networkNodeName = config.network.name
     const metricsContext = new MetricsContext(networkNodeName)
@@ -77,6 +77,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const acceptProxyConnections = config.network.acceptProxyConnections
 
     const streamrClient = new StreamrClient({
+        ...config,
         auth: {
             privateKey: config.ethereumPrivateKey,
         },

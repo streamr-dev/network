@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import StreamrClient, { MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
+import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'
@@ -54,7 +54,7 @@ export const formConfig = ({
         }
     },
     storageConfigRefreshInterval = 5000,
-}: TestConfig): Config => {
+}: TestConfig): any => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         if (enableCassandra) {
@@ -82,6 +82,7 @@ export const formConfig = ({
     }
 
     return {
+        ...ConfigTest,
         ethereumPrivateKey: privateKey,
         generateSessionId,
         network: {
@@ -149,6 +150,7 @@ export const createClient = async (
 ): Promise<StreamrClient> => {
     const newPrivateKey = privateKey ? privateKey :  await getPrivateKey()
     return new StreamrClient({
+        ...ConfigTest,
         auth: {
             privateKey: newPrivateKey
         },

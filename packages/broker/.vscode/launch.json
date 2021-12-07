@@ -6,12 +6,12 @@
     "configurations": [
         {
             "type": "node",
-            "runtimeVersion": "16.2.0", // If i need to run node 4.8.7
+            "runtimeVersion": "16.13.1", // If i need to run node 4.8.7
             "request": "launch",
             "name": "Jest single test",
-            "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+            "program": "/Users/sam/.nvm/versions/node/v16.13.1/bin/jest",
             // "env": { "CI": "true", "STREAMR_DOCKER_DEV_HOST": "192.168.0.8", "DEBUG": "*" },
-            "env": { "CI": "true", "STREAMR_DOCKER_DEV_HOST": "localhost", "DEBUG": "*", "LOG_LEVEL": "trace" },
+            // "env": { "CI": "true", "STREAMR_DOCKER_DEV_HOST": "localhost", "DEBUG": "*", "LOG_LEVEL": "trace" },
             "args": [
             //   "-c",
             //   "./config/test/jest.json",
@@ -19,8 +19,8 @@
               "-i",
               "--no-cache",
               // "--detectOpenHandles",
-              // "test/integration/broker.test.ts",
-              "test/integration/broker-drops-future-messages.test.ts",
+              "test/integration/broker.test.ts",
+              // "test/integration/broker-drops-future-messages.test.ts",
               // "test/integration/local-propagation.test.ts",
               // "test/integration/node-id.test.ts",
               // "test/integration/plugins/legacyMqtt/mqtt-error-handling.test.ts",
