@@ -20,7 +20,7 @@
           "-i",
           "--no-cache",
           "--detectOpenHandles",
-          "test/integration/GroupKeyPersistence.test.ts"
+          "test/integration/Stream.test.ts"
         ],
         "cwd": "${workspaceRoot}",
         "protocol": "inspector",
