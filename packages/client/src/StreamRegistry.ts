@@ -26,17 +26,20 @@ const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
 export type PermissionQueryResult = {
     id: string
     userAddress: string
-    edit: boolean
+} & ChainPermissions
+
+export type ChainPermissions = {
+    canEdit: boolean
     canDelete: boolean
     publishExpiration: BigNumber
     subscribeExpiration: BigNumber
-    share: boolean
+    canGrant: boolean
 }
 
 export type StreamPermissionsQueryResult = {
     id: string
     metadata: string
-    permissions: [PermissionQueryResult]
+    permissions: PermissionQueryResult[]
 }
 
 export type StreamQueryResult = {
@@ -118,11 +121,11 @@ export class StreamRegistry implements Context {
         this.debug('Getting permissions for stream %s for user %s', streamId, userAddress)
         const permissions = await this.streamRegistryContract!.getPermissionsForUser(streamId, userAddress || AddressZero)
         return {
-            edit: permissions.edit,
+            canEdit: permissions.canEdit,
             canDelete: permissions.canDelete,
-            publishExpiration: BigNumber.from(permissions.publishExpiration).gt(Date.now()),
-            subscribeExpiration: BigNumber.from(permissions.subscribeExpiration).gt(Date.now()),
-            share: permissions.share
+            canPublish: BigNumber.from(permissions.publishExpiration).gt(Date.now()),
+            canSubscribe: BigNumber.from(permissions.subscribeExpiration).gt(Date.now()),
+            canGrant: permissions.canGrant
         }
     }
 
@@ -202,9 +205,9 @@ export class StreamRegistry implements Context {
         await tx.wait()
     }
 
-    async setPermissions(streamId: string, recievingUser: string, edit: boolean, deletePermission: boolean,
+    async setPermissionsForUser(streamId: string, recievingUser: string, edit: boolean, deletePermission: boolean,
         publish: boolean, subscribe: boolean, share: boolean) {
-        this.debug(`Setting Permissions for user ${recievingUser} on stream ${streamId}:
+        this.debug(`Setting permissions for user ${recievingUser} on stream ${streamId}:
         edit: ${edit}, delete: ${deletePermission}, publish: ${publish}, subscribe: ${subscribe}, share: ${share}`)
         await this.connectToStreamRegistryContract()
         const publishExpiration = publish ? MaxInt256 : 0
@@ -214,8 +217,23 @@ export class StreamRegistry implements Context {
         await tx.wait()
     }
 
+    static convertStreamPermissionToChainPermission(permission: StreamPermissions): ChainPermissions {
+        return {
+            ...permission,
+            publishExpiration: permission.canPublish ? MaxInt256 : BigNumber.from(0),
+            subscribeExpiration: permission.canSubscribe ? MaxInt256 : BigNumber.from(0)
+        }
+    }
+
+    async setPermissions(streamId: string, users: string[], permissions: StreamPermissions[]) {
+        this.debug(`Setting permissions for stream ${streamId} for ${users.length} users`)
+        await this.connectToStreamRegistryContract()
+        const transformedPermission = permissions.map(StreamRegistry.convertStreamPermissionToChainPermission)
+        await this.streamRegistryContract!.setPermissions(streamId, users, transformedPermission)
+    }
+
     async revokePermission(streamId: string, permission: StreamPermission, recievingUser: string) {
-        this.debug('Revoking Permission %o for user %s on stream %s', permission, recievingUser, streamId)
+        this.debug('Revoking permission %o for user %s on stream %s', permission, recievingUser, streamId)
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.revokePermission(streamId, recievingUser,
             StreamRegistry.streamPermissionToSolidityType(permission))
@@ -287,7 +305,7 @@ export class StreamRegistry implements Context {
                 return BigNumber.from(2)
             case StreamPermission.SUBSCRIBE:
                 return BigNumber.from(3)
-            case StreamPermission.SHARE:
+            case StreamPermission.GRANT:
                 return BigNumber.from(4)
             default:
                 break
@@ -371,12 +389,13 @@ export class StreamRegistry implements Context {
         if (!response.stream) {
             throw new NotFoundError('stream not found: id: ' + streamid)
         }
+        const now = Date.now()
         return response.stream.permissions.map((permissionResult) => ({
-            edit: permissionResult.edit,
+            canEdit: permissionResult.canEdit,
             canDelete: permissionResult.canDelete,
-            publishExpiration: BigNumber.from(permissionResult.publishExpiration).gt(Date.now()),
-            subscribeExpiration: BigNumber.from(permissionResult.subscribeExpiration).gt(Date.now()),
-            share: permissionResult.share
+            canPublish: BigNumber.from(permissionResult.publishExpiration).gt(now),
+            canSubscribe: BigNumber.from(permissionResult.subscribeExpiration).gt(now),
+            canGrant: permissionResult.canGrant
         }))
     }
 

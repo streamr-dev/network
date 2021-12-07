@@ -46,12 +46,12 @@ type StoredStreamQueryResult = {
     stream: {
         id: string,
         metadata: string,
-        storageNodes: [NodeQueryResult],
+        storageNodes: NodeQueryResult[],
     },
 }
 
 type AllNodesQueryResult = {
-    nodes: [NodeQueryResult],
+    nodes: NodeQueryResult[],
 }
 type SingleNodeQueryResult = {
     node: NodeQueryResult,
@@ -62,7 +62,7 @@ type StorageNodeQueryResult = {
         id: string,
         metadata: string,
         lastSeen: string,
-        storedStreams: [StreamQueryResult]
+        storedStreams: StreamQueryResult[]
     }
 }
 @scoped(Lifecycle.ContainerScoped)

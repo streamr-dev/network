@@ -59,7 +59,7 @@ describe('broker drops future messages', () => {
         publisherAddress = publisherWallet.address
         client = await createClient(tracker, publisherWallet.privateKey)
         const freshStream = await createTestStream(client, module)
-        await freshStream.setPermissions(await brokerWallet.getAddress(), true, true, true, true, true)
+        await freshStream.setPermissionsForUser(await brokerWallet.getAddress(), true, true, true, true, true)
         streamId = freshStream.id
     })
 

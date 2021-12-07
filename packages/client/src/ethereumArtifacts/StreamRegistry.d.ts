@@ -49,6 +49,7 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     "revokePublicPermission(string,uint8)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
     "setExpirationTime(string,address,uint8,uint256)": FunctionFragment;
+    "setPermissions(string,address[],tuple[])": FunctionFragment;
     "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
     "setPublicPermission(string,uint256,uint256)": FunctionFragment;
     "streamIdToMetadata(string)": FunctionFragment;
@@ -58,6 +59,7 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     "transferPermissionToUser(string,address,uint8)": FunctionFragment;
     "trustedSetPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
     "trustedSetStream(string,string)": FunctionFragment;
+    "trustedSetStreams(string[],address[],string[],tuple[])": FunctionFragment;
     "updateStreamMetadata(string,string)": FunctionFragment;
   };
 
@@ -168,6 +170,20 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     values: [string, string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "setPermissions",
+    values: [
+      string,
+      string[],
+      {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[]
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setPermissionsForUser",
     values: [
       string,
@@ -218,6 +234,21 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "trustedSetStream",
     values: [string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "trustedSetStreams",
+    values: [
+      string[],
+      string[],
+      string[],
+      {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "updateStreamMetadata",
@@ -322,6 +353,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setPermissions",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setPermissionsForUser",
     data: BytesLike
   ): Result;
@@ -355,6 +390,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "trustedSetStream",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "trustedSetStreams",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -513,19 +552,19 @@ export class StreamRegistry extends Contract {
     ): Promise<
       [
         [boolean, boolean, BigNumber, BigNumber, boolean] & {
-          edit: boolean;
+          canEdit: boolean;
           canDelete: boolean;
           publishExpiration: BigNumber;
           subscribeExpiration: BigNumber;
-          share: boolean;
+          canGrant: boolean;
         }
       ] & {
         permission: [boolean, boolean, BigNumber, BigNumber, boolean] & {
-          edit: boolean;
+          canEdit: boolean;
           canDelete: boolean;
           publishExpiration: BigNumber;
           subscribeExpiration: BigNumber;
-          share: boolean;
+          canGrant: boolean;
         };
       }
     >;
@@ -537,19 +576,19 @@ export class StreamRegistry extends Contract {
     ): Promise<
       [
         [boolean, boolean, BigNumber, BigNumber, boolean] & {
-          edit: boolean;
+          canEdit: boolean;
           canDelete: boolean;
           publishExpiration: BigNumber;
           subscribeExpiration: BigNumber;
-          share: boolean;
+          canGrant: boolean;
         }
       ] & {
         permission: [boolean, boolean, BigNumber, BigNumber, boolean] & {
-          edit: boolean;
+          canEdit: boolean;
           canDelete: boolean;
           publishExpiration: BigNumber;
           subscribeExpiration: BigNumber;
-          share: boolean;
+          canGrant: boolean;
         };
       }
     >;
@@ -561,19 +600,19 @@ export class StreamRegistry extends Contract {
     ): Promise<
       [
         [boolean, boolean, BigNumber, BigNumber, boolean] & {
-          edit: boolean;
+          canEdit: boolean;
           canDelete: boolean;
           publishExpiration: BigNumber;
           subscribeExpiration: BigNumber;
-          share: boolean;
+          canGrant: boolean;
         }
       ] & {
         permission: [boolean, boolean, BigNumber, BigNumber, boolean] & {
-          edit: boolean;
+          canEdit: boolean;
           canDelete: boolean;
           publishExpiration: BigNumber;
           subscribeExpiration: BigNumber;
-          share: boolean;
+          canGrant: boolean;
         };
       }
     >;
@@ -585,19 +624,19 @@ export class StreamRegistry extends Contract {
     ): Promise<
       [
         [boolean, boolean, BigNumber, BigNumber, boolean] & {
-          edit: boolean;
+          canEdit: boolean;
           canDelete: boolean;
           publishExpiration: BigNumber;
           subscribeExpiration: BigNumber;
-          share: boolean;
+          canGrant: boolean;
         }
       ] & {
         permission: [boolean, boolean, BigNumber, BigNumber, boolean] & {
-          edit: boolean;
+          canEdit: boolean;
           canDelete: boolean;
           publishExpiration: BigNumber;
           subscribeExpiration: BigNumber;
-          share: boolean;
+          canGrant: boolean;
         };
       }
     >;
@@ -797,25 +836,51 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setPermissions(
+      streamId: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "setPermissions(string,address[],tuple[])"(
+      streamId: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setPermissionsForUser(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -849,11 +914,11 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<
       [boolean, boolean, BigNumber, BigNumber, boolean] & {
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -863,11 +928,11 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<
       [boolean, boolean, BigNumber, BigNumber, boolean] & {
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -910,22 +975,22 @@ export class StreamRegistry extends Contract {
     trustedSetPermissionsForUser(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     "trustedSetPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -938,6 +1003,34 @@ export class StreamRegistry extends Contract {
     "trustedSetStream(string,string)"(
       streamId: string,
       metadata: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    trustedSetStreams(
+      streamids: string[],
+      users: string[],
+      metadatas: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "trustedSetStreams(string[],address[],string[],tuple[])"(
+      streamids: string[],
+      users: string[],
+      metadatas: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -1038,11 +1131,11 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<
     [boolean, boolean, BigNumber, BigNumber, boolean] & {
-      edit: boolean;
+      canEdit: boolean;
       canDelete: boolean;
       publishExpiration: BigNumber;
       subscribeExpiration: BigNumber;
-      share: boolean;
+      canGrant: boolean;
     }
   >;
 
@@ -1052,11 +1145,11 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<
     [boolean, boolean, BigNumber, BigNumber, boolean] & {
-      edit: boolean;
+      canEdit: boolean;
       canDelete: boolean;
       publishExpiration: BigNumber;
       subscribeExpiration: BigNumber;
-      share: boolean;
+      canGrant: boolean;
     }
   >;
 
@@ -1066,11 +1159,11 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<
     [boolean, boolean, BigNumber, BigNumber, boolean] & {
-      edit: boolean;
+      canEdit: boolean;
       canDelete: boolean;
       publishExpiration: BigNumber;
       subscribeExpiration: BigNumber;
-      share: boolean;
+      canGrant: boolean;
     }
   >;
 
@@ -1080,11 +1173,11 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<
     [boolean, boolean, BigNumber, BigNumber, boolean] & {
-      edit: boolean;
+      canEdit: boolean;
       canDelete: boolean;
       publishExpiration: BigNumber;
       subscribeExpiration: BigNumber;
-      share: boolean;
+      canGrant: boolean;
     }
   >;
 
@@ -1283,25 +1376,51 @@ export class StreamRegistry extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setPermissions(
+    streamId: string,
+    users: string[],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "setPermissions(string,address[],tuple[])"(
+    streamId: string,
+    users: string[],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setPermissionsForUser(
     streamId: string,
     user: string,
-    edit: boolean,
+    canEdit: boolean,
     deletePerm: boolean,
     publishExpiration: BigNumberish,
     subscribeExpiration: BigNumberish,
-    share: boolean,
+    canGrant: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
     streamId: string,
     user: string,
-    edit: boolean,
+    canEdit: boolean,
     deletePerm: boolean,
     publishExpiration: BigNumberish,
     subscribeExpiration: BigNumberish,
-    share: boolean,
+    canGrant: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1332,11 +1451,11 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<
     [boolean, boolean, BigNumber, BigNumber, boolean] & {
-      edit: boolean;
+      canEdit: boolean;
       canDelete: boolean;
       publishExpiration: BigNumber;
       subscribeExpiration: BigNumber;
-      share: boolean;
+      canGrant: boolean;
     }
   >;
 
@@ -1346,11 +1465,11 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<
     [boolean, boolean, BigNumber, BigNumber, boolean] & {
-      edit: boolean;
+      canEdit: boolean;
       canDelete: boolean;
       publishExpiration: BigNumber;
       subscribeExpiration: BigNumber;
-      share: boolean;
+      canGrant: boolean;
     }
   >;
 
@@ -1393,22 +1512,22 @@ export class StreamRegistry extends Contract {
   trustedSetPermissionsForUser(
     streamId: string,
     user: string,
-    edit: boolean,
+    canEdit: boolean,
     deletePerm: boolean,
     publishExpiration: BigNumberish,
     subscribeExpiration: BigNumberish,
-    share: boolean,
+    canGrant: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   "trustedSetPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
     streamId: string,
     user: string,
-    edit: boolean,
+    canEdit: boolean,
     deletePerm: boolean,
     publishExpiration: BigNumberish,
     subscribeExpiration: BigNumberish,
-    share: boolean,
+    canGrant: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1421,6 +1540,34 @@ export class StreamRegistry extends Contract {
   "trustedSetStream(string,string)"(
     streamId: string,
     metadata: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  trustedSetStreams(
+    streamids: string[],
+    users: string[],
+    metadatas: string[],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "trustedSetStreams(string[],address[],string[],tuple[])"(
+    streamids: string[],
+    users: string[],
+    metadatas: string[],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1521,11 +1668,11 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<
       [boolean, boolean, BigNumber, BigNumber, boolean] & {
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -1535,11 +1682,11 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<
       [boolean, boolean, BigNumber, BigNumber, boolean] & {
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -1549,11 +1696,11 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<
       [boolean, boolean, BigNumber, BigNumber, boolean] & {
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -1563,11 +1710,11 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<
       [boolean, boolean, BigNumber, BigNumber, boolean] & {
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -1766,25 +1913,51 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setPermissions(
+      streamId: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "setPermissions(string,address[],tuple[])"(
+      streamId: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setPermissionsForUser(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
     "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1818,11 +1991,11 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<
       [boolean, boolean, BigNumber, BigNumber, boolean] & {
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -1832,11 +2005,11 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<
       [boolean, boolean, BigNumber, BigNumber, boolean] & {
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -1879,22 +2052,22 @@ export class StreamRegistry extends Contract {
     trustedSetPermissionsForUser(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
     "trustedSetPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1907,6 +2080,34 @@ export class StreamRegistry extends Contract {
     "trustedSetStream(string,string)"(
       streamId: string,
       metadata: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    trustedSetStreams(
+      streamids: string[],
+      users: string[],
+      metadatas: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "trustedSetStreams(string[],address[],string[],tuple[])"(
+      streamids: string[],
+      users: string[],
+      metadatas: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1927,21 +2128,21 @@ export class StreamRegistry extends Contract {
     PermissionUpdated(
       streamId: null,
       user: null,
-      edit: null,
+      canEdit: null,
       canDelete: null,
       publishExpiration: null,
       subscribeExpiration: null,
-      share: null
+      canGrant: null
     ): TypedEventFilter<
       [string, string, boolean, boolean, BigNumber, BigNumber, boolean],
       {
         streamId: string;
         user: string;
-        edit: boolean;
+        canEdit: boolean;
         canDelete: boolean;
         publishExpiration: BigNumber;
         subscribeExpiration: BigNumber;
-        share: boolean;
+        canGrant: boolean;
       }
     >;
 
@@ -2289,25 +2490,51 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setPermissions(
+      streamId: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "setPermissions(string,address[],tuple[])"(
+      streamId: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setPermissionsForUser(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -2386,22 +2613,22 @@ export class StreamRegistry extends Contract {
     trustedSetPermissionsForUser(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     "trustedSetPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -2414,6 +2641,34 @@ export class StreamRegistry extends Contract {
     "trustedSetStream(string,string)"(
       streamId: string,
       metadata: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    trustedSetStreams(
+      streamids: string[],
+      users: string[],
+      metadatas: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "trustedSetStreams(string[],address[],string[],tuple[])"(
+      streamids: string[],
+      users: string[],
+      metadatas: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -2743,25 +2998,51 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    setPermissions(
+      streamId: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "setPermissions(string,address[],tuple[])"(
+      streamId: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     setPermissionsForUser(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -2840,22 +3121,22 @@ export class StreamRegistry extends Contract {
     trustedSetPermissionsForUser(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     "trustedSetPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)"(
       streamId: string,
       user: string,
-      edit: boolean,
+      canEdit: boolean,
       deletePerm: boolean,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
-      share: boolean,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -2868,6 +3149,34 @@ export class StreamRegistry extends Contract {
     "trustedSetStream(string,string)"(
       streamId: string,
       metadata: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    trustedSetStreams(
+      streamids: string[],
+      users: string[],
+      metadatas: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "trustedSetStreams(string[],address[],string[],tuple[])"(
+      streamids: string[],
+      users: string[],
+      metadatas: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

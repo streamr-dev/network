@@ -35,19 +35,19 @@ export type StreamPartDefinition = string | StreamPartDefinitionOptions
 export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
 
 export interface StreamPermissions {
-    edit: boolean
+    canEdit: boolean
     canDelete: boolean
-    publishExpiration: boolean // BigNumber to have expiring permissions
-    subscribeExpiration: boolean // BigNumber to have expiring permissions
-    share: boolean
+    canPublish: boolean // BigNumber to have expiring permissions
+    canSubscribe: boolean // BigNumber to have expiring permissions
+    canGrant: boolean
 }
 
 export enum StreamPermission {
-    EDIT = 'edit',
+    EDIT = 'canEdit',
     DELETE = 'canDelete',
-    PUBLISH = 'publishExpiration',
-    SUBSCRIBE = 'subscribeExpiration',
-    SHARE = 'share'
+    PUBLISH = 'canPublish',
+    SUBSCRIBE = 'canSubscribe',
+    GRANT = 'canGrant'
 }
 
 export interface StreamProperties {
@@ -324,11 +324,19 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async setPermissions(recipientId: EthereumAddress, edit: boolean,
+    async setPermissionsForUser(recipientId: EthereumAddress, edit: boolean,
         deletePerm: boolean, publish: boolean, subscribe: boolean, share: boolean) {
         try {
-            await this._streamRegistry.setPermissions(this.id, recipientId, edit,
+            await this._streamRegistry.setPermissionsForUser(this.id, recipientId, edit,
                 deletePerm, publish, subscribe, share)
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
+    }
+
+    async setPermissions(recipientIds: EthereumAddress[], permissions: StreamPermissions[]) {
+        try {
+            await this._streamRegistry.setPermissions(this.id, recipientIds, permissions)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
