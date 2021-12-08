@@ -1,34 +1,8 @@
-import set from 'lodash/set'
-
 import { StreamrClient } from '../../src/StreamrClient'
 import { DEFAULTS } from '../../src/Config'
 import config from '../../src/ConfigTest'
 
 describe('Config', () => {
-    describe('validate ethereum addresses', () => {
-        const createClient = (propertyPaths: string, value: string|undefined|null) => {
-            const opts: any = {}
-            set(opts, propertyPaths, value)
-            return new StreamrClient(opts)
-        }
-        const propertyPaths: string[] = [
-            'streamrNodeAddress',
-            'tokenAddress',
-            'tokenSidechainAddress',
-            'dataUnion.factoryMainnetAddress',
-            'dataUnion.factorySidechainAddress',
-            'dataUnion.templateMainnetAddress',
-            'dataUnion.templateSidechainAddress',
-        ]
-        for (const propertyPath of propertyPaths) {
-            it(propertyPath, () => {
-                const errorMessage = `/${propertyPath.replaceAll('.', '/')} must match format "ethereum-address"`
-                expect(() => createClient(propertyPath, 'invalid-address')).toThrow(errorMessage)
-                expect(() => createClient(propertyPath, '0x1234567890123456789012345678901234567890')).not.toThrow()
-            })
-        }
-    })
-
     describe('validate', () => {
         it('additional property', () => {
             expect(() => {
