@@ -199,14 +199,12 @@ export class ProxyStreamConnectionManager {
     }
 
     private async retryConnection(targetNodeId: NodeId, spid: SPID): Promise<void> {
-        if (this.nodeToNode.isConnectionOpen(targetNodeId)) {
-            return
-        }
         const trackerId = this.trackerManager.getTrackerId(spid)
         const trackerAddress = this.trackerManager.getTrackerAddress(spid)
         try {
             await this.openPeerConnection(targetNodeId, trackerId, trackerAddress)
             logger.trace(`Successful proxy stream reconnection to ${targetNodeId}`)
+            this.stopReattemptInterval(targetNodeId, spid)
         } catch (err) {
             logger.warn(`Proxy stream reconnection attempt to ${targetNodeId} failed with error: ${err}`)
             this.startReattemptInterval(targetNodeId, spid)
