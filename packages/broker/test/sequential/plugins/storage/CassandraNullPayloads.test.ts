@@ -4,7 +4,7 @@ import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST, createTestStream, getPrivateKey } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
-import { StreamrClient } from 'streamr-client'
+import { ConfigTest, StreamrClient } from 'streamr-client'
 
 jest.setTimeout(30000)
 
@@ -101,6 +101,7 @@ describe('CassandraNullPayloads', () => {
         const HEALTHY_MESSAGE_COUNT = 9
 
         const streamrClient = new StreamrClient({
+            ...ConfigTest,
             auth: {
                 privateKey: await getPrivateKey()
             },

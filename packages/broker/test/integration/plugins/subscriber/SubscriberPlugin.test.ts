@@ -6,7 +6,7 @@ import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberP
 const TRACKER_PORT = 12465
 const wallet = Wallet.createRandom()
 
-const createMockPlugin = (tracker: Tracker) => {
+const createMockPlugin = async (tracker: Tracker) => {
     const brokerConfig: any = {
         ethereumPrivateKey: wallet.privateKey,
         plugins: {
@@ -33,11 +33,10 @@ const createMockPlugin = (tracker: Tracker) => {
         networkNode: undefined as any,
         subscriptionManager: undefined as any,
         publisher: undefined as any,
-        streamrClient: createClient(tracker, wallet.privateKey),
+        streamrClient: await createClient(tracker, wallet.privateKey),
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
         brokerConfig,
-        storageNodeRegistry: undefined as any,
         nodeId: wallet.address
     })
 }
@@ -54,7 +53,7 @@ describe('Subscriber Plugin', () => {
                 port: TRACKER_PORT
             },
         })
-        plugin = createMockPlugin(tracker)
+        plugin = await createMockPlugin(tracker)
         await plugin.start()
     })
 
