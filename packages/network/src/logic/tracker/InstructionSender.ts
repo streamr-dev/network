@@ -58,6 +58,9 @@ class StreamInstructionBuffer {
 
     stop(): void {
         this.debouncedOnReady.cancel()
+        if (typeof io.destroy == 'function') {
+            io.destroy()
+        }
     }
 }
 

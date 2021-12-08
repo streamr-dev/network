@@ -85,6 +85,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     private connectionEmitter?: EventEmitter
     private lastState?: string
     private lastGatheringState?: string
+    private remoteDescriptionSet = false
 
     constructor(opts: ConstructorOptions) {
         super(opts)
@@ -97,7 +98,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         this.onLocalDescription = this.onLocalDescription.bind(this)
         this.onGatheringStateChange = this.onGatheringStateChange.bind(this)
         this.onDataChannel = this.onDataChannel.bind(this)
-        
+
     }
 
     protected doSendMessage(message: string): boolean {
@@ -129,6 +130,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         if (this.connection) {
             try {
                 this.connection.setRemoteDescription(description, type)
+                this.remoteDescriptionSet = true
             } catch (err) {
                 this.logger.warn('setRemoteDescription failed, reason: %s', err)
             }
@@ -139,10 +141,17 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
     addRemoteCandidate(candidate: string, mid: string): void {
         if (this.connection) {
-            try {
-                this.connection.addRemoteCandidate(candidate, mid)
-            } catch (err) {
-                this.logger.warn('addRemoteCandidate failed, reason: %s', err)
+            if (this.remoteDescriptionSet) {
+                try {
+                    this.connection.addRemoteCandidate(candidate, mid)
+                } catch (err) {
+                    this.logger.warn('addRemoteCandidate failed, reason: %s', err)
+                    this.close(new Error('addRemoteCandidate failed, closing'))
+                }
+            }
+            else {
+                this.logger.warn("Tried setting remoteCandidate before remote description, closing")
+                this.close(new Error('Tried setting remoteCandidate before remote description, closing'))
             }
         } else {
             this.logger.warn('skipped addRemoteCandidate, connection is null')
@@ -195,7 +204,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
             return 1024 * 1024
         }
     }
- 
+
     isOpen(): boolean {
         try {
             return this.dataChannel!.isOpen()
