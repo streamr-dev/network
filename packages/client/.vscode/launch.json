@@ -20,7 +20,7 @@
           "-i",
           "--no-cache",
           "--detectOpenHandles",
-          "test/integration/Stream.test.ts"
+          "${fileBasename}"
         ],
         "cwd": "${workspaceRoot}",
         "protocol": "inspector",

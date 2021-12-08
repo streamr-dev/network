@@ -229,7 +229,8 @@ export class StreamRegistry implements Context {
         this.debug(`Setting permissions for stream ${streamId} for ${users.length} users`)
         await this.connectToStreamRegistryContract()
         const transformedPermission = permissions.map(StreamRegistry.convertStreamPermissionToChainPermission)
-        await this.streamRegistryContract!.setPermissions(streamId, users, transformedPermission)
+        const tx = await this.streamRegistryContract!.setPermissions(streamId, users, transformedPermission)
+        await tx.wait()
     }
 
     async revokePermission(streamId: string, permission: StreamPermission, recievingUser: string) {
@@ -487,11 +488,11 @@ export class StreamRegistry implements Context {
                 permissions {
                     id,
                     userAddress,
-                    edit,
+                    canEdit,
                     canDelete,
                     publishExpiration,
                     subscribeExpiration,
-                    share,
+                    canGrant,
                 }
             }
         }`
@@ -511,11 +512,11 @@ export class StreamRegistry implements Context {
                 permissions {
                     id,
                     userAddress,
-                    edit,
+                    canEdit,
                     canDelete,
                     publishExpiration,
                     subscribeExpiration,
-                    share,
+                    canGrant,
                 }
             }
         }`

@@ -562,10 +562,10 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 expect(await createdStream.getUserPermissions(otherWallet.address)).toEqual(
                     {
                         canDelete: false,
-                        edit: false,
-                        publishExpiration: false,
-                        share: false,
-                        subscribeExpiration: false
+                        canEdit: false,
+                        canPublish: false,
+                        canGrant: false,
+                        canSubscribe: false
                     }
                 )
             })
@@ -591,10 +591,10 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 expect(await createdStream.getPublicPermissions()).toEqual(
                     {
                         canDelete: false,
-                        edit: false,
-                        publishExpiration: false,
-                        share: false,
-                        subscribeExpiration: false
+                        canEdit: false,
+                        canPublish: false,
+                        canGrant: false,
+                        canSubscribe: false
                     }
                 )
             })
