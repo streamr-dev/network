@@ -236,4 +236,29 @@ describe('Publish only connection tests', () => {
         // @ts-expect-error private
         expect(contactNode.streams.isSetUp(streamSPID)).toBeTrue()
     })
+
+    it('will attempt reconnections on lost connectivity', async () => {
+        await Promise.all([
+            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
+            publisherNode.joinStreamAsPurePublisher('stream-0', 0, 'contact-node'),
+        ])
+
+        await Promise.all([
+            waitForEvent(publisherNode, NodeEvent.NODE_CONNECTED, 40000),
+            // @ts-expect-error private
+            contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
+        ])
+
+        await Promise.all([
+            waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
+            waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
+            publisherNode.publish(new StreamMessage({
+                messageId: new MessageID('stream-0', 0, 120, 0, 'publisher', 'session'),
+                content: {
+                    hello: 'world'
+                },
+            }))
+        ])
+
+    }, 40000)
 })

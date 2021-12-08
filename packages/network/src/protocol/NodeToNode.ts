@@ -162,4 +162,8 @@ export class NodeToNode extends EventEmitter {
     getAllConnectionNodeIds(): NodeId[] {
         return this.endpoint.getAllConnectionNodeIds()
     }
+
+    isConnectionOpen(nodeId: NodeId): boolean {
+        return this.endpoint.isConnectionOpen(nodeId)
+    }
 }

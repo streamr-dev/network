@@ -30,4 +30,5 @@ export interface IWebRtcEndpoint {
     getDefaultMessageLayerProtocolVersion(): number
     getDefaultControlLayerProtocolVersion(): number
     getAllConnectionNodeIds(): PeerId[]
+    isConnectionOpen(peerId: PeerId): boolean
 }

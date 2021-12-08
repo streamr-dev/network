@@ -482,4 +482,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     getAllConnectionNodeIds(): PeerId[] {
         return Object.keys(this.connections)
     }
+
+    isConnectionOpen(peerId: PeerId): boolean {
+        if (this.connections[peerId]) {
+            return this.connections[peerId].isOpen()
+        }
+        return false
+    }
 }

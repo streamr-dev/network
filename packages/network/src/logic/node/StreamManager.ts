@@ -109,17 +109,23 @@ export class StreamManager {
         }
     }
 
-    removeNodeFromAllStreams(node: NodeId): SPID[] {
+    removeNodeFromAllStreams(node: NodeId): [SPID[], SPID[]] {
         const streams: SPID[] = []
+        const notRemovedProxies: SPID[] = []
         this.streams.forEach(({ neighbors, inOnly, outOnly }, spidKey) => {
+            const spid = SPID.from(spidKey)
             const isRemoved = neighbors.delete(node)
             if (isRemoved) {
-                streams.push(SPID.from(spidKey))
+                streams.push(spid)
             }
-            inOnly.delete(node)
-            outOnly.delete(node)
+            if (this.isOneDirectional(spid)) {
+                notRemovedProxies.push(spid)
+            } else {
+                inOnly.delete(node)
+                outOnly.delete(node)
+            }
         })
-        return streams
+        return [streams, notRemovedProxies]
     }
 
     removeStream(spid: SPID): void {
