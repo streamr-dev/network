@@ -97,8 +97,7 @@ export class ProxyStreamConnectionManager {
                 return
             }
             this.addAttemptedPublishOnlyStreamConnection(spid, targetNodeId)
-            await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
-            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
+            await this.openPeerConnection(targetNodeId, trackerId, trackerAddress)
             await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
         } catch (err) {
             logger.warn(`Failed to create an Outgoing stream connection to ${targetNodeId} for stream ${spid.key}:\n${err}`)
@@ -122,7 +121,7 @@ export class ProxyStreamConnectionManager {
     }
 
     attemptReconnection(spid: SPID, nodeId: NodeId): void {
-        this.startReattemptInterval(nodeId, spid, 2000)
+        this.startReattemptInterval(nodeId, spid, 100)
     }
 
     async closeOutgoingStreamConnection(spid: SPID, targetNodeId: NodeId): Promise<void> {
@@ -206,16 +205,17 @@ export class ProxyStreamConnectionManager {
         const trackerId = this.trackerManager.getTrackerId(spid)
         const trackerAddress = this.trackerManager.getTrackerAddress(spid)
         try {
-            console.log('here')
-            await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
-            console.log('here2')
-            await this.nodeToNode.connectToNode(targetNodeId, trackerId)
-            console.log('here3')
+            await this.openPeerConnection(targetNodeId, trackerId, trackerAddress)
             logger.trace(`Successful proxy stream reconnection to ${targetNodeId}`)
         } catch (err) {
             logger.warn(`Proxy stream reconnection attempt to ${targetNodeId} failed with error: ${err}`)
             this.startReattemptInterval(targetNodeId, spid)
         }
+    }
+
+    private async openPeerConnection(targetNodeId: NodeId, trackerId: string, trackerAddress: string): Promise<void> {
+        await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
+        await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
     }
 
     stop(): void {
