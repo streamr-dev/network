@@ -1,5 +1,6 @@
 {
     "name": "streamr-monorepo",
+    "private": true,
     "scripts": {
         "prepare": "husky install && npm run versions",
         "bootstrap": "npm ci --prefer-offline --no-audit",

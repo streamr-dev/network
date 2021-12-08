@@ -24,7 +24,8 @@ export interface NetworkConfig {
         country: string,
         city: string
     } | null,
-    webrtcDisallowPrivateAddresses: boolean
+    webrtcDisallowPrivateAddresses: boolean,
+    acceptProxyConnections: boolean
 }
 
 export interface HttpServerConfig {

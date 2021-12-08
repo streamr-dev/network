@@ -201,6 +201,34 @@ export default class BrubeckPublisher implements Context, Stoppable {
         return this.keyExchange.stop()
     }
 
+    async setPublishProxy(streamObjectOrId: SIDLike, nodeId: string) {
+        const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
+        const spid = new SPID(streamId, streamPartition || 0)
+        await this.node.openPublishProxyConnectionOnStreamPartition(spid, nodeId)
+    }
+
+    async removePublishProxy(streamObjectOrId: SIDLike, nodeId: string) {
+        const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
+        const spid = new SPID(streamId, streamPartition || 0)
+        await this.node.closePublishProxyConnectionOnStreamPartition(spid, nodeId)
+    }
+
+    async setPublishProxies(streamObjectOrId: SIDLike, nodeIds: string[]) {
+        const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
+        const spid = new SPID(streamId, streamPartition || 0)
+        await Promise.allSettled([
+            ...nodeIds.map((nodeId) => this.node.openPublishProxyConnectionOnStreamPartition(spid, nodeId))
+        ])
+    }
+
+    async removePublishProxies(streamObjectOrId: SIDLike, nodeIds: string[]) {
+        const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
+        const spid = new SPID(streamId, streamPartition || 0)
+        await Promise.allSettled([
+            ...nodeIds.map(async (nodeId) => this.node.closePublishProxyConnectionOnStreamPartition(spid, nodeId))
+        ])
+    }
+
     async start() {
         this.isStopped = false
         this.pipeline.start()

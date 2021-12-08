@@ -23,7 +23,9 @@ export enum ControlMessageType {
     UnsubscribeRequest = 10,
     ResendLastRequest = 11,
     ResendFromRequest = 12,
-    ResendRangeRequest = 13
+    ResendRangeRequest = 13,
+    PublishStreamConnectionRequest = 14,
+    PublishStreamConnectionResponse = 15
 }
 
 export interface ControlMessageOptions {

@@ -1,6 +1,6 @@
 {
   "name": "streamr-network",
-  "version": "30.0.2-alpha.2",
+  "version": "30.1.1",
   "description": "Minimal and extendable implementation of the Streamr Network network node.",
   "repository": {
     "type": "git",
@@ -115,7 +115,7 @@
     "ts-loader": "^9.2.6",
     "ts-node": "^9.1.1",
     "typedoc": "^0.22.5",
-    "typescript": "^4.4.4",
+    "typescript": "^4.5.2",
     "webpack": "^5.64.1",
     "webpack-cli": "^4.9.1"
   },

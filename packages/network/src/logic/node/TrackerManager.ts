@@ -107,6 +107,14 @@ export class TrackerManager {
         this.trackerConnector.onNewStream(spid)
     }
 
+    async connectToSignallingOnlyTracker(trackerId: TrackerId, trackerAddress: string): Promise<void> {
+        await this.trackerConnector.createSignallingOnlyTrackerConnection(trackerId, trackerAddress)
+    }
+
+    disconnectFromSignallingOnlyTracker(trackerId: string): void {
+        this.trackerConnector.removeSignallingOnlyTrackerConnection(trackerId)
+    }
+
     onUnsubscribeFromStream(spid: SPID): void {
         const key = spid.toKey()
         this.instructionThrottler.removeStream(key)
@@ -143,16 +151,18 @@ export class TrackerManager {
     }
 
     private async sendStatus(spid: SPID, trackerId: TrackerId): Promise<void> {
-        const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
-        const status = {
-            stream: this.streamManager.getStreamStatus(spid),
-            ...nodeDescriptor
-        }
-        try {
-            await this.nodeToTracker.sendStatus(trackerId, status)
-            logger.trace('sent status %j to tracker %s', status.stream, trackerId)
-        } catch (e) {
-            logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
+        if (!this.streamManager.isOneDirectional(spid)) {
+            const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
+            const status = {
+                stream: this.streamManager.getStreamStatus(spid),
+                ...nodeDescriptor
+            }
+            try {
+                await this.nodeToTracker.sendStatus(trackerId, status)
+                logger.trace('sent status %j to tracker %s', status.stream, trackerId)
+            } catch (e) {
+                logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
+            }
         }
     }
 
@@ -216,7 +226,11 @@ export class TrackerManager {
         }
     }
 
-    private getTrackerId(spid: SPID): TrackerId {
+    getTrackerId(spid: SPID): TrackerId {
         return this.trackerRegistry.getTracker(spid).id
+    }
+
+    getTrackerAddress(spid: SPID): TrackerId {
+        return this.trackerRegistry.getTracker(spid).ws
     }
 }
