@@ -209,6 +209,8 @@ export class ProxyStreamConnectionManager {
         } catch (err) {
             logger.warn(`Proxy stream reconnection attempt to ${targetNodeId} failed with error: ${err}`)
             this.startReattemptInterval(targetNodeId, spid)
+        } finally {
+            this.trackerManager.disconnectFromSignallingOnlyTracker(trackerId)
         }
     }
 
