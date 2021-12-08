@@ -1,11 +1,3 @@
-/*
-require('leaked-handles').set({
-    fullStack: true, // use full stack traces
-    timeout: 30000, // run every 30 seconds instead of 5.
-    debugSockets: true // pretty print tcp thrown exceptions.
-});
-*/
-
 import { runAndWaitForEvents } from 'streamr-test-utils'
 
 import { Tracker } from '../../src/logic/tracker/Tracker'
@@ -13,14 +5,6 @@ import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-
-/*
-process.on('unhandledRejection', (reason, p) => {
-    console.error('Unhandled Rejection at: Promise', p, 'reason:', reason);
-    throw p
-    // application specific logging, throwing an error, or other logic here
-});
-*/
 
 /**
  * Tests for error scenarios during signalling

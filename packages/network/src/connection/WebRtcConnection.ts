@@ -275,6 +275,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
         if (this.isOpen()) {
             if (this.pingAttempts >= this.maxPingPongAttempts) {
+                if (this.pingTimeoutRef) {
+                    clearTimeout(this.pingTimeoutRef)
+                    this.pingTimeoutRef = null
+                }
                 this.baseLogger.debug(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
                 this.close(new Error('pong not received'))
                 return
@@ -292,6 +296,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
         if (this.pingTimeoutRef) {
             clearTimeout(this.pingTimeoutRef)
+            this.pingTimeoutRef = null
         }
         this.pingTimeoutRef = setTimeout(() => this.ping(), this.pingInterval)
     }

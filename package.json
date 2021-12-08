@@ -28,7 +28,6 @@
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
         "@manypkg/cli": "^0.19.1",
-        "ci": "^2.1.1",
         "cli-table": "^0.3.6",
         "husky": "^6.0.0",
         "lerna": "^4.0.0",

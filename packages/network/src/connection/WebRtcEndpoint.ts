@@ -381,13 +381,13 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const deferredAttempt = connection.getDeferredConnectionAttempt() 
         
         if (connection.getLastState() == 'connected') {
-            return Promise.resolve(targetPeerId)
+            return targetPeerId
         }
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
         } 
         else { 
-            return Promise.reject(new WebRtcError(`disconnected ${connection.getPeerId()}`))
+            throw new WebRtcError(`disconnected ${connection.getPeerId()}`)
         }
     }
 
