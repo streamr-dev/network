@@ -11,7 +11,7 @@ import { getPublishTestStreamMessages, createTestStream, getCreateClient, descri
 import { storageNodeTestConfig } from './devEnvironment'
 
 const MAX_MESSAGES = 10
-jest.setTimeout(30000)
+jest.setTimeout(50000)
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
     let count = 0
