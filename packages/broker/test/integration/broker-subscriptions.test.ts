@@ -6,7 +6,7 @@ import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, getPrivateKey, getSPIDKeys } from '../utils'
 
-jest.setTimeout(30000)
+jest.setTimeout(50000)
 
 const wsPort1 = 13391
 const wsPort2 = 13392

@@ -1,7 +1,7 @@
 import http from 'http'
 import { startTracker, Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
-import StreamrClient, { Stream } from 'streamr-client'
+import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
 import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
     createTestStream, getPrivateKey } from '../../../utils'
 import { Broker } from "../../../../src/broker"
@@ -35,7 +35,7 @@ describe('DataMetadataEndpoints', () => {
         storageNodeAccount = new Wallet(await getPrivateKey())
         const storageNodeRegistry = {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-            jsonRpcProvider: `http://127.0.0.1:${httpPort1}`
+            jsonRpcProvider: `http://127.0.0.1:8546`
         }
         tracker = await startTracker({
             listen: {
@@ -47,11 +47,12 @@ describe('DataMetadataEndpoints', () => {
         const engineAndEditorAccount = new Wallet(await getPrivateKey())
         const trackerInfo = tracker.getConfigRecord()
         const storageNodeClient = new StreamrClient({
+            ...ConfigTest,
             auth: {
                 privateKey: storageNodeAccount.privateKey
             },
         })
-        await storageNodeClient.setNode('http://127.0.0.1:' + httpPort1)
+        await storageNodeClient.setNode('http://127.0.0.1:' + httpPort1 + "/api/v1")
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,

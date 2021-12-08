@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
-import StreamrClient from 'streamr-client'
+import StreamrClient, { ConfigTest } from 'streamr-client'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { DeleteExpiredCmd } from "../../../../src/plugins/storage/DeleteExpiredCmd"
 import { STREAMR_DOCKER_DEV_HOST, createTestStream, getPrivateKey } from "../../../utils"
@@ -65,6 +65,7 @@ describe('DeleteExpiredCmd', () => {
         mockUser = new Wallet(await getPrivateKey())
 
         client = new StreamrClient({
+            ...ConfigTest,
             auth: {
                 privateKey: mockUser.privateKey
             },

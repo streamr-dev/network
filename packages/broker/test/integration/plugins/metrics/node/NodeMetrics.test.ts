@@ -8,6 +8,8 @@ const httpPort = 47741
 const wsPort = 47742
 const trackerPort = 47745
 
+jest.setTimeout(60000)
+
 describe('NodeMetrics', () => {
     let tracker: Tracker
     let broker1: Broker
@@ -51,7 +53,7 @@ describe('NodeMetrics', () => {
         const storageClient = await createClient(tracker, storageNodeAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
-        await storageClient.setNode(`http://127.0.0.1:${httpPort}`)
+        await storageClient.setNode(`http://127.0.0.1:${httpPort}/api/v1`)
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
@@ -71,7 +73,7 @@ describe('NodeMetrics', () => {
             },
             storageNodeConfig: { registry: storageNodeRegistry }
         })
-    }, 65 * 1000)
+    })
 
     afterAll(async () => {
         await Promise.allSettled([
@@ -81,7 +83,7 @@ describe('NodeMetrics', () => {
             client1?.destroy(),
             client2?.destroy()
         ])
-    }, 30 * 1000)
+    })
 
     it('should retrieve the a `sec` metrics', async () => {
         const messageQueue = new Queue<any>()
@@ -107,5 +109,5 @@ describe('NodeMetrics', () => {
                 end: expect.any(Number)
             }
         })
-    }, 30 * 1000)
+    })
 })
