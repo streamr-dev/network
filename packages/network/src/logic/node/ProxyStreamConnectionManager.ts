@@ -203,6 +203,7 @@ export class ProxyStreamConnectionManager {
         const trackerAddress = this.trackerManager.getTrackerAddress(spid)
         try {
             await this.openPeerConnection(targetNodeId, trackerId, trackerAddress)
+            await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
             logger.trace(`Successful proxy stream reconnection to ${targetNodeId}`)
             this.stopReattemptInterval(targetNodeId, spid)
         } catch (err) {
