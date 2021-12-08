@@ -9,7 +9,6 @@ import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import type { ConnectionInfo } from '@ethersproject/web'
-import type { BytesLike } from '@ethersproject/bytes'
 
 import type { EthereumAddress } from './types'
 import { Config } from './Config'
@@ -26,7 +25,7 @@ export type ProviderAuthConfig = {
 }
 
 export type PrivateKeyAuthConfig = {
-    privateKey: BytesLike
+    privateKey: string
 }
 
 export type SessionTokenAuthConfig = {
