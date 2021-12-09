@@ -71,15 +71,10 @@
             "type": "object",
             "description": "Network node settings",
             "required": [
-                "name",
                 "location"
             ],
             "additionalProperties": false,
             "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Human-readable name for network node"
-                },
                 "trackers": {
                     "default": [
                         {

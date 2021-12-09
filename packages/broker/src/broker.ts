@@ -66,15 +66,18 @@ const getStunTurnUrls = (config: Config): string[] | undefined => {
     return urls
 }
 
+const getNameDescription = (name: string|undefined, id: string) => {
+    return (name !== undefined) ? `${name} (id=${id})` : id
+}
+
 export const createBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
     validateClientConfig(config.client)
 
-    const networkNodeName = config.network.name
-    const metricsContext = new MetricsContext(networkNodeName)
-
     const wallet = new Wallet(config.client.auth!.privateKey!)
     const brokerAddress = wallet.address
+
+    const metricsContext = new MetricsContext(config.client.network?.name ?? brokerAddress)
 
     const trackers = await getTrackers(config)
 
@@ -95,7 +98,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         storageNodeRegistry: config.storageNodeConfig?.registry,
         network: {
             id: usePredeterminedNetworkId ? brokerAddress : undefined,
-            name: networkNodeName,
+            name: config.client.network?.name,
             trackers,
             location: config.network.location,
             metricsContext,
@@ -145,7 +148,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             logger.info(`Welcome to the Streamr Network. Your node's generated name is ${Protocol.generateMnemonicFromAddress(brokerAddress)}.`)
             logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${brokerAddress}`)
 
-            logger.info(`Network node '${networkNodeName}' (id=${nodeId}) running`)
+            logger.info(`Network node ${getNameDescription(config.client.network?.name, nodeId)} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             logger.info(`Configured with trackers: [${trackers.map((tracker) => tracker.http).join(', ')}]`)
             logger.info(`Configured with Streamr: ${config.streamrUrl}`)

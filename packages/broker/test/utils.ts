@@ -78,11 +78,13 @@ export const formConfig = ({
         client: {
             auth: {
                 privateKey
+            },
+            network: {
+                name
             }
         },
         generateSessionId,
         network: {
-            name,
             trackers: [
                 {
                     id: trackerId,

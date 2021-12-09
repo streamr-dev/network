@@ -47,10 +47,12 @@ const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 export const CONFIG_TEMPLATE: any = {
     client: {
         auth: {
+        },
+        network: {
+            name: 'miner-node'
         }
     },
     network: {
-        name: 'miner-node',
         trackers: [
             {
                 "id": "0xFBB6066c44bc8132bA794C73f58F391273E3bdA1",

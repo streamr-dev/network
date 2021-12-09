@@ -1,4 +1,4 @@
-import { StreamrClientConfig } from 'streamr-client'
+import { BrubeckClientConfig } from 'streamr-client'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
 export interface NetworkSmartContract {
@@ -15,7 +15,6 @@ export interface TurnConfig {
 }
 
 export interface NetworkConfig {
-    name: string,
     trackers: TrackerRegistryItem[] | NetworkSmartContract,
     stun: string | null,
     turn: TurnConfig | null,
@@ -47,7 +46,7 @@ export interface StorageNodeConfig {
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
 export interface Config {
-    client: StreamrClientConfig
+    client: BrubeckClientConfig
     generateSessionId: boolean
     network: NetworkConfig,
     streamrUrl: string,
