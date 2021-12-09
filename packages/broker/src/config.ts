@@ -1,3 +1,4 @@
+import { StreamrClientConfig } from 'streamr-client'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
 export interface NetworkSmartContract {
@@ -46,6 +47,7 @@ export interface StorageNodeConfig {
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
 export interface Config {
+    client: StreamrClientConfig
     ethereumPrivateKey: string
     generateSessionId: boolean
     network: NetworkConfig,

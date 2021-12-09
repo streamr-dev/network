@@ -76,6 +76,8 @@ export const formConfig = ({
 
     return {
         ethereumPrivateKey: privateKey,
+        client: {
+        },
         generateSessionId,
         network: {
             name,

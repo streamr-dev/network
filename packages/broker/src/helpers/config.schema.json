@@ -4,12 +4,18 @@
     "description": "Broker configuration format",
     "type": "object",
     "required": [
+        "client",
         "plugins",
         "ethereumPrivateKey",
         "network"
     ],
     "additionalProperties": false,
     "properties": {
+        "client": {
+            "type": "object",
+            "description": "Client configuration",
+            "additionalProperties": true
+        },
         "plugins": {
             "type": "object",
             "description": "Pluging configurations",
@@ -45,11 +51,6 @@
                     "default": null
                 }
             }
-        },
-        "ethereumPrivateKey": {
-            "type": "string",
-            "description": "Ethereum private key to establish broker identity",
-            "pattern": "^(0x)?[a-f0-9]{64}$"
         },
         "generateSessionId": {
             "type": "boolean",

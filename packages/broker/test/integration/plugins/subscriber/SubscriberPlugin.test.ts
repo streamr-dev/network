@@ -9,6 +9,8 @@ const wallet = Wallet.createRandom()
 const createMockPlugin = (tracker: Tracker) => {
     const brokerConfig: any = {
         ethereumPrivateKey: wallet.privateKey,
+        client: {
+        },
         plugins: {
             subscriber: {
                 streams: [

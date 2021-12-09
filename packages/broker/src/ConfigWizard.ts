@@ -45,6 +45,8 @@ const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
 const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 export const CONFIG_TEMPLATE: any = {
+    client: {
+    },
     network: {
         name: 'miner-node',
         trackers: [

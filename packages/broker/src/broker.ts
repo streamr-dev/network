@@ -1,5 +1,5 @@
 import { Logger, MetricsContext } from 'streamr-network'
-import StreamrClient from 'streamr-client'
+import StreamrClient, { validateConfig as validateClientConfig} from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
@@ -68,6 +68,7 @@ const getStunTurnUrls = (config: Config): string[] | undefined => {
 
 export const createBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
+    validateClientConfig(config.client)
 
     const networkNodeName = config.network.name
     const metricsContext = new MetricsContext(networkNodeName)

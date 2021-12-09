@@ -12,6 +12,8 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
     const wallet = Wallet.createRandom()
     const brokerConfig: any = {
         ethereumPrivateKey: wallet.privateKey,
+        client: {
+        },
         plugins: {
             storage: {
                 cassandra: {
