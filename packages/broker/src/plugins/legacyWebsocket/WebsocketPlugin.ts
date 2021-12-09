@@ -4,13 +4,13 @@ import { Plugin, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Logger, Protocol } from "streamr-network"
+import { DEFAULTS } from 'streamr-client'
 import { once } from "events"
 import fs from "fs"
 import http from 'http'
 import https from "https"
 import { Schema } from 'ajv'
 import { NetworkSmartContract, NodeRegistryItem, NodeRegistryOptions, StorageNodeRegistry } from '../../StorageNodeRegistry'
-import { DEFAULTS, STREAM_CLIENT_DEFAULTS } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -45,12 +45,11 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         this.websocketServer = new WebsocketServer(
             httpServer,
             this.networkNode,
-            new StreamFetcher(this.brokerConfig.streamrUrl),
+            new StreamFetcher(this.getRestUrl()),
             this.publisher,
             this.metricsContext,
             this.subscriptionManager,
             await this.getStorageNodeRegistry(),
-            this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
         )
         httpServer.listen(this.pluginConfig.port)
@@ -65,9 +64,8 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
 
     private async getStorageNodeRegistry() {
         const config = this.brokerConfig.client.storageNodeRegistry ?? DEFAULTS.storageNodeRegistry
-        const restUrl = this.brokerConfig.streamrUrl ? `${this.brokerConfig.streamrUrl}/api/v1` : STREAM_CLIENT_DEFAULTS.restUrl
         const storageNodes = await this.getStorageNodes(config)
-        return StorageNodeRegistry.createInstance(restUrl, storageNodes)
+        return StorageNodeRegistry.createInstance(this.getRestUrl(), storageNodes)
     }
     
     private async getStorageNodes(config: NodeRegistryOptions): Promise<NodeRegistryItem[]> {

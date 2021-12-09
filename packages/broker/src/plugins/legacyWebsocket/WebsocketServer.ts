@@ -59,7 +59,6 @@ export class WebsocketServer extends EventEmitter {
         metricsContext: MetricsContext,
         subscriptionManager: SubscriptionManager,
         storageNodeRegistry: StorageNodeRegistry,
-        streamrUrl: string,
         pingIntervalInMs = 60 * 1000,
     ) {
         super()
@@ -111,8 +110,7 @@ export class WebsocketServer extends EventEmitter {
             streams,
             subscriptionManager,
             this.metrics,
-            storageNodeRegistry,
-            streamrUrl
+            storageNodeRegistry
         )
         networkNode.addMessageListener((msg: StreamMessage) => this.broadcastMessage(msg, streams))
 

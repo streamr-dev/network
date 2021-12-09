@@ -55,13 +55,13 @@ async function handleNon2xxResponse(
 }
 
 export class StreamFetcher {
-    private readonly apiUrl: string
+    private readonly restUrl: string
     fetch: memoizee.Memoized<FetchMethod> & FetchMethod
     checkPermission: memoizee.Memoized<CheckPermissionMethod> & CheckPermissionMethod
     authenticate: memoize.Memoized<AuthenticateMethod> & AuthenticateMethod
 
-    constructor(baseUrl: string) {
-        this.apiUrl = `${baseUrl}/api/v1`
+    constructor(restUrl: string) {
+        this.restUrl = restUrl
         this.fetch = memoize<FetchMethod>(this.uncachedFetch, {
             maxAge: MAX_AGE,
             promise: true,
@@ -81,7 +81,7 @@ export class StreamFetcher {
             auth: {
                 privateKey,
             },
-            restUrl: this.apiUrl,
+            restUrl: this.restUrl,
             autoConnect: false
         })
         return client.session.getSessionToken()
@@ -100,7 +100,7 @@ export class StreamFetcher {
      * Returns a Promise that resolves with the stream json.
      */
     private async uncachedFetch(streamId: string, sessionToken?: string): Promise<Record<string, unknown>> {
-        const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}`
+        const url = `${this.restUrl}/streams/${encodeURIComponent(streamId)}`
         const headers = formAuthorizationHeader(sessionToken)
 
         const response = await fetchWithErrorLogging(url, {
@@ -127,7 +127,7 @@ export class StreamFetcher {
 
         sessionToken = sessionToken || undefined
 
-        const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}/permissions/me`
+        const url = `${this.restUrl}/streams/${encodeURIComponent(streamId)}/permissions/me`
         const headers = formAuthorizationHeader(sessionToken)
 
         const response = await fetchWithErrorLogging(url, {

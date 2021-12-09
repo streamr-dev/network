@@ -48,6 +48,7 @@ export const CONFIG_TEMPLATE: any = {
     client: {
         auth: {
         },
+        restUrl: 'https://streamr.network/api/v1',
         network: {
             name: 'miner-node'
         },
@@ -113,7 +114,6 @@ export const CONFIG_TEMPLATE: any = {
         turn: null
     },
     generateSessionId: false,
-    streamrUrl: 'https://streamr.network',
     streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     plugins: {
         legacyWebsocket: {},

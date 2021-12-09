@@ -161,12 +161,6 @@
                 }
             }
         },
-        "streamrUrl": {
-            "type": "string",
-            "description": "Base URL of Core (E&E) API to use",
-            "default": "https://streamr.network",
-            "format": "uri"
-        },
         "streamrAddress": {
             "type": "string",
             "description": "Ethereum address Core (E&E)",

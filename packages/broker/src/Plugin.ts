@@ -5,7 +5,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import express from 'express'
 import { validateConfig } from './helpers/validateConfig'
 import { Schema } from 'ajv'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient, STREAM_CLIENT_DEFAULTS } from 'streamr-client'
 import { ApiAuthenticator } from './apiAuthenticator'
 
 export interface PluginOptions {
@@ -72,5 +72,9 @@ export abstract class Plugin<T> {
 
     getConfigSchema(): Schema|undefined {
         return undefined
+    }
+
+    getRestUrl(): string {
+        return this.brokerConfig.client.restUrl ?? STREAM_CLIENT_DEFAULTS.restUrl
     }
 }

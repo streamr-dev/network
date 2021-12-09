@@ -26,7 +26,7 @@ interface TestConfig {
     privateKeyFileName?: null | string
     certFileName?: null | string
     streamrAddress?: string
-    streamrUrl?: string
+    restUrl?: string
     storageNodeRegistry?: NodeRegistryOptions
     storageConfigRefreshInterval?: number
 }
@@ -45,7 +45,7 @@ export const formConfig = ({
     privateKeyFileName = null,
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
-    streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
+    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
     storageNodeRegistry = [],
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
@@ -80,6 +80,7 @@ export const formConfig = ({
             auth: {
                 privateKey
             },
+            restUrl,
             network: {
                 name,
                 location: {
@@ -105,7 +106,6 @@ export const formConfig = ({
             webrtcDisallowPrivateAddresses: false,
             acceptProxyConnections: false
         },
-        streamrUrl,
         streamrAddress,
         httpServer: {
             port: httpPort ? httpPort : 7171,

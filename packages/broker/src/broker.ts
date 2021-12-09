@@ -78,7 +78,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         auth: {
             privateKey: config.client.auth!.privateKey!,
         },
-        restUrl: `${config.streamrUrl}/api/v1`,
+        restUrl: config.client.restUrl,
         storageNodeRegistry: config.client.storageNodeRegistry,
         network: {
             id: usePredeterminedNetworkId ? brokerAddress : undefined,
@@ -134,7 +134,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             logger.info(`Network node ${getNameDescription(config.client.network?.name, nodeId)} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             logger.info(`Configured with trackers: [${trackers.map((tracker) => tracker.http).join(', ')}]`)
-            logger.info(`Configured with Streamr: ${config.streamrUrl}`)
+            if (config.client.restUrl !== undefined) {
+                logger.info(`Configured with Streamr: ${config.client.restUrl}`)
+            }
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
             if (!webrtcDisallowPrivateAddresses) {
