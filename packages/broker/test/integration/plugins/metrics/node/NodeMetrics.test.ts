@@ -46,7 +46,7 @@ describe('NodeMetrics', () => {
             trackerPort,
             httpPort,
             enableCassandra: true,
-            storageNodeConfig: { registry: storageNodeRegistry },
+            storageNodeRegistry,
             storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
             // therefore StorageAssignmentEventManager test helper cannot be used
         })
@@ -68,7 +68,7 @@ describe('NodeMetrics', () => {
                     }
                 }
             },
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
     }, 35 * 1000)
 

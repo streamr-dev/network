@@ -173,37 +173,6 @@
             "default": "0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a",
             "pattern": "^0x[a-fA-F0-9]{40}$"
         },
-        "storageNodeConfig": {
-            "type": "object",
-            "description": "Storage node settings",
-            "default": {
-                "registry": [{
-                    "address": "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-                    "url": "https://corea1.streamr.network:8001"
-                }]
-            },
-            "required": [
-                "registry"
-            ],
-            "additionalProperties": false,
-            "properties": {
-                "registry": {
-                    "oneOf": [
-                        {
-                            "type": "array",
-                            "description": "List of storageNode HTTP URLs to connect to",
-                            "items": {
-                                "$ref": "#/definitions/storageNodeRegistryItem"
-                            }
-                        },
-                        {
-                            "description": "Storage Node Registry Config",
-                            "$ref": "#/definitions/smartContractConfig"
-                        }
-                    ]
-                }
-            }
-        },
         "apiAuthentication": {
             "type": [
                 "object",
@@ -230,22 +199,6 @@
             "type": "number",
             "minimum": 0,
             "maximum": 65353
-        },
-        "storageNodeRegistryItem": {
-            "type": "object",
-            "required": [
-                "address",
-                "url"
-            ],
-            "additionalProperties": false,
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
         },
         "smartContractConfig": {
             "type": "object",

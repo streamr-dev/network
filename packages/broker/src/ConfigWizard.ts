@@ -50,7 +50,11 @@ export const CONFIG_TEMPLATE: any = {
         },
         network: {
             name: 'miner-node'
-        }
+        },
+        storageNodeRegistry: [{
+            address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
+            url: "https://testnet2.streamr.network:8001"
+        }]
     },
     network: {
         trackers: [
@@ -111,12 +115,6 @@ export const CONFIG_TEMPLATE: any = {
     generateSessionId: false,
     streamrUrl: 'https://streamr.network',
     streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
-    storageNodeConfig: {
-        registry: [{
-            address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-            url: "https://testnet2.streamr.network:8001"
-        }]
-    },
     plugins: {
         legacyWebsocket: {},
         testnetMiner: {

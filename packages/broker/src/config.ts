@@ -28,15 +28,6 @@ export interface HttpServerConfig {
     certFileName: string | null
 }
 
-export interface StorageNodeRegistryItem {
-    address: string
-    url: string
-}
-
-export interface StorageNodeConfig {
-    registry: StorageNodeRegistryItem[] | NetworkSmartContract
-}
-
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
 export interface Config {
@@ -45,7 +36,6 @@ export interface Config {
     network: NetworkConfig,
     streamrUrl: string,
     streamrAddress: string,
-    storageNodeConfig: StorageNodeConfig,
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig

@@ -6,7 +6,8 @@ import { Tracker, Protocol } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { StorageConfig } from '../src/plugins/storage/StorageConfig'
-import { ApiAuthenticationConfig, Config, StorageNodeConfig } from '../src/config'
+import { ApiAuthenticationConfig, Config } from '../src/config'
+import { NodeRegistryOptions } from '../src/StorageNodeRegistry'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -26,7 +27,7 @@ interface TestConfig {
     certFileName?: null | string
     streamrAddress?: string
     streamrUrl?: string
-    storageNodeConfig?: StorageNodeConfig
+    storageNodeRegistry?: NodeRegistryOptions
     storageConfigRefreshInterval?: number
 }
 
@@ -45,7 +46,7 @@ export const formConfig = ({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeConfig = { registry: [] },
+    storageNodeRegistry = [],
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
@@ -87,7 +88,8 @@ export const formConfig = ({
                     country: 'Finland',
                     city: 'Helsinki'
                 },
-            }
+            },
+            storageNodeRegistry
         },
         generateSessionId,
         network: {
@@ -105,7 +107,6 @@ export const formConfig = ({
         },
         streamrUrl,
         streamrAddress,
-        storageNodeConfig,
         httpServer: {
             port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,

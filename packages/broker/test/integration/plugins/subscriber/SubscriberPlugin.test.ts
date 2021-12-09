@@ -41,7 +41,6 @@ const createMockPlugin = (tracker: Tracker) => {
         apiAuthenticator: undefined as any,
         metricsContext: new MetricsContext(null as any),
         brokerConfig,
-        storageNodeRegistry: undefined as any,
         nodeId: wallet.address
     })
 }

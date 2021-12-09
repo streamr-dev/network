@@ -9,12 +9,11 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, NetworkSmartContract, StorageNodeRegistryItem, TrackerRegistryItem } from './config'
+import { Config, NetworkSmartContract, TrackerRegistryItem } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
-import { StorageNodeRegistry } from "./StorageNodeRegistry"
 
 const logger = new Logger(module)
 
@@ -35,18 +34,6 @@ const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
         return registry.getAllTrackers()
     } else {
         return config.network.trackers as TrackerRegistryItem[]
-    }
-}
-
-const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[]> => {
-    if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
-        const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
-            contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
-            jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
-        })
-        return registry.getAllStorageNodes()
-    } else {
-        return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
     }
 }
 
@@ -81,9 +68,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const trackers = await getTrackers(config)
 
-    const storageNodes = await getStorageNodes(config)
-    const storageNodeRegistry = StorageNodeRegistry.createInstance(config, storageNodes)
-
     const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
 
     const webrtcDisallowPrivateAddresses = config.network.webrtcDisallowPrivateAddresses
@@ -95,7 +79,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             privateKey: config.client.auth!.privateKey!,
         },
         restUrl: `${config.streamrUrl}/api/v1`,
-        storageNodeRegistry: config.storageNodeConfig?.registry,
+        storageNodeRegistry: config.client.storageNodeRegistry,
         network: {
             id: usePredeterminedNetworkId ? brokerAddress : undefined,
             name: config.client.network?.name,
@@ -124,7 +108,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             apiAuthenticator,
             metricsContext,
             brokerConfig: config,
-            storageNodeRegistry,
             nodeId,
         }
         return createPlugin(name, pluginOptions)
