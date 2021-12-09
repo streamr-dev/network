@@ -46,6 +46,8 @@ const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 export const CONFIG_TEMPLATE: any = {
     client: {
+        auth: {
+        }
     },
     network: {
         name: 'miner-node',
@@ -252,7 +254,7 @@ export const selectStoragePathPrompt = {
 
 export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
-    config.ethereumPrivateKey = privateKey
+    config.client.auth.privateKey = privateKey
 
     const pluginKeys = Object.keys(PLUGIN_NAMES)
     pluginKeys.forEach((pluginKey) => {

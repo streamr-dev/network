@@ -6,7 +6,6 @@
     "required": [
         "client",
         "plugins",
-        "ethereumPrivateKey",
         "network"
     ],
     "additionalProperties": false,
@@ -14,7 +13,18 @@
         "client": {
             "type": "object",
             "description": "Client configuration",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "properties": {
+                "auth": {
+                    "type": "object",
+                    "properties": {
+                        "privateKey": {
+                            "type": "string",
+                            "pattern": "^(0x)?[a-fA-F0-9]{64}$"
+                        }
+                    }
+                }
+            }
         },
         "plugins": {
             "type": "object",

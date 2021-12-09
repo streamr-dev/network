@@ -73,11 +73,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const networkNodeName = config.network.name
     const metricsContext = new MetricsContext(networkNodeName)
 
-    // Ethereum wallet retrieval
-    const wallet = new Wallet(config.ethereumPrivateKey)
-    if (!wallet) {
-        throw new Error('Could not resolve Ethereum address from given config.ethereumPrivateKey')
-    }
+    const wallet = new Wallet(config.client.auth!.privateKey!)
     const brokerAddress = wallet.address
 
     const trackers = await getTrackers(config)
@@ -93,7 +89,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const streamrClient = new StreamrClient({
         auth: {
-            privateKey: config.ethereumPrivateKey,
+            privateKey: config.client.auth!.privateKey!,
         },
         restUrl: `${config.streamrUrl}/api/v1`,
         storageNodeRegistry: config.storageNodeConfig?.registry,

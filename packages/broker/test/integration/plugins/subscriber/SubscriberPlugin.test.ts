@@ -8,8 +8,10 @@ const wallet = Wallet.createRandom()
 
 const createMockPlugin = (tracker: Tracker) => {
     const brokerConfig: any = {
-        ethereumPrivateKey: wallet.privateKey,
         client: {
+            auth: {
+                privateKey: wallet.privateKey
+            }
         },
         plugins: {
             subscriber: {

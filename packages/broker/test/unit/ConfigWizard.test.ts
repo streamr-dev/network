@@ -268,7 +268,7 @@ describe('ConfigWizard', () => {
             ])
             const fileContent = readFileSync(configPath).toString()
             const config = JSON.parse(fileContent)
-            expect(config.ethereumPrivateKey).toBe(privateKey)
+            expect(config.client.auth.privateKey).toBe(privateKey)
             expect(config.plugins.websocket.port).toBe(parseInt(websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(mqttPort))
             expect(config.httpServer.port).toBe(parseInt(publishHttpPort))

@@ -79,7 +79,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     }
 
     private async createStorageConfig(): Promise<StorageConfig> {
-        const brokerAddress = new Wallet(this.brokerConfig.ethereumPrivateKey).address
+        const brokerAddress = new Wallet(this.brokerConfig.client.auth!.privateKey!).address
         const apiUrl = this.brokerConfig.streamrUrl + '/api/v1'
         const storageConfig = await StorageConfig.createInstance(
             this.pluginConfig.cluster.clusterAddress || brokerAddress,

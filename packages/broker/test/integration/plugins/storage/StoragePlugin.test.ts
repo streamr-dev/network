@@ -11,8 +11,10 @@ const SPIDS: Protocol.SPID[] = [new Protocol.SPID('foo', 0), new Protocol.SPID('
 const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
     const wallet = Wallet.createRandom()
     const brokerConfig: any = {
-        ethereumPrivateKey: wallet.privateKey,
         client: {
+            auth: {
+                privateKey: wallet.privateKey
+            }
         },
         plugins: {
             storage: {

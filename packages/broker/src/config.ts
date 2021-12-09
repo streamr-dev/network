@@ -48,7 +48,6 @@ export type ApiAuthenticationConfig = { keys: string[] } | null
 
 export interface Config {
     client: StreamrClientConfig
-    ethereumPrivateKey: string
     generateSessionId: boolean
     network: NetworkConfig,
     streamrUrl: string,
