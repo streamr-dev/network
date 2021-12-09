@@ -18,7 +18,7 @@
         },
         "plugins": {
             "type": "object",
-            "description": "Pluging configurations",
+            "description": "Plugin configurations",
             "additionalProperties": true
         },
         "httpServer": {
