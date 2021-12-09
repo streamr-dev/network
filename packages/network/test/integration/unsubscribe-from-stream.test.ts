@@ -19,10 +19,9 @@ describe('node unsubscribing from a stream', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30450
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         nodeA = createNetworkNode({
             id: 'a',

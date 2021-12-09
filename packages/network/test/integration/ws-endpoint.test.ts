@@ -81,8 +81,7 @@ describe('ws-endpoint', () => {
                 listen: {
                     hostname: '127.0.0.1',
                     port: trackerPort
-                },
-                id: 'tracker'
+                }
             })
             // @ts-expect-error TODO: do this proper way (pass via constructor)
             tracker.trackerServer.endpoint.handshakeTimer = 3000

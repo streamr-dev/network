@@ -22,10 +22,9 @@ describe('optimization: do not propagate to sender', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30410
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
         n1 = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo]

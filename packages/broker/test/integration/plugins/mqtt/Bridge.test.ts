@@ -1,8 +1,8 @@
 import { Stream, StreamrClient } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import mqtt from 'async-mqtt'
 import { Broker } from '../../../../src/broker'
-import { createClient, startBroker, createTestStream, createMockUser, Queue } from '../../../utils'
+import { createClient, startBroker, createTestStream, createMockUser, Queue, startTestTracker } from '../../../utils'
 import { wait } from 'streamr-test-utils'
 
 const MQTT_PLUGIN_PORT = 12470
@@ -27,13 +27,7 @@ describe('MQTT Bridge', () => {
     }
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            id: 'tracker-1',
-            listen: {
-                hostname: '127.0.0.1',
-                port: TRACKER_PORT
-            },
-        })
+        tracker = await startTestTracker(TRACKER_PORT)
         broker = await startBroker({
             name: 'broker',
             privateKey: brokerUser.privateKey,

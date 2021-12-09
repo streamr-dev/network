@@ -1,5 +1,5 @@
-import { startTracker, Tracker, MetricsContext } from 'streamr-network'
-import { createClient } from '../../../utils'
+import { Tracker, MetricsContext } from 'streamr-network'
+import { createClient, startTestTracker } from '../../../utils'
 import { Wallet } from 'ethers'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
 
@@ -47,13 +47,7 @@ describe('Subscriber Plugin', () => {
     let plugin: any
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            id: 'tracker',
-            listen: {
-                hostname: '127.0.0.1',
-                port: TRACKER_PORT
-            },
-        })
+        tracker = await startTestTracker(TRACKER_PORT)
         plugin = createMockPlugin(tracker)
         await plugin.start()
     })

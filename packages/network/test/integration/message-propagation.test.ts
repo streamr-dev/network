@@ -20,10 +20,9 @@ describe('message propagation in network', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 33300
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         n1 = createNetworkNode({
             id: 'node-1',
