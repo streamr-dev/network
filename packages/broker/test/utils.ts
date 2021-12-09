@@ -61,6 +61,7 @@ export const formConfig = ({
                     keyspace: 'streamr_dev_v2',
                 },
                 storageConfig: {
+                    streamrAddress,
                     refreshInterval: storageConfigRefreshInterval
                 }
             }
@@ -106,7 +107,6 @@ export const formConfig = ({
             webrtcDisallowPrivateAddresses: false,
             acceptProxyConnections: false
         },
-        streamrAddress,
         httpServer: {
             port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,

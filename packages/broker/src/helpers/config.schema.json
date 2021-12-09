@@ -161,12 +161,6 @@
                 }
             }
         },
-        "streamrAddress": {
-            "type": "string",
-            "description": "Ethereum address Core (E&E)",
-            "default": "0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a",
-            "pattern": "^0x[a-fA-F0-9]{40}$"
-        },
         "apiAuthentication": {
             "type": [
                 "object",

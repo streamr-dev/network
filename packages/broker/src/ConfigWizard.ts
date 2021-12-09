@@ -114,7 +114,6 @@ export const CONFIG_TEMPLATE: any = {
         turn: null
     },
     generateSessionId: false,
-    streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     plugins: {
         legacyWebsocket: {},
         testnetMiner: {

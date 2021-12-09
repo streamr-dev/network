@@ -63,7 +63,6 @@ describe('broker: end-to-end', () => {
             privateKey: fastPrivateKey(),
             trackerPort,
             wsPort: wsPort2,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
             storageNodeRegistry
         })
@@ -72,7 +71,6 @@ describe('broker: end-to-end', () => {
             privateKey: fastPrivateKey(),
             trackerPort,
             wsPort: wsPort3,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
             storageNodeRegistry
         })

@@ -15,7 +15,6 @@ program
     .description('Run broker under environment specified by given configuration file.')
     .arguments('[configFile]')
     .option('--restUrl <url>', 'override restUrl with given value')
-    .option('--streamrAddress <address>', 'override streamrAddress with given value')
     .option('--networkId <id>', 'override networkId with given value')
     .option('--test', 'test the configuration (does not start the broker)')
     .action(async (configFile) => {
@@ -30,9 +29,6 @@ program
         let config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
         if (program.opts().restUrl) {
             config.client.restUrl = program.opts().restUrl
-        }
-        if (program.opts().streamrAddress) {
-            config.streamrAddress = program.opts().streamrAddress
         }
         if (program.opts().networkId) {
             config.network.id = program.opts().networkId

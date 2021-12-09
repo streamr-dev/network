@@ -34,7 +34,6 @@ export interface Config {
     client: BrubeckClientConfig
     generateSessionId: boolean
     network: NetworkConfig,
-    streamrAddress: string,
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig

@@ -20,6 +20,7 @@ export interface StoragePluginConfig {
         datacenter: string
     }
     storageConfig: {
+        streamrAddress: string
         refreshInterval: number
     }
     cluster: {
@@ -86,12 +87,16 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             this.pluginConfig.cluster.myIndexInCluster,
             this.getRestUrl(),
             this.pluginConfig.storageConfig.refreshInterval)
-        this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.brokerConfig.streamrAddress, this.subscriptionManager)
+        this.assignmentMessageListener = storageConfig.startAssignmentEventListener(
+            this.pluginConfig.storageConfig.streamrAddress, 
+            this.subscriptionManager)
         return storageConfig
     }
 
     async stop(): Promise<void> {
-        this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, this.brokerConfig.streamrAddress, this.subscriptionManager)
+        this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, 
+            this.pluginConfig.storageConfig.streamrAddress, 
+            this.subscriptionManager)
         this.networkNode.removeMessageListener(this.messageListener!)
         this.storageConfig!.getSPIDs().forEach((spid) => {
             this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
