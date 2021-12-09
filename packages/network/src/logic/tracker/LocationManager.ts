@@ -3,8 +3,8 @@ import { Logger } from '../../helpers/Logger'
 import { Location } from '../../identifiers'
 import { NodeId } from '../node/Node'
 
-function isValidNodeLocation(location: Location | null) {
-    return location && (location.country || location.city || location.latitude || location.longitude)
+function isValidNodeLocation(location?: Location) {
+    return (location !== undefined) && (location.country || location.city || location.latitude || location.longitude)
 }
 
 export class LocationManager {
@@ -24,7 +24,7 @@ export class LocationManager {
         return this.nodeLocations[nodeId]
     }
 
-    updateLocation({ nodeId, location, address }: { nodeId: NodeId, location: Location | null, address?: string }): void {
+    updateLocation({ nodeId, location, address }: { nodeId: NodeId, location?: Location, address?: string }): void {
         if (isValidNodeLocation(location)) {
             this.nodeLocations[nodeId] = location!
         } else if (!isValidNodeLocation(this.nodeLocations[nodeId])) {

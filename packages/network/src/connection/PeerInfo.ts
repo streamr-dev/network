@@ -29,7 +29,7 @@ export class PeerInfo {
         peerName?: string | null | undefined,
         controlLayerVersions?: number[],
         messageLayerVersions?: number[],
-        location?: Location | null | undefined
+        location?: Location
     ): PeerInfo {
         return new PeerInfo(
             peerId,
@@ -46,7 +46,7 @@ export class PeerInfo {
         peerName?: string | null | undefined,
         controlLayerVersions?: number[] | undefined,
         messageLayerVersions?: number[] | undefined,
-        location?: Location | null | undefined
+        location?: Location
     ): PeerInfo  {
         return new PeerInfo(
             peerId,
@@ -69,7 +69,7 @@ export class PeerInfo {
             controlLayerVersions || defaultControlLayerVersions,
             messageLayerVersions || defaultMessageLayerVersions,
             peerName,
-            location
+            location ?? undefined
         )
     }
 
@@ -78,7 +78,7 @@ export class PeerInfo {
     readonly controlLayerVersions: number[]
     readonly messageLayerVersions: number[]
     readonly peerName: string | null
-    readonly location: Location
+    readonly location: Location | undefined
 
     constructor(
         peerId: PeerId,
@@ -86,7 +86,7 @@ export class PeerInfo {
         controlLayerVersions?: number[],
         messageLayerVersions?: number[],
         peerName?: string | null | undefined,
-        location?: Location | null | undefined
+        location?: Location
     ) {
         if (!peerId) {
             throw new Error('peerId not given')
@@ -109,12 +109,7 @@ export class PeerInfo {
         this.controlLayerVersions = controlLayerVersions
         this.messageLayerVersions = messageLayerVersions
         this.peerName = peerName ? peerName : null
-        this.location = location || {
-            latitude: null,
-            longitude: null,
-            country: null,
-            city: null
-        }
+        this.location = location
     }
 
     isTracker(): boolean {
