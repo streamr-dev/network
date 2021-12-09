@@ -70,9 +70,6 @@
         "network": {
             "type": "object",
             "description": "Network node settings",
-            "required": [
-                "location"
-            ],
             "additionalProperties": false,
             "properties": {
                 "trackers": {
@@ -115,52 +112,6 @@
                         {
                             "description": "Tracker registry smart contract to use for fetching tracker WebSocket URLs",
                             "$ref": "#/definitions/smartContractConfig"
-                        }
-                    ]
-                },
-                "location": {
-                    "description": "Location of node",
-                    "default": null,
-                    "oneOf": [
-                        {
-                            "type": "null",
-                            "description": "Location undefined"
-                        },
-                        {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "required": [
-                                "latitude",
-                                "longitude",
-                                "country",
-                                "city"
-                            ],
-                            "properties": {
-                                "latitude": {
-                                    "type": [
-                                        "number",
-                                        "null"
-                                    ]
-                                },
-                                "longitude": {
-                                    "type": [
-                                        "number",
-                                        "null"
-                                    ]
-                                },
-                                "country": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "city": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                }
-                            }
                         }
                     ]
                 },

@@ -105,7 +105,6 @@ export const CONFIG_TEMPLATE: any = {
                 "http": "https://testnet4.streamr.network:30405"
             }
         ],
-        location: null,
         stun: "stun:stun.streamr.network:5349",
         turn: null
     },

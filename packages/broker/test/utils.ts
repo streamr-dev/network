@@ -80,7 +80,13 @@ export const formConfig = ({
                 privateKey
             },
             network: {
-                name
+                name,
+                location: {
+                    latitude: 60.19,
+                    longitude: 24.95,
+                    country: 'Finland',
+                    city: 'Helsinki'
+                },
             }
         },
         generateSessionId,
@@ -92,12 +98,6 @@ export const formConfig = ({
                     http: `http://127.0.0.1:${trackerPort}`
                 }
             ],
-            location: {
-                latitude: 60.19,
-                longitude: 24.95,
-                country: 'Finland',
-                city: 'Helsinki'
-            },
             stun: null,
             turn: null,
             webrtcDisallowPrivateAddresses: false,

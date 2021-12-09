@@ -100,7 +100,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             id: usePredeterminedNetworkId ? brokerAddress : undefined,
             name: config.client.network?.name,
             trackers,
-            location: config.network.location ?? undefined,
+            location: config.client.network?.location,
             metricsContext,
             stunUrls: getStunTurnUrls(config),
             webrtcDisallowPrivateAddresses,

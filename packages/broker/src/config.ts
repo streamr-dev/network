@@ -18,12 +18,6 @@ export interface NetworkConfig {
     trackers: TrackerRegistryItem[] | NetworkSmartContract,
     stun: string | null,
     turn: TurnConfig | null,
-    location: {
-        latitude: number,
-        longitude: number,
-        country: string,
-        city: string
-    } | null,
     webrtcDisallowPrivateAddresses: boolean,
     acceptProxyConnections: boolean
 }
