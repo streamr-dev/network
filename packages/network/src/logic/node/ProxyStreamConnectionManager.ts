@@ -96,17 +96,17 @@ export class ProxyStreamConnectionManager {
             if (!this.streamManager.isSetUp(spid)) {
                 this.streamManager.setUpStream(spid, true)
             } else if (this.streamManager.isSetUp(spid) && !this.streamManager.isBehindProxy(spid)) {
-                const reason = `Could not open outgoing stream connection ${spid.key}, bidirectional stream already exists`
+                const reason = `Could not open a proxy outgoing stream connection ${spid.key}, bidirectional stream already exists`
                 logger.warn(reason)
                 this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, reason)
                 return
             } else if (this.streamManager.isSetUp(spid) && this.streamManager.hasOutOnlyConnection(spid, targetNodeId)) {
-                const reason = `Could not open outgoing stream connection ${spid.key}, proxy stream connection already exists`
+                const reason = `Could not open a proxy outgoing stream connection ${spid.key}, proxy stream connection already exists`
                 logger.warn(reason)
                 this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, reason)
                 return
             } else if (this.streamManager.isSetUp(spid) && this.hasConnection(targetNodeId, spid)) {
-                const reason = `Could not open outgoing stream connection ${spid.key}, a connection already exists`
+                const reason = `Could not open a proxy outgoing stream connection ${spid.key}, a connection already exists`
                 logger.warn(reason)
                 return
             }
@@ -115,7 +115,7 @@ export class ProxyStreamConnectionManager {
             await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
             await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
         } catch (err) {
-            logger.warn(`Failed to create an Outgoing stream connection to ${targetNodeId} for stream ${spid.key}:\n${err}`)
+            logger.warn(`Failed to create a proxy outgoing stream connection to ${targetNodeId} for stream ${spid.key}:\n${err}`)
             this.removeConnection(spid, targetNodeId)
             this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, err)
         } finally {
@@ -130,7 +130,7 @@ export class ProxyStreamConnectionManager {
             this.removeConnection(spid, targetNodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, targetNodeId, spid)
         } else {
-            logger.warn(`An outgoing stream connection for ${spid.key} on node ${targetNodeId} does not exist`)
+            logger.warn(`A proxy outgoing stream connection for ${spid.key} on node ${targetNodeId} does not exist`)
         }
     }
 
