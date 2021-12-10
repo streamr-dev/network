@@ -225,10 +225,14 @@ export class LeaksDetector {
     ignoredValues = new WeakSet()
     id = instanceId(this)
     debug = testDebug(this.id)
+    seen = new WeakSet()
+    didGC = false
 
     // temporary whitelist leaks in network code
     ignoredKeys = new Set([
         '/cachedNode',
+        '/container',
+        '/childContainer',
     ])
 
     private counter = CounterId(this.id)
@@ -238,7 +242,29 @@ export class LeaksDetector {
 
         if (this.ignoredValues.has(obj)) { return }
 
-        this.leakDetectors.set(name, new LeakDetector(obj))
+        this.resetGC()
+        const leaksDetector = new LeakDetector(obj)
+        // @ts-expect-error monkeypatching
+        // eslint-disable-next-line no-underscore-dangle
+        leaksDetector._runGarbageCollector = this.runGarbageCollectorOnce(leaksDetector._runGarbageCollector)
+        this.leakDetectors.set(name, leaksDetector)
+    }
+
+    // returns a monkeypatch for leaksDetector._runGarbageCollector
+    // that avoids running gc for every isLeaking check, only once.
+    private runGarbageCollectorOnce(original: Function) {
+        return (...args: any[]) => {
+            if (this.didGC) {
+                return
+            }
+
+            this.didGC = true
+            original(...args)
+        }
+    }
+
+    resetGC() {
+        this.didGC = false
     }
 
     ignore(obj: any) {
@@ -307,7 +333,6 @@ export class LeaksDetector {
     }
 
     addAll(rootId: string, obj: object) {
-        const seen = new Set()
         this.walk([rootId], obj, (path, value) => {
             if (this.ignoredValues.has(value)) { return false }
             const pathString = path.join('/')
@@ -319,24 +344,27 @@ export class LeaksDetector {
             const paths = this.idToPaths.get(id) || new Set()
             paths.add(pathString)
             this.idToPaths.set(id, paths)
-            if (!seen.has(value)) {
-                seen.add(value)
+            if (!this.seen.has(value)) {
+                this.seen.add(value)
                 this.add(id, value)
             }
             return undefined
         })
     }
 
-    async getLeaks() {
+    async getLeaks(): Promise<Record<string, string>> {
         this.debug('checking for leaks with %d items >>', this.leakDetectors.size)
         await wait(10) // wait a moment for gc to run?
         const outstanding = new Set<string>()
-        const results = (await Promise.all([...this.leakDetectors.entries()].map(async ([key, d]) => {
+        this.resetGC()
+        const tasks = [...this.leakDetectors.entries()].map(async ([key, d]) => {
             outstanding.add(key)
             const isLeaking = await d.isLeaking()
             outstanding.delete(key)
             return isLeaking ? key : undefined
-        }))).filter(Boolean) as string[]
+        })
+        await Promise.allSettled(tasks)
+        const results = (await Promise.all(tasks)).filter(Boolean) as string[]
 
         const leaks = results.reduce((o, id) => Object.assign(o, {
             [id]: [...(this.idToPaths.get(id) || [])],
@@ -351,7 +379,9 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (numLeaks) {
-            throw new Error(format('Leaking %d of %d items: %o', numLeaks, this.leakDetectors.size, leaks))
+            const msg = format('Leaking %d of %d items: %o', numLeaks, this.leakDetectors.size, leaks)
+            this.clear()
+            throw new Error(msg)
         }
     }
 
@@ -359,12 +389,17 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (Object.keys(leaks).includes(id)) {
-            throw new Error(format('Leaking %d of %d items, including id %s: %o', numLeaks, this.leakDetectors.size, id, leaks))
+            const msg = format('Leaking %d of %d items, including id %s: %o', numLeaks, this.leakDetectors.size, id, leaks)
+            this.clear()
+            throw new Error(msg)
         }
     }
 
     clear() {
+        this.seen = new WeakSet()
+        this.ignoredValues = new WeakSet()
         this.leakDetectors.clear()
+        this.didGC = false
     }
 }
 

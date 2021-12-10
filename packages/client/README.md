@@ -21,7 +21,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 
 ## TOC
 
-[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Storage](#storage) ·[Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
@@ -92,7 +92,7 @@ const stream = await client.createStream({
 console.log(`Stream ${stream.id} has been created!`)
 
 // Optional: to enable historical data resends, add the stream to a storage node
-await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 
 // Do something with the stream, for example call stream.publish(message)
 ```
@@ -320,6 +320,12 @@ sub.on('resent', () => {
     console.log('All caught up and received all requested historical messages! Now switching to real time!')
 })
 ```
+
+### Storage
+
+You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice. By default storage is not enabled on streams.
+
+`await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)`
 
 ## Stream API
 

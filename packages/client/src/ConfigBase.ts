@@ -82,7 +82,6 @@ export type StrictStreamrClientConfig = {
     nodeRegistrySidechainAddress: EthereumAddress, // this saves sorage nodes with their urls
     streamStorageRegistrySidechainAddress: EthereumAddress, // this ueses the streamregistry and
         // noderegistry contracts and saves what streams are stored by which storagenodes
-    storageNodeAddressGermany: EthereumAddress,
     ensCacheSidechainAddress: EthereumAddress,
     keyExchange: Todo
     dataUnion: DataUnionConfig
@@ -110,6 +109,7 @@ const validateOverridedEthereumAddresses = (opts: any, propertyPaths: string[]) 
     }
 }
 
+export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 /**
  * @category Important
  */
@@ -120,7 +120,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     restUrl: 'https://streamr.network/api/v1/',
     theGraphUrl: 'needs chaging once server is up in production',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
-    storageNodeAddressGermany: '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916',
     // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
     // P2P Streamr Network options
