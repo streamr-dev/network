@@ -1,4 +1,4 @@
-import { MetricsContext, NetworkNode } from 'streamr-network'
+import { NetworkNode } from 'streamr-network'
 import { Config } from './config'
 import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
@@ -15,7 +15,6 @@ export interface PluginOptions {
     publisher: Publisher
     streamrClient: StreamrClient
     apiAuthenticator: ApiAuthenticator
-    metricsContext: MetricsContext
     brokerConfig: Config
     nodeId: string
 }
@@ -28,7 +27,6 @@ export abstract class Plugin<T> {
     readonly publisher: Publisher
     readonly streamrClient?: StreamrClient
     readonly apiAuthenticator: ApiAuthenticator
-    readonly metricsContext: MetricsContext
     readonly brokerConfig: Config
     readonly pluginConfig: T
     readonly nodeId: string
@@ -41,7 +39,6 @@ export abstract class Plugin<T> {
         this.publisher = options.publisher
         this.streamrClient = options.streamrClient
         this.apiAuthenticator = options.apiAuthenticator
-        this.metricsContext = options.metricsContext
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]
         this.nodeId = options.nodeId

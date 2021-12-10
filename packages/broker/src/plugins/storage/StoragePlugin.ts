@@ -10,6 +10,7 @@ import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig, AssignmentMessage } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
+import { MetricsContext } from 'streamr-network'
 
 export interface StoragePluginConfig {
     cassandra: {
@@ -43,7 +44,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     }
 
     async start(): Promise<void> {
-        this.cassandra = await this.getCassandraStorage()
+        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
+        this.cassandra = await this.getCassandraStorage(metricsContext)
         this.storageConfig = await this.createStorageConfig()
         this.messageListener = (msg) => {
             if (this.storageConfig!.hasSPID(msg.getSPID())) {
@@ -59,12 +61,12 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         })
         this.networkNode.addMessageListener(this.messageListener)
         const streamFetcher = new StreamFetcher(this.getRestUrl())
-        this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, streamFetcher, this.metricsContext))
+        this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, streamFetcher, metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
     }
 
-    private async getCassandraStorage(): Promise<Storage> {
+    private async getCassandraStorage(metricsContext: MetricsContext): Promise<Storage> {
         const cassandraStorage = await startCassandraStorage({
             contactPoints: [...this.pluginConfig.cassandra.hosts],
             localDataCenter: this.pluginConfig.cassandra.datacenter,
@@ -75,7 +77,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 useTtl: false
             }
         })
-        cassandraStorage.enableMetrics(this.metricsContext)
+        cassandraStorage.enableMetrics(metricsContext)
         return cassandraStorage
     }
 

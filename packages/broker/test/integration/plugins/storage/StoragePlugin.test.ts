@@ -37,9 +37,12 @@ const createMockPlugin = (networkNode: any, subscriptionManager: any) => {
         networkNode,
         subscriptionManager,
         publisher: undefined as any,
-        streamrClient: undefined as any,
+        streamrClient: {
+            getNode: () => Promise.resolve({
+                getMetricsContext: () => new MetricsContext(undefined as any)
+            } as any)
+        } as any,
         apiAuthenticator: undefined as any,
-        metricsContext: new MetricsContext(null as any),
         brokerConfig,
         nodeId: wallet.address
     })

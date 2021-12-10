@@ -47,7 +47,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
             this.networkNode,
             new StreamFetcher(this.getRestUrl()),
             this.publisher,
-            this.metricsContext,
+            (await (this.streamrClient!.getNode())).getMetricsContext(),
             this.subscriptionManager,
             await this.getStorageNodeRegistry(),
             this.pluginConfig.pingInterval,

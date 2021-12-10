@@ -1,4 +1,4 @@
-import { Logger, MetricsContext } from 'streamr-network'
+import { Logger } from 'streamr-network'
 import StreamrClient, { validateConfig as validateClientConfig} from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
@@ -48,8 +48,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const wallet = new Wallet(config.client.auth!.privateKey!)
     const brokerAddress = wallet.address
 
-    const metricsContext = new MetricsContext(config.client.network?.name ?? brokerAddress)
-
     const streamrClient = new StreamrClient({
         auth: {
             privateKey: config.client.auth!.privateKey!,
@@ -61,13 +59,12 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             name: config.client.network?.name,
             trackers: config.client.network?.trackers,
             location: config.client.network?.location,
-            metricsContext,
             stunUrls: config.client.network?.stunUrls,
             webrtcDisallowPrivateAddresses: config.client.network?.webrtcDisallowPrivateAddresses,
             acceptProxyConnections: config.client.network?.acceptProxyConnections
         }
     })
-    const publisher = new Publisher(streamrClient, metricsContext)
+    const publisher = new Publisher(streamrClient)
     // Start network node
     const networkNode = await streamrClient.getNode()
     const nodeId = networkNode.getNodeId()
@@ -82,7 +79,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             publisher,
             streamrClient,
             apiAuthenticator,
-            metricsContext,
             brokerConfig: config,
             nodeId,
         }
@@ -98,6 +94,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
             //await streamrClient.startNode()
+            await publisher.start()
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
             if (httpServerRoutes.length > 0) {
