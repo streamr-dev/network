@@ -9,7 +9,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, NetworkSmartContract, TrackerRegistryItem } from './config'
+import { ClientConfig, Config, NetworkSmartContract } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -25,15 +25,14 @@ export interface Broker {
     stop: () => Promise<unknown>
 }
 
-const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
-    if ((config.network.trackers as NetworkSmartContract).contractAddress) {
+const transformClientConfig = async (config: ClientConfig) => {
+    const trackerConfig = config.network?.trackers
+    if ((trackerConfig as NetworkSmartContract)?.contractAddress !== undefined) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
-            contractAddress: (config.network.trackers as NetworkSmartContract).contractAddress,
-            jsonRpcProvider: (config.network.trackers as NetworkSmartContract).jsonRpcProvider
+            contractAddress: (trackerConfig as NetworkSmartContract).contractAddress,
+            jsonRpcProvider: (trackerConfig as NetworkSmartContract).jsonRpcProvider
         })
-        return registry.getAllTrackers()
-    } else {
-        return config.network.trackers as TrackerRegistryItem[]
+        config.network!.trackers = registry.getAllTrackers()
     }
 }
 
@@ -59,14 +58,13 @@ const getNameDescription = (name: string|undefined, id: string) => {
 
 export const createBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
+    await transformClientConfig(config.client)
     validateClientConfig(config.client)
 
     const wallet = new Wallet(config.client.auth!.privateKey!)
     const brokerAddress = wallet.address
 
     const metricsContext = new MetricsContext(config.client.network?.name ?? brokerAddress)
-
-    const trackers = await getTrackers(config)
 
     const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
 
@@ -83,7 +81,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         network: {
             id: usePredeterminedNetworkId ? brokerAddress : undefined,
             name: config.client.network?.name,
-            trackers,
+            trackers: config.client.network?.trackers,
             location: config.client.network?.location,
             metricsContext,
             stunUrls: getStunTurnUrls(config),
@@ -133,7 +131,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
             logger.info(`Network node ${getNameDescription(config.client.network?.name, nodeId)} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
-            logger.info(`Configured with trackers: [${trackers.map((tracker) => tracker.http).join(', ')}]`)
+            if (config.client.network?.trackers !== undefined) {
+                logger.info(`Configured with trackers: [${config.client.network.trackers.map((tracker) => tracker.http).join(', ')}]`)
+            }
             if (config.client.restUrl !== undefined) {
                 logger.info(`Configured with Streamr: ${config.client.restUrl}`)
             }

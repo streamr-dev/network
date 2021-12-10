@@ -84,6 +84,13 @@ export const formConfig = ({
             restUrl,
             network: {
                 name,
+                trackers: [
+                    {
+                        id: trackerId,
+                        ws: `ws://127.0.0.1:${trackerPort}`,
+                        http: `http://127.0.0.1:${trackerPort}`
+                    }
+                ],
                 location: {
                     latitude: 60.19,
                     longitude: 24.95,
@@ -95,13 +102,6 @@ export const formConfig = ({
         },
         generateSessionId,
         network: {
-            trackers: [
-                {
-                    id: trackerId,
-                    ws: `ws://127.0.0.1:${trackerPort}`,
-                    http: `http://127.0.0.1:${trackerPort}`
-                }
-            ],
             stun: null,
             turn: null,
             webrtcDisallowPrivateAddresses: false,

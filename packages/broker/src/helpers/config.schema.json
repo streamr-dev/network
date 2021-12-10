@@ -72,49 +72,6 @@
             "description": "Network node settings",
             "additionalProperties": false,
             "properties": {
-                "trackers": {
-                    "default": [
-                        {
-                            "id": "0x7b9ad7B9E377dFd17fb4fF8F946956BDa1572849",
-                            "ws": "wss://corea1.streamr.network:30300",
-                            "http": "https://corea1.streamr.network:30300"
-                        },
-                        {
-                            "id": "0xeC3471C25f47FD62D181Af7fd5cB82D4520E26BC",
-                            "ws": "wss://corea2.streamr.network:30300",
-                            "http": "https://corea2.streamr.network:30300"
-                        }
-                    ],
-                    "oneOf": [
-                        {
-                            "type": "array",
-                            "description": "List of tracker ids and HTTP/WebSocket URLs to connect to",
-                            "items": {
-                                "type": "object",
-                                "required": [
-                                    "id",
-                                    "ws",
-                                    "http"
-                                ],
-                                "properties": {
-                                    "id": {
-                                        "type": "string"
-                                    },
-                                    "ws": {
-                                        "type": "string"
-                                    },
-                                    "http": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "description": "Tracker registry smart contract to use for fetching tracker WebSocket URLs",
-                            "$ref": "#/definitions/smartContractConfig"
-                        }
-                    ]
-                },
                 "stun": {
                     "type": [
                         "string",

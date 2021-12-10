@@ -15,7 +15,6 @@ export interface TurnConfig {
 }
 
 export interface NetworkConfig {
-    trackers: TrackerRegistryItem[] | NetworkSmartContract,
     stun: string | null,
     turn: TurnConfig | null,
     webrtcDisallowPrivateAddresses: boolean,
@@ -30,8 +29,10 @@ export interface HttpServerConfig {
 
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
+export type ClientConfig = BrubeckClientConfig & { network?: { trackers: TrackerRegistryItem[] | NetworkSmartContract | undefined } }
+
 export interface Config {
-    client: BrubeckClientConfig
+    client: ClientConfig
     generateSessionId: boolean
     network: NetworkConfig,
     httpServer: HttpServerConfig
