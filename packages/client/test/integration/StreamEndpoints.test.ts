@@ -4,7 +4,6 @@ import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativ
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
 import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
 
@@ -18,7 +17,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
     let wallet: Wallet
     let createdStream: Stream
     let otherWallet: Wallet
-    let storageNode: StorageNode
+    let storageNodeAddress: string
 
     beforeAll(async () => {
         await wait(delay)
@@ -39,13 +38,14 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             requireEncryptedData: false,
         })
         const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-        const storageNodeClient = new StreamrClient({
-            ...clientOptions,
-            auth: {
-                privateKey: storageNodeWallet.privateKey,
-            },
-        })
-        storageNode = await storageNodeClient.setNode(storageNodeTestConfig.url)
+        // const storageNodeClient = new StreamrClient({
+        //     ...clientOptions,
+        //     auth: {
+        //         privateKey: storageNodeWallet.privateKey,
+        //     },
+        // })
+        // await storageNodeClient.setNode(storageNodeTestConfig.url)
+        storageNodeAddress = storageNodeWallet.address
         // storageNode = await client.getStorageNode(await storageNodeWallet.getAddress())
     })
 
@@ -250,8 +250,8 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             const stream = await client.createStream({
                 id: await createRelativeTestStreamId(module),
             })
-            await stream.addToStorageNode(storageNode)
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
+            await stream.addToStorageNode(storageNodeAddress)
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
             const result = await client.getStreamLast(stream.id)
             expect(result).toEqual([])
         })
@@ -634,12 +634,12 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
         it('add', async () => {
             // await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
             const stream = await createTestStream(client, module)
-            await stream.addToStorageNode(storageNode.getAddress())
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
+            await stream.addToStorageNode(storageNodeAddress)
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
-            expect(storageNodes[0]).toStrictEqual(storageNode)
-            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
+            expect(storageNodes[0]).toStrictEqual(storageNodeAddress.toLowerCase())
+            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
             return expect(storedStreamParts.some(
                 (sp) => (sp.streamId === stream.id) && (sp.streamPartition === 0)
             )).toBeTruthy()
@@ -647,13 +647,13 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
 
         it('remove', async () => {
             const stream = await createTestStream(client, module)
-            await stream.addToStorageNode(storageNode)
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress()) }, 100000, 1000)
-            await stream.removeFromStorageNode(storageNode)
-            await until(async () => { return !(await client.isStreamStoredInStorageNode(stream.id, storageNode.getAddress())) }, 100000, 1000)
+            await stream.addToStorageNode(storageNodeAddress)
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
+            await stream.removeFromStorageNode(storageNodeAddress)
+            await until(async () => { return !(await client.isStreamStoredInStorageNode(stream.id, storageNodeAddress)) }, 100000, 1000)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
-            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
+            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
             return expect(storedStreamParts.some(
                 (sp) => (sp.streamId === stream.id)
             )).toBeFalsy()

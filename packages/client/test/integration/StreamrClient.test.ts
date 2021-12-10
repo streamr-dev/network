@@ -534,12 +534,12 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('decodes resent messages correctly', async () => {
-            const storageNodeClient = await createClient({ auth: {
-                privateKey: storageNodeTestConfig.privatekey
-            } })
-            const node = await storageNodeClient.setNode(storageNodeTestConfig.url)
-            await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, node.getAddress()) }, 100000, 1000)
+            // const storageNodeClient = await createClient({ auth: {
+            //     privateKey: storageNodeTestConfig.privatekey
+            // } })
+            // await storageNodeClient.setNode(storageNodeTestConfig.url)
+            await stream.addToStorageNode(storageNodeTestConfig.address)// use actual storage nodes Address, actually register it
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeTestConfig.address) }, 100000, 1000)
 
             const publishedMessage = Msg({
                 content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')

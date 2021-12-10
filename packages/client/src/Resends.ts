@@ -195,8 +195,8 @@ export default class Resend implements Context {
     private async fetchStream<T>(endpointSuffix: 'last' | 'range' | 'from', spid: SPID, query: QueryDict = {}) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, spid.key, query)
-        const nodes = await this.getStreamNodes(spid)
-        if (!nodes.length) {
+        const nodeAdresses = await this.getStreamNodes(spid)
+        if (!nodeAdresses.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(spid)}`)
             err.code = 'NO_STORAGE_NODES'
             throw err
@@ -204,7 +204,8 @@ export default class Resend implements Context {
 
         // just pick first node
         // TODO: handle multiple nodes
-        const url = createUrl(nodes[0].url, endpointSuffix, spid, query)
+        const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(nodeAdresses[0])
+        const url = createUrl(nodeUrl, endpointSuffix, spid, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
             spid,

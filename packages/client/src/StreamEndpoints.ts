@@ -19,7 +19,6 @@ import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
-import { StorageNode } from './StorageNode'
 import { NodeRegistry } from './NodeRegistry'
 
 export const createStreamId = async (streamIdOrPath: string, ownerProvider?: () => Promise<EthereumAddress|undefined>) => {
@@ -222,22 +221,22 @@ export class StreamEndpoints implements Context {
             count,
         })
         const stream = await this.streamRegistry.getStream(streamId)
-        const nodes = await stream.getStorageNodes()
-        if (nodes.length === 0) { throw new NotFoundError('Stream: name=' + streamId + ' has no storage nodes!') }
-        const storageNode = nodes[Math.floor(Math.random() * nodes.length)]
+        const nodeAdresses = await stream.getStorageNodes()
+        if (nodeAdresses.length === 0) { throw new NotFoundError('Stream: name=' + streamId + ' has no storage nodes!') }
+        const chosenNode = nodeAdresses[Math.floor(Math.random() * nodeAdresses.length)]
+        const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(chosenNode)
         const json = await this.rest.get<StreamMessageAsObject>([
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
             query: { count },
             useSession: false,
-            restUrl: storageNode.url
+            restUrl: nodeUrl
         })
         return json
     }
 
-    async getStreamPartsByStorageNode(node: StorageNode|EthereumAddress) {
-        const storageNode = (node instanceof StorageNode) ? node : await this.nodeRegistry.getStorageNode(node)
-        const streams = await this.nodeRegistry.getStoredStreamsOf(storageNode.getAddress())
+    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress) {
+        const streams = await this.nodeRegistry.getStoredStreamsOf(nodeAddress)
 
         const result: SPID[] = []
         streams.forEach((stream: Stream) => {
