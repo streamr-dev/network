@@ -831,7 +831,7 @@ describeRepeats('decryption', () => {
             beforeEach(async () => {
                 await setupPublisherSubscriberClients({
                     cache: {
-                        maxAge: 1,
+                        maxAge: 100,
                     }
                 })
             })
