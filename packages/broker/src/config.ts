@@ -15,7 +15,6 @@ export interface TurnConfig {
 }
 
 export interface NetworkConfig {
-    webrtcDisallowPrivateAddresses: boolean,
     acceptProxyConnections: boolean
 }
 

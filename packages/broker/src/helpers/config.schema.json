@@ -72,11 +72,6 @@
             "description": "Network node settings",
             "additionalProperties": false,
             "properties": {
-                "webrtcDisallowPrivateAddresses": {
-                        "type": "boolean",
-                        "description": "If true, disallow WebRTC from probing private addresses",
-                        "default": false
-                },
                 "acceptProxyConnections": {
                     "type": "boolean",
                     "description": "If true, broker node accepts one way connections on the network overlay level",

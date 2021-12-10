@@ -52,8 +52,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
 
-    const webrtcDisallowPrivateAddresses = config.network.webrtcDisallowPrivateAddresses
-
     const acceptProxyConnections = config.network.acceptProxyConnections
 
     const streamrClient = new StreamrClient({
@@ -69,7 +67,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             location: config.client.network?.location,
             metricsContext,
             stunUrls: config.client.network?.stunUrls,
-            webrtcDisallowPrivateAddresses,
+            webrtcDisallowPrivateAddresses: config.client.network?.webrtcDisallowPrivateAddresses,
             acceptProxyConnections
         }
     })
@@ -123,7 +121,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             }
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
-            if (!webrtcDisallowPrivateAddresses) {
+            if (!config.client.network?.webrtcDisallowPrivateAddresses) {
                 logger.warn('WebRTC private address probing is allowed. ' +
                     'This can trigger false-positives for port scanning detection on some web hosts. ' +
                     'More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')

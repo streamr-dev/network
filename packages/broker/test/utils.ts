@@ -97,12 +97,12 @@ export const formConfig = ({
                     country: 'Finland',
                     city: 'Helsinki'
                 },
+                webrtcDisallowPrivateAddresses: false,
             },
-            storageNodeRegistry
+            storageNodeRegistry,
         },
         generateSessionId,
         network: {
-            webrtcDisallowPrivateAddresses: false,
             acceptProxyConnections: false
         },
         httpServer: {
