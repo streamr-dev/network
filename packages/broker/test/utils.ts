@@ -102,8 +102,6 @@ export const formConfig = ({
         },
         generateSessionId,
         network: {
-            stun: null,
-            turn: null,
             webrtcDisallowPrivateAddresses: false,
             acceptProxyConnections: false
         },

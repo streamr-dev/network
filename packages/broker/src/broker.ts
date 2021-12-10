@@ -36,22 +36,6 @@ const transformClientConfig = async (config: ClientConfig) => {
     }
 }
 
-const getStunTurnUrls = (config: Config): string[] | undefined => {
-    if (!config.network.stun && !config.network.turn) {
-        return undefined
-    }
-    const urls = []
-    if (config.network.stun) {
-        urls.push(config.network.stun)
-    }
-    if (config.network.turn) {
-        const parsedUrl = config.network.turn.url.replace('turn:', '')
-        const turn = `turn:${config.network.turn.username}:${config.network.turn.password}@${parsedUrl}`
-        urls.push(turn)
-    }
-    return urls
-}
-
 const getNameDescription = (name: string|undefined, id: string) => {
     return (name !== undefined) ? `${name} (id=${id})` : id
 }
@@ -84,7 +68,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             trackers: config.client.network?.trackers,
             location: config.client.network?.location,
             metricsContext,
-            stunUrls: getStunTurnUrls(config),
+            stunUrls: config.client.network?.stunUrls,
             webrtcDisallowPrivateAddresses,
             acceptProxyConnections
         }

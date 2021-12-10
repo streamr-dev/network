@@ -15,8 +15,6 @@ export interface TurnConfig {
 }
 
 export interface NetworkConfig {
-    stun: string | null,
-    turn: TurnConfig | null,
     webrtcDisallowPrivateAddresses: boolean,
     acceptProxyConnections: boolean
 }

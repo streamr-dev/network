@@ -107,11 +107,12 @@ export const CONFIG_TEMPLATE: any = {
         storageNodeRegistry: [{
             address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
             url: "https://testnet2.streamr.network:8001"
-        }]
+        }],
+        stunUrls: [
+            "stun:stun.streamr.network:5349"
+        ]
     },
     network: {
-        stun: "stun:stun.streamr.network:5349",
-        turn: null
     },
     generateSessionId: false,
     plugins: {
