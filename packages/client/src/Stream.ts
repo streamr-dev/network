@@ -18,7 +18,6 @@ import { NodeRegistry } from './NodeRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { StorageNode } from './StorageNode'
 import { AddressZero } from '@ethersproject/constants'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
@@ -370,23 +369,14 @@ class StreamrStream implements StreamMetadata {
         await this.update()
     }
 
-    async addToStorageNode(node: StorageNode | EthereumAddress, waitOptions: {
+    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: {
         timeout?: number,
         pollInterval?: number
     } = {}) {
         try {
-            let address: string
-            let url
-            if (node instanceof StorageNode && node.url) {
-                address = node.getAddress()
-                url = node.url
-            } else {
-                address = (node instanceof StorageNode) ? node.getAddress() : node
-                const storageNode = await this._nodeRegistry.getStorageNode(address)
-                url = storageNode.url
-            }
-            await this._nodeRegistry.addStreamToStorageNode(this.id, address)
-            await this.waitUntilStorageAssigned(waitOptions, url)
+            const storageNodeUrl = await this._nodeRegistry.getStorageNodeUrl(nodeAddress)
+            await this._nodeRegistry.addStreamToStorageNode(this.id, nodeAddress)
+            await this.waitUntilStorageAssigned(waitOptions, storageNodeUrl)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
@@ -418,10 +408,9 @@ class StreamrStream implements StreamMetadata {
         throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
-    async removeFromStorageNode(node: StorageNode | EthereumAddress) {
+    async removeFromStorageNode(nodeAddress: EthereumAddress) {
         try {
-            const address = (node instanceof StorageNode) ? node.getAddress() : node
-            return this._nodeRegistry.removeStreamFromStorageNode(this.id, address)
+            return this._nodeRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }

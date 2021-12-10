@@ -1,7 +1,7 @@
 import debug from 'debug'
 import { Wallet } from 'ethers'
 // import { wait } from 'streamr-test-utils'
-import { EthereumAddress, NotFoundError, StorageNode, Stream } from '../../src'
+import { EthereumAddress, NotFoundError, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
 import { EthereumStorageEvent } from '../../src/NodeRegistry'
@@ -20,7 +20,6 @@ const log = debug('StreamrClient::NodeEndpointsIntegrationTest')
 let client: StreamrClient
 let newStorageNodeClient: StreamrClient
 let createdStream: Stream
-let createdNode: StorageNode
 let nodeAddress: EthereumAddress
 
 const createClient = getCreateClient()
@@ -40,18 +39,18 @@ beforeAll(async () => {
 
 describe('createNode', () => {
     it('creates a node ', async () => {
-        const storageNodeUrl = 'http://asd.com'
-        createdNode = await newStorageNodeClient.setNode(storageNodeUrl)
+        const storageNodeMetadata = '{"http": "http://10.200.10.1:8891/api/v1"}'
+        await newStorageNodeClient.setNode(storageNodeMetadata)
         await until(async () => {
             try {
-                return (await client.getStorageNode(nodeAddress)) !== null
+                return (await client.getStorageNodeUrl(nodeAddress)) !== null
             } catch (err) {
                 log('node not found yet %o', err)
                 return false
             }
         }, 100000, 1000)
-        expect(createdNode.getAddress()).toEqual(nodeAddress.toLowerCase())
-        return expect(createdNode.url).toEqual(storageNodeUrl)
+        const createdNodeUrl = await client.getStorageNodeUrl(nodeAddress)
+        return expect(createdNodeUrl).toEqual('http://10.200.10.1:8891/api/v1')
     })
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode', async () => {
@@ -80,9 +79,9 @@ describe('createNode', () => {
     })
 
     it('getStorageNodesOf', async () => {
-        const storageNodes: StorageNode[] = await client.getStorageNodesOf(createdStream.id)
-        expect(storageNodes.length).toEqual(1)
-        return expect(storageNodes[0].getAddress()).toEqual(nodeAddress.toLowerCase())
+        const storageNodeUrls: EthereumAddress[] = await client.getStorageNodesOf(createdStream.id)
+        expect(storageNodeUrls.length).toEqual(1)
+        return expect(storageNodeUrls[0]).toEqual(nodeAddress.toLowerCase())
     })
 
     it('getStoredStreamsOf', async () => {
@@ -92,9 +91,9 @@ describe('createNode', () => {
     })
 
     it('getAllStorageNodes', async () => {
-        const storageNodes: StorageNode[] = await client.getAllStorageNodes()
-        expect(storageNodes.length).toBeGreaterThan(0)
-        return expect(storageNodes.map((node) => { return node.getAddress() })).toContain(nodeAddress.toLowerCase())
+        const storageNodeUrls: EthereumAddress[] = await client.getAllStorageNodes()
+        expect(storageNodeUrls.length).toBeGreaterThan(0)
+        return expect(storageNodeUrls).toContain(nodeAddress.toLowerCase())
     })
 
     it('removeStreamFromStorageNode', async () => {
@@ -107,16 +106,16 @@ describe('createNode', () => {
         const storageNodeClientFromDevEnv = await createClient({ auth: {
             privateKey: storageNodeTestConfig.privatekey
         } })
-        const storageNodeDev = await storageNodeClientFromDevEnv.setNode(storageNodeTestConfig.url)
-        await createdStream.addToStorageNode(await storageNodeDev.getAddress())
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, await storageNodeDev.getAddress())).toEqual(true)
+        await storageNodeClientFromDevEnv.setNode(storageNodeTestConfig.url)
+        await createdStream.addToStorageNode(storageNodeTestConfig.address)
+        return expect(await client.isStreamStoredInStorageNode(createdStream.id, storageNodeTestConfig.address)).toEqual(true)
     })
 
     it('delete a node ', async () => {
         await newStorageNodeClient.removeNode()
         await until(async () => {
             try {
-                const res = await client.getStorageNode(nodeAddress)
+                const res = await client.getStorageNodeUrl(nodeAddress)
                 return res === null
             } catch (err) {
                 if (err instanceof NotFoundError) { return true }
@@ -124,7 +123,7 @@ describe('createNode', () => {
                 return false
             }
         }, 100000, 1000)
-        return expect(client.getStorageNode(nodeAddress)).rejects.toThrow()
+        return expect(client.getStorageNodeUrl(nodeAddress)).rejects.toThrow()
     })
 })
 

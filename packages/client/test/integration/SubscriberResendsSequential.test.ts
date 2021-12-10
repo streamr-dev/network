@@ -8,9 +8,9 @@ import {
     createTestStream,
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { storageNodeTestConfig } from './devEnvironment'
 
 import { Stream, StreamPermission } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 12000
 const MAX_MESSAGES = 5
@@ -46,7 +46,7 @@ describeRepeats('sequential resend subscribe', () => {
         })
 
         stream = await createTestStream(publisher, module)
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV.getAddress())
+        await stream.addToStorageNode(storageNodeTestConfig.address)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
         await stream.grantUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())

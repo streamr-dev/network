@@ -52,11 +52,11 @@ describeRepeats('GapFill', () => {
         stream = await createTestStream(client, module, {
             requireSignedData: true
         })
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: storageNodeTestConfig.privatekey
-        } })
-        const storageNode = await storageNodeClient.setNode(storageNodeTestConfig.url)
-        await stream.addToStorageNode(storageNode)
+        // const storageNodeClient = await createClient({ auth: {
+        //     privateKey: storageNodeTestConfig.privatekey
+        // } })
+        // await storageNodeClient.setNode(storageNodeTestConfig.url)
+        await stream.addToStorageNode(storageNodeTestConfig.address)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream, { waitForLast: true })
         return client

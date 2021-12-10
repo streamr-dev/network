@@ -7,7 +7,6 @@ import type { StreamStorageRegistry as StreamStorageRegistryContract } from './e
 import NodeRegistryArtifact from './ethereumArtifacts/NodeRegistryAbi.json'
 import StreamStorageRegistryArtifact from './ethereumArtifacts/StreamStorageRegistry.json'
 import fetch from 'node-fetch'
-import { StorageNode } from './StorageNode'
 import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'
@@ -113,13 +112,12 @@ export class NodeRegistry {
         }
     }
 
-    async setNode(nodeUrl: string): Promise<StorageNode> {
-        log('setNode %s -> %s', nodeUrl)
+    async setNode(nodeMetadata: string): Promise<void> {
+        log('setNode %s -> %s', nodeMetadata)
         await this.connectToNodeRegistryContract()
 
-        const tx = await this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeUrl)
+        const tx = await this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata)
         await tx.wait()
-        return new StorageNode(await this.ethereum.getAddress(), nodeUrl)
     }
 
     async removeNode(): Promise<void> {
@@ -150,13 +148,14 @@ export class NodeRegistry {
     // GraphQL queries
     // --------------------------------------------------------------------------------------------
 
-    async getStorageNode(nodeAddress: string): Promise<StorageNode> {
+    async getStorageNodeUrl(nodeAddress: string): Promise<string> {
         log('getnode %s ', nodeAddress)
         const res = await this.sendNodeQuery(NodeRegistry.buildGetNodeQuery(nodeAddress.toLowerCase())) as SingleNodeQueryResult
         if (res.node === null) {
             throw new NotFoundError('Node not found, id: ' + nodeAddress)
         }
-        return new StorageNode(res.node.id, res.node.metadata)
+        const metadata = JSON.parse(res.node.metadata)
+        return metadata.http
     }
 
     async isStreamStoredInStorageNode(streamId: string, nodeAddress: string): Promise<boolean> {
@@ -168,10 +167,10 @@ export class NodeRegistry {
         return res.node.storedStreams.find((stream) => stream.id === streamId) !== undefined
     }
 
-    async getStorageNodesOf(streamId: string): Promise<StorageNode[]> {
+    async getStorageNodesOf(streamId: string): Promise<EthereumAddress[]> {
         log('Getting storage nodes of stream %s', streamId)
         const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
-        return res.stream.storageNodes.map((node) => new StorageNode(node.id, node.metadata))
+        return res.stream.storageNodes.map((node) => node.id)
     }
 
     async getStoredStreamsOf(nodeAddress: string): Promise<Stream[]> {
@@ -180,10 +179,10 @@ export class NodeRegistry {
         return res.node.storedStreams.map((stream) => this.parseStream(stream.id, stream.metadata))
     }
 
-    async getAllStorageNodes(): Promise<StorageNode[]> {
+    async getAllStorageNodes(): Promise<EthereumAddress[]> {
         log('Getting all storage nodes')
         const res = await this.sendNodeQuery(NodeRegistry.buildAllNodesQuery()) as AllNodesQueryResult
-        return res.nodes.map((node) => new StorageNode(node.id, node.metadata))
+        return res.nodes.map((node) => node.id)
     }
 
     private async sendNodeQuery(gqlQuery: string): Promise<Object> {
