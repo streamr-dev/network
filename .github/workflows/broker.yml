@@ -24,17 +24,14 @@ jobs:
   test-unit:
     name: Unit Tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
+
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -46,17 +43,13 @@ jobs:
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -225,13 +218,12 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: 16
-          registry-url: https://registry.npmjs.org/
           cache: 'npm'
+          registry-url: https://registry.npmjs.org/
           cache-dependency-path: package-lock.json
-
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |

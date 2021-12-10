@@ -28,22 +28,18 @@ defaults:
 
 jobs:
   data-unions-integration:
-    name: DataUnions Integration Test using Node ${{ matrix.node-version }}
+    name: DataUnions Integration Test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [16.x]
     env:
       TEST_REPEATS: 1
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
           cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -64,7 +60,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          name: docker-logs--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
       - name: Stop Streamr Docker Stack
         if: always()

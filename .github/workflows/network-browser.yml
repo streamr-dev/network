@@ -23,18 +23,15 @@ defaults:
 
 jobs:
   test-browser:
-    strategy:
-      matrix:
-        node-version: [16.x]
-    name: Test on Browser Node ${{ matrix.node-version }}
+    name: Test on Browser Node
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
           cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |
