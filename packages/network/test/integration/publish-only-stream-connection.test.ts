@@ -61,12 +61,12 @@ describe('Publish only connection tests', () => {
     })
 
     afterEach(async () => {
+        await tracker.stop()
         await Promise.all([
             publisherNode.stop(),
             contactNode.stop(),
             contactNode2.stop(),
         ])
-        await tracker.stop()
     })
 
     it('publisher node can form one-way connections', async () => {

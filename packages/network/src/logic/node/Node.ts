@@ -214,8 +214,8 @@ export class Node extends EventEmitter {
             if (sendStatus) {
                 this.trackerManager.sendStreamStatus(spid)
             }
-        } else if (this.streams.isSetUp(spid) && this.streams.isOneDirectional(spid)) {
-            logger.trace(`Could not join stream ${spid.key} as stream is set as one-directional`)
+        } else if (this.streams.isSetUp(spid) && this.streams.isBehindProxy(spid)) {
+            logger.trace(`Could not join stream ${spid.key} as stream is set to be behind proxy`)
         }
     }
 
@@ -259,7 +259,7 @@ export class Node extends EventEmitter {
             streamMessage.getStreamPartition()
         )
         // Check if the stream is set as one-directional and has inbound connection
-        if (source && this.streams.isSetUp(spid) && this.streams.isOneDirectional(spid) && !this.streams.hasInboundConnection(spid, source)) {
+        if (source && this.streams.isSetUp(spid) && this.streams.isBehindProxy(spid) && !this.streams.hasInboundConnection(spid, source)) {
             // Perhaps the node should be disconnected here if bad behaviour is repeated
             return
         }
@@ -334,7 +334,7 @@ export class Node extends EventEmitter {
             this.trackerManager.sendStreamStatus(s)
         })
         proxiedStreams.forEach((s) => {
-            this.proxyStreamConnectionManager.attemptReconnection(s, node)
+            this.proxyStreamConnectionManager.reconnect(node, s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }

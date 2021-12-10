@@ -6,6 +6,7 @@ import {
     PublishStreamConnectionRequest,
     PublishStreamConnectionResponse,
     SPID,
+    SPIDKey,
     UnsubscribeRequest
 } from 'streamr-client-protocol'
 import { promiseTimeout } from '../../helpers/PromiseTools'
@@ -21,6 +22,17 @@ export interface ProxyStreamConnectionManagerOptions {
     acceptProxyConnections: boolean
 }
 
+enum State {
+    CONNECTING,
+    CONNECTED,
+    RECONNECTING
+}
+
+interface ProxyConnection {
+    state?: State,
+    reconnectionTimer?: NodeJS.Timeout
+}
+
 const DEFAULT_RECONNECTION_TIMEOUT = 10 * 1000
 
 export class ProxyStreamConnectionManager {
@@ -29,9 +41,8 @@ export class ProxyStreamConnectionManager {
     private readonly nodeToNode: NodeToNode
     private readonly node: Node
     private readonly nodeConnectTimeout: number
-    private readonly attemptedPublishOnlyStreamConnections: Record<string, Record<NodeId, NodeJS.Timeout>>
     private readonly acceptProxyConnections: boolean
-    private readonly reattemptIntervals: Record<string, Record<NodeId, NodeJS.Timeout>>
+    private readonly connections: Map<SPIDKey, Map<NodeId, ProxyConnection>>
 
     constructor(opts: ProxyStreamConnectionManagerOptions) {
         this.trackerManager = opts.trackerManager
@@ -40,39 +51,42 @@ export class ProxyStreamConnectionManager {
         this.node = opts.node
         this.nodeConnectTimeout = opts.nodeConnectTimeout
         this.acceptProxyConnections = opts.acceptProxyConnections
-        this.attemptedPublishOnlyStreamConnections = {}
-        this.reattemptIntervals = {}
+        this.connections = new Map()
     }
 
-    addAttemptedPublishOnlyStreamConnection(spid: SPID, nodeId: NodeId): void {
-        if (!this.attemptedPublishOnlyStreamConnections[spid.key]) {
-            this.attemptedPublishOnlyStreamConnections[spid.key] = {}
+    addConnection(spid: SPID, nodeId: NodeId): void {
+        if (!this.connections.has(spid.key)) {
+            this.connections.set(spid.key, new Map())
         }
-        this.attemptedPublishOnlyStreamConnections[spid.key][nodeId] = setTimeout(() => {
-            delete this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]
-            if (Object.keys(this.attemptedPublishOnlyStreamConnections[spid.key]).length === 0) {
-                delete this.attemptedPublishOnlyStreamConnections[spid.key]
-            }
-        }, this.nodeConnectTimeout * 2)
+        this.connections.get(spid.key)!.set(nodeId, {
+            state: State.CONNECTING
+        })
     }
 
-    clearAttemptedPublishOnlyStreamConnection(spid: SPID, nodeId: NodeId): void {
-        if (this.attemptedPublishOnlyStreamConnections[spid.key] && this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]) {
-            clearTimeout(this.attemptedPublishOnlyStreamConnections[spid.key][nodeId])
-            delete this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]
-            if (Object.keys(this.attemptedPublishOnlyStreamConnections[spid.key]).length === 0) {
-                delete this.attemptedPublishOnlyStreamConnections[spid.key]
+    removeConnection(spid: SPID, nodeId: NodeId): void {
+        if (this.connections.has(spid.key)) {
+            this.connections.get(spid.key)!.delete(nodeId)
+            if ([...this.connections.get(spid.key)!].length === 0) {
+                this.connections.delete(spid.key)
             }
         }
+
+        this.streamManager.removeNodeFromStream(spid, nodeId)
+        if (this.streamManager.isSetUp(spid)
+            && this.streamManager.getAllNodesForStream(spid).length === 0
+            && !this.connections.has(spid.key)
+            && this.streamManager.isBehindProxy(spid)
+        ) {
+            this.streamManager.removeStream(spid)
+        }
     }
 
-    checkIfAttemptedPublishOnlyConnectionExists(spid: SPID, nodeId: NodeId): boolean {
-        if (!this.attemptedPublishOnlyStreamConnections[spid.key]) {
-            return false
-        } else if (!this.attemptedPublishOnlyStreamConnections[spid.key][nodeId]) {
-            return false
-        }
-        return true
+    private hasConnection(nodeId: NodeId, spid: SPID): boolean {
+        return this.connections.get(spid.key)!.has(nodeId)
+    }
+
+    private getConnection(nodeId: NodeId, spid: SPID): ProxyConnection | undefined {
+        return this.connections.get(spid.key)!.get(nodeId)!
     }
 
     async openOutgoingStreamConnection(spid: SPID, targetNodeId: string): Promise<void> {
@@ -81,55 +95,40 @@ export class ProxyStreamConnectionManager {
         try {
             if (!this.streamManager.isSetUp(spid)) {
                 this.streamManager.setUpStream(spid, true)
-            } else if (this.streamManager.isSetUp(spid) && !this.streamManager.isOneDirectional(spid)) {
+            } else if (this.streamManager.isSetUp(spid) && !this.streamManager.isBehindProxy(spid)) {
                 const reason = `Could not open outgoing stream connection ${spid.key}, bidirectional stream already exists`
                 logger.warn(reason)
                 this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, reason)
                 return
             } else if (this.streamManager.isSetUp(spid) && this.streamManager.hasOutOnlyConnection(spid, targetNodeId)) {
-                const reason = `Could not open outgoing stream connection ${spid.key}, publish only stream connection already exists`
+                const reason = `Could not open outgoing stream connection ${spid.key}, proxy stream connection already exists`
                 logger.warn(reason)
                 this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, reason)
                 return
-            } else if (this.streamManager.isSetUp(spid) && this.checkIfAttemptedPublishOnlyConnectionExists(spid, targetNodeId)) {
-                const reason = `Could not open outgoing stream connection ${spid.key}, an attempted connection already exists`
+            } else if (this.streamManager.isSetUp(spid) && this.hasConnection(targetNodeId, spid)) {
+                const reason = `Could not open outgoing stream connection ${spid.key}, a connection already exists`
                 logger.warn(reason)
                 return
             }
-            this.addAttemptedPublishOnlyStreamConnection(spid, targetNodeId)
-            await this.openPeerConnection(targetNodeId, trackerId, trackerAddress)
+            this.addConnection(spid, targetNodeId)
+            await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
+            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
             await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
         } catch (err) {
             logger.warn(`Failed to create an Outgoing stream connection to ${targetNodeId} for stream ${spid.key}:\n${err}`)
-            this.clearAttemptedPublishOnlyStreamConnection(spid, targetNodeId)
-            this.removeOneWayStreamConnection(spid, targetNodeId)
+            this.removeConnection(spid, targetNodeId)
             this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, err)
         } finally {
             this.trackerManager.disconnectFromSignallingOnlyTracker(trackerId)
         }
     }
 
-    private removeOneWayStreamConnection(spid: SPID, nodeId: NodeId): void {
-        this.streamManager.removeNodeFromStream(spid, nodeId)
-        if (this.streamManager.isSetUp(spid)
-            && this.streamManager.getAllNodesForStream(spid).length === 0
-            && !this.attemptedPublishOnlyStreamConnections[spid.key]
-            && this.streamManager.isOneDirectional(spid)
-        ) {
-            this.streamManager.removeStream(spid)
-        }
-    }
-
-    attemptReconnection(spid: SPID, nodeId: NodeId): void {
-        this.startReattemptInterval(nodeId, spid, 100)
-    }
-
     async closeOutgoingStreamConnection(spid: SPID, targetNodeId: NodeId): Promise<void> {
         if (this.streamManager.isSetUp(spid) && this.streamManager.hasOutOnlyConnection(spid, targetNodeId)) {
+            clearTimeout(this.getConnection(targetNodeId, spid)!.reconnectionTimer!)
             await this.nodeToNode.leaveStreamOnNode(targetNodeId, spid)
-            this.removeOneWayStreamConnection(spid, targetNodeId)
+            this.removeConnection(spid, targetNodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, targetNodeId, spid)
-            this.stopReattemptInterval(targetNodeId, spid)
         } else {
             logger.warn(`An outgoing stream connection for ${spid.key} on node ${targetNodeId} does not exist`)
         }
@@ -139,11 +138,11 @@ export class ProxyStreamConnectionManager {
         const { streamId, streamPartition } = message
         const spid = new SPID(streamId, streamPartition)
         if (this.streamManager.isSetUp(spid) && this.streamManager.hasInOnlyConnection(spid, nodeId)) {
-            this.removeOneWayStreamConnection(spid, nodeId)
+            this.removeConnection(spid, nodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, spid)
         }
         if (this.streamManager.isSetUp(spid) && this.streamManager.hasOutOnlyConnection(spid, nodeId)) {
-            this.removeOneWayStreamConnection(spid, nodeId)
+            this.removeConnection(spid, nodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, spid)
             logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${spid}`)
         }
@@ -164,73 +163,49 @@ export class ProxyStreamConnectionManager {
     processPublishStreamResponse(message: PublishStreamConnectionResponse, nodeId: string): void {
         const { streamId, streamPartition, accepted } = message
         const spid = new SPID(streamId, streamPartition)
-        this.clearAttemptedPublishOnlyStreamConnection(spid, nodeId)
         if (accepted) {
+            this.getConnection(nodeId, spid)!.state = State.CONNECTED
             this.streamManager.addOutOnlyNeighbor(spid, nodeId)
             this.node.emit(Event.PUBLISH_STREAM_ACCEPTED, nodeId, spid)
         } else {
-            if (this.streamManager.isSetUp(spid)
-                && this.streamManager.isOneDirectional(spid)
-                && !this.attemptedPublishOnlyStreamConnections[spid.key]
-            ) {
-                this.streamManager.removeStream(spid)
-            }
+            this.removeConnection(spid, nodeId)
             this.node.emit(Event.PUBLISH_STREAM_REJECTED, nodeId, spid, `Target node ${nodeId} rejected publish only stream connection ${spid.key}`)
         }
     }
 
-    private startReattemptInterval(targetNodeId: NodeId, spid: SPID, timeout?: number): void {
-        if (!this.reattemptIntervals[spid.key]) {
-            this.reattemptIntervals[spid.key] = {}
+    async reconnect(targetNodeId: NodeId, spid: SPID): Promise<void> {
+        const connection = this.getConnection(targetNodeId, spid)!
+        if (connection.state !== State.RECONNECTING) {
+            connection.state = State.RECONNECTING
         }
-        this.reattemptIntervals[spid.key][targetNodeId] = setTimeout(async () => {
-            await this.retryConnection(targetNodeId, spid)
-        }, timeout || DEFAULT_RECONNECTION_TIMEOUT)
-    }
-
-    private stopReattemptInterval(targetNodeId: NodeId, spid: SPID): void {
-        if (this.reattemptIntervals[spid.key] && this.reattemptIntervals[spid.key][targetNodeId]) {
-            clearTimeout(this.reattemptIntervals[spid.key][targetNodeId])
-            delete this.reattemptIntervals[spid.key][targetNodeId]
-        }
-        if (this.reattemptIntervals[spid.key] && Object.keys(this.reattemptIntervals[spid.key]).length === 0) {
-            delete this.reattemptIntervals[spid.key]
-        }
-    }
-
-    private async retryConnection(targetNodeId: NodeId, spid: SPID): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(spid)
         const trackerAddress = this.trackerManager.getTrackerAddress(spid)
         try {
-            await this.openPeerConnection(targetNodeId, trackerId, trackerAddress)
+            await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
+            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
             await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
             logger.trace(`Successful proxy stream reconnection to ${targetNodeId}`)
-            this.stopReattemptInterval(targetNodeId, spid)
+            connection.state = State.CONNECTED
+            if (connection.reconnectionTimer !== undefined) {
+                clearTimeout(connection.reconnectionTimer)
+            }
         } catch (err) {
             logger.warn(`Proxy stream reconnection attempt to ${targetNodeId} failed with error: ${err}`)
-            this.startReattemptInterval(targetNodeId, spid)
+            connection.reconnectionTimer = setTimeout( async () => {
+                await this.reconnect(targetNodeId, spid)
+            }, DEFAULT_RECONNECTION_TIMEOUT)
         } finally {
             this.trackerManager.disconnectFromSignallingOnlyTracker(trackerId)
         }
     }
 
-    private async openPeerConnection(targetNodeId: NodeId, trackerId: string, trackerAddress: string): Promise<void> {
-        await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
-        await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
-    }
-
     stop(): void {
-        Object.keys(this.attemptedPublishOnlyStreamConnections).forEach((stream) => {
-            Object.values(this.attemptedPublishOnlyStreamConnections[stream]).forEach((timeout) => {
-                clearTimeout(timeout)
+        this.connections.forEach((stream: Map<NodeId, ProxyConnection>) => {
+            stream.forEach((connection: ProxyConnection) => {
+                if (connection.reconnectionTimer !== undefined) {
+                    clearTimeout(connection.reconnectionTimer)
+                }
             })
-            delete this.attemptedPublishOnlyStreamConnections[stream]
-        })
-        Object.keys(this.reattemptIntervals).forEach((stream) => {
-            Object.values(this.reattemptIntervals[stream]).forEach((timeout) => {
-                clearTimeout(timeout)
-            })
-            delete this.reattemptIntervals[stream]
         })
     }
 }
