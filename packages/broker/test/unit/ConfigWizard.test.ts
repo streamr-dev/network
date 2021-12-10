@@ -14,6 +14,8 @@ import {
 } from '../../src/ConfigWizard'
 import { readFileSync } from 'fs'
 
+const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'
+
 const createMockLogger = () => {
     const messages: string[] = []
     return {
@@ -182,7 +184,7 @@ describe('ConfigWizard', () => {
                 selectPlugins:[pluginName],
                 websocketPort: port,
             }
-            const config = getConfig(undefined as any, pluginsAnswers)
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins[pluginName].port).toBe(numericPort)
         }
 
@@ -201,7 +203,7 @@ describe('ConfigWizard', () => {
                 mqttPort: DEFAULT_CONFIG_PORTS.MQTT,
                 publishHttpPort: DEFAULT_CONFIG_PORTS.HTTP,
             }
-            const config = getConfig(undefined as any, pluginsAnswers)
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket).toMatchObject({})
             expect(config.plugins.mqtt).toMatchObject({})
             expect(config.plugins.publishHttp).toMatchObject({})
@@ -215,7 +217,7 @@ describe('ConfigWizard', () => {
                 mqttPort: '3171',
                 publishHttpPort: '3172'
             }
-            const config = getConfig(undefined as any, pluginsAnswers)
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))

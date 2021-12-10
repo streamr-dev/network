@@ -26,7 +26,6 @@ export type ClientConfig = BrubeckClientConfig & { network?: { trackers: Tracker
 
 export interface Config {
     client: ClientConfig
-    generateSessionId: boolean
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig

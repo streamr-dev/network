@@ -50,8 +50,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const metricsContext = new MetricsContext(config.client.network?.name ?? brokerAddress)
 
-    const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
-
     const streamrClient = new StreamrClient({
         auth: {
             privateKey: config.client.auth!.privateKey!,
@@ -59,7 +57,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         restUrl: config.client.restUrl,
         storageNodeRegistry: config.client.storageNodeRegistry,
         network: {
-            id: usePredeterminedNetworkId ? brokerAddress : undefined,
+            id: config.client.network?.id,
             name: config.client.network?.name,
             trackers: config.client.network?.trackers,
             location: config.client.network?.location,

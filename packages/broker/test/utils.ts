@@ -17,7 +17,6 @@ interface TestConfig {
     trackerPort: number
     privateKey: string
     trackerId?: string
-    generateSessionId?: boolean
     httpPort?: null | number
     wsPort?: null | number
     extraPlugins?: Record<string, unknown>
@@ -36,7 +35,6 @@ export const formConfig = ({
     trackerPort,
     privateKey,
     trackerId = 'tracker-1',
-    generateSessionId = false,
     httpPort = null,
     wsPort = null,
     extraPlugins = {},
@@ -84,6 +82,7 @@ export const formConfig = ({
             restUrl,
             network: {
                 name,
+                id: new Wallet(privateKey).address,
                 trackers: [
                     {
                         id: trackerId,
@@ -101,7 +100,6 @@ export const formConfig = ({
             },
             storageNodeRegistry,
         },
-        generateSessionId,
         httpServer: {
             port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,

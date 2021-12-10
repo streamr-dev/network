@@ -61,11 +61,6 @@
                 }
             }
         },
-        "generateSessionId": {
-            "type": "boolean",
-            "description": "Whether to generate a session id that gets attached to node id (or not). Disable for consistent node id.",
-            "default": true
-        },
         "apiAuthentication": {
             "type": [
                 "object",

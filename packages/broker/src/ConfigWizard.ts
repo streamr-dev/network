@@ -112,7 +112,6 @@ export const CONFIG_TEMPLATE: any = {
             "stun:stun.streamr.network:5349"
         ]
     },
-    generateSessionId: false,
     plugins: {
         legacyWebsocket: {},
         testnetMiner: {
@@ -252,6 +251,7 @@ export const selectStoragePathPrompt = {
 export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
     config.client.auth.privateKey = privateKey
+    config.client.network.id = new Wallet(privateKey).address
 
     const pluginKeys = Object.keys(PLUGIN_NAMES)
     pluginKeys.forEach((pluginKey) => {
