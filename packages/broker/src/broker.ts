@@ -48,22 +48,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const wallet = new Wallet(config.client.auth!.privateKey!)
     const brokerAddress = wallet.address
 
-    const streamrClient = new StreamrClient({
-        auth: {
-            privateKey: config.client.auth!.privateKey!,
-        },
-        restUrl: config.client.restUrl,
-        storageNodeRegistry: config.client.storageNodeRegistry,
-        network: {
-            id: config.client.network?.id,
-            name: config.client.network?.name,
-            trackers: config.client.network?.trackers,
-            location: config.client.network?.location,
-            stunUrls: config.client.network?.stunUrls,
-            webrtcDisallowPrivateAddresses: config.client.network?.webrtcDisallowPrivateAddresses,
-            acceptProxyConnections: config.client.network?.acceptProxyConnections
-        }
-    })
+    const streamrClient = new StreamrClient(config.client)
     const publisher = new Publisher(streamrClient)
     // Start network node
     const networkNode = await streamrClient.getNode()
