@@ -70,7 +70,7 @@ describe('MemoryLeaks', () => {
         }
         */
 
-        test.only('container get all', async () => {
+        test('container get all', async () => {
             const { config, childContainer, rootContext } = await createContainer()
             const toStop = []
             const destroySignal = childContainer.resolve(Dependencies.DestroySignal)
