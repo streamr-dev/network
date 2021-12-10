@@ -14,8 +14,8 @@ export interface TurnConfig {
     password: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface NetworkConfig {
-    acceptProxyConnections: boolean
 }
 
 export interface HttpServerConfig {

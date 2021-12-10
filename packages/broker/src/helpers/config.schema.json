@@ -72,11 +72,6 @@
             "description": "Network node settings",
             "additionalProperties": false,
             "properties": {
-                "acceptProxyConnections": {
-                    "type": "boolean",
-                    "description": "If true, broker node accepts one way connections on the network overlay level",
-                    "default": false
-                }
             }
         },
         "apiAuthentication": {

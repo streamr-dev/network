@@ -103,7 +103,6 @@ export const formConfig = ({
         },
         generateSessionId,
         network: {
-            acceptProxyConnections: false
         },
         httpServer: {
             port: httpPort ? httpPort : 7171,

@@ -52,8 +52,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const usePredeterminedNetworkId = !config.generateSessionId || config.plugins['storage']
 
-    const acceptProxyConnections = config.network.acceptProxyConnections
-
     const streamrClient = new StreamrClient({
         auth: {
             privateKey: config.client.auth!.privateKey!,
@@ -68,7 +66,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             metricsContext,
             stunUrls: config.client.network?.stunUrls,
             webrtcDisallowPrivateAddresses: config.client.network?.webrtcDisallowPrivateAddresses,
-            acceptProxyConnections
+            acceptProxyConnections: config.client.network?.acceptProxyConnections
         }
     })
     const publisher = new Publisher(streamrClient, metricsContext)
