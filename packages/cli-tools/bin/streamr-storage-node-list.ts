@@ -14,12 +14,10 @@ import EasyTable from 'easy-table'
 const getStorageNodes = async (streamId: string | undefined, client: StreamrClient): Promise<string[]> => {
     if (streamId !== undefined) {
         const stream = await client.getStream(streamId)
-        const storageNodes = await stream.getStorageNodes()
-        return storageNodes.map((storageNode) => storageNode.getAddress())
+        return stream.getStorageNodes()
     } else {
         // all storage nodes (currently there is only one)
-        const nodes = await client.getAllStorageNodes()
-        return nodes.map((n) => n.getAddress())
+        return client.getAllStorageNodes()
     }
 }
 

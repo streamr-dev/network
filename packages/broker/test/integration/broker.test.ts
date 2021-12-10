@@ -53,7 +53,7 @@ describe('broker: end-to-end', () => {
                 privateKey: storageNodeAccount.privateKey
             },
         })
-        await storageNodeClient.setNode('http://127.0.0.1:' + httpPort + '/api/v1')
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,

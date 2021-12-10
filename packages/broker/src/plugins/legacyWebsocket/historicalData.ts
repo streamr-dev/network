@@ -7,7 +7,7 @@ import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../storage
 import { GenericError } from '../../errors/GenericError'
 import { formAuthorizationHeader } from '../../helpers/authentication'
 import { Logger } from "streamr-network"
-import { StorageNode, StreamrClient } from "streamr-client"
+import { StreamrClient } from "streamr-client"
 
 export interface HistoricalDataResponse {
     data: NodeJS.ReadableStream
@@ -64,8 +64,10 @@ export const createResponse = async (
     client: StreamrClient
 ): Promise<HistoricalDataResponse> => {
     const stream = await client.getStream(request.streamId)
-    const nodes = await stream.getStorageNodes()
-    const storageNodeUrls = nodes.map((node: StorageNode) => node.url)
+    const storageNodeAddresses = await stream.getStorageNodes()
+    const storageNodeUrls = storageNodeAddresses.map(async (nodeAddress) => {
+        await client.getStorageNodeUrl(nodeAddress)
+    })
 
     // Form data query endpoints and shuffle the resulting array
     const urls = storageNodeUrls.map((storageNodeUrl) => {
