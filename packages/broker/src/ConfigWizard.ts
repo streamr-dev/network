@@ -112,8 +112,6 @@ export const CONFIG_TEMPLATE: any = {
             "stun:stun.streamr.network:5349"
         ]
     },
-    network: {
-    },
     generateSessionId: false,
     plugins: {
         legacyWebsocket: {},

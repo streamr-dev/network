@@ -102,8 +102,6 @@ export const formConfig = ({
             storageNodeRegistry,
         },
         generateSessionId,
-        network: {
-        },
         httpServer: {
             port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,

@@ -14,10 +14,6 @@ export interface TurnConfig {
     password: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface NetworkConfig {
-}
-
 export interface HttpServerConfig {
     port: number,
     privateKeyFileName: string | null,
@@ -31,7 +27,6 @@ export type ClientConfig = BrubeckClientConfig & { network?: { trackers: Tracker
 export interface Config {
     client: ClientConfig
     generateSessionId: boolean
-    network: NetworkConfig,
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig
