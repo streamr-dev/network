@@ -7,7 +7,6 @@ const program = require('commander')
 
 const CURRENT_VERSION = require('../package.json').version
 const { createBroker } = require('../dist/src/broker')
-const { testnet2AutoMigrate } = require('../dist/src/helpers/ConfigAutoMigrate')
 
 program
     .version(CURRENT_VERSION)
@@ -35,7 +34,6 @@ program
         }
 
         try {
-            config = testnet2AutoMigrate(config, configFile)
             const broker = await createBroker(config, true)
             if (!program.opts().test) {
                 await broker.start()
