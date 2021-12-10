@@ -52,7 +52,7 @@ describe('DataMetadataEndpoints', () => {
                 privateKey: storageNodeAccount.privateKey
             },
         })
-        await storageNodeClient.setNode('http://127.0.0.1:' + httpPort1 + "/api/v1")
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}/api/v1"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,

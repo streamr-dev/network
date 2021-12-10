@@ -73,7 +73,7 @@ describe('StorageConfig', () => {
             enableCassandra: true
         })
         const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
-        await storageNodeClient.setNode(`http://127.0.0.1:${HTTP_PORT}`)
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${HTTP_PORT}/api/v1"}`)
         broker = await startBroker({
             name: 'broker',
             privateKey: brokerAccount.privateKey,
