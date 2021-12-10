@@ -161,7 +161,7 @@
         "split2": "^3.2.2",
         "sqlite": "^4.0.23",
         "sqlite3": "^5.0.2",
-        "streamr-client-protocol": "^9.1.1",
+        "streamr-client-protocol": "^9.1.2",
         "streamr-network": "^30.1.1",
         "ts-toolbelt": "^9.6.0",
         "tsyringe": "^4.6.0",
