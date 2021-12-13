@@ -1,0 +1,378 @@
+{
+    "$id": "config.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Broker configuration format",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "auth": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "privateKey": {
+                    "type": "string",
+                    "format": "ethereum-private-key"
+                },
+                "ethereum": {
+                    "type": "object"
+                },
+                "sessionToken": {
+                    "type": "string"
+                },
+                "unauthenticated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "streamrNodeAddress": {
+            "type": "string",
+            "format": "ethereum-address"
+        },
+        "keyExchange": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "publicKey": {
+                    "type": "string"
+                },
+                "privateKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "dataUnion": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "minimumWithdrawTokenWei": {
+                    "anyOf": [{
+                        "type": "number"
+                    }, {
+                        "type": "string"
+                    }, {
+                        "type": "object"
+                    }]
+                },
+                "payForTransport": {
+                    "type": "boolean"
+                },
+                "factoryMainnetAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
+                "factorySidechainAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
+                "templateMainnetAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
+                "templateSidechainAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                }
+            }
+        },
+        "cache": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "maxSize": {
+                    "type": "number"
+                },
+                "maxAge": {
+                    "type": "number"
+                }
+            }
+        },
+        "binanceRPC": {
+            "$ref": "#/definitions/chainConnectionInfo"
+        },
+        "binanceAdapterAddress": {
+            "type": "string",
+            "format": "ethereum-address"
+        },
+        "binanceSmartChainAMBAddress": {
+            "type": "string",
+            "format": "ethereum-address"
+        },
+        "withdrawServerUrl": {
+            "type": "string",
+            "format": "uri"
+        },
+        "mainnet": {
+            "anyOf": [{
+                "$ref": "#/definitions/connectionInfo"
+            }, {
+                "type": "string",
+                "format": "uri"
+            }]
+        },
+        "sidechain": {
+            "$ref": "#/definitions/chainConnectionInfo"
+        },
+        "tokenAddress": {
+            "type": "string",
+            "format": "ethereum-address"
+        },
+        "tokenSidechainAddress": {
+            "type": "string",
+            "format": "ethereum-address"
+        },
+        "restUrl": {
+            "type": "string",
+            "format": "uri"
+        },
+        "autoConnect": {
+            "type": "boolean"
+        },
+        "autoDisconnect": {
+            "type": "boolean"
+        },
+        "maxPublishQueueSize": {
+            "type": "number"
+        },
+        "publishWithSignature": {
+            "type": "string",
+            "enum": ["auto", "always", "never"]
+        },
+        "publisherStoreKeyHistory": {
+            "type": "boolean"
+        },
+        "publishAutoDisconnectDelay": {
+            "type": "number"
+        },
+        "orderMessages": {
+            "type": "boolean"
+        },
+        "gapFill": {
+            "type": "boolean"
+        },
+        "maxGapRequests": {
+            "type": "number"
+        },
+        "maxRetries": {
+            "type": "number"
+        },
+        "verifySignatures": {
+            "type": "string",
+            "enum": ["auto", "always", "never"]
+        },
+        "retryResendAfter": {
+            "type": "number"
+        },
+        "gapFillTimeout": {
+            "type": "number"
+        },
+        "groupKeys": {
+            "type": "object"
+        },
+        "network": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "latitude": {
+                            "type": "number"
+                        },
+                        "longitude": {
+                            "type": "number"
+                        },
+                        "country": {
+                            "type": "string"
+                        },
+                        "city": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "trackerPingInterval": {
+                    "type": "number"
+                },
+                "trackers": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "id",
+                            "http",
+                            "ws"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "http": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "ws": {
+                                "type": "string",
+                                "format": "uri"
+                            }
+                        }
+                    }
+                },
+                "disconnectionWaitTime": {
+                    "type": "number"
+                },
+                "peerPingInterval": {
+                    "type": "number"
+                },
+                "newWebrtcConnectionTimeout": {
+                    "type": "number"
+                },
+                "webrtcDatachannelBufferThresholdLow": {
+                    "type": "number"
+                },
+                "webrtcDatachannelBufferThresholdHigh": {
+                    "type": "number"
+                },
+                "stunUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rttUpdateTimeout": {
+                    "type": "number"
+                },
+                "trackerConnectionMaintenanceInterval": {
+                    "type": "number"
+                },
+                "webrtcDisallowPrivateAddresses": {
+                    "type": "boolean"
+                },
+                "acceptProxyConnections": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "storageNodeRegistry": {
+            "oneOf": [{
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "address",
+                        "url"
+                    ],
+                    "properties": {
+                        "address": {
+                            "type": "string",
+                            "format": "ethereum-address"
+                        },
+                        "url": {
+                            "type": "string",
+                            "format": "uri"
+                        }
+                    }
+                }
+            }, {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "contractAddress",
+                    "jsonRpcProvider"
+                ],
+                "properties": {
+                    "contractAddress": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                    },
+                    "jsonRpcProvider": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                }
+            }]
+        },
+        "debug": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "inspectOpts": {
+                    "type": "object"
+                }
+            }
+        }
+    },
+    "definitions": {
+        "connectionInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "allowInsecureAuthentication": {
+                    "type": "boolean"
+                },
+                "timeout": {
+                    "type": "number"
+                },
+                "headers": {
+                    "type": "object"
+                }
+            }
+        },
+        "chainConnectionInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "chainId": {
+                    "type": "number"
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "allowInsecureAuthentication": {
+                    "type": "boolean"
+                },
+                "timeout": {
+                    "type": "number"
+                },
+                "headers": {
+                    "type": "object"
+                }
+            }
+        }
+
+    }
+}
+  

@@ -21,9 +21,7 @@ describe('check status message flow between tracker and two nodes', () => {
 
     const location = {
         country: 'FI',
-        city: 'Helsinki',
-        latitude: null,
-        longitude: null
+        city: 'Helsinki'
     }
 
     beforeEach(async () => {
@@ -188,8 +186,8 @@ describe('check status message flow between tracker and two nodes', () => {
             }
             receivedTotal += 1
             if (receivedTotal === 2) {
-                expect(Object.keys(nodeOneStatus.location).length).toEqual(4)
-                expect(Object.keys(nodeTwoStatus.location).length).toEqual(4)
+                expect(nodeOneStatus.location).toBeUndefined()
+                expect(Object.keys(nodeTwoStatus.location).length).toEqual(2)
                 done()
             }
         })

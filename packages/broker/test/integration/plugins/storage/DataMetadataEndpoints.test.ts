@@ -62,7 +62,7 @@ describe('DataMetadataEndpoints', () => {
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
         client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,

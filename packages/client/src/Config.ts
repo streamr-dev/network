@@ -13,7 +13,7 @@ import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBas
 import type { NodeRegistryOptions } from './NodeRegistry'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
-    network?: Partial<NetworkNodeOptions>
+    network?: Omit<Partial<NetworkNodeOptions>, 'metricsContext'>
     storageNodeRegistry?: NodeRegistryOptions
     debug?: Partial<DebugConfig>
 }
@@ -145,9 +145,5 @@ export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubec
         debug: merge(defaults.debug || {}, clonedConfig.debug),
     }
 
-    // pass supplied metricsContext by reference
-    if (config.network?.metricsContext) {
-        result.network.metricsContext = config.network.metricsContext
-    }
     return result
 }

@@ -10,7 +10,11 @@ const SPIDS: Protocol.SPID[] = [new Protocol.SPID('foo', 0), new Protocol.SPID('
 const createMockPlugin = async (networkNode: any, subscriptionManager: any) => {
     const wallet = new Wallet(await getPrivateKey())
     const brokerConfig: any = {
-        ethereumPrivateKey: wallet.privateKey,
+        client: {
+            auth: {
+                privateKey: wallet.privateKey
+            }
+        },
         plugins: {
             storage: {
                 cassandra: {
@@ -33,11 +37,13 @@ const createMockPlugin = async (networkNode: any, subscriptionManager: any) => {
         networkNode,
         subscriptionManager,
         publisher: undefined as any,
-        streamrClient: undefined as any,
+        streamrClient: {
+            getNode: () => Promise.resolve({
+                getMetricsContext: () => new MetricsContext(undefined as any)
+            } as any)
+        } as any,
         apiAuthenticator: undefined as any,
-        metricsContext: new MetricsContext(null as any),
         brokerConfig,
-        // storageNodeRegistry: StorageNodeRegistry.createInstance(brokerConfig, []),
         nodeId: wallet.address
     })
 }

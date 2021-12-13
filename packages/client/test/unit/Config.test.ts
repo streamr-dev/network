@@ -1,53 +1,82 @@
-import set from 'lodash/set'
-import { arrayify, BytesLike } from '@ethersproject/bytes'
-
 import { StreamrClient } from '../../src/StreamrClient'
 import { DEFAULTS } from '../../src/Config'
 import config from '../../src/ConfigTest'
 
 describe('Config', () => {
-    describe('validate ethereum addresses', () => {
-        const createClient = (propertyPaths: string, value: string|undefined|null) => {
-            const opts: any = {}
-            set(opts, propertyPaths, value)
-            return new StreamrClient(opts)
-        }
-        const propertyPaths: string[] = [
-            'streamrNodeAddress',
-            'tokenAddress',
-            'tokenSidechainAddress',
-            'dataUnion.factoryMainnetAddress',
-            'dataUnion.factorySidechainAddress',
-            'dataUnion.templateMainnetAddress',
-            'dataUnion.templateSidechainAddress',
-            'storageNode.address'
-        ]
-        for (const propertyPath of propertyPaths) {
-            it(propertyPath, () => {
-                const errorMessage = `${propertyPath} is not a valid Ethereum address`
-                expect(() => createClient(propertyPath, 'invalid-address')).toThrow(errorMessage)
-                expect(() => createClient(propertyPath, undefined)).toThrow(errorMessage)
-                expect(() => createClient(propertyPath, null)).toThrow(errorMessage)
-                expect(() => createClient(propertyPath, '0x1234567890123456789012345678901234567890')).not.toThrow()
-            })
-        }
-    })
-
-    describe('private key', () => {
-        const createAuthenticatedClient = (privateKey: BytesLike) => {
-            return new StreamrClient({
-                auth: {
-                    privateKey
-                }
-            })
-        }
-        it('string', async () => {
-            const client = createAuthenticatedClient('0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF')
-            expect(await client.getAddress()).toBe('0xfcad0b19bb29d4674531d6f115237e16afce377c')
+    describe('validate', () => {
+        it('additional property', () => {
+            expect(() => {
+                return new StreamrClient({
+                    network: {
+                        foo: 'bar'
+                    }
+                } as any)
+            }).toThrow('/network must NOT have additional properties: foo')
         })
-        it('byteslike', async () => {
-            const client = createAuthenticatedClient(arrayify('0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'))
-            expect(await client.getAddress()).toBe('0xfcad0b19bb29d4674531d6f115237e16afce377c')
+
+        it('missing property', () => {
+            expect(() => {
+                return new StreamrClient({
+                    network: {
+                        trackers: [{
+                            id: 'foo',
+                            ws: 'foo'
+                        }]
+                    }
+                } as any)
+            }).toThrow('/network/trackers/0 must have required property \'http\'')
+        })
+
+        describe('invalid property format', () => {
+            it('primitive', () => {
+                expect(() => {
+                    return new StreamrClient({
+                        network: {
+                            acceptProxyConnections: 123
+                        }
+                    } as any)
+                }).toThrow('/network/acceptProxyConnections must be boolean')
+            })
+
+            it('enum', () => {
+                expect(() => {
+                    return new StreamrClient({
+                        verifySignatures: 'foo'
+                    } as any)
+                }).toThrow('verifySignatures must be equal to one of the allowed values')
+            })
+
+            it('ajv-format', () => {
+                expect(() => {
+                    return new StreamrClient({
+                        storageNodeRegistry: [{
+                            address: '0x000000000000000000000000000000000000aB12',
+                            url: 'foo'
+                        }]
+                    } as any)
+                }).toThrow('/storageNodeRegistry/0/url must match format "uri"')
+            })
+
+            it('ethereum address', () => {
+                expect(() => {
+                    return new StreamrClient({
+                        storageNodeRegistry: [{
+                            address: 'foo',
+                            url: 'http://foo.bar'
+                        }]
+                    } as any)
+                }).toThrow('/storageNodeRegistry/0/address must match format "ethereum-address"')
+            })
+
+            it('ethereum private key', () => {
+                expect(() => {
+                    return new StreamrClient({
+                        auth: {
+                            privateKey: 'foo'
+                        }
+                    } as any)
+                }).toThrow('/auth/privateKey must match format "ethereum-private-key"')
+            })
         })
     })
 
@@ -95,19 +124,6 @@ describe('Config', () => {
             expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
             expect(Array.isArray(clientOverrides.options.network.trackers)).toBeTruthy()
             expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
-        })
-
-        it('passes metricsContext by reference', () => {
-            const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient({
-                network: {
-                    metricsContext: clientDefaults.options.network.metricsContext,
-                }
-            })
-            // network object is different
-            expect(clientOverrides.options.network).not.toBe(clientDefaults.options.network)
-            // but metricsContext is same instance
-            expect(clientOverrides.options.network.metricsContext).toBe(clientDefaults.options.network.metricsContext)
         })
 
         it('can override trackers', () => {

@@ -3,12 +3,14 @@ import { WebsocketServer } from './WebsocketServer'
 import { Plugin, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Logger } from "streamr-network"
+import { Logger, Protocol } from "streamr-network"
+import { DEFAULTS } from 'streamr-client'
 import { once } from "events"
 import fs from "fs"
 import http from 'http'
 import https from "https"
 import { Schema } from 'ajv'
+import { NetworkSmartContract, NodeRegistryItem, NodeRegistryOptions, StorageNodeRegistry } from '../../StorageNodeRegistry'
 
 const logger = new Logger(module)
 
@@ -45,9 +47,8 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
             this.networkNode,
             new StreamFetcher(this.streamrClient!),
             this.publisher,
-            this.metricsContext,
+            (await (this.streamrClient!.getNode())).getMetricsContext(),
             this.subscriptionManager,
-            this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
             this.streamrClient!
         )

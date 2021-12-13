@@ -5,7 +5,9 @@ import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
-import { ApiAuthenticationConfig, Config, StorageNodeConfig } from '../src/config'
+import { StorageConfig } from '../src/plugins/storage/StorageConfig'
+import { ApiAuthenticationConfig, Config } from '../src/config'
+import { NodeRegistryOptions } from '../src/StorageNodeRegistry'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 // const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -15,7 +17,6 @@ interface TestConfig {
     trackerPort: number
     privateKey: string
     trackerId?: string
-    generateSessionId?: boolean
     httpPort?: null | number
     wsPort?: null | number
     extraPlugins?: Record<string, unknown>
@@ -24,8 +25,8 @@ interface TestConfig {
     privateKeyFileName?: null | string
     certFileName?: null | string
     streamrAddress?: string
-    streamrUrl?: string
-    storageNodeConfig?: StorageNodeConfig
+    restUrl?: string
+    storageNodeRegistry?: NodeRegistryOptions
     storageConfigRefreshInterval?: number
 }
 
@@ -34,7 +35,6 @@ export const formConfig = ({
     trackerPort,
     privateKey,
     trackerId = 'tracker-1',
-    generateSessionId = false,
     httpPort = null,
     wsPort = null,
     extraPlugins = {},
@@ -43,18 +43,10 @@ export const formConfig = ({
     privateKeyFileName = null,
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
-    streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeConfig = {
-        // privatekey: '0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285',
-        // address: '0x505D48552Ac17FfD0845FFA3783C2799fd4aaD78',
-        // url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`,
-        registry: {
-            contractAddress: "0xbAA81A0179015bE47Ad439566374F2Bae098686F",
-            jsonRpcProvider: "http://10.200.10.1:8546"
-        }
-    },
-    storageConfigRefreshInterval = 5000,
-}: TestConfig): any => {
+    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+    storageNodeRegistry = [],
+    storageConfigRefreshInterval = 0,
+}: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
     if (httpPort) {
         if (enableCassandra) {
@@ -67,6 +59,7 @@ export const formConfig = ({
                     keyspace: 'streamr_dev_v2',
                 },
                 storageConfig: {
+                    streamrAddress,
                     refreshInterval: storageConfigRefreshInterval
                 }
             }
@@ -82,32 +75,31 @@ export const formConfig = ({
     }
 
     return {
-        ...ConfigTest,
-        ethereumPrivateKey: privateKey,
-        generateSessionId,
-        network: {
-            name,
-            trackers: [
-                {
-                    id: trackerId,
-                    ws: `ws://127.0.0.1:${trackerPort}`,
-                    http: `http://127.0.0.1:${trackerPort}`
-                }
-            ],
-            location: {
-                latitude: 60.19,
-                longitude: 24.95,
-                country: 'Finland',
-                city: 'Helsinki'
+        client: {
+            auth: {
+                privateKey
             },
-            stun: null,
-            turn: null,
-            webrtcDisallowPrivateAddresses: false,
-            acceptProxyConnections: false
+            restUrl,
+            network: {
+                name,
+                id: new Wallet(privateKey).address,
+                trackers: [
+                    {
+                        id: trackerId,
+                        ws: `ws://127.0.0.1:${trackerPort}`,
+                        http: `http://127.0.0.1:${trackerPort}`
+                    }
+                ],
+                location: {
+                    latitude: 60.19,
+                    longitude: 24.95,
+                    country: 'Finland',
+                    city: 'Helsinki'
+                },
+                webrtcDisallowPrivateAddresses: false,
+            },
+            storageNodeRegistry,
         },
-        streamrUrl,
-        streamrAddress,
-        storageNodeConfig,
         httpServer: {
             port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,

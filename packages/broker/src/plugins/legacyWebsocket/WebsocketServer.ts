@@ -58,7 +58,6 @@ export class WebsocketServer extends EventEmitter {
         publisher: Publisher,
         metricsContext: MetricsContext,
         subscriptionManager: SubscriptionManager,
-        streamrUrl: string,
         pingIntervalInMs = 60 * 1000,
         streamrClient: StreamrClient
     ) {
