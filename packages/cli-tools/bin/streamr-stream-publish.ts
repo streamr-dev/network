@@ -1,19 +1,14 @@
 #!/usr/bin/env node
-import { Command } from 'commander'
 import es from 'event-stream'
 import { publishStream } from '../src/publish'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, getStreamId } from './common'
-import pkg from '../package.json'
+import { getStreamId } from './common'
 import { createClient } from '../src/client'
+import { createCommand } from '../src/command'
 
-const program = new Command()
-program
+createCommand()
     .arguments('<streamId>')
     .description('publish to a stream by reading JSON messages from stdin line-by-line')
     .option('-k, --partition-key <string>', 'field name in each message to use for assigning the message to a stream partition')
-authOptions(program)
-envOptions(program)
-    .version(pkg.version)
     .action((streamIdOrPath: string, options: any) => {
         const streamId = getStreamId(streamIdOrPath, options)!
         const client = createClient(options)
@@ -27,6 +22,4 @@ envOptions(program)
                 // process.stdin.pipe(ps) recover pipe to continue execution
             })
     })
-    .parse(process.argv)
-
-exitWithHelpIfArgsNotBetween(program, 1, 1)
+    .parse()

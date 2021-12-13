@@ -7,4 +7,4 @@ program
     .usage('<command> [<args>]')
     .description('miscellaneous subcommands')
     .command('get-session-token', 'get a session token for the current user')
-    .parse(process.argv)
+    .parse()

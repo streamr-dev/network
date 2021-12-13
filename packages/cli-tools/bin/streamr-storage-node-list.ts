@@ -1,15 +1,11 @@
 #!/usr/bin/env node
-import { Command } from 'commander'
 import { StreamrClient } from 'streamr-client'
 import {
-    envOptions,
-    authOptions,
-    exitWithHelpIfArgsNotBetween,
     getStreamId,
 } from './common'
-import pkg from '../package.json'
 import EasyTable from 'easy-table'
 import { createClient } from '../src/client'
+import { createCommand } from '../src/command'
 
 const getStorageNodes = async (streamId: string | undefined, client: StreamrClient): Promise<string[]> => {
     if (streamId !== undefined) {
@@ -23,15 +19,9 @@ const getStorageNodes = async (streamId: string | undefined, client: StreamrClie
     }
 }
 
-const program = new Command()
-program
+createCommand()
     .description('fetch a list of storage nodes')
     .option('-s, --stream <streamId>', 'only storage nodes which store the given stream (needs authentication)')
-
-authOptions(program)
-
-envOptions(program)
-    .version(pkg.version)
     .action((options: any) => {
         const client = createClient(options)
         const streamId = getStreamId(options.stream, options)
@@ -47,6 +37,4 @@ envOptions(program)
             process.exit(1)
         })
     })
-    .parse(process.argv)
-
-exitWithHelpIfArgsNotBetween(program, 0, 0)
+    .parse()

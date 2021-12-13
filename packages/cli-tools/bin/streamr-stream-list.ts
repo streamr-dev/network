@@ -1,12 +1,10 @@
 #!/usr/bin/env node
-import { Command, Option } from 'commander'
+import { Option } from 'commander'
 import { list } from '../src/list'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween } from './common'
-import pkg from '../package.json'
 import { createClient } from '../src/client'
+import { createCommand } from '../src/command'
 
-const program = new Command()
-program
+createCommand()
     .description('fetch a list of streams that are accessible by the authenticated user')
     .option('-s, --search [term]', 'search for term in name or description')
     // TODO could support shorter forms of operations: e.g. "publish" instead of "stream_publish",
@@ -16,9 +14,6 @@ program
         .default('stream_get'))
     .option('--public-access', 'include publicly available streams')
     .option('--no-granted-access', 'exclude streams that user has directly granted permissions to')
-authOptions(program)
-envOptions(program)
-    .version(pkg.version)
     .action((options: any) => {
         const query: any = {
             operation: options.operation,
@@ -30,6 +25,4 @@ envOptions(program)
         const client = createClient(options)
         list(query, client)
     })
-    .parse(process.argv)
-
-exitWithHelpIfArgsNotBetween(program, 0, 0)
+    .parse()

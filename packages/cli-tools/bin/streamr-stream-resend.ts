@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import { resend } from '../src/resend'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, getStreamId } from './common'
-import pkg from '../package.json'
+import { getStreamId } from './common'
 import { createClient } from '../src/client'
+import { createCommand } from '../src/command'
 
 function assertBothOrNoneDefined(option1: string, option2: string, errorMessage: string, commandOptions: any) {
     if ((option1 in commandOptions && !(option2 in commandOptions)) || (option2 in commandOptions && !(option1 in commandOptions))) {
@@ -12,7 +12,7 @@ function assertBothOrNoneDefined(option1: string, option2: string, errorMessage:
     }
 }
 
-const program = new Command()
+const program = createCommand()
 
 program
     .usage('<command> [<args>]')
@@ -87,14 +87,4 @@ program
     })
 
 program
-    .on('command:*', (invalidCommand: any) => {
-        console.error(`invalid command: ${invalidCommand}`)
-        process.exit(1)
-    })
-
-authOptions(program)
-envOptions(program)
-    .version(pkg.version)
-    .parse(process.argv)
-
-exitWithHelpIfArgsNotBetween(program, 1, Number.MAX_VALUE)
+    .parse()

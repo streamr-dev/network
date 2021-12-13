@@ -1,14 +1,11 @@
 #!/usr/bin/env node
-import { Command } from 'commander'
 import {
-    envOptions,
-    authOptions,
     getStreamId
 } from './common'
-import pkg from '../package.json'
 import { AnonymousStreamPermisson, StreamOperation, UserStreamPermission } from 'streamr-client'
 import EasyTable from 'easy-table'
 import { createClient } from '../src/client'
+import { createCommand } from '../src/command'
 
 const PUBLIC_PERMISSION_ID = 'public'
 const OPERATION_PREFIX = 'stream_'
@@ -41,13 +38,9 @@ const getTarget = (user: string): string|undefined => {
     }
 }
 
-const program = new Command()
-program
+createCommand()
     .arguments('<streamId> <user> <operations...>')
     .description('grant permission: use keyword "public" as a user to grant a public permission')
-authOptions(program)
-envOptions(program)
-    .version(pkg.version)
     .action(async (streamIdOrPath: string, user: string, operationIds: string[], options: any) => {
         const operations = operationIds.map((o: string) => getOperation(o))
         const target = getTarget(user)
@@ -62,7 +55,7 @@ envOptions(program)
             user: (permission as AnonymousStreamPermisson).anonymous ? PUBLIC_PERMISSION_ID : (permission as UserStreamPermission).user
         }))))
     })
-    .parseAsync(process.argv)
+    .parseAsync()
     .catch((e) => {
         console.error(e)
         process.exit(1)

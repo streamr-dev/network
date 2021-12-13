@@ -1,19 +1,9 @@
 #!/usr/bin/env node
-import { Command } from 'commander'
-import {
-    envOptions,
-    authOptions,
-    exitWithHelpIfArgsNotBetween,
-} from './common'
-import pkg from '../package.json'
 import { createClient } from '../src/client'
+import { createCommand } from '../src/command'
 
-const program = new Command()
-program
+createCommand()
     .description('get a session token for the current user')
-authOptions(program)
-envOptions(program)
-    .version(pkg.version)
     .action(async (options: any) => {
         const client = createClient(options)
         try {
@@ -23,10 +13,8 @@ envOptions(program)
             process.exit(1)
         }
     })
-    .parseAsync(process.argv)
+    .parseAsync()
     .catch((e) => {
         console.error(e)
         process.exit(1)
     })
-
-exitWithHelpIfArgsNotBetween(program, 0, 0)

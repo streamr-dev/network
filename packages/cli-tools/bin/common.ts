@@ -1,4 +1,3 @@
-import * as commander from 'commander'
 import { Wallet } from 'ethers'
 import { StreamrClientOptions } from 'streamr-client'
 
@@ -13,25 +12,6 @@ export interface AuthenticationOptions {
 }
 
 export type GlobalCommandLineOptions = EnvironmentOptions & AuthenticationOptions
-
-export function envOptions(program: commander.Command): commander.Command {
-    return program
-        .option('--dev', 'use pre-defined development environment')
-        .option('--stg', 'use pre-defined staging environment')
-        .option('--ws-url <url>', 'alternative websocket url to use')
-        .option('--http-url <url>', 'alternative http url to use')
-}
-
-export function authOptions(program: commander.Command): commander.Command {
-    return program
-        .option('--private-key <key>', 'use an Ethereum private key to authenticate')
-}
-
-export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: number, max: number): void {
-    if (program.args.length < min || program.args.length > max) {
-        program.help()
-    }
-}
 
 export function formStreamrOptionsWithEnv(
     { dev, stg, httpUrl, privateKey }: EnvironmentOptions & AuthenticationOptions
