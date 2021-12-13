@@ -19,7 +19,7 @@
             "--verbose",
             "-i",
             "--no-cache",
-            "${fileBasename}",
+            "${fileDirname}/${fileBasename}",
               // "--detectOpenHandles",
               // "test/integration/broker.test.ts",
               // "test/integration/broker-drops-future-messages.test.ts",

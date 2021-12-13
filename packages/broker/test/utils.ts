@@ -5,9 +5,8 @@ import { Wallet } from 'ethers'
 import { Tracker, Protocol } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
-import { StorageConfig } from '../src/plugins/storage/StorageConfig'
 import { ApiAuthenticationConfig, Config } from '../src/config'
-import { NodeRegistryOptions } from '../src/StorageNodeRegistry'
+import { NodeRegistryOptions } from 'streamr-client/src/NodeRegistry'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 // const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -44,7 +43,7 @@ export const formConfig = ({
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
-    storageNodeRegistry = [],
+    storageNodeRegistry,
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
@@ -76,6 +75,7 @@ export const formConfig = ({
 
     return {
         client: {
+            ...ConfigTest,
             auth: {
                 privateKey
             },

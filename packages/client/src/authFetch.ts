@@ -5,7 +5,6 @@ import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 
 import { getVersionString, counterId } from './utils'
-import Session from './Session'
 
 export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
@@ -98,7 +97,7 @@ export async function authRequest<T extends object>(
     const response: Response = await fetchFn(url, {
         ...opts,
         headers: {
-            ...(opts.session && !opts.session.isUnauthenticated() ? {
+            ...(opts?.session && !opts.session.isUnauthenticated() ? {
                 Authorization: `Bearer ${await opts.session.getSessionToken(requireNewToken)}`,
             } : {}),
             ...options.headers,
@@ -126,7 +125,6 @@ export async function authRequest<T extends object>(
 /** @internal */
 export default async function authFetch<T extends object>(
     url: string,
-    session?: Session,
     opts?: any,
     requireNewToken = false,
     debug?: Debugger,

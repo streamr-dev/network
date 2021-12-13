@@ -41,7 +41,6 @@ describe.skip('ping-pong test between broker and clients', () => {
             metricsContext,
             new SubscriptionManager(networkNode),
             undefined as any,
-            undefined as any,
             client1
         )
 

@@ -310,6 +310,19 @@
                     "type": "object"
                 }
             }
+        },
+        "theGraphUrl" : {
+            "type" : "string",
+            "format": "uri"
+        },
+        "streamRegistrySidechainAddress" : {
+            "type" : "string"
+        },
+        "nodeRegistrySidechainAddress" : {
+            "type" : "string"
+        },
+        "streamStorageRegistrySidechainAddress" : {
+            "type" : "string"
         }
     },
     "definitions": {
