@@ -20,7 +20,7 @@ updates:
     reviewers:
       - kare
     assignees:
-      - kare
+      - DaisyDomergue
   - package-ecosystem: docker
     directory: /
     open-pull-requests-limit: 5
