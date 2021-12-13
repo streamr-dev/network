@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { StreamrClient } from 'streamr-client'
 import {
     envOptions,
     authOptions,
     exitWithHelpIfArgsNotBetween,
-    formStreamrOptionsWithEnv,
 } from './common'
 import pkg from '../package.json'
+import { createClient } from '../src/client'
 
 const program = new Command()
 program
@@ -16,7 +15,7 @@ authOptions(program)
 envOptions(program)
     .version(pkg.version)
     .action(async (options: any) => {
-        const client = new StreamrClient(formStreamrOptionsWithEnv(options))
+        const client = createClient(options)
         try {
             console.info(await client.session.getSessionToken())
         } catch (err) {

@@ -5,10 +5,10 @@ import {
     envOptions,
     authOptions,
     exitWithHelpIfArgsNotBetween,
-    formStreamrOptionsWithEnv,
     createFnParseInt
 } from './common'
 import pkg from '../package.json'
+import { createClient } from '../src/client'
 
 const program = new Command()
 program
@@ -28,7 +28,8 @@ envOptions(program)
             config: options.config,
             partitions: options.partitions
         }
-        create(body, formStreamrOptionsWithEnv(options))
+        const client = createClient(options)
+        create(body, client)
     })
     .parse(process.argv)
 

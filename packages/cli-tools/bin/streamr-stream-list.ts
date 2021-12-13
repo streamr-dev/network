@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { Command, Option } from 'commander'
 import { list } from '../src/list'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'
+import { envOptions, authOptions, exitWithHelpIfArgsNotBetween } from './common'
 import pkg from '../package.json'
+import { createClient } from '../src/client'
 
 const program = new Command()
 program
@@ -26,7 +27,8 @@ envOptions(program)
             search: options.search,
             grantedAccess: options.grantedAccess
         }    
-        list(query, formStreamrOptionsWithEnv(options))
+        const client = createClient(options)
+        list(query, client)
     })
     .parse(process.argv)
 

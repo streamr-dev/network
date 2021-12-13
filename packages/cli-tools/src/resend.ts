@@ -1,13 +1,11 @@
-import { StreamrClient, StreamrClientOptions, ResendOptions } from 'streamr-client'
+import { StreamrClient, ResendOptions } from 'streamr-client'
 
 export const resend = async (
     streamId: string,
     resendOpts: ResendOptions,
-    streamrOptions: StreamrClientOptions & { subscribe?: boolean }
+    client: StreamrClient,
+    subscribe: boolean
 ): Promise<void> => {
-    const options = { ...streamrOptions }
-    const client = new StreamrClient(options)
-
     try {
         const subscribeOpts = {
             stream: streamId,
@@ -17,7 +15,7 @@ export const resend = async (
             console.info(JSON.stringify(message))
         }
 
-        if (options.subscribe) {
+        if (subscribe) {
             await client.subscribe(subscribeOpts, handler)
         } else {
             await client.resend(subscribeOpts, handler)

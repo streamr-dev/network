@@ -12,6 +12,8 @@ export interface AuthenticationOptions {
     privateKey?: string
 }
 
+export type GlobalCommandLineOptions = EnvironmentOptions & AuthenticationOptions
+
 export function envOptions(program: commander.Command): commander.Command {
     return program
         .option('--dev', 'use pre-defined development environment')

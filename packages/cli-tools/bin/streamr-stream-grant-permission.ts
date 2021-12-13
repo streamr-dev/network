@@ -3,12 +3,12 @@ import { Command } from 'commander'
 import {
     envOptions,
     authOptions,
-    formStreamrOptionsWithEnv,
     getStreamId
 } from './common'
 import pkg from '../package.json'
-import { AnonymousStreamPermisson, StreamOperation, StreamrClient, UserStreamPermission } from 'streamr-client'
+import { AnonymousStreamPermisson, StreamOperation, UserStreamPermission } from 'streamr-client'
 import EasyTable from 'easy-table'
+import { createClient } from '../src/client'
 
 const PUBLIC_PERMISSION_ID = 'public'
 const OPERATION_PREFIX = 'stream_'
@@ -51,7 +51,7 @@ envOptions(program)
     .action(async (streamIdOrPath: string, user: string, operationIds: string[], options: any) => {
         const operations = operationIds.map((o: string) => getOperation(o))
         const target = getTarget(user)
-        const client = new StreamrClient(formStreamrOptionsWithEnv(options))
+        const client = createClient(options)
         const streamId = getStreamId(streamIdOrPath, options)!
         const stream = await client.getStream(streamId)
         const tasks = operations.map((operation: StreamOperation) => stream.grantPermission(operation, target))

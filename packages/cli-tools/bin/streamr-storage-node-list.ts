@@ -5,11 +5,11 @@ import {
     envOptions,
     authOptions,
     exitWithHelpIfArgsNotBetween,
-    formStreamrOptionsWithEnv,
     getStreamId,
 } from './common'
 import pkg from '../package.json'
 import EasyTable from 'easy-table'
+import { createClient } from '../src/client'
 
 const getStorageNodes = async (streamId: string | undefined, client: StreamrClient): Promise<string[]> => {
     if (streamId !== undefined) {
@@ -33,7 +33,7 @@ authOptions(program)
 envOptions(program)
     .version(pkg.version)
     .action((options: any) => {
-        const client = new StreamrClient(formStreamrOptionsWithEnv(options))
+        const client = createClient(options)
         const streamId = getStreamId(options.stream, options)
         getStorageNodes(streamId, client).then((addresses: string[]) => {
             if (addresses.length > 0) {

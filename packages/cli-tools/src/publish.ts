@@ -1,14 +1,11 @@
 import { Writable } from 'stream'
-import { StreamrClient, StreamrClientOptions } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 
 export const publishStream = (
     stream: string,
     partitionKey: string | undefined,
-    streamrOptions: StreamrClientOptions
+    client: StreamrClient
 ): Writable => {
-    const options = { ...streamrOptions }
-
-    const client = new StreamrClient(options)
     const writable = new Writable({
         objectMode: true,
         write: (data: any, _: any, done: any) => {

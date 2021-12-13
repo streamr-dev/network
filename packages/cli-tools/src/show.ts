@@ -1,12 +1,10 @@
-import { StreamrClient, StreamrClientOptions } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 
 export const show = (
     streamId: string,
     includePermissions: boolean | undefined,
-    streamrOptions: StreamrClientOptions
+    client: StreamrClient
 ): void => {
-    const options = { ...streamrOptions }
-    const client = new StreamrClient(options)
     client.getStream(streamId).then(async (stream) => {
         const obj = stream.toObject()
         if (includePermissions) {

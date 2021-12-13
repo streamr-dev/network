@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { StreamrClient, Stream } from 'streamr-client'
+import { Stream } from 'streamr-client'
 import {
     envOptions,
     authOptions,
     exitWithHelpIfArgsNotBetween,
-    formStreamrOptionsWithEnv,
     getStreamId,
 } from './common'
 import pkg from '../package.json'
+import { createClient } from '../src/client'
 
 const program = new Command()
 program
@@ -18,7 +18,7 @@ authOptions(program)
 envOptions(program)
     .version(pkg.version)
     .action((storageNodeAddress: string, streamIdOrPath: string, options: any) => {
-        const client = new StreamrClient(formStreamrOptionsWithEnv(options))
+        const client = createClient(options)
         const streamId = getStreamId(streamIdOrPath, options)!
         client.getStream(streamId)
             .then((stream: Stream) => stream.addToStorageNode(storageNodeAddress))

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { StreamrClientOptions } from 'streamr-client'
 import { resend } from '../src/resend'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, getStreamId } from './common'
+import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, getStreamId } from './common'
 import pkg from '../package.json'
+import { createClient } from '../src/client'
 
 function assertBothOrNoneDefined(option1: string, option2: string, errorMessage: string, commandOptions: any) {
     if ((option1 in commandOptions && !(option2 in commandOptions)) || (option2 in commandOptions && !(option1 in commandOptions))) {
@@ -31,11 +31,11 @@ program
         const resendOptions = {
             last: parseInt(n)
         }
-        const clientOptions: StreamrClientOptions & { subscribe?: boolean } = formStreamrOptionsWithEnv(command.parent!.opts())
-        clientOptions.orderMessages = !options.disableOrdering
-        clientOptions.subscribe = options.subscribe
         const streamId = getStreamId(streamIdOrPath, command.parent!.opts())!
-        resend(streamId, resendOptions, clientOptions)
+        const client = createClient(command.parent!.opts(), {
+            orderMessages: !options.disableOrdering
+        })
+        resend(streamId, resendOptions, client, options.subscribe)
     })
 
 program
@@ -52,11 +52,11 @@ program
             },
             publisherId: options.publisherId
         }
-        const clientOptions: StreamrClientOptions & { subscribe?: boolean } = formStreamrOptionsWithEnv(command.parent!.opts())
-        clientOptions.orderMessages = !options.disableOrdering
-        clientOptions.subscribe = options.subscribe
         const streamId = getStreamId(streamIdOrPath, command.parent!.opts())!
-        resend(streamId, resendOptions, clientOptions)
+        const client = createClient(command.parent!.opts(), {
+            orderMessages: !options.disableOrdering
+        })
+        resend(streamId, resendOptions, client, options.subscribe)
     })
 
 program
@@ -79,10 +79,11 @@ program
             msgChainId: options.msgChainId
         }
         assertBothOrNoneDefined('publisherId', 'msgChainId', '--publisher-id must be accompanied by option --msg-chain-id', options)
-        const clientOptions = formStreamrOptionsWithEnv(command.parent!.opts())
-        clientOptions.orderMessages = !options.disableOrdering
         const streamId = getStreamId(streamIdOrPath, command.parent!.opts())!
-        resend(streamId, resendOptions, clientOptions)
+        const client = createClient(command.parent!.opts(), {
+            orderMessages: !options.disableOrdering
+        })
+        resend(streamId, resendOptions, client, false) 
     })
 
 program
