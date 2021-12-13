@@ -15,6 +15,7 @@ program
 
 const { nodes: numberOfNodes } = program.opts()
 const trackerPort = 27777
+const trackerId = 'tracker'
 const startingDebugPort = 9200
 const streams = []
 
@@ -29,7 +30,7 @@ productionEnv.LOG_LEVEL = productionEnv.LOG_LEVEL || 'debug'
 
 // create tracker
 const tracker = path.resolve('./bin/tracker.js')
-let args = [tracker, '--port=' + trackerPort]
+let args = [tracker, '--port=' + trackerPort, '--id=' + trackerId]
 
 if (process.env.NODE_DEBUG_OPTION !== undefined) {
     debug = true

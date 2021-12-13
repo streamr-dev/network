@@ -5,11 +5,10 @@ const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
 const { startTracker } = require('../dist/src/composition')
 const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
-const { Wallet } = require('@ethersproject/wallet')
 
 program
     .version(CURRENT_VERSION)
-    .option('--id <id>', 'Ethereum address', undefined)
+    .option('--id <id>', 'Ethereum address / tracker id', undefined)
     .option('--trackerName <trackerName>', 'Human readable name', undefined)
     .option('--port <port>', 'port', '27777')
     .option('--ip <ip>', 'ip', '0.0.0.0')
@@ -22,7 +21,7 @@ program
     .description('Run tracker with reporting')
     .parse(process.argv)
 
-const id = program.opts().id || Wallet.createRandom().address
+const id = program.opts().id || `TR${program.opts().port}`
 const name = program.opts().trackerName || id
 const logger = new Logger(module)
 const listen = program.opts().unixSocket ? program.opts().unixSocket : {

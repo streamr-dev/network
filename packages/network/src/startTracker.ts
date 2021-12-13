@@ -1,4 +1,4 @@
-import { Wallet, utils } from 'ethers'
+import { v4 as uuidv4 } from 'uuid'
 import { MetricsContext } from './helpers/MetricsContext'
 import { PeerInfo } from './connection/PeerInfo'
 import { HttpServerConfig, ServerWsEndpoint, startHttpServer } from './connection/ws/ServerWsEndpoint'
@@ -19,7 +19,7 @@ export interface TrackerOptions extends AbstractNodeOptions {
 
 export const startTracker = async ({
     listen,
-    id = Wallet.createRandom().address,
+    id = uuidv4(),
     name,
     location,
     attachHttpEndpoints = true,
@@ -30,9 +30,6 @@ export const startTracker = async ({
     certFileName,
     topologyStabilization
 }: TrackerOptions): Promise<Tracker> => {
-    if (!utils.isAddress(id)) {
-        throw new Error(`Invalid tracker id: ${id}`)
-    }
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
     const httpServer = await startHttpServer(listen, privateKeyFileName, certFileName)
     const endpoint = new ServerWsEndpoint(listen, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, trackerPingInterval)
