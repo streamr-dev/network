@@ -3,14 +3,12 @@ import { WebsocketServer } from './WebsocketServer'
 import { Plugin, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Logger, Protocol } from "streamr-network"
-import { DEFAULTS } from 'streamr-client'
+import { Logger } from "streamr-network"
 import { once } from "events"
 import fs from "fs"
 import http from 'http'
 import https from "https"
 import { Schema } from 'ajv'
-import { NetworkSmartContract, NodeRegistryItem, NodeRegistryOptions, StorageNodeRegistry } from '../../StorageNodeRegistry'
 
 const logger = new Logger(module)
 

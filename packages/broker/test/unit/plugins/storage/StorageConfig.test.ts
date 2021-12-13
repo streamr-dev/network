@@ -25,7 +25,7 @@ describe('StorageConfig', () => {
         let listener: StorageConfigListener
 
         beforeEach(async () => {
-            config = new StorageConfig('nodeId', 1, 0, 'http://api-url.com/path', client)
+            config = new StorageConfig('nodeId', 1, 0, client)
             // @ts-expect-error private
             config.setSPIDKeys(new Set(['existing1#0', 'existing2#0', 'existing2#1', 'existing3#0']))
             listener = {
@@ -110,9 +110,9 @@ describe('StorageConfig', () => {
     
         beforeEach(() => {
             configs = [
-                new StorageConfig('nodeId', 3, 0, 'http://api-url.com/path', client),
-                new StorageConfig('nodeId', 3, 1, 'http://api-url.com/path', client),
-                new StorageConfig('nodeId', 3, 2, 'http://api-url.com/path', client),
+                new StorageConfig('nodeId', 3, 0, client),
+                new StorageConfig('nodeId', 3, 1, client),
+                new StorageConfig('nodeId', 3, 2, client),
             ]
         })
 

@@ -37,33 +37,29 @@ export class StorageConfig {
     clusterId: string
     clusterSize: number
     myIndexInCluster: number
-    apiUrl: string
     private poller!: ReturnType<typeof setTimeout>
     private stopPoller: boolean
     streamrClient: StreamrClient
 
     // use createInstance method instead: it fetches the up-to-date config from API
-    constructor(clusterId: string, clusterSize: number, myIndexInCluster: number, apiUrl: string, streamrClient: StreamrClient) {
+    constructor(clusterId: string, clusterSize: number, myIndexInCluster: number, streamrClient: StreamrClient) {
         this.spidKeys = new Set<SPIDKey>()
         this.listeners = []
         this.clusterId = clusterId
         this.clusterSize = clusterSize
         this.myIndexInCluster = myIndexInCluster
-        this.apiUrl = apiUrl
         this.stopPoller = false
         this.streamrClient = streamrClient
-
     }
 
     static async createInstance(
         clusterId: string,
         clusterSize: number,
         myIndexInCluster: number,
-        apiUrl: string,
         pollInterval: number,
         streamrClient: StreamrClient
     ): Promise<StorageConfig> {
-        const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, apiUrl, streamrClient)
+        const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, streamrClient)
         // eslint-disable-next-line no-underscore-dangle
         if (pollInterval !== 0) {
             await instance.poll(pollInterval)

@@ -19,7 +19,6 @@ type AuthenticateMethod = (
     permission?: StreamPermission,
 ) => Promise<Stream>
 export class StreamFetcher {
-    private readonly restUrl: string
     fetch: memoizee.Memoized<FetchMethod> & FetchMethod
     checkPermission: memoizee.Memoized<CheckPermissionMethod> & CheckPermissionMethod
     authenticate: memoize.Memoized<AuthenticateMethod> & AuthenticateMethod
