@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { Stream } from 'streamr-client'
 import {
     getStreamId,
 } from './common'

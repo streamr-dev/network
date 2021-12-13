@@ -1,9 +1,44 @@
 #!/usr/bin/env node
+import { Writable } from 'stream'
+import { StreamrClient } from 'streamr-client'
 import es from 'event-stream'
-import { publishStream } from '../src/publish'
 import { getStreamId } from './common'
 import { createClient } from '../src/client'
 import { createCommand } from '../src/command'
+
+const publishStream = (
+    stream: string,
+    partitionKey: string | undefined,
+    client: StreamrClient
+): Writable => {
+    const writable = new Writable({
+        objectMode: true,
+        write: (data: any, _: any, done: any) => {
+            let json = null
+            // ignore newlines, etc
+            if (!data || String(data).trim() === '') {
+                done()
+                return
+            }
+            try {
+                json = JSON.parse(data)
+            } catch (e) {
+                console.error(data.toString())
+                done(e)
+                return
+            }
+            // @ts-expect-error TODO: the last argument here looks wrong, should be just `partitionKey`?
+            client.publish(stream, json, Date.now(), json[partitionKey]).then(
+                () => done(),
+                (err) => done(err)
+            )
+        }
+    })
+
+    // destroy client when upstream pipe ends and data flushed
+    writable.once('finish', () => client.destroy())
+    return writable
+}
 
 createCommand()
     .arguments('<streamId>')

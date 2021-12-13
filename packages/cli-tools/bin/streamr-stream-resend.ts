@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { resend } from '../src/resend'
+import { StreamrClient, ResendOptions } from 'streamr-client'
 import { getStreamId } from './common'
 import { createClient } from '../src/client'
 import { createCommand } from '../src/command'
@@ -8,6 +8,31 @@ import { createCommand } from '../src/command'
 function assertBothOrNoneDefined(option1: string, option2: string, errorMessage: string, commandOptions: any) {
     if ((option1 in commandOptions && !(option2 in commandOptions)) || (option2 in commandOptions && !(option1 in commandOptions))) {
         console.error(`option ${errorMessage}`)
+        process.exit(1)
+    }
+}
+
+const resend = async (
+    streamId: string,
+    resendOpts: ResendOptions,
+    client: StreamrClient,
+    subscribe: boolean
+): Promise<void> => {
+    try {
+        const subscribeOpts = {
+            stream: streamId,
+            resend: resendOpts
+        }
+        const handler = (message: any) => {
+            console.info(JSON.stringify(message))
+        }
+        if (subscribe) {
+            await client.subscribe(subscribeOpts, handler)
+        } else {
+            await client.resend(subscribeOpts, handler)
+        }
+    } catch (err) {
+        console.error(err.message ? err.message : err)
         process.exit(1)
     }
 }

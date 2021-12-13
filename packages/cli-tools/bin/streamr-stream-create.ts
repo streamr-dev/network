@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { create } from '../src/create'
 import {
     createFnParseInt
 } from './common'
@@ -13,7 +12,7 @@ createCommand()
     .option('-c, --config <config>', 'define a configuration as JSON', (s: string) => JSON.parse(s))
     .option('-p, --partitions <count>', 'define a partition count',
         createFnParseInt('--partitions'))
-    .action((streamIdOrPath: string, options: any) => {
+    .action(async (streamIdOrPath: string, options: any) => {
         const body: any = {
             id: streamIdOrPath,
             description: options.description,
@@ -21,6 +20,7 @@ createCommand()
             partitions: options.partitions
         }
         const client = createClient(options)
-        create(body, client)
+        const stream = await client.createStream(body)
+        console.info(JSON.stringify(stream.toObject(), null, 2))
     })
-    .parse()
+    .parseAsync()
