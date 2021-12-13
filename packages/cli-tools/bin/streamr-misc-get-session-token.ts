@@ -1,12 +1,10 @@
 #!/usr/bin/env node
-import { createClient } from '../src/client'
-import { createCommand } from '../src/command'
+import StreamrClient from 'streamr-client'
+import { createClientCommand } from '../src/command'
 
-createCommand()
+createClientCommand(async (client: StreamrClient) => {
+    const token = await client.session.getSessionToken()
+    console.info(token)
+})
     .description('get a session token for the current user')
-    .action(async (options: any) => {
-        const client = createClient(options)
-        const token = await client.session.getSessionToken()
-        console.info(token)
-    })
     .parseAsync()

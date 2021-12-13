@@ -37,7 +37,7 @@ export const generate = (rate: number): void => {
     }, rate)
 }
 
-createCommand(false)
+createCommand()
     .description('generate and print semi-random JSON data to stdout')
     .option('-r, --rate <n>', 'rate in milliseconds', createFnParseInt('--rate'), 500)
     .version(pkg.version)

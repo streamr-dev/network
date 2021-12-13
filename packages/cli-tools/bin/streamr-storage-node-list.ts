@@ -4,8 +4,7 @@ import {
     getStreamId,
 } from './common'
 import EasyTable from 'easy-table'
-import { createClient } from '../src/client'
-import { createCommand } from '../src/command'
+import { createClientCommand } from '../src/command'
 
 const getStorageNodes = async (streamId: string | undefined, client: StreamrClient): Promise<string[]> => {
     if (streamId !== undefined) {
@@ -19,17 +18,15 @@ const getStorageNodes = async (streamId: string | undefined, client: StreamrClie
     }
 }
 
-createCommand()
+createClientCommand(async (client: StreamrClient, options: any) => {
+    const streamId = getStreamId(options.stream, options)
+    const addresses = await getStorageNodes(streamId, client)
+    if (addresses.length > 0) {
+        console.info(EasyTable.print(addresses.map((address: string) => ({
+            address
+        }))))
+    }
+})
     .description('fetch a list of storage nodes')
     .option('-s, --stream <streamId>', 'only storage nodes which store the given stream (needs authentication)')
-    .action(async (options: any) => {
-        const client = createClient(options)
-        const streamId = getStreamId(options.stream, options)
-        const addresses = await getStorageNodes(streamId, client)
-        if (addresses.length > 0) {
-            console.info(EasyTable.print(addresses.map((address: string) => ({
-                address
-            }))))
-        }
-    })
-    .parse()
+    .parseAsync()

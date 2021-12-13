@@ -2,10 +2,9 @@
 import {
     getStreamId
 } from './common'
-import { AnonymousStreamPermisson, StreamOperation, UserStreamPermission } from 'streamr-client'
+import StreamrClient, { AnonymousStreamPermisson, StreamOperation, UserStreamPermission } from 'streamr-client'
 import EasyTable from 'easy-table'
-import { createClient } from '../src/client'
-import { createCommand } from '../src/command'
+import { createClientCommand } from '../src/command'
 
 const PUBLIC_PERMISSION_ID = 'public'
 const OPERATION_PREFIX = 'stream_'
@@ -38,21 +37,19 @@ const getTarget = (user: string): string|undefined => {
     }
 }
 
-createCommand()
+createClientCommand(async (client: StreamrClient, streamIdOrPath: string, user: string, operationIds: string[], options: any) => {
+    const operations = operationIds.map((o: string) => getOperation(o))
+    const target = getTarget(user)
+    const streamId = getStreamId(streamIdOrPath, options)!
+    const stream = await client.getStream(streamId)
+    const tasks = operations.map((operation: StreamOperation) => stream.grantPermission(operation, target))
+    const permissions = await Promise.all(tasks)
+    console.info(EasyTable.print(permissions.map((permission: UserStreamPermission|AnonymousStreamPermisson) => ({
+        id: permission.id,
+        operation: getShortOperationId(permission.operation),
+        user: (permission as AnonymousStreamPermisson).anonymous ? PUBLIC_PERMISSION_ID : (permission as UserStreamPermission).user
+    }))))
+})
     .arguments('<streamId> <user> <operations...>')
     .description('grant permission: use keyword "public" as a user to grant a public permission')
-    .action(async (streamIdOrPath: string, user: string, operationIds: string[], options: any) => {
-        const operations = operationIds.map((o: string) => getOperation(o))
-        const target = getTarget(user)
-        const client = createClient(options)
-        const streamId = getStreamId(streamIdOrPath, options)!
-        const stream = await client.getStream(streamId)
-        const tasks = operations.map((operation: StreamOperation) => stream.grantPermission(operation, target))
-        const permissions = await Promise.all(tasks)
-        console.info(EasyTable.print(permissions.map((permission: UserStreamPermission|AnonymousStreamPermisson) => ({
-            id: permission.id,
-            operation: getShortOperationId(permission.operation),
-            user: (permission as AnonymousStreamPermisson).anonymous ? PUBLIC_PERMISSION_ID : (permission as UserStreamPermission).user
-        }))))
-    })
     .parseAsync()
