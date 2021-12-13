@@ -6,20 +6,14 @@ import { createCommand } from '../src/command'
 createCommand()
     .arguments('<storageNodeAddress>')
     .description('list streams parts in a storage node')
-    .action((storageNodeAddress: string, options: any) => {
+    .action(async (storageNodeAddress: string, options: any) => {
         const client = createClient(options)
-        client.getStreamPartsByStorageNode(storageNodeAddress)
-            .then((streamParts) => {
-                if (streamParts.length > 0) {
-                    console.info(EasyTable.print(streamParts.map(({ streamId, streamPartition }) => ({
-                        streamId,
-                        streamPartition,
-                    }))))
-                }
-                return true
-            }).catch((err) => {
-                console.error(err)
-                process.exit(1)
-            })
+        const streamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
+        if (streamParts.length > 0) {
+            console.info(EasyTable.print(streamParts.map(({ streamId, streamPartition }) => ({
+                streamId,
+                streamPartition,
+            }))))
+        }
     })
-    .parse()
+    .parseAsync()

@@ -22,19 +22,14 @@ const getStorageNodes = async (streamId: string | undefined, client: StreamrClie
 createCommand()
     .description('fetch a list of storage nodes')
     .option('-s, --stream <streamId>', 'only storage nodes which store the given stream (needs authentication)')
-    .action((options: any) => {
+    .action(async (options: any) => {
         const client = createClient(options)
         const streamId = getStreamId(options.stream, options)
-        getStorageNodes(streamId, client).then((addresses: string[]) => {
-            if (addresses.length > 0) {
-                console.info(EasyTable.print(addresses.map((address: string) => ({
-                    address
-                }))))
-            }
-            return true
-        }).catch((err) => {
-            console.error(err)
-            process.exit(1)
-        })
+        const addresses = await getStorageNodes(streamId, client)
+        if (addresses.length > 0) {
+            console.info(EasyTable.print(addresses.map((address: string) => ({
+                address
+            }))))
+        }
     })
     .parse()
