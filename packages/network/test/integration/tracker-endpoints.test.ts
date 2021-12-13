@@ -43,10 +43,9 @@ describe('tracker endpoint', () => {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },
-            id: 'tracker',
             attachHttpEndpoints: true
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
         nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
@@ -321,7 +320,7 @@ describe('tracker endpoint', () => {
     it('/metrics/', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/metrics/`)
         expect(status).toEqual(200)
-        expect(jsonResult.peerId).toEqual('tracker')
+        expect(jsonResult.peerId).toEqual(tracker.getTrackerId())
         expect(jsonResult.startTime).toBeGreaterThan(1600000000000)
         expect(jsonResult.metrics).not.toBeUndefined()
     })

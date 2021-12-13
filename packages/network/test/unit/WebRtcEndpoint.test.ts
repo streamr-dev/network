@@ -26,10 +26,9 @@ describe('WebRtcEndpoint', () => {
                 listen: {
                     hostname: '127.0.0.1',
                     port: 28800
-                },
-                id: 'tracker'
+                }
             })
-            const trackerPeerInfo = PeerInfo.newTracker('tracker')
+            const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
             const ep1 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-1'))
             const ep2 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
             nodeToTracker1 = new NodeToTracker(ep1)
@@ -76,8 +75,8 @@ describe('WebRtcEndpoint', () => {
         it('connection between nodes is established when both nodes invoke tracker-instructed connect()', async () => {
             await runAndWaitForEvents([
                 () => {
-                    endpoint1.connect('node-2', 'tracker', true)
-                    endpoint2.connect('node-1', 'tracker', true)
+                    endpoint1.connect('node-2', tracker.getTrackerId(), true)
+                    endpoint2.connect('node-1', tracker.getTrackerId(), true)
                 }], [
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
                 [endpoint2, EndpointEvent.PEER_CONNECTED]
@@ -124,8 +123,8 @@ describe('WebRtcEndpoint', () => {
                 waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)])
 
             const results = await Promise.allSettled([
-                endpoint1.connect('node-2', 'tracker', false),
-                endpoint2.connect('node-1', 'tracker', false)
+                endpoint1.connect('node-2', tracker.getTrackerId(), false),
+                endpoint2.connect('node-1', tracker.getTrackerId(), false)
             ])
 
             await promise
@@ -180,8 +179,8 @@ describe('WebRtcEndpoint', () => {
                 waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)])
 
             const results = await Promise.allSettled([
-                endpoint1.connect('node-2', 'tracker', true),
-                endpoint2.connect('node-1', 'tracker', false)
+                endpoint1.connect('node-2', tracker.getTrackerId(), true),
+                endpoint2.connect('node-1', tracker.getTrackerId(), false)
             ])
 
             await promise
@@ -235,8 +234,8 @@ describe('WebRtcEndpoint', () => {
                 waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)])
 
             const results = await Promise.allSettled([
-                endpoint1.connect('node-2', 'tracker', false),
-                endpoint2.connect('node-1', 'tracker', true)
+                endpoint1.connect('node-2', tracker.getTrackerId(), false),
+                endpoint2.connect('node-1', tracker.getTrackerId(), true)
             ])
 
             await promise
@@ -289,10 +288,10 @@ describe('WebRtcEndpoint', () => {
 
             await runAndWaitForEvents([
                 () => {
-                    endpoint1.connect('node-2', 'tracker')
+                    endpoint1.connect('node-2', tracker.getTrackerId())
                 },
                 () => {
-                    endpoint2.connect('node-1', 'tracker')
+                    endpoint2.connect('node-1', tracker.getTrackerId())
                 }], [
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
                 [endpoint2, EndpointEvent.PEER_CONNECTED]
@@ -303,7 +302,7 @@ describe('WebRtcEndpoint', () => {
                     endpoint1.close('node-2', 'test')
                 },
                 () => {
-                    endpoint1.connect('node-2', 'tracker', false)
+                    endpoint1.connect('node-2', tracker.getTrackerId(), false)
                 }], [
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
                 [endpoint2, EndpointEvent.PEER_CONNECTED]
@@ -314,7 +313,7 @@ describe('WebRtcEndpoint', () => {
                     endpoint2.close('node-1', 'test')
                 },
                 () => {
-                    endpoint2.connect('node-1', 'tracker')
+                    endpoint2.connect('node-1', tracker.getTrackerId())
                 }], [
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
                 [endpoint2, EndpointEvent.PEER_CONNECTED]
@@ -325,10 +324,10 @@ describe('WebRtcEndpoint', () => {
         it('messages are delivered on temporary loss of connectivity', async () => {
             await runAndWaitForEvents([
                 () => {
-                    endpoint1.connect('node-2', 'tracker')
+                    endpoint1.connect('node-2', tracker.getTrackerId())
                 },
                 () => {
-                    endpoint2.connect('node-1', 'tracker')
+                    endpoint2.connect('node-1', tracker.getTrackerId())
                 }], [
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
                 [endpoint2, EndpointEvent.PEER_CONNECTED]
@@ -357,10 +356,10 @@ describe('WebRtcEndpoint', () => {
 
                 await runAndWaitForEvents([
                     () => {
-                        endpoint1.connect('node-2', 'tracker')
+                        endpoint1.connect('node-2', tracker.getTrackerId())
                     },
                     () => {
-                        endpoint2.connect('node-1', 'tracker')
+                        endpoint2.connect('node-1', tracker.getTrackerId())
                     }],
                 [endpoint1, EndpointEvent.PEER_CONNECTED],
                 30000
@@ -398,7 +397,7 @@ describe('WebRtcEndpoint', () => {
             await Promise.all([
                 waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
                 waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED),
-                endpoint2.connect('node-1', 'tracker')
+                endpoint2.connect('node-1', tracker.getTrackerId())
             ])
 
             let ep1NumOfReceivedMessages = 0
@@ -437,7 +436,7 @@ describe('WebRtcEndpoint', () => {
 
         it('cannot send too large of a payload', async () => {
             const payload = new Array(2 ** 21).fill('X').join('')
-            await endpoint2.connect('node-1', 'tracker')
+            await endpoint2.connect('node-1', tracker.getTrackerId())
             await expect(async () => {
                 await endpoint1.send('node-2', payload)
             }).rejects.toThrow(/Dropping message due to size 2097152 exceeding the limit of \d+/)

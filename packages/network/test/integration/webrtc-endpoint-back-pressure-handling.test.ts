@@ -23,8 +23,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 28710
-            },
-            id: 'tracker'
+            }
         })
 
         const peerInfo1 = PeerInfo.newNode('ep1')
@@ -35,8 +34,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         const wsEp2 = new NodeClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
         nodeToTracker1 = new NodeToTracker(wsEp1)
         nodeToTracker2 = new NodeToTracker(wsEp2)
-        await nodeToTracker1.connectToTracker(tracker.getUrl(), PeerInfo.newTracker('tracker'))
-        await nodeToTracker2.connectToTracker(tracker.getUrl(), PeerInfo.newTracker('tracker'))
+        await nodeToTracker1.connectToTracker(tracker.getUrl(), PeerInfo.newTracker(tracker.getTrackerId()))
+        await nodeToTracker2.connectToTracker(tracker.getUrl(), PeerInfo.newTracker(tracker.getTrackerId()))
 
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(
@@ -56,8 +55,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             NodeWebRtcConnectionFactory
         )
         await Promise.all([
-            ep1.connect('ep2', 'tracker'),
-            ep2.connect('ep1', 'tracker')
+            ep1.connect('ep2', tracker.getTrackerId()),
+            ep2.connect('ep1', tracker.getTrackerId())
         ])
     })
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 const program = require('commander')
 
-const { Logger } = require('../dist/helpers/Logger')
+const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { createNetworkNode } = require('../dist/composition')
-const { MetricsContext } = require('../dist/helpers/MetricsContext')
-const { Event: NodeEvent } = require('../dist/logic/Node')
+const { createNetworkNode } = require('../dist/src/composition')
+const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
+const { Event: NodeEvent } = require('../dist/src/logic/node/Node')
 
 program
     .version(CURRENT_VERSION)

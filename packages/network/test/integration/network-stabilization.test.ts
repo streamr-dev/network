@@ -29,10 +29,9 @@ describe('check network stabilization', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 39000
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {

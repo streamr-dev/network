@@ -1,8 +1,8 @@
 import StreamrClient, { Stream } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, fastPrivateKey, createClient, createTestStream } from '../utils'
+import { startBroker, fastPrivateKey, createClient, createTestStream, startTestTracker } from '../utils'
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -18,13 +18,7 @@ describe('local propagation', () => {
     let freshStreamId: string
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-1'
-        })
+        tracker = await startTestTracker(trackerPort)
 
         broker = await startBroker({
             name: 'broker1',

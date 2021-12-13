@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 const program = require('commander')
 
-const { Logger } = require('../dist/helpers/Logger')
+const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { startTracker } = require('../dist/composition')
-const { MetricsContext } = require('../dist/helpers/MetricsContext')
+const { startTracker } = require('../dist/src/composition')
+const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
 
 program
     .version(CURRENT_VERSION)
