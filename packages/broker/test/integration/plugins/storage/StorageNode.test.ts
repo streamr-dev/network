@@ -1,4 +1,4 @@
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import { createClient, getPrivateKey, startBroker } from '../../../utils'
 import { Broker } from "../../../../src/broker"
@@ -15,13 +15,7 @@ describe('StorageNode', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-StorageNode'
-        })
+        tracker = await startTestTracker(trackerPort)
     })
 
     beforeAll(async () => {
@@ -35,7 +29,6 @@ describe('StorageNode', () => {
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
-            trackerId: trackerInfo.id,
             wsPort: wsPort1,
             httpPort: httpPort1,
             enableCassandra: true,

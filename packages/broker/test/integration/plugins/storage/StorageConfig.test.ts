@@ -1,6 +1,6 @@
 import { Client } from 'cassandra-driver'
 import StreamrClient, { Stream } from 'streamr-client'
-import { Protocol, startTracker, Tracker } from 'streamr-network'
+import { Protocol, Tracker } from 'streamr-network'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
@@ -11,7 +11,8 @@ import {
     waitForStreamPersistedInStorageNode,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
-    getPrivateKey
+    getPrivateKey,
+    startTestTracker
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 
@@ -56,13 +57,7 @@ describe('StorageConfig', () => {
 
     beforeEach(async () => {
         const engineAndEditorAccount = new Wallet(await getPrivateKey())
-        tracker = await startTracker({
-            listen: {
-                hostname: NODE_HOST,
-                port: TRACKER_PORT
-            },
-            id: 'tracker-1'
-        })
+        tracker = await startTestTracker(TRACKER_PORT)
         const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
         await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${HTTP_PORT}/api/v1"}`)
         storageNode = await startBroker({

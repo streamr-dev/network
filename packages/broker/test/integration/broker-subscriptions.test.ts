@@ -43,14 +43,7 @@ describe('broker subscriptions', () => {
     beforeEach(async () => {
         const broker1User = new Wallet(await getPrivateKey())
         const broker2User = new Wallet(await getPrivateKey())
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker'
-        })
-
+        tracker = await startTestTracker(trackerPort)
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: broker1User.privateKey,

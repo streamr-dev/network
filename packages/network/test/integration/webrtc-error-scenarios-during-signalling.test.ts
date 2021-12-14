@@ -21,10 +21,9 @@ describe('Signalling error scenarios', () => {
                 hostname: '127.0.0.1',
                 port: 35115
             },
-            id: 'tracker',
             trackerPingInterval: 3000
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         nodeOne = createNetworkNode({
             id: 'node-1',
@@ -120,9 +119,9 @@ describe('Signalling error scenarios', () => {
 
         await runAndWaitForEvents([ 
             // @ts-expect-error private field
-            () => { nodeOne.trackerManager.nodeToTracker.endpoint.close('tracker') },
+            () => { nodeOne.trackerManager.nodeToTracker.endpoint.close(tracker.getTrackerId()) },
             // @ts-expect-error private field
-            () => { nodeTwo.trackerManager.nodeToTracker.endpoint.close('tracker') }], [
+            () => { nodeTwo.trackerManager.nodeToTracker.endpoint.close(tracker.getTrackerId()) }], [
             // @ts-expect-error private field
             [ nodeOne.trackerManager.nodeToTracker, NodeToTrackerEvent.TRACKER_DISCONNECTED ],
             // @ts-expect-error private field
@@ -146,7 +145,7 @@ describe('Signalling error scenarios', () => {
         ], 9997)
 
         // @ts-expect-error private field
-        await runAndWaitForEvents( () => {  nodeOne.trackerManager.nodeToTracker.endpoint.close('tracker') }, [
+        await runAndWaitForEvents( () => {  nodeOne.trackerManager.nodeToTracker.endpoint.close(tracker.getTrackerId()) }, [
             // @ts-expect-error private field
             [nodeOne.trackerManager.nodeToTracker, NodeToTrackerEvent.TRACKER_DISCONNECTED ],
             // @ts-expect-error private field

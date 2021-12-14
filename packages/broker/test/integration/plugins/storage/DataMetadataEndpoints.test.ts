@@ -1,5 +1,5 @@
 import http from 'http'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
 import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
@@ -37,13 +37,7 @@ describe('DataMetadataEndpoints', () => {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
             jsonRpcProvider: `http://127.0.0.1:8546`
         }
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-DataMetadataEndpoints'
-        })
+        tracker = await startTestTracker(trackerPort)
         const engineAndEditorAccount = new Wallet(await getPrivateKey())
         const trackerInfo = tracker.getConfigRecord()
         const storageNodeClient = new StreamrClient({
@@ -57,7 +51,6 @@ describe('DataMetadataEndpoints', () => {
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
-            trackerId: trackerInfo.id,
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,

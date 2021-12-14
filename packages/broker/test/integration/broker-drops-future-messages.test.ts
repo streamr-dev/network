@@ -39,13 +39,7 @@ describe('broker drops future messages', () => {
     let publisherAddress: string
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker'
-        })
+        tracker = await startTestTracker(trackerPort)
         const brokerWallet = new Wallet(await getPrivateKey())
         const storageNodeClient = await createClient(tracker, brokerWallet.privateKey)
         await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)

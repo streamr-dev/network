@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
 import { Stream, StreamrClient } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
 import { createClient, startBroker, createTestStream, Queue, getPrivateKey } from '../utils'
@@ -57,13 +57,7 @@ export const createMessagingPluginTest = <T>(
 
         beforeAll(async () => {
             brokerUser = new Wallet(await getPrivateKey())
-            tracker = await startTracker({
-                id: 'tracker-1',
-                listen: {
-                    hostname: '127.0.0.1',
-                    port: ports.tracker
-                },
-            })
+            tracker = await startTestTracker(ports.tracker)
             broker = await startBroker({
                 name: 'broker',
                 privateKey: brokerUser.privateKey,

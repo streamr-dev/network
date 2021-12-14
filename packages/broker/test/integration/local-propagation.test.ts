@@ -23,13 +23,7 @@ describe('local propagation', () => {
 
     beforeAll(async () => {
         privateKey = await getPrivateKey()
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-1'
-        })
+        tracker = await startTestTracker(trackerPort)
         brokerWallet = new Wallet(await getPrivateKey())
 
         broker = await startBroker({

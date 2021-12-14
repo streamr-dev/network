@@ -214,7 +214,8 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "string"
+                                "type": "string",
+                                "format": "ethereum-address"
                             },
                             "http": {
                                 "type": "string",

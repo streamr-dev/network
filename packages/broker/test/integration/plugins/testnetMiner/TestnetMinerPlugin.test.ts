@@ -72,13 +72,7 @@ describe('TestnetMinerPlugin', () => {
     }
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            id: 'tracker',
-            listen: {
-                hostname: '127.0.0.1',
-                port: TRACKER_PORT
-            },
-        })
+        tracker = await startTestTracker(TRACKER_PORT)
         client = await createClient(tracker, rewardPublisherPrivateKey)
         const rewardStream = await createRewardStream(client)
         rewardStreamId = rewardStream.id
@@ -88,7 +82,6 @@ describe('TestnetMinerPlugin', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey: brokerWallet.privateKey,
-            trackerId: 'tracker',
             trackerPort: TRACKER_PORT,
             wsPort: LEGACY_WEBSOCKET_PORT,
             extraPlugins: {

@@ -30,12 +30,11 @@ describe('tracker: instruction counter filtering', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30420
-            },
-            id: 'tracker'
+            }
         })
         const peerInfo1 = PeerInfo.newNode('nodeToTracker1')
         const peerInfo2 = PeerInfo.newNode('nodeToTracker2')
-        const trackerPeerInfo = PeerInfo.newTracker('tracker')
+        const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         const wsClient1 = new NodeClientWsEndpoint(peerInfo1)
         const wsClient2 = new NodeClientWsEndpoint(peerInfo2)
         nodeToTracker1 = new NodeToTracker(wsClient1)
@@ -50,8 +49,8 @@ describe('tracker: instruction counter filtering', () => {
         ])
 
         await runAndWaitForEvents([
-            () => { nodeToTracker1.sendStatus('tracker', formStatus(0, []) as Status) },
-            () => { nodeToTracker2.sendStatus('tracker', formStatus(0, []) as Status) }
+            () => { nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status) },
+            () => { nodeToTracker2.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status) }
         ], [
             [nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
             [nodeToTracker2, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED]
@@ -67,7 +66,7 @@ describe('tracker: instruction counter filtering', () => {
     test('handles status messages with counters equal or more to current counter(s)', async () => {
         await runAndWaitForEvents(
             () => {
-                nodeToTracker1.sendStatus('tracker', formStatus(1, []) as Status)
+                nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(1, []) as Status)
                     .catch(() => {})
             },
             [nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
@@ -80,7 +79,7 @@ describe('tracker: instruction counter filtering', () => {
         nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
-        nodeToTracker1.sendStatus('tracker', formStatus(0, []) as Status)
+        nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status)
             .catch(() => {})
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(0)
@@ -91,7 +90,7 @@ describe('tracker: instruction counter filtering', () => {
         nodeToTracker1.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
-        nodeToTracker1.sendStatus('tracker', formStatus(1, []) as Status)
+        nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(1, []) as Status)
             .catch(() => {})
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(1)
@@ -100,7 +99,7 @@ describe('tracker: instruction counter filtering', () => {
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
         await runAndWaitForEvents(
-            () => { nodeToTracker1.sendStatus('tracker', formStatus(0, []) as Status) },
+            () => { nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status) },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )
@@ -111,7 +110,7 @@ describe('tracker: instruction counter filtering', () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
         await runAndWaitForEvents(
             () => {
-                nodeToTracker1.sendStatus('tracker', formStatus(1, []) as Status)
+                nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(1, []) as Status)
             },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]

@@ -1,5 +1,5 @@
 import StreamrClient from 'streamr-client'
-import {startTracker, Tracker} from 'streamr-network'
+import {Tracker} from 'streamr-network'
 import { Wallet } from 'ethers'
 import { startBroker, createClient, Queue, getPrivateKey } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
@@ -26,13 +26,7 @@ describe('NodeMetrics', () => {
             jsonRpcProvider: `http://10.200.10.1:8546`
         }
         nodeAddress = tmpAccount.address
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-1'
-        })
+        tracker = await startTestTracker(trackerPort)
         client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })

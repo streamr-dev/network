@@ -1,8 +1,9 @@
 import crypto from 'crypto'
 import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import fetch from 'node-fetch'
+import _ from 'lodash'
 import { Wallet } from 'ethers'
-import { Tracker, Protocol } from 'streamr-network'
+import { Tracker, Protocol, startTracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config'
@@ -15,7 +16,6 @@ interface TestConfig {
     name: string
     trackerPort: number
     privateKey: string
-    trackerId?: string
     httpPort?: null | number
     wsPort?: null | number
     extraPlugins?: Record<string, unknown>
@@ -33,7 +33,6 @@ export const formConfig = ({
     name,
     trackerPort,
     privateKey,
-    trackerId = 'tracker-1',
     httpPort = null,
     wsPort = null,
     extraPlugins = {},
@@ -85,7 +84,7 @@ export const formConfig = ({
                 id: new Wallet(privateKey).address,
                 trackers: [
                     {
-                        id: trackerId,
+                        id: createEthereumAddress(trackerPort),
                         ws: `ws://127.0.0.1:${trackerPort}`,
                         http: `http://127.0.0.1:${trackerPort}`
                     }
@@ -110,6 +109,16 @@ export const formConfig = ({
     }
 }
 
+export const startTestTracker = async (port: number): Promise<Tracker> => {
+    return await startTracker({
+        id: createEthereumAddress(port),
+        listen: {
+            hostname: '127.0.0.1',
+            port
+        },
+    })
+}
+
 export async function getPrivateKey(): Promise<string> {
     const response = await fetch('http://localhost:45454/key')
     return response.text()
@@ -131,6 +140,10 @@ export const getWsUrl = (port: number, ssl = false): string => {
 // fastPrivateKey instead of createMockUser
 export const fastPrivateKey = (): string => {
     return `0x${crypto.randomBytes(32).toString('hex')}`
+}
+
+export const createEthereumAddress = (id: number): string => {
+    return '0x' + _.padEnd(String(id), 40, '0')
 }
 
 export const createMockUser = (): Wallet => Wallet.createRandom()

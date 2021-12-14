@@ -49,13 +49,7 @@ describe('Subscriber Plugin', () => {
     let plugin: any
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            id: 'tracker',
-            listen: {
-                hostname: '127.0.0.1',
-                port: TRACKER_PORT
-            },
-        })
+        tracker = await startTestTracker(TRACKER_PORT)
         plugin = await createMockPlugin(tracker)
         await plugin.start()
     })

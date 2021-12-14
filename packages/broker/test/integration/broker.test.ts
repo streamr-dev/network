@@ -1,4 +1,4 @@
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { wait, waitForCondition } from 'streamr-test-utils'
@@ -7,6 +7,7 @@ import {
     createTestStream,
     getPrivateKey,
     startBroker,
+    startTestTracker,
     StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode
 } from '../utils'
@@ -19,7 +20,7 @@ const wsPort2 = 12352
 const wsPort3 = 12353
 const trackerPort = 12370
 
-jest.setTimeout(6000000)
+jest.setTimeout(60000)
 
 describe('broker: end-to-end', () => {
     let tracker: Tracker
@@ -40,13 +41,7 @@ describe('broker: end-to-end', () => {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
             jsonRpcProvider: `http://10.200.10.1:8546`
         }
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-1'
-        })
+        tracker = await startTestTracker(trackerPort)
         const storageNodeClient = new StreamrClient({
             ...ConfigTest,
             auth: {
