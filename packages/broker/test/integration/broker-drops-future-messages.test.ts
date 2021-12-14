@@ -47,6 +47,8 @@ describe('broker drops future messages', () => {
             id: 'tracker'
         })
         const brokerWallet = new Wallet(await getPrivateKey())
+        const storageNodeClient = await createClient(tracker, brokerWallet.privateKey)
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
         broker = await startBroker({
             name: 'storageNode',
             privateKey: brokerWallet.privateKey,
@@ -59,6 +61,7 @@ describe('broker drops future messages', () => {
         publisherAddress = publisherWallet.address
         client = await createClient(tracker, publisherWallet.privateKey)
         const freshStream = await createTestStream(client, module)
+        await freshStream.addToStorageNode(brokerWallet.address)
         await freshStream.setPermissionsForUser(await brokerWallet.getAddress(), true, true, true, true, true)
         streamId = freshStream.id
     })
