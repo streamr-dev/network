@@ -11,8 +11,8 @@ describe('LoginEndpoints', () => {
 
     const createClient = getCreateClient()
 
-    beforeAll(() => {
-        client = createClient()
+    beforeAll(async () => {
+        client = await createClient()
     })
 
     describe('Challenge generation', () => {

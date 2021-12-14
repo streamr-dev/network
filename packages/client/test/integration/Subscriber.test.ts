@@ -14,6 +14,7 @@ import { Todo } from '../../src/types'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
+jest.setTimeout(60000)
 
 describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
@@ -32,12 +33,11 @@ describeRepeats('Subscriber', () => {
 
     beforeEach(async () => {
         // eslint-disable-next-line require-atomic-updates
-        client = createClient()
+        client = await createClient()
         M = client.subscriber
         client.debug('connecting before test >>')
         await Promise.all([
             client.connect(),
-            client.getSessionToken(),
         ])
         stream = await createTestStream(client, module)
         client.debug('connecting before test <<')
@@ -391,7 +391,7 @@ describeRepeats('Subscriber', () => {
                 sub2.onError(onSuppressError)
 
                 const received1: any[] = []
-                const client2 = createClient({
+                const client2 = await createClient({
                     auth: client.options.auth,
                 })
 

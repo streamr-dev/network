@@ -1,3 +1,7 @@
+const path = require('path')
+
+// process.env.DEBUG = '*'
+
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
@@ -14,6 +18,10 @@ module.exports = {
 
     // The directory where Jest should output its coverage files
     coverageDirectory: 'coverage',
+
+    globalSetup: './jest.setup.js',
+   
+    preset: 'ts-jest/presets/js-with-ts',
 
     // This option allows use of a custom test runner
     testRunner: 'jest-circus/runner',

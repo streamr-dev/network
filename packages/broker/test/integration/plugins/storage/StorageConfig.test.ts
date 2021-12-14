@@ -11,9 +11,12 @@ import {
     waitForStreamPersistedInStorageNode,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
+    getPrivateKey,
     startTestTracker
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
+
+jest.setTimeout(30000)
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -33,11 +36,14 @@ describe('StorageConfig', () => {
     let client: StreamrClient
     let stream: Stream
     let assignmentEventManager: StorageAssignmentEventManager
-    const publisherAccount = Wallet.createRandom()
-    const storageNodeAccount = Wallet.createRandom()
-    const brokerAccount = Wallet.createRandom()
+    let publisherAccount: Wallet
+    let storageNodeAccount: Wallet
+    let brokerAccount: Wallet
 
     beforeAll(async () => {
+        publisherAccount = new Wallet(await getPrivateKey())
+        storageNodeAccount = new Wallet(await getPrivateKey())
+        brokerAccount = new Wallet(await getPrivateKey())
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
@@ -50,8 +56,10 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
-        const engineAndEditorAccount = Wallet.createRandom()
+        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         tracker = await startTestTracker(TRACKER_PORT)
+        const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${HTTP_PORT}/api/v1"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -69,7 +77,7 @@ describe('StorageConfig', () => {
             restUrl: REST_URL,
             enableCassandra: false
         })
-        client = createClient(tracker, publisherAccount.privateKey)
+        client = await createClient(tracker, publisherAccount.privateKey)
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
     })
@@ -93,5 +101,5 @@ describe('StorageConfig', () => {
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = Protocol.StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
         expect(storeMessage.messageId).toEqual(publishMessage.messageId)
-    }, 10000)
+    })
 })

@@ -1,7 +1,9 @@
-import { createTestStream, fakePrivateKey, getCreateClient } from '../utils'
-import { ConfigTest, Stream, StreamOperation, StreamrClient } from '../../src'
+import { createTestStream, fakePrivateKey, getCreateClient, getPrivateKey } from '../utils'
+import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
 import { wait } from 'streamr-test-utils'
 import { SPID } from 'streamr-client-protocol'
+
+jest.setTimeout(30000)
 
 describe('PubSub with proxy connections', () => {
     let stream: Stream
@@ -16,17 +18,17 @@ describe('PubSub with proxy connections', () => {
     const createClient = getCreateClient()
 
     beforeEach(async () => {
-        pubPrivateKey = fakePrivateKey()
+        pubPrivateKey = await getPrivateKey()
         proxyPrivateKey1 = fakePrivateKey()
         proxyPrivateKey2 = fakePrivateKey()
 
-        publishingClient = createClient({
+        publishingClient = await createClient({
             id: 'publisher',
             auth: {
                 privateKey: pubPrivateKey
             }
         })
-        proxyClient1 = createClient({
+        proxyClient1 = await createClient({
             id: 'proxy',
             auth: {
                 privateKey: proxyPrivateKey1
@@ -36,7 +38,7 @@ describe('PubSub with proxy connections', () => {
                 trackers: ConfigTest.network.trackers
             }
         })
-        proxyClient2 = createClient({
+        proxyClient2 = await createClient({
             id: 'proxy',
             auth: {
                 privateKey: proxyPrivateKey2
@@ -53,17 +55,11 @@ describe('PubSub with proxy connections', () => {
         const proxyUser = await proxyClient1.getUserInfo()
         const proxyUser2 = await proxyClient2.getUserInfo()
 
-        await stream.grantPermissions([StreamOperation.STREAM_GET, StreamOperation.STREAM_PUBLISH], pubUser.username)
-        await stream.grantPermissions([
-            StreamOperation.STREAM_GET,
-            StreamOperation.STREAM_PUBLISH,
-            StreamOperation.STREAM_SUBSCRIBE
-        ], proxyUser.username)
-        await stream.grantPermissions([
-            StreamOperation.STREAM_GET,
-            StreamOperation.STREAM_PUBLISH,
-            StreamOperation.STREAM_SUBSCRIBE
-        ], proxyUser2.username)
+        await stream.grantUserPermission(StreamPermission.PUBLISH, pubUser.username)
+        await stream.grantUserPermission(StreamPermission.PUBLISH, proxyUser.username)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, proxyUser.username)
+        await stream.grantUserPermission(StreamPermission.PUBLISH, proxyUser2.username)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, proxyUser2.username)
     })
 
     it('Publish only connections work', async () => {

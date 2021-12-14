@@ -28,7 +28,7 @@ export default class StreamPartitioner {
             return 0
         }
 
-        const stream = await this.streamEndpoints.getStreamValidationInfo(streamId)
+        const stream = await this.streamEndpoints.getStream(streamId)
         return this.computeStreamPartition(stream.id, stream.partitions, partitionKey)
     }
 

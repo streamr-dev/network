@@ -58,10 +58,13 @@ export class Rest implements Context {
         query, useSession = true, options, requireNewToken = false, debug = this.debug, restUrl
     }: FetchOptions) {
         const url = this.getUrl(urlParts, query, restUrl)
+        const newOptions = {
+            ...options,
+            session: useSession ? this.session : undefined
+        }
         return authFetch<T>(
             url.toString(),
-            useSession ? this.session : undefined,
-            options,
+            newOptions,
             requireNewToken,
             debug,
         )
@@ -71,10 +74,13 @@ export class Rest implements Context {
         query, useSession = true, options, requireNewToken = false, debug = this.debug, restUrl
     }: FetchOptions) {
         const url = this.getUrl(urlParts, query, restUrl)
+        const newOptions = {
+            ...options,
+            session: useSession ? this.session : undefined
+        }
         return authRequest<T>(
             url.toString(),
-            useSession ? this.session : undefined,
-            options,
+            newOptions,
             requireNewToken,
             debug,
         )

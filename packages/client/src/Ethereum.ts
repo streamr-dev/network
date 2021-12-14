@@ -147,7 +147,7 @@ class StreamrEthereum {
             throw new Error('StreamrClient is not authenticated with private key')
         }
 
-        return this._getAddress()
+        return (await this._getAddress()).toLowerCase()
     }
 
     getSigner(): Signer {

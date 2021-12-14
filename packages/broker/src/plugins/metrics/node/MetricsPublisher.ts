@@ -1,4 +1,4 @@
-import { StreamOperation, StreamrClient } from 'streamr-client'
+import { StreamPermission, StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
 import { PERIOD_LENGTHS, Sample } from './Sample'
 
@@ -34,10 +34,9 @@ export class MetricsPublisher {
     }
 
     async ensureStreamsCreated(): Promise<void> {
-        await Promise.all(
-            Object.keys(STREAM_ID_SUFFIXES)
-                .map((periodLengthAsString: string) => this.ensureStreamCreated(Number(periodLengthAsString)))
-        )
+        for (const periodLength of Object.keys(STREAM_ID_SUFFIXES)) {
+            await this.ensureStreamCreated(Number(periodLength))
+        }
     }
 
     private async ensureStreamCreated(periodLength: number): Promise<string> {
@@ -45,8 +44,7 @@ export class MetricsPublisher {
         const stream = await this.client.getOrCreateStream({
             id: streamId
         })
-        await stream.grantPermission('stream_get' as StreamOperation, undefined)
-        await stream.grantPermission('stream_subscribe' as StreamOperation, undefined)
+        await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
         if (periodLength !== PERIOD_LENGTHS.FIVE_SECONDS) {
             try {
                 await stream.addToStorageNode(this.storageNodeAddress)

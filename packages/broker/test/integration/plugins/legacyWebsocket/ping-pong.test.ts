@@ -22,20 +22,20 @@ describe.skip('ping-pong test between broker and clients', () => {
 
     beforeEach(async () => {
         tracker = await startTestTracker(trackerPort)
-        client1 = createClient(tracker)
-        client2 = createClient(tracker)
-        client3 = createClient(tracker)
+        client1 = await createClient(tracker)
+        client2 = await createClient(tracker)
+        client3 = await createClient(tracker)
         metricsContext = new MetricsContext(null as any)
         networkNode = await client1.getNode()
         websocketServer = new WebsocketServer(
             http.createServer().listen(wsPort),
             networkNode,
-            new StreamFetcher('http://127.0.0.1'),
+            new StreamFetcher(client1),
             new Publisher(client1),
             metricsContext,
             new SubscriptionManager(networkNode),
             undefined as any,
-            undefined as any
+            client1
         )
 
         await Promise.all([

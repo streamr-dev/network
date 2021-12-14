@@ -8,7 +8,6 @@ import {
     MAX_SEQUENCE_NUMBER_VALUE
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { HttpError } from '../../../../src/errors/HttpError'
 import { PassThrough } from 'stream'
 import { StreamFetcher } from "../../../../src/StreamFetcher"
 
@@ -46,13 +45,13 @@ describe('DataQueryEndpoints', () => {
         app = express()
         storage = {} as Storage
         streamFetcher = {
-            authenticate(streamId: string, sessionToken: string|undefined) {
-                return new Promise(((resolve, reject) => {
-                    if (sessionToken === 'mock-session-token') {
-                        resolve({})
-                    } else {
-                        reject(new HttpError(403, 'GET', ''))
-                    }
+            authenticate() {
+                return new Promise(((resolve) => {
+                    // if (sessionToken === 'mock-session-token') {
+                    resolve({})
+                    // } else {
+                    //     reject(new HttpError(403, 'GET', ''))
+                    // }
                 }))
             },
         }
@@ -83,13 +82,14 @@ describe('DataQueryEndpoints', () => {
                     }, done)
             })
 
-            it('responds 403 and error message if not authorized', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last', 'wrong-session-token')
-                    .expect('Content-Type', /json/)
-                    .expect(403, {
-                        error: 'Authentication failed.',
-                    }, done)
-            })
+            // does not have to be autorized with session, endpoint will check permission onchain
+            // it('responds 403 and error message if not authorized', (done) => {
+            //     testGetRequest('/api/v1/streams/streamId/data/partitions/0/last', 'wrong-session-token')
+            //         .expect('Content-Type', /json/)
+            //         .expect(403, {
+            //             error: 'Authentication failed.',
+            //         }, done)
+            // })
 
             it('responds 400 and error message if optional param "count" not a number', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=sixsixsix')
@@ -284,13 +284,14 @@ describe('DataQueryEndpoints', () => {
                         error: 'Path parameter "partition" not a number: zero',
                     }, done)
             })
-            it('responds 403 and error message if not authorized', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrong-session-token')
-                    .expect('Content-Type', /json/)
-                    .expect(403, {
-                        error: 'Authentication failed.',
-                    }, done)
-            })
+            // does not have to be autorized with session, endpoint will check permission onchain
+            // it('responds 403 and error message if not authorized', (done) => {
+            //     testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrong-session-token')
+            //         .expect('Content-Type', /json/)
+            //         .expect(403, {
+            //             error: 'Authentication failed.',
+            //         }, done)
+            // })
             it('responds 400 and error message if param "fromTimestamp" not given', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range')
                     .expect('Content-Type', /json/)

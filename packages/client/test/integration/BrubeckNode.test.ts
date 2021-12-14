@@ -7,7 +7,7 @@ describe('BrubeckNode', () => {
     describe('id assignment/generation', () => {
         it('uses passed-in network node id, if supplied', async () => {
             const nodeId = uid('NetworkNode')
-            const client = createClient({
+            const client = await createClient({
                 network: {
                     id: nodeId,
                 }
@@ -17,7 +17,7 @@ describe('BrubeckNode', () => {
         })
 
         it('generates node id from address, if id not supplied', async () => {
-            const client = createClient()
+            const client = await createClient()
             const node = await client.getNode()
             const expectedPrefix = `${await client.getAddress()}#`
             expect(node.getNodeId().startsWith(expectedPrefix)).toBe(true)
@@ -25,8 +25,8 @@ describe('BrubeckNode', () => {
         })
 
         it('generates different ids for different clients with same private key', async () => {
-            const client1 = createClient()
-            const client2 = createClient({ auth: client1.options.auth })
+            const client1 = await createClient()
+            const client2 = await createClient({ auth: client1.options.auth })
             // same key, same address
             expect(await client1.getAddress()).toEqual(await client2.getAddress())
             const expectedPrefix = `${await client1.getAddress()}#`
@@ -43,8 +43,8 @@ describe('BrubeckNode', () => {
     describe('create/destroy', () => {
         let client: StreamrClient
 
-        beforeEach(() => {
-            client = createClient()
+        beforeEach(async () => {
+            client = await createClient()
         })
 
         it('caches node', async () => {

@@ -25,7 +25,7 @@ export abstract class Plugin<T> {
     readonly networkNode: NetworkNode
     readonly subscriptionManager: SubscriptionManager
     readonly publisher: Publisher
-    readonly streamrClient?: StreamrClient
+    readonly streamrClient: StreamrClient
     readonly apiAuthenticator: ApiAuthenticator
     readonly brokerConfig: Config
     readonly pluginConfig: T

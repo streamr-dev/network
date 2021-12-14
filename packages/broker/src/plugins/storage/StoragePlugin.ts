@@ -60,7 +60,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             onSPIDRemoved: (spid: SPID) => this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
         })
         this.networkNode.addMessageListener(this.messageListener)
-        const streamFetcher = new StreamFetcher(this.getRestUrl())
+        const streamFetcher = new StreamFetcher(this.streamrClient!)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, streamFetcher, metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
@@ -87,11 +87,11 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             this.pluginConfig.cluster.clusterAddress || brokerAddress,
             this.pluginConfig.cluster.clusterSize,
             this.pluginConfig.cluster.myIndexInCluster,
-            this.getRestUrl(),
-            this.pluginConfig.storageConfig.refreshInterval)
-        this.assignmentMessageListener = storageConfig.startAssignmentEventListener(
-            this.pluginConfig.storageConfig.streamrAddress, 
-            this.subscriptionManager)
+            this.pluginConfig.storageConfig.refreshInterval,
+            this.streamrClient)
+        this.assignmentMessageListener = storageConfig.
+            startAssignmentEventListener(this.pluginConfig.storageConfig.streamrAddress, this.subscriptionManager)
+        await storageConfig.startChainEventsListener()
         return storageConfig
     }
 
@@ -103,6 +103,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig!.getSPIDs().forEach((spid) => {
             this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
         })
+        this.storageConfig!.stopChainEventsListener()
         await Promise.all([
             this.cassandra!.close(),
             this.storageConfig!.cleanup()

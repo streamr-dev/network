@@ -11,7 +11,6 @@ import { DestroySignal } from '../DestroySignal'
 import Subscriber from '../Subscriber'
 import Publisher from '../Publisher'
 import Subscription from '../Subscription'
-import Session from '../Session'
 import Ethereum from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 
@@ -79,7 +78,6 @@ export class KeyExchangeStream implements Context, Stoppable {
     constructor(
         context: Context,
         private ethereum: Ethereum,
-        private session: Session,
         private subscriber: Subscriber,
         private destroySignal: DestroySignal,
         @inject(delay(() => Publisher)) private publisher: Publisher
@@ -90,7 +88,6 @@ export class KeyExchangeStream implements Context, Stoppable {
     }
 
     private async createSubscription() {
-        await this.session.getSessionToken() // trigger auth errors if any
         // subscribing to own keyexchange stream
         const publisherId = await this.ethereum.getAddress()
         const streamId = getKeyExchangeStreamId(publisherId)
