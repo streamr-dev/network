@@ -16,10 +16,8 @@ export const createClientCommand = (
 ): commander.Command => {
     return createCommand()
         .option('--private-key <key>', 'use an Ethereum private key to authenticate')
+        .option('--config <file>', 'read connection and authentication settings from a config file')
         .option('--dev', 'use pre-defined development environment')
-        .option('--stg', 'use pre-defined staging environment')
-        .option('--ws-url <url>', 'alternative websocket url to use')
-        .option('--http-url <url>', 'alternative http url to use')
         .action(async (...args: any[]) => {
             const commandLineOptions = args[args.length - 1].opts()
             try {

@@ -1,50 +1,9 @@
 import { Wallet } from 'ethers'
-import { StreamrClientOptions } from 'streamr-client'
 
-export interface EnvironmentOptions {
+export interface GlobalCommandLineArgs {
     dev?: boolean
-    stg?: boolean
-    httpUrl?: string
-}
-
-export interface AuthenticationOptions {
+    config?: string
     privateKey?: string
-}
-
-export type GlobalCommandLineOptions = EnvironmentOptions & AuthenticationOptions
-
-export function formStreamrOptionsWithEnv(
-    { dev, stg, httpUrl, privateKey }: EnvironmentOptions & AuthenticationOptions
-): StreamrClientOptions {
-    const options: StreamrClientOptions = {}
-
-    if (dev && stg) {
-        console.error('flags --dev and --stg cannot be enabled at the same time')
-        process.exit(1)
-    }
-
-    if (dev) {
-        options.restUrl = 'http://localhost/api/v1'
-        options.storageNodeRegistry = [{
-            // "broker-node-storage-1" on Docker environment
-            address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-            url: 'http://10.200.10.1:8891'
-        }]
-    } else if (stg) {
-        options.restUrl = 'https://staging.streamr.com/api/v1/'
-    }
-
-    if (httpUrl) {
-        options.restUrl = httpUrl
-    }
-
-    if (privateKey) {
-        options.auth = {
-            privateKey
-        }
-    }
-
-    return options
 }
 
 export function createFnParseInt(name: string): (s: string) => number {
