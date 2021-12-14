@@ -28,6 +28,8 @@ defaults:
 
 jobs:
   data-unions-integration:
+    # temporary disabling of DU tests
+    if: ${{ false }}
     name: DataUnions Integration Test using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
