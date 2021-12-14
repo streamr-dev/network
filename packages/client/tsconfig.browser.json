@@ -44,7 +44,8 @@
         "package.json",
         "src/**/*",
         "vendor/**/*",
-        "contracts/**/*.json"
+        "contracts/**/*.json",
+        "src/config.schema.json"
     ],
     "exclude": ["src/index-esm.mjs"],
     "references": [
