@@ -2,6 +2,8 @@
  * More ergonomic wrapper around fetch/authFetch
  */
 import { Lifecycle, scoped, inject, DependencyContainer } from 'tsyringe'
+import omitBy from 'lodash/omitBy'
+import isNil from 'lodash/isNil'
 
 import { Debugger } from './utils/log'
 import { instanceId } from './utils'
@@ -30,6 +32,10 @@ function serialize(body: any): string | undefined {
     return typeof body === 'string' ? body : JSON.stringify(body)
 }
 
+export const createQueryString = (query: Record<string, any>) => {
+    return new URLSearchParams(omitBy(query, isNil)).toString()
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class Rest implements Context {
     id
@@ -45,8 +51,7 @@ export class Rest implements Context {
 
     getUrl(urlParts: UrlParts, query = {}, restUrl = this.options.restUrl) {
         const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), restUrl + '/')
-        const searchParams = new URLSearchParams(query)
-        url.search = searchParams.toString()
+        url.search = createQueryString(query)
         return url
     }
 
