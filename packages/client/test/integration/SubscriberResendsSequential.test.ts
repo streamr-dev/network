@@ -24,7 +24,7 @@ describeRepeats('sequential resend subscribe', () => {
     let stream: Stream
 
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    let waitForStorage: (...args: any[]) => Promise<void>
+    let waitForStorage: (...args: any[]) => Promise<void> = async () => {}
 
     let published: any[] = [] // keeps track of stream message data so we can verify they were resent
 

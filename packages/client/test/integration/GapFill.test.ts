@@ -68,7 +68,7 @@ describeRepeats('GapFill', () => {
     })
 
     afterEach(() => {
-        if (!subscriber) { return }
+        if (!subscriber || !stream) { return }
         expect(subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
         expect(subscriber.getSubscriptions()).toEqual([])
