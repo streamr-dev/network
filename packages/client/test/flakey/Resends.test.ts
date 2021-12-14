@@ -6,7 +6,7 @@ import { Defer, pTimeout } from '../../src/utils'
 
 import config from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
+import { storageNodeTestConfig } from '../integration/devEnvironment'
 
 /* eslint-disable no-await-in-loop */
 
@@ -61,7 +61,7 @@ describeRepeats('StreamrClient resends', () => {
             beforeEach(async () => {
                 stream = await createTestStream(client, module)
 
-                await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+                await stream.addToStorageNode(storageNodeTestConfig.address)
 
                 publishTestMessages = getPublishTestMessages(client, stream)
             }, 300000)
