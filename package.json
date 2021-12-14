@@ -19,7 +19,6 @@
         "packages/broker",
         "packages/cli-tools",
         "packages/client",
-        "packages/cross-client-testing",
         "packages/dev-config",
         "packages/network",
         "packages/protocol",
