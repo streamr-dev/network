@@ -2,8 +2,6 @@
  * More ergonomic wrapper around fetch/authFetch
  */
 import { Lifecycle, scoped, inject, DependencyContainer } from 'tsyringe'
-import omitBy from 'lodash/omitBy'
-import isNil from 'lodash/isNil'
 
 import { Debugger } from './utils/log'
 import { instanceId } from './utils'
@@ -33,7 +31,8 @@ function serialize(body: any): string | undefined {
 }
 
 export const createQueryString = (query: Record<string, any>) => {
-    return new URLSearchParams(omitBy(query, isNil)).toString()
+    const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+    return new URLSearchParams(withoutEmpty).toString()
 }
 
 @scoped(Lifecycle.ContainerScoped)
