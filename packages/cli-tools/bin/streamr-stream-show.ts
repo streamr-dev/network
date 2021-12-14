@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { createClientCommand } from '../src/command'
 import StreamrClient from 'streamr-client'
+import { createClientCommand } from '../src/command'
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
     const stream = await client.getStream(streamId)

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { createFnParseInt } from './common'
 import pkg from '../package.json'
+import { createFnParseInt } from '../src/common'
 import { createCommand } from '../src/command'
 
 // From: https://stackoverflow.com/questions/10726909/random-alpha-numeric-string-in-javascript

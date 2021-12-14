@@ -1,9 +1,7 @@
 #!/usr/bin/env node
-import {
-    createFnParseInt
-} from './common'
-import { createClientCommand } from '../src/command'
 import StreamrClient from 'streamr-client'
+import { createFnParseInt } from '../src/common'
+import { createClientCommand } from '../src/command'
 
 createClientCommand(async (client: StreamrClient, streamIdOrPath: string, options: any) => {
     const body: any = {

@@ -3,7 +3,7 @@ import os from 'os'
 import { readFileSync } from 'fs'
 import _ from 'lodash'
 import { BrubeckClientConfig, StreamrClient, ConfigTest } from 'streamr-client'
-import { GlobalCommandLineArgs } from '../bin/common'
+import { GlobalCommandLineArgs } from './common'
 
 const tryReadFile = (fileName: string): string|undefined => {
     try {
