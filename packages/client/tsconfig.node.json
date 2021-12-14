@@ -23,7 +23,7 @@
     "include": [
         "package.json",
         "src/**/*",
-        "src/*/*.json",
+        "src/**/*.json",
         "vendor/**/*",
         "contracts/**/*.json",
         "src/config.schema.json"
