@@ -286,7 +286,7 @@ export class StreamRegistry implements Context {
     async streamExistsOnTheGraph(streamId: string): Promise<boolean> {
         this.debug('Checking if stream exists on theGraph %s', streamId)
         try {
-            await this.getStream(streamId)
+            await this.getStreamFromGraph(streamId)
             return true
         } catch (err) {
             if (err.errorCode === 'NOT_FOUND') {
@@ -356,6 +356,19 @@ export class StreamRegistry implements Context {
             metadata = await this.streamRegistryContractReadonly.getStreamMetadata(streamId)
         } catch { throw new NotFoundError('Stream not found: id=' + streamId) }
         return this.parseStream(streamId, metadata)
+    }
+
+    async getStreamFromGraph(streamId: string): Promise<Stream> {
+        this.debug('Getting stream %s from theGraph', streamId)
+        if (streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)) {
+            return new Stream({ id: streamId, partitions: 1 }, this.container)
+        }
+        const response = await this.sendStreamQuery(
+            StreamRegistry.buildGetStremWithPermissionsQuery(streamId)
+        ) as { stream: StreamPermissionsQueryResult }
+        if (!response.stream) { throw new NotFoundError('Stream not found: id=' + streamId) }
+        const { id, metadata } = response.stream
+        return this.parseStream(id, metadata)
     }
 
     async getAllStreams(pagesize: number = 1000): Promise<Stream[]> {
