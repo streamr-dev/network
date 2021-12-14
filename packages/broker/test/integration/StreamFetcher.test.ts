@@ -1,7 +1,6 @@
 import assert from 'assert'
 import { StreamFetcher } from '../../src/StreamFetcher'
-import { createClient, createTestStream, getPrivateKey } from '../utils'
-import { startTracker } from 'streamr-network'
+import { createClient, createTestStream, getPrivateKey, startTestTracker } from '../utils'
 import StreamrClient, { StreamPermission } from 'streamr-client'
 import { Wallet } from '@ethersproject/wallet'
 
@@ -14,13 +13,7 @@ describe('StreamFetcher', () => {
 
     beforeAll(async() => {
 
-        const tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 29892
-            },
-            id: 'tracker-1'
-        })
+        const tracker = await startTestTracker(29892)
         client = await createClient(tracker, await getPrivateKey(), {})
         streamId = (await createTestStream(client, module)).streamId
 

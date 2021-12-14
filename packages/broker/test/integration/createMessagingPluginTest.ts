@@ -3,7 +3,7 @@ import { Stream, StreamrClient } from 'streamr-client'
 import { Tracker } from 'streamr-network'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, Queue, getPrivateKey } from '../utils'
+import { createClient, startBroker, createTestStream, Queue, getPrivateKey, startTestTracker } from '../utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish'|'subscribe', streamId: string, apiKey: string) => Promise<T>

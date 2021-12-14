@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
-import { startTracker, Protocol, Tracker } from 'streamr-network'
-import { startBroker, createClient, createTestStream, getPrivateKey } from '../utils'
+import { Protocol, Tracker } from 'streamr-network'
+import { startBroker, createClient, createTestStream, getPrivateKey, startTestTracker } from '../utils'
 import StreamrClient from 'streamr-client'
 import { Broker } from '../../src/broker'
 import { Wallet } from '@ethersproject/wallet'

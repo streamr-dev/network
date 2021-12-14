@@ -1,10 +1,10 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, getPrivateKey, getSPIDKeys } from '../utils'
+import { startBroker, createClient, createTestStream, getPrivateKey, getSPIDKeys, startTestTracker } from '../utils'
 
 jest.setTimeout(50000)
 

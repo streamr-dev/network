@@ -2,12 +2,12 @@ import { Server } from 'http'
 import { once } from 'events'
 import { Wallet } from 'ethers'
 import express, { Request, Response} from 'express'
-import { Logger, startTracker, Tracker } from 'streamr-network'
+import { Logger, Tracker } from 'streamr-network'
 import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { Broker } from '../../../../src/broker'
-import { createClient, createTestStream, startBroker } from '../../../utils'
+import { createClient, createTestStream, startBroker, startTestTracker } from '../../../utils'
 import { version as CURRENT_VERSION } from '../../../../package.json'
 
 jest.setTimeout(30000)

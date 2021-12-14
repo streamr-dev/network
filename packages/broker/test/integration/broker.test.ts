@@ -20,7 +20,7 @@ const wsPort2 = 12352
 const wsPort3 = 12353
 const trackerPort = 12370
 
-jest.setTimeout(60000)
+jest.setTimeout(40000)
 
 describe('broker: end-to-end', () => {
     let tracker: Tracker

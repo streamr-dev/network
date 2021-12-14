@@ -2,7 +2,7 @@ import { Stream, StreamrClient } from 'streamr-client'
 import { Tracker } from 'streamr-network'
 import mqtt from 'async-mqtt'
 import { Broker } from '../../../../src/broker'
-import { createClient, startBroker, createTestStream, Queue, getPrivateKey } from '../../../utils'
+import { createClient, startBroker, createTestStream, Queue, getPrivateKey, startTestTracker } from '../../../utils'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from '@ethersproject/wallet'
 

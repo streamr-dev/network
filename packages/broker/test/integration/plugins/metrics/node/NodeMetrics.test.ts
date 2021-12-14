@@ -1,7 +1,7 @@
 import StreamrClient from 'streamr-client'
 import {Tracker} from 'streamr-network'
 import { Wallet } from 'ethers'
-import { startBroker, createClient, Queue, getPrivateKey } from '../../../../utils'
+import { startBroker, createClient, Queue, getPrivateKey, startTestTracker } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
 
 const httpPort = 47741

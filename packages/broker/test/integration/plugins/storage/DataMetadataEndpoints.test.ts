@@ -3,7 +3,7 @@ import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
 import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
-    createTestStream, getPrivateKey } from '../../../utils'
+    createTestStream, getPrivateKey, startTestTracker } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 jest.setTimeout(30000)
@@ -39,7 +39,6 @@ describe('DataMetadataEndpoints', () => {
         }
         tracker = await startTestTracker(trackerPort)
         const engineAndEditorAccount = new Wallet(await getPrivateKey())
-        const trackerInfo = tracker.getConfigRecord()
         const storageNodeClient = new StreamrClient({
             ...ConfigTest,
             auth: {

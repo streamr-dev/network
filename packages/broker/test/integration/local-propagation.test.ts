@@ -1,9 +1,9 @@
 import { Wallet } from '@ethersproject/wallet'
 import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, getPrivateKey } from '../utils'
+import { startBroker, createClient, createTestStream, getPrivateKey, startTestTracker } from '../utils'
 
 jest.setTimeout(30000)
 

@@ -24,7 +24,6 @@ export class StreamFetcher {
     authenticate: memoize.Memoized<AuthenticateMethod> & AuthenticateMethod
     client: StreamrClient
 
-
     constructor(client: StreamrClient) {
         this.fetch = memoize<FetchMethod>(this.uncachedFetch, {
             maxAge: MAX_AGE,
