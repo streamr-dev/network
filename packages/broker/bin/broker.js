@@ -7,15 +7,13 @@ const program = require('commander')
 
 const CURRENT_VERSION = require('../package.json').version
 const { createBroker } = require('../dist/src/broker')
-const { testnet2AutoMigrate } = require('../dist/src/helpers/ConfigAutoMigrate')
 
 program
     .version(CURRENT_VERSION)
     .name('broker')
     .description('Run broker under environment specified by given configuration file.')
     .arguments('[configFile]')
-    .option('--streamrUrl <url>', 'override streamrUrl with given value')
-    .option('--streamrAddress <address>', 'override streamrAddress with given value')
+    .option('--restUrl <url>', 'override restUrl with given value')
     .option('--networkId <id>', 'override networkId with given value')
     .option('--test', 'test the configuration (does not start the broker)')
     .action(async (configFile) => {
@@ -28,18 +26,14 @@ program
             }
         }
         let config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
-        if (program.opts().streamrUrl) {
-            config.streamrUrl = program.opts().streamrUrl
-        }
-        if (program.opts().streamrAddress) {
-            config.streamrAddress = program.opts().streamrAddress
+        if (program.opts().restUrl) {
+            config.client.restUrl = program.opts().restUrl
         }
         if (program.opts().networkId) {
             config.network.id = program.opts().networkId
         }
 
         try {
-            config = testnet2AutoMigrate(config, configFile)
             const broker = await createBroker(config, true)
             if (!program.opts().test) {
                 await broker.start()

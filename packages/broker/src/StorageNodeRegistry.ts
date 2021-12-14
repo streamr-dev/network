@@ -1,16 +1,27 @@
 import fetch from 'node-fetch'
 import { GenericError } from './errors/GenericError'
-import { StorageNodeRegistryItem, Config } from './config'
 import { Logger } from 'streamr-network'
+
+export type NetworkSmartContract = {
+    contractAddress: string
+    jsonRpcProvider: string
+}
+
+export type NodeRegistryItem = {
+    address: string
+    url: string
+}
+
+export type NodeRegistryOptions = NetworkSmartContract | NodeRegistryItem[]
 
 export class StorageNodeRegistry {
     urlByAddress: Record<string,string>
-    streamrUrl: string
+    restUrl: string
     logger: Logger
 
-    constructor(urlByAddress: Record<string,string>, streamrUrl: string) {
+    constructor(urlByAddress: Record<string,string>, restUrl: string) {
         this.urlByAddress = urlByAddress
-        this.streamrUrl = streamrUrl
+        this.restUrl = restUrl
         this.logger = new Logger(module)
     }
 
@@ -18,12 +29,12 @@ export class StorageNodeRegistry {
         return this.urlByAddress[address]
     }
 
-    static createInstance(config: Config, storageNodeRegistry: StorageNodeRegistryItem[]): StorageNodeRegistry {
+    static createInstance(restUrl: string, storageNodeRegistry: NodeRegistryItem[]): StorageNodeRegistry {
         const urlByAddress: Record<string,string> = {}
         storageNodeRegistry.forEach((item) => {
             urlByAddress[item.address] = item.url
         })
-        return new StorageNodeRegistry(urlByAddress, config.streamrUrl)
+        return new StorageNodeRegistry(urlByAddress, restUrl)
     }
 
     async getUrlsByStreamId(streamId: string): Promise<string[]> {
@@ -49,7 +60,7 @@ export class StorageNodeRegistry {
         }
     }
 
-    getStorageNodes(): StorageNodeRegistryItem[] {
+    getStorageNodes(): NodeRegistryItem[] {
         return Object.entries(this.urlByAddress).map(([address, url]) => ({
             address,
             url
@@ -57,7 +68,7 @@ export class StorageNodeRegistry {
     }
 
     private async getStorageNodeAddresses(streamId: string): Promise<string[]> {
-        const url = `${this.streamrUrl}/api/v1/streams/${encodeURIComponent(streamId)}/storageNodes`
+        const url = `${this.restUrl}/streams/${encodeURIComponent(streamId)}/storageNodes`
         const response = await fetch(url)
         if (response.status === 200) {
             const items = await response.json()

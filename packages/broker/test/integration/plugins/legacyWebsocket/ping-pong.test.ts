@@ -31,7 +31,7 @@ describe.skip('ping-pong test between broker and clients', () => {
             http.createServer().listen(wsPort),
             networkNode,
             new StreamFetcher('http://127.0.0.1'),
-            new Publisher(client1, metricsContext),
+            new Publisher(client1),
             metricsContext,
             new SubscriptionManager(networkNode),
             undefined as any,

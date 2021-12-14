@@ -86,7 +86,7 @@ describe('StreamFetcher', () => {
             },
         }
 
-        streamFetcher = new StreamFetcher('http://127.0.0.1:6194')
+        streamFetcher = new StreamFetcher('http://127.0.0.1:6194/api/v1')
 
         streamJson = {
             id: streamId,

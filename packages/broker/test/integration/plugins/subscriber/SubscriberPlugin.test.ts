@@ -1,4 +1,4 @@
-import { Tracker, MetricsContext } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { createClient, startTestTracker } from '../../../utils'
 import { Wallet } from 'ethers'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
@@ -8,7 +8,11 @@ const wallet = Wallet.createRandom()
 
 const createMockPlugin = (tracker: Tracker) => {
     const brokerConfig: any = {
-        ethereumPrivateKey: wallet.privateKey,
+        client: {
+            auth: {
+                privateKey: wallet.privateKey
+            }
+        },
         plugins: {
             subscriber: {
                 streams: [
@@ -35,9 +39,7 @@ const createMockPlugin = (tracker: Tracker) => {
         publisher: undefined as any,
         streamrClient: createClient(tracker, wallet.privateKey),
         apiAuthenticator: undefined as any,
-        metricsContext: new MetricsContext(null as any),
         brokerConfig,
-        storageNodeRegistry: undefined as any,
         nodeId: wallet.address
     })
 }

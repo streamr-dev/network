@@ -39,7 +39,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     latestLatency?: number
     latencyPoller?: { stop: () => void }
     natType?: string
-    metrics: Metrics
+    metrics?: Metrics
     dummyMessagesReceived: number
     rewardSubscriptionRetryRef: NodeJS.Timeout | null
     subscriptionRetryInterval: number
@@ -50,7 +50,6 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         if (this.streamrClient === undefined) {
             throw new Error('StreamrClient is not available')
         }
-        this.metrics = this.metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
@@ -58,6 +57,8 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     async start(): Promise<void> {
+        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
+        this.metrics = metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
         this.latencyPoller = await scheduleAtInterval(async () => {
             this.latestLatency = await this.getLatency()
         }, LATENCY_POLL_INTERVAL, true)
@@ -78,7 +79,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
         logger.info(`Reward code received: ${rewardCode}`)
-        this.metrics.set(METRIC_LATEST_CODE, Date.now())
+        this.metrics!.set(METRIC_LATEST_CODE, Date.now())
         const peers = this.getPeers()
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 

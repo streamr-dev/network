@@ -20,7 +20,7 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const NODE_HOST = '127.0.0.1'
-const STREAMR_URL = `http://${STREAMR_DOCKER_DEV_HOST}`
+const REST_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 const HTTP_PORT = 17770
 const WS_PORT = 17771
 const TRACKER_PORT = 17772
@@ -57,7 +57,7 @@ describe('StorageConfig', () => {
             privateKey: storageNodeAccount.privateKey,
             trackerPort: TRACKER_PORT,
             httpPort: HTTP_PORT,
-            streamrUrl: STREAMR_URL,
+            restUrl: REST_URL,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true
         })
@@ -66,7 +66,7 @@ describe('StorageConfig', () => {
             privateKey: brokerAccount.privateKey,
             trackerPort: TRACKER_PORT,
             wsPort: WS_PORT,
-            streamrUrl: STREAMR_URL,
+            restUrl: REST_URL,
             enableCassandra: false
         })
         client = createClient(tracker, publisherAccount.privateKey)

@@ -199,9 +199,6 @@
                         }
                     }
                 },
-                "metricsContext": {
-                    "type": "object"
-                },
                 "trackerPingInterval": {
                     "type": "number"
                 },

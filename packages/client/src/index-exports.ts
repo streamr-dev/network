@@ -10,8 +10,9 @@ export * from './Subscriber'
 export * from './LoginEndpoints'
 export * from './StreamEndpoints'
 import ConfigTest from './ConfigTest'
+import validateConfig from './ConfigBase'
 
-export { ConfigTest }
+export { ConfigTest, validateConfig }
 export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'

@@ -48,7 +48,7 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeConfig: { registry: storageNodeRegistry },
+            storageNodeRegistry,
             extraPlugins: {
                 publishHttp: {}
             }
@@ -58,18 +58,16 @@ describe('broker: end-to-end', () => {
             privateKey: fastPrivateKey(),
             trackerPort,
             wsPort: wsPort2,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
         brokerNode2 = await startBroker({
             name: 'brokerNode2',
             privateKey: fastPrivateKey(),
             trackerPort,
             wsPort: wsPort3,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
 
         // Create clients
