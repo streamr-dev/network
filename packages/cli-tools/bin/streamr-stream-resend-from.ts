@@ -2,9 +2,8 @@
 import StreamrClient from 'streamr-client'
 import { createClientCommand } from '../src/command'
 import { resend } from '../src/resend'
-import { getStreamId } from './common'
 
-createClientCommand(async (client: StreamrClient, from: string, streamIdOrPath: string, options: any) => {
+createClientCommand(async (client: StreamrClient, from: string, streamId: string, options: any) => {
     const resendOptions = {
         from: {
             timestamp: Date.parse(from),
@@ -12,7 +11,6 @@ createClientCommand(async (client: StreamrClient, from: string, streamIdOrPath: 
         },
         publisherId: options.publisherId
     }
-    const streamId = getStreamId(streamIdOrPath, options)!
     await resend(streamId, resendOptions, client, options.subscribe)
 }, (options) => ({
     orderMessages: !options.disableOrdering

@@ -1,10 +1,8 @@
 #!/usr/bin/env node
-import { getStreamId } from './common'
 import { createClientCommand } from '../src/command'
 import StreamrClient from 'streamr-client'
 
-createClientCommand(async (client: StreamrClient, streamIdOrPath: string, options: any) => {
-    const streamId = getStreamId(streamIdOrPath, options)!
+createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
     const stream = await client.getStream(streamId)
     const obj = stream.toObject()
     if (options.includePermissions) {

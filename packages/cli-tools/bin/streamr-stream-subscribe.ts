@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-import { createFnParseInt, getStreamId } from './common'
+import { createFnParseInt } from './common'
 import { createClientCommand } from '../src/command'
 import StreamrClient from 'streamr-client'
 
-createClientCommand(async (client: StreamrClient, streamIdOrPath: string, options: any) => {
-    const streamId = getStreamId(streamIdOrPath, options)!
+createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
     await client.subscribe({
         streamId,
         streamPartition: options.partition,

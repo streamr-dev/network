@@ -2,9 +2,8 @@
 import { StreamrClient } from 'streamr-client'
 import { createClientCommand } from '../src/command'
 import { assertBothOrNoneDefined, resend } from '../src/resend'
-import { getStreamId } from './common'
 
-createClientCommand(async (client: StreamrClient, from: string, to: string, streamIdOrPath: string, options: any) => {
+createClientCommand(async (client: StreamrClient, from: string, to: string, streamId: string, options: any) => {
     const resendOptions = {
         from: {
             timestamp: Date.parse(from),
@@ -18,7 +17,6 @@ createClientCommand(async (client: StreamrClient, from: string, to: string, stre
         msgChainId: options.msgChainId
     }
     assertBothOrNoneDefined('publisherId', 'msgChainId', '--publisher-id must be accompanied by option --msg-chain-id', options)
-    const streamId = getStreamId(streamIdOrPath, options)!
     await resend(streamId, resendOptions, client, false) 
 }, (options) => ({
     orderMessages: !options.disableOrdering

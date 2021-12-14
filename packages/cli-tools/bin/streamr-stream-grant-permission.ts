@@ -1,7 +1,4 @@
 #!/usr/bin/env node
-import {
-    getStreamId
-} from './common'
 import StreamrClient, { AnonymousStreamPermisson, StreamOperation, UserStreamPermission } from 'streamr-client'
 import EasyTable from 'easy-table'
 import { createClientCommand } from '../src/command'
@@ -37,10 +34,9 @@ const getTarget = (user: string): string|undefined => {
     }
 }
 
-createClientCommand(async (client: StreamrClient, streamIdOrPath: string, user: string, operationIds: string[], options: any) => {
+createClientCommand(async (client: StreamrClient, streamId: string, user: string, operationIds: string[]) => {
     const operations = operationIds.map((o: string) => getOperation(o))
     const target = getTarget(user)
-    const streamId = getStreamId(streamIdOrPath, options)!
     const stream = await client.getStream(streamId)
     const tasks = operations.map((operation: StreamOperation) => stream.grantPermission(operation, target))
     const permissions = await Promise.all(tasks)

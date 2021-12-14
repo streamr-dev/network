@@ -2,7 +2,6 @@
 import { Writable } from 'stream'
 import { StreamrClient } from 'streamr-client'
 import es from 'event-stream'
-import { getStreamId } from './common'
 import { createClientCommand } from '../src/command'
 
 const publishStream = (
@@ -36,8 +35,7 @@ const publishStream = (
     return writable
 }
 
-createClientCommand(async (client: StreamrClient, streamIdOrPath: string, options: any) => {
-    const streamId = getStreamId(streamIdOrPath, options)!
+createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
     const ps = publishStream(streamId, options.partitionKey, client)
     return new Promise((resolve, reject) => {
         process.stdin

@@ -31,7 +31,6 @@
   "dependencies": {
     "commander": "^8.3.0",
     "easy-table": "^1.1.1",
-    "ethers": "^5.4.7",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
     "streamr-client": "^6.0.0-alpha.19"
