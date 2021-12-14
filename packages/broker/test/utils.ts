@@ -1,12 +1,14 @@
 import crypto from 'crypto'
 import StreamrClient, { Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import fetch from 'node-fetch'
+import _ from 'lodash'
 import { Wallet } from 'ethers'
-import { Tracker, Protocol } from 'streamr-network'
+import { Tracker, Protocol, startTracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { StorageConfig } from '../src/plugins/storage/StorageConfig'
-import { ApiAuthenticationConfig, Config, StorageNodeConfig } from '../src/config'
+import { ApiAuthenticationConfig, Config } from '../src/config'
+import { NodeRegistryOptions } from '../src/StorageNodeRegistry'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -15,8 +17,6 @@ interface TestConfig {
     name: string
     trackerPort: number
     privateKey: string
-    trackerId?: string
-    generateSessionId?: boolean
     httpPort?: null | number
     wsPort?: null | number
     extraPlugins?: Record<string, unknown>
@@ -25,8 +25,8 @@ interface TestConfig {
     privateKeyFileName?: null | string
     certFileName?: null | string
     streamrAddress?: string
-    streamrUrl?: string
-    storageNodeConfig?: StorageNodeConfig
+    restUrl?: string
+    storageNodeRegistry?: NodeRegistryOptions
     storageConfigRefreshInterval?: number
 }
 
@@ -34,8 +34,6 @@ export const formConfig = ({
     name,
     trackerPort,
     privateKey,
-    trackerId = 'tracker-1',
-    generateSessionId = false,
     httpPort = null,
     wsPort = null,
     extraPlugins = {},
@@ -44,8 +42,8 @@ export const formConfig = ({
     privateKeyFileName = null,
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
-    streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
-    storageNodeConfig = { registry: [] },
+    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+    storageNodeRegistry = [],
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
@@ -60,6 +58,7 @@ export const formConfig = ({
                     keyspace: 'streamr_dev_v2',
                 },
                 storageConfig: {
+                    streamrAddress,
                     refreshInterval: storageConfigRefreshInterval
                 }
             }
@@ -75,31 +74,31 @@ export const formConfig = ({
     }
 
     return {
-        ethereumPrivateKey: privateKey,
-        generateSessionId,
-        network: {
-            name,
-            trackers: [
-                {
-                    id: trackerId,
-                    ws: `ws://127.0.0.1:${trackerPort}`,
-                    http: `http://127.0.0.1:${trackerPort}`
-                }
-            ],
-            location: {
-                latitude: 60.19,
-                longitude: 24.95,
-                country: 'Finland',
-                city: 'Helsinki'
+        client: {
+            auth: {
+                privateKey
             },
-            stun: null,
-            turn: null,
-            webrtcDisallowPrivateAddresses: false,
-            acceptProxyConnections: false
+            restUrl,
+            network: {
+                name,
+                id: new Wallet(privateKey).address,
+                trackers: [
+                    {
+                        id: createEthereumAddress(trackerPort),
+                        ws: `ws://127.0.0.1:${trackerPort}`,
+                        http: `http://127.0.0.1:${trackerPort}`
+                    }
+                ],
+                location: {
+                    latitude: 60.19,
+                    longitude: 24.95,
+                    country: 'Finland',
+                    city: 'Helsinki'
+                },
+                webrtcDisallowPrivateAddresses: false,
+            },
+            storageNodeRegistry,
         },
-        streamrUrl,
-        streamrAddress,
-        storageNodeConfig,
         httpServer: {
             port: httpPort ? httpPort : 7171,
             privateKeyFileName: null,
@@ -108,6 +107,16 @@ export const formConfig = ({
         apiAuthentication,
         plugins
     }
+}
+
+export const startTestTracker = async (port: number): Promise<Tracker> => {
+    return await startTracker({
+        id: createEthereumAddress(port),
+        listen: {
+            hostname: '127.0.0.1',
+            port
+        },
+    })
 }
 
 export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
@@ -126,6 +135,10 @@ export const getWsUrl = (port: number, ssl = false): string => {
 // fastPrivateKey instead of createMockUser
 export const fastPrivateKey = (): string => {
     return `0x${crypto.randomBytes(32).toString('hex')}`
+}
+
+export const createEthereumAddress = (id: number): string => {
+    return '0x' + _.padEnd(String(id), 40, '0')
 }
 
 export const createMockUser = (): Wallet => Wallet.createRandom()

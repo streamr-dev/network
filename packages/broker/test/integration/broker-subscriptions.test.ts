@@ -1,10 +1,10 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, fastPrivateKey, createClient, createTestStream, getSPIDKeys, createMockUser } from '../utils'
+import { startBroker, fastPrivateKey, createClient, createTestStream, getSPIDKeys, createMockUser, startTestTracker } from '../utils'
 
 const wsPort1 = 13391
 const wsPort2 = 13392
@@ -43,14 +43,7 @@ describe('broker subscriptions', () => {
     let mqttClient2: AsyncMqttClient
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker'
-        })
-
+        tracker = await startTestTracker(trackerPort)
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: broker1User.privateKey,

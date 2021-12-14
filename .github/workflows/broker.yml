@@ -122,7 +122,7 @@ jobs:
           dest: 'logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.0
         with:
           name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
@@ -160,7 +160,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_failure
-        uses: docker/metadata-action@v3.6.1
+        uses: docker/metadata-action@v3.6.2
         # if test steps failed, push sha anyway
         if: ${{ always() && (needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
         with:
@@ -171,7 +171,7 @@ jobs:
             type=raw,value=debug
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v3.6.1
+        uses: docker/metadata-action@v3.6.2
         # if test steps succeeded
         if: ${{ always() && !(needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
         with:

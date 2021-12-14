@@ -1,7 +1,7 @@
 import StreamrClient from 'streamr-client'
-import {startTracker, Tracker} from 'streamr-network'
+import {Tracker} from 'streamr-network'
 import { Wallet } from 'ethers'
-import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, Queue } from '../../../../utils'
+import { startBroker, createClient, STREAMR_DOCKER_DEV_HOST, Queue, startTestTracker } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
 
 const httpPort = 47741
@@ -24,13 +24,7 @@ describe('NodeMetrics', () => {
             url: `http://127.0.0.1:${httpPort}`
         }]
         nodeAddress = tmpAccount.address
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-1'
-        })
+        tracker = await startTestTracker(trackerPort)
 
         client1 = createClient(tracker, Wallet.createRandom().privateKey, {
             storageNodeRegistry: storageNodeRegistry,
@@ -46,7 +40,7 @@ describe('NodeMetrics', () => {
             trackerPort,
             httpPort,
             enableCassandra: true,
-            storageNodeConfig: { registry: storageNodeRegistry },
+            storageNodeRegistry,
             storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
             // therefore StorageAssignmentEventManager test helper cannot be used
         })
@@ -68,7 +62,7 @@ describe('NodeMetrics', () => {
                     }
                 }
             },
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
     }, 35 * 1000)
 

@@ -36,7 +36,6 @@ export class RequestHandler {
     subscriptionManager: SubscriptionManager
     metrics: Metrics
     storageNodeRegistry: StorageNodeRegistry
-    streamrUrl: string
     ongoingResendResponses: ArrayMultimap<string,HistoricalDataResponse> = new ArrayMultimap()
 
     constructor(
@@ -46,7 +45,6 @@ export class RequestHandler {
         subscriptionManager: SubscriptionManager,
         metrics: Metrics,
         storageNodeRegistry: StorageNodeRegistry,
-        streamrUrl: string
     ) {
         this.streamFetcher = streamFetcher
         this.publisher = publisher
@@ -54,7 +52,6 @@ export class RequestHandler {
         this.subscriptionManager = subscriptionManager
         this.metrics = metrics
         this.storageNodeRegistry = storageNodeRegistry,
-        this.streamrUrl = streamrUrl
         this.metrics.addQueriedMetric('numOfOngoingResends', () => this.ongoingResendResponses.size)
         this.metrics.addQueriedMetric('meanAgeOfOngoingResends', () => {
             if (this.ongoingResendResponses.size > 0) {

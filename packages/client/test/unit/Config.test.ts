@@ -19,8 +19,8 @@ describe('Config', () => {
                 return new StreamrClient({
                     network: {
                         trackers: [{
-                            id: 'foo',
-                            ws: 'foo'
+                            id: '0x1234567890123456789012345678901234567890',
+                            ws: 'http://foo.bar'
                         }]
                     }
                 } as any)
@@ -124,19 +124,6 @@ describe('Config', () => {
             expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
             expect(Array.isArray(clientOverrides.options.network.trackers)).toBeTruthy()
             expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
-        })
-
-        it('passes metricsContext by reference', () => {
-            const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient({
-                network: {
-                    metricsContext: clientDefaults.options.network.metricsContext,
-                }
-            })
-            // network object is different
-            expect(clientOverrides.options.network).not.toBe(clientDefaults.options.network)
-            // but metricsContext is same instance
-            expect(clientOverrides.options.network.metricsContext).toBe(clientDefaults.options.network.metricsContext)
         })
 
         it('can override trackers', () => {

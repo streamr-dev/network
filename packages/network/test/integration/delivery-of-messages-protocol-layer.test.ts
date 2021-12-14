@@ -29,12 +29,11 @@ describe('delivery of messages in protocol layer', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 28515
-            },
-            id: 'tracker'
+            }
         })
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
-        const trackerPeerInfo = PeerInfo.newTracker('tracker')
+        const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         const trackerServerPeerInfo = PeerInfo.newTracker('trackerServer')
         const wsEndpoint1 = new NodeClientWsEndpoint(peerInfo1)
         const wsEndpoint2 = new NodeClientWsEndpoint(peerInfo2)
@@ -79,7 +78,7 @@ describe('delivery of messages in protocol layer', () => {
 
         // Connect nodeToNode1 <-> nodeToNode2
         await Promise.all([
-            nodeToNode1.connectToNode('node2', 'tracker'),
+            nodeToNode1.connectToNode('node2', tracker.getTrackerId()),
             waitForEvent(nodeToNode2, NodeToNodeEvent.NODE_CONNECTED),
             waitForEvent(nodeToNode1, NodeToNodeEvent.NODE_CONNECTED)
         ])

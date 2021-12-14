@@ -1,4 +1,4 @@
-import { startTracker, MetricsContext, NetworkNode, Tracker } from 'streamr-network'
+import { MetricsContext, NetworkNode, Tracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import http from 'http'
 import StreamrClient from 'streamr-client'
@@ -6,7 +6,7 @@ import { StreamFetcher } from '../../../../src/StreamFetcher'
 import { WebsocketServer } from '../../../../src/plugins/legacyWebsocket/WebsocketServer'
 import { Publisher } from '../../../../src/Publisher'
 import { SubscriptionManager } from '../../../../src/SubscriptionManager'
-import { createClient } from '../../../utils'
+import { createClient, startTestTracker } from '../../../utils'
 
 const trackerPort = 17370
 const wsPort = 17351
@@ -21,13 +21,7 @@ describe.skip('ping-pong test between broker and clients', () => {
     let client3: StreamrClient
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker'
-        })
+        tracker = await startTestTracker(trackerPort)
         client1 = createClient(tracker)
         client2 = createClient(tracker)
         client3 = createClient(tracker)
@@ -37,7 +31,7 @@ describe.skip('ping-pong test between broker and clients', () => {
             http.createServer().listen(wsPort),
             networkNode,
             new StreamFetcher('http://127.0.0.1'),
-            new Publisher(client1, metricsContext),
+            new Publisher(client1),
             metricsContext,
             new SubscriptionManager(networkNode),
             undefined as any,

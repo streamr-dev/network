@@ -2,7 +2,6 @@ import { Server } from 'http'
 import { once } from 'events'
 import express, { Request, Response} from 'express'
 
-import { Config } from '../../src/config'
 import { StorageNodeRegistry } from '../../src/StorageNodeRegistry'
 
 const mockCoreApiServerPort = 17755
@@ -18,9 +17,6 @@ const createMockCoreApiServer = async () => {
         res.json(addresses.map((address: string) => ({
             storageNodeAddress: address
         })))
-    })
-    app.use('/fail', (_req: Request, res: Response) => {
-        res.status(500).end()
     })
     const server = app.listen(mockCoreApiServerPort)
     await once(server, 'listening')
@@ -49,13 +45,7 @@ describe('StorageNodeRegistry', () => {
             address: '0x3333333333333333333333333333333333333333',
             url: 'http://three.mock'
         }]
-        const config = {
-            storageNodeConfig: {
-                storageNodes
-            },
-            streamrUrl: `http://127.0.0.1:${mockCoreApiServerPort}`
-        } as unknown as Config
-        registry = StorageNodeRegistry.createInstance(config, storageNodes)
+        registry = StorageNodeRegistry.createInstance(`http://127.0.0.1:${mockCoreApiServerPort}/api/v1`, storageNodes)
     })
 
     it('get url by address', () => {
@@ -82,7 +72,7 @@ describe('StorageNodeRegistry', () => {
         })
 
         it('unable to list storage nodes', async () => {
-            registry.streamrUrl = `http://127.0.0.1:${mockCoreApiServerPort}/fail`
+            registry.restUrl = `http://127.0.0.1:${mockCoreApiServerPort}/fail`
             return expect(() => registry.getUrlsByStreamId('stream-id-3'))
                 .rejects.toThrow('Unable to list storage nodes: stream-id-3')
         })

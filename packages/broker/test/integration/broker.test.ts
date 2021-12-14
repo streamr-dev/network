@@ -1,4 +1,4 @@
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { wait, waitForCondition } from 'streamr-test-utils'
@@ -7,6 +7,7 @@ import {
     createTestStream,
     fastPrivateKey,
     startBroker,
+    startTestTracker,
     StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode
 } from '../utils'
@@ -38,13 +39,7 @@ describe('broker: end-to-end', () => {
             address: storageNodeAccount.address,
             url: `http://127.0.0.1:${httpPort}`
         }]
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-1'
-        })
+        tracker = await startTestTracker(trackerPort)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -53,7 +48,7 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeConfig: { registry: storageNodeRegistry },
+            storageNodeRegistry,
             extraPlugins: {
                 publishHttp: {}
             }
@@ -63,18 +58,16 @@ describe('broker: end-to-end', () => {
             privateKey: fastPrivateKey(),
             trackerPort,
             wsPort: wsPort2,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
         brokerNode2 = await startBroker({
             name: 'brokerNode2',
             privateKey: fastPrivateKey(),
             trackerPort,
             wsPort: wsPort3,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
 
         // Create clients

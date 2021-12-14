@@ -19,15 +19,18 @@ describe('Publisher', () => {
     let client: StreamrClient
     let publisher: Publisher
 
-    beforeEach(() => {
+    beforeEach(async () => {
         client = {
-            // @ts-expect-error mock
             publisher: {
                 validateAndPublishStreamMessage: sinon.stub().resolves()
-            }
-        }
+            }, 
+            getNode: () => Promise.resolve({
+                getMetricsContext: () => new MetricsContext(undefined as any)
+            } as any)
+        } as any
 
-        publisher = new Publisher(client, new MetricsContext(null as any))
+        publisher = new Publisher(client)
+        await publisher.start()
     })
 
     describe('validateAndPublish', () => {

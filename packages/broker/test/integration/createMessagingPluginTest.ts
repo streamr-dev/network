@@ -1,8 +1,8 @@
 import { Stream, StreamrClient } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, createMockUser, Queue } from '../utils'
+import { createClient, startBroker, createTestStream, createMockUser, Queue, startTestTracker } from '../utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish'|'subscribe', streamId: string, apiKey: string) => Promise<T>
@@ -56,13 +56,7 @@ export const createMessagingPluginTest = <T>(
         let messageQueue: Queue<Message>
 
         beforeAll(async () => {
-            tracker = await startTracker({
-                id: 'tracker-1',
-                listen: {
-                    hostname: '127.0.0.1',
-                    port: ports.tracker
-                },
-            })
+            tracker = await startTestTracker(ports.tracker)
             broker = await startBroker({
                 name: 'broker',
                 privateKey: brokerUser.privateKey,

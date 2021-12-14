@@ -3,12 +3,14 @@ import { WebsocketServer } from './WebsocketServer'
 import { Plugin, PluginOptions } from '../../Plugin'
 import { StreamFetcher } from '../../StreamFetcher'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Logger } from "streamr-network"
+import { Logger, Protocol } from "streamr-network"
+import { DEFAULTS } from 'streamr-client'
 import { once } from "events"
 import fs from "fs"
 import http from 'http'
 import https from "https"
 import { Schema } from 'ajv'
+import { NetworkSmartContract, NodeRegistryItem, NodeRegistryOptions, StorageNodeRegistry } from '../../StorageNodeRegistry'
 
 const logger = new Logger(module)
 
@@ -43,12 +45,11 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         this.websocketServer = new WebsocketServer(
             httpServer,
             this.networkNode,
-            new StreamFetcher(this.brokerConfig.streamrUrl),
+            new StreamFetcher(this.getRestUrl()),
             this.publisher,
-            this.metricsContext,
+            (await (this.streamrClient!.getNode())).getMetricsContext(),
             this.subscriptionManager,
-            this.storageNodeRegistry,
-            this.brokerConfig.streamrUrl,
+            await this.getStorageNodeRegistry(),
             this.pluginConfig.pingInterval,
         )
         httpServer.listen(this.pluginConfig.port)
@@ -61,6 +62,24 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         return this.websocketServer!.close()
     }
 
+    private async getStorageNodeRegistry() {
+        const config = this.brokerConfig.client.storageNodeRegistry ?? DEFAULTS.storageNodeRegistry
+        const storageNodes = await this.getStorageNodes(config)
+        return StorageNodeRegistry.createInstance(this.getRestUrl(), storageNodes)
+    }
+    
+    private async getStorageNodes(config: NodeRegistryOptions): Promise<NodeRegistryItem[]> {
+        if ((config as NetworkSmartContract).contractAddress !== undefined) {
+            const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
+                contractAddress: (config as NetworkSmartContract).contractAddress,
+                jsonRpcProvider: (config as NetworkSmartContract).jsonRpcProvider
+            })
+            return registry.getAllStorageNodes()
+        } else {
+            return config as NodeRegistryItem[]
+        }
+    }
+    
     getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }

@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
-import { startTracker, Protocol, Tracker } from 'streamr-network'
-import { startBroker, createClient, createTestStream } from '../utils'
+import { Protocol, Tracker } from 'streamr-network'
+import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
 import StreamrClient from 'streamr-client'
 import { Broker } from '../../src/broker'
 
@@ -36,13 +36,7 @@ describe('broker drops future messages', () => {
     let token: string
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker'
-        })
+        tracker = await startTestTracker(trackerPort)
         broker = await startBroker({
             name: 'broker',
             privateKey: '0x0381aa979c2b85ce409f70f6c64c66f70677596c7acad0b58763b0990cd5fbff',

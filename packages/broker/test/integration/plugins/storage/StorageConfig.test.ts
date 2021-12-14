@@ -1,6 +1,6 @@
 import { Client } from 'cassandra-driver'
 import StreamrClient, { Stream } from 'streamr-client'
-import { Protocol, startTracker, Tracker } from 'streamr-network'
+import { Protocol, Tracker } from 'streamr-network'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
@@ -10,7 +10,8 @@ import {
     StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode,
     STREAMR_DOCKER_DEV_HOST,
-    createTestStream
+    createTestStream,
+    startTestTracker
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 
@@ -19,7 +20,7 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const NODE_HOST = '127.0.0.1'
-const STREAMR_URL = `http://${STREAMR_DOCKER_DEV_HOST}`
+const REST_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 const HTTP_PORT = 17770
 const WS_PORT = 17771
 const TRACKER_PORT = 17772
@@ -50,19 +51,13 @@ describe('StorageConfig', () => {
 
     beforeEach(async () => {
         const engineAndEditorAccount = Wallet.createRandom()
-        tracker = await startTracker({
-            listen: {
-                hostname: NODE_HOST,
-                port: TRACKER_PORT
-            },
-            id: 'tracker-1'
-        })
+        tracker = await startTestTracker(TRACKER_PORT)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort: TRACKER_PORT,
             httpPort: HTTP_PORT,
-            streamrUrl: STREAMR_URL,
+            restUrl: REST_URL,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true
         })
@@ -71,7 +66,7 @@ describe('StorageConfig', () => {
             privateKey: brokerAccount.privateKey,
             trackerPort: TRACKER_PORT,
             wsPort: WS_PORT,
-            streamrUrl: STREAMR_URL,
+            restUrl: REST_URL,
             enableCassandra: false
         })
         client = createClient(tracker, publisherAccount.privateKey)

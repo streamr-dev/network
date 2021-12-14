@@ -199,9 +199,6 @@
                         }
                     }
                 },
-                "metricsContext": {
-                    "type": "object"
-                },
                 "trackerPingInterval": {
                     "type": "number"
                 },
@@ -217,7 +214,8 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "string"
+                                "type": "string",
+                                "format": "ethereum-address"
                             },
                             "http": {
                                 "type": "string",
