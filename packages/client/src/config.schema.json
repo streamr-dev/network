@@ -16,6 +16,10 @@
                     "type": "string",
                     "format": "ethereum-private-key"
                 },
+                "address": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
                 "ethereum": {
                     "type": "object"
                 },

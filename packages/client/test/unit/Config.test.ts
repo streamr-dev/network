@@ -80,6 +80,15 @@ describe('Config', () => {
         })
     })
 
+    describe('ignorable properties', () => {
+        it('auth address', () => {
+            expect(() => {
+                const wallet = StreamrClient.generateEthereumAccount()
+                return new StreamrClient({ auth: wallet })
+            }).not.toThrow()
+        })
+    })
+
     describe('merging configs', () => {
         it('works with no arguments', () => {
             expect(new StreamrClient()).toBeInstanceOf(StreamrClient)
