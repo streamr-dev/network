@@ -89,7 +89,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             this.pluginConfig.cluster.myIndexInCluster,
             this.pluginConfig.storageConfig.refreshInterval,
             this.streamrClient)
-        this.assignmentMessageListener = storageConfig.startAssignmentEventListener(this.pluginConfig.storageConfig.streamrAddress, this.subscriptionManager)
+        this.assignmentMessageListener = storageConfig.
+            startAssignmentEventListener(this.pluginConfig.storageConfig.streamrAddress, this.subscriptionManager)
         await storageConfig.startChainEventsListener()
         return storageConfig
     }

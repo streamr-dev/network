@@ -20,7 +20,7 @@
           "-i",
           "--no-cache",
           "--detectOpenHandles",
-          "${fileBasename}"
+          "${fileDirname}/${fileBasename}"
         ],
         "cwd": "${workspaceRoot}",
         "protocol": "inspector",
