@@ -20,6 +20,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
 import { StreamRegistry } from './StreamRegistry'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
+import { createQueryString } from './Rest'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -61,9 +62,7 @@ const createUrl = (baseUrl: string, endpointSuffix: string, spid: SPID, query: Q
         ...query,
         format: 'raw'
     }
-
-    const queryString = new URLSearchParams(Object.entries(queryMap).filter(([_key, value]) => value != null)).toString()
-
+    const queryString = createQueryString(queryMap)
     return `${baseUrl}/streams/${encodeURIComponent(spid.streamId)}/data/partitions/${spid.streamPartition}/${endpointSuffix}?${queryString}`
 }
 
