@@ -28,18 +28,15 @@ defaults:
 
 jobs:
   lint:
-    name: Run linter using Node ${{ matrix.node-version }}
+    name: Run Linter
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -57,11 +54,12 @@ jobs:
       TEST_REPEATS: 5
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
           cache-dependency-path: package-lock.json
+          cache: 'npm'
+          check-latest: true
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -94,11 +92,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
           cache-dependency-path: package-lock.json
+          cache: 'npm'
+          check-latest: true
       # >> use monorepo brokers/trackers with streamr-docker-dev
       # For now, builds docker image and runs with streamr-docker-dev so we
       # don't have to worry about backgrounding processes
@@ -156,7 +155,7 @@ jobs:
 
   flakey:
     if: ${{ false }}
-    name: Flakey Tests using Node ${{ matrix.node-version }}
+    name: Flakey Tests
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -165,11 +164,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
           cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -203,11 +202,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
           cache-dependency-path: package-lock.json
+          cache: 'npm'
+          check-latest: true
       - name: bootstrap-pkg
         working-directory: './'
         run: |
