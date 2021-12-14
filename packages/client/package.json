@@ -42,7 +42,7 @@
         "watch": "webpack --progress --watch --mode=development",
         "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
         "test": "jest --detectOpenHandles",
-        "test-unit": "jest test/unit --verbose --useStderr",
+        "test-unit": "jest test/unit --verbose --useStderr --forceExit",
         "test-types": "npm run test-browser-types",
         "test-browser-types": "tsc -b tsconfig.browser.json",
         "coverage": "jest --coverage",
