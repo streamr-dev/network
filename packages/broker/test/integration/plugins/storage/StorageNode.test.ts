@@ -1,6 +1,6 @@
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
-import { startBroker } from '../../../utils'
+import { startBroker, startTestTracker } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 const httpPort1 = 12501
@@ -13,13 +13,7 @@ describe('StorageNode', () => {
     const storageNodeAccount = Wallet.createRandom()
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-StorageNode'
-        })
+        tracker = await startTestTracker(trackerPort)
     })
 
     beforeAll(async () => {
@@ -28,12 +22,10 @@ describe('StorageNode', () => {
             url: `http://127.0.0.1:${httpPort1}`
         }]
         const engineAndEditorAccount = Wallet.createRandom()
-        const trackerInfo = tracker.getConfigRecord()
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
-            trackerId: trackerInfo.id,
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,

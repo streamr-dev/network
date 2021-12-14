@@ -1,8 +1,15 @@
 import http from 'http'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream } from '../../../utils'
+import { 
+    startBroker, 
+    createClient, 
+    StorageAssignmentEventManager, 
+    waitForStreamPersistedInStorageNode, 
+    createTestStream, 
+    startTestTracker 
+} from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 const httpPort1 = 12371
@@ -35,21 +42,13 @@ describe('DataMetadataEndpoints', () => {
             address: storageNodeAccount.address,
             url: `http://127.0.0.1:${httpPort1}`
         }]
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-DataMetadataEndpoints'
-        })
+        tracker = await startTestTracker(trackerPort)
         const engineAndEditorAccount = Wallet.createRandom()
-        const trackerInfo = tracker.getConfigRecord()
 
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
-            trackerId: trackerInfo.id,
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,
