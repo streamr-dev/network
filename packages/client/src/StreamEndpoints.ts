@@ -222,7 +222,7 @@ export class StreamEndpoints implements Context {
         })
         const stream = await this.streamRegistry.getStream(streamId)
         const nodeAdresses = await stream.getStorageNodes()
-        if (nodeAdresses.length === 0) { throw new NotFoundError('Stream: name=' + streamId + ' has no storage nodes!') }
+        if (nodeAdresses.length === 0) { throw new NotFoundError('Stream: id=' + streamId + ' has no storage nodes!') }
         const chosenNode = nodeAdresses[Math.floor(Math.random() * nodeAdresses.length)]
         const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(chosenNode)
         const json = await this.rest.get<StreamMessageAsObject>([

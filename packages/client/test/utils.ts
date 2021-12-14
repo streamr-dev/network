@@ -174,7 +174,7 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
         id: createRelativeTestStreamId(module),
         ...props
     })
-    await until(async () => { return streamrClient.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
+    await until(async () => { return streamrClient.streamExistsOnTheGraph(stream.id) }, 20000, 500)
     return stream
 }
 

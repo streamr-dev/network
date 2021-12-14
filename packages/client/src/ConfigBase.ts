@@ -99,6 +99,8 @@ export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataU
     dataUnion: Partial<StrictStreamrClientConfig['dataUnion']>
 }>
 
+export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
+
 /**
  * @category Important
  */
@@ -134,11 +136,11 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
     mainnet: undefined, // Default to ethers.js default provider settings
     sidechain: {
-        url: 'https://rpc.xda_ichain.com/',
+        url: 'https://rpc.xdaichain.com/',
         chainId: 100
     },
     binanceRPC: {
-        url: 'https://bsc-data_seed.binance.org/',
+        url: 'https://bsc-dataseed.binance.org/',
         chainId: 56
     },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
