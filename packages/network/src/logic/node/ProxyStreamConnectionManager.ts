@@ -66,12 +66,13 @@ export class ProxyStreamConnectionManager {
     removeConnection(spid: SPID, nodeId: NodeId): void {
         if (this.connections.has(spid.key)) {
             this.connections.get(spid.key)!.delete(nodeId)
-            if ([...this.connections.get(spid.key)!].length === 0) {
+            if (this.connections.get(spid.key)!.size === 0) {
                 this.connections.delete(spid.key)
             }
         }
 
         this.streamManager.removeNodeFromStream(spid, nodeId)
+        // Finally if the stream has no neighbors or in/out connections, remove the stream
         if (this.streamManager.isSetUp(spid)
             && this.streamManager.getAllNodesForStream(spid).length === 0
             && !this.connections.has(spid.key)
@@ -82,6 +83,9 @@ export class ProxyStreamConnectionManager {
     }
 
     private hasConnection(nodeId: NodeId, spid: SPID): boolean {
+        if (!this.connections.has(spid.key)) {
+            return false
+        }
         return this.connections.get(spid.key)!.has(nodeId)
     }
 
@@ -95,17 +99,17 @@ export class ProxyStreamConnectionManager {
         try {
             if (!this.streamManager.isSetUp(spid)) {
                 this.streamManager.setUpStream(spid, true)
-            } else if (this.streamManager.isSetUp(spid) && !this.streamManager.isBehindProxy(spid)) {
+            } else if (!this.streamManager.isBehindProxy(spid)) {
                 const reason = `Could not open a proxy outgoing stream connection ${spid.key}, bidirectional stream already exists`
                 logger.warn(reason)
                 this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, reason)
                 return
-            } else if (this.streamManager.isSetUp(spid) && this.streamManager.hasOutOnlyConnection(spid, targetNodeId)) {
+            } else if (this.streamManager.hasOutOnlyConnection(spid, targetNodeId)) {
                 const reason = `Could not open a proxy outgoing stream connection ${spid.key}, proxy stream connection already exists`
                 logger.warn(reason)
                 this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, spid, reason)
                 return
-            } else if (this.streamManager.isSetUp(spid) && this.hasConnection(targetNodeId, spid)) {
+            } else if (this.hasConnection(targetNodeId, spid)) {
                 const reason = `Could not open a proxy outgoing stream connection ${spid.key}, a connection already exists`
                 logger.warn(reason)
                 return
@@ -126,8 +130,8 @@ export class ProxyStreamConnectionManager {
     async closeOutgoingStreamConnection(spid: SPID, targetNodeId: NodeId): Promise<void> {
         if (this.streamManager.isSetUp(spid) && this.streamManager.hasOutOnlyConnection(spid, targetNodeId)) {
             clearTimeout(this.getConnection(targetNodeId, spid)!.reconnectionTimer!)
-            await this.nodeToNode.leaveStreamOnNode(targetNodeId, spid)
             this.removeConnection(spid, targetNodeId)
+            await this.nodeToNode.leaveStreamOnNode(targetNodeId, spid)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, targetNodeId, spid)
         } else {
             logger.warn(`A proxy outgoing stream connection for ${spid.key} on node ${targetNodeId} does not exist`)
@@ -157,7 +161,7 @@ export class ProxyStreamConnectionManager {
         if (isAccepted) {
             this.streamManager.addInOnlyNeighbor(spid, nodeId)
         }
-        return await this.nodeToNode.respondToPublishOnlyStreamConnectionRequest(nodeId, spid, isAccepted)
+        await this.nodeToNode.respondToPublishOnlyStreamConnectionRequest(nodeId, spid, isAccepted)
     }
 
     processPublishStreamResponse(message: PublishStreamConnectionResponse, nodeId: string): void {
@@ -207,5 +211,6 @@ export class ProxyStreamConnectionManager {
                 }
             })
         })
+        this.connections.clear()
     }
 }
