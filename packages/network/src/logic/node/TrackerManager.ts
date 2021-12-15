@@ -15,7 +15,7 @@ const logger = new Logger(module)
 
 interface NodeDescriptor {
     started: string
-    location: Location
+    location?: Location
     extra: Record<string, unknown>
     rtts: Readonly<Rtts> | null
 }

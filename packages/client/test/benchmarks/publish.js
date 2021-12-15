@@ -15,17 +15,24 @@ const Msg = () => {
     }
 }
 
-function createClient(opts) {
+async function getPrivateKey() {
+    const response = await fetch('http://localhost:45454/key')
+    return response.text()
+}
+
+async function createClient(opts) {
     return new StreamrClient({
         ...clientOptions,
         ...opts,
+        auth: {
+            privateKey: await getPrivateKey()
+        }
     })
 }
 
 async function setupClientAndStream(clientOpts, streamOpts) {
-    const client = createClient(clientOpts)
+    const client = await createClient(clientOpts)
     await client.connect()
-    await client.session.getSessionToken()
 
     const stream = await client.createStream({
         id: `/test-stream-publish/${process.pid}`,

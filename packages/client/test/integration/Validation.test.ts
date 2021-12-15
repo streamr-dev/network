@@ -6,6 +6,7 @@ import Subscriber from '../../src/Subscriber'
 import Subscription from '../../src/Subscription'
 
 const MAX_MESSAGES = 10
+jest.setTimeout(30000)
 
 describeRepeats('Validation', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
@@ -17,14 +18,12 @@ describeRepeats('Validation', () => {
 
     async function setupClient(opts: any) {
         // eslint-disable-next-line require-atomic-updates
-        client = createClient(opts)
+        client = await createClient(opts)
         subscriber = client.subscriber
         client.debug('connecting before test >>')
-        await client.getSessionToken()
         stream = await createTestStream(client, module, {
             requireSignedData: client.options.publishWithSignature !== 'never'
         })
-
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)
         return client

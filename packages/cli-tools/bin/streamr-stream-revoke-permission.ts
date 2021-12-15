@@ -1,11 +1,10 @@
 #!/usr/bin/env node
-import StreamrClient from 'streamr-client'
-import { createClientCommand } from '../src/command'
 
-createClientCommand(async (client: StreamrClient, streamId: string, permissionId: number) => {
-    const stream = await client.getStream(streamId)
-    stream.revokePermission(permissionId)
-})
-    .arguments('<streamId> <permissionId>')
-    .description('revoke permission')
-    .parseAsync()
+import { Stream, StreamPermission } from 'streamr-client'
+import { runModifyPermissionsCommand } from '../src/permission'
+
+runModifyPermissionsCommand(
+    (stream: Stream, permission: StreamPermission, target: string) => stream.revokeUserPermission(permission, target),
+    (stream: Stream, permission: StreamPermission) => stream.revokePublicPermission(permission),
+    'revoke'
+)

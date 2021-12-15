@@ -28,22 +28,20 @@ defaults:
 
 jobs:
   data-unions-integration:
-    name: DataUnions Integration Test using Node ${{ matrix.node-version }}
+    # temporary disabling of DU tests
+    if: ${{ false }}
+    name: DataUnions Integration Test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [16.x]
     env:
       TEST_REPEATS: 1
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
           cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -52,7 +50,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
       - name: Run Test
         run: npm run test-integration-dataunions
       - name: Collect docker logs on failure
@@ -62,9 +60,9 @@ jobs:
           dest: 'logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.0
         with:
-          name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          name: docker-logs--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
       - name: Stop Streamr Docker Stack
         if: always()

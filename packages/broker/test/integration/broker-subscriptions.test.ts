@@ -1,10 +1,12 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
+import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
 import { Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, fastPrivateKey, createClient, createTestStream, getSPIDKeys, createMockUser, startTestTracker } from '../utils'
+import { startBroker, createClient, createTestStream, getPrivateKey, getSPIDKeys, startTestTracker } from '../utils'
+
+jest.setTimeout(50000)
 
 const wsPort1 = 13391
 const wsPort2 = 13392
@@ -22,8 +24,7 @@ const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
     // target users
     for await (const s of streams) {
         for await (const u of brokerUsers) {
-            await s.grantPermission(StreamOperation.STREAM_GET, u.address)
-            await s.grantPermission(StreamOperation.STREAM_SUBSCRIBE, u.address)
+            await s.grantUserPermission(StreamPermission.SUBSCRIBE, u.address)
         }
     }
 }
@@ -32,9 +33,6 @@ describe('broker subscriptions', () => {
     let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
-    const broker1User = createMockUser()
-    const broker2User = createMockUser()
-    const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream1: Stream
@@ -43,6 +41,8 @@ describe('broker subscriptions', () => {
     let mqttClient2: AsyncMqttClient
 
     beforeEach(async () => {
+        const broker1User = new Wallet(await getPrivateKey())
+        const broker2User = new Wallet(await getPrivateKey())
         tracker = await startTestTracker(trackerPort)
         broker1 = await startBroker({
             name: 'broker1',
@@ -69,8 +69,11 @@ describe('broker subscriptions', () => {
 
         await wait(2000)
 
-        client1 = createClient(tracker, privateKey)
-        client2 = createClient(tracker, privateKey)
+        client1 = await createClient(tracker, await getPrivateKey())
+        client2 = await createClient(tracker, await getPrivateKey())
+
+        client1 = await createClient(tracker, await getPrivateKey())
+        client2 = await createClient(tracker, await getPrivateKey())
 
         mqttClient1 = await createMqttClient(mqttPort1)
         mqttClient2 = await createMqttClient(mqttPort2)
@@ -78,7 +81,8 @@ describe('broker subscriptions', () => {
         freshStream1 = await createTestStream(client1, module)
         freshStream2 = await createTestStream(client2, module)
         await grantPermissions([freshStream1, freshStream2], [broker1User, broker2User])
-    }, 10 * 1000)
+
+    })
 
     afterEach(async () => {
         await mqttClient1.end(true)
@@ -124,7 +128,6 @@ describe('broker subscriptions', () => {
 
         await mqttClient1.unsubscribe(freshStream1.id)
 
-        await waitForCondition(() => getSPIDKeys(broker1).length === 1)
         await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
         expect(getSPIDKeys(broker1)).toIncludeSameMembers([freshStream2.id + '#0'])
@@ -132,10 +135,9 @@ describe('broker subscriptions', () => {
 
         await mqttClient1.unsubscribe(freshStream2.id)
 
-        await waitForCondition(() => getSPIDKeys(broker1).length === 0)
         await waitForCondition(() => getSPIDKeys(broker2).length === 2)
 
         expect(getSPIDKeys(broker1)).toIncludeSameMembers([])
         expect(getSPIDKeys(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
-    }, 10000)
+    })
 })

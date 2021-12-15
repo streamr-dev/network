@@ -5,7 +5,6 @@ import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 
 import { getVersionString, counterId } from './utils'
-import Session from './Session'
 
 export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
@@ -69,7 +68,6 @@ const parseErrorCode = (body: string) => {
 
 export async function authRequest<T extends object>(
     url: string,
-    session?: Session,
     opts?: any,
     requireNewToken = false,
     debug?: Debugger,
@@ -99,8 +97,8 @@ export async function authRequest<T extends object>(
     const response: Response = await fetchFn(url, {
         ...opts,
         headers: {
-            ...(session && !session.isUnauthenticated() ? {
-                Authorization: `Bearer ${await session.getSessionToken(requireNewToken)}`,
+            ...(opts?.session && !opts.session.isUnauthenticated() ? {
+                Authorization: `Bearer ${await opts.session.getSessionToken(requireNewToken)}`,
             } : {}),
             ...options.headers,
         },
@@ -114,7 +112,7 @@ export async function authRequest<T extends object>(
 
     if ([400, 401].includes(response.status) && !requireNewToken) {
         debug('%d %s – revalidating session')
-        return authRequest<T>(url, session, options, true)
+        return authRequest<T>(url, options, true)
     }
 
     debug('%s – failed', url)
@@ -127,7 +125,6 @@ export async function authRequest<T extends object>(
 /** @internal */
 export default async function authFetch<T extends object>(
     url: string,
-    session?: Session,
     opts?: any,
     requireNewToken = false,
     debug?: Debugger,
@@ -136,7 +133,7 @@ export default async function authFetch<T extends object>(
     const id = counterId('authFetch')
     debug = debug || Debug('utils').extend(id) // eslint-disable-line no-param-reassign
 
-    const response = await authRequest(url, session, opts, requireNewToken, debug, fetchFn)
+    const response = await authRequest(url, opts, requireNewToken, debug, fetchFn)
     // can only be ok response
     const body = await response.text()
     try {

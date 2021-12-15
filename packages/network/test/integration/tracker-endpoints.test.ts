@@ -51,9 +51,7 @@ describe('tracker endpoint', () => {
             trackers: [trackerInfo],
             location: {
                 country: 'CH',
-                city: 'Zug',
-                latitude: null,
-                longitude: null
+                city: 'Zug'
             }
         })
         nodeTwo = createNetworkNode({
@@ -61,9 +59,7 @@ describe('tracker endpoint', () => {
             trackers: [trackerInfo],
             location: {
                 country: 'FI',
-                city: 'Helsinki',
-                latitude: null,
-                longitude: null
+                city: 'Helsinki'
             }
         })
         nodeTwo.setExtraMetadata({
@@ -287,15 +283,11 @@ describe('tracker endpoint', () => {
         expect(jsonResult).toEqual({
             'node-1': {
                 country: 'CH',
-                city: 'Zug',
-                latitude: null,
-                longitude: null
+                city: 'Zug'
             },
             'node-2': {
                 country: 'FI',
-                city: 'Helsinki',
-                latitude: null,
-                longitude: null
+                city: 'Helsinki'
             }
         })
     })
@@ -305,9 +297,7 @@ describe('tracker endpoint', () => {
         expect(status).toEqual(200)
         expect(jsonResult).toEqual({
             country: 'CH',
-            city: 'Zug',
-            latitude: null,
-            longitude: null
+            city: 'Zug'
         })
     })
 

@@ -1,13 +1,16 @@
 import WebSocket from 'ws'
 import { Protocol, Tracker } from 'streamr-network'
-import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
+import { startBroker, createClient, createTestStream, getPrivateKey, startTestTracker } from '../utils'
 import StreamrClient from 'streamr-client'
 import { Broker } from '../../src/broker'
+import { Wallet } from '@ethersproject/wallet'
 
 const { ControlLayer } = Protocol
 const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
 
-const trackerPort = 19420
+jest.setTimeout(30000)
+
+const trackerPort = 19429
 const httpPort = 19422
 const wsPort = 19423
 
@@ -18,7 +21,7 @@ function buildMsg(
     streamPartition: number,
     timestamp: number,
     sequenceNumber: number,
-    publisherId = 'publisher',
+    publisherId: string,
     msgChainId = '1',
     content = {}
 ) {
@@ -33,22 +36,28 @@ describe('broker drops future messages', () => {
     let broker: Broker
     let streamId: string
     let client: StreamrClient
-    let token: string
+    let publisherAddress: string
 
     beforeEach(async () => {
         tracker = await startTestTracker(trackerPort)
+        const brokerWallet = new Wallet(await getPrivateKey())
+        const storageNodeClient = await createClient(tracker, brokerWallet.privateKey)
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
         broker = await startBroker({
-            name: 'broker',
-            privateKey: '0x0381aa979c2b85ce409f70f6c64c66f70677596c7acad0b58763b0990cd5fbff',
+            name: 'storageNode',
+            privateKey: brokerWallet.privateKey,
             trackerPort,
             httpPort,
-            wsPort
+            wsPort,
+            enableCassandra: true
         })
-
-        client = createClient(tracker)
+        const publisherWallet = new Wallet(await getPrivateKey())
+        publisherAddress = publisherWallet.address
+        client = await createClient(tracker, publisherWallet.privateKey)
         const freshStream = await createTestStream(client, module)
+        await freshStream.addToStorageNode(brokerWallet.address)
+        await freshStream.setPermissionsForUser(await brokerWallet.getAddress(), true, true, true, true, true)
         streamId = freshStream.id
-        token = await client.getSessionToken()
     })
 
     afterEach(async () => {
@@ -60,13 +69,13 @@ describe('broker drops future messages', () => {
     test('pushing message with too future timestamp to Websocket plugin returns error & does not crash broker', (done) => {
         const streamMessage = buildMsg(
             streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 5) * 1000,
-            0, 'publisher', '1', {}
+            0, publisherAddress, '1', {}
         )
 
         const publishRequest = new ControlLayer.PublishRequest({
             streamMessage,
             requestId: '',
-            sessionToken: token,
+            sessionToken: null,
         })
 
         const ws = new WebSocket(`ws://127.0.0.1:${wsPort}/api/v1/ws?messageLayerVersion=31&controlLayerVersion=2`, {

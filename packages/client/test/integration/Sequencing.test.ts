@@ -5,6 +5,8 @@ import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
 
+jest.setTimeout(30000)
+
 const Msg = (opts?: any) => ({
     value: uid('msg'),
     ...opts,
@@ -27,7 +29,7 @@ describe('Sequencing', () => {
     const createClient = getCreateClient()
 
     beforeEach(async () => {
-        client = createClient()
+        client = await createClient()
         await client.connect()
 
         stream = await createTestStream(client, module)

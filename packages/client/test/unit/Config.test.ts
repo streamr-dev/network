@@ -108,10 +108,10 @@ describe('Config', () => {
         it('can override storageNodeRegistry as array of nodes', () => {
             const clientDefaults = new StreamrClient()
             const clientOverrides = new StreamrClient({
-                storageNodeRegistry: [{
-                    address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-                    url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
-                }],
+                storageNodeRegistry: {
+                    contractAddress: '0xde1112f631486CfC759A50196853011528bC5FA0',
+                    jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
+                },
             })
             expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
         })
@@ -124,19 +124,6 @@ describe('Config', () => {
             expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
             expect(Array.isArray(clientOverrides.options.network.trackers)).toBeTruthy()
             expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
-        })
-
-        it('passes metricsContext by reference', () => {
-            const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient({
-                network: {
-                    metricsContext: clientDefaults.options.network.metricsContext,
-                }
-            })
-            // network object is different
-            expect(clientOverrides.options.network).not.toBe(clientDefaults.options.network)
-            // but metricsContext is same instance
-            expect(clientOverrides.options.network.metricsContext).toBe(clientDefaults.options.network.metricsContext)
         })
 
         it('can override trackers', () => {

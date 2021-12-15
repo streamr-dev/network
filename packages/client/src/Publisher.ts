@@ -136,7 +136,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
 
     async waitForStorage(streamMessage: StreamMessage, {
         interval = 500,
-        timeout = 20000,
+        timeout = 30000,
         count = 100,
         messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
             return msgTarget.signature === msgGot.signature

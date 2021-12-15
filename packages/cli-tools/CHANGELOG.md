@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove `--msg-chain-id` parameter from `stream resend from`
 - (Breaking) `streamr stream create` argument is a stream ID, not a name
 - Support path notation when defining a stream ID
+- Replaced `stream list --operation` with `stream list --permission`
+  - uses the same enum values as `stream grant-permission`
 - Modified configuration management:
   - can read config from `~/.streamr/config/default.json`
   - `--config` argument added

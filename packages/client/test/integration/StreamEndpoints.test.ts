@@ -1,24 +1,28 @@
-import { ethers, Wallet } from 'ethers'
-import { StreamrClient } from '../../src/StreamrClient'
+import { Wallet } from 'ethers'
 
-import { NotFoundError, ValidationError } from '../../src/authFetch'
-import { Stream, StreamOperation } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
-import { clientOptions, uid, fakeAddress, createTestStream, createRelativeTestStreamId } from '../utils'
+import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
+import { NotFoundError } from '../../src/authFetch'
+import { StreamrClient } from '../../src/StreamrClient'
+import { Stream, StreamPermission } from '../../src/Stream'
+import { wait } from 'streamr-test-utils'
+import { storageNodeTestConfig } from './devEnvironment'
+
+jest.setTimeout(40000)
 
 /**
  * These tests should be run in sequential order!
  */
-
-function TestStreamEndpoints(getName: () => string) {
+function TestStreamEndpoints(getName: () => string, delay: number) {
     let client: StreamrClient
     let wallet: Wallet
     let createdStream: Stream
     let otherWallet: Wallet
+    let storageNodeAddress: string
 
-    beforeAll(() => {
-        wallet = ethers.Wallet.createRandom()
-        otherWallet = ethers.Wallet.createRandom()
+    beforeAll(async () => {
+        await wait(delay)
+        wallet = new Wallet(await getPrivateKey())
+        otherWallet = new Wallet(await getPrivateKey())
         client = new StreamrClient({
             ...clientOptions,
             auth: {
@@ -33,41 +37,54 @@ function TestStreamEndpoints(getName: () => string) {
             requireSignedData: true,
             requireEncryptedData: false,
         })
+        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
+        // const storageNodeClient = new StreamrClient({
+        //     ...clientOptions,
+        //     auth: {
+        //         privateKey: storageNodeWallet.privateKey,
+        //     },
+        // })
+        // await storageNodeClient.setNode(storageNodeTestConfig.url)
+        storageNodeAddress = storageNodeWallet.address
+        // storageNode = await client.getStorageNode(await storageNodeWallet.getAddress())
     })
 
     describe('createStream', () => {
         it('creates a stream with correct values', async () => {
             const name = getName()
+            const id = await createRelativeTestStreamId(module)
             const stream = await client.createStream({
-                id: createRelativeTestStreamId(module),
+                id,
                 name,
                 requireSignedData: true,
                 requireEncryptedData: true,
             })
+            await until(async () => { return client.streamExistsOnTheGraph(stream.streamId) }, 100000, 1000)
             expect(stream.id).toBeTruthy()
-            expect(stream.name).toBe(name)
-            expect(stream.requireSignedData).toBe(true)
-            expect(stream.requireEncryptedData).toBe(true)
+            return expect(stream.name).toBe(name)
         })
 
         it('valid id', async () => {
-            const newId = `${wallet.address}/StreamEndpoints-createStream-newId-${Date.now()}`
+            const newId = `${wallet.address.toLowerCase()}/StreamEndpoints-createStream-newId-${Date.now()}`
             const newStream = await client.createStream({
                 id: newId,
             })
+            await until(async () => { return client.streamExistsOnTheGraph(newId) }, 100000, 1000)
             expect(newStream.id).toEqual(newId)
         })
 
         it('valid path', async () => {
             const newPath = `/StreamEndpoints-createStream-newPath-${Date.now()}`
+            const expectedId = `${wallet.address.toLowerCase()}${newPath}`
             const newStream = await client.createStream({
                 id: newPath,
             })
-            expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+            await until(async () => { return client.streamExistsOnTheGraph(expectedId) }, 100000, 1000)
+            expect(newStream.id).toEqual(expectedId)
         })
 
-        it('invalid id', () => {
-            return expect(() => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow(ValidationError)
+        it('invalid id', async () => {
+            await expect(async () => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow()
         })
     })
 
@@ -79,21 +96,69 @@ function TestStreamEndpoints(getName: () => string) {
         })
 
         it('get a non-existing Stream', async () => {
-            const id = `${wallet.address}/StreamEndpoints-nonexisting-${Date.now()}`
-            return expect(() => client.getStream(id)).rejects.toThrow(NotFoundError)
+            const streamid = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
+            return expect(() => client.getStream(streamid)).rejects.toThrow(NotFoundError)
+        })
+
+        it('get all Streams', async () => {
+            const streams = await client.getAllStreams()
+            const streamsPagesize2 = await client.getAllStreams(1)
+            expect(streams).toEqual(streamsPagesize2)
         })
     })
 
     describe('getStreamByName', () => {
         it('get an existing Stream', async () => {
-            const stream = await createTestStream(client, module)
+            const name = 'name-' + Date.now()
+            const props = { id: await createRelativeTestStreamId(module), name }
+            const stream = await client.createStream(props)
+            await until(async () => { return client.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
+            // await new Promise((resolve) => setTimeout(resolve, 5000))
             const existingStream = await client.getStreamByName(stream.name)
             expect(existingStream.id).toEqual(stream.id)
         })
 
         it('get a non-existing Stream', async () => {
-            const name = `${wallet.address}/StreamEndpoints-nonexisting-${Date.now()}`
+            const name = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
             return expect(() => client.getStreamByName(name)).rejects.toThrow(NotFoundError)
+        })
+    })
+
+    describe('liststreams with search and filters', () => {
+        it('get streamlist', async () => {
+            // create n streams to test offset and max
+            const name = 'filter-' + Date.now()
+            for (let i = 0; i < 3; i++) {
+                // eslint-disable-next-line no-await-in-loop
+                const props = { id: await createRelativeTestStreamId(module), name }
+                props.name = name + i
+                // eslint-disable-next-line no-await-in-loop
+                await client.createStream(props)
+            }
+            await until(async () => { return (await client.listStreams({ name })).length === 3 }, 20000, 1000)
+            let resultList = await client.listStreams({
+                name
+            })
+            expect(resultList.length).toBe(3)
+            resultList = await client.listStreams({
+                name,
+                max: 2,
+            })
+            expect(resultList.length).toBe(2)
+            expect(resultList[0].name.endsWith('0')).toBe(true)
+            expect(resultList[1].name.endsWith('1')).toBe(true)
+            resultList = await client.listStreams({
+                name,
+                max: 2,
+                offset: 1
+            })
+            expect(resultList[0].name.endsWith('1')).toBe(true)
+            return expect(resultList[1].name.endsWith('2')).toBe(true)
+        })
+
+        it('get a non-existing Stream', async () => {
+            const name = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
+            return expect(() => client.getStreamByName(name)).rejects.toThrow()
         })
     })
 
@@ -103,7 +168,7 @@ function TestStreamEndpoints(getName: () => string) {
                 name: createdStream.name,
             })
             expect(existingStream.id).toBe(createdStream.id)
-            expect(existingStream.name).toBe(createdStream.name)
+            return expect(existingStream.name).toBe(createdStream.name)
         })
 
         it('existing Stream by id', async () => {
@@ -111,15 +176,23 @@ function TestStreamEndpoints(getName: () => string) {
                 id: createdStream.id,
             })
             expect(existingStream.id).toBe(createdStream.id)
-            expect(existingStream.name).toBe(createdStream.name)
+            return expect(existingStream.name).toBe(createdStream.name)
+        })
+
+        it('new Stream by name', async () => {
+            const newName = uid('stream')
+            const props = { id: await createRelativeTestStreamId(module), name: '' }
+            props.name = newName
+            const newStream = await client.getOrCreateStream(props)
+            return expect(newStream.name).toEqual(newName)
         })
 
         it('new Stream by id', async () => {
-            const newId = `${wallet.address}/StreamEndpoints-getOrCreate-newId-${Date.now()}`
+            const newId = `${wallet.address.toLowerCase()}/StreamEndpoints-getOrCreate-newId-${Date.now()}`
             const newStream = await client.getOrCreateStream({
                 id: newId,
             })
-            expect(newStream.id).toEqual(newId)
+            return expect(newStream.id).toEqual(newId)
         })
 
         it('new Stream by path', async () => {
@@ -145,7 +218,7 @@ function TestStreamEndpoints(getName: () => string) {
                 await client.getOrCreateStream({
                     id: `${otherAddress}${newPath}`,
                 })
-            }).rejects.toThrow(/validation/gi)
+            }).rejects.toThrow('Validation')
         })
     })
 
@@ -155,14 +228,14 @@ function TestStreamEndpoints(getName: () => string) {
                 name: createdStream.name,
             })
             expect(result.length).toBe(1)
-            expect(result[0].id).toBe(createdStream.id)
+            return expect(result[0].id).toBe(createdStream.id)
         })
 
         it('filters by given criteria (no  match)', async () => {
             const result = await client.listStreams({
                 name: `non-existent-${Date.now()}`,
             })
-            expect(result.length).toBe(0)
+            return expect(result.length).toBe(0)
         })
     })
 
@@ -175,9 +248,10 @@ function TestStreamEndpoints(getName: () => string) {
 
         it('does not error if has storage assigned', async () => {
             const stream = await client.createStream({
-                id: createRelativeTestStreamId(module),
+                id: await createRelativeTestStreamId(module),
             })
-            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+            await stream.addToStorageNode(storageNodeAddress)
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
             const result = await client.getStreamLast(stream.id)
             expect(result).toEqual([])
         })
@@ -187,7 +261,14 @@ function TestStreamEndpoints(getName: () => string) {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
             const address = await client.getAddress()
-            expect(publishers).toEqual([address.toLowerCase()])
+            return expect(publishers).toEqual([address])
+        })
+        it('retrieves a list of publishers, pagination', async () => {
+            await createdStream.grantUserPermission(StreamPermission.PUBLISH, fakeAddress())
+            await createdStream.grantUserPermission(StreamPermission.PUBLISH, fakeAddress())
+            const allPublishers = await client.getStreamPublishers(createdStream.id, 1000)
+            const pagedPublishers = await client.getStreamPublishers(createdStream.id, 2)
+            return expect(pagedPublishers).toEqual(allPublishers)
         })
     })
 
@@ -195,19 +276,29 @@ function TestStreamEndpoints(getName: () => string) {
         it('returns true for valid publishers', async () => {
             const address = await client.getAddress()
             const valid = await client.isStreamPublisher(createdStream.id, address)
-            expect(valid).toBeTruthy()
+            return expect(valid).toBeTruthy()
+        })
+        it('returns trow error for invalid udseraddress', async () => {
+            return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, 'some-wrong-address')
-            expect(!valid).toBeTruthy()
+            const valid = await client.isStreamPublisher(createdStream.id, fakeAddress())
+            return expect(!valid).toBeTruthy()
         })
     })
 
     describe('getStreamSubscribers', () => {
-        it('retrieves a list of publishers', async () => {
+        it('retrieves a list of subscribers', async () => {
             const subscribers = await client.getStreamSubscribers(createdStream.id)
             const address = await client.getAddress()
-            expect(subscribers).toEqual([address.toLowerCase()])
+            return expect(subscribers).toEqual([address])
+        })
+        it('retrieves a list of subscribers, pagination', async () => {
+            await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, fakeAddress())
+            await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, fakeAddress())
+            const allSubscribers = await client.getStreamPublishers(createdStream.id, 1000)
+            const pagedSubscribers = await client.getStreamPublishers(createdStream.id, 2)
+            return expect(pagedSubscribers).toEqual(allSubscribers)
         })
     })
 
@@ -215,27 +306,30 @@ function TestStreamEndpoints(getName: () => string) {
         it('returns true for valid subscribers', async () => {
             const address = await client.getAddress()
             const valid = await client.isStreamSubscriber(createdStream.id, address)
-            expect(valid).toBeTruthy()
+            return expect(valid).toBeTruthy()
+        })
+        it('returns trow error for invalid udseraddress', async () => {
+            return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, 'some-wrong-address')
-            expect(!valid).toBeTruthy()
-        })
-    })
-
-    describe('getStreamValidationInfo', () => {
-        it('returns an object with expected fields', async () => {
-            const result = await client.getStreamValidationInfo(createdStream.id)
-            expect(result.partitions > 0).toBeTruthy()
-            expect(result.requireSignedData === true).toBeTruthy()
-            expect(result.requireEncryptedData === false).toBeTruthy()
+            const valid = await client.isStreamSubscriber(createdStream.id, fakeAddress())
+            return expect(!valid).toBeTruthy()
         })
     })
 
     describe('Stream.update', () => {
         it('can change stream name', async () => {
-            createdStream.name = 'New name'
+            createdStream.name = 'Newname'
             await createdStream.update()
+            await until(async () => {
+                try {
+                    return (await client.getStream(createdStream.id)).name === createdStream.name
+                } catch (err) {
+                    return false
+                }
+            }, 100000, 1000)
+            const stream = await client.getStream(createdStream.id)
+            return expect(stream.name).toEqual(createdStream.name)
         })
     })
 
@@ -259,14 +353,13 @@ function TestStreamEndpoints(getName: () => string) {
 
         it('Stream.getPermissions', async () => {
             const permissions = await createdStream.getPermissions()
-            // get, edit, delete, subscribe, publish, share
-            expect(permissions.length).toBe(6)
+            return expect(permissions.length).toBeGreaterThan(0)
         })
 
         describe('Stream.hasPermission', () => {
             it('gets permission', async () => {
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, wallet.address)).toBeTruthy()
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).not.toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamPermission.GRANT, wallet.address)).toBeTruthy()
+                expect(await createdStream.hasUserPermission(StreamPermission.GRANT, otherWallet.address)).not.toBeTruthy()
             })
 
             it('errors if invalid userId', async () => {
@@ -274,7 +367,7 @@ function TestStreamEndpoints(getName: () => string) {
                     // eslint-disable-next-line no-await-in-loop, no-loop-func
                     await expect(async () => {
                         // @ts-expect-error should require userId, this is part of the test
-                        await createdStream.hasPermission(StreamOperation.STREAM_SHARE, invalidId)
+                        await createdStream.hasUserPermission(StreamPermission.GRANT, invalidId)
                     }).rejects.toThrow()
                 }
             })
@@ -282,39 +375,60 @@ function TestStreamEndpoints(getName: () => string) {
 
         describe('Stream.grantPermission', () => {
             it('creates public permissions when passed undefined', async () => {
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).toBeTruthy()
+                await createdStream.grantPublicPermission(StreamPermission.SUBSCRIBE) // public read
+                expect(await createdStream.hasPublicPermission(StreamPermission.SUBSCRIBE)).toBeTruthy()
             })
 
             it('creates user permissions when passed user id', async () => {
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address) // user read
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)).toBeTruthy()
+                await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address) // user read
+                expect(await createdStream.hasUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address)).toBeTruthy()
             })
 
-            it('does not error if creating multiple permissions in parallel', async () => {
-                await Promise.all([
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                    createdStream.grantPermission(StreamOperation.STREAM_SHARE, otherWallet.address),
-                ])
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_GET, otherWallet.address)).toBeTruthy()
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).toBeTruthy()
+            it('sets Permissions for multiple users in one transaction', async () => {
+                const userA = fakeAddress()
+                const userB = fakeAddress()
+                const permissionA = {
+                    canEdit: true,
+                    canDelete: true,
+                    canPublish: true,
+                    canSubscribe: true,
+                    canGrant: true
+                }
+                const permissionB = {
+                    canEdit: false,
+                    canDelete: false,
+                    canSubscribe: false,
+                    canPublish: false,
+                    canGrant: false
+                }
+
+                await createdStream.setPermissions([userA, userB], [permissionA, permissionB]) // user read
+                expect(await createdStream.hasUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address)).toBeTruthy()
             })
 
-            it('does not error or create duplicates if creating multiple identical permissions in parallel', async () => {
-                await createdStream.revokeAllUserPermissions(otherWallet.address)
-                await Promise.all([
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                    createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address),
-                ])
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_GET, otherWallet.address)).toBeTruthy()
-                expect(await createdStream.getUserPermissions(otherWallet.address)).toHaveLength(1)
-            })
+            // it('does not error if creating multiple permissions in parallel', async () => {
+            //     await Promise.all([
+            //         createdStream.grantUserPermission(StreamPermission.SHARE, otherWallet.address),
+            //     ])
+            //     expect(await createdStream.hasUserPermission(StreamPermission.SHARE, otherWallet.address)).toBeTruthy()
+            // })
 
-            it('does not grant multiple permissions for same operation + user', async () => {
+            // it('does not error or create duplicates if creating multiple identical permissions in parallel', async () => {
+            //     await createdStream.revokeAllUserPermissions(otherWallet.address)
+            //     await Promise.all([
+            //         createdStream.grantUserPermission(StreamPermission.PUBLISH, otherWallet.address),
+            //         createdStream.grantUserPermission(StreamPermission.PUBLISH, otherWallet.address),
+            //         createdStream.grantUserPermission(StreamPermission.PUBLISH, otherWallet.address),
+            //         createdStream.grantUserPermission(StreamPermission.PUBLISH, otherWallet.address),
+            //     ])
+            //     expect(await createdStream.hasUserPermission(StreamPermission.PUBLISH, otherWallet.address)).toBeTruthy()
+            //     expect(await createdStream.getUserPermissions(otherWallet.address)).toHaveLength(1)
+            // })
+
+            it('does not grant multiple permissions for same permission + user', async () => {
+                await createdStream.grantPublicPermission(StreamPermission.SUBSCRIBE) // public read
                 const previousPermissions = await createdStream.getPermissions()
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
+                await createdStream.grantPublicPermission(StreamPermission.SUBSCRIBE) // public read
                 const permissions = await createdStream.getPermissions()
                 expect(permissions).toHaveLength(previousPermissions.length)
                 expect(permissions).toEqual(previousPermissions)
@@ -325,39 +439,24 @@ function TestStreamEndpoints(getName: () => string) {
                     // eslint-disable-next-line no-await-in-loop, no-loop-func
                     await expect(async () => {
                         // @ts-expect-error should require userId, this is part of the test
-                        await createdStream.grantPermission(StreamOperation.STREAM_SHARE, invalidId)
+                        await createdStream.grantUserPermission(StreamPermission.GRANT, invalidId)
                     }).rejects.toThrow()
                 }
             })
         })
 
         describe('Stream.revokePermission', () => {
-            it('removes permission by id', async () => {
-                const publicRead = await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
-                await createdStream.revokePermission(publicRead!.id)
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).not.toBeTruthy()
-            })
+        //     it('removes permission by id', async () => {
+        //         const publicRead = await createdStream.hasPublicPermission(StreamPermission.SUBSCRIBE)
+        //         await createdStream.revokeUserPermission(publicRead!.id)
+        //         expect(await createdStream.hasPublicPermission(StreamPermission.SUBSCRIBE)).not.toBeTruthy()
+        //     })
 
             it('does not error if not found', async () => {
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
-                const publicRead = await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
-                await createdStream.revokePermission(publicRead!.id)
-                await createdStream.revokePermission(publicRead!.id)
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).not.toBeTruthy()
-            })
-
-            it('does not error if revoking multiple permissions in parallel', async () => {
-                const p1 = await createdStream.grantPermission(StreamOperation.STREAM_GET, otherWallet.address)
-                const p2 = await createdStream.grantPermission(StreamOperation.STREAM_SHARE, otherWallet.address)
-                await Promise.all([
-                    createdStream.revokePermission(p1.id),
-                    createdStream.revokePermission(p1.id), // also try multiple of same id
-                    createdStream.revokePermission(p2.id),
-                    createdStream.revokePermission(p2.id),
-                    createdStream.revokePermission(p2.id),
-                ])
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_GET, otherWallet.address)).not.toBeTruthy()
-                expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, otherWallet.address)).not.toBeTruthy()
+                await createdStream.grantPublicPermission(StreamPermission.SUBSCRIBE) // public read
+                await createdStream.hasPublicPermission(StreamPermission.SUBSCRIBE)
+                await createdStream.revokePublicPermission(StreamPermission.SUBSCRIBE)
+                expect(await createdStream.hasPublicPermission(StreamPermission.SUBSCRIBE)).not.toBeTruthy()
             })
 
             it('errors if invalid permission id', async () => {
@@ -382,86 +481,93 @@ function TestStreamEndpoints(getName: () => string) {
                     // eslint-disable-next-line no-await-in-loop, no-loop-func
                     await expect(async () => {
                         // @ts-expect-error should require valid id, this is part of the test
-                        await createdStream.revokePermission(invalidId)
+                        await createdStream.revokeUserPermission(invalidId)
                     }).rejects.toThrow()
                 }
             })
         })
 
-        describe('Stream.revokePublicPermission', () => {
-            it('removes permission', async () => {
-                await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
-                await createdStream.revokePublicPermission(StreamOperation.STREAM_SUBSCRIBE)
-                expect(await createdStream.hasPublicPermission(StreamOperation.STREAM_SUBSCRIBE)).not.toBeTruthy()
-            })
-        })
+        // describe('Stream.revokePublicPermission', () => {
+        //     it('removes permission', async () => {
+        //         await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE)
+        //         await createdStream.revokePublicPermission(StreamPermission.SUBSCRIBE)
+        //         expect(await createdStream.hasPublicPermission(StreamPermission.SUBSCRIBE)).not.toBeTruthy()
+        //     })
+        // })
 
         describe('Stream.revokeUserPermission', () => {
             it('removes permission', async () => {
-                await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)
-                await createdStream.revokeUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)
-                expect(await createdStream.hasPublicPermission(StreamOperation.STREAM_SUBSCRIBE)).not.toBeTruthy()
+                await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address)
+                await createdStream.revokeUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address)
+                expect(await createdStream.hasPublicPermission(StreamPermission.SUBSCRIBE)).not.toBeTruthy()
             })
 
             it('fails if no user id provided', async () => {
                 await expect(async () => {
                     // @ts-expect-error should require userId, this is part of the test
-                    await createdStream.revokeUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
+                    await createdStream.revokeUserPermission(StreamPermission.SUBSCRIBE, undefined)
                 }).rejects.toThrow()
             })
         })
 
         describe('Stream.grantUserPermission', () => {
             it('creates permission for user', async () => {
-                await createdStream.revokeUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)
-                await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address) // public read
-                expect(await createdStream.hasUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)).toBeTruthy()
+                await createdStream.revokeUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address)
+                await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address) // public read
+                expect(await createdStream.hasUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address)).toBeTruthy()
             })
 
             it('fails if no user id provided', async () => {
                 await expect(async () => {
                     // @ts-expect-error should require userId, this is part of the test
-                    await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
+                    await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, undefined)
                 }).rejects.toThrow()
             })
         })
 
         describe('Stream.{grant,revoke,has}UserPermissions', () => {
-            it('creates & revokes permissions for user', async () => {
-                await createdStream.revokeAllUserPermissions(otherWallet.address)
-                expect(
-                    await createdStream.hasUserPermissions([StreamOperation.STREAM_SUBSCRIBE, StreamOperation.STREAM_GET], otherWallet.address)
-                ).not.toBeTruthy()
+            // it('creates & revokes permissions for user', async () => {
+            //     await createdStream.revokeAllUserPermissions(otherWallet.address)
+            //     expect(
+            //         await createdStream.hasUserPermissions([StreamPermission.SUBSCRIBE, StreamPermission.GET], otherWallet.address)
+            //     ).not.toBeTruthy()
 
-                await createdStream.grantUserPermissions([StreamOperation.STREAM_GET, StreamOperation.STREAM_SUBSCRIBE], otherWallet.address)
+            //     await createdStream.grantUserPermissions([StreamPermission.GET, StreamPermission.SUBSCRIBE], otherWallet.address)
 
-                expect(
-                    await createdStream.hasUserPermissions([StreamOperation.STREAM_SUBSCRIBE, StreamOperation.STREAM_GET], otherWallet.address)
-                ).toBeTruthy()
+            //     expect(
+            //         await createdStream.hasUserPermissions([StreamPermission.SUBSCRIBE, StreamPermission.GET], otherWallet.address)
+            //     ).toBeTruthy()
 
-                // revoke permissions we just created
-                await createdStream.revokeUserPermissions([StreamOperation.STREAM_GET, StreamOperation.STREAM_SUBSCRIBE], otherWallet.address)
+            //     // revoke permissions we just created
+            //     await createdStream.revokeUserPermissions([StreamPermission.GET, StreamPermission.SUBSCRIBE], otherWallet.address)
 
-                expect(
-                    await createdStream.hasUserPermissions([StreamOperation.STREAM_SUBSCRIBE, StreamOperation.STREAM_GET], otherWallet.address)
-                ).not.toBeTruthy()
-            })
+            //     expect(
+            //         await createdStream.hasUserPermissions([StreamPermission.SUBSCRIBE, StreamPermission.GET], otherWallet.address)
+            //     ).not.toBeTruthy()
+            // })
 
             it('fails if no user id provided', async () => {
                 await expect(async () => {
                     // @ts-expect-error should require userId, this is part of the test
-                    await createdStream.revokeUserPermissions([StreamOperation.STREAM_SUBSCRIBE], undefined)
+                    await createdStream.revokeUserPermissions([StreamPermission.SUBSCRIBE], undefined)
                 }).rejects.toThrow()
             })
         })
 
         describe('Stream.revokeAllUserPermissions', () => {
             it('revokes all user permissions', async () => {
-                await createdStream.grantUserPermission(StreamOperation.STREAM_GET, otherWallet.address)
-                await createdStream.grantUserPermission(StreamOperation.STREAM_SUBSCRIBE, otherWallet.address)
-                expect((await createdStream.getUserPermissions(otherWallet.address)).length).toBeGreaterThanOrEqual(2)
+                await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, otherWallet.address)
+                expect((await createdStream.getUserPermissions(otherWallet.address)).canSubscribe).toBe(true)
                 await createdStream.revokeAllUserPermissions(otherWallet.address)
-                expect(await createdStream.getUserPermissions(otherWallet.address)).toHaveLength(0)
+                expect(await createdStream.getUserPermissions(otherWallet.address)).toEqual(
+                    {
+                        canDelete: false,
+                        canEdit: false,
+                        canPublish: false,
+                        canGrant: false,
+                        canSubscribe: false
+                    }
+                )
             })
 
             it('does not fail if called twice', async () => {
@@ -479,11 +585,18 @@ function TestStreamEndpoints(getName: () => string) {
 
         describe('Stream.revokeAllPublicPermissions', () => {
             it('revokes all public permissions', async () => {
-                await createdStream.grantPublicPermission(StreamOperation.STREAM_GET)
-                await createdStream.grantPublicPermission(StreamOperation.STREAM_SUBSCRIBE)
-                expect((await createdStream.getPublicPermissions()).length).toBeGreaterThanOrEqual(2)
+                await createdStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
+                expect((await createdStream.getPublicPermissions()).canSubscribe).toBe(true)
                 await createdStream.revokeAllPublicPermissions()
-                expect(await createdStream.getPublicPermissions()).toHaveLength(0)
+                expect(await createdStream.getPublicPermissions()).toEqual(
+                    {
+                        canDelete: false,
+                        canEdit: false,
+                        canPublish: false,
+                        canGrant: false,
+                        canSubscribe: false
+                    }
+                )
             })
 
             it('does not fail if called twice', async () => {
@@ -495,39 +608,53 @@ function TestStreamEndpoints(getName: () => string) {
 
     describe('Stream deletion', () => {
         it('Stream.delete', async () => {
-            await createdStream.delete()
-            return expect(() => client.getStream(createdStream.id)).rejects.toThrow(NotFoundError)
+            const props = { id: await createRelativeTestStreamId(module), name: '' }
+            const stream = await client.createStream(props)
+            await until(() => client.streamExistsOnTheGraph(stream.id), 100000, 1000)
+            await stream.delete()
+            await until(async () => {
+                try {
+                    await client.getStream(stream.id)
+                    return false
+                } catch (err: any) {
+                    return err.errorCode === 'NOT_FOUND'
+                }
+            }, 100000, 1000)
+            expect(await client.streamExists(stream.id)).toEqual(false)
+            return expect(client.getStream(stream.id)).rejects.toThrow()
         })
 
-        it('does not throw if already deleted', async () => {
-            await createdStream.delete()
-            await createdStream.delete()
-        })
+        // it('does not throw if already deleted', async () => {
+        //     await createdStream.delete()
+        //     await createdStream.delete()
+        // })
     })
 
     describe('Storage node assignment', () => {
         it('add', async () => {
+            // await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
             const stream = await createTestStream(client, module)
-            const storageNode = StorageNode.STREAMR_DOCKER_DEV
-            await stream.addToStorageNode(storageNode)
+            await stream.addToStorageNode(storageNodeAddress)
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
-            expect(storageNodes[0].address).toBe(storageNode)
-            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
-            expect(storedStreamParts.some(
+            expect(storageNodes[0]).toStrictEqual(storageNodeAddress.toLowerCase())
+            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
+            return expect(storedStreamParts.some(
                 (sp) => (sp.streamId === stream.id) && (sp.streamPartition === 0)
             )).toBeTruthy()
         })
 
         it('remove', async () => {
-            const storageNode = StorageNode.STREAMR_DOCKER_DEV
             const stream = await createTestStream(client, module)
-            await stream.addToStorageNode(storageNode)
-            await stream.removeFromStorageNode(storageNode)
+            await stream.addToStorageNode(storageNodeAddress)
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
+            await stream.removeFromStorageNode(storageNodeAddress)
+            await until(async () => { return !(await client.isStreamStoredInStorageNode(stream.id, storageNodeAddress)) }, 100000, 1000)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
-            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
-            expect(storedStreamParts.some(
+            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
+            return expect(storedStreamParts.some(
                 (sp) => (sp.streamId === stream.id)
             )).toBeFalsy()
         })
@@ -535,11 +662,11 @@ function TestStreamEndpoints(getName: () => string) {
 }
 
 describe('StreamEndpoints', () => {
-    describe('using normal name', () => {
-        TestStreamEndpoints(() => uid('test-stream'))
-    })
+    // describe('using normal name', () => {
+    //     TestStreamEndpoints(() => uid('test-stream'), 0)
+    // })
 
     describe('using name with slashes', () => {
-        TestStreamEndpoints(() => uid('test-stream/slashes'))
+        TestStreamEndpoints(() => uid('test-stream/slashes'), 4000)
     })
 })

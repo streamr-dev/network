@@ -6,12 +6,10 @@ import { createClientCommand } from '../src/command'
 const getStorageNodes = async (streamId: string | undefined, client: StreamrClient): Promise<string[]> => {
     if (streamId !== undefined) {
         const stream = await client.getStream(streamId)
-        const storageNodes = await stream.getStorageNodes()
-        return storageNodes.map((storageNode) => storageNode.address)
+        return stream.getStorageNodes()
     } else {
         // all storage nodes (currently there is only one)
-        const nodes = await client.getNodes()
-        return nodes.map((n) => n.address)
+        return client.getAllStorageNodes()
     }
 }
 

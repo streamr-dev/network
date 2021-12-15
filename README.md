@@ -6,7 +6,7 @@
 
 # Streamr Network + Client Monorepo
 
-Streamr network, client & supporting packages. Work in progress.
+Streamr network, broker, client & supporting packages.
 
 ## Contains
 
@@ -16,7 +16,6 @@ Streamr network, client & supporting packages. Work in progress.
 * [protocol](packages/protocol/README.md) (streamr-client-protocol)
 * [test-utils](packages/test-utils/README.md) (streamr-test-utils)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
-* [cross-client-testing](packages/cross-client-testing/README.md) (com.streamr.client_testing)
 
 ## Build Status
 

@@ -44,6 +44,8 @@ export type SubscribeConfig = {
 export type ConnectionConfig = {
     /** Core HTTP API calls go here */
     restUrl: string
+    /** Some TheGraph instance, that indexes the streamr registries */
+    theGraphUrl: string
     /** Automatically connect on first subscribe */
     autoConnect: boolean
     /**  Automatically disconnect on last unsubscribe */
@@ -77,6 +79,11 @@ export type StrictStreamrClientConfig = {
     auth: AuthConfig
     /** joinPartAgent when using EE for join part handling */
     streamrNodeAddress: EthereumAddress
+    streamRegistrySidechainAddress: EthereumAddress, // this saves streams and permissions
+    nodeRegistrySidechainAddress: EthereumAddress, // this saves sorage nodes with their urls
+    streamStorageRegistrySidechainAddress: EthereumAddress, // this ueses the streamregistry and
+        // noderegistry contracts and saves what streams are stored by which storagenodes
+    ensCacheSidechainAddress: EthereumAddress,
     keyExchange: Todo
     dataUnion: DataUnionConfig
     cache: CacheConfig,
@@ -92,6 +99,8 @@ export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataU
     dataUnion: Partial<StrictStreamrClientConfig['dataUnion']>
 }>
 
+export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
+
 /**
  * @category Important
  */
@@ -99,8 +108,10 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 
     // Streamr Core options
-    restUrl: 'https://streamr.network/api/v1',
+    restUrl: 'https://streamr.network/api/v1/',
+    theGraphUrl: 'needs chaging once server is up in production',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
+    // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
     // P2P Streamr Network options
     autoConnect: true,
@@ -137,6 +148,10 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     binanceAdapterAddress: '0x193888692673b5dD46e6BC90bA8cBFeDa515c8C1',
     binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
     withdrawServerUrl: 'https://streamr.com:3000',
+    streamRegistrySidechainAddress: '0xa86863053cECFD9f6f861e0Fd39a042238411b75',
+    nodeRegistrySidechainAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+    streamStorageRegistrySidechainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
+    ensCacheSidechainAddress: '',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
         payForTransport: true,
