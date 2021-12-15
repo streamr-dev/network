@@ -23,9 +23,9 @@ export interface ProxyStreamConnectionManagerOptions {
 }
 
 enum State {
-    CONNECTING,
-    CONNECTED,
-    RECONNECTING
+    NEGOTIATING,
+    ACCEPTED,
+    RENEGOTIATING
 }
 
 interface ProxyConnection {
@@ -54,12 +54,12 @@ export class ProxyStreamConnectionManager {
         this.connections = new Map()
     }
 
-    addConnection(spid: SPID, nodeId: NodeId): void {
+    private addConnection(spid: SPID, nodeId: NodeId): void {
         if (!this.connections.has(spid.key)) {
             this.connections.set(spid.key, new Map())
         }
         this.connections.get(spid.key)!.set(nodeId, {
-            state: State.CONNECTING
+            state: State.NEGOTIATING
         })
     }
 
@@ -95,7 +95,6 @@ export class ProxyStreamConnectionManager {
 
     async openOutgoingStreamConnection(spid: SPID, targetNodeId: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(spid)
-        const trackerAddress = this.trackerManager.getTrackerAddress(spid)
         try {
             if (!this.streamManager.isSetUp(spid)) {
                 this.streamManager.setUpStream(spid, true)
@@ -115,9 +114,7 @@ export class ProxyStreamConnectionManager {
                 return
             }
             this.addConnection(spid, targetNodeId)
-            await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
-            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
-            await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
+            await this.connectAndNegotiate(spid, targetNodeId)
         } catch (err) {
             logger.warn(`Failed to create a proxy outgoing stream connection to ${targetNodeId} for stream ${spid.key}:\n${err}`)
             this.removeConnection(spid, targetNodeId)
@@ -127,6 +124,15 @@ export class ProxyStreamConnectionManager {
         }
     }
 
+    private async connectAndNegotiate(spid: SPID, targetNodeId: NodeId): Promise<void> {
+        const trackerId = this.trackerManager.getTrackerId(spid)
+        const trackerAddress = this.trackerManager.getTrackerAddress(spid)
+
+        await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
+        await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
+        await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
+    }
+
     async closeOutgoingStreamConnection(spid: SPID, targetNodeId: NodeId): Promise<void> {
         if (this.streamManager.isSetUp(spid) && this.streamManager.hasOutOnlyConnection(spid, targetNodeId)) {
             clearTimeout(this.getConnection(targetNodeId, spid)!.reconnectionTimer!)
@@ -134,7 +140,9 @@ export class ProxyStreamConnectionManager {
             await this.nodeToNode.leaveStreamOnNode(targetNodeId, spid)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, targetNodeId, spid)
         } else {
-            logger.warn(`A proxy outgoing stream connection for ${spid.key} on node ${targetNodeId} does not exist`)
+            const reason = `A proxy outgoing stream connection for ${spid.key} on node ${targetNodeId} does not exist`
+            logger.warn(reason)
+            throw reason
         }
     }
 
@@ -168,7 +176,7 @@ export class ProxyStreamConnectionManager {
         const { streamId, streamPartition, accepted } = message
         const spid = new SPID(streamId, streamPartition)
         if (accepted) {
-            this.getConnection(nodeId, spid)!.state = State.CONNECTED
+            this.getConnection(nodeId, spid)!.state = State.ACCEPTED
             this.streamManager.addOutOnlyNeighbor(spid, nodeId)
             this.node.emit(Event.PUBLISH_STREAM_ACCEPTED, nodeId, spid)
         } else {
@@ -179,17 +187,14 @@ export class ProxyStreamConnectionManager {
 
     async reconnect(targetNodeId: NodeId, spid: SPID): Promise<void> {
         const connection = this.getConnection(targetNodeId, spid)!
-        if (connection.state !== State.RECONNECTING) {
-            connection.state = State.RECONNECTING
+        if (connection.state !== State.RENEGOTIATING) {
+            connection.state = State.RENEGOTIATING
         }
         const trackerId = this.trackerManager.getTrackerId(spid)
-        const trackerAddress = this.trackerManager.getTrackerAddress(spid)
         try {
-            await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
-            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
-            await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, spid)
+            await this.connectAndNegotiate(spid, targetNodeId)
             logger.trace(`Successful proxy stream reconnection to ${targetNodeId}`)
-            connection.state = State.CONNECTED
+            connection.state = State.ACCEPTED
             if (connection.reconnectionTimer !== undefined) {
                 clearTimeout(connection.reconnectionTimer)
             }

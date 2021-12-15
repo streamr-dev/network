@@ -260,6 +260,7 @@ export class Node extends EventEmitter {
         )
         // Check if the stream is set as one-directional and has inbound connection
         if (source && this.streams.isSetUp(spid) && this.streams.isBehindProxy(spid) && !this.streams.hasInboundConnection(spid, source)) {
+            logger.warn(`Unexpected message received on outgoing proxy stream from node ${source} on stream ${spid}`)
             // Perhaps the node should be disconnected here if bad behaviour is repeated
             return
         }
