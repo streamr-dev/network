@@ -169,6 +169,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
      */
     protected onNewConnection(connection: C): void {
         if (this.stopped) {
+            connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
             return
         }
         const peerInfo = connection.getPeerInfo()
