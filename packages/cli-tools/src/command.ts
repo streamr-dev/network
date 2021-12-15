@@ -10,9 +10,17 @@ export const createCommand = (): commander.Command => {
         .allowExcessArguments(false)
 }
 
+export interface CommandOpts {
+    autoDestroyClient?: boolean
+    clientOptionsFactory?: (options: any) => BrubeckClientConfig
+}
+
 export const createClientCommand = (
     action: (...handleArgs: any[]) => Promise<void>, 
-    clientOptionsFactory: (options: any) => BrubeckClientConfig = () => ({})
+    opts: CommandOpts = {
+        autoDestroyClient: true,
+        clientOptionsFactory: () => ({})
+    }
 ): commander.Command => {
     return createCommand()
         .option('--private-key <key>', 'use an Ethereum private key to authenticate')
@@ -21,11 +29,13 @@ export const createClientCommand = (
         .action(async (...args: any[]) => {
             const commandLineOptions = args[args.length - 1].opts()
             try {
-                const client = createClient(commandLineOptions, clientOptionsFactory(commandLineOptions))
+                const client = createClient(commandLineOptions, opts.clientOptionsFactory!(commandLineOptions))
                 try {
                     await action(...[client].concat(args))
                 } finally {
-                    await client.destroy()
+                    if (opts.autoDestroyClient) {
+                        await client.destroy()
+                    }
                 }
             } catch (e: any) {
                 console.error(e)

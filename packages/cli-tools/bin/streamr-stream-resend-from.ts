@@ -12,9 +12,11 @@ createClientCommand(async (client: StreamrClient, from: string, streamId: string
         publisherId: options.publisherId
     }
     await resend(streamId, resendOptions, client, options.subscribe)
-}, (options) => ({
-    orderMessages: !options.disableOrdering
-}))
+}, {
+    clientOptionsFactory: (options) => ({
+        orderMessages: !options.disableOrdering
+    })
+})
     .arguments('<from> <streamId>')
     .description('request messages starting from given date-time (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
     .option('--publisher-id <string>', 'filter results by publisher')

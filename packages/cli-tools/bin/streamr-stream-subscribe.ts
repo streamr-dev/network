@@ -8,9 +8,12 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: any
         streamId,
         streamPartition: options.partition,
     }, (message) => console.info(JSON.stringify(message)))
-}, (options) => ({
-    orderMessages: !options.disableOrdering
-}))
+}, {
+    autoDestroyClient: false,
+    clientOptionsFactory: (options) => ({
+        orderMessages: !options.disableOrdering
+    })
+})
     .arguments('<streamId>')
     .description('subscribe to a stream, prints JSON messages to stdout line-by-line')
     .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'), 0)

@@ -12,9 +12,11 @@ createClientCommand(async (client: StreamrClient, n: string, streamId: string, o
         last: parseInt(n)
     }
     await resend(streamId, resendOptions, client, options.subscribe)
-}, (options) => ({
-    orderMessages: !options.disableOrdering
-}))
+}, {
+    clientOptionsFactory: (options) => ({
+        orderMessages: !options.disableOrdering
+    })
+})
     .arguments('<n> <streamId>')
     .description('request last N messages')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)

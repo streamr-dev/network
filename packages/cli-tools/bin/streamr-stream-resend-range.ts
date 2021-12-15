@@ -18,9 +18,11 @@ createClientCommand(async (client: StreamrClient, from: string, to: string, stre
     }
     assertBothOrNoneDefined('publisherId', 'msgChainId', '--publisher-id must be accompanied by option --msg-chain-id', options)
     await resend(streamId, resendOptions, client, false) 
-}, (options) => ({
-    orderMessages: !options.disableOrdering
-}))
+}, {
+    clientOptionsFactory: (options) => ({
+        orderMessages: !options.disableOrdering
+    })
+})
     .arguments('<from> <to> <streamId>')
     .description('request messages between two given date-times (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
     .option('--publisher-id <string>', 'filter results by publisher')
