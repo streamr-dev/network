@@ -187,7 +187,7 @@ export class StorageAssignmentEventManager {
 
     async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient): Promise<void> {
         await client.addStreamToStorageNode(streamId, storageNodeAddress)
-        await until(async () => { return client.isStreamStoredInStorageNode(streamId, storageNodeAddress) }, 100000, 1000)
+        await until(async () => { return client.isStreamStoredInStorageNode(streamId, storageNodeAddress) }, 10000, 500)
         this.publishAddEvent(streamId)
     }
 

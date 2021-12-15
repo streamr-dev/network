@@ -20,10 +20,9 @@
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "build": "tsc -b tsconfig.node.json",
-    "test-unit": "jest test/unit",
-    "t": "jest --forceExit test/integration/broker.test.ts",
-    "test-sequential": "jest --maxWorkers=1 test/sequential # always run sequential tests with maxWorkers=1",
-    "test-integration": "jest --forceExit test/integration && npm run test-sequential",
+    "test-unit": "jest test/unit --forceExit --detectOpenHandles",
+    "test-sequential": "jest --maxWorkers=1 test/sequential --forceExit --detectOpenHandles # always run sequential tests with maxWorkers=1",
+    "test-integration": "jest --forceExit --detectOpenHandles test/integration && npm run test-sequential",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"
   },
   "author": "Streamr Network AG <contact@streamr.com>",

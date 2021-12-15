@@ -14,6 +14,7 @@ import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
 import Ethereum from './Ethereum'
 import { EthereumAddress, NotFoundError } from '.'
+import { until } from './utils'
 
 const log = debug('StreamrClient:NodeRegistry')
 
@@ -134,6 +135,8 @@ export class NodeRegistry {
 
         const tx = await this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress)
         await tx.wait()
+        await until(async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) }, 10000, 500,
+            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
     async removeStreamFromStorageNode(streamId: string, nodeAddress: string): Promise<void> {
