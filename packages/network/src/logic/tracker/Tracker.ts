@@ -1,4 +1,3 @@
-import io from '@pm2/io'
 import { EventEmitter } from 'events'
 import { SmartContractRecord, SPID, SPIDKey } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
@@ -58,7 +57,6 @@ export class Tracker extends EventEmitter {
     private readonly extraMetadatas: Record<NodeId,Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
-    private readonly statusMeter: any
 
     constructor(opts: TrackerOptions) {
         super()
@@ -98,9 +96,6 @@ export class Tracker extends EventEmitter {
             .addRecordedMetric('processNodeStatus')
             .addRecordedMetric('_removeNode')
 
-        this.statusMeter = io.meter({
-            name: 'statuses/sec'
-        })
         this.instructionSender = new InstructionSender(
             opts.topologyStabilization,
             this.trackerServer.sendInstruction.bind(this.trackerServer),
@@ -120,7 +115,6 @@ export class Tracker extends EventEmitter {
 
     processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
         this.metrics.record('processNodeStatus', 1)
-        this.statusMeter.mark()
         const status = statusMessage.status as Status
         const legacyMessageStreams = (status as any).streams
         if (legacyMessageStreams !== undefined) {
