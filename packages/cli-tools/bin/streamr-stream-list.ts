@@ -15,11 +15,8 @@ createClientCommand(async (client: StreamrClient, options: any) => {
     }    
     const streams = await client.listStreams(query)
     if (streams.length > 0) {
-        // @ts-expect-error: TODO: lastUpdated not officially part of stream object?
-        console.info(EasyTable.print(streams.map(({id, name, lastUpdated}) => ({
-            lastUpdated,
-            id,
-            name
+        console.info(EasyTable.print(streams.map(({id}) => ({
+            id
         }))))
     }
 })
