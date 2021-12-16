@@ -6,7 +6,7 @@ import {
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,
-    getCreateClient
+    clientOptions
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/Resends'
@@ -21,11 +21,9 @@ import { storageNodeTestConfig } from './devEnvironment'
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 20000 : 10000
 const MAX_MESSAGES = 5
 
-const createClient = getCreateClient()
-
 jest.setTimeout(60000)
 
-describeRepeats.skip('resends', () => {
+describeRepeats('resends', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
@@ -36,7 +34,9 @@ describeRepeats.skip('resends', () => {
     let storageNodeAddress: string
 
     beforeAll(async () => {
-        client = await createClient()
+        client = new StreamrClient({
+            ...clientOptions
+        })
         subscriber = client.resends
 
         // eslint-disable-next-line require-atomic-updates
