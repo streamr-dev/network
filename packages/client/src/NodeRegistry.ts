@@ -116,9 +116,11 @@ export class NodeRegistry {
     async setNode(nodeMetadata: string): Promise<void> {
         log('setNode %s -> %s', nodeMetadata)
         await this.connectToNodeRegistryContract()
-
+        const nodeAddress = await this.ethereum.getAddress()
         const tx = await this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata)
         await tx.wait()
+        await until(async () => { return this.getStorageNodeUrl(nodeAddress) !== undefined }, 10000, 500,
+            () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
     async removeNode(): Promise<void> {
