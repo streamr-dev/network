@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Writable } from 'stream'
 import { StreamrClient } from 'streamr-client'
+import { wait } from 'streamr-test-utils'
 import es from 'event-stream'
 import { createClientCommand } from '../src/command'
 
@@ -41,7 +42,16 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: any
         process.stdin
             .pipe(es.split())
             .pipe(ps)
-            .once('finish', () => resolve(undefined))
+            .once('finish', async () => {
+                // We need to wait some time because the client.publish() may resolve the promise
+                // before the node has propagated the message. That may happend if the node
+                // has not yet connected to Tracker when client.publish() is called. In that case
+                // the message is put to the propagation queue (activeTaskStore.add call in
+                // network Propagation.ts:59) and the client.publish() promise resolves immeditatelly.
+                // TODO Remove this wait when NET-604 has been resolved
+                await wait(2000)
+                resolve(undefined)
+            })
             .once('error', (err: any) => reject(err) )
     })
 })

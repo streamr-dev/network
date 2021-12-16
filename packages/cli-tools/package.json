@@ -33,7 +33,8 @@
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "^6.1.0-ocr-experimental.12"
+    "streamr-client": "^6.1.0-ocr-experimental.12",
+    "streamr-test-utils": "^2.0.0"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
