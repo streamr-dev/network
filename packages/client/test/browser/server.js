@@ -26,6 +26,7 @@ app.get('/', (req, res) => {
 server = app.listen(8880, () => {
     console.info('Browser Test Server: Listening on ', server.address())
 })
+
 server.once('close', () => {
     keyserver?.close()
 })
