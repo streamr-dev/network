@@ -92,7 +92,7 @@ const stream = await client.createStream({
 console.log(`Stream ${stream.id} has been created!`)
 
 // Optional: to enable historical data resends, add the stream to a storage node
-await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 
 // Do something with the stream, for example call stream.publish(message)
 ```

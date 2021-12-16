@@ -25,7 +25,11 @@ export type ProviderAuthConfig = {
 }
 
 export type PrivateKeyAuthConfig = {
-    privateKey: string
+    privateKey: string,
+    // The address property is not used. It is included to make the object
+    // compatible with StreamrClient.generateEthereumAccount(), as we typically
+    // use that method to generate the client "auth" option.
+    address?: string
 }
 
 export type SessionTokenAuthConfig = {
@@ -147,7 +151,7 @@ class StreamrEthereum {
             throw new Error('StreamrClient is not authenticated with private key')
         }
 
-        return this._getAddress()
+        return (await this._getAddress()).toLowerCase()
     }
 
     getSigner(): Signer {

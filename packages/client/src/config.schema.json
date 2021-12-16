@@ -16,6 +16,10 @@
                     "type": "string",
                     "format": "ethereum-private-key"
                 },
+                "address": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
                 "ethereum": {
                     "type": "object"
                 },
@@ -199,9 +203,6 @@
                         }
                     }
                 },
-                "metricsContext": {
-                    "type": "object"
-                },
                 "trackerPingInterval": {
                     "type": "number"
                 },
@@ -217,7 +218,8 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "string"
+                                "type": "string",
+                                "format": "ethereum-address"
                             },
                             "http": {
                                 "type": "string",
@@ -313,6 +315,19 @@
                     "type": "object"
                 }
             }
+        },
+        "theGraphUrl" : {
+            "type" : "string",
+            "format": "uri"
+        },
+        "streamRegistrySidechainAddress" : {
+            "type" : "string"
+        },
+        "nodeRegistrySidechainAddress" : {
+            "type" : "string"
+        },
+        "streamStorageRegistrySidechainAddress" : {
+            "type" : "string"
         }
     },
     "definitions": {

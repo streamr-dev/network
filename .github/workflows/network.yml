@@ -22,22 +22,15 @@ defaults:
 
 jobs:
   test:
-    name: Lint & Test on Node ${{ matrix.node-version }}
+    name: Lint & Test
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [16.x]
-
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
           cache-dependency-path: package-lock.json
-
+          cache: 'npm'
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -71,7 +64,7 @@ jobs:
 
   publish:
     needs: [test]
-    name: Publishing main using Node 16
+    name: Publishing Main
     runs-on: ubuntu-latest
 
     # run job only for tags and skip for cron
@@ -82,12 +75,12 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: 16
-          registry-url: https://registry.npmjs.org/
-          cache: 'npm'
           cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+          registry-url: https://registry.npmjs.org/
       - name: bootstrap-pkg
         working-directory: './'
         run: |

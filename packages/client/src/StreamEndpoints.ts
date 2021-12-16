@@ -9,17 +9,17 @@ import { ContentType, EncryptionType, SignatureType } from 'streamr-client-proto
 import { StreamMessageType, SIDLike, SPID } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
-import { Context, ContextError } from './utils/Context'
+import { Context } from './utils/Context'
 
-import { Stream, StreamOperation, StreamProperties } from './Stream'
-import { isKeyExchangeStream } from './encryption/KeyExchangeUtils'
+import { Stream, StreamPermission } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
 import { EthereumAddress } from './types'
-import NodeRegistry, { NodeRegistryItem } from './StorageNodeRegistry'
 import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
+import { StreamRegistry } from './StreamRegistry'
+import { NodeRegistry } from './NodeRegistry'
 
 export const createStreamId = async (streamIdOrPath: string, ownerProvider?: () => Promise<EthereumAddress|undefined>) => {
     if (streamIdOrPath === undefined) {
@@ -52,7 +52,7 @@ export interface StreamListQuery {
     offset?: number
     grantedAccess?: boolean
     publicAccess?: boolean
-    operation?: StreamOperation
+    permission?: StreamPermission
 }
 
 export interface StreamValidationInfo {
@@ -112,8 +112,9 @@ export class StreamEndpoints implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Config.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
-        private readonly ethereum: StreamrEthereum,
-        private readonly storageNodeRegistry: NodeRegistry
+        @inject(NodeRegistry) private readonly nodeRegistry: NodeRegistry,
+        @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
+        private readonly ethereum: StreamrEthereum
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -123,32 +124,8 @@ export class StreamEndpoints implements Context {
      * @category Important
      */
     async getStream(streamId: string) {
-        const isKeyExchange = isKeyExchangeStream(streamId)
-        this.debug('getStream %o', {
-            streamId,
-            isKeyExchangeStream: isKeyExchange,
-        })
-
-        if (isKeyExchange) {
-            return new Stream({
-                id: streamId,
-                partitions: 1,
-            }, this.container)
-        }
-
-        const json = await this.rest.get<StreamProperties>(['streams', streamId])
-        return new Stream(json, this.container)
-    }
-
-    async getStorageNodes(sidLike: SIDLike): Promise<NodeRegistryItem[]> {
-        const { streamId } = SPID.parse(sidLike)
-        const json = await this.rest.get<{ storageNodeAddress: string}[] >(
-            ['streams', streamId, 'storageNodes']
-        )
-
-        const storageNodeAddresses = new Set(json.map(({ storageNodeAddress }) => storageNodeAddress))
-        const nodes = await this.storageNodeRegistry.getNodes()
-        return nodes.filter((node: any) => storageNodeAddresses.has(node.address))
+        this.debug('getStream %s', streamId)
+        return this.streamRegistry.getStream(streamId)
     }
 
     /**
@@ -158,57 +135,39 @@ export class StreamEndpoints implements Context {
         this.debug('listStreams %o', {
             query,
         })
-        const json = await this.rest.get<StreamProperties[]>(['streams'], { query })
-        return json ? json.map((stream: StreamProperties) => new Stream(stream, this.container)) : []
+        return this.streamRegistry.listStreams(query)
     }
 
     async getStreamByName(name: string) {
         this.debug('getStreamByName %o', {
             name,
         })
-        const json = await this.listStreams({
-            name,
-            // @ts-expect-error
-            public: false,
-        })
-        return json[0] ? new Stream(json[0], this.container) : Promise.reject(new NotFoundError('Stream: name=' + name))
-    }
-
-    /**
-     * @category Important
-     * @param props - if id is specified, it can be full streamId or path
-     */
-    async createStream(props?: Partial<StreamProperties> & { id: string }) {
-        this.debug('createStream %o', {
-            props,
-        })
-        const body = (props?.id !== undefined) ? {
-            ...props,
-            id: await createStreamId(props.id, () => this.ethereum.getAddress())
-        } : props
-        const json = await this.rest.post<StreamProperties>(['streams'], body)
-        return new Stream(json, this.container)
+        const streams = await this.streamRegistry.listStreams({ name })
+        return streams[0] ? streams[0] : Promise.reject(new NotFoundError('Stream: name=' + name))
     }
 
     /**
      * @category Important
      */
-    async getOrCreateStream(props: { id: string, name?: never } | { id?: never, name: string }) {
+    async getOrCreateStream(props: { id?: string, name?: string }) {
         this.debug('getOrCreateStream %o', {
             props,
         })
-        const id = props.id ? await createStreamId(props.id, () => this.ethereum.getAddress()) : ''
         // Try looking up the stream by id or name, whichever is defined
         try {
             if (props.id) {
-                return await this.getStream(id)
+                if (props.id && props.id.startsWith('/')) {
+                    return await this.getStream(await this.ethereum.getAddress() + props.id)
+                }
+                return await this.getStream(props.id)
             }
             return await this.getStreamByName(props.name!)
         } catch (err: any) {
             // try create stream if NOT_FOUND + also supplying an id.
             if (props.id && err.errorCode === ErrorCode.NOT_FOUND) {
-                const stream = await this.createStream(props)
-                this.debug('Created stream: %s %o', id, stream.toObject())
+                const id = props.id || (await this.ethereum.getAddress()) + '/'
+                const stream = await this.streamRegistry.createStream({ ...props, id })
+                this.debug('Created stream: %s %o', props.id, stream.toObject())
                 return stream
             }
 
@@ -216,13 +175,11 @@ export class StreamEndpoints implements Context {
         }
     }
 
-    async getStreamPublishers(streamId: string) {
+    async getStreamPublishers(streamId: string, pagesize: number = 1000) {
         this.debug('getStreamPublishers %o', {
             streamId,
         })
-
-        const json = await this.rest.get<{ addresses: string[]}>(['streams', streamId, 'publishers'])
-        return json.addresses.map((a: string) => a.toLowerCase())
+        return this.streamRegistry.getStreamPublishers(streamId, pagesize)
     }
 
     async isStreamPublisher(streamId: string, ethAddress: EthereumAddress) {
@@ -230,24 +187,14 @@ export class StreamEndpoints implements Context {
             streamId,
             ethAddress,
         })
-        try {
-            await this.rest.get(['streams', streamId, 'publisher', ethAddress])
-            return true
-        } catch (e) {
-            this.debug(e)
-            if (e.response && e.response.status === 404) {
-                return false
-            }
-            throw e
-        }
+        return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
 
-    async getStreamSubscribers(streamId: string) {
+    async getStreamSubscribers(streamId: string, pagesize: number = 1000) {
         this.debug('getStreamSubscribers %o', {
             streamId,
         })
-        const json = await this.rest.get<{ addresses: string[] }>(['streams', streamId, 'subscribers'])
-        return json.addresses.map((a: string) => a.toLowerCase())
+        return this.streamRegistry.getStreamSubscribers(streamId, pagesize)
     }
 
     async isStreamSubscriber(streamId: string, ethAddress: EthereumAddress) {
@@ -255,67 +202,44 @@ export class StreamEndpoints implements Context {
             streamId,
             ethAddress,
         })
-        try {
-            await this.rest.get(['streams', streamId, 'subscriber', ethAddress])
-            return true
-        } catch (e) {
-            if (e.response && e.response.status === 404) {
-                return false
-            }
-            throw e
-        }
+        return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }
 
     async getStreamValidationInfo(streamId: string) {
-        const isKeyExchange = isKeyExchangeStream(streamId)
         this.debug('getStreamValidationInfo %o', {
             streamId,
-            isKeyExchangeStream: isKeyExchange,
         })
-
-        if (isKeyExchange) {
-            return new Stream({
-                id: streamId,
-                partitions: 1,
-            }, this.container)
-        }
-
         const json = await this.rest.get<StreamValidationInfo>(['streams', streamId, 'validation'])
         return json
     }
 
-    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject[]> {
-        const spid = SPID.parse(streamObjectOrId)
-        const { streamId, streamPartition = 0 } = spid
+    async getStreamLast<T extends Stream|SIDLike|string>(streamObjectOrId: T, count = 1): Promise<StreamMessageAsObject> {
+        const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
         this.debug('getStreamLast %o', {
             streamId,
             streamPartition,
             count,
         })
-
-        const nodes = await this.getStorageNodes(streamId)
-        if (!nodes.length) {
-            throw new ContextError(this, 'no storage assigned: %o', streamObjectOrId)
-        }
-
-        const json = await this.rest.get<StreamMessageAsObject[]>([
+        const stream = await this.streamRegistry.getStream(streamId)
+        const nodeAdresses = await stream.getStorageNodes()
+        if (nodeAdresses.length === 0) { throw new NotFoundError('Stream: id=' + streamId + ' has no storage nodes!') }
+        const chosenNode = nodeAdresses[Math.floor(Math.random() * nodeAdresses.length)]
+        const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(chosenNode)
+        const json = await this.rest.get<StreamMessageAsObject>([
             'streams', streamId, 'data', 'partitions', streamPartition, 'last',
         ], {
             query: { count },
-            restUrl: nodes[0] ? nodes[0].url + '/api/v1' : undefined,
+            useSession: false,
+            restUrl: nodeUrl
         })
-
         return json
     }
 
-    async getStreamPartsByStorageNode(address: EthereumAddress) {
-        type ItemType = { id: string, partitions: number}
-        const json = await this.rest.get<ItemType[]>([
-            'storageNodes', address, 'streams'
-        ])
+    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress) {
+        const streams = await this.nodeRegistry.getStoredStreamsOf(nodeAddress)
 
         const result: SPID[] = []
-        json.forEach((stream: ItemType) => {
+        streams.forEach((stream: Stream) => {
             for (let i = 0; i < stream.partitions; i++) {
                 result.push(new SPID(stream.id, i))
             }
@@ -323,7 +247,7 @@ export class StreamEndpoints implements Context {
         return result
     }
 
-    async publishHttp(streamObjectOrId: Stream|string, data: any, requestOptions: any = {}, keepAlive: boolean = true) {
+    async publishHttp(nodeUrl: string, streamObjectOrId: Stream|string, data: any, requestOptions: any = {}, keepAlive: boolean = true) {
         let streamId
         if (streamObjectOrId instanceof Stream) {
             streamId = streamObjectOrId.id
@@ -340,8 +264,9 @@ export class StreamEndpoints implements Context {
             data,
             {
                 ...requestOptions,
-                agent: keepAlive ? getKeepAliveAgentForUrl(this.options.restUrl!) : undefined,
-            },
+                agent: keepAlive ? getKeepAliveAgentForUrl(nodeUrl) : undefined,
+                restUrl: nodeUrl
+            }
         )
     }
 }

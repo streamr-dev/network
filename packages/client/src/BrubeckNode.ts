@@ -2,7 +2,7 @@
  * Wrap a network node.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { NetworkNodeOptions, createNetworkNode, NetworkNode } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { Config } from './Config'
@@ -57,6 +57,7 @@ export default class BrubeckNode implements Context {
             name: id,
             ...options,
             id,
+            metricsContext: new MetricsContext(options.name ?? id)
         })
 
         if (!this.destroySignal.isDestroyed()) {

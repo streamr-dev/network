@@ -22,10 +22,9 @@ describe('duplicate message detection and avoidance', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30350
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
         contactNode = createNetworkNode({
             id: 'node-0',
             trackers: [trackerInfo],

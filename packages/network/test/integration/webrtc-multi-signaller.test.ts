@@ -23,15 +23,13 @@ describe('WebRTC multisignaller test', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 28715
-            },
-            id: 'tracker1'
+            }
         })
         tracker2 = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
                 port: 28716
-            },
-            id: 'tracker2'
+            }
         })
 
         const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'), new MetricsContext(''))
@@ -40,13 +38,13 @@ describe('WebRTC multisignaller test', () => {
         nodeToTracker1 = new NodeToTracker(ep1)
         nodeToTracker2 = new NodeToTracker(ep2)
 
-        nodeToTracker1.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker('tracker1'))
+        nodeToTracker1.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker(tracker1.getConfigRecord().id))
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        nodeToTracker2.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker('tracker1'))
+        nodeToTracker2.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker(tracker1.getConfigRecord().id))
         await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        nodeToTracker1.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker('tracker2'))
+        nodeToTracker1.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker(tracker2.getConfigRecord().id))
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
-        nodeToTracker2.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker('tracker2'))
+        nodeToTracker2.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker(tracker2.getConfigRecord().id))
         await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
 
         const peerInfo1 = PeerInfo.newNode('node-1')
@@ -81,8 +79,8 @@ describe('WebRTC multisignaller test', () => {
     })
 
     it('WebRTC connection is established and signalling works if endpoints use different trackers for signalling', async () => {
-        endpoint1.connect('node-2', 'tracker1', true).catch(() => null)
-        endpoint2.connect('node-1', 'tracker2', false).catch(() => null)
+        endpoint1.connect('node-2', tracker1.getConfigRecord().id, true).catch(() => null)
+        endpoint2.connect('node-1', tracker2.getConfigRecord().id, false).catch(() => null)
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
             waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)

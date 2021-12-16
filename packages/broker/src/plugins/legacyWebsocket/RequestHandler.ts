@@ -22,9 +22,9 @@ import { Publisher } from '../../Publisher'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Connection } from './Connection'
 import { StreamFetcher } from '../../StreamFetcher'
-import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { createResponse as createHistoricalDataResponse, HistoricalDataResponse } from './historicalData'
 import { GenericError } from '../../errors/GenericError'
+import StreamrClient, { StreamPermission } from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -35,9 +35,8 @@ export class RequestHandler {
     streams: StreamStateManager<Connection>
     subscriptionManager: SubscriptionManager
     metrics: Metrics
-    storageNodeRegistry: StorageNodeRegistry
-    streamrUrl: string
     ongoingResendResponses: ArrayMultimap<string,HistoricalDataResponse> = new ArrayMultimap()
+    streamrClient: StreamrClient
 
     constructor(
         streamFetcher: StreamFetcher,
@@ -45,16 +44,13 @@ export class RequestHandler {
         streams: StreamStateManager<Connection>,
         subscriptionManager: SubscriptionManager,
         metrics: Metrics,
-        storageNodeRegistry: StorageNodeRegistry,
-        streamrUrl: string
+        streamrClient: StreamrClient
     ) {
         this.streamFetcher = streamFetcher
         this.publisher = publisher
         this.streams = streams
         this.subscriptionManager = subscriptionManager
         this.metrics = metrics
-        this.storageNodeRegistry = storageNodeRegistry,
-        this.streamrUrl = streamrUrl
         this.metrics.addQueriedMetric('numOfOngoingResends', () => this.ongoingResendResponses.size)
         this.metrics.addQueriedMetric('meanAgeOfOngoingResends', () => {
             if (this.ongoingResendResponses.size > 0) {
@@ -69,6 +65,7 @@ export class RequestHandler {
                 return 0
             }
         })
+        this.streamrClient = streamrClient
     }
 
     handleRequest(connection: Connection, request: ControlMessage): Promise<any> {
@@ -104,7 +101,8 @@ export class RequestHandler {
             // This can be removed when support for unsigned messages is dropped!
             if (!streamMessage.signature) {
                 // checkPermission is cached
-                await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(), request.sessionToken, 'stream_publish')
+                await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(),
+                    streamMessage.getPublisherId(), StreamPermission.PUBLISH)
             }
 
             await this.publisher.validateAndPublish(streamMessage)
@@ -141,7 +139,7 @@ export class RequestHandler {
         await this.validateSubscribeOrResendRequest(request)
         let streamingStorageData
         try {
-            const response = await createHistoricalDataResponse(request, this.storageNodeRegistry)
+            const response = await createHistoricalDataResponse(request, this.streamrClient)
             streamingStorageData = response.data
             this.ongoingResendResponses.put(connection.id, response)
         } catch (e: any) {
@@ -346,13 +344,12 @@ export class RequestHandler {
         }
     }
 
+    // TODO rename method
     private async validateSubscribeOrResendRequest(request: SubscribeRequest|ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
         if (Utils.StreamMessageValidator.isKeyExchangeStream(request.streamId)) {
             if (request.streamPartition !== 0) {
                 throw new Error(`Key exchange streams only have partition 0. Tried to subscribe to ${request.streamId}:${request.streamPartition}`)
             }
-        } else {
-            await this.streamFetcher.checkPermission(request.streamId, request.sessionToken, 'stream_subscribe')
         }
     }
 

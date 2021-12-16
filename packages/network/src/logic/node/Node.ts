@@ -73,6 +73,7 @@ export class Node extends EventEmitter {
     private readonly propagation: Propagation
     private readonly trackerManager: TrackerManager
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
+    private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
@@ -88,8 +89,8 @@ export class Node extends EventEmitter {
         this.started = new Date().toLocaleString()
         this.acceptProxyConnections = opts.acceptProxyConnections || false
 
-        const metricsContext = opts.metricsContext || new MetricsContext('')
-        this.metrics = metricsContext.create('node')
+        this.metricsContext = opts.metricsContext || new MetricsContext('')
+        this.metrics = this.metricsContext.create('node')
             .addRecordedMetric('onDataReceived')
             .addRecordedMetric('onDataReceived:invalidNumbering')
             .addRecordedMetric('onDataReceived:gapMismatch')
@@ -350,5 +351,9 @@ export class Node extends EventEmitter {
 
     getNodeId(): NodeId {
         return this.peerInfo.peerId
+    }
+
+    getMetricsContext(): MetricsContext {
+        return this.metricsContext
     }
 }

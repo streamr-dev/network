@@ -1,8 +1,11 @@
-import StreamrClient, { Stream } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Wallet } from '@ethersproject/wallet'
+import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
+import { Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, fastPrivateKey, createClient, createTestStream } from '../utils'
+import { startBroker, createClient, createTestStream, getPrivateKey, startTestTracker } from '../utils'
+
+jest.setTimeout(30000)
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -11,41 +14,39 @@ const wsPort = 17713
 describe('local propagation', () => {
     let tracker: Tracker
     let broker: Broker
-    const privateKey = fastPrivateKey()
+    let privateKey: string
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream: Stream
     let freshStreamId: string
+    let brokerWallet: Wallet
 
-    beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
-            },
-            id: 'tracker-1'
-        })
+    beforeAll(async () => {
+        privateKey = await getPrivateKey()
+        tracker = await startTestTracker(trackerPort)
+        brokerWallet = new Wallet(await getPrivateKey())
 
         broker = await startBroker({
             name: 'broker1',
-            privateKey: '0xfe77283a570fda0e581897b18d65632c438f0d00f9440183119c1b7e4d5275e1',
+            privateKey: brokerWallet.privateKey,
             trackerPort,
             httpPort,
             wsPort
         })
 
-        client1 = createClient(tracker, privateKey)
-        client2 = createClient(tracker, privateKey)
+        client1 = await createClient(tracker, privateKey)
+        client2 = await createClient(tracker, privateKey)
     })
 
     beforeEach(async () => {
         freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
+        await freshStream.grantUserPermission(StreamPermission.PUBLISH, brokerWallet.address)
 
         await wait(3000)
-    }, 10 * 1000)
+    })
 
-    afterEach(async () => {
+    afterAll(async () => {
         await Promise.all([
             tracker.stop(),
             client1.destroy(),

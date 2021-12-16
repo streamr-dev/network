@@ -1,20 +1,23 @@
 import { wait } from 'streamr-test-utils'
-import { getPublishTestMessages, fakePrivateKey, snapshot, LeaksDetector } from '../utils'
+import { getPublishTestMessages, getPrivateKey, snapshot, LeaksDetector } from '../utils'
 import { StreamrClient, initContainer, Dependencies } from '../../src/StreamrClient'
-import { container } from 'tsyringe'
+import { container, DependencyContainer } from 'tsyringe'
 import Subscription from '../../src/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
 import clientOptions from './config'
+import { StrictBrubeckClientConfig } from '../../src/Config'
+import { ethers } from 'ethers'
 
 const MAX_MESSAGES = 5
-const TIMEOUT = 120000
+const TIMEOUT = 30000
 describe('MemoryLeaks', () => {
     let leaksDetector: LeaksDetector
 
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
         leaksDetector.ignoreAll(container)
+        leaksDetector.ignoreAll(ethers)
         snapshot()
     })
 
@@ -29,18 +32,24 @@ describe('MemoryLeaks', () => {
     }, TIMEOUT)
 
     describe('client container', () => {
-        function createContainer(opts: any = {}) {
-            return initContainer({
-                ...clientOptions,
-                auth: {
-                    privateKey: fakePrivateKey(),
-                },
-                autoConnect: false,
-                autoDisconnect: false,
-                maxRetries: 2,
-                ...opts,
-            })
-        }
+        let createContainer: Function
+        beforeAll(() => {
+            createContainer = async (opts: any = {}): Promise<{
+                config: StrictBrubeckClientConfig;
+                childContainer: DependencyContainer;
+                rootContext: any;}> => {
+                return initContainer({
+                    ...clientOptions,
+                    auth: {
+                        privateKey: await getPrivateKey(),
+                    },
+                    autoConnect: false,
+                    autoDisconnect: false,
+                    maxRetries: 2,
+                    ...opts,
+                })
+            }
+        })
 
         /* Uncomment to debug get all failure
         for (const [key, value] of Object.entries(Dependencies)) {
@@ -62,11 +71,11 @@ describe('MemoryLeaks', () => {
         */
 
         test('container get all', async () => {
-            const { config, childContainer, rootContext } = createContainer()
+            const { config, childContainer, rootContext } = await createContainer()
             const toStop = []
-            const destroySignal = childContainer.resolve<any>(Dependencies.DestroySignal)
+            const destroySignal = childContainer.resolve(Dependencies.DestroySignal)
             for (const [key, value] of Object.entries(Dependencies)) {
-                const result = childContainer.resolve<any>(value as any)
+                const result = childContainer.resolve(value as any)
                 expect(result).toBeTruthy()
 
                 if (result && typeof result.stop === 'function') {
@@ -86,38 +95,41 @@ describe('MemoryLeaks', () => {
     })
 
     describe('StreamrClient', () => {
-        const createClient = (opts: any = {}) => {
-            const c = new StreamrClient({
-                ...clientOptions,
-                auth: {
-                    privateKey: fakePrivateKey(),
-                },
-                autoConnect: false,
-                autoDisconnect: false,
-                maxRetries: 2,
-                ...opts,
-            })
-            // ignore stuff captured by leaking network node
-            leaksDetector.ignoreAll(c.options.storageNodeRegistry)
-            leaksDetector.ignoreAll(c.options.network)
-            return c
-        }
+        let createClient: Function
+        beforeAll(() => {
+            createClient = async (opts: any = {}) => {
+                const c = new StreamrClient({
+                    ...clientOptions,
+                    auth: {
+                        privateKey: await getPrivateKey(),
+                    },
+                    autoConnect: false,
+                    autoDisconnect: false,
+                    maxRetries: 2,
+                    ...opts,
+                })
+                // ignore stuff captured by leaking network node
+                leaksDetector.ignoreAll(c.options.storageNodeRegistry)
+                leaksDetector.ignoreAll(c.options.network)
+                return c
+            }
+        })
 
         describe('with client', () => {
             test('creating client', async () => {
-                const client = createClient()
+                const client = await createClient()
                 leaksDetector.addAll(client.id, client)
             })
 
             test('connect + destroy', async () => {
-                const client = createClient()
+                const client = await createClient()
                 await client.connect()
                 leaksDetector.addAll(client.id, client)
                 await client.destroy()
             })
 
             test('connect + destroy + session token', async () => {
-                const client = createClient()
+                const client = await createClient()
                 await client.connect()
                 leaksDetector.addAll(client.id, client)
                 await client.getSessionToken()
@@ -125,7 +137,7 @@ describe('MemoryLeaks', () => {
             })
 
             test('connect + disconnect + getAddress', async () => {
-                const client = createClient()
+                const client = await createClient()
                 await client.connect()
                 await client.getSessionToken()
                 await client.getAddress()
@@ -138,10 +150,9 @@ describe('MemoryLeaks', () => {
             let client: StreamrClient
 
             beforeEach(async () => {
-                client = createClient()
+                client = await createClient()
                 leaksDetector.addAll(client.id, client)
                 await client.connect()
-                await client.getSessionToken()
             })
 
             afterEach(async () => {
@@ -153,14 +164,14 @@ describe('MemoryLeaks', () => {
 
             test('create', async () => {
                 await client.createStream({
-                    id: `/${counterId('stream')}`,
+                    id: `/${counterId('stream')}-${Date.now()}`,
                     requireSignedData: true,
                 })
             })
 
             test('publish', async () => {
                 const stream = await client.createStream({
-                    id: `/${counterId('stream')}`,
+                    id: `/${counterId('stream')}-${Date.now()}`,
                     requireSignedData: true,
                 })
                 const publishTestMessages = getPublishTestMessages(client, stream, {
@@ -176,7 +187,7 @@ describe('MemoryLeaks', () => {
             describe('publish + subscribe', () => {
                 it('does not leak subscription', async () => {
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}`,
+                        id: `/${counterId('stream')}-${Date.now()}`,
                         requireSignedData: true,
                     })
                     const sub = await client.subscribe(stream)
@@ -190,7 +201,7 @@ describe('MemoryLeaks', () => {
 
                 test('subscribe using async iterator', async () => {
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}`,
+                        id: `/${counterId('stream')}-${Date.now()}`,
                         requireSignedData: true,
                     })
                     const sub = await client.subscribe(stream)
@@ -212,7 +223,7 @@ describe('MemoryLeaks', () => {
 
                 test('subscribe using onMessage callback', async () => {
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}`,
+                        id: `/${counterId('stream')}-${Date.now()}`,
                         requireSignedData: true,
                     })
 
@@ -238,7 +249,7 @@ describe('MemoryLeaks', () => {
                 test('subscriptions can be collected before all subscriptions removed', async () => {
                     // leaksDetector = new LeaksDetector()
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}`,
+                        id: `/${counterId('stream')}-${Date.now()}`,
                         requireSignedData: true,
                     })
 

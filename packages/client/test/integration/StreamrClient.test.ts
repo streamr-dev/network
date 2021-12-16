@@ -13,7 +13,8 @@ import {
     getWaitForStorage,
     publishManyGenerator,
     describeRepeats,
-    createRelativeTestStreamId
+    createRelativeTestStreamId,
+    until
 } from '../utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
@@ -21,7 +22,10 @@ import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
 
 import { Stream } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
+import { storageNodeTestConfig } from './devEnvironment'
+// import Subscription from '../../src/brubeck/Subscription'
+
+jest.setTimeout(60000)
 
 const { StreamMessage } = MessageLayer
 
@@ -67,7 +71,7 @@ describeRepeats('StreamrClient', () => {
             requireSignedData,
             ...opts,
         })
-
+        await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
         expect(s.id).toBeTruthy()
         expect(s.name).toEqual(name)
         expect(s.requireSignedData).toBe(requireSignedData)
@@ -75,11 +79,8 @@ describeRepeats('StreamrClient', () => {
     }
 
     beforeEach(async () => {
-        client = createClient()
-        await Promise.all([
-            client.getSessionToken(),
-            client.connect(),
-        ])
+        client = await createClient()
+        await client.connect()
         stream = await createStream()
         publishTestMessages = getPublishTestMessages(client, stream)
         expect(onError).toHaveBeenCalledTimes(0)
@@ -428,7 +429,7 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('destroying stops publish', async () => {
-            const subscriber = createClient({
+            const subscriber = await createClient({
                 auth: client.options.auth,
             })
             const sub = await subscriber.subscribe({
@@ -467,7 +468,7 @@ describeRepeats('StreamrClient', () => {
                 await publishTask
             }).rejects.toThrow('publish')
             expect(received.map((s) => s.getParsedContent())).toEqual(published.slice(0, 3))
-            expect(onMessage).toHaveBeenCalledTimes(3)
+            return expect(onMessage).toHaveBeenCalledTimes(3)
         })
 
         it('destroying resolves publish promises', async () => {
@@ -475,7 +476,7 @@ describeRepeats('StreamrClient', () => {
             // can't yet reliably publish messages then disconnect and know
             // that subscriber will actually get something.
             // Probably needs to wait for propagation.
-            const subscriber = createClient({
+            const subscriber = await createClient({
                 auth: client.options.auth,
             })
 
@@ -533,7 +534,13 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('decodes resent messages correctly', async () => {
-            await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+            // const storageNodeClient = await createClient({ auth: {
+            //     privateKey: storageNodeTestConfig.privatekey
+            // } })
+            // await storageNodeClient.setNode(storageNodeTestConfig.url)
+            await stream.addToStorageNode(storageNodeTestConfig.address)// use actual storage nodes Address, actually register it
+            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeTestConfig.address) }, 100000, 1000)
+
             const publishedMessage = Msg({
                 content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
             })
@@ -548,7 +555,7 @@ describeRepeats('StreamrClient', () => {
             })
             const messages = await sub.collectContent()
             expect(messages).toEqual([publishedMessage])
-        }, 20000)
+        })
     })
 })
 

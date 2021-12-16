@@ -1,10 +1,12 @@
-import fetch from 'node-fetch'
 import { Logger } from 'streamr-network'
 import { StreamMessage, keyToArrayIndex, SPID, SPIDKey } from 'streamr-client-protocol'
 import { SubscriptionManager } from '../../SubscriptionManager'
+import StreamrClient from 'streamr-client'
+import { EthereumStorageEvent } from 'streamr-client/dist/types/src/NodeRegistry'
 
 const logger = new Logger(module)
 
+let skipPollResultSoonAfterEvent = false
 export interface StorageConfigListener {
     onSPIDAdded: (spid: SPID) => void
     onSPIDRemoved: (spid: SPID) => void
@@ -35,29 +37,29 @@ export class StorageConfig {
     clusterId: string
     clusterSize: number
     myIndexInCluster: number
-    apiUrl: string
     private poller!: ReturnType<typeof setTimeout>
     private stopPoller: boolean
+    streamrClient: StreamrClient
 
     // use createInstance method instead: it fetches the up-to-date config from API
-    constructor(clusterId: string, clusterSize: number, myIndexInCluster: number, apiUrl: string) {
+    constructor(clusterId: string, clusterSize: number, myIndexInCluster: number, streamrClient: StreamrClient) {
         this.spidKeys = new Set<SPIDKey>()
         this.listeners = []
         this.clusterId = clusterId
         this.clusterSize = clusterSize
         this.myIndexInCluster = myIndexInCluster
-        this.apiUrl = apiUrl
         this.stopPoller = false
+        this.streamrClient = streamrClient
     }
 
     static async createInstance(
         clusterId: string,
         clusterSize: number,
         myIndexInCluster: number,
-        apiUrl: string,
-        pollInterval: number
+        pollInterval: number,
+        streamrClient: StreamrClient
     ): Promise<StorageConfig> {
-        const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, apiUrl)
+        const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, streamrClient)
         // eslint-disable-next-line no-underscore-dangle
         if (pollInterval !== 0) {
             await instance.poll(pollInterval)
@@ -102,21 +104,14 @@ export class StorageConfig {
     }
 
     async refresh(): Promise<void> {
-        const res = await fetch(`${this.apiUrl}/storageNodes/${this.clusterId}/streams`)
-        if (!res.ok) {
-            throw new Error(`Refresh failed: ${res.status} ${await res.text()}`)
-        }
-        const json = await res.json()
-        if (!Array.isArray(json)) {
-            throw new Error(`Invalid response. Refresh failed: ${json}`)
-        }
+        const streamsToStore = await this.streamrClient.getStoredStreamsOf(this.clusterId)
+        if (!skipPollResultSoonAfterEvent) {
 
-        const spidKeys = new Set<SPIDKey>(
-            json.flatMap((stream: { id: string, partitions: number }) => ([
+            const spidKeys = new Set<SPIDKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
                 ...getSPIDKeys(stream.id, stream.partitions)
-            ])).filter ((key: SPIDKey) => this.belongsToMeInCluster(key))
-        )
-        this.setSPIDKeys(spidKeys)
+            ])).filter ((key: SPIDKey) => this.belongsToMeInCluster(key)))
+            this.setSPIDKeys(spidKeys)
+        }
     }
 
     private setSPIDKeys(newKeys: Set<SPIDKey>): void {
@@ -239,6 +234,34 @@ export class StorageConfig {
         subscriptionManager.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         subscriptionManager.unsubscribe(assignmentStreamId, 0)
+    }
+
+    async startChainEventsListener(): Promise<void> {
+        const clientAddress = (await this.streamrClient.getAddress()).toLowerCase()
+        this.streamrClient.registerStorageEventListener(
+            async (event: EthereumStorageEvent) => {
+                skipPollResultSoonAfterEvent = true
+                if (event.nodeAddress.toLowerCase() !== clientAddress) { return }
+                const stream = await this.streamrClient.getStream(event.streamId)
+                const streamKeys = new Set(
+                    getSPIDKeys(stream.id, stream.partitions)
+                        .filter ((key: SPIDKey) => this.belongsToMeInCluster(key))
+                )
+                if (event.type === 'added') {
+                    this.addSPIDKeys(streamKeys)
+                }
+                if (event.type === 'removed') {
+                    this.removeSPIDKeys(streamKeys)
+                }
+                setTimeout(() => {
+                    skipPollResultSoonAfterEvent = false
+                }, 10000)
+            }
+        )
+    }
+
+    stopChainEventsListener(): Promise<void> {
+        return this.streamrClient.unRegisterStorageEventListeners()
     }
 
     private getAssignmentStreamId(streamrAddress: string) {

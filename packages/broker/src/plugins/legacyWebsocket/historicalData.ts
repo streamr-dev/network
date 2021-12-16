@@ -4,10 +4,10 @@ import fetch from 'node-fetch'
 import { StreamMessage, ControlMessage, ResendLastRequest, ResendFromRequest, ResendRangeRequest } from 'streamr-client-protocol'
 import AbortController from 'abort-controller'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../storage/DataQueryEndpoints'
-import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { GenericError } from '../../errors/GenericError'
 import { formAuthorizationHeader } from '../../helpers/authentication'
 import { Logger } from "streamr-network"
+import { StreamrClient } from "streamr-client"
 
 export interface HistoricalDataResponse {
     data: NodeJS.ReadableStream
@@ -61,9 +61,13 @@ const getDataQueryEndpointUrl = (request: ResendFromRequest|ResendLastRequest|Re
 
 export const createResponse = async (
     request: ResendFromRequest|ResendLastRequest|ResendRangeRequest,
-    storageNodeRegistry: StorageNodeRegistry
+    client: StreamrClient
 ): Promise<HistoricalDataResponse> => {
-    const storageNodeUrls = await storageNodeRegistry.getUrlsByStreamId(request.streamId)
+    const stream = await client.getStream(request.streamId)
+    const storageNodeAddresses = await stream.getStorageNodes()
+    const storageNodeUrls = storageNodeAddresses.map(async (nodeAddress) => {
+        await client.getStorageNodeUrl(nodeAddress)
+    })
 
     // Form data query endpoints and shuffle the resulting array
     const urls = storageNodeUrls.map((storageNodeUrl) => {

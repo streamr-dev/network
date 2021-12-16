@@ -25,10 +25,9 @@ describe('Publish only connection tests', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30353
-            },
-            id: 'tracker'
+            }
         })
-        trackerInfo = {id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl()}
+        trackerInfo = tracker.getConfigRecord()
         contactNode = createNetworkNode({
             id: 'contact-node',
             trackers: [trackerInfo],

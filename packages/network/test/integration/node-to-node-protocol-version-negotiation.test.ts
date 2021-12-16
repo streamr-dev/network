@@ -29,14 +29,13 @@ describe('Node-to-Node protocol version negotiation', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 28680
-            },
-            id: 'tracker'
+            }
         })
 
         const peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31])
         const peerInfo2 = new PeerInfo('node-endpoint2', PeerType.Node, [1, 2], [31, 32, 33])
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
-        const trackerPeerInfo = PeerInfo.newTracker('tracker')
+        const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
         const wsEp1 = new NodeClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
         const wsEp2 = new NodeClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
@@ -80,7 +79,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         nodeToNode1 = new NodeToNode(ep1)
         nodeToNode2 = new NodeToNode(ep2)
 
-        await runAndWaitForEvents(()=> {nodeToNode1.connectToNode('node-endpoint2', 'tracker')}, [
+        await runAndWaitForEvents(()=> {nodeToNode1.connectToNode('node-endpoint2', tracker.getTrackerId())}, [
             [nodeToNode1, ntnEvent.NODE_CONNECTED],
             [nodeToNode2, ntnEvent.NODE_CONNECTED]
         ])
@@ -132,8 +131,8 @@ describe('Node-to-Node protocol version negotiation', () => {
         let errors = 0
         try {
             await Promise.all([
-                ep3.connect('node-endpoint1', 'tracker'),
-                ep1.connect('node-endpoint3', 'tracker')
+                ep3.connect('node-endpoint1', tracker.getTrackerId()),
+                ep1.connect('node-endpoint3', tracker.getTrackerId())
             ])
         } catch (err) {
             errors += 1

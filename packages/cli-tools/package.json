@@ -33,7 +33,7 @@
     "easy-table": "^1.1.1",
     "ethers": "^5.4.7",
     "event-stream": "^4.0.1",
-    "streamr-client": "^6.0.0-alpha.19"
+   "streamr-client": "^6.1.0-ocr-experimental.12"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",

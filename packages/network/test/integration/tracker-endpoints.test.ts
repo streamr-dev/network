@@ -43,18 +43,15 @@ describe('tracker endpoint', () => {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },
-            id: 'tracker',
             attachHttpEndpoints: true
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
         nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             location: {
                 country: 'CH',
-                city: 'Zug',
-                latitude: null,
-                longitude: null
+                city: 'Zug'
             }
         })
         nodeTwo = createNetworkNode({
@@ -62,9 +59,7 @@ describe('tracker endpoint', () => {
             trackers: [trackerInfo],
             location: {
                 country: 'FI',
-                city: 'Helsinki',
-                latitude: null,
-                longitude: null
+                city: 'Helsinki'
             }
         })
         nodeTwo.setExtraMetadata({
@@ -288,15 +283,11 @@ describe('tracker endpoint', () => {
         expect(jsonResult).toEqual({
             'node-1': {
                 country: 'CH',
-                city: 'Zug',
-                latitude: null,
-                longitude: null
+                city: 'Zug'
             },
             'node-2': {
                 country: 'FI',
-                city: 'Helsinki',
-                latitude: null,
-                longitude: null
+                city: 'Helsinki'
             }
         })
     })
@@ -306,9 +297,7 @@ describe('tracker endpoint', () => {
         expect(status).toEqual(200)
         expect(jsonResult).toEqual({
             country: 'CH',
-            city: 'Zug',
-            latitude: null,
-            longitude: null
+            city: 'Zug'
         })
     })
 
@@ -321,7 +310,7 @@ describe('tracker endpoint', () => {
     it('/metrics/', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/metrics/`)
         expect(status).toEqual(200)
-        expect(jsonResult.peerId).toEqual('tracker')
+        expect(jsonResult.peerId).toEqual(tracker.getTrackerId())
         expect(jsonResult.startTime).toBeGreaterThan(1600000000000)
         expect(jsonResult.metrics).not.toBeUndefined()
     })

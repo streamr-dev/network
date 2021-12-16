@@ -17,8 +17,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 32400
-            },
-            id: 'tracker'
+            }
         })
 
         const trackerInfo = tracker.getConfigRecord()

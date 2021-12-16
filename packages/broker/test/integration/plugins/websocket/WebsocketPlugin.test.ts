@@ -4,6 +4,8 @@ import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 import { Queue } from '../../../utils'
 
+jest.setTimeout(30000)
+
 const WEBSOCKET_PORT = 12400
 const LEGACY_WEBSOCKET_PORT = 12401
 const TRACKER_PORT = 12402

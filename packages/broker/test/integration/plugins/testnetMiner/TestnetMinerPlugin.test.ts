@@ -2,13 +2,15 @@ import { Server } from 'http'
 import { once } from 'events'
 import { Wallet } from 'ethers'
 import express, { Request, Response} from 'express'
-import { Logger, startTracker, Tracker } from 'streamr-network'
-import { Stream, StreamOperation, StreamrClient } from 'streamr-client'
+import { Logger, Tracker } from 'streamr-network'
+import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { Broker } from '../../../../src/broker'
-import { createClient, createTestStream, fastPrivateKey, startBroker } from '../../../utils'
+import { createClient, createTestStream, startBroker, startTestTracker } from '../../../utils'
 import { version as CURRENT_VERSION } from '../../../../package.json'
+
+jest.setTimeout(30000)
 
 const logger = new Logger(module)
 
@@ -17,7 +19,7 @@ const LEGACY_WEBSOCKET_PORT = 12462
 const CLAIM_SERVER_PORT = 12463
 const MOCK_REWARD_CODE = 'mock-reward-code'
 
-const rewardPublisherPrivateKey = fastPrivateKey()
+const rewardPublisherPrivateKey = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
 
 class MockClaimServer {
 
@@ -51,9 +53,7 @@ class MockClaimServer {
 
 const createRewardStream = async (client: StreamrClient): Promise<Stream> => {
     const stream = await createTestStream(client, module)
-    await Promise.all(
-        [StreamOperation.STREAM_GET, StreamOperation.STREAM_SUBSCRIBE].map((op) => stream.grantPermission(op, undefined))
-    )
+    await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
     return stream
 }
 
@@ -72,14 +72,8 @@ describe('TestnetMinerPlugin', () => {
     }
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            id: 'tracker',
-            listen: {
-                hostname: '127.0.0.1',
-                port: TRACKER_PORT
-            },
-        })
-        client = createClient(tracker, rewardPublisherPrivateKey)
+        tracker = await startTestTracker(TRACKER_PORT)
+        client = await createClient(tracker, rewardPublisherPrivateKey)
         const rewardStream = await createRewardStream(client)
         rewardStreamId = rewardStream.id
         claimServer = new MockClaimServer()
@@ -88,7 +82,6 @@ describe('TestnetMinerPlugin', () => {
         broker = await startBroker({
             name: 'broker',
             privateKey: brokerWallet.privateKey,
-            trackerId: 'tracker',
             trackerPort: TRACKER_PORT,
             wsPort: LEGACY_WEBSOCKET_PORT,
             extraPlugins: {
