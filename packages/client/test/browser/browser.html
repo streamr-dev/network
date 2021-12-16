@@ -60,7 +60,7 @@
         <div id="error"></div>
     </article>
 </body>
-<script>
+<script type="module">
     const onError = ({ message, source, lineno, colno, error, reason }) => {
         document.querySelector('#error').innerHTML = `Error: ${error ? error.stack : reason.stack}`
     }
@@ -73,11 +73,21 @@
     const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v1/ws'
     const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v1'
 
-    const publisherAuth = StreamrClient.generateEthereumAccount()
-    const subscriberAuth = StreamrClient.generateEthereumAccount()
+    async function getPrivateKey() {
+        const response = await fetch('http://localhost:45454/key', { credentials: 'omit' })
+        return response.text()
+    }
+    const publisherAuth = {
+        privateKey: await getPrivateKey()
+    }
+    const subscriberAuth = {
+        privateKey: await getPrivateKey()
+    }
     console.info('Creating streamr client connecting to:', {
         url,
         restUrl,
+        publisherAuth,
+        subscriberAuth
     })
 
     const publisher = new StreamrClient({
@@ -92,93 +102,91 @@
     })
     publisher.enableDebugLogging()
     subscriber.enableDebugLogging()
-</script>
-<script>
-let stream
-let messages = []
+    let stream
+    let messages = []
 
-const resetResults = () => {
-    $('#result').html('')
-    $('#error').html('')
-}
-
-
-$('#connect').on('click', async () => {
-    resetResults()
-    await publisher.connect()
-    await subscriber.connect()
-    $('#result').html('connected')
-})
-
-$('#create').on('click', async () => {
-    resetResults()
-    stream = await publisher.createStream({
-        id: '/' + streamName,
-        requireEncryptedData: true,
-    })
-    $('#result').html(stream.name)
-})
-
-$('#store').on('click', async () => {
-    resetResults()
-    await stream.addToStorageNode(StreamrClient.StorageNode.STREAMR_DOCKER_DEV)
-    $('#result').html(JSON.stringify(await stream.getStorageNodes()))
-})
-
-$('#permissions').on('click', async () => {
-    resetResults()
-    await stream.grantUserPermissions([
-        StreamrClient.StreamOperation.STREAM_GET,
-        StreamrClient.StreamOperation.STREAM_SUBSCRIBE
-    ], await subscriber.getAddress())
-    $('#result').html(JSON.stringify(await stream.getUserPermissions(await subscriber.getAddress())))
-})
-
-$('#subscribe').on('click', async () => {
-    resetResults()
-    await subscriber.subscribe({
-        stream: stream.id
-    }, (message, metadata) => {
-        console.log({ message, metadata })
-        messages.push(message)
-    })
-    $('#result').html('subscribed')
-})
-
-$('#publish').on('click', async () => {
-    resetResults()
-    for (let i = 0; i < 10; i++) {
-        const msg = {
-            msg: i
-        }
-        await publisher.publish(stream.id, msg)
+    const resetResults = () => {
+        $('#result').html('')
+        $('#error').html('')
     }
 
-    setTimeout(() => $('#result').html(JSON.stringify(messages)), 6000)
-})
 
-$('#resend').on('click', async () => {
-    resetResults()
-    messages = []
-
-    const sub = await subscriber.resend({
-        stream: stream.id,
-        resend: {
-            last: 10,
-        },
-    }, (message) => {
-        messages.push(message)
+    $('#connect').on('click', async () => {
+        resetResults()
+        await publisher.connect()
+        await subscriber.connect()
+        $('#result').html('connected')
     })
 
-    sub.onConsumed(() => {
-        $('#result').html('Resend: ' + JSON.stringify(messages))
+    $('#create').on('click', async () => {
+        resetResults()
+        stream = await publisher.createStream({
+            id: '/' + streamName,
+            requireEncryptedData: true,
+        })
+        $('#result').html(stream.name)
     })
-})
 
-$('#disconnect').on('click', async () => {
-    await publisher.disconnect()
-    await subscriber.disconnect()
-    $('#result').html('disconnected')
-})
+    $('#store').on('click', async () => {
+        resetResults()
+        await stream.addToStorageNode(StreamrClient.StorageNode.STREAMR_DOCKER_DEV)
+        $('#result').html(JSON.stringify(await stream.getStorageNodes()))
+    })
+
+    $('#permissions').on('click', async () => {
+        resetResults()
+        await stream.grantUserPermissions([
+            StreamrClient.StreamOperation.STREAM_GET,
+            StreamrClient.StreamOperation.STREAM_SUBSCRIBE
+        ], await subscriber.getAddress())
+        $('#result').html(JSON.stringify(await stream.getUserPermissions(await subscriber.getAddress())))
+    })
+
+    $('#subscribe').on('click', async () => {
+        resetResults()
+        await subscriber.subscribe({
+            stream: stream.id
+        }, (message, metadata) => {
+            console.log({ message, metadata })
+            messages.push(message)
+        })
+        $('#result').html('subscribed')
+    })
+
+    $('#publish').on('click', async () => {
+        resetResults()
+        for (let i = 0; i < 10; i++) {
+            const msg = {
+                msg: i
+            }
+            await publisher.publish(stream.id, msg)
+        }
+
+        setTimeout(() => $('#result').html(JSON.stringify(messages)), 6000)
+    })
+
+    $('#resend').on('click', async () => {
+        resetResults()
+        messages = []
+
+        const sub = await subscriber.resend({
+            stream: stream.id,
+            resend: {
+                last: 10,
+            },
+        }, (message) => {
+            messages.push(message)
+        })
+
+        sub.onConsumed(() => {
+            $('#result').html('Resend: ' + JSON.stringify(messages))
+        })
+    })
+
+    $('#disconnect').on('click', async () => {
+        await publisher.disconnect()
+        await subscriber.disconnect()
+        $('#result').html('disconnected')
+    })
 </script>
 </html>
