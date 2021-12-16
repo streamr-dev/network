@@ -2,7 +2,7 @@
  * Public Resend + Subscribe APIs
  */
 
-import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
+import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 import SubscriptionSession from './SubscriptionSession'
@@ -20,7 +20,7 @@ export class ResendSubscription<T> extends Subscription<T> {
     private orderMessages
     constructor(
         subSession: SubscriptionSession<T>,
-        private resends: Resends,
+        @inject(delay(() => Resends)) private resends: Resends,
         private resendOptions: ResendOptionsStrict,
         container: DependencyContainer
     ) {
