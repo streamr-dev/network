@@ -120,25 +120,22 @@
 
     $('#create').on('click', async () => {
         resetResults()
-        stream = await publisher.createStream({
+        stream = await publisher.getOrCreateStream({
             id: '/' + streamName,
             requireEncryptedData: true,
         })
-        $('#result').html(stream.name)
+        $('#result').html(stream.id)
     })
 
     $('#store').on('click', async () => {
         resetResults()
-        await stream.addToStorageNode(StreamrClient.StorageNode.STREAMR_DOCKER_DEV)
+        await stream.addToStorageNode('0xde1112f631486CfC759A50196853011528bC5FA0')
         $('#result').html(JSON.stringify(await stream.getStorageNodes()))
     })
 
     $('#permissions').on('click', async () => {
         resetResults()
-        await stream.grantUserPermissions([
-            StreamrClient.StreamOperation.STREAM_GET,
-            StreamrClient.StreamOperation.STREAM_SUBSCRIBE
-        ], await subscriber.getAddress())
+        await stream.setPermissionsForUser(await subscriber.getAddress(), false, false, false, true, false)
         $('#result').html(JSON.stringify(await stream.getUserPermissions(await subscriber.getAddress())))
     })
 
@@ -162,7 +159,7 @@
             await publisher.publish(stream.id, msg)
         }
 
-        setTimeout(() => $('#result').html(JSON.stringify(messages)), 6000)
+        setTimeout(() => $('#result').html(JSON.stringify(messages)), 10000)
     })
 
     $('#resend').on('click', async () => {
