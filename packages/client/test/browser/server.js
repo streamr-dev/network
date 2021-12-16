@@ -3,6 +3,7 @@ const path = require('path')
 const express = require('express')
 
 const app = express()
+const keyserver = require('../keyserver')
 
 // viewed at http://localhost:8880
 app.use('/static', express.static(path.join(__dirname, '/../../dist')))
@@ -24,4 +25,7 @@ app.get('/', (req, res) => {
 
 server = app.listen(8880, () => {
     console.info('Browser Test Server: Listening on ', server.address())
+})
+server.once('close', () => {
+    keyserver?.close()
 })
