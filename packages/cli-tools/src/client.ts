@@ -15,7 +15,18 @@ const getClientConfig = (commandLineArgs: GlobalCommandLineArgs, overridenOption
     )
 }
 
+const addInterruptHandler = (client: StreamrClient) => {
+    process.on('SIGINT', async () => {
+        try {
+            await client.destroy()
+        } catch {}
+        process.exit()
+    })
+}
+
 export const createClient = (commandLineArgs: GlobalCommandLineArgs, overridenOptions: BrubeckClientConfig = {}): StreamrClient => {
     const config = getClientConfig(commandLineArgs, overridenOptions)
-    return new StreamrClient(config)
+    const client = new StreamrClient(config)
+    addInterruptHandler(client)
+    return client
 }
