@@ -4,44 +4,98 @@
 <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
 <script src="/static/streamr-client.web.js"></script>
 <style>
-  html {
-      --primary: #515151;
-      --secondary: #FFFFFF;
-      margin: 0;
-      padding: 0;
-  }
+    /* Box sizing rules */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
 
-  body {
-      background: var(--primary);
-      color: var(--secondary);
-      display: grid;
-      grid-template-columns: minmax(300px, auto) 1fr;
-      grid-column-gap: 2rem;
-      font-family: monospace;
-  }
-  button {
-      font-family: monospace;
-      background: var(--secondary);
-      color: var(--primary);
-      font-size: 1.3em;
-      border-radius: 0.5em;
-  }
-  nav {
-      display: grid;
-      grid-row-gap: 1rem;
-      grid-template-columns: auto;
-  }
-  article {
-      display: grid;
-      grid-row-gap: 1rem;
-      grid-template-rows: auto auto;
-  }
+    /* Set core root defaults */
+    html:focus-within {
+        scroll-behavior: smooth;
+    }
 
-  #error {
-      color: #ffb3ba;
-      white-space: pre-wrap;
-  }
+    /* Set core body defaults */
+    body {
+        min-height: 100vh;
+        text-rendering: optimizeSpeed;
+        line-height: 1.5;
+    }
 
+    /* Inherit fonts for inputs and buttons */
+    input,
+    button,
+    textarea,
+    select {
+        font: inherit;
+    }
+
+    html {
+        --primary: #333333;
+        --secondary: #7DBDDB;
+        --c3: #7DBDDB;
+        --c5: #354444;
+        --c6: #343838;
+        --c4: #C4C4C4;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: var(--primary);
+        color: var(--c4);
+        display: grid;
+        grid-template-columns: minmax(300px, auto) 1fr;
+        font-family: monospace;
+    }
+
+    button {
+        font-family: monospace;
+        font-size: 1.3em;
+        text-align: left;
+        text-transform: uppercase;
+        border-radius: 0;
+        appearance: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.1s;
+        background: var(--c5);
+        color: var(--c4);
+        opacity: 0.3;
+        padding: 1rem;
+    }
+
+    button:hover {
+        opacity: 1;
+        color: var(--c3);
+    }
+
+    nav {
+        padding: 1em;
+        display: grid;
+        grid-row-gap: 1rem;
+        grid-template-columns: auto;
+        max-height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    article {
+        white-space: pre-wrap;
+        max-height: 100vh;
+        max-width: 100vw;
+        overflow: auto;
+        background: var(--c6);
+        padding: 0 2rem;
+    }
+
+    .error {
+        color: #ffb3ba;
+        white-space: pre-wrap;
+    }
 </style>
 </head>
 <body>
@@ -55,14 +109,13 @@
         <button id="resend">Resend</button>
         <button id="disconnect">Disconnect</button>
     </nav>
-    <article>
-        <div id="result"></div>
-        <div id="error"></div>
+    <article id="result">
     </article>
 </body>
 <script type="module">
     const onError = ({ message, source, lineno, colno, error, reason }) => {
-        document.querySelector('#error').innerHTML = `Error: ${error ? error.stack : reason.stack}`
+        const err = $(`<div class="error">Error: ${error ? error.stack : reason.stack}</div>`)
+        $('#result').append(err)
     }
 
     window.addEventListener('error', onError)
@@ -78,11 +131,19 @@
         return response.text()
     }
     const publisherAuth = {
-        privateKey: await getPrivateKey()
+        privateKey: urlParams.get('PUBLISHER_KEY') || await getPrivateKey()
     }
     const subscriberAuth = {
-        privateKey: await getPrivateKey()
+        privateKey: urlParams.get('SUBSCRIBE_KEY') || await getPrivateKey()
     }
+
+    if (subscriberAuth.privateKey !==  urlParams.get('SUBSCRIBE_KEY') || publisherAuth.privateKey !== urlParams.get('PUBLISHER_KEY')) {
+        const newURL = new URL(document.URL)
+        newURL.searchParams.set('SUBSCRIBE_KEY', subscriberAuth.privateKey)
+        newURL.searchParams.set('PUBLISHER_KEY', publisherAuth.privateKey)
+        history.pushState({}, document.title, newURL)
+    }
+
     console.info('Creating streamr client connecting to:', {
         url,
         restUrl,
@@ -105,85 +166,95 @@
     let stream
     let messages = []
 
-    const resetResults = () => {
-        $('#result').html('')
-        $('#error').html('')
-    }
-
-
     $('#connect').on('click', async () => {
-        resetResults()
+        $('#result').append($(`<div>Connecting...</div>`))
         await publisher.connect()
         await subscriber.connect()
-        $('#result').html('connected')
+        const connectResult = $('<div class="connectResult">Connected.</div>')
+        $('#result').append(connectResult)
     })
 
     $('#create').on('click', async () => {
-        resetResults()
+        $('#result').append($(`<div>Creating...</div>`))
         stream = await publisher.getOrCreateStream({
             id: '/' + streamName,
             requireEncryptedData: true,
         })
-        $('#result').html(stream.id)
+        const createResult = $(`<div class="createResult">Created: ${stream.id}</div>`)
+        $('#result').append(createResult)
     })
 
     $('#store').on('click', async () => {
-        resetResults()
+        $('#result').append($(`<div>Storing...</div>`))
+        // TODO remove hardcoded address
         await stream.addToStorageNode('0xde1112f631486CfC759A50196853011528bC5FA0')
-        $('#result').html(JSON.stringify(await stream.getStorageNodes()))
+        const storageNodes = await stream.getStorageNodes()
+        const storeResult = $(`<div class="storeResult">Stored: ${JSON.stringify(storageNodes)}</div>`)
+        $('#result').append(storeResult)
     })
 
     $('#permissions').on('click', async () => {
-        resetResults()
+        $('#result').append($(`<div>Setting Permissions...</div>`))
         await stream.setPermissionsForUser(await subscriber.getAddress(), false, false, false, true, false)
-        $('#result').html(JSON.stringify(await stream.getUserPermissions(await subscriber.getAddress())))
+        const permissions = await stream.getUserPermissions(await subscriber.getAddress())
+        const permissionsResult = $(`<div class="permissionsResult">Set Permissions: ${JSON.stringify(permissions)}</div>`)
+        $('#result').append(permissionsResult)
     })
 
     $('#subscribe').on('click', async () => {
-        resetResults()
+        $('#result').append($(`<div>Subscribing...</div>`))
         await subscriber.subscribe({
             stream: stream.id
         }, (message, metadata) => {
             console.log({ message, metadata })
             messages.push(message)
+            $('#result').append($(`<div class="realtime-msg">Received: ${JSON.stringify(message)}</div>`))
+            if (messages.length === 10) {
+                $('#result').append($(`<div class="messagesResult">${JSON.stringify(messages)}</div>`))
+            }
         })
-        $('#result').html('subscribed')
+        const subscribeResult = $(`<div class="subscribeResult">Subscribed</div>`)
+        $('#result').append(subscribeResult)
     })
 
     $('#publish').on('click', async () => {
-        resetResults()
+        $('#result').append($(`<div>Publishing Messages...</div>`))
         for (let i = 0; i < 10; i++) {
             const msg = {
                 msg: i
             }
+            $('#result').append($(`<div>Publishing ${i} of ${10}...</div>`))
             await publisher.publish(stream.id, msg)
+            $('#result').append($(`<div>Published ${i} of ${10}.</div>`))
         }
-
-        setTimeout(() => $('#result').html(JSON.stringify(messages)), 10000)
+        $('#result').append($(`<div class="publishResult">Published All Messages</div>`))
     })
 
     $('#resend').on('click', async () => {
-        resetResults()
         messages = []
+        $('#result').append($(`<div>Resending...</div>`))
 
         const sub = await subscriber.resend({
             stream: stream.id,
-            resend: {
-                last: 10,
-            },
-        }, (message) => {
+            last: 10,
+        })
+        sub.onMessage((message) => {
             messages.push(message)
+            $('#result').append($(`<div>Received Resent: ${JSON.stringify(message)}</div>`))
+            if (messages.length === 10) {
+                $('#result').append($(`<div class="resendMessagesResult">${JSON.stringify(messages)}</div>`))
+            }
         })
 
         sub.onConsumed(() => {
-            $('#result').html('Resend: ' + JSON.stringify(messages))
+            $('#result').append($(`<div class="resendResult">Resend Consumed</div>`))
         })
     })
 
     $('#disconnect').on('click', async () => {
         await publisher.disconnect()
         await subscriber.disconnect()
-        $('#result').html('disconnected')
+        $('#result').append($(`<div class="disconnectResult">Disconnected</div>`))
     })
 </script>
 </html>
