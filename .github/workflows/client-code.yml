@@ -77,8 +77,7 @@ jobs:
       matrix:
         node-version: [16.x]
         test-name: [
-          "test-integration-no-resend",
-          "test-integration-resend",
+          "test-integration",
         ]
         websocket-url:
           - name: "default"
