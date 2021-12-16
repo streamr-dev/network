@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - can read config from `~/.streamr/config/default.json`
   - `--config` argument added
   - `--stg`, `--http-url` and `--ws-url` arguments removed
+- Rename `--config` argument to `--stream-config` in `stream create`
 
 ## [5.0.0] - 2021-05-05
 ### Added

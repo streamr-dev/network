@@ -7,7 +7,7 @@ createClientCommand(async (client: StreamrClient, streamIdOrPath: string, option
     const body: any = {
         id: streamIdOrPath,
         description: options.description,
-        config: options.config,
+        config: options.streamConfig,
         partitions: options.partitions
     }
     const stream = await client.createStream(body)
@@ -16,7 +16,7 @@ createClientCommand(async (client: StreamrClient, streamIdOrPath: string, option
     .arguments('<streamId>')
     .description('create a new stream')
     .option('-d, --description <description>', 'define a description')
-    .option('-c, --config <config>', 'define a configuration as JSON', (s: string) => JSON.parse(s))
+    .option('-c, --stream-config <config>', 'define a configuration as JSON', (s: string) => JSON.parse(s))
     .option('-p, --partitions <count>', 'define a partition count',
         createFnParseInt('--partitions'))
     .parseAsync()
