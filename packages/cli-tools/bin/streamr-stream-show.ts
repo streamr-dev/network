@@ -14,5 +14,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: any
 })
     .arguments('<streamId>')
     .description('show detailed information about a stream')
-    .option('--include-permissions', 'include list of permissions (requires SHARE permission)')
+    .option('--include-permissions', 'include list of permissions')
     .parseAsync()
