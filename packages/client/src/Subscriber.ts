@@ -2,12 +2,15 @@
  * Public Subscribe APIs
  */
 
-import { DependencyContainer, inject, scoped, Lifecycle } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
+import { inject, scoped, Lifecycle } from 'tsyringe'
 import { allSettledValues, instanceId } from './utils'
-import { Context } from './utils/Context'
+import type { Context } from './utils/Context'
 import SubscriptionSession from './SubscriptionSession'
-import Subscription, { SubscriptionOnMessage } from './Subscription'
-import { SPIDLike, SPID, SIDLike } from 'streamr-client-protocol'
+import type { SubscriptionOnMessage } from './Subscription'
+import Subscription from './Subscription'
+import type { SPIDLike, SIDLike } from 'streamr-client-protocol'
+import { SPID } from 'streamr-client-protocol'
 import { BrubeckContainer } from './Container'
 
 export { Subscription, SubscriptionSession }

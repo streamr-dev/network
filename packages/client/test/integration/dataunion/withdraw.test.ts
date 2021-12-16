@@ -1,6 +1,6 @@
 import { BigNumber, Contract, providers, Wallet } from 'ethers'
 import { formatEther, parseEther, defaultAbiCoder } from 'ethers/lib/utils'
-import { ContractReceipt } from '@ethersproject/contracts'
+import type { ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 
 import debug from 'debug'
@@ -12,8 +12,9 @@ import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 import authFetch from '../../../src/authFetch'
 import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
-import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
-import { EthereumAddress } from '../../../src'
+import type { AmbMessageHash, DataUnionWithdrawOptions } from '../../../src/dataunion/DataUnion'
+import { MemberStatus } from '../../../src/dataunion/DataUnion'
+import type { EthereumAddress } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 

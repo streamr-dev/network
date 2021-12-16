@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { StreamMessage } from 'streamr-client-protocol'
+import type { StreamMessage } from 'streamr-client-protocol'
 
 import {
     describeRepeats,
@@ -8,10 +8,10 @@ import {
     createTestStream,
     getCreateClient
 } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import Resend from '../../src/Resends'
+import type { StreamrClient } from '../../src/StreamrClient'
+import type Resend from '../../src/Resends'
 
-import { Stream } from '../../src/Stream'
+import type { Stream } from '../../src/Stream'
 import { Wallet } from 'ethers'
 import { storageNodeTestConfig } from './devEnvironment'
 // import { EthereumAddress } from '../types'

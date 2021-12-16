@@ -2,9 +2,10 @@
  * StreamMessage Signing in-place.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamMessage, StreamMessageSigned, SignatureType, SigningUtil } from 'streamr-client-protocol'
+import type { StreamMessageSigned } from 'streamr-client-protocol'
+import { StreamMessage, SignatureType, SigningUtil } from 'streamr-client-protocol'
 import { Web3Provider } from '@ethersproject/providers'
-import { Bytes } from '@ethersproject/bytes'
+import type { Bytes } from '@ethersproject/bytes'
 
 import { pLimitFn, sleep } from './utils'
 import type { AuthenticatedConfig } from './Ethereum'

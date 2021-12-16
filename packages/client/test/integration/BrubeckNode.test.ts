@@ -1,4 +1,4 @@
-import { StreamrClient } from '../../src/StreamrClient'
+import type { StreamrClient } from '../../src/StreamrClient'
 import { getCreateClient, uid } from '../utils'
 
 describe('BrubeckNode', () => {

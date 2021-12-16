@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 import { counterId } from '../../src/utils'
-import { Context } from '../../src/utils/Context'
+import type { Context } from '../../src/utils/Context'
 import { Debug, Msg, LeaksDetector } from '../utils'
 import MessageStream from '../../src/MessageStream'
 import { StreamMessage, MessageID } from 'streamr-client-protocol'

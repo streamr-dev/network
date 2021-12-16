@@ -1,5 +1,6 @@
-import { Server } from 'http'
-import express, { Application } from 'express'
+import type { Server } from 'http'
+import type { Application } from 'express'
+import express from 'express'
 import { wait } from 'streamr-test-utils'
 
 import authFetch from '../../src/authFetch'

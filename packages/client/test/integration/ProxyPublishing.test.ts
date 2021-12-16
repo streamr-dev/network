@@ -1,5 +1,6 @@
 import { createTestStream, fakePrivateKey, getCreateClient, getPrivateKey } from '../utils'
-import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
+import type { Stream, StreamrClient } from '../../src'
+import { ConfigTest, StreamPermission } from '../../src'
 import { wait } from 'streamr-test-utils'
 import { SPID } from 'streamr-client-protocol'
 

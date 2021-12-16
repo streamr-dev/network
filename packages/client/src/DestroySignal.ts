@@ -4,7 +4,8 @@
 import { scoped, Lifecycle } from 'tsyringe'
 import { instanceId } from './utils'
 
-import { Context, ContextError } from './utils/Context'
+import type { Context } from './utils/Context'
+import { ContextError } from './utils/Context'
 import Signal from './utils/Signal'
 
 /**

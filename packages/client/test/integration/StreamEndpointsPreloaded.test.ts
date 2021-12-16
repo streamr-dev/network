@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 import '../../src/utils/PatchTsyringe'
 
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
+import type { StreamrClient } from '../../src/StreamrClient'
+import type { Stream } from '../../src/Stream'
 import { getCreateClient, createTestStream } from '../utils'
 import { preloadStreams, preloadPublishers } from '../../src/StreamEndpointsCached'
 

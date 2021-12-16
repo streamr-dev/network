@@ -11,10 +11,11 @@ import {
     getPrivateKey
 } from '../utils'
 import { Defer, pLimitFn, until } from '../../src/utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import type { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
-import { Stream, StreamPermission } from '../../src/Stream'
-import Subscription from '../../src/Subscription'
+import type { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/Stream'
+import type Subscription from '../../src/Subscription'
 import { storageNodeTestConfig } from './devEnvironment'
 
 const debug = Debug('StreamrClient::test')

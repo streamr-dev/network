@@ -1,13 +1,14 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import type { StreamMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { StreamrClient } from '../../src/StreamrClient'
-import { BrubeckClientConfig } from '../../src/Config'
-import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/Subscriber'
-import Subscription from '../../src/Subscription'
+import type { StreamrClient } from '../../src/StreamrClient'
+import type { BrubeckClientConfig } from '../../src/Config'
+import type { Stream } from '../../src/Stream'
+import type Subscriber from '../../src/Subscriber'
+import type Subscription from '../../src/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../utils'
+import type { Msg } from '../utils'
+import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats } from '../utils'
 import { storageNodeTestConfig } from './devEnvironment'
 
 const MAX_MESSAGES = 10

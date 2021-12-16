@@ -2,17 +2,22 @@
  * Public Resend + Subscribe APIs
  */
 
-import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { instanceId } from './utils'
-import { Context } from './utils/Context'
-import SubscriptionSession from './SubscriptionSession'
-import Subscription, { SubscriptionOnMessage } from './Subscription'
-import { SPID, SIDLike, StreamMessage } from 'streamr-client-protocol'
-import Subscriber, { SubscribeOptions } from './Subscriber'
+import type { Context } from './utils/Context'
+import type SubscriptionSession from './SubscriptionSession'
+import type { SubscriptionOnMessage } from './Subscription'
+import Subscription from './Subscription'
+import type { SIDLike, StreamMessage } from 'streamr-client-protocol'
+import { SPID } from 'streamr-client-protocol'
+import type { SubscribeOptions } from './Subscriber'
+import type Subscriber from './Subscriber'
 import { BrubeckContainer } from './Container'
 import { Config } from './Config'
 import OrderMessages from './OrderMessages'
-import Resends, { isResendOptions, ResendOptions, ResendOptionsStrict } from './Resends'
+import type { ResendOptions, ResendOptionsStrict } from './Resends'
+import Resends, { isResendOptions } from './Resends'
 import Signal from './utils/Signal'
 
 export class ResendSubscription<T> extends Subscription<T> {

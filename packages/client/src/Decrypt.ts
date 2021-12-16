@@ -4,11 +4,11 @@
 import { StreamMessage } from 'streamr-client-protocol'
 
 import EncryptionUtil, { UnableToDecryptError } from './encryption/Encryption'
-import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { Context } from './utils/Context'
-import { DestroySignal } from './DestroySignal'
-import { Stoppable } from './utils/Stoppable'
+import type { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
+import type { StreamEndpointsCached } from './StreamEndpointsCached'
+import type { Context } from './utils/Context'
+import type { DestroySignal } from './DestroySignal'
+import type { Stoppable } from './utils/Stoppable'
 import { instanceId } from './utils'
 
 type IDecrypt<T> = {

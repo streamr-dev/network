@@ -10,7 +10,8 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import { storageNodeTestConfig } from './devEnvironment'
 
-import { Stream, StreamPermission } from '../../src/Stream'
+import type { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/Stream'
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 12000
 const MAX_MESSAGES = 5

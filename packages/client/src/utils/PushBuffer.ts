@@ -1,7 +1,8 @@
 import { instanceId } from './index'
 import Gate from './Gate'
 import { Debug, inspect } from './log'
-import { Context, ContextError } from './Context'
+import type { Context } from './Context'
+import { ContextError } from './Context'
 import * as G from './GeneratorUtils'
 
 export class PushBufferError extends ContextError {}

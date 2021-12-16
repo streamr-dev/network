@@ -1,6 +1,6 @@
 import Emitter from 'events'
 import pMemoize from 'p-memoize'
-import { MaybeAsync } from '../types'
+import type { MaybeAsync } from '../types'
 
 import { Defer, pTimeout, AggregatedError } from './index'
 import { Debug } from './log'

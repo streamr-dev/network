@@ -1,18 +1,19 @@
-import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyAnnounce
+import type {
+    StreamMessage, EncryptedGroupKey } from 'streamr-client-protocol'
+import { GroupKeyRequest, GroupKeyResponse, GroupKeyAnnounce
 } from 'streamr-client-protocol'
 
 import { uuid, instanceId } from '../utils'
-import { Context } from '../utils/Context'
-import Subscriber from '../Subscriber'
+import type { Context } from '../utils/Context'
+import type Subscriber from '../Subscriber'
 
-import {
+import type {
     GroupKeyId,
     KeyExchangeStream,
 } from './KeyExchangeUtils'
 
 import EncryptionUtil, { GroupKey } from './Encryption'
-import GroupKeyStoreFactory from './GroupKeyStoreFactory'
+import type GroupKeyStoreFactory from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil): Promise<GroupKey[]> {

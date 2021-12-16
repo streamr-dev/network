@@ -1,6 +1,6 @@
 import pLimit from 'p-limit'
 
-import { MaybeAsync } from '../types'
+import type { MaybeAsync } from '../types'
 import AggregatedError from './AggregatedError'
 
 /**

@@ -1,5 +1,5 @@
 import { get, set, del, clear, keys, createStore } from 'idb-keyval'
-import { PersistentStore } from './PersistentStore'
+import type { PersistentStore } from './PersistentStore'
 
 export default class BrowserPersistentStore implements PersistentStore<string, string> {
     readonly clientId: string

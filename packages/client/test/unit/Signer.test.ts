@@ -4,7 +4,7 @@ import { StreamMessage, MessageID, MessageRef } from 'streamr-client-protocol'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import Signer from '../../src/Signer'
-import { Todo } from '../../src/types'
+import type { Todo } from '../../src/types'
 
 /*
 The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since

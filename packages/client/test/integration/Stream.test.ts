@@ -1,5 +1,5 @@
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
+import type { StreamrClient } from '../../src/StreamrClient'
+import type { Stream } from '../../src/Stream'
 import { getPublishTestMessages, getCreateClient, createTestStream } from '../utils'
 
 import { Wallet } from 'ethers'

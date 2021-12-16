@@ -1,20 +1,24 @@
+import type { GroupKeyRequest, GroupKeyErrorResponse
+} from 'streamr-client-protocol'
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse
+    StreamMessage, GroupKeyResponse
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
-import { pOnce, Defer, instanceId, Deferred } from '../utils'
-import { EthereumAddress } from '../types'
-import { Context } from '../utils/Context'
-import { DestroySignal } from '../DestroySignal'
+import type { Deferred } from '../utils'
+import { pOnce, Defer, instanceId } from '../utils'
+import type { EthereumAddress } from '../types'
+import type { Context } from '../utils/Context'
+import type { DestroySignal } from '../DestroySignal'
 
-import Subscriber from '../Subscriber'
+import type Subscriber from '../Subscriber'
 import Publisher from '../Publisher'
-import Subscription from '../Subscription'
-import Ethereum from '../Ethereum'
-import { Stoppable } from '../utils/Stoppable'
+import type Subscription from '../Subscription'
+import type Ethereum from '../Ethereum'
+import type { Stoppable } from '../utils/Stoppable'
 
-import { GroupKey, GroupKeyish } from './Encryption'
+import type { GroupKeyish } from './Encryption'
+import { GroupKey } from './Encryption'
 
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
 

@@ -1,12 +1,14 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
-import { container as rootContainer, DependencyContainer, inject } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
+import { container as rootContainer, inject } from 'tsyringe'
 
 import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
+import type { StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
+import BrubeckConfig, { Config } from './Config'
 import { BrubeckContainer } from './Container'
 
 import Publisher from './Publisher'
@@ -23,7 +25,8 @@ import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
-import { Methods, Plugin } from './utils/Plugin'
+import type { Methods } from './utils/Plugin'
+import { Plugin } from './utils/Plugin'
 
 let uid: string = process.pid != null
     // Use process id in node uid.

@@ -2,12 +2,13 @@
  * Wrap a network node.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
+import type { NetworkNodeOptions, NetworkNode } from 'streamr-network'
+import { createNetworkNode, MetricsContext } from 'streamr-network'
 import { pOnce, uuid, instanceId } from './utils'
-import { Context } from './utils/Context'
+import type { Context } from './utils/Context'
 import { Config } from './Config'
-import { StreamMessage, SPID } from 'streamr-client-protocol'
-import { DestroySignal } from './DestroySignal'
+import type { StreamMessage, SPID } from 'streamr-client-protocol'
+import type { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 
 /**

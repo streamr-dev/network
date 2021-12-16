@@ -1,21 +1,23 @@
 /**
  * Organises async Publish steps into a Pipeline
  */
-import { StreamMessage } from 'streamr-client-protocol'
+import type { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from './utils/log'
-import { instanceId, Defer, Deferred } from './utils'
-import { Context, ContextError } from './utils/Context'
+import type { Deferred } from './utils'
+import { instanceId, Defer } from './utils'
+import type { Context } from './utils/Context'
+import { ContextError } from './utils/Context'
 import { PushPipeline, Pipeline } from './utils/Pipeline'
-import { Stoppable } from './utils/Stoppable'
+import type { Stoppable } from './utils/Stoppable'
 
-import StreamMessageCreator from './MessageCreator'
-import BrubeckNode from './BrubeckNode'
-import Signer from './Signer'
+import type StreamMessageCreator from './MessageCreator'
+import type BrubeckNode from './BrubeckNode'
+import type Signer from './Signer'
 import Encrypt from './Encrypt'
-import Validator from './Validator'
-import { DestroySignal } from './DestroySignal'
+import type Validator from './Validator'
+import type { DestroySignal } from './DestroySignal'
 
 export class FailedToPublishError extends Error {
     streamId

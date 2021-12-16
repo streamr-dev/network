@@ -1,4 +1,5 @@
-import { Debugger, formatWithOptions } from './log'
+import type { Debugger } from './log'
+import { formatWithOptions } from './log'
 
 export const InjectContext = Symbol('Context')
 

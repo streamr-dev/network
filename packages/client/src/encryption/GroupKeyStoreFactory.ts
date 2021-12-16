@@ -2,13 +2,16 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 
 import { CacheAsyncFn, instanceId } from '../utils'
 import { inspect } from '../utils/log'
-import { Context, ContextError } from '../utils/Context'
-import { Config, CacheConfig } from '../Config'
-import Ethereum from '../Ethereum'
+import type { Context } from '../utils/Context'
+import { ContextError } from '../utils/Context'
+import type { CacheConfig } from '../Config'
+import { Config } from '../Config'
+import type Ethereum from '../Ethereum'
 
-import { EncryptionConfig, parseGroupKeys } from './KeyExchangeUtils'
+import type { EncryptionConfig } from './KeyExchangeUtils'
+import { parseGroupKeys } from './KeyExchangeUtils'
 import GroupKeyStore from './GroupKeyStore'
-import { GroupKey } from './Encryption'
+import type { GroupKey } from './Encryption'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class GroupKeyStoreFactory implements Context {

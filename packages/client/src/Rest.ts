@@ -1,14 +1,16 @@
 /**
  * More ergonomic wrapper around fetch/authFetch
  */
-import { Lifecycle, scoped, inject, DependencyContainer } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
+import { Lifecycle, scoped, inject } from 'tsyringe'
 
-import { Debugger } from './utils/log'
+import type { Debugger } from './utils/log'
 import { instanceId } from './utils'
-import { ConnectionConfig, Config } from './Config'
+import type { ConnectionConfig } from './Config'
+import { Config } from './Config'
 import authFetch, { authRequest } from './authFetch'
-import { Context } from './utils/Context'
-import { Readable } from 'stream'
+import type { Context } from './utils/Context'
+import type { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 
 import Session from './Session'

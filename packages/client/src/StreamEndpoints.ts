@@ -3,21 +3,25 @@
  */
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
-import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 // TODO change this import when streamr-client-protocol exports StreamMessage type or the enums types directly
-import { ContentType, EncryptionType, SignatureType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
-import { StreamMessageType, SIDLike, SPID } from 'streamr-client-protocol'
+import type { ContentType, EncryptionType, SignatureType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
+import type { StreamMessageType, SIDLike } from 'streamr-client-protocol'
+import { SPID } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
-import { Context } from './utils/Context'
+import type { Context } from './utils/Context'
 
-import { Stream, StreamPermission } from './Stream'
+import type { StreamPermission } from './Stream'
+import { Stream } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
-import { EthereumAddress } from './types'
-import { Config, ConnectionConfig } from './Config'
+import type { EthereumAddress } from './types'
+import type { ConnectionConfig } from './Config'
+import { Config } from './Config'
 import { Rest } from './Rest'
-import StreamrEthereum from './Ethereum'
+import type StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
 import { NodeRegistry } from './NodeRegistry'
 

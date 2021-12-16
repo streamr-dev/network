@@ -1,15 +1,16 @@
-import { DependencyContainer, inject } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
+import { inject } from 'tsyringe'
 
-import { StreamMessage, SPID } from 'streamr-client-protocol'
-import { NetworkNode } from 'streamr-network'
+import type { StreamMessage, SPID } from 'streamr-client-protocol'
+import type { NetworkNode } from 'streamr-network'
 
 import { Scaffold, instanceId, until } from './utils'
-import { Stoppable } from './utils/Stoppable'
-import { Context } from './utils/Context'
+import type { Stoppable } from './utils/Stoppable'
+import type { Context } from './utils/Context'
 import Signal from './utils/Signal'
 import MessageStream from './MessageStream'
 
-import Subscription from './Subscription'
+import type Subscription from './Subscription'
 import SubscribePipeline from './SubscribePipeline'
 import { BrubeckContainer } from './Container'
 import BrubeckNode from './BrubeckNode'

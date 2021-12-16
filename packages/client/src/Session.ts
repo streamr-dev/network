@@ -1,11 +1,13 @@
 /**
  * Session token caching and async init.
  */
-import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
+import { scoped, Lifecycle, inject } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
 
-import { LoginEndpoints, TokenObject } from './LoginEndpoints'
-import { AuthConfig } from './Ethereum'
+import type { TokenObject } from './LoginEndpoints'
+import { LoginEndpoints } from './LoginEndpoints'
+import type { AuthConfig } from './Ethereum'
 import { Config } from './Config'
 import { BrubeckContainer } from './Container'
 import { Debug } from './utils/log'

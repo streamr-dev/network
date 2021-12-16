@@ -3,9 +3,10 @@
  */
 import { Utils } from 'streamr-client-protocol'
 import { CacheFn } from './utils'
-import { Config, CacheConfig } from './Config'
+import type { CacheConfig } from './Config'
+import { Config } from './Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import type { StreamEndpointsCached } from './StreamEndpointsCached'
 
 export type PartitionKey = string | number | undefined
 

@@ -1,8 +1,10 @@
 import { instanceId, pOnce } from './index'
 import { Debug } from './log'
 import { iteratorFinally } from './iterators'
-import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions } from './PushBuffer'
-import { ContextError, Context } from './Context'
+import type { IPushBuffer, PushBufferOptions } from './PushBuffer'
+import { PushBuffer, DEFAULT_BUFFER_SIZE, pull } from './PushBuffer'
+import type { Context } from './Context'
+import { ContextError } from './Context'
 import * as G from './GeneratorUtils'
 import Signal, { ErrorSignal } from './Signal'
 

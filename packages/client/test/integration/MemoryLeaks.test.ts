@@ -1,12 +1,13 @@
 import { wait } from 'streamr-test-utils'
 import { getPublishTestMessages, getPrivateKey, snapshot, LeaksDetector } from '../utils'
 import { StreamrClient, initContainer, Dependencies } from '../../src/StreamrClient'
-import { container, DependencyContainer } from 'tsyringe'
-import Subscription from '../../src/Subscription'
+import type { DependencyContainer } from 'tsyringe'
+import { container } from 'tsyringe'
+import type Subscription from '../../src/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
 import clientOptions from './config'
-import { StrictBrubeckClientConfig } from '../../src/Config'
+import type { StrictBrubeckClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 
 const MAX_MESSAGES = 5

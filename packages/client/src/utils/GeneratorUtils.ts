@@ -1,4 +1,4 @@
-import { MaybeAsync } from '../types'
+import type { MaybeAsync } from '../types'
 
 export type GeneratorForEach<InType> = MaybeAsync<(value: InType, index: number, src: AsyncGenerator<InType>) => void>
 export type GeneratorFilter<InType> = MaybeAsync<(value: InType, index: number, src: AsyncGenerator<InType>) => any>

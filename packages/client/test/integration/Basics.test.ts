@@ -1,9 +1,9 @@
 import { wait } from 'streamr-test-utils'
 
 import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import type { StreamrClient } from '../../src/StreamrClient'
 
-import { Stream } from '../../src/Stream'
+import type { Stream } from '../../src/Stream'
 
 jest.setTimeout(15000)
 

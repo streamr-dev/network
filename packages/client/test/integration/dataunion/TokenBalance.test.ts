@@ -4,12 +4,13 @@ import { Wallet } from '@ethersproject/wallet'
 import { getRandomClient, createMockAddress } from '../../utils'
 import * as Token from '../../../contracts/TestToken.json'
 import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from '../devEnvironment'
-import { BigNumber, providers } from 'ethers'
+import type { BigNumber } from 'ethers'
+import { providers } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
-import { EthereumAddress } from '../../../src/types'
+import type { EthereumAddress } from '../../../src/types'
 import { until } from '../../../src/utils'
 import debug from 'debug'
-import StreamrClient from '../../../src'
+import type StreamrClient from '../../../src'
 
 const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
 const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)

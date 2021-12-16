@@ -63,6 +63,9 @@ module.exports = {
         '@typescript-eslint/no-dupe-class-members': ['error'],
         'no-useless-constructor': 'off',
         '@typescript-eslint/no-useless-constructor': ['error'],
+        '@typescript-eslint/consistent-type-imports': ['error', {
+            prefer: 'type-imports',
+        }],
         'no-empty-function': 'off',
     },
     settings: {

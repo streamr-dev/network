@@ -8,7 +8,8 @@
 
 import type { BigNumber } from '@ethersproject/bignumber'
 import cloneDeep from 'lodash/cloneDeep'
-import Ajv, { ErrorObject } from 'ajv'
+import type { ErrorObject } from 'ajv'
+import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 
 import type { EthereumAddress, Todo } from './types'

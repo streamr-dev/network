@@ -1,20 +1,24 @@
 /**
  * Public Publishing API
  */
-import { StreamMessage, SPID, SIDLike } from 'streamr-client-protocol'
+import type { StreamMessage, SIDLike } from 'streamr-client-protocol'
+import { SPID } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from './utils'
 import { inspect } from './utils/log'
-import { Context, ContextError } from './utils/Context'
-import { CancelableGenerator, ICancelable } from './utils/iterators'
+import type { Context } from './utils/Context'
+import { ContextError } from './utils/Context'
+import type { ICancelable } from './utils/iterators'
+import { CancelableGenerator } from './utils/iterators'
 
 import { StreamEndpoints } from './StreamEndpoints'
-import PublishPipeline, { PublishMetadata } from './PublishPipeline'
-import { Stoppable } from './utils/Stoppable'
+import type { PublishMetadata } from './PublishPipeline'
+import type PublishPipeline from './PublishPipeline'
+import type { Stoppable } from './utils/Stoppable'
 import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
-import Validator from './Validator'
-import BrubeckNode from './BrubeckNode'
+import type Validator from './Validator'
+import type BrubeckNode from './BrubeckNode'
 
 export type { PublishMetadata }
 

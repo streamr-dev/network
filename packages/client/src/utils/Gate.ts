@@ -1,5 +1,6 @@
-import { instanceId, Defer, Deferred } from './index'
-import { Context } from './Context'
+import type { Deferred } from './index'
+import { instanceId, Defer } from './index'
+import type { Context } from './Context'
 import { Debug } from './log'
 
 /**

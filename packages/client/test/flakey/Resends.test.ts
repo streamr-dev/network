@@ -5,7 +5,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 
 import config from '../../src/ConfigTest'
-import { Stream } from '../../src/Stream'
+import type { Stream } from '../../src/Stream'
 import { storageNodeTestConfig } from '../integration/devEnvironment'
 
 /* eslint-disable no-await-in-loop */

@@ -5,10 +5,11 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamMessage, StreamMessageValidator, SigningUtil, StreamMessageError } from 'streamr-client-protocol'
 
 import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
-import { Stoppable } from './utils/Stoppable'
-import { Context } from './utils/Context'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { Config, SubscribeConfig, CacheConfig } from './Config'
+import type { Stoppable } from './utils/Stoppable'
+import type { Context } from './utils/Context'
+import type { StreamEndpointsCached } from './StreamEndpointsCached'
+import type { SubscribeConfig, CacheConfig } from './Config'
+import { Config } from './Config'
 
 export class SignatureRequiredError extends StreamMessageError {
     constructor(streamMessage: StreamMessage, code?: string) {

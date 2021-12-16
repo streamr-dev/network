@@ -1,16 +1,18 @@
 import { getCreate2Address, isAddress } from '@ethersproject/address'
-import { arrayify, BytesLike, hexZeroPad } from '@ethersproject/bytes'
-import { Contract, ContractReceipt } from '@ethersproject/contracts'
+import type { BytesLike } from '@ethersproject/bytes'
+import { arrayify, hexZeroPad } from '@ethersproject/bytes'
+import type { ContractReceipt } from '@ethersproject/contracts'
+import { Contract } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { Debug } from '../utils/log'
-import { EthereumAddress, Todo } from '../types'
+import type { EthereumAddress, Todo } from '../types'
 import { binanceAdapterABI, dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
 import { until } from '../utils'
 import { BigNumber } from '@ethersproject/bignumber'
-import StreamrEthereum from '../Ethereum'
-import DataUnionAPI from './index'
+import type StreamrEthereum from '../Ethereum'
+import type DataUnionAPI from './index'
 
 const log = Debug('Contracts')
 

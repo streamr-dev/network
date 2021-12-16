@@ -1,9 +1,10 @@
 import { instanceId } from '../utils'
-import { Context } from '../utils/Context'
+import type { Context } from '../utils/Context'
 import { GroupKey } from './Encryption'
-import { PersistentStore } from './PersistentStore'
+import type { PersistentStore } from './PersistentStore'
 
-import ServerPersistentStore, { ServerPersistentStoreOptions } from './ServerPersistentStore'
+import type { ServerPersistentStoreOptions } from './ServerPersistentStore'
+import ServerPersistentStore from './ServerPersistentStore'
 
 type GroupKeyId = string
 

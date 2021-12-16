@@ -2,13 +2,13 @@
 import { wait } from 'streamr-test-utils'
 
 import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats, collect } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import type { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
-import { Stream } from '../../src/Stream'
-import Subscription from '../../src/Subscription'
-import Subscriber from '../../src/Subscriber'
-import { Todo } from '../../src/types'
+import type { Stream } from '../../src/Stream'
+import type Subscription from '../../src/Subscription'
+import type Subscriber from '../../src/Subscriber'
+import type { Todo } from '../../src/types'
 
 // const { ControlMessage } = ControlLayer
 

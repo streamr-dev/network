@@ -1,14 +1,14 @@
 import { inspect } from 'util'
-import EventEmitter from 'events'
+import type EventEmitter from 'events'
 import { SEPARATOR } from './uuid'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import mem from 'mem'
-import { L } from 'ts-toolbelt'
+import type { L } from 'ts-toolbelt'
 
 import pkg from '../../package.json'
 import LRU from '../../vendor/quick-lru'
-import { MaybeAsync } from '../types'
+import type { MaybeAsync } from '../types'
 
 import AggregatedError from './AggregatedError'
 import Scaffold from './Scaffold'

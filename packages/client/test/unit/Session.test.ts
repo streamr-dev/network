@@ -1,9 +1,10 @@
 import 'reflect-metadata'
-import { container, DependencyContainer } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
+import { container } from 'tsyringe'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
-import Session from '../../src/Session'
+import type Session from '../../src/Session'
 import clientOptions from '../../src/ConfigTest'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
 

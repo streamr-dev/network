@@ -2,9 +2,10 @@
  * The client.subscribe() return value.
  * Primary interface for consuming StreamMessages.
  */
-import { SPID, SPIDKeyShape } from 'streamr-client-protocol'
-import MessageStream, { MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
-import SubscriptionSession from './SubscriptionSession'
+import type { SPID, SPIDKeyShape } from 'streamr-client-protocol'
+import type { MessageStreamOptions } from './MessageStream'
+import MessageStream, { MessageStreamOnMessage } from './MessageStream'
+import type SubscriptionSession from './SubscriptionSession'
 
 export type SubscriptionOptions = {
   streamId: string,

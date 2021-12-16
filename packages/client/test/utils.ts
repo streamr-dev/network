@@ -1,22 +1,23 @@
 import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
-import { DependencyContainer } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
 
 import fetch from 'node-fetch'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { PublishRequest, StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
+import type { PublishRequest, StreamMessage, SIDLike } from 'streamr-client-protocol'
+import { SPID } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../src/StreamrClient'
 import { counterId, CounterId, AggregatedError, instanceId } from '../src/utils'
 import { Debug, format } from '../src/utils/log'
-import { MaybeAsync } from '../src/types'
-import { StreamProperties } from '../src/Stream'
+import type { MaybeAsync } from '../src/types'
+import type { StreamProperties } from '../src/Stream'
 import clientOptions from '../src/ConfigTest'
 
-import Signal from '../src/utils/Signal'
-import { PublishMetadata } from '../src/Publisher'
+import type Signal from '../src/utils/Signal'
+import type { PublishMetadata } from '../src/Publisher'
 import { Pipeline } from '../src/utils/Pipeline'
 
 export { clientOptions }

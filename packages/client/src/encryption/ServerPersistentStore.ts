@@ -1,13 +1,14 @@
 import envPaths from 'env-paths'
 import { dirname, resolve, join } from 'path'
 import { promises as fs } from 'fs'
-import { open, Database } from 'sqlite'
+import type { Database } from 'sqlite'
+import { open } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
 import { instanceId, pOnce } from '../utils'
-import { Context } from '../utils/Context'
+import type { Context } from '../utils/Context'
 
-import { PersistentStore } from './PersistentStore'
+import type { PersistentStore } from './PersistentStore'
 
 // eslint-disable-next-line promise/param-names
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))

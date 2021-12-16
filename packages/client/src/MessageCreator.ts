@@ -2,15 +2,17 @@
  * Central place to fetch async dependencies and convert message metadata into StreamMessages.
  */
 import { inject, scoped, Lifecycle } from 'tsyringe'
-import { StreamMessage, SPID, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
+import type { StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
+import { StreamMessage, SPID } from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from './utils'
-import { Stoppable } from './utils/Stoppable'
+import type { Stoppable } from './utils/Stoppable'
 
 import { getCachedMesssageChain } from './MessageChain'
-import { Config, CacheConfig } from './Config'
-import Ethereum from './Ethereum'
-import StreamPartitioner from './StreamPartitioner'
+import type { CacheConfig } from './Config'
+import { Config } from './Config'
+import type Ethereum from './Ethereum'
+import type StreamPartitioner from './StreamPartitioner'
 
 export type MessageCreateOptions<T = unknown> = {
     content: T,

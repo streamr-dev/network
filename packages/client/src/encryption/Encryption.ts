@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { O } from 'ts-toolbelt'
+import type { O } from 'ts-toolbelt'
 import { promisify } from 'util'
 
 import { arrayify, hexlify } from '@ethersproject/bytes'

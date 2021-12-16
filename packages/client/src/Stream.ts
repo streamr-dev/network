@@ -2,11 +2,12 @@
  * Wrapper for Stream metadata and (some) methods.
  */
 import fetch from 'node-fetch'
-import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
-import { DependencyContainer, inject } from 'tsyringe'
+import type { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
+import type { DependencyContainer } from 'tsyringe'
+import { inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
-import { EthereumAddress } from './types'
+import type { EthereumAddress } from './types'
 import { until } from './utils'
 
 import { Rest } from './Rest'

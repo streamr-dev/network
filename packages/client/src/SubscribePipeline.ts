@@ -2,10 +2,11 @@
  * Subscription message processing pipeline
  */
 
-import { SPID, StreamMessage, StreamMessageError, GroupKeyErrorResponse } from 'streamr-client-protocol'
+import type { SPID } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageError, GroupKeyErrorResponse } from 'streamr-client-protocol'
 
 import OrderMessages from './OrderMessages'
-import MessageStream from './MessageStream'
+import type MessageStream from './MessageStream'
 
 import Validator from './Validator'
 import { Decrypt } from './Decrypt'
@@ -14,7 +15,7 @@ import { Context } from './utils/Context'
 import { Config } from './Config'
 import Resends from './Resends'
 import { DestroySignal } from './DestroySignal'
-import { DependencyContainer } from 'tsyringe'
+import type { DependencyContainer } from 'tsyringe'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 
 export default function SubscribePipeline<T = unknown>(

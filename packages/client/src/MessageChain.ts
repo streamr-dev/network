@@ -1,8 +1,9 @@
 /**
  * MessageChains
  */
-import { MessageRef, MessageID, MessageIDStrict, SPID } from 'streamr-client-protocol'
-import { CacheConfig } from './Config'
+import type { MessageID, SPID } from 'streamr-client-protocol'
+import { MessageRef, MessageIDStrict } from 'streamr-client-protocol'
+import type { CacheConfig } from './Config'
 import { randomString, CacheFn } from './utils'
 
 export type MessageChainOptions = {

@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, getPrivateKey } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream, StreamPermission } from '../../src/Stream'
+import type { StreamrClient } from '../../src/StreamrClient'
+import type { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Wallet } from 'ethers'
 import { storageNodeTestConfig } from './devEnvironment'

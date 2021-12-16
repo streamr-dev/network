@@ -1,7 +1,7 @@
 import Emitter from 'events'
 
 import { wait } from 'streamr-test-utils'
-import { Todo } from '../../src/types'
+import type { Todo } from '../../src/types'
 
 import { Defer } from '../../src/utils'
 import Scaffold from '../../src/utils/Scaffold'

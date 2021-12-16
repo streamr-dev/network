@@ -1,9 +1,9 @@
 import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import type { StreamrClient } from '../../src/StreamrClient'
 
-import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/Subscriber'
-import Subscription from '../../src/Subscription'
+import type { Stream } from '../../src/Stream'
+import type Subscriber from '../../src/Subscriber'
+import type Subscription from '../../src/Subscription'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(30000)

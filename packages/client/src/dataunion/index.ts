@@ -1,16 +1,18 @@
 import { inject, scoped, Lifecycle } from 'tsyringe'
 
-import Ethereum from '../Ethereum'
-import { Rest } from '../Rest'
-import { StrictBrubeckClientConfig, Config } from '../Config'
-import { EthereumAddress } from '../types'
-import { DataUnion, DataUnionDeployOptions } from './DataUnion'
-import { BigNumber } from '@ethersproject/bignumber'
+import type Ethereum from '../Ethereum'
+import type { Rest } from '../Rest'
+import type { StrictBrubeckClientConfig } from '../Config'
+import { Config } from '../Config'
+import type { EthereumAddress } from '../types'
+import type { DataUnionDeployOptions } from './DataUnion'
+import { DataUnion } from './DataUnion'
+import type { BigNumber } from '@ethersproject/bignumber'
 import { getAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
 import Contracts from './Contracts'
 
-import { BytesLike } from '@ethersproject/bytes'
+import type { BytesLike } from '@ethersproject/bytes'
 
 const balanceOfAbi = [{
     name: 'balanceOf',

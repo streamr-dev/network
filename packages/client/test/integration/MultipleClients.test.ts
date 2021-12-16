@@ -3,11 +3,12 @@ import { wait, waitForCondition } from 'streamr-test-utils'
 import {
     getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, getPrivateKey,
 } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import type { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
-import { Stream, StreamPermission } from '../../src/Stream'
+import type { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/Stream'
 import { Wallet } from '@ethersproject/wallet'
-import { StreamMessage } from 'streamr-client-protocol'
+import type { StreamMessage } from 'streamr-client-protocol'
 import { storageNodeTestConfig } from './devEnvironment'
 
 jest.setTimeout(50000)

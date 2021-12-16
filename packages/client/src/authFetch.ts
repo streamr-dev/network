@@ -1,8 +1,10 @@
 /**
  * Wrap fetch with default headers performing authentication if required.
  */
-import fetch, { Response } from 'node-fetch'
-import { Debug, Debugger, inspect } from './utils/log'
+import type { Response } from 'node-fetch'
+import fetch from 'node-fetch'
+import type { Debugger } from './utils/log'
+import { Debug, inspect } from './utils/log'
 
 import { getVersionString, counterId } from './utils'
 

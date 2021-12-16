@@ -5,8 +5,9 @@ import { SPID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
 import { CacheAsyncFn, instanceId } from './utils'
-import { Context } from './utils/Context'
-import { CacheConfig, Config } from './Config'
+import type { Context } from './utils/Context'
+import type { CacheConfig } from './Config'
+import { Config } from './Config'
 import { StreamEndpoints } from './StreamEndpoints'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key

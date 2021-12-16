@@ -2,12 +2,12 @@
  * Encrypt StreamMessages in-place.
  */
 import { StreamMessage } from 'streamr-client-protocol'
-import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import type { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
+import type { StreamEndpointsCached } from './StreamEndpointsCached'
 import { scoped, Lifecycle } from 'tsyringe'
 import EncryptionUtil from './encryption/Encryption'
-import Ethereum from './Ethereum'
-import { Stoppable } from './utils/Stoppable'
+import type Ethereum from './Ethereum'
+import type { Stoppable } from './utils/Stoppable'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class PublisherEncryption implements Stoppable {

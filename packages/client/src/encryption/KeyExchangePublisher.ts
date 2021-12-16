@@ -1,17 +1,19 @@
-import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyErrorResponse, ValidationError
+import type {
+    StreamMessage } from 'streamr-client-protocol'
+import { GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyErrorResponse, ValidationError
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
 import { pOnce, instanceId } from '../utils'
-import { Context } from '../utils/Context'
+import type { Context } from '../utils/Context'
 import Publisher from '../Publisher'
-import GroupKeyStoreFactory from './GroupKeyStoreFactory'
+import type GroupKeyStoreFactory from './GroupKeyStoreFactory'
 
-import EncryptionUtil, { GroupKey, StreamMessageProcessingError } from './Encryption'
-import { KeyExchangeStream } from './KeyExchangeUtils'
+import type { GroupKey, StreamMessageProcessingError } from './Encryption'
+import EncryptionUtil from './Encryption'
+import type { KeyExchangeStream } from './KeyExchangeUtils'
 
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import type { StreamEndpointsCached } from '../StreamEndpointsCached'
 
 class InvalidGroupKeyRequestError extends ValidationError {
     constructor(msg: string) {

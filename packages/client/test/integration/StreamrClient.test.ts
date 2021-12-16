@@ -17,11 +17,11 @@ import {
     until
 } from '../utils'
 
-import { StreamrClient } from '../../src/StreamrClient'
+import type { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
 
-import { Stream } from '../../src/Stream'
+import type { Stream } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
 // import Subscription from '../../src/brubeck/Subscription'
 

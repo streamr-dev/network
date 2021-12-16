@@ -1,24 +1,27 @@
 /**
  * Public Resends API
  */
-import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { SPID, SIDLike, MessageRef, StreamMessage } from 'streamr-client-protocol'
+import type { DependencyContainer } from 'tsyringe'
+import { inject, Lifecycle, scoped, delay } from 'tsyringe'
+import type { SIDLike, MessageRef } from 'streamr-client-protocol'
+import { SPID, StreamMessage } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import split2 from 'split2'
-import { Readable } from 'stream'
+import type { Readable } from 'stream'
 
 import { instanceId, counterId } from './utils'
 import { Context, ContextError } from './utils/Context'
 import { inspect } from './utils/log'
 
-import MessageStream, { MessageStreamOnMessage } from './MessageStream'
+import type { MessageStreamOnMessage } from './MessageStream'
+import MessageStream from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 import { authRequest } from './authFetch'
 
-import { NodeRegistry } from './NodeRegistry'
+import type { NodeRegistry } from './NodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
-import { StreamRegistry } from './StreamRegistry'
+import type { StreamRegistry } from './StreamRegistry'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import { createQueryString } from './Rest'
 

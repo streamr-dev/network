@@ -1,4 +1,4 @@
-import { AnyInstance } from './index'
+import type { AnyInstance } from './index'
 
 /**
  * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
