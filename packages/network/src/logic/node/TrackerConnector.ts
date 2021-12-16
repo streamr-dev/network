@@ -55,7 +55,6 @@ export class TrackerConnector {
 
     removeSignallingOnlyTrackerConnection(trackerId: TrackerId): void {
         this.signallingOnlyTrackers.delete(trackerId)
-        this.disconnectFromTracker(trackerId)
     }
 
     start(): void {
