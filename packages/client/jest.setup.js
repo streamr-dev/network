@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 import { GitRevisionPlugin } from 'git-revision-webpack-plugin'
-import './test/keyserver'
+import keyserver from './test/keyserver'
 
+global.__StreamrKeyserver = keyserver
 const pkg = require('./package.json')
 
 export default async () => {
