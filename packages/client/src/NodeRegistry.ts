@@ -119,8 +119,16 @@ export class NodeRegistry {
         const nodeAddress = await this.ethereum.getAddress()
         const tx = await this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata)
         await tx.wait()
-        await until(async () => { return this.getStorageNodeUrl(nodeAddress) !== undefined }, 10000, 500,
-            () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`)
+        await until(async () => {
+            try {
+                const url = await this.getStorageNodeUrl(nodeAddress)
+                return nodeMetadata.indexOf(url) !== -1
+            } catch (err) {
+                log('node not found yet %o', err)
+                return false
+            }
+        }, 10000, 500,
+        () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
     async removeNode(): Promise<void> {
