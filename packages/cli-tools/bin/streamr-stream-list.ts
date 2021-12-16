@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('../src/logLevel')
 import { Option } from 'commander'
 import EasyTable from 'easy-table'
 import StreamrClient, { StreamListQuery } from 'streamr-client'

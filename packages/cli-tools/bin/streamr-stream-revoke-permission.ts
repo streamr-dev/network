@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+require('../src/logLevel')
 import { Stream, StreamPermission } from 'streamr-client'
 import { runModifyPermissionsCommand } from '../src/permission'
 
