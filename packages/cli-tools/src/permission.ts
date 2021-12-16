@@ -13,10 +13,10 @@ const getTarget = (user: string): string|undefined => {
 }
 
 export const PERMISSIONS = new Map<string,StreamPermission>([
+    ['subscribe', StreamPermission.SUBSCRIBE],
+    ['publish', StreamPermission.PUBLISH],
     ['edit', StreamPermission.EDIT],
     ['delete', StreamPermission.DELETE],
-    ['publish', StreamPermission.PUBLISH],
-    ['subscribe', StreamPermission.SUBSCRIBE],
     ['grant', StreamPermission.GRANT]
 ])
 
