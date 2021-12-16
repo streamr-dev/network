@@ -63,7 +63,7 @@ export class ProxyStreamConnectionManager {
         })
     }
 
-    removeConnection(spid: SPID, nodeId: NodeId): void {
+    private removeConnection(spid: SPID, nodeId: NodeId): void {
         if (this.connections.has(spid.key)) {
             this.connections.get(spid.key)!.delete(nodeId)
             if (this.connections.get(spid.key)!.size === 0) {
@@ -73,8 +73,7 @@ export class ProxyStreamConnectionManager {
 
         this.streamManager.removeNodeFromStream(spid, nodeId)
         // Finally if the stream has no neighbors or in/out connections, remove the stream
-        if (this.streamManager.isSetUp(spid)
-            && this.streamManager.getAllNodesForStream(spid).length === 0
+        if (this.streamManager.getAllNodesForStream(spid).length === 0
             && !this.connections.has(spid.key)
             && this.streamManager.isBehindProxy(spid)
         ) {
