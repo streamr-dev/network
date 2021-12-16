@@ -154,6 +154,11 @@ jobs:
             ${{ runner.os }}-jest-timing-${{ github.base_ref }}-${{ github.head_ref }}
       - name: Run Test
         run: npm run $TEST_NAME
+      - name: Post Test Timing Results
+        uses: javierfernandes/jest-timing-action@28139f7
+        with:
+          threshold: 20
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
