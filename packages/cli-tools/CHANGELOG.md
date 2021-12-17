@@ -10,12 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (Breaking) Remove `--msg-chain-id` parameter from `stream resend from`
 - (Breaking) `streamr stream create` argument is a stream ID, not a name
 - Support path notation when defining a stream ID
-- (Breaking) Permission names and arguments:
+- (Breaking) Remove `misc get-session-token` command
+- (Breaking) Change permission names and arguments:
   - renamed `--operation` to `--permission` in `stream list`
   - the data format of `permissions` returned by `--include-permissions` of `stream show` 
   - enum values updated for all commands: `subscribe`, `publish`, `edit`, `delete` and `grant`
-- (Breaking) Removed `lastUpdated` and `name` columns from `stream list` output
-- (Breaking) Modified configuration management:
+- (Breaking) Remove `lastUpdated` and `name` columns from `stream list` output
+- (Breaking) Modify configuration management:
   - can read config from `~/.streamr/config/default.json`
   - `--config` argument added
   - `--stg`, `--http-url` and `--ws-url` arguments removed

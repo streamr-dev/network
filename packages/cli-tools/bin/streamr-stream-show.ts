@@ -7,7 +7,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: any
     const stream = await client.getStream(streamId)
     const obj = stream.toObject()
     if (options.includePermissions) {
-        // TODO the data of stream.getPermissions() should be transformed somehow
+        // TODO the data of stream.getPermissions() should be transformed somehow (NET-610)
         // @ts-expect-error permissions not on {}
         obj.permissions = await stream.getPermissions()
     }

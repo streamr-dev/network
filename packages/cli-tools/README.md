@@ -113,7 +113,7 @@ streamr stream resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 <streamId> -
 
 #### Configuration
 
-Use can specify the environment and the authentication with the following command line arguments
+User can specify environment and authentication details with the following command line arguments:
 - `--private-key <key>`, e.g. `--private-key 0x1234567890123456789012345678901234567890123456789012345678901234`
 - `--config <file>`, e.g. `--config foobar.json`
 - `--dev` use the pre-defined [development environment](https://github.com/streamr-dev/streamr-docker-dev)
