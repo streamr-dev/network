@@ -1,7 +1,12 @@
 import { StreamrClient, ResendOptions } from 'streamr-client'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const assertBothOrNoneDefined = (option1: string, option2: string, errorMessage: string, commandOptions: any): void | never => {
+export const assertBothOrNoneDefined = (
+    option1: string,
+    option2: string,
+    errorMessage: string,
+    commandOptions: Record<string, unknown>
+): void | never => { 
     if ((option1 in commandOptions && !(option2 in commandOptions)) || (option2 in commandOptions && !(option1 in commandOptions))) {
         console.error(`option ${errorMessage}`)
         process.exit(1)
