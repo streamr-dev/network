@@ -122,9 +122,8 @@ export class NodeRegistry {
         await until(async () => {
             try {
                 const url = await this.getStorageNodeUrl(nodeAddress)
-                return nodeMetadata.indexOf(url) !== -1
+                return nodeMetadata.includes(url)
             } catch (err) {
-                log('node not found yet %o', err)
                 return false
             }
         }, 10000, 500,
