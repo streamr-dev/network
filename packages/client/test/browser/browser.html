@@ -4,9 +4,6 @@
 <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
 <script src="/static/streamr-client.web.js"></script>
 <style>
-    :root {
-        scrollbar-color: transparent transparent;
-    }
     /* Box sizing rules */
     *,
     *::before,
@@ -40,7 +37,9 @@
         --c3: #7DBDDB;
         --c5: #354444;
         --c6: #343838;
+        --c7: #353C3C;
         --c4: #C4C4C4;
+        --c8: #5F5E5E;
         margin: 0;
         padding: 0;
     }
@@ -57,25 +56,34 @@
         padding: 1rem;
     }
 
+    body::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+        background: var(--c6);
+    }
+
+    body::-webkit-scrollbar-thumb {
+        background: var(--c5);
+    }
+
     button {
         font-family: inherit;
         font-size: 1.5rem;
         text-align: left;
         text-transform: uppercase;
-        border-radius: 0;
+        border-radius: 1px;
         appearance: none;
         border: none;
         cursor: pointer;
         transition: all 0.1s;
-        background: var(--c5);
-        color: var(--c4);
-        opacity: 0.3;
-        padding: 1rem;
+        background: var(--c6);
+        color: var(--c8);
+        padding: 1.5rem;
         margin: 0;
     }
 
     button:hover {
-        opacity: 1;
+        background: var(--c5);
         color: var(--c3);
     }
 
@@ -84,25 +92,45 @@
         display: grid;
         grid-row-gap: 1rem;
         grid-template-columns: auto;
-        max-height: 100vh;
-        position: sticky;
-        top: 0;
+        z-index: 1;
+        position: relative;
     }
 
     #result {
-        max-height: 100vh;
         max-width: 100vw;
-        overflow: auto;
         background: var(--c6);
-        padding: 2rem;
-        line-height: 1.78;
+        line-height: 1.82;
         overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        padding: 1.78rem 0;
+        border-radius: 1px;
     }
-    #result > * {
+
+    #result .timestamp {
+        opacity: 0.3;
+        transform: scale(0.78);
+        text-align: right;
+    }
+
+    #result .row {
+        transition: all 0.1s;
+        padding: 0 1.78rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-column-gap: 1ch;
+        align-items: baseline;
+        border-radius: 1px;
+    }
+
+    #result .row:hover {
+        background: var(--c5);
+    }
+
+    #result .row .content {
         text-overflow: clip;
         white-space: pre-wrap;
         word-break: break-word;
-
     }
 
     #result::-webkit-scrollbar {
@@ -110,8 +138,9 @@
         height: 8px;
         background: var(--c6);
     }
+
     #result::-webkit-scrollbar-thumb {
-        background: var(--c5);
+        background: var(--c7);
     }
 
     .error {
@@ -136,8 +165,7 @@
 </body>
 <script type="module">
     const onError = ({ message, source, lineno, colno, error, reason }) => {
-        const err = $(`<div class="error">Error: ${error ? error.stack : reason.stack}</div>`)
-        $('#result').append(err)
+        logError('Uncaught/Unhandled: ' + (error ? error.stack : reason.stack))
     }
 
     window.addEventListener('error', onError)
@@ -147,6 +175,32 @@
     const streamName = urlParams.get('streamName')
     const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v1/ws'
     const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v1'
+    let firstTime
+    let lastTime
+    function log(content, className = '') {
+        const now = Math.floor(performance.now())
+        if (lastTime === undefined) {
+            lastTime = now
+        }
+        if (firstTime === undefined) {
+            firstTime = now
+        }
+
+        const duration = Math.round(now - lastTime)
+        const timestamp = Math.round(now - firstTime)
+        lastTime = now
+        if (className === 'error') {
+            console.error('%i (+%i):', timestamp, duration, content)
+        } else {
+            console.info('%i (+%i): ', timestamp, duration, content)
+        }
+
+        $('#result').append($(`<div class="row"><div class="content ${className}">${content}</div><div class='timestamp'>+${duration}ms</div></div>`))
+    }
+
+    function logError(content) {
+        log(content, 'error')
+    }
 
     async function getPrivateKey() {
         const response = await fetch('http://localhost:45454/key', { credentials: 'omit' })
@@ -189,72 +243,74 @@
     let messages = []
 
     $('#connect').on('click', async () => {
-        $('#result').append($(`<div>Connecting...</div>`))
+        log('Connecting...')
+        log('Connecting Publisher...')
         await publisher.connect()
+        log('Connecting Subscriber...')
         await subscriber.connect()
-        const connectResult = $('<div class="connectResult">Connected.</div>')
-        $('#result').append(connectResult)
+        log('Connected.', 'connectResult')
     })
 
     $('#create').on('click', async () => {
-        $('#result').append($(`<div>Creating...</div>`))
+        log('Creating...')
         stream = await publisher.getOrCreateStream({
             id: '/' + streamName,
             requireEncryptedData: true,
         })
-        const createResult = $(`<div class="createResult">Created: ${stream.id}</div>`)
-        $('#result').append(createResult)
+        log(`Created: ${stream.id}`, 'createResult')
     })
 
     $('#store').on('click', async () => {
-        $('#result').append($(`<div>Storing...</div>`))
+        log('Storing...')
         // TODO remove hardcoded address
         await stream.addToStorageNode('0xde1112f631486CfC759A50196853011528bC5FA0')
+        log('Added to storage node.')
+        log('Loading storage nodes...')
         const storageNodes = await stream.getStorageNodes()
         const storeResult = $(`<div class="storeResult">Stored: ${JSON.stringify(storageNodes)}</div>`)
-        $('#result').append(storeResult)
+        log(`Storage: ${JSON.stringify(storageNodes)}`, 'storeResult')
     })
 
     $('#permissions').on('click', async () => {
-        $('#result').append($(`<div>Setting Permissions...</div>`))
+        log('Setting Permissions...')
         await stream.setPermissionsForUser(await subscriber.getAddress(), false, false, false, true, false)
+        log('Set Permissions.')
+        log('Loading permissions...')
         const permissions = await stream.getUserPermissions(await subscriber.getAddress())
-        const permissionsResult = $(`<div class="permissionsResult">Set Permissions: ${JSON.stringify(permissions)}</div>`)
-        $('#result').append(permissionsResult)
+        log(`Permissions: ${JSON.stringify(permissions)}`, 'permissionsResult')
     })
 
     $('#subscribe').on('click', async () => {
-        $('#result').append($(`<div>Subscribing...</div>`))
+        log('Subscribing...')
         await subscriber.subscribe({
             stream: stream.id
         }, (message, metadata) => {
             console.log({ message, metadata })
             messages.push(message)
-            $('#result').append($(`<div class="realtime-msg">Received: ${JSON.stringify(message)}</div>`))
+            log(`Received: ${JSON.stringify(message)}`, 'realtime-msg')
             if (messages.length === 10) {
-                $('#result').append($(`<div class="messagesResult">${JSON.stringify(messages)}</div>`))
+                log(`Received All Messages: ${JSON.stringify(messages)}`, 'messagesResult')
             }
         })
-        const subscribeResult = $(`<div class="subscribeResult">Subscribed</div>`)
-        $('#result').append(subscribeResult)
+        log('Subscribed', 'subscribeResult')
     })
 
     $('#publish').on('click', async () => {
-        $('#result').append($(`<div>Publishing Messages...</div>`))
+        log('Publishing Messages...')
         for (let i = 0; i < 10; i++) {
             const msg = {
                 msg: i
             }
-            $('#result').append($(`<div>Publishing ${i} of ${10}...</div>`))
+            log(`Publishing ${i} of ${10}...`)
             await publisher.publish(stream.id, msg)
-            $('#result').append($(`<div>Published ${i} of ${10}.</div>`))
+            log(`Published ${i} of ${10}.`)
         }
-        $('#result').append($(`<div class="publishResult">Published All Messages</div>`))
+        log('Published All Messages', 'publishResult')
     })
 
     $('#resend').on('click', async () => {
         messages = []
-        $('#result').append($(`<div>Resending...</div>`))
+        log(`Resending...`)
 
         const sub = await subscriber.resend({
             stream: stream.id,
@@ -262,21 +318,25 @@
         })
         sub.onMessage((message) => {
             messages.push(message)
-            $('#result').append($(`<div>Received Resent: ${JSON.stringify(message)}</div>`))
+            log(`Received Resent: ${JSON.stringify(message)}`)
             if (messages.length === 10) {
-                $('#result').append($(`<div class="resendMessagesResult">${JSON.stringify(messages)}</div>`))
+                log(`Resent: ${JSON.stringify(messages)}`, 'resendMessagesResult')
             }
         })
 
         sub.onConsumed(() => {
-            $('#result').append($(`<div class="resendResult">Resend Consumed</div>`))
+            log('Resend Consumed.', 'resendResult')
         })
     })
 
     $('#disconnect').on('click', async () => {
+        log(`Disconnecting...`)
+        $('#result').append($(`<div>Disconnecting Publisher...</div>`))
+        log(`Disconnecting Publisher...`)
         await publisher.disconnect()
+        log(`Disconnecting Subscriber...`)
         await subscriber.disconnect()
-        $('#result').append($(`<div class="disconnectResult">Disconnected</div>`))
+        log(`Disconnected.`, 'disconnectResult')
     })
 </script>
 </html>
