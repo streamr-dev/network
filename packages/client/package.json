@@ -46,7 +46,7 @@
         "test-types": "npm run test-browser-types",
         "test-browser-types": "tsc -b tsconfig.browser.json",
         "coverage": "jest --coverage",
-        "test-integration": "jest --verbose --useStderr --maxWorkers=2 --forceExit test/integration",
+        "test-integration": "jest --verbose --useStderr --maxWorkers=8 --forceExit test/integration",
         "test-exports": "cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json && npm test",
         "test-integration-no-resend": "jest --verbose --useStderr --forceExit --testTimeout=30000 --testPathIgnorePatterns='resend|Resend' --testNamePattern='^((?!(resend|Resend|resent|Resent|gap|Gap)).)*$' test/integration/*.test.*",
         "test-integration-resend": "jest --verbose --useStderr --forceExit --testTimeout=40000 --testNamePattern='(resend|Resend|resent|Resent)' test/integration/*.test.*",
