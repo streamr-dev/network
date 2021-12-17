@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('../src/logLevel')
+import '../src/logLevel'
 import EasyTable from 'easy-table'
 import StreamrClient from 'streamr-client'
 import { createClientCommand } from '../src/command'

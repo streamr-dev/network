@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('../src/logLevel')
+import '../src/logLevel'
 import { Writable } from 'stream'
 import { StreamrClient } from 'streamr-client'
 import { wait } from 'streamr-test-utils'

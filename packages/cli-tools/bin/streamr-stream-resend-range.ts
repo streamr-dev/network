@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('../src/logLevel')
+import '../src/logLevel'
 import { StreamrClient } from 'streamr-client'
 import { createClientCommand } from '../src/command'
 import { assertBothOrNoneDefined, resend } from '../src/resend'
