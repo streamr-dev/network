@@ -203,27 +203,25 @@ class StreamrStream implements StreamMetadata {
         return this._streamRegistry.hasPublicPermission(this.id, permission)
     }
 
-    async hasUserPermissions(requestedPermissions: StreamPermission[], userId: string): Promise<boolean> {
-        this.assertUserId(userId)
-        const permissions = await this._streamRegistry.getDirectPermissionsForUser(this.id, userId)
-        for (const requestedPermission of requestedPermissions) {
-            if (!permissions[requestedPermission]) {
-                return false
-            }
-        }
-        return true
-    }
+    // async hasUserPermissions(operations: StreamPermission[], userId: string) {
+    //     this.assertUserId(userId)
+    //     const permissions = this._streamRegistry.getPermissionsForUser(this.id, userId, )
+    //     return this.hasPermissions(operations, userId)
+    // }
+    // async hasPermissions(operations: StreamPermission[], userId: string) {
+    //     const permissions = await this._streamRegistry.getPermissionsForUser(this.id, userId)
 
-    async hasPermissions(requestedPermissions: StreamPermission[], userId: string): Promise<boolean> {
-        this.assertUserId(userId)
-        const permissions = await this._streamRegistry.getPermissionsForUser(this.id, userId)
-        for (const requestedPermission of requestedPermissions) {
-            if (!permissions[requestedPermission]) {
-                return false
-            }
-        }
-        return true
-    }
+    //     if (operation === StreamPermission.PUBLISH || operation === StreamPermission.SUBSCRIBE) {
+    //         return permissions[operation].gt(Date.now())
+    //     }
+    //     return permissions[operation]
+    // }
+
+    // async hasPermission(operation: StreamPermission, userId: string|undefined) {
+    //     const permissions = await this.hasPermissions([operation], userId)
+    //     if (!Array.isArray(permissions) || !permissions.length) { return undefined }
+    //     return permissions[0]
+    // }
 
     async grantUserPermission(permission: StreamPermission, userId: string) {
         try {
@@ -233,19 +231,15 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async grantUserPermissions(permissions: StreamPermission[], userId: string) {
-        this.assertUserIdOrPublic(userId)
-        const permissionsBase = await this.getUserPermissions(userId)
-        for (const permission of permissions) {
-            permissionsBase[permission] = true
-        }
-        try {
-            await this.setPermissionsForUser(userId, permissionsBase.canEdit, permissionsBase.canDelete,
-                permissionsBase.canPublish, permissionsBase.canSubscribe, permissionsBase.canGrant)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
+    // private async grantUserPermissions(permissions: StreamPermissions, userId: string) {
+    //     this.assertUserIdOrPublic(userId)
+    //     try {
+    //         await this.setPermissions(userId, permissions.edit, permissions.canDelete,
+    //             permissions.publishExpiration, permissions.subscribeExpiration, permissions.share)
+    //     } finally {
+    //         this._streamEndpointsCached.clearStream(this.id)
+    //     }
+    // }
 
     async grantPublicPermission(permission: StreamPermission) {
         try {
@@ -264,20 +258,6 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async revokeUserPermissions(permissions: StreamPermission[], userId: string) {
-        this.assertUserId(userId)
-        const permissionsBase = await this.getUserPermissions(userId)
-        for (const permission of permissions) {
-            permissionsBase[permission] = false
-        }
-        try {
-            await this.setPermissionsForUser(userId, permissionsBase.canEdit, permissionsBase.canDelete,
-                permissionsBase.canPublish, permissionsBase.canSubscribe, permissionsBase.canGrant)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
     async revokePublicPermission(permission: StreamPermission) {
         try {
             return this._streamRegistry.revokePublicPermission(this.id, permission)
@@ -285,6 +265,46 @@ class StreamrStream implements StreamMetadata {
             this._streamEndpointsCached.clearStream(this.id)
         }
     }
+
+    // async getMatchingPermissions(operations: StreamPermission[]|false, userId: string|undefined|false): Promise<StreamPermision[]> {
+    //     if (operations && !operations.length) { return [] }
+
+    //     if (userId !== false) {
+    //         this.assertUserIdOrPublic(userId)
+    //     }
+
+    //     const permissions = await this.getPermissions()
+    //     // eth addresses may be in checksumcase, but userId from server has no case
+    //     const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
+    //     const operationSet = new Set<StreamPermission>(operations === false ? [] : operations)
+    //     return permissions.filter((p) => {
+    //         if (operations !== false) {
+    //             if (!operationSet.has(p.operation)) {
+    //                 return false
+    //             }
+    //         }
+
+    //         if (userId !== false) {
+    //             if (userIdCaseInsensitive === undefined) {
+    //                 return !!('anonymous' in p && p.anonymous) // match nullish userId against p.anonymous
+    //             }
+    //             return 'user' in p && p.user && p.user.toLowerCase() === userIdCaseInsensitive // match against userId
+    //         }
+
+    //         return true
+    //     })
+    // }
+
+    // async revokeMatchingPermissions(operations: StreamPermission[], userId: string|undefined) {
+    //     this.assertUserIdOrPublic(userId)
+    //     const matchingPermissions = await this.getMatchingPermissions(operations, userId)
+
+    //     const tasks = matchingPermissions.map(async (p: any) => {
+    //         await this.revokePermission(p.id)
+    //     })
+    //     await Promise.allSettled(tasks)
+    //     await Promise.all(tasks)
+    // }
 
     async revokeAllUserPermissions(userId: string) {
         this.assertUserId(userId)

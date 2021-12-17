@@ -116,21 +116,10 @@ export class StreamRegistry implements Context {
             StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
-    async getPermissionsForUser(streamId: string, userAddress: EthereumAddress): Promise<StreamPermissions> {
+    async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
         await this.connectToStreamRegistryContract()
         this.debug('Getting permissions for stream %s for user %s', streamId, userAddress)
-        return StreamRegistry.getPermissionsForUserFromChain(streamId, userAddress, this.streamRegistryContract!.getPermissionsForUser)
-
-    }
-
-    async getDirectPermissionsForUser(streamId: string, userAddress: EthereumAddress): Promise<StreamPermissions> {
-        await this.connectToStreamRegistryContract()
-        this.debug('Getting permissions for stream %s for user %s', streamId, userAddress)
-        return StreamRegistry.getPermissionsForUserFromChain(streamId, userAddress, this.streamRegistryContract!.getDirectPermissionsForUser)
-    }
-
-    private static async getPermissionsForUserFromChain(streamId: string, userAddress: EthereumAddress, contractMethod: Function) {
-        const permissions = await contractMethod(streamId, userAddress)
+        const permissions = await this.streamRegistryContract!.getPermissionsForUser(streamId, userAddress || AddressZero)
         return {
             canEdit: permissions.canEdit,
             canDelete: permissions.canDelete,
