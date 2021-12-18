@@ -38,7 +38,7 @@ describe('StreamrClient Resend', () => {
             .click('button[id=store]')
             .waitForElementPresent('.storeResult')
             // TODO remove hardcoded address
-            .assert.containsText('#result', '0xde1112f631486CfC759A50196853011528bC5FA0')
+            .assert.containsText('#result', '0xde1112f631486CfC759A50196853011528bC5FA0'.toLowerCase())
             .assert.not.elementPresent('.error')
             .click('button[id=subscribe]')
             .waitForElementPresent('.subscribeResult')

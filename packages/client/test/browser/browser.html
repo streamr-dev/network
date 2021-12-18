@@ -267,8 +267,7 @@
         log('Added to storage node.')
         log('Loading storage nodes...')
         const storageNodes = await stream.getStorageNodes()
-        const storeResult = $(`<div class="storeResult">Stored: ${JSON.stringify(storageNodes)}</div>`)
-        log(`Storage: ${JSON.stringify(storageNodes)}`, 'storeResult')
+        log(`Storage: ${JSON.stringify(storageNodes && storageNodes.map((s) => s.toLowerCase()))}`, 'storeResult')
     })
 
     $('#permissions').on('click', async () => {
@@ -331,7 +330,6 @@
 
     $('#disconnect').on('click', async () => {
         log(`Disconnecting...`)
-        $('#result').append($(`<div>Disconnecting Publisher...</div>`))
         log(`Disconnecting Publisher...`)
         await publisher.disconnect()
         log(`Disconnecting Subscriber...`)
