@@ -1,10 +1,5 @@
 /* eslint-disable no-undef */
 const { v4: uuidv4 } = require('uuid')
-const { formatWithOptions } = require('util')
-
-function log(msg, ...args) {
-    process.stderr.write(formatWithOptions({ colors: true }, msg, ...args) + '\n')
-}
 
 describe('StreamrClient Resend', () => {
     const streamName = uuidv4()
@@ -15,7 +10,7 @@ describe('StreamrClient Resend', () => {
         const restUrl = process.env.REST_URL ? `&REST_URL=${encodeURIComponent(process.env.REST_URL)}` : ''
         const browserUrl = `http://localhost:8880?streamName=${streamName}${url}${restUrl}`
         // eslint-disable-next-line no-console
-        log(browserUrl)
+        console.log(browserUrl)
         await browser.windowMaximize()
         return browser.url(browserUrl)
     })
@@ -84,7 +79,7 @@ describe('StreamrClient Resend', () => {
     after(async (browser) => {
         await browser.getLog('browser', (logs) => {
             logs.forEach((l) => {
-                log('%s [%s]: %s', l.timestamp, l.level, l.message)
+                console.log(`[${l.level}]: ${l.message}`)
             })
         })
         await new Promise((resolve) => setTimeout(resolve, 500))

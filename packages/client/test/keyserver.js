@@ -7,10 +7,10 @@ const app = express()
 
 app.use(cors())
 
-let c = 0
+// try avoid sequential tests starting from same address
+let c = ((Math.random() * 1000) % 1000)
 app.get('/key', (req, res) => {
-    c += 1
-    if (c === 1000) { c = 1 }
+    c = ((c + 1) % 1000)
     const hexString = c.toString(16)
     const privkey = '0x' + hexString.padStart(64, '0')
     log('key endpoint called, returning key ' + privkey)
