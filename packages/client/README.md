@@ -669,6 +669,28 @@ await Promise.all([2, 3, 4].map(async (partition) => {
 }))
 ```
 
+## Proxy publishing
+
+In some cases the client might be interested in publishing data without participating in the stream's message propagation. With this option the nodes can sign all messages they publish by themselves. Alternatively, a client could open a WS connection to a broker node and allow the broker to handle signing with its private key.
+
+Proxy publishing is done on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
+
+```js
+// Open publish proxy to a node on stream
+await publishingClient.setPublishProxy(stream, 'proxyNodeId')
+
+// Open publish proxy to multiple nodes on stream
+await publishingClient.setPublishProxies(stream, ['proxyNodeId1', 'proxyNodeId2'])
+
+// Remove publish proxy to a node on stream
+await publishingClient.removePublishProxy(stream, proxyNodeId1)
+
+// Remove publish proxy to multiple nodes on stream
+await publishingClient.removePublishProxies(stream, ['proxyNodeId1', 'proxyNodeId2'])
+```
+
+IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections.
+
 ## Logging
 
 The Streamr JS client library supports [debug](https://github.com/visionmedia/debug) for logging.

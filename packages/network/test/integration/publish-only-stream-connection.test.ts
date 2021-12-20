@@ -60,12 +60,12 @@ describe('Publish only connection tests', () => {
     })
 
     afterEach(async () => {
+        await tracker.stop()
         await Promise.all([
             publisherNode.stop(),
             contactNode.stop(),
             contactNode2.stop(),
         ])
-        await tracker.stop()
     })
 
     it('publisher node can form one-way connections', async () => {
@@ -235,4 +235,29 @@ describe('Publish only connection tests', () => {
         // @ts-expect-error private
         expect(contactNode.streams.isSetUp(streamSPID)).toBeTrue()
     })
+
+    it('will reconnect after lost connectivity', async () => {
+        await Promise.all([
+            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
+            publisherNode.joinStreamAsPurePublisher('stream-0', 0, 'contact-node'),
+        ])
+
+        await Promise.all([
+            waitForEvent(publisherNode, NodeEvent.NODE_CONNECTED, 20000),
+            // @ts-expect-error private
+            contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
+        ])
+
+        await Promise.all([
+            waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
+            waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
+            publisherNode.publish(new StreamMessage({
+                messageId: new MessageID('stream-0', 0, 120, 0, 'publisher', 'session'),
+                content: {
+                    hello: 'world'
+                },
+            }))
+        ])
+
+    }, 20000)
 })

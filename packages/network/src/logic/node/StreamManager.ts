@@ -12,7 +12,7 @@ interface StreamState {
     counter: number,
     inOnly: Set<NodeId>,
     outOnly: Set<NodeId>,
-    oneDirectional: boolean
+    isBehindProxy: boolean
 }
 
 function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
@@ -22,7 +22,7 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
 export class StreamManager {
     private readonly streams: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
 
-    setUpStream(spid: SPID, oneDirectional = false): void {
+    setUpStream(spid: SPID, isBehindProxy = false): void {
         if (!(spid instanceof SPID)) {
             throw new Error('streamId not instance of SPID')
         }
@@ -35,7 +35,7 @@ export class StreamManager {
             counter: 0,
             inOnly: new Set(),
             outOnly: new Set(),
-            oneDirectional
+            isBehindProxy
         })
     }
 
@@ -109,17 +109,23 @@ export class StreamManager {
         }
     }
 
-    removeNodeFromAllStreams(node: NodeId): SPID[] {
+    removeNodeFromAllStreams(node: NodeId): [SPID[], SPID[]] {
         const streams: SPID[] = []
+        const notRemovedProxies: SPID[] = []
         this.streams.forEach(({ neighbors, inOnly, outOnly }, spidKey) => {
+            const spid = SPID.from(spidKey)
             const isRemoved = neighbors.delete(node)
             if (isRemoved) {
-                streams.push(SPID.from(spidKey))
+                streams.push(spid)
             }
-            inOnly.delete(node)
-            outOnly.delete(node)
+            if (this.isBehindProxy(spid)) {
+                notRemovedProxies.push(spid)
+            } else {
+                inOnly.delete(node)
+                outOnly.delete(node)
+            }
         })
-        return streams
+        return [streams, notRemovedProxies]
     }
 
     removeStream(spid: SPID): void {
@@ -152,17 +158,20 @@ export class StreamManager {
 
     getOutboundNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
         this.verifyThatIsSetUp(spid)
-        return [...this.streams.get(spid.toKey())!.neighbors, ...this.streams.get(spid.toKey())!.outOnly]
+        const { neighbors, outOnly } = this.streams.get(spid.toKey())!
+        return [...neighbors, ...outOnly]
     }
 
     getInboundNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
         this.verifyThatIsSetUp(spid)
-        return [...this.streams.get(spid.toKey())!.neighbors, ...this.streams.get(spid.toKey())!.inOnly]
+        const { neighbors, inOnly } = this.streams.get(spid.toKey())!
+        return [...neighbors, ...inOnly]
     }
 
     getAllNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
         this.verifyThatIsSetUp(spid)
-        return [...this.streams.get(spid.toKey())!.neighbors, ...this.streams.get(spid.toKey())!.inOnly, ...this.streams.get(spid.toKey())!.outOnly]
+        const { neighbors, inOnly, outOnly } = this.streams.get(spid.toKey())!
+        return [...neighbors, ...inOnly, ...outOnly]
     }
 
     getAllNodes(): ReadonlyArray<NodeId> {
@@ -192,10 +201,10 @@ export class StreamManager {
         return this.hasInOnlyConnection(spid, node) || this.hasNeighbor(spid, node)
     }
 
-    isOneDirectional(spid: SPID): boolean {
+    isBehindProxy(spid: SPID): boolean {
         try {
             this.verifyThatIsSetUp(spid)
-            return this.streams.get(spid.toKey())!.oneDirectional
+            return this.streams.get(spid.toKey())!.isBehindProxy
         }
         catch (err) {
             return false
