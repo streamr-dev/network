@@ -187,7 +187,7 @@ describe('Publish only connection tests', () => {
         expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
     })
 
-    it.only('Multiple calls to joinStreamAsPurePublisher do not cancel the first call', async () => {
+    it('Multiple calls to joinStreamAsPurePublisher do not cancel the first call', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
             publisherNode.joinStreamAsPurePublisher('stream-0', 0, 'contact-node'),
