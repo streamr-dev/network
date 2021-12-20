@@ -1,6 +1,5 @@
 import { StreamrClient, ResendOptions } from 'streamr-client'
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const assertBothOrNoneDefined = (
     option1: string,
     option2: string,
