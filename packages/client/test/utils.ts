@@ -23,6 +23,7 @@ export { clientOptions }
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
+
 export {
     testDebug as Debug
 }
@@ -42,8 +43,21 @@ export function fakeAddress() {
     return crypto.randomBytes(32).toString('hex').slice(0, 40)
 }
 
-export async function getPrivateKey(): Promise<string> {
-    const response = await fetch('http://localhost:45454/key')
+export async function getPrivateKey(timeout = 5000): Promise<string> {
+    const response = await new Promise<ReturnType<typeof fetch>>((resolve, reject) => {
+        const t = setTimeout(() => {
+            reject(new Error(`getPrivateKey timed out after ${timeout}ms.`))
+        }, timeout)
+
+        resolve(fetch('http://localhost:45454/key').finally(() => {
+            clearTimeout(t)
+        }))
+    })
+
+    if (!response.ok) {
+        throw new Error(`getPrivateKey failed ${response.status} ${response.statusText}: ${response.text()}`)
+    }
+
     return response.text()
 }
 

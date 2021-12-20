@@ -102,15 +102,15 @@ export const CONFIG_TEMPLATE: any = {
                     "ws": "wss://testnet4.streamr.network:30405",
                     "http": "https://testnet4.streamr.network:30405"
                 }
+            ],
+            stunUrls: [
+                "stun:stun.streamr.network:5349"
             ]
         },
         storageNodeRegistry: [{
             address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
             url: "https://testnet2.streamr.network:8001"
-        }],
-        stunUrls: [
-            "stun:stun.streamr.network:5349"
-        ]
+        }]
     },
     plugins: {
         legacyWebsocket: {},

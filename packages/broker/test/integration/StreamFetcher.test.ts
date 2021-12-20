@@ -63,53 +63,6 @@ describe('StreamFetcher', () => {
             })
         })
 
-        // it('escapes any forward slashes ("/") in streamId', async () => {
-        //     streamId = 'sandbox/stream/aaa'
-        //     await streamFetcher.checkPermission('sandbox/stream/aaa', StreamPermission.SUBSCRIBE, null)
-        //     expect(numOfRequests).toEqual(1) // would not land at handler if "/" not escaped
-        // })
-
-        // it('caches repeated invocations', async () => {
-        //     const streamId2 = (await createTestStream(client, module)).streamId
-        //     const streamId3 = (await createTestStream(client, module)).streamId
-
-        //     await Promise.all([streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //         streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //         streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //         streamFetcher.checkPermission(streamId2, StreamPermission.SUBSCRIBE, null),
-        //         streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //         streamFetcher.checkPermission(streamId2, StreamPermission.SUBSCRIBE, null),
-        //         streamFetcher.checkPermission(streamId3, StreamPermission.SUBSCRIBE, null),
-        //         streamFetcher.checkPermission(streamId2, StreamPermission.SUBSCRIBE, null),
-        //         streamFetcher.checkPermission(streamId3, StreamPermission.SUBSCRIBE, null),
-        //     ]).catch(() => {
-        //         assert.equal(numOfRequests, 3)
-        //     })
-        // })
-
-        // it('does not cache errors', (done) => {
-        //     broken = true
-        //     streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null).catch(() => {
-        //         streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null).catch(() => {
-        //             streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null).catch(() => {
-        //                 assert.equal(numOfRequests, 3)
-        //                 broken = false
-        //                 Promise.all([
-        //                     streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //                     streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //                     streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //                     streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //                     streamFetcher.checkPermission(streamId, StreamPermission.SUBSCRIBE, null),
-        //                 ]).then(() => {
-        //                     assert.equal(numOfRequests, 3 + 1)
-        //                     done()
-        //                 }).catch(() => {
-        //                     done(new Error('test fail'))
-        //                 })
-        //             })
-        //         })
-        //     })
-        // })
     })
 
     describe('fetch', () => {
@@ -125,127 +78,11 @@ describe('StreamFetcher', () => {
             })
         })
 
-        // it('rejects with unauthorized if session token does not grant access to stream', (done) => {
-        //     streamFetcher.fetch(streamId).catch((err: Todo) => {
-        //         expect(err.errorCode).toContain('unauthorized')
-        //         done()
-        //     })
-        // })
-
         it('resolves with stream if session token provides privilege to stream', async () => {
             const stream = await streamFetcher.fetch(streamId)
             expect(stream.streamId).toEqual(streamId)
             expect(stream.partitions).toEqual(1)
         })
 
-        // it('resolves with stream if stream is publicly readable', (done) => {
-        //     requestHandlers.stream = (req: Request, res: Response) => {
-        //         assert.equal(req.params.id, 'publicStream')
-        //         res.status(200).send(streamJson)
-        //     }
-        //     streamFetcher.fetch('publicStream').then((response: Todo) => {
-        //         assert.deepEqual(response, streamJson)
-        //         done()
-        //     }).catch((err: Todo) => {
-        //         done(err)
-        //     })
-        // })
-
-        // it('escapes any forward slashes ("/") in streamId', async () => {
-        //     await streamFetcher.fetch('sandbox/stream/aaa')
-        //     expect(numOfRequests).toEqual(1) // would not land at handler if "/" not escaped
-        // })
-
-        // it('caches repeated invocations', async () => {
-        //     const streamId2 = (await createTestStream(client, module)).streamId
-        //     const streamId3 = (await createTestStream(client, module)).streamId
-
-        //     await Promise.all([streamFetcher.fetch(streamId),
-        //         streamFetcher.fetch(streamId),
-        //         streamFetcher.fetch(streamId),
-        //         streamFetcher.fetch(streamId2),
-        //         streamFetcher.fetch(streamId),
-        //         streamFetcher.fetch(streamId2),
-        //         streamFetcher.fetch(streamId3),
-        //         streamFetcher.fetch(streamId2),
-        //         streamFetcher.fetch(streamId3),
-        //     ]).catch(() => {
-        //         assert.equal(numOfRequests, 3)
-        //     })
-        // })
-
-        // it('does not cache errors', (done) => {
-        //     broken = true
-        //     streamFetcher.fetch(streamId).catch(() => {
-        //         streamFetcher.fetch(streamId).catch(() => {
-        //             streamFetcher.fetch(streamId).catch(() => {
-        //                 assert.equal(numOfRequests, 3)
-        //                 broken = false
-        //                 Promise.all([
-        //                     streamFetcher.fetch(streamId),
-        //                     streamFetcher.fetch(streamId),
-        //                     streamFetcher.fetch(streamId),
-        //                     streamFetcher.fetch(streamId),
-        //                     streamFetcher.fetch(streamId),
-        //                 ]).then(() => {
-        //                     assert.equal(numOfRequests, 3 + 1)
-        //                     done()
-        //                 }).catch(() => {
-        //                     done(new Error('test fail'))
-        //                 })
-        //             })
-        //         })
-        //     })
-        // })
     })
-
-    // describe('authenticate', () => {
-    // it('fails if the requested permission has not been granted', (done) => {
-    //     // Only stream_get permission
-    //     permissions = [
-    //         {
-    //             id: null,
-    //             user: 'tester1@streamr.com',
-    //             operation: 'stream_get',
-    //         }
-    //     ]
-
-    //     // Should reject promise
-    //     streamFetcher.authenticate(streamId, StreamPermission.SUBSCRIBE, null)
-    //         .catch((_err: Todo) => {
-    //             done()
-    //         })
-    // })
-
-    // it('accepts and returns stream if the permission is granted', (done) => {
-    //     permissions.push({
-    //         id: null,
-    //         user: 'tester1@streamr.com',
-    //         operation: 'stream_publish',
-    //     })
-
-    // streamFetcher.authenticate(streamId, StreamPermission.PUBLISH, null).then((json: Todo) => {
-    //     assert.equal(numOfRequests, 2)
-    //     assert.deepEqual(json, streamJson)
-    //     done()
-    // }).catch(() => {
-    //     done(new Error('test fail'))
-    // })
-    // })
-
-    // it('fails with an invalid session token', (done) => {
-    //     streamFetcher.authenticate(streamId, StreamPermission.SUBSCRIBE, null).catch((_err: Todo) => {
-    //         assert.equal(numOfRequests, 1)
-    //         done()
-    //     })
-    // })
-
-    // it('escapes any forward slashes ("/") in streamId', async () => {
-    //     streamId = 'sandbox/stream/aaa'
-    //     await streamFetcher.authenticate('sandbox/stream/aaa', StreamPermission.SUBSCRIBE, null)
-    //     expect(numOfRequests).toEqual(2) // would not land at handlers if "/" not escaped
-    // })
-
-    // TODO: write cache tests
-    // })
 })

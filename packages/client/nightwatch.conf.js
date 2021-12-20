@@ -9,11 +9,14 @@ module.exports = {
         ],
         port: 9515
     },
-
+    globals: {
+        waitForConditionTimeout: 15000
+    },
     test_settings: {
         default: {
             desiredCapabilities: {
                 browserName: 'chrome',
+                loggingPrefs: { browser: 'DEBUG' },
                 chromeOptions: {
                     args: [
                         '--no-sandbox',
