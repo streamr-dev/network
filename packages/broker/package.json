@@ -57,6 +57,7 @@
     "chalk": "^4.0.0",
     "commander": "^7.2.0",
     "cors": "^2.8.5",
+    "env-paths": "^2.2.1",
     "ethers": "^5.4.7",
     "express": "^4.17.1",
     "heap": "^0.2.6",
@@ -79,7 +80,6 @@
     "terminal-kit": "^2.1.5",
     "utf8-binary-cutter": "^0.9.2",
     "uuid": "^8.3.2",
-    "env-paths": "^2.2.1",
     "ws": "^7.5.0"
   },
   "devDependencies": {
