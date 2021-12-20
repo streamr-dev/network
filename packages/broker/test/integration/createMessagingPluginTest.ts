@@ -1,8 +1,9 @@
+import { Wallet } from '@ethersproject/wallet'
 import { Stream, StreamrClient } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, createMockUser, Queue } from '../utils'
+import { createClient, startBroker, createTestStream, Queue, getPrivateKey, startTestTracker } from '../utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish'|'subscribe', streamId: string, apiKey: string) => Promise<T>
@@ -26,8 +27,7 @@ const MOCK_MESSAGE = {
     }
 }
 const MOCK_API_KEY = 'mock-api-key'
-
-const brokerUser = createMockUser()
+let brokerUser: Wallet
 
 const assertReceivedMessage = (message: Message) => {
     const { content, metadata } = message
@@ -56,13 +56,8 @@ export const createMessagingPluginTest = <T>(
         let messageQueue: Queue<Message>
 
         beforeAll(async () => {
-            tracker = await startTracker({
-                id: 'tracker-1',
-                listen: {
-                    hostname: '127.0.0.1',
-                    port: ports.tracker
-                },
-            })
+            brokerUser = new Wallet(await getPrivateKey())
+            tracker = await startTestTracker(ports.tracker)
             broker = await startBroker({
                 name: 'broker',
                 privateKey: brokerUser.privateKey,
@@ -89,7 +84,7 @@ export const createMessagingPluginTest = <T>(
         })
 
         beforeEach(async () => {
-            streamrClient = createClient(tracker, brokerUser.privateKey)
+            streamrClient = await createClient(tracker, brokerUser.privateKey)
             stream = await createTestStream(streamrClient, testModule)
             messageQueue = new Queue<Message>()
         })

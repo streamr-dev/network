@@ -38,13 +38,12 @@
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-flakey": "jest test/flakey",
     "test-integration": "jest test/integration/",
-    "test-simulator": "jest --projects simulator.jest.config.js -- test/",
+    "test-simulator": "jest --projects simulator.jest.config.js -- test/integration/publish-only-stream-connection.test.ts",
     "test-types": "tsc --noEmit -b ./tsconfig.json ",
     "test-unit": "jest test/unit",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
   },
   "dependencies": {
-    "@pm2/io": "^5.0.0",
     "@types/compression": "^1.7.2",
     "@types/morgan": "^1.9.3",
     "cancelable-promise": "^3.2.3",
@@ -60,7 +59,7 @@
     "node-datachannel": "^0.1.14",
     "pino": "^6.11.3",
     "setimmediate": "^1.0.5",
-    "streamr-client-protocol": "^9.1.1",
+    "streamr-client-protocol": "^9.1.2",
     "strict-event-emitter-types": "^2.0.0",
     "uuid": "^8.3.2",
     "websocket": "^1.0.34",

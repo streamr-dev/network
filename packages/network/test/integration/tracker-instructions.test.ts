@@ -21,10 +21,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: trackerPort
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         // @ts-expect-error private method
         tracker.formAndSendInstructions = () => {}
@@ -77,9 +76,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
         await Promise.race([
             // @ts-expect-error private field
-            node1.trackerManager.instructionThrottler.add(trackerInstruction1, 'tracker'),
+            node1.trackerManager.instructionThrottler.add(trackerInstruction1, tracker.getTrackerId()),
             // @ts-expect-error private field
-            node2.trackerManager.instructionThrottler.add(trackerInstruction2, 'tracker')
+            node2.trackerManager.instructionThrottler.add(trackerInstruction2, tracker.getTrackerId())
         ]).catch(() => {})
 
         await Promise.race([

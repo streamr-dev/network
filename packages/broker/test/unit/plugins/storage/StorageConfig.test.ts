@@ -1,23 +1,31 @@
 /* eslint-disable no-underscore-dangle, object-curly-newline */
+import StreamrClient, { Stream } from 'streamr-client'
 import { StorageConfig, StorageConfigListener } from '../../../../src/plugins/storage/StorageConfig'
-import nock from 'nock'
 import { Protocol } from 'streamr-network'
 
 describe('StorageConfig', () => {
 
-    afterEach(function () {
-        if (!nock.isDone()) {
-            nock.cleanAll()
-            throw new Error('Not all nock interceptors were used!')
-        }
+    let client: StreamrClient
+    beforeAll(async () => {
+        client = {} as StreamrClient
+        client.getStoredStreamsOf = () => Promise.resolve([
+            {
+                id: 'foo',
+                partitions: 2
+            } as Stream,
+            {
+                id: 'bar',
+                partitions: 1
+            } as Stream,
+        ])
     })
 
     describe('single storage node', () => {
         let config: StorageConfig
         let listener: StorageConfigListener
 
-        beforeEach(() => {
-            config = new StorageConfig('nodeId', 1, 0, 'http://api-url.com/path')
+        beforeEach(async () => {
+            config = new StorageConfig('nodeId', 1, 0, client)
             // @ts-expect-error private
             config.setSPIDKeys(new Set(['existing1#0', 'existing2#0', 'existing2#1', 'existing3#0']))
             listener = {
@@ -63,19 +71,6 @@ describe('StorageConfig', () => {
         })
 
         it('refresh', async () => {
-            nock('http://api-url.com')
-                .get('/path/storageNodes/nodeId/streams')
-                .reply(200, [
-                    {
-                        id: 'foo',
-                        partitions: 2
-                    },
-                    {
-                        id: 'bar',
-                        partitions: 1
-                    },
-                ])
-
             await config.refresh()
             expect(config.hasSPID(new Protocol.SPID('foo', 0))).toBeTruthy()
             expect(config.hasSPID(new Protocol.SPID('foo', 1))).toBeTruthy()
@@ -99,29 +94,29 @@ describe('StorageConfig', () => {
     describe('storage cluster', () => {
         let configs: StorageConfig[]
 
+        beforeAll(async () => {
+            client = {} as StreamrClient
+            client.getStoredStreamsOf = () => Promise.resolve([
+                {
+                    id: 'foo',
+                    partitions: 100
+                } as Stream,
+                {
+                    id: 'bar',
+                    partitions: 100
+                } as Stream,
+            ])
+        })
+    
         beforeEach(() => {
             configs = [
-                new StorageConfig('nodeId', 3, 0, 'http://api-url.com/path'),
-                new StorageConfig('nodeId', 3, 1, 'http://api-url.com/path'),
-                new StorageConfig('nodeId', 3, 2, 'http://api-url.com/path'),
+                new StorageConfig('nodeId', 3, 0, client),
+                new StorageConfig('nodeId', 3, 1, client),
+                new StorageConfig('nodeId', 3, 2, client),
             ]
         })
 
         it('refresh', async () => {
-            // One http call per config
-            configs.map(() => nock('http://api-url.com')
-                .get('/path/storageNodes/nodeId/streams')
-                .reply(200, [
-                    {
-                        id: 'foo',
-                        partitions: 100
-                    },
-                    {
-                        id: 'bar',
-                        partitions: 100
-                    },
-                ]))
-
             await Promise.all(configs.map((config) => config.refresh()))
             // @ts-expect-error private field
             expect(configs[0].spidKeys.size).toBe(61)

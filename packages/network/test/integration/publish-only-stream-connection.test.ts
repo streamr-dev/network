@@ -1,7 +1,7 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { MessageLayer, SPID } from 'streamr-client-protocol'
-import { waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
@@ -25,10 +25,9 @@ describe('Publish only connection tests', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30353
-            },
-            id: 'tracker'
+            }
         })
-        trackerInfo = {id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl()}
+        trackerInfo = tracker.getConfigRecord()
         contactNode = createNetworkNode({
             id: 'contact-node',
             trackers: [trackerInfo],
@@ -102,7 +101,7 @@ describe('Publish only connection tests', () => {
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
             publisherNode.leavePurePublishingStream('stream-0', 0, 'contact-node'),
         ])
-
+        
         // @ts-expect-error private
         expect(publisherNode.streams.hasOutOnlyConnection(streamSPID, 'contact-node')).toBeFalse()
         // @ts-expect-error private
@@ -188,7 +187,7 @@ describe('Publish only connection tests', () => {
         expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
     })
 
-    it('Multiple calls to joinStreamAsPurePublisher do not cancel the first call', async () => {
+    it.only('Multiple calls to joinStreamAsPurePublisher do not cancel the first call', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
             publisherNode.joinStreamAsPurePublisher('stream-0', 0, 'contact-node'),

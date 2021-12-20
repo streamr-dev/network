@@ -1,12 +1,15 @@
 import { Stream, StreamrClient } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import mqtt from 'async-mqtt'
 import { Broker } from '../../../../src/broker'
-import { createClient, startBroker, createTestStream, createMockUser, Queue } from '../../../utils'
+import { createClient, startBroker, createTestStream, Queue, getPrivateKey, startTestTracker } from '../../../utils'
 import { wait } from 'streamr-test-utils'
+import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470
 const TRACKER_PORT = 12471
+
+jest.setTimeout(30000)
 
 const createMqttClient = () => {
     return mqtt.connectAsync('mqtt://localhost:' + MQTT_PLUGIN_PORT)
@@ -17,7 +20,7 @@ describe('MQTT Bridge', () => {
     let streamrClient: StreamrClient
     let tracker: Tracker
     let broker: Broker
-    const brokerUser = createMockUser()
+    let brokerUser: Wallet
 
     const createSubscriber = async (messageQueue: Queue<any>) => {
         const subscriber = await createMqttClient()
@@ -27,13 +30,8 @@ describe('MQTT Bridge', () => {
     }
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            id: 'tracker-1',
-            listen: {
-                hostname: '127.0.0.1',
-                port: TRACKER_PORT
-            },
-        })
+        brokerUser = new Wallet(await getPrivateKey())
+        tracker = await startTestTracker(TRACKER_PORT)
         broker = await startBroker({
             name: 'broker',
             privateKey: brokerUser.privateKey,
@@ -54,7 +52,7 @@ describe('MQTT Bridge', () => {
     })
 
     beforeEach(async () => {
-        streamrClient = createClient(tracker, brokerUser.privateKey)
+        streamrClient = await createClient(tracker, brokerUser.privateKey)
         stream = await createTestStream(streamrClient, module)
     })
 

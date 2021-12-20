@@ -2,19 +2,21 @@ import {
     Msg,
     clientOptions,
     describeRepeats,
-    fakePrivateKey,
+    getPrivateKey,
     getWaitForStorage,
     getPublishTestStreamMessages,
     createTestStream,
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { storageNodeTestConfig } from './devEnvironment'
 
-import { Stream, StreamOperation } from '../../src/Stream'
-import { StorageNode } from '../../src/StorageNode'
+import { Stream, StreamPermission } from '../../src/Stream'
 
-const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 6000
+const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 12000
 const MAX_MESSAGES = 5
 const ITERATIONS = 4
+
+jest.setTimeout(30000)
 
 describeRepeats('sequential resend subscribe', () => {
     let publisher: StreamrClient
@@ -22,7 +24,7 @@ describeRepeats('sequential resend subscribe', () => {
     let stream: Stream
 
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    let waitForStorage: (...args: any[]) => Promise<void>
+    let waitForStorage: (...args: any[]) => Promise<void> = async () => {}
 
     let published: any[] = [] // keeps track of stream message data so we can verify they were resent
 
@@ -31,7 +33,7 @@ describeRepeats('sequential resend subscribe', () => {
             ...clientOptions,
             id: 'TestPublisher',
             auth: {
-                privateKey: fakePrivateKey(),
+                privateKey: await getPrivateKey(),
             },
         })
 
@@ -39,15 +41,15 @@ describeRepeats('sequential resend subscribe', () => {
             ...clientOptions,
             id: 'TestSubscriber',
             auth: {
-                privateKey: fakePrivateKey(),
+                privateKey: await getPrivateKey(),
             },
         })
 
         stream = await createTestStream(publisher, module)
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+        await stream.addToStorageNode(storageNodeTestConfig.address)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
-        await stream.grantPermissions([StreamOperation.STREAM_GET, StreamOperation.STREAM_SUBSCRIBE], await subscriber.getAddress())
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())
 
         waitForStorage = getWaitForStorage(publisher, {
             stream,

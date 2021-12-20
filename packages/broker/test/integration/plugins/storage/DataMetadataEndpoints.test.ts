@@ -1,10 +1,12 @@
 import http from 'http'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
-import StreamrClient, { Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream } from '../../../utils'
+import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
+import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
+    createTestStream, getPrivateKey, startTestTracker } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
+jest.setTimeout(30000)
 const httpPort1 = 12371
 const wsPort1 = 12372
 const trackerPort = 12375
@@ -26,42 +28,40 @@ describe('DataMetadataEndpoints', () => {
     let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
-    const storageNodeAccount = Wallet.createRandom()
+    let storageNodeAccount: Wallet
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
-
-        const storageNodeRegistry = [{
-            address: storageNodeAccount.address,
-            url: `http://127.0.0.1:${httpPort1}`
-        }]
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: trackerPort
+        storageNodeAccount = new Wallet(await getPrivateKey())
+        const storageNodeRegistry = {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            jsonRpcProvider: `http://127.0.0.1:8546`
+        }
+        tracker = await startTestTracker(trackerPort)
+        const engineAndEditorAccount = new Wallet(await getPrivateKey())
+        const storageNodeClient = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: storageNodeAccount.privateKey
             },
-            id: 'tracker-DataMetadataEndpoints'
         })
-        const engineAndEditorAccount = Wallet.createRandom()
-        const trackerInfo = tracker.getConfigRecord()
-
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}/api/v1"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
-            trackerId: trackerInfo.id,
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
-        client1 = createClient(tracker, undefined, {
+        client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
         assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
-    }, 10 * 1000)
+    })
 
     afterAll(async () => {
         await tracker.stop()

@@ -9,6 +9,8 @@ export const createMockStorageConfig = (spids: Protocol.SPID[]): any => {
             return spids
         },
         addChangeListener: () => {},
+        startChainEventsListener: jest.fn(),
+        stopChainEventsListener: jest.fn(),
         startAssignmentEventListener: jest.fn(),
         stopAssignmentEventListener: jest.fn(),
         cleanup: jest.fn().mockResolvedValue(undefined)

@@ -17,13 +17,16 @@
         ],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "strictBindCallApply": true
+        "strictBindCallApply": true,
+        "resolveJsonModule": true
     },
     "include": [
         "package.json",
         "src/**/*",
+        "src/**/*.json",
         "vendor/**/*",
-        "contracts/**/*.json"
+        "contracts/**/*.json",
+        "src/config.schema.json"
     ],
     "exclude": ["src/index-esm.mjs"],
     "references": [

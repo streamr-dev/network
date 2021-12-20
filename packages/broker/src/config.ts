@@ -1,3 +1,4 @@
+import { BrubeckClientConfig } from 'streamr-client'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
 export interface NetworkSmartContract {
@@ -13,45 +14,18 @@ export interface TurnConfig {
     password: string
 }
 
-export interface NetworkConfig {
-    name: string,
-    trackers: TrackerRegistryItem[] | NetworkSmartContract,
-    stun: string | null,
-    turn: TurnConfig | null,
-    location: {
-        latitude: number,
-        longitude: number,
-        country: string,
-        city: string
-    } | null,
-    webrtcDisallowPrivateAddresses: boolean,
-    acceptProxyConnections: boolean
-}
-
 export interface HttpServerConfig {
     port: number,
     privateKeyFileName: string | null,
     certFileName: string | null
 }
 
-export interface StorageNodeRegistryItem {
-    address: string
-    url: string
-}
-
-export interface StorageNodeConfig {
-    registry: StorageNodeRegistryItem[] | NetworkSmartContract
-}
-
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
+export type ClientConfig = BrubeckClientConfig & { network?: { trackers: TrackerRegistryItem[] | NetworkSmartContract | undefined } }
+
 export interface Config {
-    ethereumPrivateKey: string
-    generateSessionId: boolean
-    network: NetworkConfig,
-    streamrUrl: string,
-    streamrAddress: string,
-    storageNodeConfig: StorageNodeConfig,
+    client: ClientConfig
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig

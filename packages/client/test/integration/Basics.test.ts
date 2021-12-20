@@ -1,9 +1,11 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator } from '../utils'
+import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
+
+jest.setTimeout(15000)
 
 describeRepeats('StreamrClient', () => {
     const MAX_MESSAGES = 10
@@ -37,18 +39,19 @@ describeRepeats('StreamrClient', () => {
         const id = `/${uid('stream')}`
         const s = await client.createStream({
             id,
+            partitions: 1,
             ...opts,
         })
+        await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
+
+        // await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 
         expect(s.id).toBeTruthy()
         return s
     }
 
     beforeEach(async () => {
-        client = createClient()
-        client.debug('getSessionToken >>')
-        const t = await client.getSessionToken()
-        client.debug('getSessionToken <<', t)
+        client = await createClient()
         client.debug('create stream >>')
         stream = await createStream()
         client.debug('create stream <<')
@@ -107,7 +110,7 @@ describeRepeats('StreamrClient', () => {
                     }
                 }
                 expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
-                expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
+                return expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
             }
             const stream2 = await createStream()
             const tasks = [

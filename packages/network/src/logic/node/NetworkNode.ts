@@ -25,8 +25,8 @@ export class NetworkNode extends Node {
         await this.openOutgoingStreamConnection(new SPID(streamId, streamPartition), contactNodeId)
     }
 
-    leavePurePublishingStream(streamId: string, streamPartition: number, contactNodeId: string): void {
-        this.closeOutgoingStreamConnection(new SPID(streamId, streamPartition), contactNodeId)
+    async leavePurePublishingStream(streamId: string, streamPartition: number, contactNodeId: string): Promise<void> {
+        await this.closeOutgoingStreamConnection(new SPID(streamId, streamPartition), contactNodeId)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {

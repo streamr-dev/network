@@ -30,6 +30,11 @@ function serialize(body: any): string | undefined {
     return typeof body === 'string' ? body : JSON.stringify(body)
 }
 
+export const createQueryString = (query: Record<string, any>) => {
+    const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+    return new URLSearchParams(withoutEmpty).toString()
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class Rest implements Context {
     id
@@ -45,8 +50,7 @@ export class Rest implements Context {
 
     getUrl(urlParts: UrlParts, query = {}, restUrl = this.options.restUrl) {
         const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), restUrl + '/')
-        const searchParams = new URLSearchParams(query)
-        url.search = searchParams.toString()
+        url.search = createQueryString(query)
         return url
     }
 
@@ -58,10 +62,13 @@ export class Rest implements Context {
         query, useSession = true, options, requireNewToken = false, debug = this.debug, restUrl
     }: FetchOptions) {
         const url = this.getUrl(urlParts, query, restUrl)
+        const newOptions = {
+            ...options,
+            session: useSession ? this.session : undefined
+        }
         return authFetch<T>(
             url.toString(),
-            useSession ? this.session : undefined,
-            options,
+            newOptions,
             requireNewToken,
             debug,
         )
@@ -71,10 +78,13 @@ export class Rest implements Context {
         query, useSession = true, options, requireNewToken = false, debug = this.debug, restUrl
     }: FetchOptions) {
         const url = this.getUrl(urlParts, query, restUrl)
+        const newOptions = {
+            ...options,
+            session: useSession ? this.session : undefined
+        }
         return authRequest<T>(
             url.toString(),
-            useSession ? this.session : undefined,
-            options,
+            newOptions,
             requireNewToken,
             debug,
         )

@@ -7,10 +7,10 @@ export interface Rtts {
 }
 
 export interface Location {
-    latitude: number | null
-    longitude: number | null
-    country: string | null
-    city: string | null
+    latitude?: number
+    longitude?: number
+    country?: string
+    city?: string
 }
 
 export interface StreamStatus {
@@ -23,7 +23,7 @@ export interface StreamStatus {
 export interface Status {
     stream: StreamStatus
     rtts: Rtts | null
-    location: Location
+    location?: Location
     started: string
     extra: Record<string, unknown>
 }
@@ -84,7 +84,7 @@ export type TrackerInfo = SmartContractRecord
 export interface AbstractNodeOptions {
     id?: NodeId
     name?: string
-    location?: Location | null
+    location?: Location
     metricsContext?: MetricsContext
     trackerPingInterval?: number
 }

@@ -15,15 +15,12 @@ describe('check status message flow between tracker and two nodes', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
     let nodeTwo: NetworkNode
-    const TRACKER_ID = 'tracker'
     const streamId = 'stream-1'
     const streamId2 = 'stream-2'
 
     const location = {
         country: 'FI',
-        city: 'Helsinki',
-        latitude: null,
-        longitude: null
+        city: 'Helsinki'
     }
 
     beforeEach(async () => {
@@ -31,10 +28,9 @@ describe('check status message flow between tracker and two nodes', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30750
-            },
-            id: TRACKER_ID
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         nodeOne = createNetworkNode({
             id: 'node-1',
@@ -185,8 +181,8 @@ describe('check status message flow between tracker and two nodes', () => {
             }
             receivedTotal += 1
             if (receivedTotal === 2) {
-                expect(Object.keys(nodeOneStatus.location).length).toEqual(4)
-                expect(Object.keys(nodeTwoStatus.location).length).toEqual(4)
+                expect(nodeOneStatus.location).toBeUndefined()
+                expect(Object.keys(nodeTwoStatus.location).length).toEqual(2)
                 done()
             }
         })

@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "runtimeVersion": "16.13.0",
+        "request": "launch",
+        "name": "Jest single test",
+        "program": "${env:HOME}/.nvm/versions/node/v16.13.0/lib/node_modules/jest/bin/jest.js",
+        "env": {
+          "CI": "true",
+          "STREAMR_DOCKER_DEV_HOST": "localhost",
+          "DEBUG": "*"
+        },
+        "args": [
+          "--verbose",
+          "-i",
+          "--no-cache",
+          "--detectOpenHandles",
+          "${fileDirname}/${fileBasename}"
+        ],
+        "cwd": "${workspaceRoot}",
+        "protocol": "inspector",
+        "console": "integratedTerminal"
+      },
+      {
+        "type": "node",
+        "name": "vscode-jest-tests",
+        "request": "launch",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "program": "/Users/sam/.nvm/versions/node/v16.13.0/bin/jest",
+        "cwd": "/Users/sam/.nvm/versions/node/v16.13.0/bin/",
+        "args": [
+          "--verbose",
+          "-i",
+          "--no-cache",
+          "--forceExit",
+          "--runInBand",
+          "--watchAll=false"
+        ]
+      }
+    ]
+}

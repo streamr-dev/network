@@ -23,9 +23,11 @@
     "include": [
         "package.json",
         "src/**/*",
+        "src/**/*.json",
         "vendor/**/*",
         "contracts/**/*.json",
-        "test/**/*"
+        "test/**/*",
+        "src/config.schema.json"
     ],
     "exclude": [
         "test/legacy/*",

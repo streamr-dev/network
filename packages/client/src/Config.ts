@@ -10,12 +10,10 @@ import merge from 'lodash/merge'
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
-import type { NodeRegistryOptions } from './StorageNodeRegistry'
-
-import { StorageNode } from './StorageNode'
+import type { NodeRegistryOptions } from './NodeRegistry'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
-    network?: Partial<NetworkNodeOptions>
+    network?: Omit<Partial<NetworkNodeOptions>, 'metricsContext'>
     storageNodeRegistry?: NodeRegistryOptions
     debug?: Partial<DebugConfig>
 }
@@ -70,10 +68,10 @@ const BRUBECK_CLIENT_DEFAULTS = {
             maxStringLength: 512
         }
     },
-    storageNodeRegistry: [{
-        address: StorageNode.STREAMR_GERMANY,
-        url: 'https://testnet2.streamr.network:8001',
-    }],
+    storageNodeRegistry: {
+        contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+        jsonRpcProvider: 'http://127.0.0.1:8546',
+    },
     network: {
         trackers: [
             {
@@ -147,9 +145,5 @@ export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubec
         debug: merge(defaults.debug || {}, clonedConfig.debug),
     }
 
-    // pass supplied metricsContext by reference
-    if (config.network?.metricsContext) {
-        result.network.metricsContext = config.network.metricsContext
-    }
     return result
 }

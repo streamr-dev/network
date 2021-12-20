@@ -70,7 +70,7 @@ describeRepeats('utils', () => {
         describe('authFetch', () => {
             it('should return normally when valid session token is passed', async () => {
                 session.getSessionToken = jest.fn(async () => 'session-token')
-                const res = await authFetch<TestResponse>(baseUrl + testUrl, session)
+                const res = await authFetch<TestResponse>(baseUrl + testUrl, { session })
                 expect(session.getSessionToken).toHaveBeenCalledTimes(1)
                 expect(res.test).toBeTruthy()
             })
@@ -78,7 +78,7 @@ describeRepeats('utils', () => {
             it('should return 401 error when invalid session token is passed twice', async () => {
                 session.getSessionToken = jest.fn(async () => 'invalid-token')
                 const onCaught = jest.fn()
-                const err = await authFetch<TestResponse>(baseUrl + testUrl, session).catch((error) => {
+                const err = await authFetch<TestResponse>(baseUrl + testUrl, { session }).catch((error) => {
                     onCaught()
                     return error
                 })
@@ -96,7 +96,7 @@ describeRepeats('utils', () => {
                     .mockImplementationOnce(async () => 'expired-session-token')
                     .mockImplementationOnce(async () => 'session-token')
 
-                const res = await authFetch<TestResponse>(baseUrl + testUrl, session)
+                const res = await authFetch<TestResponse>(baseUrl + testUrl, { session })
                 expect(session.getSessionToken).toHaveBeenCalledTimes(2)
                 expect(res.test).toBeTruthy()
             })

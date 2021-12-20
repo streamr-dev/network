@@ -1,5 +1,4 @@
 import _ from 'lodash'
-import io from '@pm2/io'
 import { SPID, SPIDKey } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics } from '../../helpers/MetricsContext'
@@ -58,9 +57,6 @@ class StreamInstructionBuffer {
 
     stop(): void {
         this.debouncedOnReady.cancel()
-        if (typeof io.destroy == 'function') {
-            io.destroy()
-        }
     }
 }
 
@@ -76,7 +72,6 @@ export class InstructionSender {
     private readonly options: TopologyStabilizationOptions
     private readonly sendInstruction: SendInstructionFn
     private readonly metrics: Metrics
-    private readonly pm2Meter: any
 
     constructor(
         options: TopologyStabilizationOptions | undefined,
@@ -87,9 +82,6 @@ export class InstructionSender {
         this.sendInstruction = sendInstruction
         this.metrics = metrics
             .addRecordedMetric('instructionsSent')
-        this.pm2Meter = io.meter({
-            name: 'instructions/sec'
-        })
     }
 
     addInstruction(instruction: Instruction): void {
@@ -119,7 +111,6 @@ export class InstructionSender {
         const promises = Array.from(buffer.getInstructions())
             .map(async ({ nodeId, spidKey, newNeighbors, counterValue }) => {
                 this.metrics.record('instructionsSent', 1)
-                this.pm2Meter.mark()
                 try {
                     await this.sendInstruction(
                         nodeId,
