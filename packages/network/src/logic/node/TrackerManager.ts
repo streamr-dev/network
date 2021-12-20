@@ -151,7 +151,7 @@ export class TrackerManager {
     }
 
     private async sendStatus(spid: SPID, trackerId: TrackerId): Promise<void> {
-        if (!this.streamManager.isOneDirectional(spid)) {
+        if (!this.streamManager.isBehindProxy(spid)) {
             const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
             const status = {
                 stream: this.streamManager.getStreamStatus(spid),
