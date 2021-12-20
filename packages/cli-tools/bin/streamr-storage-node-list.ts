@@ -14,11 +14,10 @@ import EasyTable from 'easy-table'
 const getStorageNodes = async (streamId: string | undefined, client: StreamrClient): Promise<string[]> => {
     if (streamId !== undefined) {
         const stream = await client.getStream(streamId)
-        const storageNodes = await stream.getStorageNodes()
-        return storageNodes.map((storageNode) => storageNode.getAddress())
+        return stream.getStorageNodes()
     } else {
         // all storage nodes (currently there is only one)
-        return [client.options.storageNode.address]
+        return client.getAllStorageNodes()
     }
 }
 
@@ -26,7 +25,9 @@ const program = new Command()
 program
     .description('fetch a list of storage nodes')
     .option('-s, --stream <streamId>', 'only storage nodes which store the given stream (needs authentication)')
+
 authOptions(program)
+
 envOptions(program)
     .version(pkg.version)
     .action((options: any) => {

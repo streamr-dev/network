@@ -8,7 +8,6 @@ export const resend = async (
     const options = { ...streamrOptions }
     const client = new StreamrClient(options)
 
-    let sub
     try {
         const subscribeOpts = {
             stream: streamId,
@@ -19,29 +18,12 @@ export const resend = async (
         }
 
         if (options.subscribe) {
-            sub = await client.subscribe(subscribeOpts, handler)
+            await client.subscribe(subscribeOpts, handler)
         } else {
-            sub = await client.resend(subscribeOpts, handler)
+            await client.resend(subscribeOpts, handler)
         }
     } catch (err) {
         console.error(err.message ? err.message : err)
         process.exit(1)
     }
-
-    sub.on('error', (err: any) => {
-        console.error(err)
-        process.exit(1)
-    })
-
-    sub.on('resent', () => {
-        if (!options.subscribe) {
-            process.exit(0)
-        }
-    })
-
-    sub.on('no_resend', () => {
-        if (!options.subscribe) {
-            process.exit(0)
-        }
-    })
 }

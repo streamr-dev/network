@@ -1,3 +1,4 @@
+---
 name: Network – Lint, Test and Publish
 
 on:
@@ -11,89 +12,59 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
-
+    - cron: '0 0 * * *'
+concurrency:
+  group: network-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/network
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.0
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
   test:
-    name: Lint & Test on Node ${{ matrix.node-version }}
+    name: Lint & Test
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [ 14.x, 16.x ]
-
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-network
       - run: npm run eslint
       - run: npm run test-unit
         env:
           CI: true
-      - run: npm run test-integration
-        env:
-          CI: true
-
-  test-browser:
-    name: Test on Browser Node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
-        working-directory: './'
+      - name: Run test-integration
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
-          sudo apt-get install xvfb
-      - run: xvfb-run --auto-servernum npm run test-browser
+          ulimit -c unlimited
+          mkdir -p /tmp/cores
+          chmod a+rwx /tmp/cores
+          echo "/tmp/cores/core.%p" | sudo tee /proc/sys/kernel/core_pattern
+          npm run test-integration
         env:
           CI: true
+      - if: failure()
+        name: Print core dump
+        run: |
+          if ls /tmp/cores/core.* 1> /dev/null 2>&1; then
+            echo "Core dump found, printing stack trace..."
+            sudo apt-get install -y gdb > /dev/null
+            for c in /tmp/cores/core.*; do
+              gdb node --core=$c --eval-command="set pagination off" --eval-command="info threads" --eval-command="backtrace" --eval-command="quit"
+              done
+          else
+            echo "No core dump found."
+          fi
 
   publish:
     needs: [test]
-    name: Publishing main using Node 14
+    name: Publishing Main
     runs-on: ubuntu-latest
 
     # run job only for tags and skip for cron
@@ -103,25 +74,18 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: 14
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
           registry-url: https://registry.npmjs.org/
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-network --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-network
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword

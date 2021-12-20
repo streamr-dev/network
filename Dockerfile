@@ -1,12 +1,12 @@
 FROM node:16-buster as build
 WORKDIR /usr/src/monorepo
+RUN npm set unsafe-perm true && \
+	# explicitly use npm v8
+	npm install -g npm@8 --no-audit
 COPY . .
-RUN npm set unsafe-perm true
-RUN npm install -g npm@6 # explicitly use npm v6
-RUN npm ci
-RUN npm run bootstrap-pkg streamr-broker
-RUN npx lerna exec -- npm prune --production # image contains all packages, remove devDeps to keep image size down
-RUN npx lerna link # restore inter-package symlinks removed by npm prune
+RUN npm run bootstrap-pkg -- streamr-broker
+
+RUN npm run prune-pkg -- streamr-broker
 
 FROM node:16-buster-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
@@ -19,5 +19,11 @@ ENV LOG_LEVEL=info
 
 RUN ln -s packages/broker/tracker.js tracker.js
 
+EXPOSE 1883/tcp
+EXPOSE 7170/tcp
+EXPOSE 7171/tcp
+
 WORKDIR /usr/src/monorepo/packages/broker
-CMD ./bin/broker.js # start broker from default config
+
+# start broker from default config
+CMD ["./bin/broker.js"]

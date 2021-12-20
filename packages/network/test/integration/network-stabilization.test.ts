@@ -1,11 +1,11 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import assert from 'assert'
 
 import { wait } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { getTopology } from '../../src/logic/trackerSummaryUtils'
+import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 
 function areEqual(a: any, b: any) {
     try {
@@ -26,11 +26,12 @@ describe('check network stabilization', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 39000,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: 39000
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {

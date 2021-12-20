@@ -1,24 +1,26 @@
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import {
     createClient,
     createTestStream,
-    fastPrivateKey,
+    getPrivateKey,
     startBroker,
+    startTestTracker,
     StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode
 } from '../utils'
-import { Todo } from '../types'
-import StreamrClient, { Stream, StreamOperation } from 'streamr-client'
-import { Broker } from '../broker'
+import StreamrClient, { ConfigTest, Stream, StreamPermission } from 'streamr-client'
+import { Broker } from '../../src/broker'
 
 const httpPort = 12341
 const wsPort1 = 12351
 const wsPort2 = 12352
 const wsPort3 = 12353
 const trackerPort = 12370
+
+jest.setTimeout(40000)
 
 describe('broker: end-to-end', () => {
     let tracker: Tracker
@@ -33,17 +35,20 @@ describe('broker: end-to-end', () => {
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
-        const storageNodeAccount = Wallet.createRandom()
-        const engineAndEditorAccount = Wallet.createRandom()
-        const storageNodeRegistry = [{
-            address: storageNodeAccount.address,
-            url: `http://127.0.0.1:${httpPort}`
-        }]
-        tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker-1'
+        const storageNodeAccount = new Wallet(await getPrivateKey())
+        const engineAndEditorAccount = new Wallet(await getPrivateKey())
+        const storageNodeRegistry = {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            jsonRpcProvider: `http://10.200.10.1:8546`
+        }
+        tracker = await startTestTracker(trackerPort)
+        const storageNodeClient = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: storageNodeAccount.privateKey
+            },
         })
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -52,40 +57,41 @@ describe('broker: end-to-end', () => {
             wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry,
+            extraPlugins: {
+                publishHttp: {}
+            }
         })
         brokerNode1 = await startBroker({
             name: 'brokerNode1',
-            privateKey: fastPrivateKey(),
+            privateKey: await getPrivateKey(),
             trackerPort,
             wsPort: wsPort2,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
         brokerNode2 = await startBroker({
             name: 'brokerNode2',
-            privateKey: fastPrivateKey(),
+            privateKey: await getPrivateKey(),
             trackerPort,
             wsPort: wsPort3,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: false,
-            storageNodeConfig: { registry: storageNodeRegistry }
+            storageNodeRegistry
         })
 
         // Create clients
-        const user1 = Wallet.createRandom()
-        const user2 = Wallet.createRandom()
-        client1 = createClient(wsPort1, user1.privateKey, {
-            storageNode: storageNodeRegistry[0]
+        const user1 = new Wallet(await getPrivateKey())
+        const user2 = new Wallet(await getPrivateKey())
+        client1 = await createClient(tracker, user1.privateKey, {
+            storageNodeRegistry
         })
-        client2 = createClient(wsPort2, user1.privateKey, {
-            storageNode: storageNodeRegistry[0]
+        client2 = await createClient(tracker, user1.privateKey, {
+            storageNodeRegistry
         })
-        client3 = createClient(wsPort3, user2.privateKey, {
-            storageNode: storageNodeRegistry[0]
+        client3 = await createClient(tracker, user2.privateKey, {
+            storageNodeRegistry
         })
-        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
 
         // Set up stream
@@ -93,16 +99,15 @@ describe('broker: end-to-end', () => {
         freshStreamId = freshStream.id
         await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort)
-        await freshStream.grantPermission(StreamOperation.STREAM_GET, user2.address)
-        await freshStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, user2.address)
-    }, 30 * 1000)
+        await freshStream.grantUserPermission(StreamPermission.SUBSCRIBE, user2.address)
+    })
 
     afterAll(async () => {
         await Promise.allSettled([
             tracker.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
-            client3.ensureDisconnected(),
+            client1.disconnect(),
+            client2.disconnect(),
+            client3.disconnect(),
             storageNode.stop(),
             brokerNode1.stop(),
             brokerNode2.stop(),
@@ -111,11 +116,11 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: real-time websocket producing and websocket consuming (unsigned messages)', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
-        await Promise.all([
+        const subs = await Promise.all([
             client1.subscribe({
                 stream: freshStreamId
             }, (message) => {
@@ -132,6 +137,8 @@ describe('broker: end-to-end', () => {
                 client3Messages.push(message)
             })
         ])
+
+        await Promise.all(subs.map((sub) => sub.waitForNeighbours()))
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -184,9 +191,9 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: real-time HTTP producing and websocket consuming', async () => {
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await Promise.all([
             client1.subscribe({
@@ -207,16 +214,9 @@ describe('broker: end-to-end', () => {
         ])
 
         for (let i = 1; i <= 3; ++i) {
-            // eslint-disable-next-line no-await-in-loop
-            await fetch(`http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data`, {
-                method: 'post',
-                headers: {
-                    Authorization: 'Bearer ' + await client1.session.getSessionToken()
-                },
-                body: JSON.stringify({
-                    key: i
-                })
-            })
+            client1.publish(freshStream, JSON.stringify({
+                key: i
+            }))
         }
 
         await waitForCondition(() => client2Messages.length === 3 && client3Messages.length === 3)
@@ -260,7 +260,7 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: resend last request via websocket', async () => {
-        await Promise.all([
+        const subs = await Promise.all([
             client1.subscribe({
                 stream: freshStreamId
             }, () => {}),
@@ -271,6 +271,8 @@ describe('broker: end-to-end', () => {
                 stream: freshStreamId
             }, () => {}),
         ])
+
+        await Promise.all(subs.map((sub) => sub.waitForNeighbours()))
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -287,9 +289,9 @@ describe('broker: end-to-end', () => {
 
         await wait(3000) // wait for propagation
 
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await Promise.all([
             client1.resend({
@@ -318,8 +320,8 @@ describe('broker: end-to-end', () => {
             })
         ])
 
-        await waitForCondition(() => client2Messages.length === 2 && client3Messages.length === 2)
-        await waitForCondition(() => client1Messages.length === 2)
+        await waitForCondition(() => client2Messages.length === 2 && client3Messages.length === 2, 10000)
+        await waitForCondition(() => client1Messages.length === 2, 10000)
 
         expect(client1Messages).toEqual([
             {
@@ -382,9 +384,9 @@ describe('broker: end-to-end', () => {
 
         await wait(1500) // wait for propagation
 
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
         await Promise.all([
             client1.resend({
                 stream: freshStreamId,
@@ -494,9 +496,9 @@ describe('broker: end-to-end', () => {
 
         await wait(1500) // wait for propagation
 
-        const client1Messages: Todo[] = []
-        const client2Messages: Todo[] = []
-        const client3Messages: Todo[] = []
+        const client1Messages: any[] = []
+        const client2Messages: any[] = []
+        const client3Messages: any[] = []
 
         await Promise.all([
             client1.resend({
@@ -599,17 +601,13 @@ describe('broker: end-to-end', () => {
             key: 4
         })
 
-        await wait(1500) // wait for propagation
-
+        await wait(3000) // wait for propagation
         const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/last?count=2`
         const response = await fetch(url, {
             method: 'get',
-            headers: {
-                Authorization: 'Bearer ' + await client1.session.getSessionToken()
-            },
         })
         const messagesAsObjects = await response.json()
-        const messageContents = messagesAsObjects.map((msgAsObject: Todo) => msgAsObject.content)
+        const messageContents = messagesAsObjects.map((msgAsObject: any) => msgAsObject.content)
 
         expect(messageContents).toEqual([
             {
@@ -634,29 +632,25 @@ describe('broker: end-to-end', () => {
             sentMessages.push(msg)
         }
 
-        await wait(3000)
+        await wait(8000)
 
+        // eslint-disable-next-line max-len
         const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
         const response = await fetch(url, {
             method: 'get',
-            headers: {
-                Authorization: 'Bearer ' + await client1.session.getSessionToken()
-            },
         })
         const messagesAsObjects = await response.json()
-        const messages = messagesAsObjects.map((msgAsObject: Todo) => msgAsObject.content)
+        const messages = messagesAsObjects.map((msgAsObject: any) => msgAsObject.content)
 
         expect(sentMessages).toEqual(messages)
     })
 
     it('broker returns [] for empty http resend', async () => {
         const fromTimestamp = Date.now() + 99999999
+        // eslint-disable-next-line max-len
         const url = `http://localhost:${httpPort}/api/v1/streams/${encodeURIComponent(freshStreamId)}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
         const response = await fetch(url, {
             method: 'get',
-            headers: {
-                Authorization: 'Bearer ' + await client1.session.getSessionToken()
-            },
         })
         const messagesAsObjects = await response.json()
         expect(messagesAsObjects).toEqual([])
@@ -699,12 +693,9 @@ describe('broker: end-to-end', () => {
             + `?fromTimestamp=${timeAfterFirstMessagePublished}`
         const response = await fetch(url, {
             method: 'get',
-            headers: {
-                Authorization: 'Bearer ' + await client1.session.getSessionToken()
-            },
         })
         const messagesAsObjects = await response.json()
-        const messageContents = messagesAsObjects.map((msgAsObject: Todo) => msgAsObject.content)
+        const messageContents = messagesAsObjects.map((msgAsObject: any) => msgAsObject.content)
 
         expect(messageContents).toEqual([
             {
@@ -760,12 +751,9 @@ describe('broker: end-to-end', () => {
             + `&toTimestamp=${timeAfterThirdMessagePublished}`
         const response = await fetch(url, {
             method: 'get',
-            headers: {
-                Authorization: 'Bearer ' + await client1.session.getSessionToken()
-            },
         })
         const messagesAsObjects = await response.json()
-        const messageContents = messagesAsObjects.map((msgAsObject: Todo) => msgAsObject.content)
+        const messageContents = messagesAsObjects.map((msgAsObject: any) => msgAsObject.content)
 
         expect(messageContents).toEqual([
             {

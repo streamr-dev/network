@@ -1,11 +1,12 @@
 import http from 'http'
-import { startTracker, createNetworkNode, Tracker, NetworkNode } from 'streamr-network'
-import { wait } from 'streamr-test-utils'
+import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
-import StreamrClient, { Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode, createTestStream } from '../../../utils'
+import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
+import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
+    createTestStream, getPrivateKey, startTestTracker } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
+jest.setTimeout(30000)
 const httpPort1 = 12371
 const wsPort1 = 12372
 const trackerPort = 12375
@@ -23,29 +24,28 @@ const httpGet = (url: string): Promise<[number, string]> => { // return tuple is
     })
 }
 
-const WAIT_TIME_TO_LAND_IN_STORAGE = 3000
-
 describe('DataMetadataEndpoints', () => {
     let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
-    let publisherNode: NetworkNode
-    const storageNodeAccount = Wallet.createRandom()
+    let storageNodeAccount: Wallet
     let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
-        const engineAndEditorAccount = Wallet.createRandom()
-        tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker'
+        storageNodeAccount = new Wallet(await getPrivateKey())
+        const storageNodeRegistry = {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            jsonRpcProvider: `http://127.0.0.1:8546`
+        }
+        tracker = await startTestTracker(trackerPort)
+        const engineAndEditorAccount = new Wallet(await getPrivateKey())
+        const storageNodeClient = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: storageNodeAccount.privateKey
+            },
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: '' }
-        publisherNode = createNetworkNode({
-            id: 'publisherNode',
-            trackers: [trackerInfo]
-        })
-        publisherNode.start()
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}/api/v1"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -54,17 +54,18 @@ describe('DataMetadataEndpoints', () => {
             wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
-            trackers: [trackerInfo]
+            storageNodeRegistry
         })
-        client1 = createClient(wsPort1)
-        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
+        client1 = await createClient(tracker, await getPrivateKey(), {
+            storageNodeRegistry: storageNodeRegistry,
+        })
+        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
         await assignmentEventManager.createStream()
-    }, 10 * 1000)
+    })
 
     afterAll(async () => {
         await tracker.stop()
-        await client1.ensureDisconnected()
-        await publisherNode.stop()
+        await client1.destroy()
         await storageNode.stop()
         await assignmentEventManager.close()
     })
@@ -110,11 +111,10 @@ describe('DataMetadataEndpoints', () => {
         await client1.publish(stream.id, {
             key: 3
         })
-        await client1.publish(stream.id, {
+        const lastItem = await client1.publish(stream.id, {
             key: 4
         })
-
-        await wait(WAIT_TIME_TO_LAND_IN_STORAGE)
+        await client1.waitForStorage(lastItem)
 
         const url = `http://localhost:${httpPort1}/api/v1/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)

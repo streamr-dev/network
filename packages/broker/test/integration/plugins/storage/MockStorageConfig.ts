@@ -1,14 +1,16 @@
-import { StreamPart } from '../../../../src/types'
+import { Protocol } from 'streamr-network'
 
-export const createMockStorageConfig = (streams: StreamPart[]) => {
+export const createMockStorageConfig = (spids: Protocol.SPID[]): any => {
     return {
-        hasStream: (stream: StreamPart) => {
-            return streams.some((s) => (s.id === stream.id) && (s.partition === stream.partition))
+        hasSPID: (spid: Protocol.SPID) => {
+            return spids.some((s) => (s.streamId === spid.streamId) && (s.streamPartition === spid.streamPartition))
         },
-        getStreams: () => {
-            return streams
+        getSPIDs: () => {
+            return spids
         },
         addChangeListener: () => {},
+        startChainEventsListener: jest.fn(),
+        stopChainEventsListener: jest.fn(),
         startAssignmentEventListener: jest.fn(),
         stopAssignmentEventListener: jest.fn(),
         cleanup: jest.fn().mockResolvedValue(undefined)

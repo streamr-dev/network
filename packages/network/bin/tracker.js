@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 const program = require('commander')
 
-const { Logger } = require('../dist/helpers/Logger')
+const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { startTracker } = require('../dist/composition')
-const { MetricsContext } = require('../dist/helpers/MetricsContext')
+const { startTracker } = require('../dist/src/composition')
+const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
 
 program
     .version(CURRENT_VERSION)
@@ -12,26 +12,46 @@ program
     .option('--trackerName <trackerName>', 'Human readable name', undefined)
     .option('--port <port>', 'port', '27777')
     .option('--ip <ip>', 'ip', '0.0.0.0')
+    .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', '4')
     .option('--metrics <metrics>', 'output metrics to console', false)
     .option('--metricsInterval <metricsInterval>', 'metrics output interval (ms)', '5000')
+    .option('--topologyStabilizationDebounceWait <topologyStabilizationDebounceWait>', 'topologyStabilizationDebounceWait')
+    .option('--topologyStabilizationMaxWait <topologyStabilizationMaxWait>', 'topologyStabilizationMaxWait')
     .description('Run tracker with reporting')
     .parse(process.argv)
 
 const id = program.opts().id || `TR${program.opts().port}`
 const name = program.opts().trackerName || id
 const logger = new Logger(module)
+const listen = program.opts().unixSocket ? program.opts().unixSocket : {
+    hostname: program.opts().ip,
+    port: Number.parseInt(program.opts().port, 10)
+}
+
+const getTopologyStabilization = () => {
+    const debounceWait = program.opts().topologyStabilizationDebounceWait
+    const maxWait = program.opts().topologyStabilizationMaxWait
+    if ((debounceWait !== undefined) || (maxWait !== undefined)) {
+        return {
+            debounceWait: parseInt(debounceWait),
+            maxWait: parseInt(maxWait)
+        }
+    } else {
+        return undefined
+    }
+}
 
 async function main() {
     const metricsContext = new MetricsContext(id)
     try {
         await startTracker({
-            host: program.opts().ip,
-            port: Number.parseInt(program.opts().port, 10),
+            listen,
             id,
             name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode, 10),
-            metricsContext
+            metricsContext,
+            topologyStabilization: getTopologyStabilization()
         })
 
         const trackerObj = {}

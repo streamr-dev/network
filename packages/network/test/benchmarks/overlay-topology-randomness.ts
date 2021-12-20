@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
-import { OverlayTopology, TopologyState } from '../../src/logic/OverlayTopology'
+import { OverlayTopology, TopologyState } from '../../src/logic/tracker/OverlayTopology'
+import { NodeId } from '../../src/logic/node/Node'
 
 const numOfNeighbors = 4
 const numOfRounds = 1000
@@ -7,7 +8,7 @@ const numOfNodes = 1000
 const printProgress = true
 
 const idxToNodeId = (idx: number) => `${idx + 1}`
-const nodeIdToIdx = (nodeId: string) => Number.parseInt(nodeId, 10) - 1
+const nodeIdToIdx = (nodeId: NodeId) => Number.parseInt(nodeId, 10) - 1
 
 // Run topology experiment
 const states: TopologyState[] = []

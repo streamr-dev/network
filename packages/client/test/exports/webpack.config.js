@@ -31,7 +31,7 @@ module.exports = (env, argv) => {
                     use: {
                         loader: 'babel-loader',
                         options: {
-                            configFile: path.resolve(__dirname, '../../.babel.config.js'),
+                            configFile: path.resolve(__dirname, '../../.babel.browser.config.js'),
                             babelrc: false,
                             cacheDirectory: true,
                         }
@@ -40,7 +40,7 @@ module.exports = (env, argv) => {
             ],
         },
         resolve: {
-            modules: [path.resolve('./node_modules'), path.resolve('./tests/'), path.resolve('../../node_modules')],
+            modules: [path.resolve('./node_modules'), path.resolve('./tests/'), ...require.resolve.paths('')],
             extensions: ['.json', '.js', '.ts', '.mjs'],
         },
     }

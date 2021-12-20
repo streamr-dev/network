@@ -1,14 +1,15 @@
 import { validateIsArray } from '../../utils/validations'
-import ValidationError from '../../errors/ValidationError'
 
 import GroupKeyMessage from './GroupKeyMessage'
 import StreamMessage from './StreamMessage'
-import EncryptedGroupKey from './EncryptedGroupKey'
+import EncryptedGroupKey, { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
 
 export interface Options {
     streamId: string
     encryptedGroupKeys: EncryptedGroupKey[]
 }
+
+type GroupKeyAnnounceSerialized = [string, EncryptedGroupKeySerialized[]]
 
 export default class GroupKeyAnnounce extends GroupKeyMessage {
 
@@ -23,21 +24,27 @@ export default class GroupKeyAnnounce extends GroupKeyMessage {
         // Validate content of encryptedGroupKeys
         this.encryptedGroupKeys.forEach((it: EncryptedGroupKey) => {
             if (!(it instanceof EncryptedGroupKey)) {
-                throw new ValidationError(`Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`)
+                throw new Error(
+                    `Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`
+                )
             }
         })
     }
 
-    toArray() {
+    toArray(): GroupKeyAnnounceSerialized {
         return [this.streamId, this.encryptedGroupKeys.map((it: EncryptedGroupKey)=> it.toArray())]
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: GroupKeyAnnounceSerialized): GroupKeyAnnounce {
         const [streamId, encryptedGroupKeys] = arr
         return new GroupKeyAnnounce({
             streamId,
-            encryptedGroupKeys: encryptedGroupKeys.map((it: any[]) => EncryptedGroupKey.fromArray(it)),
+            encryptedGroupKeys: encryptedGroupKeys.map((it) => EncryptedGroupKey.fromArray(it)),
         })
+    }
+
+    static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyAnnounceSerialized> {
+        return streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
     }
 }
 

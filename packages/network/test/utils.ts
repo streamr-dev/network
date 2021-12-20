@@ -1,6 +1,8 @@
-import { MetricsContext } from '../src/composition'
+import { SPIDKey } from 'streamr-client-protocol'
+import { MetricsContext, Tracker } from '../src/composition'
 import { PeerInfo } from '../src/connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from '../src/connection/ws/ServerWsEndpoint'
+import { Node } from '../src/logic/node/Node'
 
 export const startServerWsEndpoint = async (
     host: string,
@@ -9,6 +11,14 @@ export const startServerWsEndpoint = async (
     metricsContext?: MetricsContext,
     pingInterval?: number | undefined
 ): Promise<ServerWsEndpoint> => {
-    const httpServer = await startHttpServer(host, port, undefined, undefined)
-    return  new ServerWsEndpoint(host, port, false, httpServer, peerInfo, metricsContext, pingInterval)
+    const listen = {
+        hostname: host,
+        port: port
+    }
+    const httpServer = await startHttpServer(listen, undefined, undefined)
+    return  new ServerWsEndpoint(listen, false, httpServer, peerInfo, metricsContext, pingInterval)
+}
+
+export const getSPIDKeys = (nodeOrTracker: Node|Tracker): SPIDKey[] => {
+    return Array.from(nodeOrTracker.getSPIDs(), (spid) => spid.toKey())
 }

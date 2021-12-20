@@ -2,14 +2,17 @@ import { Protocol, MetricsContext } from 'streamr-network'
 import express from 'express'
 import request from 'supertest'
 import { toReadableStream } from 'streamr-test-utils'
-import { router as restEndpointRouter, MIN_SEQUENCE_NUMBER_VALUE, MAX_SEQUENCE_NUMBER_VALUE } from '../../../../src/plugins/storage/DataQueryEndpoints'
+import {
+    router as restEndpointRouter,
+    MIN_SEQUENCE_NUMBER_VALUE,
+    MAX_SEQUENCE_NUMBER_VALUE
+} from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { HttpError } from '../../../../src/errors/HttpError'
-import { Todo } from '../../../../src/types'
 import { PassThrough } from 'stream'
+import { StreamFetcher } from "../../../../src/StreamFetcher"
 
 const { MessageLayer } = Protocol
-const { StreamMessage, MessageID } = MessageLayer
+const { MessageID } = MessageLayer
 
 const createEmptyStream = () => {
     const stream = new PassThrough()
@@ -20,7 +23,9 @@ const createEmptyStream = () => {
 describe('DataQueryEndpoints', () => {
     let app: express.Express
     let storage: Storage
-    let streamFetcher: Todo
+    let streamFetcher: {
+        authenticate: (streamId: string, sessionToken: string|undefined) => Promise<Record<string, never>>
+    }
 
     function testGetRequest(url: string, sessionToken = 'mock-session-token') {
         return request(app)
@@ -29,8 +34,8 @@ describe('DataQueryEndpoints', () => {
             .set('Authorization', `Bearer ${sessionToken}`)
     }
 
-    function createStreamMessage(content: any) {
-        return new StreamMessage({
+    function createStreamMessage(content: any): Protocol.StreamMessage {
+        return new Protocol.StreamMessage({
             messageId: new MessageID('streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', 'msgChainId'),
             content,
         })
@@ -38,24 +43,23 @@ describe('DataQueryEndpoints', () => {
 
     beforeEach(() => {
         app = express()
-        // @ts-expect-error
-        storage = {}
+        storage = {} as Storage
         streamFetcher = {
-            authenticate(streamId: string, sessionToken: string|undefined) {
-                return new Promise(((resolve, reject) => {
-                    if (sessionToken === 'mock-session-token') {
-                        resolve({})
-                    } else {
-                        reject(new HttpError(403, 'GET', ''))
-                    }
+            authenticate() {
+                return new Promise(((resolve) => {
+                    // if (sessionToken === 'mock-session-token') {
+                    resolve({})
+                    // } else {
+                    //     reject(new HttpError(403, 'GET', ''))
+                    // }
                 }))
             },
         }
-        app.use(restEndpointRouter(storage, streamFetcher, new MetricsContext(null as any)))
+        app.use(restEndpointRouter(storage, streamFetcher as unknown as StreamFetcher, new MetricsContext(null as any)))
     })
 
     describe('Getting last events', () => {
-        let streamMessages: Todo[]
+        let streamMessages: Protocol.StreamMessage[]
 
         beforeEach(() => {
             streamMessages = [
@@ -78,13 +82,14 @@ describe('DataQueryEndpoints', () => {
                     }, done)
             })
 
-            it('responds 403 and error message if not authorized', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last', 'wrong-session-token')
-                    .expect('Content-Type', /json/)
-                    .expect(403, {
-                        error: 'Authentication failed.',
-                    }, done)
-            })
+            // does not have to be autorized with session, endpoint will check permission onchain
+            // it('responds 403 and error message if not authorized', (done) => {
+            //     testGetRequest('/api/v1/streams/streamId/data/partitions/0/last', 'wrong-session-token')
+            //         .expect('Content-Type', /json/)
+            //         .expect(403, {
+            //             error: 'Authentication failed.',
+            //         }, done)
+            // })
 
             it('responds 400 and error message if optional param "count" not a number', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=sixsixsix')
@@ -103,6 +108,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 400 and error message if publisherId+msgChainId combination is invalid in range request', async () => {
+                // eslint-disable-next-line max-len
                 const base = '/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
                 const suffixes = ['publisherId=foo', 'msgChainId=bar']
                 for (const suffix of suffixes) {
@@ -130,7 +136,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with latest version protocol serialization of messages given format=protocol', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?format=protocol')
-                    .expect(streamMessages.map((msg) => msg.serialize(StreamMessage.LATEST_VERSION)), done)
+                    .expect(streamMessages.map((msg) => msg.serialize(Protocol.StreamMessage.LATEST_VERSION)), done)
             })
 
             it('responds with specific version protocol serialization of messages given format=protocol&version=30', (done) => {
@@ -144,16 +150,10 @@ describe('DataQueryEndpoints', () => {
                     .expect(streamMessages.map((msg) => msg.serialize(30)).join('\n'), done)
             })
 
-            it('invokes storage#requestLast once with correct arguments', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
-                    .then(() => {
-                        expect(storage.requestLast).toHaveBeenCalledTimes(1)
-                        // @ts-expect-error
-                        expect(storage.requestLast.mock.calls[0])
-                            .toEqual(['streamId', 0, 1])
-                        done()
-                    })
-                    .catch(done)
+            it('invokes storage#requestLast once with correct arguments', async () => {
+                await testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
+                expect(storage.requestLast).toHaveBeenCalledTimes(1)
+                expect((storage.requestLast as jest.Mock).mock.calls[0]).toEqual(['streamId', 0, 1])
             })
 
             it('responds 500 and error message if storage signals error', (done) => {
@@ -182,7 +182,7 @@ describe('DataQueryEndpoints', () => {
     })
 
     describe('From queries', () => {
-        let streamMessages: Todo[]
+        let streamMessages: Protocol.StreamMessage[]
 
         beforeEach(() => {
             streamMessages = [
@@ -219,7 +219,7 @@ describe('DataQueryEndpoints', () => {
                     0,
                     1496408255672,
                     MIN_SEQUENCE_NUMBER_VALUE,
-                    null
+                    undefined
                 )
             })
 
@@ -284,13 +284,14 @@ describe('DataQueryEndpoints', () => {
                         error: 'Path parameter "partition" not a number: zero',
                     }, done)
             })
-            it('responds 403 and error message if not authorized', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrong-session-token')
-                    .expect('Content-Type', /json/)
-                    .expect(403, {
-                        error: 'Authentication failed.',
-                    }, done)
-            })
+            // does not have to be autorized with session, endpoint will check permission onchain
+            // it('responds 403 and error message if not authorized', (done) => {
+            //     testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrong-session-token')
+            //         .expect('Content-Type', /json/)
+            //         .expect(403, {
+            //             error: 'Authentication failed.',
+            //         }, done)
+            // })
             it('responds 400 and error message if param "fromTimestamp" not given', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range')
                     .expect('Content-Type', /json/)
@@ -324,7 +325,7 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
-            let streamMessages: Todo[]
+            let streamMessages: Protocol.StreamMessage[]
             beforeEach(() => {
                 streamMessages = [
                     createStreamMessage([6, 6, 6]),
@@ -362,8 +363,8 @@ describe('DataQueryEndpoints', () => {
                     MIN_SEQUENCE_NUMBER_VALUE,
                     1496415670909,
                     MAX_SEQUENCE_NUMBER_VALUE,
-                    null,
-                    null,
+                    undefined,
+                    undefined,
                 )
             })
 
@@ -394,8 +395,8 @@ describe('DataQueryEndpoints', () => {
                     1,
                     2000,
                     2,
-                    null,
-                    null,
+                    undefined,
+                    undefined,
                 )
             })
 
@@ -406,7 +407,7 @@ describe('DataQueryEndpoints', () => {
             // eslint-disable-next-line max-len
             const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId&msgChainId=msgChainId'
 
-            let streamMessages: Todo[]
+            let streamMessages: Protocol.StreamMessage[]
             beforeEach(() => {
                 streamMessages = [
                     createStreamMessage([6, 6, 6]),

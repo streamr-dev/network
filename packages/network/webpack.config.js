@@ -24,8 +24,9 @@ const externals = (env) => {
 const fallbacks = (env) => {
     const fallbacks = {
         'fs': require.resolve('browserify-fs'),
-        '/src/logic/LocationManager.ts': false,
+        '/src/logic/tracker/LocationManager.ts': false,
         'module': false,
+        'net': false
     }
     if (env === 'production') {
         return Object.assign(fallbacks, {
@@ -33,7 +34,6 @@ const fallbacks = (env) => {
             'https': false,
             'express': false,
             'ws': false,
-            'net': false,
         })
     }
     return fallbacks
@@ -42,7 +42,7 @@ const fallbacks = (env) => {
 const aliases = (env) => {
     const aliases = {
         'process': 'process/browser',
-        [path.resolve(__dirname, 'src/logic/LocationManager.ts')]:
+        [path.resolve(__dirname, 'src/logic/tracker/LocationManager.ts')]:
             path.resolve(__dirname, 'src/browser/LocationManager.ts'),
         [path.resolve(__dirname, 'src/connection/NodeWebRtcConnection.ts')]:
             path.resolve(__dirname, 'src/connection/BrowserWebRtcConnection.ts'),
@@ -50,6 +50,7 @@ const aliases = (env) => {
             path.resolve(__dirname, 'src/connection/ws/BrowserClientWsEndpoint.ts'),
         [path.resolve(__dirname, 'src/connection/ws/NodeClientWsConnection.ts')]:
             path.resolve(__dirname, 'src/connection/ws/BrowserClientWsConnection.ts'),
+        ['@pm2/io']: path.resolve(__dirname, 'src/browser/Pm2Shim.ts')
     }
     if (env !== 'test') {
         return Object.assign(aliases, {
@@ -69,6 +70,9 @@ module.exports = (env, argv) => {
     const isProduction = environment === 'production'
 
     const config = {
+        cache: {
+            type: 'filesystem',
+        },
         mode: isProduction ? 'production' : 'development',
         entry: './src/browser.ts',
         devtool: "source-map",
@@ -97,7 +101,8 @@ module.exports = (env, argv) => {
         },
         output: {
             filename: `${libraryName}.js`,
-            sourceMapFilename: `${libraryName}.js.map`,
+            sourceMapFilename: `[name].[contenthash].js.map`,
+            chunkFilename: '[id].[contenthash].js',
             path: path.resolve(__dirname, 'dist'),
             library: 'StreamrNetwork',
             libraryTarget: 'umd2',

@@ -1,3 +1,7 @@
+/**
+ * Utility Types
+ */
+
 import { F } from 'ts-toolbelt'
 
 export type EthereumAddress = string

@@ -1,7 +1,7 @@
 import { Client } from 'cassandra-driver'
 import { EventEmitter } from 'events'
-import { Protocol } from 'streamr-network'
 import { Logger } from 'streamr-network'
+import type { StreamMessage } from 'streamr-client-protocol'
 import { Batch, BatchId, DoneCallback } from './Batch'
 import { BucketId } from './Bucket'
 
@@ -31,7 +31,7 @@ export class BatchManager extends EventEmitter {
     pendingBatches: Record<BatchId,Batch>
     cassandraClient: Client
     insertStatement: string
-    logger
+    logger: Logger
 
     constructor(cassandraClient: Client, opts: Partial<BatchManagerOptions> = {}) {
         super()
@@ -62,7 +62,7 @@ export class BatchManager extends EventEmitter {
         this.logger.trace('create %o', this.opts)
     }
 
-    store(bucketId: BucketId, streamMessage: Protocol.StreamMessage, doneCb?: DoneCallback): void {
+    store(bucketId: BucketId, streamMessage: StreamMessage, doneCb?: DoneCallback): void {
         const batch = this.batches[bucketId]
 
         if (batch && batch.isFull()) {
@@ -80,8 +80,8 @@ export class BatchManager extends EventEmitter {
                 this.opts.batchMaxRetries
             )
 
-            newBatch.on('locked', () => this._moveFullBatch(bucketId, newBatch))
-            newBatch.on('pending', () => this._insert(newBatch.getId()))
+            newBatch.on('locked', () => this.moveFullBatch(bucketId, newBatch))
+            newBatch.on('pending', () => this.insert(newBatch.getId()))
 
             this.batches[bucketId] = newBatch
         }
@@ -97,7 +97,7 @@ export class BatchManager extends EventEmitter {
         Object.values(pendingBatches).forEach((batch) => batch.clear())
     }
 
-    private _moveFullBatch(bucketId: BucketId, batch: Batch): void {
+    private moveFullBatch(bucketId: BucketId, batch: Batch): void {
         this.logger.trace('moving batch to pendingBatches')
         const batchId = batch.getId()
         this.pendingBatches[batchId] = batch
@@ -106,7 +106,7 @@ export class BatchManager extends EventEmitter {
         delete this.batches[bucketId]
     }
 
-    private async _insert(batchId: BatchId): Promise<void> {
+    private async insert(batchId: BatchId): Promise<void> {
         const batch = this.pendingBatches[batchId]
 
         try {

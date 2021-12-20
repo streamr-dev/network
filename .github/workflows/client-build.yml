@@ -1,3 +1,4 @@
+---
 # Any tests that need the built code should go in here.
 name: Client – Test Build
 
@@ -17,82 +18,64 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
-
+    - cron: '0 0 * * *'
+concurrency:
+  group: client-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/client
 # Be sure to update both workflow files if you edit any env or trigger config
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.8.0
-        with:
-          access_token: ${{ github.token }}
   build:
-    name: Run build using Node 14.x
+    name: Build Client
     runs-on: ubuntu-latest
     env:
       BUNDLE_ANALYSIS: true
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.3.1
         with:
           name: client-build
           path: packages/client/dist
 
   test-exports:
-    name: Test Exports using Node 16.x
+    name: Test Exports using Node ${{ matrix.node-version }}
+    strategy:
+      matrix:
+        node-version: [16.x]
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: "16.x"
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          check-latest: true
       - uses: actions/download-artifact@v2
         with:
           name: client-build
           path: packages/client/dist
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: test-types
         run: npm run test-types
       - name: npm run test-exports
@@ -103,32 +86,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: "14.x"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
       - uses: actions/download-artifact@v2
         with:
           name: client-build
           path: packages/client/dist
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
       - uses: nick-invision/retry@v2
         name: Run Realtime Test
         with:
@@ -136,38 +112,36 @@ jobs:
           timeout_minutes: 3
           retry_on: error
           command: cd packages/client && npm run test-browser-realtime
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   browser-resend:
     name: Test Browser Realtime + Resend
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: "14.x"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
       - uses: actions/download-artifact@v2
         with:
           name: client-build
           path: packages/client/dist
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
       - uses: nick-invision/retry@v2
         name: Run Resend Test
         with:
@@ -175,6 +149,11 @@ jobs:
           timeout_minutes: 3
           retry_on: error
           command: cd packages/client && npm run test-browser-resend
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   benchmarks:
     name: Test Benchmark using Node ${{ matrix.node-version }}
@@ -183,44 +162,42 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [16.x]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/download-artifact@v2
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          check-latest: true
+      - uses: actions/download-artifact@v2.0.10
         with:
           name: client-build
           path: packages/client/dist
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: benchmark publish
         timeout-minutes: 15
         run: DEBUG='' npm run benchmark-publish > benchmark-publish.txt
       - name: benchmark subscribe
         timeout-minutes: 15
         run: DEBUG='' npm run benchmark-subscribe > benchmark-subscribe.txt
-      - uses: actions/upload-artifact@v2
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
+      - uses: actions/upload-artifact@v2.3.1
         with:
           name: client-benchmarks
           path: |
               packages/client/benchmark-publish.txt
               packages/client/benchmark-subscribe.txt
-

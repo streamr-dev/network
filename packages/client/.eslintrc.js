@@ -52,7 +52,18 @@ module.exports = {
         'no-shadow': 'off',
         '@typescript-eslint/no-shadow': 'error',
         'no-unused-vars': 'off',
-        '@typescript-eslint/no-unused-vars': ['error'],
+        '@typescript-eslint/no-unused-vars': ['error', {
+            argsIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
+        }],
+        'import/no-extraneous-dependencies': ['error', { devDependencies: ['**/*.test.*', 'test/*.ts', 'test/*.js', 'test/**/*.ts', 'test/**/*.js'] }],
+        'no-redeclare': 'off',
+        '@typescript-eslint/no-redeclare': ['error'],
+        'no-dupe-class-members': 'off',
+        '@typescript-eslint/no-dupe-class-members': ['error'],
+        'no-useless-constructor': 'off',
+        '@typescript-eslint/no-useless-constructor': ['error'],
+        'no-empty-function': 'off',
     },
     settings: {
         'import/resolver': {

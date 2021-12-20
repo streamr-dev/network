@@ -1,5 +1,5 @@
-import { NetworkNode } from '../../src/NetworkNode'
-import { Tracker } from '../../src/logic/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
@@ -19,11 +19,12 @@ describe('optimization: do not propagate to sender', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30410,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30410
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
         n1 = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo]

@@ -1,44 +1,50 @@
 /**
  * SPID - Stream + Partition ID
  * See SPID constructor docs.
+ *
+ * SPID
+ * SPIDLike
+ * SID
+ * SIDLike
  */
 
 import { format } from 'util'
+import ValidationError from '../errors/ValidationError'
+
+type RequiredKeys<T, Keys extends keyof T> = Omit<T, Keys> & Required<Pick<T, Keys>>
+
+export type SPIDKey = string
 
 /**
- * Object version of SPID
+ * Has both streamId & partition
  */
-export type SPIDObject = {
-    streamId: string,
+export type SPIDShape = {
+    streamId: string
     streamPartition: number
 }
 
-/**
- * Represents partial SPIDObject e.g. for setting defaults
- * Known keys
- */
-export type SPIDObjectPartial = Partial<SPIDObject>
+export type SPIDKeyShape = SPIDShape & {
+    key: SPIDKey
+}
 
 /**
  * SPID or String representing a SPID
  * Object cases can be typechecked
  * TODO: SPID string type safety
  */
-export type SPIDLike = SPID | string | SPIDObject | { id: string, partition: number }
+export type SPIDLike = SPIDKey | SPIDShape
 
 /**
- * Flexible input type
+ * Must have something that looks like an id.
+ * Partition optional.
  */
-export type SPIDLikePartial = SPIDLike | SPIDObjectPartial | Partial<{ id: string, partition: number }>
+export type SID = { streamId: string, streamPartition?: number }
 
-class SPIDValidationError extends Error {
-    data: SPIDLikePartial
-    constructor(msg: string, data: SPIDLikePartial) {
-        super(format(msg, data))
-        this.data = data
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
+export type SIDLike = string | SID
+
+class SPIDValidationError extends ValidationError {
+    constructor(msg: string, public data: Partial<SPIDLike>, ...args: any[]) {
+        super(format(msg, data, ...args))
     }
 }
 
@@ -57,28 +63,28 @@ class SPIDValidationError extends Error {
  * ```
  * See tests for more usage examples.
  */
-export default class SPID {
+export class SPID implements SPIDKeyShape {
     /** stream id */
-    public readonly id: string
+    public readonly streamId: string
     /** stream partition */
-    public readonly partition: number
+    public readonly streamPartition: number
     /** toString/fromString separator */
     protected static readonly SEPARATOR = '#'
 
     /** string key representing SPID */
-    public readonly key: string
+    public readonly key: SPIDKey
 
     /**
      * @param id - stream id
      * @param partition - stream partition
      */
     constructor(id: string, partition: number) {
-        this.id = id
-        this.partition = partition
+        this.streamId = id
+        this.streamPartition = partition
         this.validate()
 
         // static cached values to prevent unnecessary runtime allocations
-        this.key = `${this.id}${SPID.SEPARATOR}${this.partition}`
+        this.key = `${this.streamId}${SPID.SEPARATOR}${this.streamPartition}`
         // prevent all mutation
         Object.freeze(this)
     }
@@ -87,17 +93,17 @@ export default class SPID {
      * Throws if data is invalid.
      */
     private validate() {
-        if (typeof this.id !== 'string' || this.id.length === 0) {
+        if (typeof this.streamId !== 'string' || this.streamId.length === 0) {
             throw new SPIDValidationError('SPID validation failed: id must be non-empty string: %o', {
-                id: this.id,
-                partition: this.partition
+                streamId: this.streamId,
+                streamPartition: this.streamPartition
             })
         }
 
-        if (typeof this.partition !== 'number' || !Number.isSafeInteger(this.partition) || this.partition < 0) {
+        if (typeof this.streamPartition !== 'number' || !Number.isSafeInteger(this.streamPartition) || this.streamPartition < 0) {
             throw new SPIDValidationError('SPID validation failed: partition must be a safe integer >= 0: %o', {
-                id: this.id,
-                partition: this.partition
+                streamId: this.streamId,
+                streamPartition: this.streamPartition
             })
         }
     }
@@ -122,11 +128,36 @@ export default class SPID {
     }
 
     /**
+     * True iff matches streamId & optionally streamPartition
+     * streamId is required, hence SPIDMatcher.
+     * If streamPartition is missing, just matches on streamId
+     */
+    matches(spidMatcher: SIDLike): boolean {
+        if (spidMatcher instanceof SPID) { return this.equals(spidMatcher) }
+
+        const { streamId, streamPartition } = SPID.parse(spidMatcher)
+        if (streamPartition == null) {
+            return this.streamId === streamId
+        }
+
+        return this.streamId === streamId && this.streamPartition === streamPartition
+    }
+
+    /**
      * Convert SPIDLikePartial to SPIDObjectPartial
      * i.e. normalizes various input types/shapes to { streamId?, streamPartition? }
      * Note: does not throw on malformed input
      */
-    static toSPIDObjectPartial(spidLike: SPIDLikePartial): SPIDObjectPartial {
+    static parse(spidLike: SPID): SPID
+    static parse(spidLike: SPIDShape): SPIDShape
+    static parse(spidLike: SIDLike): SID
+    static parse(spidLike: SPIDLike): SPIDShape // both fields
+    static parse(spidLike: Partial<SIDLike>): Partial<SPIDShape>
+    static parse(spidLike: SIDLike): Partial<SPIDShape> {
+        if (spidLike instanceof SPID) {
+            return spidLike
+        }
+
         // convert from string
         if (typeof spidLike === 'string') {
             const [streamId, partitionStr] = spidLike.split(this.SEPARATOR)
@@ -134,12 +165,10 @@ export default class SPID {
             const streamPartition = partitionStr != null ? Number.parseFloat(partitionStr) : undefined
             return { streamId, streamPartition }
         } else if (spidLike && typeof spidLike === 'object') {
-            // @ts-expect-error object should have one of these, validated anyway
-            const streamId = spidLike.streamId || spidLike.id
-            // @ts-expect-error object should have one of these, validated anyway
-            const partition = spidLike.streamPartition || spidLike.partition
+            const streamId = spidLike.streamId
+            const partition = spidLike.streamPartition ?? undefined
             // try parse if a value was passed, but fall back to undefined i.e. default
-            const streamPartition = partition != null ? Number.parseFloat(partition) : undefined
+            const streamPartition = typeof partition === 'string' ? Number.parseFloat(partition) : partition
             return { streamId, streamPartition }
         } else {
             return { streamId: undefined, streamPartition: undefined }
@@ -153,9 +182,12 @@ export default class SPID {
      * fromDefaults(streamId, { partition: 0 })
      * ```
      */
-    static fromDefaults(spidLike: SPIDLike, defaultValues?: SPIDLikePartial): SPID
-    static fromDefaults(spidLike: SPIDLikePartial, defaultValues: SPIDLikePartial): SPID // requires id+partition if no defaults
-    static fromDefaults(spidLike: SPIDLikePartial, defaultValues?: SPIDLikePartial): SPID {
+    static fromDefaults(spidLike: SIDLike, defaultValues?: Partial<SPIDShape>): SPID
+    // requires id+partition if no defaults
+    static fromDefaults(spidLike: SIDLike, defaultValues: RequiredKeys<Partial<SPIDShape>, 'streamPartition'>): SPID
+    static fromDefaults(spidLike: SIDLike, defaultValues: string | RequiredKeys<Partial<SPIDShape>, 'streamPartition'>): SPID
+    static fromDefaults(spidLike: string | RequiredKeys<Partial<SPIDShape>, 'streamPartition'>, defaultValues: SIDLike): SPID
+    static fromDefaults(spidLike: SPIDLike, defaultValues?: Partial<SPIDLike>): SPID {
         // return spid if already spid
         if (spidLike instanceof SPID) {
             return spidLike
@@ -163,14 +195,14 @@ export default class SPID {
 
         // defaults can be partial, e.g. { partition: 0 }
         // toSPIDObjectPartial can handle undefined input but we want external interface to check for it.
-        const defaults = SPID.toSPIDObjectPartial(defaultValues!)
-        const { streamId = defaults?.streamId, streamPartition = defaults?.streamPartition } = SPID.toSPIDObjectPartial(spidLike)
+        const defaults = SPID.parse(defaultValues!)
+        const { streamId = defaults?.streamId, streamPartition = defaults?.streamPartition } = SPID.parse(spidLike)
         try {
             // constructor can handle partial input but we want external interface to check for it.
             return new SPID(streamId!, streamPartition!)
-        } catch (err) {
+        } catch (err: any) {
             // TODO: add more conversions?
-            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err.message} %o`, spidLike)
+            throw new SPIDValidationError(`SPID validation failed, input is malformed. ${err && err.message} %o`, spidLike)
         }
     }
 
@@ -184,24 +216,24 @@ export default class SPID {
     /**
      * Plain object representation of SPID id + partition
      */
-    toObject(): SPIDObject {
+    toObject(): SPIDShape {
         return {
-            streamId: this.id,
-            streamPartition: this.partition,
+            streamId: this.streamId,
+            streamPartition: this.streamPartition,
         }
     }
 
     /**
      * String representation of SPID id + partition
      */
-    toString(): string {
+    toString(): SPIDKey {
         return this.key
     }
 
     /**
      * Alias of toString.
      */
-    toKey(): string {
+    toKey(): SPIDKey {
         return this.toString()
     }
 
@@ -212,8 +244,14 @@ export default class SPID {
      * const key = SPID.toKey({ streamId, streamPartition })
      * ```
      */
-    static toKey(spidLike: SPIDLike): string {
-        return SPID.from(spidLike).key
+    static toKey(spidLike: SPIDLike): SPIDKey
+    static toKey(streamId: string, streamPartition: number): SPIDKey
+    static toKey(param1: string|SPIDLike, param2?: number): SPIDKey {
+        if ((typeof param1 === 'string') && (param2 !== undefined)) {
+            return new SPID(param1, param2).key
+        } else {
+            return SPID.from(param1).key
+        }
     }
 }
 

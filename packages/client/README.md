@@ -8,25 +8,20 @@
   Streamr JavaScript Client
 </h1>
 
-![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/streamr-client-javascript/Test%20Build/master)
-[![GitHub release](https://img.shields.io/github/release/streamr-dev/streamr-client-javascript.svg?style=flat)](https://github.com/streamr-dev/streamr-client-javascript/releases/)
-[![GitHub stars](https://img.shields.io/github/stars/streamr-dev/streamr-client-javascript.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/streamr-client-javascript/)
+[![Build status](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml)
+![latest npm package version](https://img.shields.io/npm/v/streamr-client?label=latest)
+[![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
-By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams. The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
+This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to data, as well as contains convenience functions for creating and managing streams.
 
-Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
-
-
-### Breaking changes notice
-
-* Support for unsigned data will be dropped in the second half of 2021 or in 2022. This means that every data point will require a signature using the publisher's private key.
+Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ----
 
 ## TOC
 
-[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Storage](#storage) ·[Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
@@ -37,22 +32,18 @@ The client is available on [npm](https://www.npmjs.com/package/streamr-client) a
 npm install streamr-client
 ```
 
-Node v14 or higher is recommended if you intend to use the client in a Node environment. For example, inside a script.
-
 ## Usage
 
-Here are some quick examples. More detailed examples for the browser and node.js can be found [here](https://github.com/streamr-dev/streamr-client/tree/master/examples).
+Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
 
-Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
-
-If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
 ### Creating a StreamrClient instance
 
 ```js
 const client = new StreamrClient({
     auth: {
-        privateKey: 'your-private-key'
+        privateKey: 'your-ethereum-private-key'
     }
 })
 ```
@@ -60,7 +51,7 @@ const client = new StreamrClient({
 When using Node.js remember to import the library with:
 
 ```js
-import { StreamrClient } from 'streamr-client';
+import { StreamrClient } from 'streamr-client'
 ```
 
 ### Subscribing to real-time events in a stream
@@ -101,7 +92,7 @@ const stream = await client.createStream({
 console.log(`Stream ${stream.id} has been created!`)
 
 // Optional: to enable historical data resends, add the stream to a storage node
-await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 
 // Do something with the stream, for example call stream.publish(message)
 ```
@@ -139,14 +130,6 @@ await stream.publish(msg)
 ```
 
 ----
-
-## API Docs
-
-The [API docs](https://streamr-dev.github.io/streamr-client-javascript/) are automatically generated from the TypeScript source code. They can also be rebuilt locally via:
-
-```
-npm run docs
-```
 
 ## Client options
 
@@ -208,7 +191,7 @@ To extract the session token from an authenticated client:
 const bearerToken = await client.session.getSessionToken()
 ```
 
-Then for example, 
+Then for example,
 ```js
     axios({
         headers: {
@@ -338,6 +321,12 @@ sub.on('resent', () => {
 })
 ```
 
+### Storage
+
+You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice. By default storage is not enabled on streams.
+
+`await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)`
+
 ## Stream API
 
 All the below functions return a Promise which gets resolved with the result.
@@ -368,7 +357,7 @@ All the below functions return a Promise which gets resolved with the result.
 
 ## Data Unions
 
-This library provides functions for working with Data Unions. Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for auto-generated documentation on each Data Union endpoint.
+This library provides functions for working with Data Unions. Please see the [TypeScript generated function documentation](https://streamr-dev.github.io/streamr-client-javascript/classes/dataunion_dataunion.dataunion.html) for information on each Data Union endpoint.
 
 To deploy a new DataUnion with default [deployment options](#deployment-options):
 ```js
@@ -490,7 +479,7 @@ These are available for everyone and anyone, to query publicly available info fr
 | Name                                                       | Returns                                        | Description                             |
 | :--------------------------------------------------------- | :--------------------------------------------- | :-------------------------------------- |
 | getStats()                                                 | {activeMemberCount, totalEarnings, ...}        | Get Data Union's statistics             |
-| getMemberStats(memberAddress)                              | {earnings, proof, ...}                         | Get member's stats                      |
+| getMemberStats(memberAddress)                              | {status, totalEarnings, withdrawableEarnings}  | Get member's stats                      |
 | getWithdrawableEarnings(memberAddress)                     | `BigNumber` withdrawable DATA tokens in the DU |                                         |
 | getAdminFee()                                              | `Number` between 0.0 and 1.0 (inclusive)       | Admin's cut from revenues               |
 | getAdminAddress()                                          | Ethereum address                               | Data union admin's address              |
@@ -516,7 +505,7 @@ The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAl
 | waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                    |
 | pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                     |
 | retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                                 |
-| gasPrice          | network estimate      | Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge    | 
+| gasPrice          | network estimate      | Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge    |
 
 These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low),
 but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
@@ -532,7 +521,7 @@ The use cases corresponding to the different combinations of the boolean flags:
 | `true`      | `true`  | Transaction receipt | *(default)* Self-service bridge to mainnet, client pays for mainnet gas |
 | `true`      | `false` | Transaction receipt | Self-service bridge to mainnet (but **skip** the wait that double-checks the withdraw succeeded and tokens arrived to destination) |
 | `false`     | `true`  | `null`              | Someone else pays for the mainnet gas automatically, e.g. the bridge operator (in this case the transaction receipt can't be returned) |
-| `false`     | `false` | AMB message hash    | Someone else pays for the mainnet gas, but we need to give them the message hash first | 
+| `false`     | `false` | AMB message hash    | Someone else pays for the mainnet gas, but we need to give them the message hash first |
 
 ### Deployment options
 
@@ -567,7 +556,7 @@ const dataUnion = await client.deployDataUnion({
 `dataUnionName` option exists purely for the purpose of predicting the addresses of Data Unions not yet deployed.
 Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/eip-1014) which means
 a Data Union deployed by a particular address with particular "name" will have a predictable address.
-            
+
 ## Utility functions
 
 | Name                                    | Returns                 |   Description    |

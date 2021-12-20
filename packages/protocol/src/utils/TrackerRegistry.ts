@@ -1,9 +1,12 @@
-import { Contract, providers } from 'ethers'
-import { ConnectionInfo } from 'ethers/lib/utils'
+import { Contract } from '@ethersproject/contracts'
+import { JsonRpcProvider } from '@ethersproject/providers'
+
+import { keyToArrayIndex } from './HashUtil'
 
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
+import { SPID } from './SPID'
 
-const { JsonRpcProvider } = providers
+type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
 
 export type SmartContractRecord = {
     id: string
@@ -13,32 +16,18 @@ export type SmartContractRecord = {
 
 export type TrackerInfo = SmartContractRecord | string
 
-// source: https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
-function hashCode(str: string): number {
-    const a = str.split('')
-        .reduce((prevHash, currVal) => (((prevHash << 5) - prevHash) + currVal.charCodeAt(0)) | 0, 0)
-    return Math.abs(a)
-}
-
 export class TrackerRegistry<T extends TrackerInfo> {
     private readonly records: T[]
 
     constructor(records: T[]) {
-        this.records = records
+        this.records = records.slice() // copy before mutating
         this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(streamId: string, partition = 0): T {
-        if (typeof streamId !== 'string' || streamId.indexOf('::') >= 0) {
-            throw new Error(`invalid id: ${streamId}`)
-        }
-        if (!Number.isInteger(partition) || partition < 0) {
-            throw new Error(`invalid partition: ${partition}`)
-        }
-
-        const streamKey = `${streamId}::${partition}`
-
-        return this.records[hashCode(streamKey) % this.records.length]
+    getTracker(spid: SPID): T {
+        const key = spid.toKey().replace('#', '::') // TODO temporary backwards compatibility
+        const index = keyToArrayIndex(this.records.length, key)
+        return this.records[index]
     }
 
     getAllTrackers(): T[] {
@@ -46,7 +35,7 @@ export class TrackerRegistry<T extends TrackerInfo> {
     }
 }
 
-async function fetchTrackers(contractAddress: string, jsonRpcProvider: string | ConnectionInfo) {
+async function fetchTrackers(contractAddress: string, jsonRpcProvider: ProviderConnectionInfo) {
     const provider = new JsonRpcProvider(jsonRpcProvider)
     // check that provider is connected and has some valid blockNumber
     await provider.getBlockNumber()
@@ -71,7 +60,7 @@ export async function getTrackerRegistryFromContract({
     jsonRpcProvider
 }: {
     contractAddress: string,
-    jsonRpcProvider: string | ConnectionInfo
+    jsonRpcProvider: ProviderConnectionInfo
 }): Promise<TrackerRegistry<SmartContractRecord>> {
     const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
     const records: SmartContractRecord[] = []

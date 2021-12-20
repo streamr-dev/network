@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { StreamrClient, StreamPart } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import {
     envOptions,
     authOptions,
@@ -20,11 +20,11 @@ envOptions(program)
     .action((storageNodeAddress: string, options: any) => {
         const client = new StreamrClient(formStreamrOptionsWithEnv(options))
         client.getStreamPartsByStorageNode(storageNodeAddress)
-            .then((streamParts: StreamPart[]) => {
+            .then((streamParts) => {
                 if (streamParts.length > 0) {
-                    console.info(EasyTable.print(streamParts.map((streamPart: StreamPart) => ({
-                        streamId: streamPart.getStreamId(),
-                        streamPartition: streamPart.getStreamPartition()
+                    console.info(EasyTable.print(streamParts.map(({ streamId, streamPartition }) => ({
+                        streamId,
+                        streamPartition,
                     }))))
                 }
                 return true

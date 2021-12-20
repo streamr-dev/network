@@ -1,3 +1,4 @@
+---
 # Any tests that can run without building should go in here.
 name: Client – Lint, Unit, Integration Tests
 
@@ -17,76 +18,53 @@ on:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
-
+    - cron: '0 0 * * *'
+concurrency:
+  group: client-code-build-${{ github.head_ref }}
+  cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/client
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.0
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
   lint:
-    name: Run linter using Node 14.x
+    name: Run Linter
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
-      - name: npm run eslint
-        run: npm run eslint
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
+      - run: npm run eslint
 
   test:
     name: Test Unit using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [16.x]
     env:
       TEST_REPEATS: 5
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          check-latest: true
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: test-unit
         timeout-minutes: 7
         run: npm run test-unit
@@ -97,89 +75,109 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [16.x]
         test-name: [
-            "test-integration-no-resend",
-            "test-integration-resend",
+          "test-integration-no-resend",
+          "test-integration-resend",
         ]
         websocket-url:
-            - name: "default"
-              url:  ""
-            - name: "single-node-only"
-              url:  "ws://localhost:8690/api/v1/ws"
+          - name: "default"
+            url: ""
+          - name: "single-node-only"
+            url: "ws://localhost:8690/api/v1/ws"
     env:
       TEST_NAME: ${{ matrix.test-name }}
       WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
       TEST_REPEATS: 2
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          check-latest: true
+      # >> use monorepo brokers/trackers with streamr-docker-dev
+      # For now, builds docker image and runs with streamr-docker-dev so we
+      # don't have to worry about backgrounding processes
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.7
         with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+            ${{ runner.os }}-buildx-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          driver-opts: |
+            network=host
+      - name: Build
+        uses: docker/build-push-action@v2.7.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: streamr/broker-node:dev
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      # << use monorepo brokers/trackers with streamr-docker-dev
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
       - name: Run Test
         run: npm run $TEST_NAME
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v1
+        uses: jwalton/gh-docker-logs@v2.0.2
         with:
-          dest: 'packages/client/logs'
+          dest: 'logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2.3.1
         with:
-          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
-          path: packages/client/logs
+          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          path: 'logs'
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   flakey:
-    name: Flakey Tests using Node ${{ matrix.node-version }}
+    if: ${{ false }}
+    name: Flakey Tests
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [16.x]
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -187,38 +185,38 @@ jobs:
           timeout_minutes: 15
           retry_on: error
           command: cd packages/client && npm run test-flakey || echo "::warning::Flakey Tests Failed"
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
 
   memory:
-    name:  Memory Tests using Node ${{ matrix.node-version }}
+    if: ${{ false }}
+    name: Memory Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [16.x]
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node-version }}
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: npm ci
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          check-latest: true
+      - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm ci
-          npx lerna bootstrap --scope streamr-client --include-dependencies
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -226,3 +224,8 @@ jobs:
           timeout_minutes: 20
           retry_on: error
           command: cd packages/client && npm run test-memory
+      - name: Stop Streamr Docker Stack
+        if: always()
+        run: |
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)

@@ -1,11 +1,10 @@
-import { NetworkNode } from '../../src/NetworkNode'
-import { Tracker } from '../../src/logic/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
-import { Event as NodeEvent } from "../../src/logic/Node"
+import { Event as NodeEvent } from "../../src/logic/node/Node"
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -20,11 +19,12 @@ describe('duplicate message detection and avoidance', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30350,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30350
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
         contactNode = createNetworkNode({
             id: 'node-0',
             trackers: [trackerInfo],
@@ -60,15 +60,10 @@ describe('duplicate message detection and avoidance', () => {
             }),
         ]
 
-        const allNodesConnnectedToTrackerPromise = Promise.all(otherNodes.map((node) => {
-            // @ts-expect-error private field
-            return waitForEvent(node.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER)
-        }))
         // eslint-disable-next-line no-restricted-syntax
         for (const node of otherNodes) {
             node.start()
         }
-        await allNodesConnnectedToTrackerPromise
 
         const allNodesSubscribed = Promise.all(otherNodes.map((node) => {
             return waitForEvent(node, NodeEvent.NODE_SUBSCRIBED)

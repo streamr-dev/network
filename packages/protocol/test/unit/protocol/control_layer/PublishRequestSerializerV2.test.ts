@@ -14,6 +14,7 @@ const message = new PublishRequest({
     streamMessage,
     sessionToken: 'sessionToken',
 })
+// eslint-disable-next-line max-len
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.PublishRequest, 'requestId', JSON.parse(streamMessage.serialize(30)), 'sessionToken'])
 
 describe('PublishRequestSerializerV2', () => {

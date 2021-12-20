@@ -1,9 +1,9 @@
-import { Contract, providers } from 'ethers'
-import { ConnectionInfo } from 'ethers/lib/utils'
+import { Contract } from '@ethersproject/contracts'
+import { JsonRpcProvider } from '@ethersproject/providers'
+
+type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
 
 import * as storageNodeRegistryConfig from '../../contracts/NodeRegistry.json'
-
-const { JsonRpcProvider } = providers
 
 // storageNodeAddress => HTTP address
 export type StorageNodeInfo = {
@@ -32,7 +32,7 @@ export class StorageNodeRegistry {
     }
 }
 
-async function fetchStorageNodes(contractAddress: string, jsonRpcProvider: string | ConnectionInfo): Promise<StorageNodeInfo[]> {
+async function fetchStorageNodes(contractAddress: string, jsonRpcProvider: ProviderConnectionInfo): Promise<StorageNodeInfo[]> {
     const provider = new JsonRpcProvider(jsonRpcProvider)
     // check that provider is connected and has some valid blockNumber
     await provider.getBlockNumber()
@@ -63,7 +63,7 @@ export async function getStorageNodeRegistryFromContract({
     jsonRpcProvider
 }: {
     contractAddress: string,
-    jsonRpcProvider: string | ConnectionInfo
+    jsonRpcProvider: ProviderConnectionInfo
 }): Promise<StorageNodeRegistry> {
     const storageNodes = await fetchStorageNodes(contractAddress, jsonRpcProvider)
     return createStorageNodeRegistry(storageNodes)

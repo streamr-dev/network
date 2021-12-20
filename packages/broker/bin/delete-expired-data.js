@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander')
 
-const { DeleteExpiredCmd } = require('../dist/src/storage/DeleteExpiredCmd')
+const { DeleteExpiredCmd } = require('../dist/src/plugins/storage/DeleteExpiredCmd')
 const CURRENT_VERSION = require('../package.json').version
 
 program
@@ -27,9 +27,15 @@ const deleteExpiredCommand = new DeleteExpiredCmd({
     bucketLimit: program.opts().bucketLimit,
     dryRun: !program.opts().realRun
 })
-deleteExpiredCommand.run()
-    .then(() => {})
-    .catch((e) => {
-        console.error(e)
+
+async function run() {
+    try {
+        await deleteExpiredCommand.run()
+        return {}
+    } catch (err) {
+        console.error(err)
         process.exit(1)
-    })
+    }
+}
+
+run()

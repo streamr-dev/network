@@ -1,12 +1,10 @@
-import { Tracker } from '../../src/logic/Tracker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
-import { TrackerLayer } from 'streamr-client-protocol'
-
+import { SPID, TrackerLayer } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { Event as NodeEvent } from '../../src/logic/Node'
-import { StreamIdAndPartition } from "../../src/identifiers"
+import { Event as NodeEvent } from '../../src/logic/node/Node'
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions
@@ -19,11 +17,12 @@ describe('Check tracker instructions to node', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: '127.0.0.1',
-            port: 30950,
-            id: 'tracker'
+            listen: {
+                hostname: '127.0.0.1',
+                port: 30950
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         nodeOne = createNetworkNode({
             id: 'node-1',
@@ -70,12 +69,12 @@ describe('Check tracker instructions to node', () => {
             waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
         ])
 
-        const streamIdAndPartition = new StreamIdAndPartition(streamId, 0)
+        const spid = new SPID(streamId, 0)
 
         // @ts-expect-error private field
-        expect(nodeOne.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(1)
+        expect(nodeOne.streams.getNeighborsForStream(spid).length).toBe(1)
         // @ts-expect-error private field
-        expect(nodeTwo.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(1)
+        expect(nodeTwo.streams.getNeighborsForStream(spid).length).toBe(1)
         
         // send empty list and wait for expected events
         await runAndWaitForEvents([
@@ -97,8 +96,8 @@ describe('Check tracker instructions to node', () => {
         ])
 
         // @ts-expect-error private field
-        expect(nodeOne.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(0)
+        expect(nodeOne.streams.getNeighborsForStream(spid).length).toBe(0)
         // @ts-expect-error private field
-        expect(nodeTwo.streams.getAllNodesForStream(streamIdAndPartition).length).toBe(0)
+        expect(nodeTwo.streams.getNeighborsForStream(spid).length).toBe(0)
     })
 })

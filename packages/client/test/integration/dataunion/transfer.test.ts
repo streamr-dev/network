@@ -4,11 +4,20 @@ import { formatEther, parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
 import Token from '../../../contracts/TestToken.json'
 import DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress, relayTokensAbi, providerMainnet, providerSidechain, getMainnetTestWallet, getSidechainTestWallet } from '../devEnvironment'
+import {
+    clientOptions,
+    tokenAdminPrivateKey,
+    tokenMediatorAddress,
+    relayTokensAbi,
+    providerMainnet,
+    providerSidechain,
+    getMainnetTestWallet,
+    getSidechainTestWallet
+} from '../devEnvironment'
 import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { EthereumAddress } from '../../../src/types'
-import authFetch from '../../../src/rest/authFetch'
+import authFetch from '../../../src/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-transfer')
 
@@ -51,7 +60,12 @@ describe('DataUnion earnings transfer methods', () => {
         const tokenMediator = new Contract(tokenMediatorAddress, relayTokensAbi, tokenAdminWallet)
         const approveTx = await tokenMainnet.approve(tokenMediator.address, parseEther('100'))
         await approveTx.wait()
-        const relayTx = await tokenMediator.relayTokensAndCall(tokenMainnet.address, tokenAdminSidechainWallet.address, parseEther('100'), '0x1234') // dummy 0x1234
+        const relayTx = await tokenMediator.relayTokensAndCall(
+            tokenMainnet.address,
+            tokenAdminSidechainWallet.address,
+            parseEther('100'),
+            '0x1234' // dummy 0x1234
+        )
         await relayTx.wait()
         await until(async () => (await tokenSidechain.balanceOf(tokenAdminSidechainWallet.address)).gt('0'), 300000, 3000)
 

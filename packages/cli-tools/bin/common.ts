@@ -5,13 +5,11 @@ import { StreamrClientOptions } from 'streamr-client'
 export interface EnvironmentOptions {
     dev?: boolean
     stg?: boolean
-    wsUrl?: string
-    httpUrl?: string 
+    httpUrl?: string
 }
 
 export interface AuthenticationOptions {
     privateKey?: string
-    apiKey?: string
 }
 
 export function envOptions(program: commander.Command): commander.Command {
@@ -25,7 +23,6 @@ export function envOptions(program: commander.Command): commander.Command {
 export function authOptions(program: commander.Command): commander.Command {
     return program
         .option('--private-key <key>', 'use an Ethereum private key to authenticate')
-        .option('--api-key <key>', 'use an API key to authenticate (deprecated)')
 }
 
 export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: number, max: number): void {
@@ -35,7 +32,7 @@ export function exitWithHelpIfArgsNotBetween(program: commander.Command, min: nu
 }
 
 export function formStreamrOptionsWithEnv(
-    { dev, stg, wsUrl, httpUrl, privateKey, apiKey }: EnvironmentOptions & AuthenticationOptions
+    { dev, stg, httpUrl, privateKey }: EnvironmentOptions & AuthenticationOptions
 ): StreamrClientOptions {
     const options: StreamrClientOptions = {}
 
@@ -45,37 +42,22 @@ export function formStreamrOptionsWithEnv(
     }
 
     if (dev) {
-        options.url = 'ws://localhost/api/v1/ws'
         options.restUrl = 'http://localhost/api/v1'
-        options.storageNode = {
-            // "broker-node-storage-1" on Docker environment
-            address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-            url: 'http://10.200.10.1:8891'
+        options.storageNodeRegistry = {
+            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            jsonRpcProvider: `http://10.200.10.1:8546`
         }
     } else if (stg) {
-        options.url = 'wss://staging.streamr.com/api/v1/ws'
         options.restUrl = 'https://staging.streamr.com/api/v1/'
     }
 
-    if (wsUrl) {
-        options.url = wsUrl
-    }
     if (httpUrl) {
         options.restUrl = httpUrl
-    }
-
-    if (privateKey && apiKey) {
-        console.error('flags --privateKey and --apiKey cannot be used at the same time')
-        process.exit(1)
     }
 
     if (privateKey) {
         options.auth = {
             privateKey
-        }
-    } else if (apiKey) {
-        options.auth = {
-            apiKey
         }
     }
 
@@ -93,7 +75,8 @@ export function createFnParseInt(name: string): (s: string) => number {
     }
 }
 
-export const getStreamId = (streamIdOrPath: string|undefined, options: any) => {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export const getStreamId = (streamIdOrPath: string|undefined, options: any): string | undefined => {
     if (streamIdOrPath === undefined) {
         return undefined
     }

@@ -1,0 +1,57 @@
+{
+    "extends": "@streamr/dev-config/ts/tsconfig.browser.json",
+    "compilerOptions": {
+        "composite": true,
+        "noEmit": true,
+        "declarationDir": "dist/types",
+        "outDir": "dist",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "strictBindCallApply": true,
+        "baseUrl": ".",
+        "paths": {
+            "stream": ["readable-stream"],
+            "util": ["util"],
+            "http": ["./src/shim/http-https.js"],
+            "@ethersproject/wordlists": [
+                "@ethersproject/wordlists/lib.esm/browser-wordlists.js"
+            ],
+            "https": ["./src/shim/http-https.js"],
+            "crypto": ["crypto-browserify"],
+            "buffer": ["buffer/"],
+            "node-fetch": ["./src/shim/node-fetch.ts"],
+            "streamr-client-protocol/dist/contracts/NodeRegistry.json": [
+                "streamr-client-protocol/dist/contracts/NodeRegistry.json"
+            ],
+            "streamr-client-protocol/*": ["streamr-client-protocol/src/*"],
+            "streamr-client-protocol": ["streamr-client-protocol/src/index.ts"],
+            "streamr-network": ["streamr-network/src/browser.ts"],
+            "streamr-network/src/connection/NodeWebRtcConnection.ts": [
+                "streamr-network/src/connection/BrowserWebRtcConnection.ts"
+            ],
+            "streamr-network/src/connection/ws/NodeClientWsEndpoint.ts": [
+                "streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts"
+            ],
+            "streamr-network/src/connection/ws/NodeClientWsConnection.ts": [
+                "streamr-network/src/connection/ws/BrowserClientWsConnection.ts"
+            ],
+            "streamr-network/src/helpers/logger/LoggerNode.ts": [
+                "streamr-network/src/helpers/logger/LoggerBrowser.ts"
+            ]
+        }
+    },
+    "include": [
+        "package.json",
+        "src/**/*",
+        "src/**/*.json",
+        "vendor/**/*",
+        "contracts/**/*.json",
+        "src/config.schema.json"
+    ],
+    "exclude": ["src/index-esm.mjs"],
+    "references": [
+        {
+            "path": "../protocol/tsconfig.node.json"
+        }
+    ]
+}

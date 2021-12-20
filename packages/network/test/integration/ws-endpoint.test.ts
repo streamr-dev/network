@@ -1,4 +1,4 @@
-import { Tracker } from '../../src/logic/Tracker'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import WebSocket from 'ws'
 import { waitForEvent, wait } from 'streamr-test-utils'
 
@@ -55,7 +55,7 @@ describe('ws-endpoint', () => {
 
     it('server and client form correct peerInfo on connection', async () => {
         const client = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
-        const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'))
+        const server = await startServerWsEndpoint('127.0.0.1', 30697, PeerInfo.newNode('server'))
 
         const e1 = waitForEvent(client, Event.PEER_CONNECTED)
         const e2 = waitForEvent(server, Event.PEER_CONNECTED)
@@ -78,10 +78,13 @@ describe('ws-endpoint', () => {
 
         beforeEach(async () => {
             tracker = await startTracker({
-                host: '127.0.0.1',
-                port: trackerPort,
-                id: 'tracker'
+                listen: {
+                    hostname: '127.0.0.1',
+                    port: trackerPort
+                }
             })
+            // @ts-expect-error TODO: do this proper way (pass via constructor)
+            tracker.trackerServer.endpoint.handshakeTimer = 3000
         })
 
         afterEach(async () => {
@@ -93,6 +96,23 @@ describe('ws-endpoint', () => {
             const close = await waitForEvent(ws, 'close')
             expect(close[0]).toEqual(DisconnectionCode.FAILED_HANDSHAKE)
             expect(close[1]).toContain('Handshake not received from connection behind UUID')
+        })
+    })
+
+    describe('Duplicate connections from same nodeId are closed', () => {
+        it('Duplicate connection is closed', async () => {
+            const client1 = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
+            const client2 = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
+
+            const server = await startServerWsEndpoint('127.0.0.1', 38483, PeerInfo.newNode('server'))
+
+            await client1.connect(server.getUrl(), PeerInfo.newTracker('server'))
+            await client2.connect(server.getUrl(), PeerInfo.newTracker('server'))
+            await waitForEvent(client2, Event.PEER_DISCONNECTED)
+
+            await client1.stop()
+            await client2.stop()
+            await server.stop()
         })
     })
 })

@@ -1,34 +1,24 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/stream'
-import { fakePrivateKey, getPublishTestMessages, createTestStream } from '../utils'
-import { StorageNode } from '../../src/stream/StorageNode'
+import { Stream } from '../../src/Stream'
+import { getPublishTestMessages, getCreateClient, createTestStream } from '../utils'
 
-import clientOptions from './config'
+import { Wallet } from 'ethers'
+import { storageNodeTestConfig } from './devEnvironment'
 
-const createClient = (opts = {}) => new StreamrClient({
-    ...clientOptions,
-    auth: {
-        privateKey: fakePrivateKey(),
-    },
-    autoConnect: false,
-    autoDisconnect: false,
-    ...opts,
-})
+jest.setTimeout(30000)
 
 describe('Stream', () => {
     let client: StreamrClient
     let stream: Stream
 
+    const createClient = getCreateClient()
     beforeEach(async () => {
-        client = createClient()
+        client = await createClient()
         await client.connect()
 
         stream = await createTestStream(client, module)
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
-    })
-
-    afterEach(async () => {
-        await client.disconnect()
+        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
+        await stream.addToStorageNode(await storageNodeWallet.getAddress())
     })
 
     describe('detectFields()', () => {
@@ -43,8 +33,7 @@ describe('Stream', () => {
                 array: [1, 2, 3],
                 string: 'test',
             }
-            const publishTestMessages = getPublishTestMessages(client, {
-                streamId: stream.id,
+            const publishTestMessages = getPublishTestMessages(client, stream, {
                 waitForLast: true,
                 createMessage: () => msg,
             })
@@ -89,8 +78,7 @@ describe('Stream', () => {
                 symbol: Symbol('test'),
                 // TODO: bigint: 10n,
             }
-            const publishTestMessages = getPublishTestMessages(client, {
-                streamId: stream.id,
+            const publishTestMessages = getPublishTestMessages(client, stream, {
                 waitForLast: true,
                 createMessage: () => msg,
             })

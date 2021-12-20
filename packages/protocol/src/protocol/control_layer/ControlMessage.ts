@@ -23,7 +23,9 @@ export enum ControlMessageType {
     UnsubscribeRequest = 10,
     ResendLastRequest = 11,
     ResendFromRequest = 12,
-    ResendRangeRequest = 13
+    ResendRangeRequest = 13,
+    PublishStreamConnectionRequest = 14,
+    PublishStreamConnectionResponse = 15
 }
 
 export interface ControlMessageOptions {
@@ -55,7 +57,7 @@ export default class ControlMessage {
         this.requestId = requestId
     }
 
-    static registerSerializer(version: number, type: ControlMessageType, serializer: Serializer<ControlMessage>) {
+    static registerSerializer(version: number, type: ControlMessageType, serializer: Serializer<ControlMessage>): void {
         // Check the serializer interface
         if (!serializer.fromArray) {
             throw new Error(`Serializer ${JSON.stringify(serializer)} doesn't implement a method fromArray!`)
@@ -75,11 +77,11 @@ export default class ControlMessage {
         serializerByVersionAndType[version][type] = serializer
     }
 
-    static unregisterSerializer(version: number, type: ControlMessageType) {
+    static unregisterSerializer(version: number, type: ControlMessageType): void {
         delete serializerByVersionAndType[version][type]
     }
 
-    static getSerializer(version: number, type: ControlMessageType) {
+    static getSerializer(version: number, type: ControlMessageType): Serializer<ControlMessage> {
         const serializersByType = serializerByVersionAndType[version]
         if (!serializersByType) {
             throw new UnsupportedVersionError(version, `Supported versions: [${ControlMessage.getSupportedVersions()}]`)
@@ -91,18 +93,19 @@ export default class ControlMessage {
         return clazz
     }
 
-    static getSupportedVersions() {
+    static getSupportedVersions(): number[] {
         return Object.keys(serializerByVersionAndType).map((key) => parseInt(key, 10))
     }
 
-    serialize(version = this.version, ...typeSpecificSerializeArgs: any[]) {
+    serialize(version = this.version, ...typeSpecificSerializeArgs: any[]): string {
         return JSON.stringify(ControlMessage.getSerializer(version, this.type).toArray(this, ...typeSpecificSerializeArgs))
     }
 
     /**
      * Takes a serialized representation (array or string) of a message, and returns a ControlMessage instance.
      */
-    static deserialize(msg: any, ...typeSpecificDeserializeArgs: any[]) {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    static deserialize(msg: any, ...typeSpecificDeserializeArgs: any[]): ControlMessage {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
 
         /* eslint-disable prefer-destructuring */

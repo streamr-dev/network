@@ -1,9 +1,9 @@
 import { Wallet } from '@ethersproject/wallet'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
-import StreamrClient from 'streamr-client'
+import StreamrClient, { ConfigTest } from 'streamr-client'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { DeleteExpiredCmd } from "../../../../src/plugins/storage/DeleteExpiredCmd"
-import { createMockUser, createClient, STREAMR_DOCKER_DEV_HOST, createTestStream } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST, createTestStream, getPrivateKey } from "../../../utils"
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -11,6 +11,8 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24
+
+jest.setTimeout(30000)
 
 const insertBucket = async (cassandraClient: Client, streamId: string, dateCreate: number) => {
     const bucketId = TimeUuid.fromDate(new Date(dateCreate)).toString()
@@ -60,8 +62,14 @@ describe('DeleteExpiredCmd', () => {
             localDataCenter,
             keyspace,
         })
-        mockUser = createMockUser()
-        client = createClient(9999, mockUser.privateKey, {
+        mockUser = new Wallet(await getPrivateKey())
+
+        client = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: mockUser.privateKey
+            },
+            restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
             orderMessages: false,
         })
         deleteExpiredCmd = new DeleteExpiredCmd({
@@ -99,9 +107,8 @@ describe('DeleteExpiredCmd', () => {
             await insertData(cassandraClient, streamId, bucketId3, now - 2 * DAY_IN_MS)
             await insertData(cassandraClient, streamId, bucketId4, now - 3 * DAY_IN_MS)
 
-            await deleteExpiredCmd.run()
-            // @ts-expect-error
-            const counts = await checkDBCount(cassandraClient, streamId, days)
+            await deleteExpiredCmd.run(client)
+            const counts = await checkDBCount(cassandraClient, streamId)
             expect(counts).toEqual({
                 bucketCount: days,
                 messageCount: days
@@ -122,7 +129,7 @@ describe('DeleteExpiredCmd', () => {
         // prevents bucket from being deleted
         await insertData(cassandraClient, streamId, bucketId, now - 3 * DAY_IN_MS)
 
-        await deleteExpiredCmd.run()
+        await deleteExpiredCmd.run(client)
         const counts = await checkDBCount(cassandraClient, streamId)
         expect(counts).toEqual({
             bucketCount: 1,

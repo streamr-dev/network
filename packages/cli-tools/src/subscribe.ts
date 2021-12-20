@@ -1,9 +1,9 @@
 import { StreamrClient, StreamrClientOptions } from 'streamr-client'
 
-export const subscribe = (stream: string, partition: number, streamrOptions: StreamrClientOptions): void => {
+export const subscribe = (streamId: string, streamPartition: number, streamrOptions: StreamrClientOptions): void => {
     const options = { ...streamrOptions }
     new StreamrClient(options).subscribe({
-        stream,
-        partition,
+        streamId,
+        streamPartition,
     }, (message) => console.info(JSON.stringify(message)))
 }
