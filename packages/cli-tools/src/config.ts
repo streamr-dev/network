@@ -8,53 +8,50 @@ interface Config {
 }
 
 /*
- * Currently the config contains only one root level element: the "client" block.
- * Here we validate that there are no additional root level fields. The values 
- * of the "client" blocks are validated by StreamrClient when the configuration is
- * used.
+ * Validate that the config contains at least one root level element: the "client" block.
+ * The values of the "client" blocks are validated by StreamrClient when the configuration 
+ * is used.
  *  
- * If the config will be more complicated in the future, we could use e.g. AJV npm 
- * module to validate the file content.
- * 
- * Also we may want to extend the usage of configuration files so that the same file 
- * can be used to configure both Broker and cli-tools. In that case we should move
- * Broker's validation logic to a shared package and import that code here.
+ * We don't check other root level elements. It is ok to use a Broker config file as
+ * a cli-tools config file. In that case the file contains e.g. "plugins" block, 
+ * but cli-tools can just ignore that block.
  */
-const validateConfig = (config: any): void | never => {
-    const unknownFields = Object.keys(config).filter((key) => key !== 'client')
-    if (unknownFields.length > 0) {
-        throw new Error(`Unknown configuration properties: ${unknownFields.join(', ')}`)
+const validateConfig = (config: any, fileName: string): void | never => {
+    const CLIENT_CONFIG_BLOCK = 'client'
+    if (config[CLIENT_CONFIG_BLOCK] === undefined) {
+        throw new Error(`Missing root element "${CLIENT_CONFIG_BLOCK}" in ${fileName}`)
     }
 }
 
-const tryReadFile = (fileName: string): string|undefined => {
+const tryReadConfigFile = (fileName: string): Config|undefined|never => {
+    let content
     try {
-        return readFileSync(fileName, 'utf8')
+        content = readFileSync(fileName, 'utf8')
     } catch (e: any) {
         return undefined
     }
+    const json = JSON.parse(content)
+    validateConfig(json, fileName)
+    return json
 }
 
 export const getConfig = (id?: string): Config|undefined => {
     const CONFIG_DIRECTORY = path.join(os.homedir(), '.streamr', 'config')
-    let fileNames: string[]
     if (id !== undefined) {
-        fileNames = [
+        const fileNames = [
             id,
             `${id}.json`,
             path.join(CONFIG_DIRECTORY, `${id}.json`),
-            
         ]
-    } else {
-        fileNames = [ path.join(CONFIG_DIRECTORY, `default.json`) ]
-    }
-    for (const fileName of fileNames) {
-        const content = tryReadFile(fileName)
-        if (content !== undefined) {
-            const json = JSON.parse(content)
-            validateConfig(json)
-            return json
+        for (const fileName of fileNames) {
+            const content = tryReadConfigFile(fileName)
+            if (content !== undefined) {
+                return content
+            }
         }
+        throw new Error('Config file not found')
+    } else {
+        const fileName = path.join(CONFIG_DIRECTORY, `default.json`)
+        return tryReadConfigFile(fileName)
     }
-    return undefined
 }
