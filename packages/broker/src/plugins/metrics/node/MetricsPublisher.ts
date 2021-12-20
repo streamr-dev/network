@@ -26,8 +26,9 @@ export class MetricsPublisher {
     async publish(sample: Sample): Promise<void> {
         const periodLength = sample.period.end - sample.period.start
         const streamId = this.getStreamId(periodLength)
+        const partitionKey = this.nodeAddress.toLowerCase()
         try {
-            await this.client.publish(streamId, sample)
+            await this.client.publish(streamId, sample, undefined, partitionKey)
         } catch (e: any) {
             logger.warn(`Unable to publish NodeMetrics: ${e.message}`)
         }
@@ -164,7 +165,7 @@ export class MetricsPublisher {
     getStreamId(periodLength: number): string {
         const suffix = STREAM_ID_SUFFIXES[periodLength]
         if (suffix !== undefined) {
-            return `${this.nodeAddress.toLowerCase()}/streamr/node/metrics/${suffix}`
+            return `/streamr.eth/metrics/nodes/firehose/${suffix}`
         } else {
             throw new Error(`Invalid period length: ${periodLength}`)
         }

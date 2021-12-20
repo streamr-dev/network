@@ -1,8 +1,8 @@
-import StreamrClient from 'streamr-client'
+import StreamrClient, {StreamPermission} from 'streamr-client'
 import {Tracker} from 'streamr-network'
-import { Wallet } from 'ethers'
-import { startBroker, createClient, Queue, getPrivateKey, startTestTracker } from '../../../../utils'
-import { Broker } from '../../../../../src/broker'
+import {Wallet} from 'ethers'
+import {createClient, getPrivateKey, Queue, startBroker, startTestTracker} from '../../../../utils'
+import {Broker} from '../../../../../src/broker'
 
 const httpPort = 47741
 const wsPort = 47742
@@ -33,6 +33,9 @@ describe('NodeMetrics', () => {
         client2 = await createClient(tracker, tmpAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+
+        const stream = await client2.getOrCreateStream({ id: '/streamr.eth/metrics/nodes/firehose/sec'})
+        await stream.grantUserPermission(StreamPermission.PUBLISH, 'public')
 
         storageNode = await startBroker({
             name: 'storageNode',
@@ -81,8 +84,11 @@ describe('NodeMetrics', () => {
 
     it('should retrieve the a `sec` metrics', async () => {
         const messageQueue = new Queue<any>()
-        const streamId = `${nodeAddress.toLowerCase()}/streamr/node/metrics/sec`
-        await client2.subscribe(streamId, (content: any) => {
+
+        const streamId = `/streamr.eth/metrics/nodes/firehose/sec`
+        const stream = await client2.getOrCreateStream({id: streamId})
+        console.log(stream)
+        await client2.subscribe({ streamId, streamPartition: 2 }, (content: any) => {
             messageQueue.push({ content })
         })
         const message = await messageQueue.pop(30 * 1000)
