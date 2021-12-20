@@ -155,7 +155,8 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
         let requestIdPromise: Promise<string> | undefined
         const [rtcErrors]: any[] = await runAndWaitForEvents(
             () => {
-                requestIdPromise = originatorNodeToTracker.sendRtcConnect(tracker.getTrackerId(), 'nonExistingNode', PeerInfo.newUnknown('originator'))
+                requestIdPromise = originatorNodeToTracker.sendRtcConnect(tracker.getTrackerId(), 'nonExistingNode', 
+                    PeerInfo.newUnknown('originator'))
             },[originatorNodeToTracker, NodeToTrackerEvent.RTC_ERROR_RECEIVED])
         
         const requestId = await requestIdPromise
