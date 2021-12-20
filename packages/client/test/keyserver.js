@@ -8,7 +8,7 @@ const app = express()
 app.use(cors())
 
 // try avoid sequential tests starting from same address
-let c = ((Math.random() * 1000) % 1000)
+let c = (Math.round((Math.random() * 1000)) % 1000)
 app.get('/key', (req, res) => {
     c = ((c + 1) % 1000)
     const hexString = c.toString(16)
