@@ -38,7 +38,7 @@
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-flakey": "jest test/flakey",
     "test-integration": "jest test/integration/",
-    "test-simulator": "jest --projects simulator.jest.config.js -- test/integration/publish-only-stream-connection.test.ts",
+    "test-simulator": "jest --projects simulator.jest.config.js -- test/",
     "test-types": "tsc --noEmit -b ./tsconfig.json ",
     "test-unit": "jest test/unit",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
