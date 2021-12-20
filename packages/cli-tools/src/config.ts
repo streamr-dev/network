@@ -40,7 +40,6 @@ export const getConfig = (id?: string): Config|undefined => {
     if (id !== undefined) {
         const fileNames = [
             id,
-            `${id}.json`,
             path.join(CONFIG_DIRECTORY, `${id}.json`),
         ]
         for (const fileName of fileNames) {
