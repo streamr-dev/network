@@ -17,9 +17,13 @@ This library allows you to easily interact with the [Streamr Network](https://st
 
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
+## Important information
+
+The current stable version of the Streamr Client is `5.x` (at the time of writing, December 2021) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-alpha.19](https://www.npmjs.com/package/streamr-client/v/6.0.0-alpha.19) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-alpha.19` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing data to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
+
 ----
 
-## TOC
+## Table of contents
 
 [Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Storage](#storage) ·[Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 

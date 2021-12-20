@@ -344,12 +344,6 @@ describeRepeats('Group Key Persistence', () => {
                     privateKey: publisherPrivateKey,
                 },
             })
-
-            // streams = await Promise.all(Array(NUM_STREAMS).fill(true).map(async () => {
-            //     return createTestStream(publisher, module, {
-            //         requireEncryptedData: false,
-            //     })
-            // }))
             for (let i = 0; i < NUM_STREAMS; i++) {
                 // eslint-disable-next-line no-await-in-loop
                 const stream = await createTestStream(publisher, module, {

@@ -47,11 +47,7 @@ describe('DataQueryEndpoints', () => {
         streamFetcher = {
             authenticate() {
                 return new Promise(((resolve) => {
-                    // if (sessionToken === 'mock-session-token') {
                     resolve({})
-                    // } else {
-                    //     reject(new HttpError(403, 'GET', ''))
-                    // }
                 }))
             },
         }
@@ -81,15 +77,6 @@ describe('DataQueryEndpoints', () => {
                         error: 'Path parameter "partition" not a number: zero',
                     }, done)
             })
-
-            // does not have to be autorized with session, endpoint will check permission onchain
-            // it('responds 403 and error message if not authorized', (done) => {
-            //     testGetRequest('/api/v1/streams/streamId/data/partitions/0/last', 'wrong-session-token')
-            //         .expect('Content-Type', /json/)
-            //         .expect(403, {
-            //             error: 'Authentication failed.',
-            //         }, done)
-            // })
 
             it('responds 400 and error message if optional param "count" not a number', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=sixsixsix')
@@ -284,14 +271,6 @@ describe('DataQueryEndpoints', () => {
                         error: 'Path parameter "partition" not a number: zero',
                     }, done)
             })
-            // does not have to be autorized with session, endpoint will check permission onchain
-            // it('responds 403 and error message if not authorized', (done) => {
-            //     testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrong-session-token')
-            //         .expect('Content-Type', /json/)
-            //         .expect(403, {
-            //             error: 'Authentication failed.',
-            //         }, done)
-            // })
             it('responds 400 and error message if param "fromTimestamp" not given', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range')
                     .expect('Content-Type', /json/)

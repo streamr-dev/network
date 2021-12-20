@@ -143,7 +143,7 @@ jobs:
           dest: 'logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v2.3.0
+        uses: actions/upload-artifact@v2.3.1
         with:
           name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'

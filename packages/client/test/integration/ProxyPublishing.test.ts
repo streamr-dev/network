@@ -3,7 +3,7 @@ import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
 import { wait } from 'streamr-test-utils'
 import { SPID } from 'streamr-client-protocol'
 
-jest.setTimeout(30000)
+jest.setTimeout(50000)
 
 describe('PubSub with proxy connections', () => {
     let stream: Stream
@@ -48,6 +48,9 @@ describe('PubSub with proxy connections', () => {
                 trackers: ConfigTest.network.trackers
             }
         })
+    }, 10000)
+
+    beforeEach(async () => {
         proxyNodeId1 = await proxyClient1.node.getNodeId()
         proxyNodeId2 = await proxyClient2.node.getNodeId()
         stream = await createTestStream(publishingClient, module)
@@ -60,7 +63,7 @@ describe('PubSub with proxy connections', () => {
         await stream.grantUserPermission(StreamPermission.SUBSCRIBE, proxyUser.username)
         await stream.grantUserPermission(StreamPermission.PUBLISH, proxyUser2.username)
         await stream.grantUserPermission(StreamPermission.SUBSCRIBE, proxyUser2.username)
-    })
+    }, 60000)
 
     it('Publish only connections work', async () => {
         const receivedMessagesProxy: any[] = []
