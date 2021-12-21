@@ -3,6 +3,8 @@ import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import { createClient, getPrivateKey, Queue, startBroker, startTestTracker } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
+import { v4 as uuid } from 'uuid'
+import { keyToArrayIndex } from 'streamr-client-protocol'
 
 const httpPort = 47741
 const wsPort = 47742
@@ -33,9 +35,10 @@ describe('NodeMetrics', () => {
             storageNodeRegistry: storageNodeRegistry,
         })
 
-        const stream = await client2.getOrCreateStream({ id: '/metrics/nodes/firehose/sec'})
+        const stream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
         await stream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
         await stream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
+        firehoseStreamIdHead = stream.id.replace('sec', '')
 
         storageNode = await startBroker({
             name: 'storageNode',
@@ -51,7 +54,6 @@ describe('NodeMetrics', () => {
             storageNodeRegistry: storageNodeRegistry,
         })
         await storageClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
-        firehoseStreamIdHead = stream.id.replace('sec', '')
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
@@ -88,7 +90,8 @@ describe('NodeMetrics', () => {
         const messageQueue = new Queue<any>()
 
         const streamId = `${firehoseStreamIdHead}sec`
-        await client2.subscribe({ streamId }, (content: any) => {
+        const streamPartition = keyToArrayIndex(10, (await client2.getUserInfo()).username)
+        await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
         })
         const message = await messageQueue.pop(30 * 1000)
