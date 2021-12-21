@@ -1,13 +1,12 @@
-import StreamrClient, {StreamPermission} from 'streamr-client'
-import {Tracker} from 'streamr-network'
-import {Wallet} from 'ethers'
-import {createClient, getPrivateKey, Queue, startBroker, startTestTracker} from '../../../../utils'
-import {Broker} from '../../../../../src/broker'
+import StreamrClient, { StreamPermission } from 'streamr-client'
+import { Tracker } from 'streamr-network'
+import { Wallet } from 'ethers'
+import { createClient, getPrivateKey, Queue, startBroker, startTestTracker } from '../../../../utils'
+import { Broker } from '../../../../../src/broker'
 
 const httpPort = 47741
 const wsPort = 47742
 const trackerPort = 47745
-
 
 describe('NodeMetrics', () => {
     let tracker: Tracker
