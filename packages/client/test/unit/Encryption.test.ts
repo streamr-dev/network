@@ -16,23 +16,30 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             // @ts-expect-error
             process.browser = !!isBrowser
         })
+
         afterAll(() => {
             // @ts-expect-error
             process.browser = !isBrowser
         })
 
-        it('rsa decryption after encryption equals the initial plaintext', async () => {
-            const encryptionUtil = await EncryptionUtil.create()
-            const plaintext = 'some random text'
-            const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey())
-            expect(encryptionUtil.decryptWithPrivateKey(ciphertext).toString('utf8')).toStrictEqual(plaintext)
-        })
+        describe('EncryptionUtil instance', () => {
+            let encryptionUtil: EncryptionUtil
 
-        it('rsa decryption after encryption equals the initial plaintext (hex strings)', async () => {
-            const encryptionUtil = await EncryptionUtil.create()
-            const plaintext = 'some random text'
-            const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey(), true)
-            expect(encryptionUtil.decryptWithPrivateKey(ciphertext, true).toString('utf8')).toStrictEqual(plaintext)
+            beforeEach(async () => {
+                encryptionUtil = await EncryptionUtil.create()
+            }, 10000)
+
+            it('rsa decryption after encryption equals the initial plaintext', () => {
+                const plaintext = 'some random text'
+                const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey())
+                expect(encryptionUtil.decryptWithPrivateKey(ciphertext).toString('utf8')).toStrictEqual(plaintext)
+            })
+
+            it('rsa decryption after encryption equals the initial plaintext (hex strings)', () => {
+                const plaintext = 'some random text'
+                const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey(), true)
+                expect(encryptionUtil.decryptWithPrivateKey(ciphertext, true).toString('utf8')).toStrictEqual(plaintext)
+            })
         })
 
         it('aes decryption after encryption equals the initial plaintext', () => {

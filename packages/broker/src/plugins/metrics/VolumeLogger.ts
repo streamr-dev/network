@@ -1,5 +1,4 @@
 import { MetricsContext } from 'streamr-network'
-import io from '@pm2/io'
 import { ConsoleAndPM2Metrics } from './ConsoleAndPM2Metrics'
 
 // TODO remove this class and use ConsoleAndPM2Metrics directly from MetricsPlugin
@@ -25,7 +24,6 @@ export class VolumeLogger {
     }
 
     stop(): void {
-        io.destroy()
         if (this.legacyMetrics !== undefined) {
             this.legacyMetrics.stop()
         }
