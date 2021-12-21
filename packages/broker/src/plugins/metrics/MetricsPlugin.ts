@@ -14,6 +14,7 @@ export interface MetricsPluginConfig {
     firehoseStreamIdHead: string
     nodeMetrics: {
         storageNode: string
+        firehoseStreamIdHead: string
     } | null
 }
 
@@ -37,7 +38,7 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
                 this.nodeId,
                 this.streamrClient!,
                 this.pluginConfig.nodeMetrics.storageNode,
-                this.pluginConfig.firehoseStreamIdHead
+                this.pluginConfig.nodeMetrics.firehoseStreamIdHead
             )
             this.nodeMetrics = new NodeMetrics(metricsContext, metricsPublisher)
         }

@@ -67,9 +67,10 @@ describe('NodeMetrics', () => {
                             wsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
                             httpUrl: `http://127.0.0.1:${httpPort}/api/v1`,
                         },
-                        storageNode: storageNodeAccount.address
+                        storageNode: storageNodeAccount.address,
+                        firehoseStreamIdHead
                     },
-                    firehoseStreamIdHead
+
                 }
             },
             storageNodeRegistry

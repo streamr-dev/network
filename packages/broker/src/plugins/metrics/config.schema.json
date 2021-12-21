@@ -5,8 +5,7 @@
   "description": "Metrics plugin configuration",
   "required": [
     "consoleAndPM2IntervalInSeconds",
-    "nodeMetrics",
-    "firehoseStreamIdHead"
+    "nodeMetrics"
   ],
   "additionalProperties": false,
   "properties": {
@@ -14,11 +13,6 @@
       "type": "integer",
       "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
       "minimum": 0
-    },
-    "firehoseStreamIdHead": {
-      "type": "string",
-      "description": "Base streamId before granularities (sec, min, hour) for the firehose metrics stream",
-      "default": "streamr.eth/metrics/nodes/firehose/"
     },
     "nodeMetrics" : {
       "type": [
@@ -51,6 +45,11 @@
         },
         "storageNode":{
           "type": "string"
+        },
+        "firehoseStreamIdHead": {
+          "type": "string",
+          "description": "Base streamId before granularities (sec, min, hour) for the firehose metrics stream",
+          "default": "streamr.eth/metrics/nodes/firehose/"
         }
       }
     }
