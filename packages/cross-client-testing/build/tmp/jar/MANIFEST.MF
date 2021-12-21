@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Implementation-Title: client_testing
-Implementation-Version: 1.0-SNAPSHOT
-
