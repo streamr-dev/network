@@ -234,7 +234,7 @@ export const selectStoragePathPrompt = {
     type: 'input',
     name: 'selectStoragePath',
     message: `Select a path to store the generated config in `,
-    default: path.join(PATHS.config, 'broker-config.json'),
+    default: path.join(PATHS.config, 'default.json'),
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
         try {
             const parentDirPath = path.dirname(input)

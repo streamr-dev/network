@@ -89,13 +89,13 @@ describe('ConfigWizard', () => {
 
         it ('happy path', () => {
             const validate = selectStoragePathPrompt.validate!
-            const validPath = tmpDataDir + '/test-config.json'
+            const validPath = tmpDataDir + '/default.json'
             expect(validate(validPath)).toBe(true)
         })
 
         it ('happy path with overwrite destination', () => {
             const validate = selectStoragePathPrompt.validate!
-            const validPath = tmpDataDir + '/test-config.json'
+            const validPath = tmpDataDir + '/default.json'
             writeFileSync(validPath, JSON.stringify({}))
             const answers: any = {}
             const isValid = validate(validPath, answers)
@@ -126,7 +126,7 @@ describe('ConfigWizard', () => {
 
         it ('happy path; create parent dir when doesn\'t exist', async () => {
             const parentDirPath = tmpDataDir + '/newdir/'
-            const configPath = parentDirPath + 'test-config.json'
+            const configPath = parentDirPath + 'default.json'
             const configFileLocation: string = await createStorageFile(CONFIG, {
                 selectStoragePath: configPath,
                 parentDirPath,
@@ -147,7 +147,7 @@ describe('ConfigWizard', () => {
 
         it ('should throw when no permissions on path', async () => {
             const parentDirPath = '/home/'
-            const configPath = parentDirPath + 'test-config.json'
+            const configPath = parentDirPath + 'default.json'
             await expect(createStorageFile(CONFIG, {
                 selectStoragePath: configPath,
                 parentDirPath,
@@ -237,7 +237,7 @@ describe('ConfigWizard', () => {
     describe('user flow', () => {
         it ('should exercise the happy path', async () => {
             const tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
-            const configPath = tmpDataDir + 'test-config.json'
+            const configPath = tmpDataDir + 'default.json'
             const privateKey = '0x1234567890123456789012345678901234567890123456789012345678901234'
             const websocketPort = '3170'
             const mqttPort = '3171'
