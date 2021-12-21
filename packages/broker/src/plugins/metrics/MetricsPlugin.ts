@@ -11,6 +11,7 @@ const logger = new Logger(module)
 
 export interface MetricsPluginConfig {
     consoleAndPM2IntervalInSeconds: number
+    firehoseStreamIdHead: string
     nodeMetrics: {
         storageNode: string
     } | null
@@ -30,8 +31,14 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
             this.pluginConfig.consoleAndPM2IntervalInSeconds,
             metricsContext,
         )
+
         if (this.pluginConfig.nodeMetrics !== null) {
-            const metricsPublisher = new MetricsPublisher(this.nodeId, this.streamrClient!, this.pluginConfig.nodeMetrics.storageNode)
+            const metricsPublisher = new MetricsPublisher(
+                this.nodeId,
+                this.streamrClient!,
+                this.pluginConfig.nodeMetrics.storageNode,
+                this.pluginConfig.firehoseStreamIdHead
+            )
             this.nodeMetrics = new NodeMetrics(metricsContext, metricsPublisher)
         }
         try {

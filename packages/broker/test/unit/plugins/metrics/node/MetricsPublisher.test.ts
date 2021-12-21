@@ -16,7 +16,7 @@ describe('MetricsPublisher', () => {
             }
         })
 
-        publisher = new MetricsPublisher(nodeAddress, client, storageNodeAddress)
+        publisher = new MetricsPublisher(nodeAddress, client, storageNodeAddress, `${nodeAddress}/metrics/node/firehose/`)
         mockStream = {
             addToStorageNode: jest.fn(),
             // grantPermission: jest.fn(),

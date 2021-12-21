@@ -8,7 +8,6 @@ const httpPort = 47741
 const wsPort = 47742
 const trackerPort = 47745
 
-jest.setTimeout(60000)
 
 describe('NodeMetrics', () => {
     let tracker: Tracker
@@ -17,6 +16,7 @@ describe('NodeMetrics', () => {
     let client1: StreamrClient
     let nodeAddress: string
     let client2: StreamrClient
+    let firehoseStreamIdHead: string
 
     beforeAll(async () => {
         const tmpAccount = new Wallet(await getPrivateKey())
@@ -34,8 +34,9 @@ describe('NodeMetrics', () => {
             storageNodeRegistry: storageNodeRegistry,
         })
 
-        const stream = await client2.getOrCreateStream({ id: '/streamr.eth/metrics/nodes/firehose/sec'})
-        await stream.grantUserPermission(StreamPermission.PUBLISH, 'public')
+        const stream = await client2.getOrCreateStream({ id: '/metrics/nodes/firehose/sec'})
+        await stream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
 
         storageNode = await startBroker({
             name: 'storageNode',
@@ -51,6 +52,7 @@ describe('NodeMetrics', () => {
             storageNodeRegistry: storageNodeRegistry,
         })
         await storageClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
+        firehoseStreamIdHead = stream.id.replace('sec', '')
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
@@ -65,12 +67,13 @@ describe('NodeMetrics', () => {
                             httpUrl: `http://127.0.0.1:${httpPort}/api/v1`,
                         },
                         storageNode: storageNodeAccount.address
-                    }
+                    },
+                    firehoseStreamIdHead
                 }
             },
             storageNodeRegistry
         })
-    })
+    }, 80 * 1000)
 
     afterAll(async () => {
         await Promise.allSettled([
@@ -85,10 +88,8 @@ describe('NodeMetrics', () => {
     it('should retrieve the a `sec` metrics', async () => {
         const messageQueue = new Queue<any>()
 
-        const streamId = `/streamr.eth/metrics/nodes/firehose/sec`
-        const stream = await client2.getOrCreateStream({id: streamId})
-        console.log(stream)
-        await client2.subscribe({ streamId, streamPartition: 2 }, (content: any) => {
+        const streamId = `${firehoseStreamIdHead}sec`
+        await client2.subscribe({ streamId }, (content: any) => {
             messageQueue.push({ content })
         })
         const message = await messageQueue.pop(30 * 1000)
@@ -109,5 +110,5 @@ describe('NodeMetrics', () => {
                 end: expect.any(Number)
             }
         })
-    })
+    }, 35000)
 })

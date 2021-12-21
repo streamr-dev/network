@@ -16,11 +16,13 @@ export class MetricsPublisher {
     private readonly nodeAddress: string
     private readonly client: StreamrClient
     private readonly storageNodeAddress: string
+    private readonly streamIdHead: string
 
-    constructor(nodeAddress: string, client: StreamrClient, storageNodeAddress: string) {
+    constructor(nodeAddress: string, client: StreamrClient, storageNodeAddress: string, streamIdHead: string) {
         this.nodeAddress = nodeAddress
         this.client = client
         this.storageNodeAddress = storageNodeAddress
+        this.streamIdHead = streamIdHead
     }
 
     async publish(sample: Sample): Promise<void> {
@@ -165,7 +167,7 @@ export class MetricsPublisher {
     getStreamId(periodLength: number): string {
         const suffix = STREAM_ID_SUFFIXES[periodLength]
         if (suffix !== undefined) {
-            return `/streamr.eth/metrics/nodes/firehose/${suffix}`
+            return `${this.streamIdHead}${suffix}`
         } else {
             throw new Error(`Invalid period length: ${periodLength}`)
         }
