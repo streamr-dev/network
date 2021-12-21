@@ -94,6 +94,7 @@ export class ConsoleAndPM2Metrics {
     }
 
     stop(): void {
+        io.destroy()
         clearTimeout(this.timeout!)
     }
 
