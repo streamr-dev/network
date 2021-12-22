@@ -31,11 +31,26 @@ describe('check tracker, nodes and statuses from nodes', () => {
             trackers: [trackerInfo]
         })
 
-        subscriberOne.subscribe('stream-1', 0)
+        subscriberOne.start()
+        subscriberTwo.start()
+
         subscriberOne.subscribe('stream-2', 2)
 
-        subscriberTwo.subscribe('stream-1', 0)
-        subscriberTwo.subscribe('stream-2', 2)
+        await runAndWaitForEvents([ () => { subscriberOne.subscribe('stream-1', 0) }, 
+            () => { subscriberTwo.subscribe('stream-1', 0) }],[
+            [subscriberOne, NodeEvent.NODE_SUBSCRIBED],
+            [subscriberTwo, NodeEvent.NODE_SUBSCRIBED],
+            // @ts-expect-error private field
+            [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
+        ])
+
+        await runAndWaitForEvents([ () => { subscriberOne.subscribe('stream-2', 2) }, 
+            () => { subscriberTwo.subscribe('stream-2', 2) }],[
+            [subscriberOne, NodeEvent.NODE_SUBSCRIBED],
+            [subscriberTwo, NodeEvent.NODE_SUBSCRIBED],
+            // @ts-expect-error private field
+            [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
+        ])
     })
 
     afterEach(async () => {
@@ -44,6 +59,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         await tracker.stop()
     })
 
+    /*
     it('has id & peerInfo', async () => {
         expect(tracker.getTrackerId()).toEqual(tracker.peerInfo.peerId)
         expect(tracker.peerInfo.isTracker()).toEqual(true)
@@ -75,19 +91,15 @@ describe('check tracker, nodes and statuses from nodes', () => {
             }
         })
     })
-
+    */
     it('tracker should update correctly overlays on subscribe/unsubscribe', async () => {
-        await runAndWaitForEvents([ () => { subscriberOne.start() }, () => { subscriberTwo.start() }],[
-            [subscriberOne, NodeEvent.NODE_SUBSCRIBED],
-            [subscriberTwo, NodeEvent.NODE_SUBSCRIBED],
-            // @ts-expect-error private field
-            [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
-        ])
-
+        
         await runAndWaitForEvents(() => { subscriberOne.unsubscribe('stream-2', 2) },[
             [subscriberTwo, NodeEvent.NODE_UNSUBSCRIBED],
+            
             // @ts-expect-error private field
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
+            
         ])
 
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
@@ -133,5 +145,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
         )
 
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({})
+    
     }, 10 * 1000)
 })

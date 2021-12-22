@@ -101,7 +101,7 @@ describe('Publish only connection tests', () => {
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
             publisherNode.leavePurePublishingStream('stream-0', 0, 'contact-node'),
         ])
-
+        
         // @ts-expect-error private
         expect(publisherNode.streams.hasOutOnlyConnection(streamSPID, 'contact-node')).toBeFalse()
         // @ts-expect-error private

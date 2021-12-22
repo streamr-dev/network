@@ -1,15 +1,16 @@
-import { PeerId, PeerInfo } from '../PeerInfo'
-import { MetricsContext } from '../../helpers/MetricsContext'
-import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
-import { staticLogger, ServerWsConnection } from './ServerWsConnection'
+import { Simulator } from './Simulator'
+import { PeerId, PeerInfo } from '../connection/PeerInfo'
+import { MetricsContext } from '../helpers/MetricsContext'
+import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "../connection/ws/AbstractWsEndpoint"
+import { staticLogger, ServerWsConnection } from './ServerWsConnection_simulator'
 import fs from 'fs'
 import net from 'net'
 import https from 'https'
 import http from 'http'
-import WebSocket from 'ws'
 import { once } from 'events'
 import { v4 } from 'uuid'
-import { Duplex } from "stream"
+import { AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
+import { ISimulatedWsEndpoint } from './ISimulatedWsEndpoint'
 
 type HostPort = {
     hostname: string,
@@ -19,20 +20,21 @@ type UnixSocket = string
 
 export type HttpServerConfig = HostPort | UnixSocket
 
-export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
+export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> implements ISimulatedWsEndpoint {
     private readonly serverUrl: string
-    private readonly httpServer: http.Server | https.Server
-    private readonly wss: WebSocket.Server
+    private readonly httpServer: http.Server | https.Server | null
+    private readonly ownAddress: string
+    private handshakeListeners: { [fromAddress: string]: { [uuid: string]: (data: string) => Promise<void> } } = {}
+
     constructor(
         listen: HttpServerConfig,
         sslEnabled: boolean,
-        httpServer: http.Server | https.Server,
+        httpServer: http.Server | https.Server | null,
         peerInfo: PeerInfo,
         metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
         super(peerInfo, metricsContext, pingInterval)
-
         this.httpServer = httpServer
         const protocol = sslEnabled ? 'wss' : 'ws'
         if (typeof listen !== "string") {
@@ -40,9 +42,112 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         } else {
             this.serverUrl = `${protocol}+unix://${listen}`
         }
-        this.wss = this.startWsServer()
+        this.ownAddress = (listen as HostPort).hostname + ':' + (listen as HostPort).port
+        Simulator.instance().addServerWsEndpoint(peerInfo, (listen as HostPort).hostname, (listen as HostPort).port, this)
+        //this.wss = this.startWsServer()
+
     }
 
+    /****************** Called by Simulator ************/
+
+    public handleIncomingConnection(fromAddress: string, _ufromInfo: PeerInfo): void {
+
+        if (!this.handshakeListeners.hasOwnProperty(fromAddress)) {
+            this.handshakeListeners[fromAddress] = {}
+        }
+
+        const handshakeUUID = v4()
+
+        //let otherNodeIdForLogging = 'unknown (no handshake)'
+        this.handshakeListeners[fromAddress][handshakeUUID] = async (data: string) => {
+            try {
+                const { uuid, peerId } = JSON.parse(data)
+                if (uuid === handshakeUUID && peerId) {
+                    //otherNodeIdForLogging = peerId
+                    this.clearHandshake(uuid)
+                    delete this.handshakeListeners[fromAddress][uuid]
+                    if (Object.keys(this.handshakeListeners[fromAddress]).length == 0) {
+                        delete this.handshakeListeners[fromAddress]
+                    }    
+                    // Check that a client with the same peerId has not already connected to the server.
+                    if (!this.getConnectionByPeerId(peerId)) {
+                        this.acceptConnection(peerId, fromAddress)
+                    } else {
+                        this.metrics.record('open:duplicateSocket', 1)
+                        const failedMessage = `Connection for node: ${peerId} has already been established, rejecting duplicate`
+
+                        Simulator.instance().wsDisconnect(this.ownAddress, this.peerInfo, fromAddress, DisconnectionCode.DUPLICATE_SOCKET, 
+                            failedMessage)
+
+                        this.logger.warn(failedMessage + " "+data)
+                    }
+                } else {
+                    this.logger.trace('Expected a handshake message got: ' + data.toString())
+                }
+            } catch (err) {
+                this.logger.trace(err)
+            }
+        }
+
+        this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
+            Simulator.instance().wsDisconnect(this.ownAddress, this.peerInfo, fromAddress, DisconnectionCode.FAILED_HANDSHAKE, 
+                `Handshake not received from connection behind UUID ${handshakeUUID}`)
+
+            //ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
+
+            this.logger.warn(`Server: Handshake not received from connection behind UUID ${handshakeUUID}`)
+
+            delete this.handshakeTimeoutRefs[handshakeUUID]
+        }, this.handshakeTimer)
+
+        Simulator.instance().wsSend(this.ownAddress, this.peerInfo, fromAddress, 
+            JSON.stringify({ uuid: handshakeUUID, peerId: this.peerInfo.peerId }))
+    }
+
+    public handleIncomingDisconnection(fromAddress: string, fromInfo: PeerInfo, code: DisconnectionCode, reason: DisconnectionReason | string): void {
+        if (this.getConnectionByPeerId(fromInfo.peerId)) {
+            this.onClose(this.getConnectionByPeerId(fromInfo.peerId) as ServerWsConnection, code, reason as DisconnectionReason)
+        }
+    }
+
+    public async handleIncomingMessage(fromAddress: string, fromInfo: PeerInfo, data: string): Promise<void> {
+        if (data === 'ping') {
+            await this.send(fromInfo.peerId, 'pong')
+        }
+
+        else if (data === 'pong') {
+            const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
+            connection.onPong()
+        }
+
+        else if (this.handshakeListeners.hasOwnProperty(fromAddress) && Object.keys(this.handshakeListeners[fromAddress]).length > 0) {
+            try {
+                const { uuid, peerId } = JSON.parse(data)
+
+                if (uuid && peerId && this.handshakeListeners[fromAddress].hasOwnProperty(uuid)) {
+                    this.handshakeListeners[fromAddress][uuid](data)
+                }
+
+                else {
+                    const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
+                    this.onReceive(connection, data.toString())
+                }
+
+            } catch (err) {
+                const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
+                this.logger.trace(err)
+                this.onReceive(connection, data.toString())
+            }
+        }
+        else {
+            const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
+            this.onReceive(connection, data)
+        }
+    }
+
+    /****************** Called by Simulator ends *******/
+
+    /*
     private startWsServer(): WebSocket.Server {
         return new WebSocket.Server({
             server: this.httpServer,
@@ -54,14 +159,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
             const handshakeUUID = v4()
 
+            ws.send(JSON.stringify({ uuid: handshakeUUID, peerId: this.peerInfo.peerId }))
+
             this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
                 ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
                 this.logger.warn(`Handshake not received from connection behind UUID ${handshakeUUID}`)
                 ws.terminate()
                 delete this.handshakeTimeoutRefs[handshakeUUID]
             }, this.handshakeTimer)
-
-            ws.send(JSON.stringify({ uuid: handshakeUUID, peerId: this.peerInfo.peerId }))
 
             const duplexStream = WebSocket.createWebSocketStream(ws, {
                 decodeStrings: false
@@ -98,40 +203,10 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             })
         })
     }
+    */
 
-    acceptConnection(ws: WebSocket, duplexStream: Duplex, peerId: PeerId, remoteAddress: string): void {
-        const connection = new ServerWsConnection(
-            ws,
-            duplexStream,
-            remoteAddress,
-            PeerInfo.newNode(peerId)
-        )
-
-        duplexStream.on('data', async (data: WebSocket.Data) => {
-            const parsed = data.toString()
-            if (parsed === 'ping') {
-                await this.send(peerId, 'pong')
-            } else {
-                this.onReceive(connection, data.toString())
-            }
-        })
-
-        duplexStream.on('drain', () => {
-            connection.evaluateBackPressure()
-        })
-
-        duplexStream.on('error', (error) => {
-            this.logger.error('Duplex stream error: ' + error.stack as string)
-        })
-
-        ws.on('pong', () => {
-            connection.onPong()
-        })
-
-        ws.on('close', (code: number, reason: string) => {
-            this.onClose(connection, code, reason as DisconnectionReason)
-        })
-
+    private acceptConnection(peerId: PeerId, remoteAddress: string): void {
+        const connection = new ServerWsConnection(this.ownAddress, this.peerInfo, remoteAddress, PeerInfo.newNode(peerId))
         this.onNewConnection(connection)
     }
 
@@ -143,9 +218,22 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
     }
 
-    protected doClose(_connection: ServerWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void {}
+    protected doClose(_connection: ServerWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void { }
 
     protected async doStop(): Promise<void> {
+        if (this.httpServer) {
+            return new Promise((resolve, reject) => {
+                this.httpServer?.close((err?) => {
+                    if (err) {
+                        this.logger.error('error closing http server: %s', err)
+                        reject(err)
+                    } else {
+                        resolve()
+                    }
+                })
+            })
+        }
+        /*
         return new Promise((resolve, reject) => {
             this.wss.close((err?) => {
                 if (err) {
@@ -160,7 +248,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                     }
                 })
             })
-        })
+        })*/
     }
 
     private resolveIP(request: http.IncomingMessage): string {
@@ -215,7 +303,8 @@ export async function startHttpServer(
     config: HttpServerConfig,
     privateKeyFileName: string | undefined = undefined,
     certFileName: string | undefined = undefined
-): Promise<http.Server | https.Server> {
+): Promise<http.Server | https.Server | null> {
+
     let httpServer: http.Server | https.Server
     if (privateKeyFileName && certFileName) {
         const opts = {
@@ -247,4 +336,5 @@ export async function startHttpServer(
         }
     }
     return httpServer
+
 }
