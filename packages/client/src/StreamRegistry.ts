@@ -119,7 +119,7 @@ export class StreamRegistry implements Context {
     async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
         await this.connectToStreamRegistryContract()
         this.debug('Getting permissions for stream %s for user %s', streamId, userAddress)
-        const permissions = await this.streamRegistryContract!.getPermissionsForUser(streamId, userAddress || AddressZero)
+        const permissions = await this.streamRegistryContractReadonly!.getPermissionsForUser(streamId, userAddress || AddressZero)
         return {
             canEdit: permissions.canEdit,
             canDelete: permissions.canDelete,
@@ -280,7 +280,7 @@ export class StreamRegistry implements Context {
     async streamExists(streamId: string): Promise<boolean> {
         this.debug('Checking if stream exists %s', streamId)
         this.connectToStreamRegistryContract()
-        return this.streamRegistryContract!.exists(streamId)
+        return this.streamRegistryContractReadonly!.exists(streamId)
     }
 
     async streamExistsOnTheGraph(streamId: string): Promise<boolean> {
