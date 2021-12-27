@@ -27,16 +27,16 @@ export default {
         trackers: [
             {
                 id: '0xb9e7cEBF7b03AE26458E32a059488386b05798e8',
-                ws: 'ws://127.0.0.1:30301',
-                http: 'http://127.0.0.1:30301'
+                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30301`,
+                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30301`
             }, {
                 id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
-                ws: 'ws://127.0.0.1:30302',
-                http: 'http://127.0.0.1:30302'
+                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30302`,
+                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30302`
             }, {
                 id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
-                ws: 'ws://127.0.0.1:30303',
-                http: 'http://127.0.0.1:30303'
+                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`,
+                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`
             }
         ],
     },
