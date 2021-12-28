@@ -7,6 +7,15 @@ import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry,
 import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
+import {
+    StreamID,
+    toStreamID,
+    KEY_EXCHANGE_STREAM_PREFIX,
+    formKeyExchangeStreamId,
+    isPathOnlyFormat,
+    isKeyExchangeStream,
+    getRecipient
+} from "./StreamID"
 
 export {
     TimestampUtil,
@@ -23,4 +32,11 @@ export {
     generateMnemonicFromAddress,
     parseAddressFromNodeId,
     keyToArrayIndex,
+    StreamID,
+    toStreamID,
+    KEY_EXCHANGE_STREAM_PREFIX,
+    formKeyExchangeStreamId,
+    isPathOnlyFormat,
+    isKeyExchangeStream,
+    getRecipient
 }

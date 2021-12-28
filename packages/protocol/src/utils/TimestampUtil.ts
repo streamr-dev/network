@@ -11,5 +11,3 @@ export default function parse(millisOrString: number | string): number | never {
 
     throw new Error(`Invalid timestamp: ${millisOrString}`)
 }
-
-export { parse }

@@ -1,16 +1,17 @@
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
 import {validateIsInteger, validateIsNotNullOrUndefined, validateIsString} from '../../../utils/validations'
+import { StreamID } from '../../../utils/StreamID'
 
 interface Options extends ControlMessageOptions {
     senderId: string
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     accepted: boolean
 }
 
 export default class PublishStreamConnectionResponse extends ControlMessage {
     senderId: string
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     accepted: boolean
 

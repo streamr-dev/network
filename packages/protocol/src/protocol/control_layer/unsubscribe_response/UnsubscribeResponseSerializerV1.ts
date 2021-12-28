@@ -3,6 +3,7 @@ import ControlMessage, { PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 } from '../ControlMe
 import UnsubscribeResponse from './UnsubscribeResponse'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 1
 
@@ -25,7 +26,10 @@ export default class UnsubscribeResponseSerializerV1 extends Serializer<Unsubscr
         ] = arr
 
         return new UnsubscribeResponse({
-            version, streamId, streamPartition, requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1
+            version,
+            streamId: toStreamID(streamId),
+            streamPartition,
+            requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1
         })
     }
 }

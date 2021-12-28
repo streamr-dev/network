@@ -1,8 +1,9 @@
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
 import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../../utils/validations'
+import { StreamID } from '../../../utils/StreamID'
 
 export interface Options extends ControlMessageOptions {
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     numberLast: number
     sessionToken: string | null
@@ -10,7 +11,7 @@ export interface Options extends ControlMessageOptions {
 
 export default class ResendLastRequest extends ControlMessage {
 
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     numberLast: number
     sessionToken: string | null

@@ -3,6 +3,7 @@ import ControlMessage from '../ControlMessage'
 import ResendResponseResending from './ResendResponseResending'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
@@ -27,7 +28,10 @@ export default class ResendResponseResendingSerializerV2 extends Serializer<Rese
         ] = arr
 
         return new ResendResponseResending({
-            version, requestId, streamId, streamPartition
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition
         })
     }
 }
