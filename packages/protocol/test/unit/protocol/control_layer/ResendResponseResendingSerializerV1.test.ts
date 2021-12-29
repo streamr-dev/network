@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { ResendResponseResending, ControlMessage  } from '../../../../src/index'
+import { ResendResponseResending, ControlMessage, toStreamID } from '../../../../src/index'
 
 const VERSION = 1
 
@@ -8,7 +8,7 @@ const VERSION = 1
 const message = new ResendResponseResending({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
 })
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.ResendResponseResending, 'streamId', 0, 'requestId'])

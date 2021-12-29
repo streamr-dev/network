@@ -3,6 +3,7 @@ import assert from 'assert'
 import ResendResponseResending from '../../../../src/protocol/control_layer/resend_response/ResendResponseResending'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
+import { toStreamID } from '../../../../src'
 
 describe('ResendResponseResending', () => {
     describe('constructor', () => {
@@ -15,7 +16,7 @@ describe('ResendResponseResending', () => {
         it('should create the latest version', () => {
             const msg = new ResendResponseResending({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
             })
             assert(msg instanceof ResendResponseResending)

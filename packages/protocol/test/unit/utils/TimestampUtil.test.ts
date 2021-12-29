@@ -1,4 +1,4 @@
-import { parse }  from '../../../src/utils/TimestampUtil'
+import parse from '../../../src/utils/TimestampUtil'
 
 describe('TimestampUtil', () => {
     it('parse epoch from number', () => {
