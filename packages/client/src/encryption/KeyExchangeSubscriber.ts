@@ -1,5 +1,5 @@
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyAnnounce
+    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyAnnounce, StreamID
 } from 'streamr-client-protocol'
 
 import { uuid, instanceId } from '../utils'
@@ -52,7 +52,7 @@ export class SubscriberKeyExchange implements Context {
     }
 
     async requestKeys({ streamId, publisherId, groupKeyIds }: {
-        streamId: string,
+        streamId: StreamID,
         publisherId: string,
         groupKeyIds: GroupKeyId[]
     }): Promise<GroupKey[]> {

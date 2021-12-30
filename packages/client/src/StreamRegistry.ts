@@ -18,7 +18,7 @@ import { Stream, StreamPermission, StreamPermissions, StreamProperties } from '.
 import { NotFoundError, ValidationError } from './authFetch'
 import { EthereumAddress } from './types'
 import { StreamListQuery } from './StreamEndpoints'
-import { SIDLike, SPID } from 'streamr-client-protocol'
+import { SIDLike, SPID, StreamID, toStreamID } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
@@ -81,9 +81,9 @@ export class StreamRegistry implements Context {
             StreamRegistryArtifact, this.sideChainProvider) as StreamRegistryContract
     }
 
-    parseStream(id: string, propsString: string): Stream {
+    private parseStream(id: string, propsString: string): Stream {
         const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(propsString)
-        return new Stream({ ...parsedProps, id }, this.container)
+        return new Stream({ ...parsedProps, id: toStreamID(id) }, this.container)
     }
 
     // --------------------------------------------------------------------------------------------

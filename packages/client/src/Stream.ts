@@ -19,6 +19,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
+import { StreamID } from 'streamr-client-protocol'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -50,7 +51,7 @@ export enum StreamPermission {
 }
 
 export interface StreamProperties {
-    id: string
+    id: StreamID
     name?: string
     description?: string
     config?: {
@@ -90,8 +91,8 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 }
 
 class StreamrStream implements StreamMetadata {
-    streamId: string
-    id: string
+    streamId: StreamID
+    id: StreamID
     // @ts-expect-error
     name: string
     description?: string
