@@ -1,5 +1,5 @@
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse
+    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse, StreamID, toStreamID
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
@@ -29,11 +29,11 @@ export type EncryptionConfig = {
     groupKeys: Record<string, GroupKeysSerialized>
 }
 
-export function getKeyExchangeStreamId(address: EthereumAddress) {
+export function getKeyExchangeStreamId(address: string): StreamID {
     if (isKeyExchangeStream(address)) {
-        return address // prevent ever double-handling
+        return toStreamID(address) // prevent ever double-handling
     }
-    return `${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`
+    return toStreamID(`${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`)
 }
 
 export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKeyId, GroupKey> {

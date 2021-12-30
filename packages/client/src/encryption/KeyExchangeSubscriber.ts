@@ -73,7 +73,7 @@ export class SubscriberKeyExchange implements Context {
         this.isStopped = true
     }
 
-    async getGroupKeyStore(streamId: string) {
+    async getGroupKeyStore(streamId: StreamID) {
         return this.groupKeyStoreFactory.getStore(streamId)
     }
 

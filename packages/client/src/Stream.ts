@@ -19,7 +19,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -51,7 +51,7 @@ export enum StreamPermission {
 }
 
 export interface StreamProperties {
-    id: StreamID
+    id: string
     name?: string
     description?: string
     config?: {
@@ -119,7 +119,7 @@ class StreamrStream implements StreamMetadata {
         @inject(BrubeckContainer) private _container: DependencyContainer
     ) {
         Object.assign(this, props)
-        this.id = props.id
+        this.id = toStreamID(props.id)
         this.streamId = this.id
         this.partitions = props.partitions ? props.partitions : 1
         this._rest = _container.resolve<Rest>(Rest)
@@ -397,7 +397,7 @@ class StreamrStream implements StreamMetadata {
         ))
     }
 
-    private static async isStreamStoredInStorageNode(streamId: string, nodeurl: string) {
+    private static async isStreamStoredInStorageNode(streamId: StreamID, nodeurl: string) {
         const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
         const response = await fetch(url)
         if (response.status === 200) {
