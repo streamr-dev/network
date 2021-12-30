@@ -6,7 +6,7 @@ import { wait } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
-import { SPID, toStreamID } from 'streamr-client-protocol'
+import { SPID } from 'streamr-client-protocol'
 
 function areEqual(a: any, b: any) {
     try {
