@@ -4,7 +4,6 @@ import {
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
 import { pOnce, Defer, instanceId, Deferred } from '../utils'
-import { EthereumAddress } from '../types'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
 
