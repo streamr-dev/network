@@ -3,12 +3,13 @@ import { Protocol } from 'streamr-network'
 import { MetricsContext } from 'streamr-network'
 import { StreamrClient } from 'streamr-client'
 import { Publisher } from '../../src/Publisher'
+import { toStreamID } from "streamr-client-protocol"
 
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 function formMessage(timestamp: number) {
     return new StreamMessage({
-        messageId: new MessageID('streamId', 0, timestamp, 0, 'publisherId', 'msgChainId'),
+        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, 0, 'publisherId', 'msgChainId'),
         content: {
             hello: 'world'
         },
