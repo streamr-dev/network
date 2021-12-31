@@ -4,6 +4,7 @@ import { startBroker, createClient, createTestStream, getPrivateKey, startTestTr
 import StreamrClient from 'streamr-client'
 import { Broker } from '../../src/broker'
 import { Wallet } from '@ethersproject/wallet'
+import { toStreamID } from "streamr-client-protocol"
 
 const { ControlLayer } = Protocol
 const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
@@ -26,7 +27,7 @@ function buildMsg(
     content = {}
 ) {
     return new StreamMessage({
-        messageId: new MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+        messageId: new MessageIDStrict(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: JSON.stringify(content)
     })
 }
