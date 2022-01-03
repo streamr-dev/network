@@ -22,7 +22,7 @@ export function toStreamID(streamIdOrPath: string, baseAddress?: EthereumAddress
         return streamIdOrPath as StreamID
     } else if (firstSlashIdx === 0) { // path-only format
         if (baseAddress === undefined) {
-            throw new Error(`path-only stream id (${streamIdOrPath}) provided without baseAddress`)
+            throw new Error(`path-only format (${streamIdOrPath}) provided without baseAddress`)
         }
         return (baseAddress.toLowerCase() + streamIdOrPath) as StreamID
     } else {
