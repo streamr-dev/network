@@ -12,7 +12,6 @@ import {
     toStreamID,
     KEY_EXCHANGE_STREAM_PREFIX,
     formKeyExchangeStreamId,
-    isPathOnlyFormat,
     isKeyExchangeStream,
     getRecipient
 } from "./StreamID"
@@ -37,7 +36,6 @@ export {
     toStreamID,
     KEY_EXCHANGE_STREAM_PREFIX,
     formKeyExchangeStreamId,
-    isPathOnlyFormat,
     isKeyExchangeStream,
     getRecipient,
     EthereumAddress

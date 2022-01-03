@@ -17,9 +17,9 @@ export function formKeyExchangeStreamId(address: string): StreamID {
  *  - key-exchange format, e.g., SYSTEM/keyexchange/0x0000000000000000000000000000000000000000
  *  - legacy format, e.g., '7wa7APtlTq6EC5iTCBy6dw'
  *
- *  If `streamIdOrPath` is not in path-only format, baseAddress can be left undefined.
+ *  If `streamIdOrPath` is not in path-only format, `address` can be left undefined.
  */
-export function toStreamID(streamIdOrPath: string, baseAddress?: EthereumAddress): StreamID {
+export function toStreamID(streamIdOrPath: string, address?: EthereumAddress): StreamID {
     if (streamIdOrPath.length === 0) {
         throw new Error('stream id may not be empty')
     }
@@ -29,10 +29,10 @@ export function toStreamID(streamIdOrPath: string, baseAddress?: EthereumAddress
     } else if (isKeyExchangeStream(streamIdOrPath)) { // key-exchange format
         return streamIdOrPath as StreamID
     } else if (firstSlashIdx === 0) { // path-only format
-        if (baseAddress === undefined) {
-            throw new Error(`path-only format (${streamIdOrPath}) provided without baseAddress`)
+        if (address === undefined) {
+            throw new Error(`path-only format "${streamIdOrPath}" provided without address`)
         }
-        return (baseAddress.toLowerCase() + streamIdOrPath) as StreamID
+        return (address.toLowerCase() + streamIdOrPath) as StreamID
     } else {
         const address = streamIdOrPath.substring(0, firstSlashIdx).toLowerCase()
         const path = streamIdOrPath.substring(firstSlashIdx)
@@ -40,14 +40,11 @@ export function toStreamID(streamIdOrPath: string, baseAddress?: EthereumAddress
     }
 }
 
-export function isPathOnlyFormat(str: string): boolean {
-    return str.startsWith('/')
-}
-
 export function isKeyExchangeStream(streamId: StreamID | string): boolean {
     return streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
 }
 
+// TODO: if recipient exists, will it always be an EthereumAddress? Can it be an ENS domain?
 export function getRecipient(streamId: StreamID): string | undefined {
     if (isKeyExchangeStream(streamId)) {
         return streamId.substring(KEY_EXCHANGE_STREAM_PREFIX.length)
