@@ -9,7 +9,15 @@ export function formKeyExchangeStreamId(address: string): StreamID {
 }
 
 /**
- * TODO: show examples
+ * Create an instance of `StreamID` from a given string stream id or path.
+ *
+ * Supported formats:
+ *  - full stream id format, e.g., '0x0000000000000000000000000000000000000000/foo/bar'
+ *  - path-only format, e.g. , '/foo/bar'
+ *  - key-exchange format, e.g., SYSTEM/keyexchange/0x0000000000000000000000000000000000000000
+ *  - legacy format, e.g., '7wa7APtlTq6EC5iTCBy6dw'
+ *
+ *  If `streamIdOrPath` is not in path-only format, baseAddress can be left undefined.
  */
 export function toStreamID(streamIdOrPath: string, baseAddress?: EthereumAddress): StreamID {
     if (streamIdOrPath.length === 0) {
