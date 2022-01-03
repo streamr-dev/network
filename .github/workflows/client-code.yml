@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.0
+      - uses: actions/setup-node@v2.5.1
         with:
           cache: 'npm'
           cache-dependency-path: package-lock.json
@@ -54,7 +54,7 @@ jobs:
       TEST_REPEATS: 5
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.0
+      - uses: actions/setup-node@v2.5.1
         with:
           node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
@@ -92,7 +92,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.0
+      - uses: actions/setup-node@v2.5.1
         with:
           node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
@@ -164,7 +164,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.0
+      - uses: actions/setup-node@v2.5.1
         with:
           cache-dependency-path: package-lock.json
           cache: 'npm'
@@ -202,7 +202,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.0
+      - uses: actions/setup-node@v2.5.1
         with:
           node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
