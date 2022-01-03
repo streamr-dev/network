@@ -11,7 +11,6 @@ const logger = new Logger(module)
 
 export interface MetricsPluginConfig {
     consoleAndPM2IntervalInSeconds: number
-    firehoseStreamIdHead: string
     nodeMetrics: {
         storageNode: string
         firehoseStreamIdHead: string
