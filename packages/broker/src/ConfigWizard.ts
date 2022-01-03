@@ -2,7 +2,6 @@ import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
 import path from 'path'
 import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
-import * as os from 'os'
 import chalk from 'chalk'
 import { v4 as uuid } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
@@ -11,6 +10,7 @@ import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'
 import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
+import { getDefaultFile } from './config'
 
 const createLogger = () => {
     return {
@@ -231,8 +231,8 @@ export const PROMPTS = {
 export const selectStoragePathPrompt = {
     type: 'input',
     name: 'selectStoragePath',
-    message: `Select a path to store the generated config in `,
-    default: path.join(os.homedir(), '.streamr/broker-config.json'),
+    message: 'Select a path to store the generated config in',
+    default: getDefaultFile(),
     validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
         try {
             const parentDirPath = path.dirname(input)
