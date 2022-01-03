@@ -8,12 +8,6 @@ export interface NetworkSmartContract {
 
 export type TrackerRegistryItem = SmartContractRecord
 
-export interface TurnConfig {
-    url: string,
-    username: string,
-    password: string
-}
-
 export interface HttpServerConfig {
     port: number,
     privateKeyFileName: string | null,
