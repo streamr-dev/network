@@ -6,23 +6,26 @@ export function formKeyExchangeStreamId(address: string): StreamID {
     return (KEY_EXCHANGE_STREAM_PREFIX + address.toLowerCase()) as StreamID
 }
 
-export function toStreamID(streamIdOrPathAsStr: string, baseAddress?: string): StreamID {
-    if (streamIdOrPathAsStr.length === 0) {
+/**
+ * TODO: show examples
+ */
+export function toStreamID(streamIdOrPath: string, baseAddress?: string): StreamID {
+    if (streamIdOrPath.length === 0) {
         throw new Error('stream id may not be empty')
     }
-    const firstSlashIdx = streamIdOrPathAsStr.indexOf('/')
+    const firstSlashIdx = streamIdOrPath.indexOf('/')
     if (firstSlashIdx === -1) { // legacy format
-        return streamIdOrPathAsStr as StreamID
-    } else if (isKeyExchangeStream(streamIdOrPathAsStr)) { // key-exchange format
-        return streamIdOrPathAsStr as StreamID
+        return streamIdOrPath as StreamID
+    } else if (isKeyExchangeStream(streamIdOrPath)) { // key-exchange format
+        return streamIdOrPath as StreamID
     } else if (firstSlashIdx === 0) { // path-only format
         if (baseAddress === undefined) {
-            throw new Error(`path-only stream id (${streamIdOrPathAsStr}) provided without baseAddress`)
+            throw new Error(`path-only stream id (${streamIdOrPath}) provided without baseAddress`)
         }
-        return (baseAddress.toLowerCase() + streamIdOrPathAsStr) as StreamID
+        return (baseAddress.toLowerCase() + streamIdOrPath) as StreamID
     } else {
-        const address = streamIdOrPathAsStr.substring(0, firstSlashIdx).toLowerCase()
-        const path = streamIdOrPathAsStr.substring(firstSlashIdx)
+        const address = streamIdOrPath.substring(0, firstSlashIdx).toLowerCase()
+        const path = streamIdOrPath.substring(firstSlashIdx)
         return (address + path) as StreamID
     }
 }
