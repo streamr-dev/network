@@ -16,6 +16,7 @@ import {
     isKeyExchangeStream,
     getRecipient
 } from "./StreamID"
+import { EthereumAddress } from "./types"
 
 export {
     TimestampUtil,
@@ -38,5 +39,6 @@ export {
     formKeyExchangeStreamId,
     isPathOnlyFormat,
     isKeyExchangeStream,
-    getRecipient
+    getRecipient,
+    EthereumAddress
 }

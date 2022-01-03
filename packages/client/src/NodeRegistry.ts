@@ -13,9 +13,9 @@ import { BrubeckContainer } from './Container'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
 import Ethereum from './Ethereum'
-import { EthereumAddress, NotFoundError } from '.'
+import { NotFoundError } from '.'
 import { until } from './utils'
-import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 const log = debug('StreamrClient:NodeRegistry')
 

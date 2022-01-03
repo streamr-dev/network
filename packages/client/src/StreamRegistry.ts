@@ -13,9 +13,8 @@ import { Context } from './utils/Context'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamPermission, StreamPermissions, StreamProperties } from './Stream'
 import { NotFoundError, ValidationError } from './authFetch'
-import { EthereumAddress } from './types'
 import { StreamListQuery } from './StreamEndpoints'
-import { SIDLike, SPID, StreamID, toStreamID, isKeyExchangeStream } from 'streamr-client-protocol'
+import { SIDLike, SPID, StreamID, toStreamID, isKeyExchangeStream, EthereumAddress } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 
 export type PermissionQueryResult = {

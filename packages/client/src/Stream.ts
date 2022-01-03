@@ -6,7 +6,6 @@ import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMes
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
-import { EthereumAddress } from './types'
 import { until } from './utils'
 
 import { Rest } from './Rest'
@@ -19,7 +18,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
-import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
