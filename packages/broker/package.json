@@ -55,7 +55,7 @@
     "body-parser": "^1.19.0",
     "cassandra-driver": "^4.6.3",
     "chalk": "^4.0.0",
-    "commander": "^7.2.0",
+    "commander": "^8.3.0",
     "cors": "^2.8.5",
     "ethers": "^5.4.7",
     "express": "^4.17.1",

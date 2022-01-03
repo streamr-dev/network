@@ -1,21 +1,19 @@
 #!/usr/bin/env node
-import { Command } from 'commander'
-import { show } from '../src/show'
-import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, getStreamId } from './common'
-import pkg from '../package.json'
+import '../src/logLevel'
+import StreamrClient from 'streamr-client'
+import { createClientCommand } from '../src/command'
 
-const program = new Command()
-program
+createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
+    const stream = await client.getStream(streamId)
+    const obj = stream.toObject()
+    if (options.includePermissions) {
+        // TODO the data of stream.getPermissions() should be transformed somehow (NET-610)
+        // @ts-expect-error permissions not on {}
+        obj.permissions = await stream.getPermissions()
+    }
+    console.info(JSON.stringify(obj, null, 2))
+})
     .arguments('<streamId>')
     .description('show detailed information about a stream')
-    .option('--include-permissions', 'include list of permissions (requires SHARE permission)')
-authOptions(program)
-envOptions(program)
-    .version(pkg.version)
-    .action((streamIdOrPath: string, options: any) => {
-        const streamId = getStreamId(streamIdOrPath, options)!
-        show(streamId, options.includePermissions, formStreamrOptionsWithEnv(options))
-    })
-    .parse(process.argv)
-
-exitWithHelpIfArgsNotBetween(program, 1, 1)
+    .option('--include-permissions', 'include list of permissions')
+    .parseAsync()
