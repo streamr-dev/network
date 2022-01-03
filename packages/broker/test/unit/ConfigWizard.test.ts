@@ -87,8 +87,8 @@ describe('ConfigWizard', () => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
 
-        it ('happy path; create parent dir when doesn\'t exist', async () => {
-            const parentDirPath = tmpDataDir + '/newdir/'
+        it ('happy path; create parent directories if needed', async () => {
+            const parentDirPath = tmpDataDir + '/newdir1/newdir2/'
             const configPath = parentDirPath + 'test-config.json'
             const configFileLocation: string = await createStorageFile(CONFIG, {
                 storagePath: configPath

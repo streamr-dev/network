@@ -284,7 +284,9 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     const parentDirPath = path.dirname(answers.storagePath)
     const parentDirExists = existsSync(parentDirPath)
     if (!parentDirExists) {
-        mkdirSync(parentDirPath)
+        mkdirSync(parentDirPath, {
+            recursive: true
+        })
     }
     writeFileSync(answers.storagePath, JSON.stringify(config, null, 2))
     chmodSync(answers.storagePath, '0600')
