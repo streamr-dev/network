@@ -228,25 +228,19 @@ export const PROMPTS = {
     plugins: createPluginPrompts(),
 }
 
-export const selectStoragePathPrompt = {
+export const storagePathPrompts = [{
     type: 'input',
-    name: 'selectStoragePath',
+    name: 'storagePath',
     message: 'Select a path to store the generated config in',
-    default: getDefaultFile(),
-    validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
-        try {
-            const parentDirPath = path.dirname(input)
-
-            answers.parentDirPath = parentDirPath
-            answers.parentDirExists = existsSync(parentDirPath)
-            answers.fileExists = existsSync(input)
-
-            return true
-        } catch (e: any) {
-            return e.message
-        }
-    }
-}
+    default: getDefaultFile()
+},
+{
+    type: 'confirm',
+    name: 'overwrite',
+    message: (answers: inquirer.Answers): string => `The selected destination ${answers.storagePath} already exists, do you want to overwrite it?`,
+    default: false,
+    when: (answers: inquirer.Answers): boolean => existsSync(answers.storagePath)
+}]
 
 export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
@@ -278,35 +272,23 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
 }
 
 const selectStoragePath = async (): Promise<inquirer.Answers> => {
-    const answers = await inquirer.prompt([selectStoragePathPrompt])
-
-    if (answers.fileExists) {
-        const overwriteAnswers = await inquirer.prompt([
-            {
-                type: 'confirm',
-                name: 'confirmOverwrite',
-                message: `The selected destination ${answers.selectStoragePath} already exists, do you want to overwrite it?`,
-                default: false,
-            }
-        ])
-
-        if (!overwriteAnswers.confirmOverwrite) {
-            return selectStoragePath()
-        }
-    }
-
+    let answers
+    do {
+        answers = await inquirer.prompt(storagePathPrompts)
+    } while (answers.overwrite === false)
     return answers
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
-    if (!answers.parentDirExists) {
-        mkdirSync(answers.parentDirPath)
+    const parentDirPath = path.dirname(answers.storagePath)
+    const parentDirExists = existsSync(parentDirPath)
+    if (!parentDirExists) {
+        mkdirSync(parentDirPath)
     }
-
-    writeFileSync(answers.selectStoragePath, JSON.stringify(config, null, 2))
-    chmodSync(answers.selectStoragePath, '0600')
-    return answers.selectStoragePath
+    writeFileSync(answers.storagePath, JSON.stringify(config, null, 2))
+    chmodSync(answers.storagePath, '0600')
+    return answers.storagePath
 }
 
 export const getPrivateKey = (answers: inquirer.Answers): string => {

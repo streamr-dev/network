@@ -1,11 +1,10 @@
 import { Wallet } from 'ethers'
-import { writeFileSync, mkdtempSync, existsSync } from 'fs'
+import { mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
 import {
     PROMPTS,
     DEFAULT_CONFIG_PORTS,
-    selectStoragePathPrompt,
     createStorageFile,
     getConfig,
     getPrivateKey,
@@ -80,42 +79,6 @@ describe('ConfigWizard', () => {
         })
     })
 
-    describe('storagePrompt validation', () => {
-        let tmpDataDir: string
-
-        beforeAll(() => {
-            tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
-        })
-
-        it ('happy path', () => {
-            const validate = selectStoragePathPrompt.validate!
-            const validPath = tmpDataDir + '/test-config.json'
-            expect(validate(validPath)).toBe(true)
-        })
-
-        it ('happy path with overwrite destination', () => {
-            const validate = selectStoragePathPrompt.validate!
-            const validPath = tmpDataDir + '/test-config.json'
-            writeFileSync(validPath, JSON.stringify({}))
-            const answers: any = {}
-            const isValid = validate(validPath, answers)
-            expect(isValid).toBe(true)
-            expect(answers.parentDirExists).toBe(true)
-            expect(answers.fileExists).toBe(true)
-        })
-
-        it ('invalid path provided', () => {
-            const validate = selectStoragePathPrompt.validate!
-            const invalidPath = `/invalid-path/${Date.now()}`
-            const answers: any = {}
-            const isValid = validate(invalidPath, answers)
-            expect(isValid).toBe(true)
-            expect(answers.parentDirExists).toBe(false)
-            expect(answers.fileExists).toBe(false)
-
-        })
-    })
-
     describe('createStorageFile', () => {
         const CONFIG: any = {}
         let tmpDataDir: string
@@ -128,31 +91,17 @@ describe('ConfigWizard', () => {
             const parentDirPath = tmpDataDir + '/newdir/'
             const configPath = parentDirPath + 'test-config.json'
             const configFileLocation: string = await createStorageFile(CONFIG, {
-                selectStoragePath: configPath,
-                parentDirPath,
-                fileExists: false,
-                parentDirExists: false,
+                storagePath: configPath
             })
             expect(configFileLocation).toBe(configPath)
             expect(existsSync(configFileLocation)).toBe(true)
-        })
-
-        it ('should throw when attempting to mkdir on existing path', async () => {
-            const parentDirPath = '/home/'
-            await expect(createStorageFile(CONFIG, {
-                parentDirPath,
-                parentDirExists: false,
-            })).rejects.toThrow()
         })
 
         it ('should throw when no permissions on path', async () => {
             const parentDirPath = '/home/'
             const configPath = parentDirPath + 'test-config.json'
             await expect(createStorageFile(CONFIG, {
-                selectStoragePath: configPath,
-                parentDirPath,
-                fileExists: false,
-                parentDirExists: true,
+                storagePath: configPath
             })).rejects.toThrow()
         })
 
@@ -255,8 +204,7 @@ describe('ConfigWizard', () => {
                     publishHttpPort,
                 }),
                 jest.fn().mockResolvedValue({
-                    parentDirExists: true,
-                    selectStoragePath: configPath
+                    storagePath: configPath
                 }),
                 logger
             )
