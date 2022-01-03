@@ -1,4 +1,4 @@
-export type StreamID = string & { readonly '': unique symbol } // Nominal typing
+export type StreamID = string & { readonly __brand: 'streamId' } // Nominal typing
 
 export const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
 
