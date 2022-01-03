@@ -1,3 +1,5 @@
+import { EthereumAddress } from './types'
+
 export type StreamID = string & { readonly __brand: 'streamId' } // Nominal typing
 
 export const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
@@ -9,7 +11,7 @@ export function formKeyExchangeStreamId(address: string): StreamID {
 /**
  * TODO: show examples
  */
-export function toStreamID(streamIdOrPath: string, baseAddress?: string): StreamID {
+export function toStreamID(streamIdOrPath: string, baseAddress?: EthereumAddress): StreamID {
     if (streamIdOrPath.length === 0) {
         throw new Error('stream id may not be empty')
     }
