@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
-import { StreamMessage, MessageID,  UnicastMessage, ControlMessage } from '../../../../src/index'
+import { StreamMessage, MessageID, UnicastMessage, ControlMessage, toStreamID } from '../../../../src/index'
 
 describe('UnicastMessage', () => {
     describe('constructor', () => {
@@ -21,7 +21,7 @@ describe('UnicastMessage', () => {
         })
         it('should create the latest version', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageID('streamId', 0, 12345, 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 12345, 0, 'publisherId', 'msgChainId'),
                 content: {},
             })
 

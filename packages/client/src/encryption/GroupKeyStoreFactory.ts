@@ -9,6 +9,7 @@ import Ethereum from '../Ethereum'
 import { EncryptionConfig, parseGroupKeys } from './KeyExchangeUtils'
 import GroupKeyStore from './GroupKeyStore'
 import { GroupKey } from './Encryption'
+import { StreamID } from 'streamr-client-protocol'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class GroupKeyStoreFactory implements Context {
@@ -16,7 +17,7 @@ export default class GroupKeyStoreFactory implements Context {
     debug
     private cleanupFns: ((...args: any[]) => any)[] = []
     initialGroupKeys
-    getStore: ((streamId: string) => Promise<GroupKeyStore>) & { clear(): void }
+    getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
     constructor(
         context: Context,
         private ethereum: Ethereum,
@@ -34,7 +35,7 @@ export default class GroupKeyStoreFactory implements Context {
         this.initialGroupKeys = encryptionConfig.groupKeys
     }
 
-    private async getNewStore(streamId: string) {
+    private async getNewStore(streamId: StreamID) {
         if (!streamId || typeof streamId !== 'string') {
             throw new ContextError(this, `invalid streamId for store: ${inspect(streamId)}`)
         }
@@ -57,22 +58,22 @@ export default class GroupKeyStoreFactory implements Context {
         return store
     }
 
-    async useGroupKey(streamId: string) {
+    async useGroupKey(streamId: StreamID) {
         const store = await this.getStore(streamId)
         return store.useGroupKey()
     }
 
-    async rotateGroupKey(streamId: string) {
+    async rotateGroupKey(streamId: StreamID) {
         const store = await this.getStore(streamId)
         return store.rotateGroupKey()
     }
 
-    async setNextGroupKey(streamId: string, newKey: GroupKey) {
+    async setNextGroupKey(streamId: StreamID, newKey: GroupKey) {
         const store = await this.getStore(streamId)
         return store.setNextGroupKey(newKey)
     }
 
-    async rekey(streamId: string) {
+    async rekey(streamId: StreamID) {
         const store = await this.getStore(streamId)
         return store.rekey()
     }

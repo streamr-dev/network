@@ -1,7 +1,7 @@
 /**
  * Cached Subset of StreamEndpoints.
  */
-import { SPID } from 'streamr-client-protocol'
+import { SPID, StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
 import { CacheAsyncFn, instanceId } from './utils'
@@ -34,7 +34,7 @@ export const preloadPublishers = new Set([
     '0xfcd24cffe0913548058bd105109fea784de3d5e5'
 ])
 
-function preloadGetStream(streamId: string) {
+function preloadGetStream(streamId: StreamID) {
     return {
         id: streamId,
         partitions: 1,
@@ -51,7 +51,7 @@ function preloadGetStream(streamId: string) {
     }
 }
 
-function preloadGetStreamValidationInfo(streamId: string) {
+function preloadGetStreamValidationInfo(streamId: StreamID) {
     return {
         id: streamId,
         partitions: 1,
@@ -61,7 +61,7 @@ function preloadGetStreamValidationInfo(streamId: string) {
     }
 }
 
-function isPreloadedStream(streamId: string) {
+function isPreloadedStream(streamId: StreamID) {
     return preloadStreams.has(streamId)
 }
 
@@ -82,7 +82,7 @@ export class StreamEndpointsCached implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    async getStreamPreloaded(streamId: string) {
+    async getStreamPreloaded(streamId: StreamID) {
         if (isPreloadedStream(streamId)) { return preloadGetStream(streamId) }
         return this.streamEndpoints.getStream(streamId)
     }
@@ -96,7 +96,7 @@ export class StreamEndpointsCached implements Context {
         }
     })
 
-    async getStreamValidationInfoPreloaded(streamId: string) {
+    async getStreamValidationInfoPreloaded(streamId: StreamID) {
         if (isPreloadedStream(streamId)) { return preloadGetStreamValidationInfo(streamId) }
         return this.streamEndpoints.getStreamValidationInfo(streamId)
     }
@@ -109,7 +109,7 @@ export class StreamEndpointsCached implements Context {
         }
     })
 
-    async isStreamPublisherPreloaded(streamId: string, ethAddress: string) {
+    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: string) {
         if (isPreloadedStream(streamId)) { return preloadIsPublisher(ethAddress) }
         return this.streamEndpoints.isStreamPublisher(streamId, ethAddress)
     }
@@ -122,7 +122,7 @@ export class StreamEndpointsCached implements Context {
         }
     })
 
-    async isStreamSubscriberPreloaded(streamId: string, ethAddress: string) {
+    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: string) {
         if (isPreloadedStream(streamId)) { return true }
         return this.streamEndpoints.isStreamSubscriber(streamId, ethAddress)
     }
@@ -138,7 +138,7 @@ export class StreamEndpointsCached implements Context {
     /**
      * Clear cache for streamId
      */
-    clearStream(streamId: string) {
+    clearStream(streamId: StreamID) {
         this.debug('clearStream', streamId)
         // include separator so startsWith(streamid) doesn't match streamid-something
         const target = `${streamId}${SEPARATOR}`

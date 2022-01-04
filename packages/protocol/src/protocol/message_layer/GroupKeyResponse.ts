@@ -4,10 +4,11 @@ import ValidationError from '../../errors/ValidationError'
 import StreamMessage from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
 import EncryptedGroupKey, { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
+import { StreamID, toStreamID } from '../../utils/StreamID'
 
 interface Options {
     requestId: string
-    streamId: string
+    streamId: StreamID
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
@@ -45,7 +46,7 @@ export default class GroupKeyResponse extends GroupKeyMessage {
         const [requestId, streamId, encryptedGroupKeys] = arr
         return new GroupKeyResponse({
             requestId,
-            streamId,
+            streamId: toStreamID(streamId),
             encryptedGroupKeys: encryptedGroupKeys.map((it) => EncryptedGroupKey.fromArray(it)),
         })
     }

@@ -7,7 +7,6 @@ import { AddressZero } from '@ethersproject/constants'
 import type { Overrides as EthersOptions } from '@ethersproject/contracts'
 import type { Signer } from '@ethersproject/abstract-signer'
 
-import { EthereumAddress } from '../types'
 import { Debug } from '../utils/log'
 import { sleep, until } from '../utils'
 
@@ -15,6 +14,7 @@ import Contracts from './Contracts'
 import { erc20AllowanceAbi } from './abi'
 
 import DataUnionAPI from './index'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 export interface DataUnionDeployOptions {
     owner?: EthereumAddress,
