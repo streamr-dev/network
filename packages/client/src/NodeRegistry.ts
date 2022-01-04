@@ -15,7 +15,8 @@ import { Stream, StreamProperties } from './Stream'
 import Ethereum from './Ethereum'
 import { NotFoundError } from '.'
 import { until } from './utils'
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID } from 'streamr-client-protocol'
+import { StreamIDBuilder } from './StreamIDBuilder'
 
 const log = debug('StreamrClient:NodeRegistry')
 
@@ -80,6 +81,7 @@ export class NodeRegistry {
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Ethereum) private ethereum: Ethereum,
+        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(Config.Root) clientConfig: StrictStreamrClientConfig
     ) {
         log('creating NodeRegistryOnchain')
@@ -95,10 +97,10 @@ export class NodeRegistry {
     // Read from the NodeRegistry or StreamStorageRegistry contract
     // --------------------------------------------------------------------------------------------
 
-    async isStreamStoredInStorageNodeFromContract(streamId: string, nodeAddress: string): Promise<boolean> {
-        const id = toStreamID(streamId)
-        log('Checking if stream %s is stored in storage node %s', id, nodeAddress)
-        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(id, nodeAddress.toLowerCase())
+    async isStreamStoredInStorageNodeFromContract(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
+        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
     }
 
     // --------------------------------------------------------------------------------------------
@@ -140,23 +142,23 @@ export class NodeRegistry {
         await tx.wait()
     }
 
-    async addStreamToStorageNode(streamId: string, nodeAddress: string): Promise<void> {
-        const id = toStreamID(streamId)
-        log('Adding stream %s to node %s', id, nodeAddress)
+    async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        log('Adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
 
-        const tx = await this.streamStorageRegistryContract!.addStorageNode(id, nodeAddress)
+        const tx = await this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress)
         await tx.wait()
-        await until(async () => { return this.isStreamStoredInStorageNode(id, nodeAddress) }, 10000, 500,
-            () => `Failed to add stream ${id} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
+        await until(async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) }, 10000, 500,
+            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
-    async removeStreamFromStorageNode(streamId: string, nodeAddress: string): Promise<void> {
-        const id = toStreamID(streamId)
-        log('Removing stream %s from node %s', id, nodeAddress)
+    async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        log('Removing stream %s from node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
 
-        const tx = await this.streamStorageRegistryContract!.removeStorageNode(id, nodeAddress)
+        const tx = await this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress)
         await tx.wait()
     }
 
@@ -174,20 +176,20 @@ export class NodeRegistry {
         return metadata.http
     }
 
-    async isStreamStoredInStorageNode(streamId: string, nodeAddress: string): Promise<boolean> {
-        const id = toStreamID(streamId)
-        log('Checking if stream %s is stored in storage node %s', id, nodeAddress)
+    async isStreamStoredInStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
         const res = await this.sendNodeQuery(NodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
         if (res.node === null) {
             throw new NotFoundError('Node not found, id: ' + nodeAddress)
         }
-        return res.node.storedStreams.find((stream) => stream.id === id) !== undefined
+        return res.node.storedStreams.find((stream) => stream.id === streamId) !== undefined
     }
 
-    async getStorageNodesOf(streamId: string): Promise<EthereumAddress[]> {
-        const id = toStreamID(streamId)
-        log('Getting storage nodes of stream %s', id)
-        const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(id)) as StoredStreamQueryResult
+    async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        log('Getting storage nodes of stream %s', streamId)
+        const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
         return res.stream.storageNodes.map((node) => node.id)
     }
 

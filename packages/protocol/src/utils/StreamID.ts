@@ -40,6 +40,10 @@ export function toStreamID(streamIdOrPath: string, address?: EthereumAddress): S
     }
 }
 
+export function isPathOnlyFormat(streamIdOrPath: string): boolean {
+    return streamIdOrPath.startsWith('/')
+}
+
 export function isKeyExchangeStream(streamId: StreamID | string): boolean {
     return streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
 }

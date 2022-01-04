@@ -1,7 +1,7 @@
 /**
  * Public Publishing API
  */
-import { StreamMessage, SPID, SIDLike, toStreamID } from 'streamr-client-protocol'
+import { StreamMessage, SPID, SIDLike } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from './utils'
@@ -15,6 +15,7 @@ import { Stoppable } from './utils/Stoppable'
 import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
 import Validator from './Validator'
 import BrubeckNode from './BrubeckNode'
+import { toStreamID } from './toStreamID'
 
 export type { PublishMetadata }
 
@@ -71,7 +72,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
 
         return this.pipeline.publish({
-            streamId: toStreamID(streamId),
+            streamId: toStreamID(streamId, this.ethereum),
             content,
             timestamp: timestampAsNumber,
             partitionKey: partitionKey != null ? partitionKey : streamPartition,
