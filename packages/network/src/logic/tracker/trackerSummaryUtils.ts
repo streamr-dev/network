@@ -1,4 +1,4 @@
-import { SPID, SPIDKey } from 'streamr-client-protocol'
+import { SPID, SPIDKey, StreamID } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
 
@@ -8,7 +8,7 @@ type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
 export function getTopology(
     overlayPerStream: OverlayPerStream,
     connectionRtts: OverlayConnectionRtts,
-    streamId: string | null = null,
+    streamId: StreamID | null = null,
     partition: number | null = null
 ): OverLayWithRtts {
     const topology: OverLayWithRtts = {}
@@ -24,7 +24,7 @@ export function getTopology(
     return topology
 }
 
-export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): OverlaySizes {
+export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): OverlaySizes {
     const spidKeys = findSPIDKeys(overlayPerStream, streamId, partition)
     const streamSizes: OverlaySizes = spidKeys.map((spidKey) => {
         const spid = SPID.from(spidKey)
@@ -99,7 +99,7 @@ function getNodeToNodeConnectionRtts(
     }
 }
 
-function findSPIDKeys(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): string[] {
+function findSPIDKeys(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): string[] {
     let keys
 
     if (streamId && partition === null) {

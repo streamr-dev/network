@@ -1,14 +1,15 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
+import { StreamID } from '../../../utils/StreamID'
 
 export interface Options extends ControlMessageOptions {
-    streamId: string
+    streamId: StreamID
     streamPartition: number
 }
 
 export default class UnsubscribeRequest extends ControlMessage {
 
-    streamId: string
+    streamId: StreamID
     streamPartition: number
 
     constructor({ version = ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition }: Options) {

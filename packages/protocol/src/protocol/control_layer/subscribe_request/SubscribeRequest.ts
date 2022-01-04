@@ -1,15 +1,16 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../../utils/validations'
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
+import { StreamID } from '../../../utils/StreamID'
 
 export interface Options extends ControlMessageOptions {
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     sessionToken: string | null
 }
 
 export default class SubscribeRequest extends ControlMessage {
 
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     sessionToken: string | null
 

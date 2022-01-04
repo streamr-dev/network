@@ -9,6 +9,7 @@ import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { Serializer } from '../../Serializer'
+import { StreamID } from '../../utils/StreamID'
 
 const serializerByVersion: {[version: string]: Serializer<StreamMessage> } = {}
 const BYE_KEY = '_bye'
@@ -214,7 +215,7 @@ export default class StreamMessage<T = unknown> {
         this.spid = SPID.from(this.messageId)
     }
 
-    getStreamId(): string {
+    getStreamId(): StreamID {
         return this.messageId.streamId
     }
 

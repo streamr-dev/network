@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { TrackerLayer } from '../../../../src'
+import { toStreamID, TrackerLayer } from '../../../../src'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
 const { InstructionMessage } = TrackerLayer
@@ -11,7 +11,7 @@ const VERSION = 2
 const message = new InstructionMessage({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 10,
     nodeIds: ['node-1', 'node-2'],
     counter: 100

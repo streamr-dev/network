@@ -8,6 +8,7 @@ import { instanceId, pOnce } from '../utils'
 import { Context } from '../utils/Context'
 
 import { PersistentStore } from './PersistentStore'
+import { StreamID } from 'streamr-client-protocol'
 
 // eslint-disable-next-line promise/param-names
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
@@ -15,7 +16,7 @@ const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms
 export type ServerPersistentStoreOptions = {
     context: Context,
     clientId: string
-    streamId: string
+    streamId: StreamID
     initialData?: Record<string, string> // key -> value
     rootPath?: string,
     migrationsPath?: string,

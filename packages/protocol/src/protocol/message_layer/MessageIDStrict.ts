@@ -1,9 +1,10 @@
 import { validateIsNotNegativeInteger, validateIsString } from '../../utils/validations'
 
 import MessageID, { MessageIDArray } from './MessageID'
+import { StreamID, toStreamID } from '../../utils/StreamID'
 
 export default class MessageIDStrict extends MessageID {
-    constructor(streamId: string, streamPartition: number, timestamp: number, sequenceNumber: number, publisherId: string, msgChainId: string) {
+    constructor(streamId: StreamID, streamPartition: number, timestamp: number, sequenceNumber: number, publisherId: string, msgChainId: string) {
         super(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
         validateIsNotNegativeInteger('sequenceNumber', sequenceNumber)
         validateIsString('publisherId', publisherId)
@@ -20,10 +21,10 @@ export default class MessageIDStrict extends MessageID {
             msgChainId,
         ] = arr
 
-        return new MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
+        return new MessageIDStrict(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
     }
 
     clone(): MessageIDStrict {
-        return new MessageIDStrict(...this.toArray())
+        return new MessageIDStrict(...this.toArray() as [StreamID, number, number, number, string, string])
     }
 }

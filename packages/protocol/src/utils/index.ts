@@ -1,4 +1,3 @@
-import TimestampUtil from "./TimestampUtil"
 import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator from "./StreamMessageValidator"
 import SigningUtil from "./SigningUtil"
@@ -7,9 +6,17 @@ import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry,
 import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
+import {
+    StreamID,
+    toStreamID,
+    KEY_EXCHANGE_STREAM_PREFIX,
+    formKeyExchangeStreamId,
+    isKeyExchangeStream,
+    getRecipient
+} from "./StreamID"
+import { EthereumAddress } from "./types"
 
 export {
-    TimestampUtil,
     OrderingUtil,
     StreamMessageValidator,
     SigningUtil,
@@ -23,4 +30,11 @@ export {
     generateMnemonicFromAddress,
     parseAddressFromNodeId,
     keyToArrayIndex,
+    StreamID,
+    toStreamID,
+    KEY_EXCHANGE_STREAM_PREFIX,
+    formKeyExchangeStreamId,
+    isKeyExchangeStream,
+    getRecipient,
+    EthereumAddress
 }

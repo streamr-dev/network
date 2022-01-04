@@ -1,11 +1,8 @@
 import { Contract } from '@ethersproject/contracts'
-// import { Wallet } from '@ethersproject/wallet'
 import { Signer } from '@ethersproject/abstract-signer'
 import type { StreamRegistry as StreamRegistryContract } from './ethereumArtifacts/StreamRegistry.d'
 import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryAbi.json'
-// import { Provider } from '@ethersproject/abstract-provider'
 import fetch from 'node-fetch'
-// import { BigNumber, ethers } from 'ethers'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
@@ -16,12 +13,9 @@ import { Context } from './utils/Context'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamPermission, StreamPermissions, StreamProperties } from './Stream'
 import { NotFoundError, ValidationError } from './authFetch'
-import { EthereumAddress } from './types'
 import { StreamListQuery } from './StreamEndpoints'
-import { SIDLike, SPID } from 'streamr-client-protocol'
+import { SIDLike, SPID, StreamID, toStreamID, isKeyExchangeStream, EthereumAddress } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
-
-const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
 
 export type PermissionQueryResult = {
     id: string
@@ -81,7 +75,7 @@ export class StreamRegistry implements Context {
             StreamRegistryArtifact, this.sideChainProvider) as StreamRegistryContract
     }
 
-    parseStream(id: string, propsString: string): Stream {
+    private parseStream(id: StreamID, propsString: string): Stream {
         const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(propsString)
         return new Stream({ ...parsedProps, id }, this.container)
     }
@@ -91,35 +85,37 @@ export class StreamRegistry implements Context {
     // --------------------------------------------------------------------------------------------
 
     async getStreamFromContract(id: string): Promise<Stream> {
-        this.debug('getStream %s', id)
+        const streamId = toStreamID(id)
+        this.debug('getStream %s', streamId)
         try {
-            const propertiesString = await this.streamRegistryContractReadonly.getStreamMetadata(id) || '{}'
-            return this.parseStream(id, propertiesString)
+            const propertiesString = await this.streamRegistryContractReadonly.getStreamMetadata(streamId) || '{}'
+            return this.parseStream(streamId, propertiesString)
         } catch (error) {
             this.debug(error)
         }
-        throw new NotFoundError('Stream: id=' + id)
+        throw new NotFoundError('Stream: id=' + streamId)
     }
 
     async hasPermission(streamId: string, userAddess: EthereumAddress, permission: StreamPermission) {
-        return this.streamRegistryContractReadonly.hasPermission(streamId, userAddess,
+        return this.streamRegistryContractReadonly.hasPermission(toStreamID(streamId), userAddess,
             StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
     async hasPublicPermission(streamId: string, permission: StreamPermission) {
-        return this.streamRegistryContractReadonly.hasPublicPermission(streamId,
+        return this.streamRegistryContractReadonly.hasPublicPermission(toStreamID(streamId),
             StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
     async hasDirectPermission(streamId: string, userAddess: EthereumAddress, permission: StreamPermission) {
-        return this.streamRegistryContractReadonly.hasDirectPermission(streamId, userAddess,
+        return this.streamRegistryContractReadonly.hasDirectPermission(toStreamID(streamId), userAddess,
             StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
     async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
+        const id = toStreamID(streamId)
         await this.connectToStreamRegistryContract()
-        this.debug('Getting permissions for stream %s for user %s', streamId, userAddress)
-        const permissions = await this.streamRegistryContractReadonly!.getPermissionsForUser(streamId, userAddress || AddressZero)
+        this.debug('Getting permissions for stream %s for user %s', id, userAddress)
+        const permissions = await this.streamRegistryContractReadonly!.getPermissionsForUser(id, userAddress || AddressZero)
         return {
             canEdit: permissions.canEdit,
             canDelete: permissions.canDelete,
@@ -148,7 +144,7 @@ export class StreamRegistry implements Context {
             completeProps = props as StreamProperties
         } else {
             const sid = SPID.parse(props as SIDLike)
-            completeProps = { id: sid.streamId, ...sid }
+            completeProps = { id: toStreamID(sid.streamId), ...sid }
         }
         completeProps.partitions ??= 1
         await this.connectToStreamRegistryContract()
@@ -160,7 +156,7 @@ export class StreamRegistry implements Context {
         await this.connectToStreamRegistryContract()
         return this._createOrUpdateStream(async (path: string, metadata: string) => {
             const userAddress: string = (await this.ethereum.getAddress()).toLowerCase()
-            const id = userAddress + path
+            const id = toStreamID(userAddress + path)
             return this.streamRegistryContract!.updateStreamMetadata(id, metadata)
         }, props)
     }
@@ -181,7 +177,7 @@ export class StreamRegistry implements Context {
             throw new ValidationError('Validation')
             // TODO add check for ENS??
         }
-        const id = userAddress + path
+        const id = toStreamID(userAddress + path)
         properties.id = id
         const propsJsonStr : string = JSON.stringify(properties)
         const tx = await contractFunction(path, propsJsonStr)
@@ -190,29 +186,32 @@ export class StreamRegistry implements Context {
     }
 
     async grantPermission(streamId: string, permission: StreamPermission, recievingUser: string) {
-        this.debug('Granting Permission %o for user %s on stream %s', permission, recievingUser, streamId)
+        const id = toStreamID(streamId)
+        this.debug('Granting Permission %o for user %s on stream %s', permission, recievingUser, id)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.grantPermission(streamId, recievingUser,
+        const tx = await this.streamRegistryContract!.grantPermission(id, recievingUser,
             StreamRegistry.streamPermissionToSolidityType(permission))
         await tx.wait()
     }
 
     async grantPublicPermission(streamId: string, permission: StreamPermission) {
-        this.debug('Granting PUBLIC Permission %o on stream %s', permission, streamId)
+        const id = toStreamID(streamId)
+        this.debug('Granting PUBLIC Permission %o on stream %s', permission, id)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.grantPublicPermission(streamId,
+        const tx = await this.streamRegistryContract!.grantPublicPermission(id,
             StreamRegistry.streamPermissionToSolidityType(permission))
         await tx.wait()
     }
 
     async setPermissionsForUser(streamId: string, recievingUser: string, edit: boolean, deletePermission: boolean,
         publish: boolean, subscribe: boolean, share: boolean) {
-        this.debug(`Setting permissions for user ${recievingUser} on stream ${streamId}:
+        const id = toStreamID(streamId)
+        this.debug(`Setting permissions for user ${recievingUser} on stream ${id}:
         edit: ${edit}, delete: ${deletePermission}, publish: ${publish}, subscribe: ${subscribe}, share: ${share}`)
         await this.connectToStreamRegistryContract()
         const publishExpiration = publish ? MaxInt256 : 0
         const subscribeExpiration = subscribe ? MaxInt256 : 0
-        const tx = await this.streamRegistryContract!.setPermissionsForUser(streamId, recievingUser,
+        const tx = await this.streamRegistryContract!.setPermissionsForUser(id, recievingUser,
             edit, deletePermission, publishExpiration, subscribeExpiration, share)
         await tx.wait()
     }
@@ -226,67 +225,76 @@ export class StreamRegistry implements Context {
     }
 
     async setPermissions(streamId: string, users: string[], permissions: StreamPermissions[]) {
-        this.debug(`Setting permissions for stream ${streamId} for ${users.length} users`)
+        const id = toStreamID(streamId)
+        this.debug(`Setting permissions for stream ${id} for ${users.length} users`)
         await this.connectToStreamRegistryContract()
         const transformedPermission = permissions.map(StreamRegistry.convertStreamPermissionToChainPermission)
-        const tx = await this.streamRegistryContract!.setPermissions(streamId, users, transformedPermission)
+        const tx = await this.streamRegistryContract!.setPermissions(id, users, transformedPermission)
         await tx.wait()
     }
 
     async revokePermission(streamId: string, permission: StreamPermission, recievingUser: string) {
-        this.debug('Revoking permission %o for user %s on stream %s', permission, recievingUser, streamId)
+        const id = toStreamID(streamId)
+        this.debug('Revoking permission %o for user %s on stream %s', permission, recievingUser, id)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokePermission(streamId, recievingUser,
+        const tx = await this.streamRegistryContract!.revokePermission(id, recievingUser,
             StreamRegistry.streamPermissionToSolidityType(permission))
         await tx.wait()
     }
 
     async revokeAllMyPermission(streamId: string) {
-        this.debug('Revoking all permissions user %s on stream %s', await this.ethereum.getAddress(), streamId)
+        const id = toStreamID(streamId)
+        this.debug('Revoking all permissions user %s on stream %s', await this.ethereum.getAddress(), id)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, await this.ethereum.getAddress())
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(id, await this.ethereum.getAddress())
         await tx.wait()
     }
     async revokeAllUserPermission(streamId: string, userId: EthereumAddress) {
-        this.debug('Revoking all permissions user %s on stream %s', userId, streamId)
+        const id = toStreamID(streamId)
+        this.debug('Revoking all permissions user %s on stream %s', userId, id)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, userId)
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(id, userId)
         await tx.wait()
     }
 
     async revokePublicPermission(streamId: string, permission: StreamPermission) {
-        this.debug('Revoking PUBLIC Permission %o on stream %s', permission, streamId)
+        const id = toStreamID(streamId)
+        this.debug('Revoking PUBLIC Permission %o on stream %s', permission, id)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokePublicPermission(streamId,
+        const tx = await this.streamRegistryContract!.revokePublicPermission(id,
             StreamRegistry.streamPermissionToSolidityType(permission))
         await tx.wait()
     }
 
     async revokeAllPublicPermissions(streamId: string) {
-        this.debug('Revoking all PUBLIC Permissions stream %s', streamId)
+        const id = toStreamID(streamId)
+        this.debug('Revoking all PUBLIC Permissions stream %s', id)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId,
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(id,
             AddressZero)
         await tx.wait()
     }
 
     async deleteStream(streamId: string) {
-        this.debug('Deleting stream %s', streamId)
+        const id = toStreamID(streamId)
+        this.debug('Deleting stream %s', id)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.deleteStream(streamId)
+        const tx = await this.streamRegistryContract!.deleteStream(id)
         await tx.wait()
     }
 
     async streamExists(streamId: string): Promise<boolean> {
-        this.debug('Checking if stream exists %s', streamId)
+        const id = toStreamID(streamId)
+        this.debug('Checking if stream exists %s', id)
         this.connectToStreamRegistryContract()
-        return this.streamRegistryContractReadonly!.exists(streamId)
+        return this.streamRegistryContractReadonly!.exists(id)
     }
 
     async streamExistsOnTheGraph(streamId: string): Promise<boolean> {
-        this.debug('Checking if stream exists on theGraph %s', streamId)
+        const id = toStreamID(streamId)
+        this.debug('Checking if stream exists on theGraph %s', id)
         try {
-            await this.getStreamFromGraph(streamId)
+            await this.getStreamFromGraph(id)
             return true
         } catch (err) {
             if (err.errorCode === 'NOT_FOUND') {
@@ -347,28 +355,30 @@ export class StreamRegistry implements Context {
     }
 
     async getStream(streamId: string): Promise<Stream> {
-        this.debug('Getting stream %s', streamId)
-        if (streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)) {
-            return new Stream({ id: streamId, partitions: 1 }, this.container)
+        const id = toStreamID(streamId)
+        this.debug('Getting stream %s', id)
+        if (isKeyExchangeStream(id)) {
+            return new Stream({ id, partitions: 1 }, this.container)
         }
         let metadata
         try {
-            metadata = await this.streamRegistryContractReadonly.getStreamMetadata(streamId)
-        } catch { throw new NotFoundError('Stream not found: id=' + streamId) }
-        return this.parseStream(streamId, metadata)
+            metadata = await this.streamRegistryContractReadonly.getStreamMetadata(id)
+        } catch { throw new NotFoundError('Stream not found: id=' + id) }
+        return this.parseStream(id, metadata)
     }
 
     async getStreamFromGraph(streamId: string): Promise<Stream> {
-        this.debug('Getting stream %s from theGraph', streamId)
-        if (streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)) {
-            return new Stream({ id: streamId, partitions: 1 }, this.container)
+        const id = toStreamID(streamId)
+        this.debug('Getting stream %s from theGraph', id)
+        if (isKeyExchangeStream(id)) {
+            return new Stream({ id, partitions: 1 }, this.container)
         }
         const response = await this.sendStreamQuery(
-            StreamRegistry.buildGetStremWithPermissionsQuery(streamId)
+            StreamRegistry.buildGetStremWithPermissionsQuery(id)
         ) as { stream: StreamPermissionsQueryResult }
-        if (!response.stream) { throw new NotFoundError('Stream not found: id=' + streamId) }
-        const { id, metadata } = response.stream
-        return this.parseStream(id, metadata)
+        if (!response.stream) { throw new NotFoundError('Stream not found: id=' + id) }
+        const { id: id2, metadata } = response.stream
+        return this.parseStream(toStreamID(id2), metadata)
     }
 
     async getAllStreams(pagesize: number = 1000): Promise<Stream[]> {
@@ -386,7 +396,7 @@ export class StreamRegistry implements Context {
             const resStreams: Stream[] = []
             queryResponse.streams.forEach(({ id, metadata }) => {
                 try {
-                    const stream = this.parseStream(id, metadata)
+                    const stream = this.parseStream(toStreamID(id), metadata)
                     resStreams.push(stream)
                 } catch (err) { this.debug(`Skipping stream ${id} cannot parse metadata: ${metadata}`) }
             })
@@ -398,10 +408,11 @@ export class StreamRegistry implements Context {
     }
 
     async getAllPermissionsForStream(streamid: string): Promise<StreamPermissions[]> {
-        this.debug('Getting all permissions for stream %s', streamid)
-        const response = await this.sendStreamQuery(StreamRegistry.buildGetStremWithPermissionsQuery(streamid)) as SingleStreamQueryResult
+        const id = toStreamID(streamid)
+        this.debug('Getting all permissions for stream %s', id)
+        const response = await this.sendStreamQuery(StreamRegistry.buildGetStremWithPermissionsQuery(id)) as SingleStreamQueryResult
         if (!response.stream) {
-            throw new NotFoundError('stream not found: id: ' + streamid)
+            throw new NotFoundError('stream not found: id: ' + id)
         }
         const now = Date.now()
         return response.stream.permissions.map((permissionResult) => ({
@@ -416,28 +427,31 @@ export class StreamRegistry implements Context {
     async listStreams(filter: StreamListQuery = {}): Promise<Stream[]> {
         this.debug('Getting all streams from thegraph that match filter %o', filter)
         const response = await this.sendStreamQuery(StreamRegistry.buildGetFilteredStreamListQuery(filter)) as FilteredStreamListQueryResult
-        return response.streams.map((streamobj) => this.parseStream(streamobj.id, streamobj.metadata))
+        return response.streams.map((streamobj) => this.parseStream(toStreamID(streamobj.id), streamobj.metadata))
     }
 
     async getStreamPublishers(streamId: string, pagesize: number = 1000) {
-        return this.getStreamPublishersOrSubscribersList(streamId, pagesize, StreamRegistry
+        const id = toStreamID(streamId)
+        return this.getStreamPublishersOrSubscribersList(id, pagesize, StreamRegistry
             .buildGetStreamPublishersQuery)
     }
     async getStreamSubscribers(streamId: string, pagesize: number = 1000) {
-        return this.getStreamPublishersOrSubscribersList(streamId, pagesize, StreamRegistry
+        const id = toStreamID(streamId)
+        return this.getStreamPublishersOrSubscribersList(id, pagesize, StreamRegistry
             .buildGetStreamSubscribersQuery)
     }
 
     async getStreamPublishersOrSubscribersList(streamId: string, pagesize: number = 1000, queryMethod: Function): Promise<EthereumAddress[]> {
-        this.debug('Getting stream publishers for stream id %s', streamId)
+        const id = toStreamID(streamId)
+        this.debug('Getting stream publishers for stream id %s', id)
         let results: EthereumAddress[] = []
         let lastResultSize = pagesize
         let lastID: string | undefined
         do {
             // eslint-disable-next-line no-await-in-loop
-            const response = await this.sendStreamQuery(queryMethod(streamId, pagesize, lastID)) as SingleStreamQueryResult
+            const response = await this.sendStreamQuery(queryMethod(id, pagesize, lastID)) as SingleStreamQueryResult
             if (!response.stream) {
-                throw new NotFoundError('stream not found: id: ' + streamId)
+                throw new NotFoundError('stream not found: id: ' + id)
             }
             const resStreams = response.stream.permissions.map((permission) => permission.userAddress)
             if (resStreams.length === 0) {
@@ -451,26 +465,28 @@ export class StreamRegistry implements Context {
     }
 
     async isStreamPublisher(streamId: string, userAddress: EthereumAddress): Promise<boolean> {
-        this.debug('Checking isStreamPublisher for stream %s for address %s', streamId, userAddress)
+        const id = toStreamID(streamId)
+        this.debug('Checking isStreamPublisher for stream %s for address %s', id, userAddress)
         // const response = await this.sendStreamQuery(StreamRegistry.buildIsPublisherQuery(streamId, userAddress)) as SingleStreamQueryResult
         let response
         try {
-            response = await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
+            response = await this.streamRegistryContractReadonly.hasPermission(id, userAddress,
                 StreamRegistry.streamPermissionToSolidityType(StreamPermission.PUBLISH))
         } catch {
-            throw new NotFoundError('stream not found: id: ' + streamId)
+            throw new NotFoundError('stream not found: id: ' + id)
         }
         return response
     }
 
     async isStreamSubscriber(streamId: string, userAddress: EthereumAddress): Promise<boolean> {
-        this.debug('Checking isStreamSubscriber for stream %s for address %s', streamId, userAddress)
+        const id = toStreamID(streamId)
+        this.debug('Checking isStreamSubscriber for stream %s for address %s', id, userAddress)
         let response
         try {
-            response = await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
+            response = await this.streamRegistryContractReadonly.hasPermission(id, userAddress,
                 StreamRegistry.streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
         } catch {
-            throw new NotFoundError('stream not found: id: ' + streamId)
+            throw new NotFoundError('stream not found: id: ' + id)
         }
         return response
     }
@@ -493,7 +509,7 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    private static buildGetStremWithPermissionsQuery(streamid: string): string {
+    private static buildGetStremWithPermissionsQuery(streamid: StreamID): string {
         const query = `{
             stream (id: "${streamid}") {
                 id,
@@ -536,7 +552,7 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    private static buildGetStreamPublishersQuery(streamId: string, pagesize: number, lastId?: string): string {
+    private static buildGetStreamPublishersQuery(streamId: StreamID, pagesize: number, lastId?: string): string {
         const startIDFilter = lastId ? `, id_gt: "${lastId}"` : ''
         const query = `{
             stream (id: "${streamId}") {
@@ -548,7 +564,7 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    private static buildGetStreamSubscribersQuery(streamId: string, pagesize: number, lastId?: string): string {
+    private static buildGetStreamSubscribersQuery(streamId: StreamID, pagesize: number, lastId?: string): string {
         const startIDFilter = lastId ? `, id_gt: "${lastId}"` : ''
         const query = `{
             stream (id: "${streamId}") {

@@ -1,5 +1,11 @@
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyErrorResponse, ValidationError
+    StreamMessage,
+    GroupKeyRequest,
+    GroupKeyResponse,
+    EncryptedGroupKey,
+    GroupKeyErrorResponse,
+    ValidationError,
+    StreamID
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
@@ -139,11 +145,11 @@ export class PublisherKeyExchange implements Context {
         return sub
     }
 
-    async getGroupKeyStore(streamId: string) {
+    async getGroupKeyStore(streamId: StreamID) {
         return this.groupKeyStoreFactory.getStore(streamId)
     }
 
-    async rotateGroupKey(streamId: string) {
+    async rotateGroupKey(streamId: StreamID) {
         if (!this.enabled) { return }
         try {
             const groupKeyStore = await this.getGroupKeyStore(streamId)
@@ -153,7 +159,7 @@ export class PublisherKeyExchange implements Context {
         }
     }
 
-    async setNextGroupKey(streamId: string, groupKey: GroupKey) {
+    async setNextGroupKey(streamId: StreamID, groupKey: GroupKey) {
         if (!this.enabled) { return }
         try {
             const groupKeyStore = await this.getGroupKeyStore(streamId)
@@ -165,7 +171,7 @@ export class PublisherKeyExchange implements Context {
         }
     }
 
-    async useGroupKey(streamId: string) {
+    async useGroupKey(streamId: StreamID) {
         await this.getSubscription()
         if (!this.enabled) { return [] }
         const groupKeyStore = await this.getGroupKeyStore(streamId)
@@ -173,13 +179,13 @@ export class PublisherKeyExchange implements Context {
         return groupKeyStore.useGroupKey()
     }
 
-    async hasAnyGroupKey(streamId: string) {
+    async hasAnyGroupKey(streamId: StreamID) {
         const groupKeyStore = await this.getGroupKeyStore(streamId)
         if (!this.enabled) { return false }
         return !(await groupKeyStore.isEmpty())
     }
 
-    async rekey(streamId: string) {
+    async rekey(streamId: StreamID) {
         try {
             if (!this.enabled) { return }
             const groupKeyStore = await this.getGroupKeyStore(streamId)

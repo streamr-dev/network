@@ -3,6 +3,7 @@ import MessageID from './MessageID'
 import MessageRef from './MessageRef'
 import ValidationError from '../../errors/ValidationError'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
+import { StreamID } from '../../utils/StreamID'
 
 // TODO refactor deserialization to separate class (Serializer<GroupKeyMessage>)
 //
@@ -14,10 +15,10 @@ export default abstract class GroupKeyMessage {
         [key: number]: GroupKeyMessageType
     } = {}
 
-    streamId: string
+    streamId: StreamID
     messageType: StreamMessageType
 
-    constructor(streamId: string, messageType: StreamMessageType) {
+    protected constructor(streamId: StreamID, messageType: StreamMessageType) {
         validateIsString('streamId', streamId)
         this.streamId = streamId
 

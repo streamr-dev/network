@@ -2,7 +2,7 @@
  * Central place to fetch async dependencies and convert message metadata into StreamMessages.
  */
 import { inject, scoped, Lifecycle } from 'tsyringe'
-import { StreamMessage, SPID, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
+import { StreamMessage, SPID, StreamMessageEncrypted, StreamMessageSigned, StreamID } from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from './utils'
 import { Stoppable } from './utils/Stoppable'
@@ -20,7 +20,7 @@ export type MessageCreateOptions<T = unknown> = {
 }
 
 export interface IMessageCreator {
-    create: <T>(streamId: string, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
+    create: <T>(streamId: StreamID, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
     stop: () => Promise<void> | void
 }
 
@@ -59,7 +59,7 @@ export default class StreamMessageCreator implements IMessageCreator, Stoppable 
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create<T = unknown>(streamId: string, {
+    async create<T = unknown>(streamId: StreamID, {
         content,
         timestamp,
         partitionKey,

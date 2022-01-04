@@ -1,7 +1,7 @@
 /**
  * Organises async Publish steps into a Pipeline
  */
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from './utils/log'
@@ -18,10 +18,10 @@ import Validator from './Validator'
 import { DestroySignal } from './DestroySignal'
 
 export class FailedToPublishError extends Error {
-    streamId
+    streamId: StreamID
     msg
     reason
-    constructor(streamId: string, data: PublishMetadata | StreamMessage, reason?: Error) {
+    constructor(streamId: StreamID, data: PublishMetadata | StreamMessage, reason?: Error) {
         super(`Failed to publish to stream ${streamId} due to: ${reason && reason.stack ? reason.stack : reason}.`)
         this.streamId = streamId
         this.msg = data
@@ -49,7 +49,7 @@ export type PublishMetadata<T = unknown> = {
 
 export type PublishMetadataStrict<T = unknown> = PublishMetadata<T> & {
     timestamp: number
-    streamId: string
+    streamId: StreamID
     partitionKey?: number | string
 }
 

@@ -1,11 +1,11 @@
-import { ControlLayer } from 'streamr-client-protocol'
+import { ControlLayer, toStreamID } from 'streamr-client-protocol'
 
 import { decode } from '../../src/protocol/utils'
 
 describe('encoder', () => {
     const controlMessage = new ControlLayer.ResendResponseNoResend({
         requestId: 'requestId',
-        streamId: 'streamId',
+        streamId: toStreamID('streamId'),
         streamPartition: 0,
     })
 

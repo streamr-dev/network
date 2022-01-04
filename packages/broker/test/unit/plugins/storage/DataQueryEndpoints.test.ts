@@ -10,6 +10,7 @@ import {
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
 import { StreamFetcher } from "../../../../src/StreamFetcher"
+import { toStreamID } from 'streamr-client-protocol'
 
 const { MessageLayer } = Protocol
 const { MessageID } = MessageLayer
@@ -36,7 +37,7 @@ describe('DataQueryEndpoints', () => {
 
     function createStreamMessage(content: any): Protocol.StreamMessage {
         return new Protocol.StreamMessage({
-            messageId: new MessageID('streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', 'msgChainId'),
             content,
         })
     }

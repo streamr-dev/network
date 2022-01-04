@@ -4,13 +4,14 @@ import ResendRangeRequest from '../../../../src/protocol/control_layer/resend_re
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
+import { toStreamID } from '../../../../src'
 
 describe('ResendRangeRequest', () => {
     describe('constructor', () => {
         it('throws on null requestId', () => {
             assert.throws(() => new ResendRangeRequest({
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 fromMsgRef: new MessageRef(132846894, 0),
                 toMsgRef: new MessageRef(132847000, 0),
@@ -22,7 +23,7 @@ describe('ResendRangeRequest', () => {
         it('throws if from > to', () => {
             assert.throws(() => new ResendRangeRequest({
                 requestId: '',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 fromMsgRef: new MessageRef(132847000, 0),
                 toMsgRef: new MessageRef(132846894, 0),
@@ -34,7 +35,7 @@ describe('ResendRangeRequest', () => {
         it('should create the latest version', () => {
             const msg = new ResendRangeRequest({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 fromMsgRef: new MessageRef(132846894, 0),
                 toMsgRef: new MessageRef(132847000, 0),

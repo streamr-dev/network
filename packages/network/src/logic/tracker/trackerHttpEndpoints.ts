@@ -14,6 +14,7 @@ import http from 'http'
 import https from 'https'
 import morgan from 'morgan'
 import compression from 'compression'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 
 const staticLogger = new Logger(module)
 
@@ -23,14 +24,14 @@ const respondWithError = (res: express.Response, errorMessage: string): void => 
     })
 }
 
-const validateStreamId = (req: express.Request, res: express.Response): string | null => {
+const validateStreamId = (req: express.Request, res: express.Response): StreamID | null => {
     const streamId = decodeURIComponent(req.params.streamId).trim()
     if (streamId.length === 0) {
         staticLogger.warn('422 streamId must be a not empty string')
         respondWithError(res, 'streamId cannot be empty')
         return null
     }
-    return streamId
+    return toStreamID(streamId)
 }
 
 const validatePartition = (req: express.Request, res: express.Response): number | null  => {
