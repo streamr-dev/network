@@ -17,7 +17,7 @@ describe('NodeMetrics', () => {
     let client1: StreamrClient
     let nodeAddress: string
     let client2: StreamrClient
-    let firehoseStreamIdHead: string
+    let streamIdPrefix: string
 
     beforeAll(async () => {
         const tmpAccount = new Wallet(await getPrivateKey())
@@ -38,7 +38,7 @@ describe('NodeMetrics', () => {
         const stream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
         await stream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
         await stream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
-        firehoseStreamIdHead = stream.id.replace('sec', '')
+        streamIdPrefix = stream.id.replace('sec', '')
 
         storageNode = await startBroker({
             name: 'storageNode',
@@ -68,7 +68,7 @@ describe('NodeMetrics', () => {
                             httpUrl: `http://127.0.0.1:${httpPort}/api/v1`,
                         },
                         storageNode: storageNodeAccount.address,
-                        firehoseStreamIdHead
+                        streamIdPrefix
                     },
 
                 }
@@ -90,7 +90,7 @@ describe('NodeMetrics', () => {
     it('should retrieve the a `sec` metrics', async () => {
         const messageQueue = new Queue<any>()
 
-        const streamId = `${firehoseStreamIdHead}sec`
+        const streamId = `${streamIdPrefix}sec`
         const streamPartition = keyToArrayIndex(10, (await client2.getUserInfo()).username)
         await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
