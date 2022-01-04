@@ -1,5 +1,8 @@
 import { Readable } from "stream"
 import { EventEmitter } from "events"
+import http from 'http'
+import express from 'express'
+import cors from 'cors'
 
 export type Event = string | symbol
 
@@ -269,4 +272,40 @@ export const toReadableStream = (...args: unknown[]): Readable => {
         }
     })
     return rs
+}
+
+/**
+ * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
+ * balances in streamr-docker-dev environment.
+ */
+export class KeyServer {
+    public static readonly KEY_SERVER_PORT = 45454
+    private readonly server: http.Server
+
+    constructor() {
+        const app = express()
+        app.use(cors())
+
+        // try avoid sequential tests starting from same address
+        let c = (Math.round((Math.random() * 1000)) % 1000)
+        app.get('/key', (req, res) => {
+            c = ((c + 1) % 1000)
+            const hexString = c.toString(16)
+            const privateKey = '0x' + hexString.padStart(64, '0')
+            res.send(privateKey)
+        })
+        this.server = app.listen(KeyServer.KEY_SERVER_PORT)
+    }
+
+    destroy(): Promise<unknown> {
+        return new Promise((resolve, reject) => {
+            this.server.close((err) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve(true)
+                }
+            })
+        })
+    }
 }
