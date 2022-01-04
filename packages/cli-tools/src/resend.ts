@@ -1,13 +1,23 @@
-import { StreamrClient, StreamrClientOptions, ResendOptions } from 'streamr-client'
+import { StreamrClient, ResendOptions } from 'streamr-client'
+
+export const assertBothOrNoneDefined = (
+    option1: string,
+    option2: string,
+    errorMessage: string,
+    commandOptions: Record<string, unknown>
+): void | never => { 
+    if ((option1 in commandOptions && !(option2 in commandOptions)) || (option2 in commandOptions && !(option1 in commandOptions))) {
+        console.error(`option ${errorMessage}`)
+        process.exit(1)
+    }
+}
 
 export const resend = async (
     streamId: string,
     resendOpts: ResendOptions,
-    streamrOptions: StreamrClientOptions & { subscribe?: boolean }
+    client: StreamrClient,
+    subscribe: boolean
 ): Promise<void> => {
-    const options = { ...streamrOptions }
-    const client = new StreamrClient(options)
-
     try {
         const subscribeOpts = {
             stream: streamId,
@@ -16,8 +26,7 @@ export const resend = async (
         const handler = (message: any) => {
             console.info(JSON.stringify(message))
         }
-
-        if (options.subscribe) {
+        if (subscribe) {
             await client.subscribe(subscribeOpts, handler)
         } else {
             await client.resend(subscribeOpts, handler)

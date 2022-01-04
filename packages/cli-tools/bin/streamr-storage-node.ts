@@ -10,4 +10,4 @@ program
     .command('add-stream', 'add stream')
     .command('remove-stream', 'remove stream')
     .command('list-stream-parts', 'list stream parts in a storage node')
-    .parse(process.argv)
+    .parse()

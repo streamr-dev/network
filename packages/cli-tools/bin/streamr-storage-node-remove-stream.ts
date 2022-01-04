@@ -1,32 +1,12 @@
 #!/usr/bin/env node
-import { Command } from 'commander'
-import { StreamrClient, Stream } from 'streamr-client'
-import {
-    envOptions,
-    authOptions,
-    exitWithHelpIfArgsNotBetween,
-    formStreamrOptionsWithEnv,
-    getStreamId,
-} from './common'
-import pkg from '../package.json'
+import '../src/logLevel'
+import StreamrClient from 'streamr-client'
+import { createClientCommand } from '../src/command'
 
-const program = new Command()
-program
+createClientCommand(async (client: StreamrClient, storageNodeAddress: string, streamId: string) => {
+    const stream = await client.getStream(streamId)
+    await stream.removeFromStorageNode(storageNodeAddress)
+})
     .arguments('<storageNodeAddress> <streamId>')
     .description('remove stream from a storage node')
-authOptions(program)
-envOptions(program)
-    .version(pkg.version)
-    .action((storageNodeAddress: string, streamIdOrPath: string, options: any) => {
-        const client = new StreamrClient(formStreamrOptionsWithEnv(options))
-        const streamId = getStreamId(streamIdOrPath, options)!
-        client.getStream(streamId)
-            .then((stream: Stream) => stream.removeFromStorageNode(storageNodeAddress))
-            .catch((err) => {
-                console.error(err)
-                process.exit(1)
-            })
-    })
-    .parse(process.argv)
-
-exitWithHelpIfArgsNotBetween(program, 2, 2)
+    .parseAsync()
