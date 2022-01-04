@@ -19,20 +19,32 @@ describe('NodeMetrics', () => {
     let client2: StreamrClient
 
     beforeAll(async () => {
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #1') // remove when CI flakyness issue has been resolved
         const tmpAccount = new Wallet(await getPrivateKey())
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #2') // remove when CI flakyness issue has been resolved
         const storageNodeAccount = new Wallet(await getPrivateKey())
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #3') // remove when CI flakyness issue has been resolved
         const storageNodeRegistry = {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-            jsonRpcProvider: `http://10.200.10.1:8546`
+            jsonRpcProvider: `http://${ process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1' }:8546`
         }
         nodeAddress = tmpAccount.address
         tracker = await startTestTracker(trackerPort)
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #4') // remove when CI flakyness issue has been resolved
         client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #5') // remove when CI flakyness issue has been resolved
         client2 = await createClient(tracker, tmpAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #6') // remove when CI flakyness issue has been resolved
 
         storageNode = await startBroker({
             name: 'storageNode',
@@ -44,10 +56,16 @@ describe('NodeMetrics', () => {
             storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
             // therefore StorageAssignmentEventManager test helper cannot be used
         })
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #7') // remove when CI flakyness issue has been resolved
         const storageClient = await createClient(tracker, storageNodeAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #8') // remove when CI flakyness issue has been resolved
         await storageClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #9') // remove when CI flakyness issue has been resolved
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
@@ -67,6 +85,8 @@ describe('NodeMetrics', () => {
             },
             storageNodeRegistry
         })
+        // eslint-disable-next-line no-console
+        console.log('NodeMetricsTest #10') // remove when CI flakyness issue has been resolved
     })
 
     afterAll(async () => {
