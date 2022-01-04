@@ -1,4 +1,3 @@
-import TimestampUtil from "./TimestampUtil"
 import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator from "./StreamMessageValidator"
 import SigningUtil from "./SigningUtil"
@@ -18,7 +17,6 @@ import {
 import { EthereumAddress } from "./types"
 
 export {
-    TimestampUtil,
     OrderingUtil,
     StreamMessageValidator,
     SigningUtil,

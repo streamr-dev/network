@@ -6,11 +6,6 @@ import { SPID, SPIDKeyShape, StreamID } from 'streamr-client-protocol'
 import MessageStream, { MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
 import SubscriptionSession from './SubscriptionSession'
 
-export type SubscriptionOptions = {
-  streamId: StreamID,
-  streamPartition: number
-}
-
 export { MessageStreamOnMessage as SubscriptionOnMessage }
 
 export default class Subscription<T = unknown> extends MessageStream<T> implements SPIDKeyShape {

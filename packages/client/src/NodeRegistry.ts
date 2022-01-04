@@ -95,9 +95,10 @@ export class NodeRegistry {
     // Read from the NodeRegistry or StreamStorageRegistry contract
     // --------------------------------------------------------------------------------------------
 
-    async isStreamStoredInStorageNodeFromContract(streamId: StreamID, nodeAddress: string): Promise<boolean> {
-        log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
-        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
+    async isStreamStoredInStorageNodeFromContract(streamId: string, nodeAddress: string): Promise<boolean> {
+        const id = toStreamID(streamId)
+        log('Checking if stream %s is stored in storage node %s', id, nodeAddress)
+        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(id, nodeAddress.toLowerCase())
     }
 
     // --------------------------------------------------------------------------------------------
