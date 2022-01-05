@@ -36,28 +36,6 @@ export class MetricsPublisher {
         }
     }
 
-    async ensureStreamsCreated(): Promise<void> {
-        for (const periodLength of Object.keys(STREAM_ID_SUFFIXES)) {
-            await this.ensureStreamCreated(Number(periodLength))
-        }
-    }
-
-    private async ensureStreamCreated(periodLength: number): Promise<string> {
-        const streamId = this.getStreamId(periodLength)
-        const stream = await this.client.getOrCreateStream({
-            id: streamId
-        })
-        await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
-        if (periodLength !== PERIOD_LENGTHS.FIVE_SECONDS) {
-            try {
-                await stream.addToStorageNode(this.storageNodeAddress)
-            } catch (err: any) {
-                logger.warn('Unable to add %s to storage node, reason: %s', streamId, err.message)
-            }
-        }
-        return stream.id
-    }
-
     /**
      * Fetch the sample from the previous Broker session.
      *
