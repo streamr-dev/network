@@ -163,28 +163,12 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
     })
 
     describe('getOrCreate', () => {
-        it('existing Stream by name', async () => {
-            const existingStream = await client.getOrCreateStream({
-                name: createdStream.name,
-            })
-            expect(existingStream.id).toBe(createdStream.id)
-            return expect(existingStream.name).toBe(createdStream.name)
-        })
-
         it('existing Stream by id', async () => {
             const existingStream = await client.getOrCreateStream({
                 id: createdStream.id,
             })
             expect(existingStream.id).toBe(createdStream.id)
             return expect(existingStream.name).toBe(createdStream.name)
-        })
-
-        it('new Stream by name', async () => {
-            const newName = uid('stream')
-            const props = { id: await createRelativeTestStreamId(module), name: '' }
-            props.name = newName
-            const newStream = await client.getOrCreateStream(props)
-            return expect(newStream.name).toEqual(newName)
         })
 
         it('new Stream by id', async () => {
