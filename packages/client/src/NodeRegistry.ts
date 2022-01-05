@@ -13,8 +13,9 @@ import { BrubeckContainer } from './Container'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
 import Ethereum from './Ethereum'
-import { EthereumAddress, NotFoundError } from '.'
+import { NotFoundError } from '.'
 import { until } from './utils'
+import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 const log = debug('StreamrClient:NodeRegistry')
 
@@ -95,8 +96,9 @@ export class NodeRegistry {
     // --------------------------------------------------------------------------------------------
 
     async isStreamStoredInStorageNodeFromContract(streamId: string, nodeAddress: string): Promise<boolean> {
-        log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
-        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
+        const id = toStreamID(streamId)
+        log('Checking if stream %s is stored in storage node %s', id, nodeAddress)
+        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(id, nodeAddress.toLowerCase())
     }
 
     // --------------------------------------------------------------------------------------------
@@ -139,20 +141,22 @@ export class NodeRegistry {
     }
 
     async addStreamToStorageNode(streamId: string, nodeAddress: string): Promise<void> {
-        log('Adding stream %s to node %s', streamId, nodeAddress)
+        const id = toStreamID(streamId)
+        log('Adding stream %s to node %s', id, nodeAddress)
         await this.connectToNodeRegistryContract()
 
-        const tx = await this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress)
+        const tx = await this.streamStorageRegistryContract!.addStorageNode(id, nodeAddress)
         await tx.wait()
-        await until(async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) }, 10000, 500,
-            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
+        await until(async () => { return this.isStreamStoredInStorageNode(id, nodeAddress) }, 10000, 500,
+            () => `Failed to add stream ${id} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
     async removeStreamFromStorageNode(streamId: string, nodeAddress: string): Promise<void> {
-        log('Removing stream %s from node %s', streamId, nodeAddress)
+        const id = toStreamID(streamId)
+        log('Removing stream %s from node %s', id, nodeAddress)
         await this.connectToNodeRegistryContract()
 
-        const tx = await this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress)
+        const tx = await this.streamStorageRegistryContract!.removeStorageNode(id, nodeAddress)
         await tx.wait()
     }
 
@@ -171,17 +175,19 @@ export class NodeRegistry {
     }
 
     async isStreamStoredInStorageNode(streamId: string, nodeAddress: string): Promise<boolean> {
-        log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
+        const id = toStreamID(streamId)
+        log('Checking if stream %s is stored in storage node %s', id, nodeAddress)
         const res = await this.sendNodeQuery(NodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
         if (res.node === null) {
             throw new NotFoundError('Node not found, id: ' + nodeAddress)
         }
-        return res.node.storedStreams.find((stream) => stream.id === streamId) !== undefined
+        return res.node.storedStreams.find((stream) => stream.id === id) !== undefined
     }
 
     async getStorageNodesOf(streamId: string): Promise<EthereumAddress[]> {
-        log('Getting storage nodes of stream %s', streamId)
-        const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
+        const id = toStreamID(streamId)
+        log('Getting storage nodes of stream %s', id)
+        const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(id)) as StoredStreamQueryResult
         return res.stream.storageNodes.map((node) => node.id)
     }
 
@@ -266,7 +272,7 @@ export class NodeRegistry {
         return JSON.stringify({ query })
     }
 
-    private static buildStoredStreamQuery(streamid: string): string {
+    private static buildStoredStreamQuery(streamid: StreamID): string {
         const query = `{
             stream (id: "${streamid}") {
                 id,

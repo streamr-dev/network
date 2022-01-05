@@ -11,12 +11,13 @@ import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 
-import type { EthereumAddress, Todo } from './types'
+import type { Todo } from './types'
 
 import type { AuthConfig, EthereumConfig } from './Ethereum'
 import type { EncryptionConfig } from './encryption/KeyExchangeUtils'
 
 import CONFIG_SCHEMA from './config.schema.json'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 export type CacheConfig = {
     maxSize: number,

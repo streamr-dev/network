@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { MessageRef, ResendRangeRequest, ControlMessage } from '../../../../src/index'
+import { MessageRef, ResendRangeRequest, ControlMessage, toStreamID } from '../../../../src/index'
 
 const VERSION = 2
 
@@ -8,7 +8,7 @@ const VERSION = 2
 const message = new ResendRangeRequest({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
     fromMsgRef: new MessageRef(132846894, 0),
     toMsgRef: new MessageRef(132847000, 0),

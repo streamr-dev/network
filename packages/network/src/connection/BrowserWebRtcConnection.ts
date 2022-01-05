@@ -142,7 +142,9 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     addRemoteCandidate(candidate: string, mid: string): void {
         try {
-            this.peerConnection?.addIceCandidate( { candidate: candidate, sdpMid: mid })
+            this.peerConnection?.addIceCandidate( { candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
+                this.logger.warn(err)    
+            })
         } catch (e) {
             this.logger.warn(e)
         }

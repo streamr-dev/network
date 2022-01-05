@@ -57,6 +57,7 @@ export class Tracker extends EventEmitter {
     private readonly extraMetadatas: Record<NodeId,Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
+    private stopped = false
 
     constructor(opts: TrackerOptions) {
         super()
@@ -114,6 +115,10 @@ export class Tracker extends EventEmitter {
     }
 
     processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
+        if (this.stopped) {
+            return
+        }
+
         this.metrics.record('processNodeStatus', 1)
         const status = statusMessage.status as Status
         const legacyMessageStreams = (status as any).streams
@@ -171,9 +176,13 @@ export class Tracker extends EventEmitter {
         this.formAndSendInstructions(source, spidKey)
     }
 
-    stop(): Promise<void> {
+    async stop(): Promise<void> {
         this.logger.debug('stopping')
-        return this.trackerServer.stop()
+
+        this.instructionSender.stop()
+        
+        await this.trackerServer.stop()
+        this.stopped = true
     }
 
     // Utility method for tests
@@ -197,6 +206,9 @@ export class Tracker extends EventEmitter {
     }
 
     private formAndSendInstructions(node: NodeId, spidKey: SPIDKey, forceGenerate = false): void {
+        if (this.stopped) {
+            return
+        }
         if (this.overlayPerStream[spidKey]) {
             const instructions = this.overlayPerStream[spidKey].formInstructions(node, forceGenerate)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {

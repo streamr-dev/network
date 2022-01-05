@@ -6,7 +6,7 @@ import { Agent as HttpsAgent } from 'https'
 import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
 // TODO change this import when streamr-client-protocol exports StreamMessage type or the enums types directly
 import { ContentType, EncryptionType, SignatureType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
-import { StreamMessageType, SIDLike, SPID } from 'streamr-client-protocol'
+import { StreamMessageType, SIDLike, SPID, toStreamID, EthereumAddress } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
@@ -14,32 +14,11 @@ import { Context } from './utils/Context'
 import { Stream, StreamPermission } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
-import { EthereumAddress } from './types'
 import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
 import { NodeRegistry } from './NodeRegistry'
-
-export const createStreamId = async (streamIdOrPath: string, ownerProvider?: () => Promise<EthereumAddress|undefined>) => {
-    if (streamIdOrPath === undefined) {
-        throw new Error('Missing stream id')
-    }
-
-    if (!streamIdOrPath.startsWith('/')) {
-        return streamIdOrPath
-    }
-
-    if (ownerProvider === undefined) {
-        throw new Error(`Owner provider missing for stream id: ${streamIdOrPath}`)
-    }
-    const owner = await ownerProvider()
-    if (owner === undefined) {
-        throw new Error(`Owner missing for stream id: ${streamIdOrPath}`)
-    }
-
-    return owner.toLowerCase() + streamIdOrPath
-}
 
 export interface StreamListQuery {
     name?: string
@@ -209,7 +188,7 @@ export class StreamEndpoints implements Context {
         this.debug('getStreamValidationInfo %o', {
             streamId,
         })
-        const json = await this.rest.get<StreamValidationInfo>(['streams', streamId, 'validation'])
+        const json = await this.rest.get<StreamValidationInfo>(['streams', toStreamID(streamId), 'validation'])
         return json
     }
 
@@ -226,7 +205,7 @@ export class StreamEndpoints implements Context {
         const chosenNode = nodeAdresses[Math.floor(Math.random() * nodeAdresses.length)]
         const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(chosenNode)
         const json = await this.rest.get<StreamMessageAsObject>([
-            'streams', streamId, 'data', 'partitions', streamPartition, 'last',
+            'streams', toStreamID(streamId), 'data', 'partitions', streamPartition, 'last',
         ], {
             query: { count },
             useSession: false,
@@ -260,7 +239,7 @@ export class StreamEndpoints implements Context {
 
         // Send data to the stream
         await this.rest.post(
-            ['streams', streamId, 'data'],
+            ['streams', toStreamID(streamId), 'data'],
             data,
             {
                 ...requestOptions,

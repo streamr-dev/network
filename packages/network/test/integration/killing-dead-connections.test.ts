@@ -33,12 +33,13 @@ describe('check and kill dead connections', () => {
         const connection = clientEndpoint.getPeers().get('serverEndpoint')
         expect(connection!.getReadyState()).toEqual(STATE_OPEN)
 
+        const event = waitForEvent(clientEndpoint, Event.PEER_DISCONNECTED)
+        
         // check connections
         jest.spyOn(connection!, 'ping').mockImplementation(() => {
             throw new Error('mock error message')
         })
 
-        const event = waitForEvent(clientEndpoint, Event.PEER_DISCONNECTED)
         // @ts-expect-error private method
         clientEndpoint.pingPongWs.pingConnections()
         const [peerInfo, reason] = await event

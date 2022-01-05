@@ -96,7 +96,8 @@ const stream = await client.createStream({
 console.log(`Stream ${stream.id} has been created!`)
 
 // Optional: to enable historical data resends, add the stream to a storage node
-await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
+const { StorageNode, StreamrClient } = require('streamr-client').StreamrClient
+await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
 
 // Do something with the stream, for example call stream.publish(message)
 ```

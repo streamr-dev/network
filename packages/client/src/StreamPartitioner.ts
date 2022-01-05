@@ -1,7 +1,7 @@
 /**
  * Derive partitions for StreamMessages.
  */
-import { Utils } from 'streamr-client-protocol'
+import { StreamID, Utils } from 'streamr-client-protocol'
 import { CacheFn } from './utils'
 import { Config, CacheConfig } from './Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
@@ -21,7 +21,7 @@ export default class StreamPartitioner {
         // to the same partition
     }
 
-    public async compute(streamId: string, partitionKey: PartitionKey) {
+    public async compute(streamId: StreamID, partitionKey: PartitionKey) {
         // no need to fetch stream partition info if partition key is 0
         // partition 0 should always exist
         if (partitionKey === 0) {
@@ -36,7 +36,7 @@ export default class StreamPartitioner {
         this.computeStreamPartition.clear()
     }
 
-    protected computeStreamPartition = CacheFn((_streamId: string, partitionCount: number, partitionKey: PartitionKey) => {
+    protected computeStreamPartition = CacheFn((_streamId: StreamID, partitionCount: number, partitionKey: PartitionKey) => {
         if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {
             throw new Error(`partitionCount is not a safe positive integer! ${partitionCount}`)
         }

@@ -7,7 +7,7 @@ import { startTracker } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
-import { MessageID, StreamMessage } from "streamr-client-protocol"
+import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
@@ -96,7 +96,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             ep3.stop()
         ])
     })
-
+    
     it('protocol versions are correctly negotiated',  () => {
         expect(nodeToNode1.getNegotiatedProtocolVersionsOnNode('node-endpoint2')).toEqual([2,31])
         expect(nodeToNode2.getNegotiatedProtocolVersionsOnNode('node-endpoint1')).toEqual([2,31])
@@ -111,7 +111,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         })
         const i = 1
         const msg1 = new StreamMessage({
-            messageId: new MessageID('stream-1', 0, i, 0, 'node-endpoint1', 'msgChainId'),
+            messageId: new MessageID(toStreamID('stream-1'), 0, i, 0, 'node-endpoint1', 'msgChainId'),
             prevMsgRef: null,
             content: {
                 messageNo: i
@@ -119,14 +119,14 @@ describe('Node-to-Node protocol version negotiation', () => {
         })
         nodeToNode1.sendData('node-endpoint2', msg1)
     })
-
+    
     it('negotiated version is removed once node is disconnected', async () => {
         await runAndWaitForEvents(()=> { ep1.close('node-endpoint2', 'test') }, [ep2, wrtcEvent.PEER_DISCONNECTED])
 
         expect(ep1.getNegotiatedControlLayerProtocolVersionOnNode('node-endpoint2')).toEqual(undefined)
         expect(ep2.getNegotiatedControlLayerProtocolVersionOnNode('node-endpoint1')).toEqual(undefined)
     })
-
+    
     it('if there are no shared versions the connection is closed', async () => {
         let errors = 0
         try {
@@ -138,5 +138,5 @@ describe('Node-to-Node protocol version negotiation', () => {
             errors += 1
         }
         expect(errors).toEqual(1)
-    })
+    })  
 })

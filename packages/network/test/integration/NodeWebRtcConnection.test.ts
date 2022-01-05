@@ -1,9 +1,10 @@
 import { once } from 'events'
 import { DescriptionType } from 'node-datachannel'
-import { waitForCondition, wait } from 'streamr-test-utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { NodeWebRtcConnection } from '../../src/connection/NodeWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/DeferredConnectionAttempt'
+import { runAndWaitForEvents, wait, waitForCondition } from 'streamr-test-utils'
+
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
  * is "abstracted away" by local functions.
@@ -87,13 +88,14 @@ describe('Connection', () => {
         connectionOne.close()
         connectionTwo.close()
     })
-
+  
     it('connection can be established', async () => {
-        connectionOne.connect()
-        connectionTwo.connect()
-
-        await Promise.all([once(connectionOne, 'open'), once(connectionTwo, 'open')])
-
+        
+        await runAndWaitForEvents([()=>{connectionOne.connect()}, ()=>{connectionTwo.connect()} ], [
+            [connectionOne, 'open'],
+            [connectionTwo, 'open']
+        ])
+        
         expect(connectionOne.isOpen()).toEqual(true)
         expect(connectionTwo.isOpen()).toEqual(true)
     })
@@ -106,16 +108,18 @@ describe('Connection', () => {
         const p2 = once(connectionTwo, 'message')
         connectionOne.connect()
         connectionTwo.connect()
+
         const [connectionOneReceivedMsg, connectionTwoReceivedMsg] = await Promise.all([p1, p2])
+        
         expect(connectionOneReceivedMsg[0]).toEqual('lorem ipsum dolor sit amet')
         expect(connectionTwoReceivedMsg[0]).toEqual('hello, world!')
     })
-
+    
     it('ping-pong functionality', async () => {
-        connectionOne.connect()
-        connectionTwo.connect()
-
-        await Promise.all([once(connectionOne, 'open'), once(connectionTwo, 'open')])
+        await runAndWaitForEvents([()=>{connectionOne.connect()}, ()=>{connectionTwo.connect()} ], [
+            [connectionOne, 'open'],
+            [connectionTwo, 'open']
+        ])
 
         expect(connectionOne.getRtt()).toEqual(null)
         expect(connectionTwo.getRtt()).toEqual(null)
@@ -131,7 +135,7 @@ describe('Connection', () => {
         expect(connectionOne.getRtt()).toBeGreaterThanOrEqual(0)
         expect(connectionTwo.getRtt()).toBeGreaterThanOrEqual(0)
     })
-
+    
     it('connection does not timeout if connection succeeds', async () => {
         // this test ensures failed connection timeout has been cleared
         const TIMEOUT = 3000
@@ -139,20 +143,20 @@ describe('Connection', () => {
         connectionOne.newConnectionTimeout = TIMEOUT
         // @ts-expect-error access private, only in test
         connectionTwo.newConnectionTimeout = TIMEOUT
-        connectionOne.connect()
-        connectionTwo.connect()
-        await Promise.all([
-            once(connectionOne, 'open'),
-            once(connectionTwo, 'open'),
+        await runAndWaitForEvents([()=>{connectionOne.connect()}, ()=>{connectionTwo.connect()} ], [
+            [connectionOne, 'open'],
+            [connectionTwo, 'open']
         ])
         await wait(TIMEOUT * 2) // give enough time to time out
     })
-
+   
     it('connection gets closed if other end does not respond to pings', async () => {
-        connectionOne.connect()
-        connectionTwo.connect()
-
-        await Promise.all([once(connectionOne, 'open'), once(connectionTwo, 'open')])
+        await runAndWaitForEvents([
+            ()=>{connectionOne.connect()}, 
+            ()=>{connectionTwo.connect()} ], [
+            [connectionOne, 'open'],
+            [connectionTwo, 'open']
+        ])
 
         connectionTwo.pong = () => {
         } // hacky: prevent connectionTwo from responding
@@ -174,7 +178,7 @@ describe('Connection', () => {
         expect(connectionOne.isOpen()).toEqual(false)
         expect(connectionTwo.isOpen()).toEqual(false)
     })
-
+    
     it('can not connect if closed then opened again in series', async () => {
         // open
         const t1 = Promise.allSettled([once(connectionOne, 'open'), once(connectionTwo, 'open')])
@@ -203,6 +207,7 @@ describe('Connection', () => {
         expect(connectionTwo.isOpen()).toEqual(false)
     })
 
+    /*
     it('can not connect if closed then opened again in parallel', async () => {
         const connectResolved = jest.fn()
         const onConnect = once(connectionOne, 'open').finally(connectResolved)
@@ -220,4 +225,5 @@ describe('Connection', () => {
         expect(connectResolved).not.toHaveBeenCalled()
         expect(connectionOne.isOpen()).toEqual(false)
     })
+    */
 })

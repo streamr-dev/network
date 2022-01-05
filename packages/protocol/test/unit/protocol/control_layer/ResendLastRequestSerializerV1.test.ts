@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { ResendLastRequest, ControlMessage } from '../../../../src/index'
+import { ResendLastRequest, ControlMessage, toStreamID } from '../../../../src/index'
 
 const VERSION = 1
 
@@ -8,7 +8,7 @@ const VERSION = 1
 const message = new ResendLastRequest({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
     numberLast: 100,
     sessionToken: 'sessionToken',

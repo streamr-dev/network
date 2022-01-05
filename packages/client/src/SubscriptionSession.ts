@@ -90,8 +90,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.debug('subscribe')
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        const { streamId, streamPartition } = this.spid
-        node.subscribe(streamId, streamPartition)
+        node.subscribe(this.spid)
         return node
     }
 
@@ -101,8 +100,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
-        const { streamId, streamPartition } = this.spid
-        node.unsubscribe(streamId, streamPartition)
+        node.unsubscribe(this.spid)
     }
 
     updateNodeSubscriptions = (() => {
@@ -144,13 +142,11 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     }
 
     async waitForNeighbours(numNeighbours = 1, timeout = 10000) {
-        const { streamId, streamPartition } = this.spid
-
         return until(async () => {
             if (!this.shouldBeSubscribed()) { return true } // abort
             const node = await this.node.getNode()
             if (!this.shouldBeSubscribed()) { return true } // abort
-            return node.getNeighborsForStream(streamId, streamPartition).length >= numNeighbours
+            return node.getNeighborsForStream(this.spid).length >= numNeighbours
         }, timeout)
     }
 

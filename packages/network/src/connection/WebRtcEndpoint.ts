@@ -16,7 +16,7 @@ import {
 import { Rtts } from '../identifiers'
 import { MessageQueue } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
-import { NegotiatedProtocolVersions } from "./NegotiatedProtocolVersions"
+import { NegotiatedProtocolVersions } from './NegotiatedProtocolVersions'
 import { v4 as uuidv4 } from 'uuid'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../helpers/AddressTools'
 
@@ -377,11 +377,16 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.rtcSignaller.sendRtcConnect(routerId, connection.getPeerId())
         }
 
-        const deferredAttempt = connection.getDeferredConnectionAttempt()
+        const deferredAttempt = connection.getDeferredConnectionAttempt() 
+        
+        if (connection.getLastState() == 'connected') {
+            return targetPeerId
+        }
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
-        } else {
-            throw new Error(`disconnected ${connection.getPeerId()}`)
+        } 
+        else { 
+            throw new WebRtcError(`disconnected ${connection.getPeerId()}`)
         }
     }
 

@@ -10,8 +10,8 @@ import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import type { ConnectionInfo } from '@ethersproject/web'
 
-import type { EthereumAddress } from './types'
 import { Config } from './Config'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
 type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U

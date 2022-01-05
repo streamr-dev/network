@@ -1,8 +1,9 @@
 import StreamMessage from '../protocol/message_layer/StreamMessage'
 import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './OrderedMsgChain'
+import { StreamID } from './StreamID'
 
-class OrderingUtil extends MsgChainEmitter {
-    streamId: string
+export default class OrderingUtil extends MsgChainEmitter {
+    streamId: StreamID
     streamPartition: number
     inOrderHandler: MessageHandler
     gapHandler: GapHandler
@@ -12,7 +13,7 @@ class OrderingUtil extends MsgChainEmitter {
     orderedChains: { [key: string]: OrderedMsgChain}
 
     constructor(
-        streamId: string,
+        streamId: StreamID,
         streamPartition: number,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
@@ -76,5 +77,3 @@ class OrderingUtil extends MsgChainEmitter {
         })
     }
 }
-
-export default OrderingUtil

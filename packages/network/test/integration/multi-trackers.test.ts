@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { SPID, toStreamID, TrackerLayer } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
@@ -82,7 +82,7 @@ describe('multi trackers', () => {
 
     test('node sends stream status to specific tracker', async () => {
         // first stream, first tracker
-        nodeOne.subscribe(FIRST_STREAM, 0)
+        nodeOne.subscribe(new SPID(FIRST_STREAM, 0))
 
         await wait(500)
 
@@ -91,7 +91,7 @@ describe('multi trackers', () => {
         expect(getSPIDKeys(trackerThree)).not.toContain(`${FIRST_STREAM}#0`)
 
         // second stream, second tracker
-        nodeOne.subscribe(SECOND_STREAM, 0)
+        nodeOne.subscribe(new SPID(SECOND_STREAM, 0))
 
         await wait(500)
 
@@ -100,7 +100,7 @@ describe('multi trackers', () => {
         expect(getSPIDKeys(trackerThree)).not.toContain(`${SECOND_STREAM}#0`)
 
         // third stream, third tracker
-        nodeOne.subscribe(THIRD_STREAM, 0)
+        nodeOne.subscribe(new SPID(THIRD_STREAM, 0))
 
         await wait(500)
 
@@ -110,57 +110,64 @@ describe('multi trackers', () => {
     })
 
     test('only one specific tracker sends instructions about stream', async () => {
-        // first stream, first tracker
-        nodeOne.subscribe(FIRST_STREAM_2, 0)
-        nodeTwo.subscribe(FIRST_STREAM_2, 0)
+        
+        const nodePromise = Promise.all([
+            waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
+        ])
 
         // @ts-expect-error private field
         let nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
         let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
-        await Promise.all([
-            waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
-            waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
-        ])
+        // first stream, first tracker
+        nodeOne.subscribe(new SPID(FIRST_STREAM_2, 0))
+        nodeTwo.subscribe(new SPID(FIRST_STREAM_2, 0))
+
+        await nodePromise
 
         expect(nodeOneEvents).toHaveLength(2)
         expect(nodeTwoEvents).toHaveLength(2)
         expect(nodeTwoEvents[1][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
         expect(nodeTwoEvents[1][2]).toEqual(trackerOne.getTrackerId())
 
-        // second stream, second tracker
-        nodeOne.subscribe(SECOND_STREAM_2, 0)
-        nodeTwo.subscribe(SECOND_STREAM_2, 0)
+        const nodePromise2 = Promise.all([
+            waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
+        ])
 
         // @ts-expect-error private field
         nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
         nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
-        await Promise.all([
-            waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
-            waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
-        ])
+        // second stream, second tracker
+        nodeOne.subscribe(new SPID(SECOND_STREAM_2, 0))
+        nodeTwo.subscribe(new SPID(SECOND_STREAM_2, 0))
+
+        await nodePromise2
 
         expect(nodeOneEvents).toHaveLength(2)
         expect(nodeTwoEvents).toHaveLength(2)
         expect(nodeTwoEvents[1][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
         expect(nodeTwoEvents[1][2]).toEqual(trackerTwo.getTrackerId())
 
-        // third stream, third tracker
-        nodeOne.subscribe(THIRD_STREAM_2, 0)
-        nodeTwo.subscribe(THIRD_STREAM_2, 0)
+        const nodePromise3 = Promise.all([
+            waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
+        ])
 
         // @ts-expect-error private field
         nodeOneEvents = eventsWithArgsToArray(nodeOne.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
         // @ts-expect-error private field
         nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
-        await Promise.all([
-            waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
-            waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED)
-        ])
+        // third stream, third tracker
+        nodeOne.subscribe(new SPID(THIRD_STREAM_2, 0))
+        nodeTwo.subscribe(new SPID(THIRD_STREAM_2, 0))
+
+        await nodePromise3
 
         expect(nodeOneEvents).toHaveLength(2)
         expect(nodeTwoEvents).toHaveLength(2)
@@ -171,7 +178,7 @@ describe('multi trackers', () => {
     test('node ignores instructions from unexpected tracker', async () => {
         const unexpectedInstruction = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: 'stream-2',
+            streamId: toStreamID('stream-2'),
             streamPartition: 0,
             nodeIds: [
                 'node-address-1',

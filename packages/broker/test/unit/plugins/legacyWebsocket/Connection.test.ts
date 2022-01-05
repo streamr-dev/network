@@ -6,6 +6,7 @@ import { Protocol } from "streamr-network"
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import Mock = jest.Mock
 import stream from 'stream'
+import { toStreamID } from "streamr-client-protocol"
 
 class FakeWebSocket extends EventEmitter {
     send: Mock
@@ -32,7 +33,7 @@ class FakeDuplexStream extends EventEmitter {
 // Just any protocol message really, content doesn't matter
 const protocolMessage = new Protocol.ControlLayer.SubscribeRequest({
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
     sessionToken: 'sessionToken'
 })

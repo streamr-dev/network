@@ -37,7 +37,7 @@ export interface Instruction {
 
 class StreamInstructionBuffer {
     private readonly instructions = new Map<NodeId, Instruction>()
-    private readonly debouncedOnReady: () => void
+    private readonly debouncedOnReady: _.DebouncedFunc<() => void>
 
     constructor(options: TopologyStabilizationOptions, onReady: () => void) {
         this.debouncedOnReady = _.debounce(onReady, options.debounceWait, {
@@ -53,6 +53,10 @@ class StreamInstructionBuffer {
 
     getInstructions(): IterableIterator<Instruction> {
         return this.instructions.values()
+    }
+
+    stop(): void {
+        this.debouncedOnReady.cancel()
     }
 }
 
@@ -84,12 +88,17 @@ export class InstructionSender {
         this.getOrCreateBuffer(instruction.spidKey).addInstruction(instruction)
     }
 
+    stop(): void {
+        this.streamBuffers.forEach((entry) => entry.stop())
+    }
+
     private getOrCreateBuffer(spidKey: SPIDKey): StreamInstructionBuffer {
         const existingBuffer = this.streamBuffers.get(spidKey)
         if (existingBuffer !== undefined) {
             return existingBuffer
         } else {
             const newBuffer = new StreamInstructionBuffer(this.options, () => {
+                this.streamBuffers.get(spidKey)?.stop()
                 this.streamBuffers.delete(spidKey)
                 this.sendInstructions(newBuffer)
             })

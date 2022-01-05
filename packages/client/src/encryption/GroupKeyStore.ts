@@ -4,13 +4,14 @@ import { GroupKey } from './Encryption'
 import { PersistentStore } from './PersistentStore'
 
 import ServerPersistentStore, { ServerPersistentStoreOptions } from './ServerPersistentStore'
+import { StreamID } from 'streamr-client-protocol'
 
 type GroupKeyId = string
 
 type GroupKeyStoreOptions = {
     context: Context,
     clientId: string,
-    streamId: string,
+    streamId: StreamID,
     groupKeys: [GroupKeyId, GroupKey][]
 }
 

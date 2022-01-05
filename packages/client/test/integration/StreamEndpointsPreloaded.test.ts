@@ -5,6 +5,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { getCreateClient, createTestStream } from '../utils'
 import { preloadStreams, preloadPublishers } from '../../src/StreamEndpointsCached'
+import { toStreamID } from 'streamr-client-protocol'
 
 jest.setTimeout(30000)
 
@@ -25,7 +26,7 @@ describe('preloaded stream data', () => {
             expect(getStreamMock).toHaveBeenCalledTimes(1)
 
             const preloadedStreamId = [...preloadStreams][0]
-            const result = await client.cached.getStream(preloadedStreamId)
+            const result = await client.cached.getStream(toStreamID(preloadedStreamId))
             expect(result.id).toEqual(preloadedStreamId)
             expect(getStreamMock).toHaveBeenCalledTimes(1)
         })
@@ -36,7 +37,7 @@ describe('preloaded stream data', () => {
             expect(getStreamMock).toHaveBeenCalledTimes(1)
 
             const preloadedStreamId = [...preloadStreams][0]
-            const result = await client.cached.getStream(preloadedStreamId)
+            const result = await client.cached.getStream(toStreamID(preloadedStreamId))
             expect(result.id).toEqual(preloadedStreamId)
             expect(getStreamMock).toHaveBeenCalledTimes(1)
         })

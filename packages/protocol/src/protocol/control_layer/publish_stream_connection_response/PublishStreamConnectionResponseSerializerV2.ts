@@ -1,16 +1,17 @@
-import ControlMessage, { PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 } from '../ControlMessage'
+import ControlMessage from '../ControlMessage'
 
-import PublishStreamConnectionResponse from './PublishStreamConnectionResponse'
-
+import PublishStreamConnectionResponse from "./PublishStreamConnectionResponse"
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
-const VERSION = 1
+const VERSION = 2
 
-export default class PublishStreamConnectionResponseSerializerV1 extends Serializer<PublishStreamConnectionResponse> {
+export default class PublishStreamConnectionResponseSerializerV2 extends Serializer<PublishStreamConnectionResponse> {
     toArray(publishStreamConnectionResponse: PublishStreamConnectionResponse): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.PublishStreamConnectionResponse,
+            publishStreamConnectionResponse.requestId,
             publishStreamConnectionResponse.streamId,
             publishStreamConnectionResponse.streamPartition,
             publishStreamConnectionResponse.senderId,
@@ -22,6 +23,7 @@ export default class PublishStreamConnectionResponseSerializerV1 extends Seriali
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            requestId,
             streamId,
             streamPartition,
             senderId,
@@ -30,13 +32,13 @@ export default class PublishStreamConnectionResponseSerializerV1 extends Seriali
 
         return new PublishStreamConnectionResponse({
             version,
-            streamId,
+            requestId,
+            streamId: toStreamID(streamId),
             streamPartition,
             senderId,
-            accepted,
-            requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1
+            accepted
         })
     }
 }
 
-ControlMessage.registerSerializer(VERSION, ControlMessage.TYPES.PublishStreamConnectionResponse, new PublishStreamConnectionResponseSerializerV1())
+ControlMessage.registerSerializer(VERSION, ControlMessage.TYPES.PublishStreamConnectionResponse, new PublishStreamConnectionResponseSerializerV2())

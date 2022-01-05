@@ -3,7 +3,6 @@ import { inject, scoped, Lifecycle } from 'tsyringe'
 import Ethereum from '../Ethereum'
 import { Rest } from '../Rest'
 import { StrictBrubeckClientConfig, Config } from '../Config'
-import { EthereumAddress } from '../types'
 import { DataUnion, DataUnionDeployOptions } from './DataUnion'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getAddress } from '@ethersproject/address'
@@ -11,6 +10,7 @@ import { Contract } from '@ethersproject/contracts'
 import Contracts from './Contracts'
 
 import { BytesLike } from '@ethersproject/bytes'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 const balanceOfAbi = [{
     name: 'balanceOf',

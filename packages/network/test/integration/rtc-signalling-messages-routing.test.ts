@@ -1,5 +1,5 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
-import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -33,17 +33,19 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
         originatorNodeToTracker = new NodeToTracker(originatorEndpoint)
         targetNodeToTracker = new NodeToTracker(targetEndpoint)
 
-        originatorNodeToTracker.connectToTracker(tracker.getUrl(), trackerPeerInfo)
-        targetNodeToTracker.connectToTracker(tracker.getUrl(), trackerPeerInfo)
-
-        await Promise.all([
-            // @ts-expect-error private method
-            waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_CONNECTED),
-            // @ts-expect-error private method
-            waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_CONNECTED),
-            waitForEvent(targetNodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER),
-            waitForEvent(originatorNodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER)
-        ])
+        await runAndWaitForEvents(
+            () => { originatorNodeToTracker.connectToTracker(tracker.getUrl(), trackerPeerInfo) },[
+                // @ts-expect-error private method
+                [tracker.trackerServer, TrackerServerEvent.NODE_CONNECTED],
+                [originatorNodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER]        
+            ])
+            
+        await runAndWaitForEvents(
+            () => { targetNodeToTracker.connectToTracker(tracker.getUrl(), trackerPeerInfo) }, [
+                // @ts-expect-error private method
+                [tracker.trackerServer, TrackerServerEvent.NODE_CONNECTED],   
+                [targetNodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER]
+            ])
     })
 
     afterAll(async () => {
@@ -53,10 +55,10 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     })
 
     it('Offer messages are delivered', async () => {
-        let requestId: string|undefined
+        let requestIdPromise: Promise<string>|undefined
         const [rtcOffers]: any[] = await runAndWaitForEvents(
-            async () => {
-                requestId = await originatorNodeToTracker.sendRtcOffer(
+            () => {
+                requestIdPromise = originatorNodeToTracker.sendRtcOffer(
                     tracker.getTrackerId(),
                     'target',
                     'connectionid',
@@ -66,6 +68,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             },
             [targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED]
         )
+        const requestId = await requestIdPromise
         expect(rtcOffers[0]).toEqual(new RelayMessage({
             requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
@@ -79,16 +82,20 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     })
 
     it('Answer messages are delivered', async () => {
-        const requestId = await originatorNodeToTracker.sendRtcAnswer(
-            tracker.getTrackerId(),
-            'target',
-            'connectionid',
-            PeerInfo.newNode('originator'),
-            'description'
-        )
-        const [rtcOffer] = await waitForEvent(targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED)
-        expect(rtcOffer).toEqual(new RelayMessage({
-            requestId,
+        let requestIdPromise: Promise<string>|undefined
+        const [rtcOffers]: any[] = await runAndWaitForEvents(
+            () => {
+                requestIdPromise = originatorNodeToTracker.sendRtcAnswer(
+                    tracker.getTrackerId(),
+                    'target',
+                    'connectionid',
+                    PeerInfo.newNode('originator'),
+                    'description'
+                )}, [targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED])
+
+        const requestId = await requestIdPromise
+        expect(rtcOffers[0]).toEqual(new RelayMessage({
+            requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
             subType: RtcSubTypes.RTC_ANSWER,
@@ -98,19 +105,23 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             }
         }))
     })
-
+    
     it('LocalCandidate messages are delivered', async () => {
-        const requestId = await originatorNodeToTracker.sendRtcIceCandidate(
-            tracker.getTrackerId(),
-            'target',
-            'connectionid',
-            PeerInfo.newNode('originator'),
-            'candidate',
-            'mid'
-        )
-        const [rtcOffer] = await waitForEvent(targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED)
-        expect(rtcOffer).toEqual(new RelayMessage({
-            requestId,
+        let requestIdPromise: Promise<string>|undefined
+        const [rtcOffers]: any[] = await runAndWaitForEvents(
+            () => {
+                requestIdPromise = originatorNodeToTracker.sendRtcIceCandidate(
+                    tracker.getTrackerId(),
+                    'target',
+                    'connectionid',
+                    PeerInfo.newNode('originator'),
+                    'candidate',
+                    'mid'
+                )},[targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED])
+
+        const requestId = await requestIdPromise
+        expect(rtcOffers[0]).toEqual(new RelayMessage({
+            requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
             subType: RtcSubTypes.ICE_CANDIDATE,
@@ -121,26 +132,36 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             }
         }))
     })
-
+    
     it('RtcConnect messages are delivered', async () => {
-        const requestId = await originatorNodeToTracker.sendRtcConnect(tracker.getTrackerId(), 'target', PeerInfo.newNode('originator'))
-        const [rtcOffer] = await waitForEvent(targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED)
-        expect(rtcOffer).toEqual(new RelayMessage({
-            requestId,
+        let requestIdPromise: Promise<string> | undefined
+        const [rtcOffers]: any[] = await runAndWaitForEvents(
+            () => {
+                requestIdPromise = originatorNodeToTracker.sendRtcConnect(tracker.getTrackerId(), 'target', PeerInfo.newNode('originator'))
+            }, [targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED])
+
+        const requestId = await requestIdPromise
+        expect(rtcOffers[0]).toEqual(new RelayMessage({
+            requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
             subType: RtcSubTypes.RTC_CONNECT,
             data: {}
-
         }))
     })
-
+    
     it('RelayMessage with invalid target results in RTC_ERROR response sent back to originator', async () => {
         // Enough to test only sendRtcConnect here as we know all relay message share same error handling logic
-        const requestId = await originatorNodeToTracker.sendRtcConnect(tracker.getTrackerId(), 'nonExistingNode', PeerInfo.newUnknown('originator'))
-        const [rtcError] = await waitForEvent(originatorNodeToTracker, NodeToTrackerEvent.RTC_ERROR_RECEIVED)
-        expect(rtcError).toEqual(new ErrorMessage({
-            requestId,
+        let requestIdPromise: Promise<string> | undefined
+        const [rtcErrors]: any[] = await runAndWaitForEvents(
+            () => {
+                requestIdPromise = originatorNodeToTracker.sendRtcConnect(tracker.getTrackerId(), 'nonExistingNode', 
+                    PeerInfo.newUnknown('originator'))
+            },[originatorNodeToTracker, NodeToTrackerEvent.RTC_ERROR_RECEIVED])
+        
+        const requestId = await requestIdPromise
+        expect(rtcErrors[0]).toEqual(new ErrorMessage({
+            requestId: requestId!,
             errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
             targetNode: 'nonExistingNode'
         }))

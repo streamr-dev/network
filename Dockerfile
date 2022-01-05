@@ -1,4 +1,4 @@
-FROM node:16-buster as build
+FROM node:16-bullseye as build
 WORKDIR /usr/src/monorepo
 RUN npm set unsafe-perm true && \
 	# explicitly use npm v8
@@ -8,7 +8,7 @@ RUN npm run bootstrap-pkg -- streamr-broker
 
 RUN npm run prune-pkg -- streamr-broker
 
-FROM node:16-buster-slim
+FROM node:16-bullseye-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*

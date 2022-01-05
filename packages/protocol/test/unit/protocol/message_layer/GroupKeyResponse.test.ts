@@ -1,12 +1,19 @@
 import assert from 'assert'
 
-import { StreamMessage, MessageID, MessageRef, GroupKeyMessage, GroupKeyResponse } from '../../../../src/index'
+import {
+    StreamMessage,
+    MessageID,
+    MessageRef,
+    GroupKeyMessage,
+    GroupKeyResponse,
+    toStreamID
+} from '../../../../src/index'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
 
 // Message definitions
 const message = new GroupKeyResponse({
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     encryptedGroupKeys: [
         new EncryptedGroupKey('groupKeyId1', 'encryptedGroupKey1'),
         new EncryptedGroupKey('groupKeyId2', 'encryptedGroupKey2'),
@@ -15,7 +22,7 @@ const message = new GroupKeyResponse({
 const serializedMessage = JSON.stringify(['requestId', 'streamId', [['groupKeyId1', 'encryptedGroupKey1'], ['groupKeyId2', 'encryptedGroupKey2']]])
 
 const streamMessage = new StreamMessage({
-    messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+    messageId: new MessageID(toStreamID('streamId'), 0, 1, 0, 'publisherId', 'msgChainId'),
     prevMsgRef: new MessageRef(0, 0),
     content: serializedMessage,
     messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,

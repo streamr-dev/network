@@ -7,9 +7,10 @@ import {
 } from '../../../utils/validations'
 import MessageRef from '../../message_layer/MessageRef'
 import ValidationError from '../../../errors/ValidationError'
+import { StreamID } from '../../../utils/StreamID'
 
 export interface Options extends ControlMessageOptions {
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     fromMsgRef: MessageRef
     toMsgRef: MessageRef
@@ -20,7 +21,7 @@ export interface Options extends ControlMessageOptions {
 
 export default class ResendRangeRequest extends ControlMessage {
 
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     fromMsgRef: MessageRef
     toMsgRef: MessageRef
