@@ -1,4 +1,4 @@
-import { StreamPermission, StreamrClient } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
 import { PERIOD_LENGTHS, Sample } from './Sample'
 
