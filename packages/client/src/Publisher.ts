@@ -15,7 +15,7 @@ import { Stoppable } from './utils/Stoppable'
 import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
 import Validator from './Validator'
 import BrubeckNode from './BrubeckNode'
-import { toStreamID } from './toStreamID'
+import { StreamIDBuilder } from './StreamIDBuilder'
 
 export type { PublishMetadata }
 
@@ -36,6 +36,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         private pipeline: PublishPipeline,
         private node: BrubeckNode,
         private validator: Validator,
+        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
     ) {
@@ -51,28 +52,28 @@ export default class BrubeckPublisher implements Context, Stoppable {
     }
 
     async publish<T>(
-        streamObjectOrId: SIDLike,
+        streamObjectOrStreamIdOrPath: SIDLike,
         content: T,
         timestamp: string | number | Date = Date.now(),
         partitionKey?: string | number
     ): Promise<StreamMessage<T>> {
-        return this.publishMessage<T>(streamObjectOrId, {
+        return this.publishMessage<T>(streamObjectOrStreamIdOrPath, {
             content,
             timestamp,
             partitionKey,
         })
     }
 
-    async publishMessage<T>(streamObjectOrId: SIDLike, {
+    async publishMessage<T>(streamObjectOrStreamIdOrPath: SIDLike, {
         content,
         timestamp = Date.now(),
         partitionKey
     }: PublishMetadata<T>): Promise<StreamMessage<T>> {
         const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-        const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
+        const { streamId, streamPartition } = SPID.parse(streamObjectOrStreamIdOrPath)
 
         return this.pipeline.publish({
-            streamId: toStreamID(streamId, this.ethereum),
+            streamId,
             content,
             timestamp: timestampAsNumber,
             partitionKey: partitionKey != null ? partitionKey : streamPartition,
