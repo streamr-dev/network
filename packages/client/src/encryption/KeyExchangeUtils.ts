@@ -1,5 +1,9 @@
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse, StreamID, toStreamID
+    StreamMessage,
+    GroupKeyRequest,
+    GroupKeyResponse,
+    GroupKeyErrorResponse,
+    formKeyExchangeStreamId
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
@@ -15,24 +19,11 @@ import { Stoppable } from '../utils/Stoppable'
 
 import { GroupKey, GroupKeyish } from './Encryption'
 
-const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
-
-export function isKeyExchangeStream(id = '') {
-    return id.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
-}
-
 export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
 
 export type EncryptionConfig = {
     groupKeys: Record<string, GroupKeysSerialized>
-}
-
-export function getKeyExchangeStreamId(address: string): StreamID {
-    if (isKeyExchangeStream(address)) {
-        return toStreamID(address) // prevent ever double-handling
-    }
-    return toStreamID(`${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`)
 }
 
 export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKeyId, GroupKey> {
@@ -89,7 +80,7 @@ export class KeyExchangeStream implements Context, Stoppable {
     private async createSubscription() {
         // subscribing to own keyexchange stream
         const publisherId = await this.ethereum.getAddress()
-        const streamId = getKeyExchangeStreamId(publisherId)
+        const streamId = formKeyExchangeStreamId(publisherId)
         const sub = await this.subscriber.subscribe(streamId)
         const onDestroy = () => {
             return sub.unsubscribe()
@@ -109,7 +100,7 @@ export class KeyExchangeStream implements Context, Stoppable {
     async request(publisherId: string, request: GroupKeyRequest) {
         if (this.isStopped) { return undefined }
 
-        const streamId = getKeyExchangeStreamId(publisherId)
+        const streamId = formKeyExchangeStreamId(publisherId)
 
         let responseTask: Deferred<StreamMessage<unknown>> | undefined
         const onDestroy = () => {
@@ -168,6 +159,6 @@ export class KeyExchangeStream implements Context, Stoppable {
             return msg
         }
 
-        return this.publisher.publish(getKeyExchangeStreamId(subscriberId), response)
+        return this.publisher.publish(formKeyExchangeStreamId(subscriberId), response)
     }
 }

@@ -4,8 +4,8 @@ export type StreamID = string & { readonly __brand: 'streamId' } // Nominal typi
 
 export const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
 
-export function formKeyExchangeStreamId(address: string): StreamID {
-    return (KEY_EXCHANGE_STREAM_PREFIX + address.toLowerCase()) as StreamID
+export function formKeyExchangeStreamId(recipient: EthereumAddress): StreamID {
+    return (KEY_EXCHANGE_STREAM_PREFIX + recipient.toLowerCase()) as StreamID
 }
 
 /**
@@ -47,6 +47,16 @@ export function isPathOnlyFormat(streamIdOrPath: string): boolean {
 
 export function isKeyExchangeStream(streamId: StreamID | string): boolean {
     return streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
+}
+
+export function getAddressFromStreamID(streamId: StreamID): string | undefined {
+    const addressAndPath = getAddressAndPathFromStreamID(streamId)
+    return addressAndPath?.[0]
+}
+
+export function getPathFromStreamID(streamId: StreamID): string | undefined {
+    const addressAndPath = getAddressAndPathFromStreamID(streamId)
+    return addressAndPath?.[1]
 }
 
 export function getAddressAndPathFromStreamID(streamId: StreamID): [string, string] | undefined {

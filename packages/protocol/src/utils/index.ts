@@ -9,6 +9,8 @@ import { keyToArrayIndex } from "./HashUtil"
 import {
     StreamID,
     toStreamID,
+    getAddressFromStreamID,
+    getPathFromStreamID,
     getAddressAndPathFromStreamID,
     KEY_EXCHANGE_STREAM_PREFIX,
     formKeyExchangeStreamId,
@@ -34,6 +36,8 @@ export {
     keyToArrayIndex,
     StreamID,
     toStreamID,
+    getAddressFromStreamID,
+    getPathFromStreamID,
     getAddressAndPathFromStreamID,
     KEY_EXCHANGE_STREAM_PREFIX,
     formKeyExchangeStreamId,
