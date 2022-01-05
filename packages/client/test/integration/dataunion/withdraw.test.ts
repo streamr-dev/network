@@ -13,7 +13,7 @@ import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 import authFetch from '../../../src/authFetch'
 import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
-import { EthereumAddress } from '../../../src'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
