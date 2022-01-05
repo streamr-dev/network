@@ -1,17 +1,18 @@
 import { Protocol } from 'streamr-network'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 
 type State = 'init'|'subscribing'|'subscribed'
 
 export class Stream<C> {
 
-    readonly id: string
+    readonly id: StreamID
     readonly name: string
     readonly partition: number
     state: State
     readonly connections: C[]
 
     constructor(id: string, partition: number, name: string) {
-        this.id = id
+        this.id = toStreamID(id)
         this.name = name
         this.partition = partition
         this.state = 'init'

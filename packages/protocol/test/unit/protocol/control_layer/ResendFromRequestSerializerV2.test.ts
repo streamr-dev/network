@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
-import { ResendFromRequest, ControlMessage } from '../../../../src/index'
+import { ResendFromRequest, ControlMessage, toStreamID } from '../../../../src/index'
 
 const VERSION = 2
 
@@ -9,7 +9,7 @@ const VERSION = 2
 const message = new ResendFromRequest({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
     fromMsgRef: new MessageRef(132846894, 0),
     publisherId: 'publisherId',

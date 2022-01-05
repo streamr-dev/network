@@ -3,6 +3,7 @@ import ControlMessage from '../ControlMessage'
 import SubscribeRequest from './SubscribeRequest'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
@@ -29,7 +30,11 @@ export default class SubscribeRequestSerializerV2 extends Serializer<SubscribeRe
         ] = arr
 
         return new SubscribeRequest({
-            version, requestId, streamId, streamPartition, sessionToken
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition,
+            sessionToken
         })
     }
 }

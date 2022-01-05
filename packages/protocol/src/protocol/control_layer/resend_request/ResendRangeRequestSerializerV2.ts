@@ -4,6 +4,7 @@ import MessageRef from '../../message_layer/MessageRef'
 import ResendRangeRequest from './ResendRangeRequest'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
@@ -42,7 +43,7 @@ export default class ResendRangeRequestSerializerV2 extends Serializer<ResendRan
         return new ResendRangeRequest({
             version,
             requestId,
-            streamId,
+            streamId: toStreamID(streamId),
             streamPartition,
             fromMsgRef: new MessageRef(fromTimestamp, fromSequenceNumber),
             toMsgRef: new MessageRef(toTimestamp, toSequenceNumber),

@@ -3,6 +3,7 @@ import assert from 'assert'
 import SubscribeRequest from '../../../../src/protocol/control_layer/subscribe_request/SubscribeRequest'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
+import { toStreamID } from '../../../../src'
 
 describe('SubscribeRequest', () => {
     describe('constructor', () => {
@@ -17,7 +18,7 @@ describe('SubscribeRequest', () => {
         it('throws on null streamPartition', () => {
             assert.throws(() => new SubscribeRequest({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: null as any,
                 sessionToken: 'sessionToken',
             }), ValidationError)
@@ -25,7 +26,7 @@ describe('SubscribeRequest', () => {
         it('throws on null requestId (since V2)', () => {
             assert.throws(() => new SubscribeRequest({
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 sessionToken: 'sessionToken',
             }), ValidationError)
@@ -34,7 +35,7 @@ describe('SubscribeRequest', () => {
             assert.doesNotThrow(() => new SubscribeRequest({
                 version: 1,
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 sessionToken: 'sessionToken',
             }))
@@ -42,7 +43,7 @@ describe('SubscribeRequest', () => {
         it('should create the latest version', () => {
             const msg = new SubscribeRequest({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 sessionToken: 'sessionToken',
             })

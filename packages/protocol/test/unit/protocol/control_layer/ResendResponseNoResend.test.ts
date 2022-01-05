@@ -3,20 +3,21 @@ import assert from 'assert'
 import ResendResponseNoResend from '../../../../src/protocol/control_layer/resend_response/ResendResponseNoResend'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
+import { toStreamID } from '../../../../src'
 
 describe('ResendResponseNoResend', () => {
     describe('constructor', () => {
         it('throws on null requestId', () => {
             assert.throws(() => new ResendResponseNoResend({
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
             }), ValidationError)
         })
         it('should create the latest version', () => {
             const msg = new ResendResponseNoResend({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
             })
             assert(msg instanceof ResendResponseNoResend)

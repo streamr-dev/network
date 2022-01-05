@@ -3,6 +3,7 @@ import ControlMessage from '../ControlMessage'
 import ResendLastRequest from './ResendLastRequest'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 1
 
@@ -31,7 +32,12 @@ export default class ResendLastRequestSerializerV1 extends Serializer<ResendLast
         ] = arr
 
         return new ResendLastRequest({
-            version, requestId, streamId, streamPartition, numberLast, sessionToken
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition,
+            numberLast,
+            sessionToken
         })
     }
 }

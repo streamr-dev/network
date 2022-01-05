@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { StreamMessage, MessageID, MessageRef } from 'streamr-client-protocol'
+import { StreamMessage, MessageID, MessageRef, StreamID, toStreamID } from 'streamr-client-protocol'
 
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
@@ -22,7 +22,7 @@ describe('Signer', () => {
 
     describe('signing', () => {
         let signer: Todo
-        const streamId = 'streamId'
+        const streamId: StreamID = toStreamID('streamId')
         const data = {
             field: 'some-data',
         }

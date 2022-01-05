@@ -3,6 +3,7 @@ import ControlMessage, { PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 } from '../ControlMe
 import SubscribeRequest from './SubscribeRequest'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 1
 
@@ -27,7 +28,11 @@ export default class SubscribeRequestSerializerV1 extends Serializer<SubscribeRe
         ] = arr
 
         return new SubscribeRequest({
-            version, streamId, streamPartition, sessionToken, requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1
+            version,
+            streamId: toStreamID(streamId),
+            streamPartition,
+            sessionToken,
+            requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1
         })
     }
 }

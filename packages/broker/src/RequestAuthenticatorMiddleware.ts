@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { Logger } from 'streamr-network'
 import { StreamFetcher } from './StreamFetcher'
-import { EthereumAddress, StreamPermission, Todo } from 'streamr-client'
+import { StreamPermission, Todo } from 'streamr-client'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 const logger = new Logger(module)
 

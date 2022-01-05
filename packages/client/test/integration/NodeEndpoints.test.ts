@@ -1,14 +1,13 @@
 import debug from 'debug'
 import { Wallet } from 'ethers'
-// import { wait } from 'streamr-test-utils'
-import { EthereumAddress, NotFoundError, Stream } from '../../src'
+import { NotFoundError, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
 import { EthereumStorageEvent } from '../../src/NodeRegistry'
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
-// import { id } from '@ethersproject/hash'
 
 import { storageNodeTestConfig } from './devEnvironment'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 jest.setTimeout(30000)
 const log = debug('StreamrClient::NodeEndpointsIntegrationTest')

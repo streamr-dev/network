@@ -1,6 +1,6 @@
-import memoize from 'memoizee'
-import StreamrClient, { StreamPermission, EthereumAddress, Stream } from 'streamr-client'
+import StreamrClient, { StreamPermission, Stream } from 'streamr-client'
 import memoizee from "memoizee"
+import { EthereumAddress } from 'streamr-client-protocol'
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes
@@ -21,19 +21,19 @@ type AuthenticateMethod = (
 export class StreamFetcher {
     fetch: memoizee.Memoized<FetchMethod> & FetchMethod
     checkPermission: memoizee.Memoized<CheckPermissionMethod> & CheckPermissionMethod
-    authenticate: memoize.Memoized<AuthenticateMethod> & AuthenticateMethod
+    authenticate: memoizee.Memoized<AuthenticateMethod> & AuthenticateMethod
     client: StreamrClient
 
     constructor(client: StreamrClient) {
-        this.fetch = memoize<FetchMethod>(this.uncachedFetch, {
+        this.fetch = memoizee<FetchMethod>(this.uncachedFetch, {
             maxAge: MAX_AGE,
             promise: true,
         })
-        this.checkPermission = memoize<CheckPermissionMethod>(this.uncachedCheckPermission, {
+        this.checkPermission = memoizee<CheckPermissionMethod>(this.uncachedCheckPermission, {
             maxAge: MAX_AGE,
             promise: true,
         })
-        this.authenticate = memoize<StreamFetcher['uncachedAuthenticate']>(this.uncachedAuthenticate, {
+        this.authenticate = memoizee<StreamFetcher['uncachedAuthenticate']>(this.uncachedAuthenticate, {
             maxAge: MAX_AGE_MINUTE,
             promise: true,
         })

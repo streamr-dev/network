@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { SubscribeResponse, ControlMessage } from '../../../../src/index'
+import { SubscribeResponse, ControlMessage, toStreamID } from '../../../../src/index'
 
 const VERSION = 2
 
@@ -8,7 +8,7 @@ const VERSION = 2
 const message = new SubscribeResponse({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
 })
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.SubscribeResponse, 'requestId', 'streamId', 0])

@@ -3,13 +3,14 @@ import assert from 'assert'
 import ResendLastRequest from '../../../../src/protocol/control_layer/resend_request/ResendLastRequest'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
+import { toStreamID } from '../../../../src'
 
 describe('ResendLastRequest', () => {
     describe('constructor', () => {
         it('throws on null requestId', () => {
             assert.throws(() => new ResendLastRequest({
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 numberLast: 100,
                 sessionToken: 'sessionToken',
@@ -18,7 +19,7 @@ describe('ResendLastRequest', () => {
         it('should create the latest version', () => {
             const msg = new ResendLastRequest({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 numberLast: 100,
                 sessionToken: 'sessionToken',

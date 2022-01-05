@@ -1,6 +1,6 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
-import { MessageLayer } from 'streamr-client-protocol'
+import { MessageLayer, SPID, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -43,9 +43,10 @@ describe('optimization: do not propagate to sender', () => {
         await n3.start()
 
         // Become subscribers (one-by-one, for well connected graph)
-        n1.subscribe('stream-id', 0)
-        n2.subscribe('stream-id', 0)
-        n3.subscribe('stream-id', 0)
+        const spid = new SPID('stream-id', 0)
+        n1.subscribe(spid)
+        n2.subscribe(spid)
+        n3.subscribe(spid)
 
         // Wait for fully-connected network
         await waitForCondition(() => {
@@ -68,7 +69,7 @@ describe('optimization: do not propagate to sender', () => {
     // propagating received messages back to their source
     test('total duplicates == 2 in a fully-connected network of 3 nodes', async () => {
         n1.publish(new StreamMessage({
-            messageId: new MessageID('stream-id', 0, 100, 0, 'publisher', 'session'),
+            messageId: new MessageID(toStreamID('stream-id'), 0, 100, 0, 'publisher', 'session'),
             prevMsgRef: new MessageRef(99, 0),
             content: {
                 hello: 'world'
