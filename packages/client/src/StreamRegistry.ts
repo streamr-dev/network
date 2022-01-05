@@ -14,8 +14,17 @@ import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamPermission, StreamPermissions, StreamProperties } from './Stream'
 import { NotFoundError, ValidationError } from './authFetch'
 import { StreamListQuery } from './StreamEndpoints'
-import { SIDLike, SPID, StreamID, toStreamID, isKeyExchangeStream, EthereumAddress } from 'streamr-client-protocol'
+import {
+    SIDLike,
+    SPID,
+    StreamID,
+    isKeyExchangeStream,
+    EthereumAddress,
+    getPathFromStreamID,
+} from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
+import { StreamIDBuilder } from './StreamIDBuilder'
+import { getAddressAndPathFromStreamID, getAddressFromStreamID } from 'streamr-client-protocol/dist/src/utils/StreamID'
 
 export type PermissionQueryResult = {
     id: string
@@ -64,6 +73,7 @@ export class StreamRegistry implements Context {
     constructor(
         context: Context,
         @inject(Ethereum) private ethereum: Ethereum,
+        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Config.Root) private config: StrictStreamrClientConfig
     ) {
@@ -84,8 +94,8 @@ export class StreamRegistry implements Context {
     // Read from the StreamRegistry contract
     // --------------------------------------------------------------------------------------------
 
-    async getStreamFromContract(id: string): Promise<Stream> {
-        const streamId = toStreamID(id)
+    async getStreamFromContract(streamIdOrPath: string): Promise<Stream> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('getStream %s', streamId)
         try {
             const propertiesString = await this.streamRegistryContractReadonly.getStreamMetadata(streamId) || '{}'
@@ -96,26 +106,29 @@ export class StreamRegistry implements Context {
         throw new NotFoundError('Stream: id=' + streamId)
     }
 
-    async hasPermission(streamId: string, userAddess: EthereumAddress, permission: StreamPermission) {
-        return this.streamRegistryContractReadonly.hasPermission(toStreamID(streamId), userAddess,
+    async hasPermission(streamIdOrPath: string, userAddress: EthereumAddress, permission: StreamPermission) {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
             StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
-    async hasPublicPermission(streamId: string, permission: StreamPermission) {
-        return this.streamRegistryContractReadonly.hasPublicPermission(toStreamID(streamId),
+    async hasPublicPermission(streamIdOrPath: string, permission: StreamPermission) {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistryContractReadonly.hasPublicPermission(streamId,
             StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
-    async hasDirectPermission(streamId: string, userAddess: EthereumAddress, permission: StreamPermission) {
-        return this.streamRegistryContractReadonly.hasDirectPermission(toStreamID(streamId), userAddess,
+    async hasDirectPermission(streamIdOrPath: string, userAddess: EthereumAddress, permission: StreamPermission) {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistryContractReadonly.hasDirectPermission(streamId, userAddess,
             StreamRegistry.streamPermissionToSolidityType(permission))
     }
 
-    async getPermissionsForUser(streamId: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
-        const id = toStreamID(streamId)
+    async getPermissionsForUser(streamIdOrPath: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         await this.connectToStreamRegistryContract()
-        this.debug('Getting permissions for stream %s for user %s', id, userAddress)
-        const permissions = await this.streamRegistryContractReadonly!.getPermissionsForUser(id, userAddress || AddressZero)
+        this.debug('Getting permissions for stream %s for user %s', streamId, userAddress)
+        const permissions = await this.streamRegistryContractReadonly!.getPermissionsForUser(streamId, userAddress || AddressZero)
         return {
             canEdit: permissions.canEdit,
             canDelete: permissions.canDelete,
@@ -144,7 +157,7 @@ export class StreamRegistry implements Context {
             completeProps = props as StreamProperties
         } else {
             const sid = SPID.parse(props as SIDLike)
-            completeProps = { id: toStreamID(sid.streamId), ...sid }
+            completeProps = { id: sid.streamId, ...sid }
         }
         completeProps.partitions ??= 1
         await this.connectToStreamRegistryContract()
@@ -155,34 +168,34 @@ export class StreamRegistry implements Context {
         this.debug('updateStream %o', props)
         await this.connectToStreamRegistryContract()
         return this._createOrUpdateStream(async (path: string, metadata: string) => {
+            const streamId = this.streamIdBuilder.toStreamID(path)
             const userAddress: string = (await this.ethereum.getAddress()).toLowerCase()
             const id = toStreamID(userAddress + path)
             return this.streamRegistryContract!.updateStreamMetadata(id, metadata)
         }, props)
     }
 
-    async _createOrUpdateStream(contractFunction: Function, props: StreamProperties): Promise<Stream> {
-        this.debug('updateStream %o', props)
-
-        const properties = props
-        const userAddress: string = (await this.ethereum.getAddress()).toLowerCase()
-        this.debug('creating/registering stream onchain')
-        // const a = this.ethereum.getAddress()
-        let path = '/'
-        if (properties && properties.id && properties.id.includes('/')) {
-            path = properties.id.slice(properties.id.indexOf('/'), properties.id.length)
+    async _createOrUpdateStream(contractFunction: Function, properties: StreamProperties): Promise<Stream> {
+        this.debug('_createOrUpdateStream %o', properties)
+        const streamId = await this.streamIdBuilder.toStreamID(properties.id)
+        const addressAndPath = getAddressAndPathFromStreamID(streamId)
+        if (addressAndPath === undefined) {
+            throw new Error(`full or path-only stream ids not supported: "${properties.id}"`)
         }
 
-        if (properties && properties.id && !properties.id.startsWith('/') && !properties.id.startsWith(userAddress)) {
-            throw new ValidationError('Validation')
-            // TODO add check for ENS??
+        const [address, path] = addressAndPath
+        const userAddress = await this.ethereum.getAddress()
+        if (address.toLowerCase() !== userAddress.toLowerCase()) { // TODO: add check for ENS??
+            throw new Error(`authenticated user "${userAddress}" cannot create/update stream "${streamId}"`)
         }
-        const id = toStreamID(userAddress + path)
-        properties.id = id
-        const propsJsonStr : string = JSON.stringify(properties)
-        const tx = await contractFunction(path, propsJsonStr)
+
+        const normalisedProperties = {
+            ...properties,
+            id: streamId
+        }
+        const tx = await contractFunction(path, JSON.stringify(normalisedProperties))
         await tx.wait()
-        return new Stream(properties, this.container)
+        return new Stream(normalisedProperties, this.container)
     }
 
     async grantPermission(streamId: string, permission: StreamPermission, recievingUser: string) {

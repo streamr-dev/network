@@ -63,6 +63,10 @@ export interface StreamProperties {
     inactivityThresholdHours?: number
 }
 
+export interface StreamrStreamConstructorOptions extends StreamProperties {
+    id: StreamID
+}
+
 const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
 export type Field = {
@@ -113,12 +117,13 @@ class StreamrStream implements StreamMetadata {
     protected _nodeRegistry: NodeRegistry
     protected _ethereuem: Ethereum
 
+    /** @internal **/
     constructor(
-        props: StreamProperties,
+        props: StreamrStreamConstructorOptions,
         @inject(BrubeckContainer) private _container: DependencyContainer
     ) {
         Object.assign(this, props)
-        this.id = toStreamID(props.id)
+        this.id = props.id
         this.streamId = this.id
         this.partitions = props.partitions ? props.partitions : 1
         this._rest = _container.resolve<Rest>(Rest)

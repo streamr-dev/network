@@ -40,12 +40,22 @@ export function toStreamID(streamIdOrPath: string, address?: EthereumAddress): S
     }
 }
 
+// TODO: Should we move all of these under a namespace / module for clarity?
 export function isPathOnlyFormat(streamIdOrPath: string): boolean {
     return streamIdOrPath.startsWith('/')
 }
 
 export function isKeyExchangeStream(streamId: StreamID | string): boolean {
     return streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
+}
+
+export function getAddressAndPathFromStreamID(streamId: StreamID): [string, string] | undefined {
+    const firstSlashIdx = streamId.indexOf('/')
+    if (firstSlashIdx !== -1 && !isKeyExchangeStream(streamId)) {
+        return [streamId.substring(0, firstSlashIdx), streamId.substring(firstSlashIdx)]
+    } else {
+        return undefined
+    }
 }
 
 // TODO: if recipient exists, will it always be an EthereumAddress? Can it be an ENS domain?
