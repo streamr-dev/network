@@ -2,6 +2,12 @@ function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
+
+const sideChainConfig = {
+    url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
+    timeout: toNumber(process.env.TEST_TIMEOUT),
+}
+
 /**
  * Streamr client constructor options that work in the test environment
  */
@@ -44,14 +50,13 @@ export default {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     },
-    sidechain: {
-        url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
-        timeout: toNumber(process.env.TEST_TIMEOUT),
-    },
-    mainnet: {
+    mainChainRPC: {
         url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
         timeout: toNumber(process.env.TEST_TIMEOUT),
     },
+    streamRegistryChainRPC: sideChainConfig,
+    storageNodeRegistryChainRPC: sideChainConfig,
+    dataUnionChainRPC: sideChainConfig,
     autoConnect: false,
     autoDisconnect: false,
     maxRetries: 2,

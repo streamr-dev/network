@@ -84,7 +84,7 @@ export class NodeRegistry {
     ) {
         log('creating NodeRegistryOnchain')
         this.clientConfig = clientConfig
-        this.sideChainProvider = this.ethereum.getSidechainProvider()
+        this.sideChainProvider = this.ethereum.getStorageNodeRegistryChainProvider()
         this.nodeRegistryContractReadonly = new Contract(this.clientConfig.nodeRegistrySidechainAddress,
             NodeRegistryArtifact, this.sideChainProvider) as NodeRegistryContract
         this.streamStorageRegistryContractReadonly = new Contract(this.clientConfig.streamStorageRegistrySidechainAddress,
@@ -107,7 +107,7 @@ export class NodeRegistry {
 
     private async connectToNodeRegistryContract() {
         if (!this.sideChainSigner || !this.nodeRegistryContract) {
-            this.sideChainSigner = await this.ethereum.getSidechainSigner()
+            this.sideChainSigner = await this.ethereum.getStorageNodeRegistryChainSigner()
             this.nodeRegistryContract = new Contract(this.clientConfig.nodeRegistrySidechainAddress,
                 NodeRegistryArtifact, this.sideChainSigner) as NodeRegistryContract
             this.streamStorageRegistryContract = new Contract(this.clientConfig.streamStorageRegistrySidechainAddress,

@@ -135,14 +135,22 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Ethereum and Data Union related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-    mainnet: undefined, // Default to ethers.js default provider settings
-    sidechain: {
+    mainChainRPC: undefined, // Default to ethers.js default provider settings
+    dataUnionChainRPC: {
         url: 'https://rpc.xdaichain.com/',
         chainId: 100
     },
-    binanceRPC: {
+    dataUnionBinanceWithdrawalChainRPC: {
         url: 'https://bsc-dataseed.binance.org/',
         chainId: 56
+    },
+    streamRegistryChainRPC: {
+        url: 'https://rpc.xdaichain.com/',
+        chainId: 100
+    },
+    storageNodeRegistryChainRPC: {
+        url: 'https://rpc.xdaichain.com/',
+        chainId: 100
     },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
     tokenSidechainAddress: '0x256eb8a51f382650B2A1e946b8811953640ee47D',

@@ -26,7 +26,6 @@ describe('DataUnion member', () => {
         const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
         await authFetch(
             createProductUrl,
-            adminClient.session,
             {
                 method: 'POST',
                 body: JSON.stringify({

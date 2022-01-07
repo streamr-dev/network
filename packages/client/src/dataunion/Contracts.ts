@@ -85,7 +85,7 @@ export default class Contracts {
     }
 
     async getSidechainContract(contractAddress: EthereumAddress) {
-        const signer = await this.ethereum.getSidechainSigner()
+        const signer = await this.ethereum.getDataUnionChainSigner()
         const duMainnet = this.getMainnetContractReadOnly(contractAddress)
         const duSidechainAddress = this.getDataUnionSidechainAddress(duMainnet.address)
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, signer)
@@ -93,7 +93,7 @@ export default class Contracts {
     }
 
     async getSidechainContractReadOnly(contractAddress: EthereumAddress) {
-        const provider = this.ethereum.getSidechainProvider()
+        const provider = this.ethereum.getDataUnionChainProvider()
         const duMainnet = this.getMainnetContractReadOnly(contractAddress)
         const duSidechainAddress = this.getDataUnionSidechainAddress(duMainnet.address)
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, provider)
@@ -104,7 +104,7 @@ export default class Contracts {
     async getSidechainAmb() {
         if (!this.cachedSidechainAmb) {
             const getAmbPromise = async () => {
-                const sidechainProvider = this.ethereum.getSidechainProvider()
+                const sidechainProvider = this.ethereum.getDataUnionChainProvider()
                 const factorySidechain = new Contract(this.factorySidechainAddress, [{
                     name: 'amb',
                     inputs: [],
@@ -129,11 +129,11 @@ export default class Contracts {
     }
 
     async getBinanceAdapter() {
-        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, await this.ethereum.getSidechainSigner())
+        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, await this.ethereum.getDataUnionChainSigner())
     }
 
     getBinanceAdapterReadOnly() {
-        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, this.ethereum.getSidechainProvider())
+        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, this.ethereum.getDataUnionChainProvider())
     }
 
     async getBinanceSmartChainAmb(binanceSenderPrivateKey: BytesLike) {
@@ -260,7 +260,7 @@ export default class Contracts {
     }) {
         const mainnetProvider = this.ethereum.getMainnetProvider()
         const mainnetWallet = this.ethereum.getSigner()
-        const sidechainProvider = this.ethereum.getSidechainProvider()
+        const duChainProvider = this.ethereum.getDataUnionChainProvider()
 
         const duMainnetAddress = await this.fetchDataUnionMainnetAddress(duName, deployerAddress)
         const duSidechainAddress = await this.fetchDataUnionSidechainAddress(duMainnetAddress)
@@ -291,14 +291,14 @@ export default class Contracts {
 
         log(`Data Union "${duName}" (mainnet: ${duMainnetAddress}, sidechain: ${duSidechainAddress}) deployed to mainnet, waiting for side-chain...`)
         await until(
-            async () => await sidechainProvider.getCode(duSidechainAddress) !== '0x',
+            async () => await duChainProvider.getCode(duSidechainAddress) !== '0x',
             sidechainRetryTimeoutMs,
             sidechainPollingIntervalMs
         )
 
         const dataUnion = new Contract(duMainnetAddress, dataUnionMainnetABI, mainnetWallet)
         // @ts-expect-error
-        dataUnion.sidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, sidechainProvider)
+        dataUnion.sidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, duChainProvider)
         return dataUnion
     }
 }

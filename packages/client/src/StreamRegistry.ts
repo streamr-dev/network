@@ -70,7 +70,7 @@ export class StreamRegistry implements Context {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.debug('create')
-        this.sideChainProvider = this.ethereum.getSidechainProvider()
+        this.sideChainProvider = this.ethereum.getStreamRegistryChainProvider()
         this.streamRegistryContractReadonly = new Contract(this.config.streamRegistrySidechainAddress,
             StreamRegistryArtifact, this.sideChainProvider) as StreamRegistryContract
     }
@@ -131,7 +131,7 @@ export class StreamRegistry implements Context {
 
     private async connectToStreamRegistryContract() {
         if (!this.sideChainSigner || !this.streamRegistryContract) {
-            this.sideChainSigner = await this.ethereum.getSidechainSigner()
+            this.sideChainSigner = await this.ethereum.getStreamRegistryChainSigner()
             this.streamRegistryContract = new Contract(this.config.streamRegistrySidechainAddress,
                 StreamRegistryArtifact, this.sideChainSigner) as StreamRegistryContract
         }
