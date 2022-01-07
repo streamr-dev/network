@@ -323,13 +323,13 @@
             "type" : "string",
             "format": "uri"
         },
-        "streamRegistrySidechainAddress" : {
+        "streamRegistryChainAddress" : {
             "type" : "string"
         },
-        "nodeRegistrySidechainAddress" : {
+        "nodeRegistryChainAddress" : {
             "type" : "string"
         },
-        "streamStorageRegistrySidechainAddress" : {
+        "streamStorageRegistryChainAddress" : {
             "type" : "string"
         }
     },

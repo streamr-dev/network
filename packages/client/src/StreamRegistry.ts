@@ -58,8 +58,8 @@ export class StreamRegistry implements Context {
     debug
     streamRegistryContract?: StreamRegistryContract
     streamRegistryContractReadonly: StreamRegistryContract
-    sideChainProvider: Provider
-    sideChainSigner?: Signer
+    chainProvider: Provider
+    chainSigner?: Signer
 
     constructor(
         context: Context,
@@ -70,9 +70,9 @@ export class StreamRegistry implements Context {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.debug('create')
-        this.sideChainProvider = this.ethereum.getStreamRegistryChainProvider()
-        this.streamRegistryContractReadonly = new Contract(this.config.streamRegistrySidechainAddress,
-            StreamRegistryArtifact, this.sideChainProvider) as StreamRegistryContract
+        this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
+        this.streamRegistryContractReadonly = new Contract(this.config.streamRegistryChainAddress,
+            StreamRegistryArtifact, this.chainProvider) as StreamRegistryContract
     }
 
     private parseStream(id: StreamID, propsString: string): Stream {
@@ -130,10 +130,10 @@ export class StreamRegistry implements Context {
     // --------------------------------------------------------------------------------------------
 
     private async connectToStreamRegistryContract() {
-        if (!this.sideChainSigner || !this.streamRegistryContract) {
-            this.sideChainSigner = await this.ethereum.getStreamRegistryChainSigner()
-            this.streamRegistryContract = new Contract(this.config.streamRegistrySidechainAddress,
-                StreamRegistryArtifact, this.sideChainSigner) as StreamRegistryContract
+        if (!this.chainSigner || !this.streamRegistryContract) {
+            this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
+            this.streamRegistryContract = new Contract(this.config.streamRegistryChainAddress,
+                StreamRegistryArtifact, this.chainSigner) as StreamRegistryContract
         }
     }
 
