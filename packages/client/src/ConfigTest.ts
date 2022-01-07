@@ -54,7 +54,6 @@ export default {
         timeout: toNumber(process.env.TEST_TIMEOUT),
     },
     streamRegistryChainRPC: sideChainConfig,
-    storageNodeRegistryChainRPC: sideChainConfig,
     dataUnionChainRPC: sideChainConfig,
     autoConnect: false,
     autoDisconnect: false,

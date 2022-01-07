@@ -4,7 +4,7 @@ import { id } from 'ethers/lib/utils'
 import clientOptionsConfig from './config'
 
 export const clientOptions = clientOptionsConfig
-export const providerSidechain = new JsonRpcProvider(clientOptions.storageNodeRegistryChainRPC)
+export const providerSidechain = new JsonRpcProvider(clientOptions.streamRegistryChainRPC)
 export const providerMainnet = new JsonRpcProvider(clientOptions.mainChainRPC)
 
 export const tokenMediatorAddress = '0xedD2aa644a6843F2e5133Fe3d6BD3F4080d97D9F'

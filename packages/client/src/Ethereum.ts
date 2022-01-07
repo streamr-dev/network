@@ -68,7 +68,6 @@ export abstract class EthereumConfig {
     abstract tokenAddress: EthereumAddress
     abstract tokenSidechainAddress: EthereumAddress
     abstract streamRegistryChainRPC: ConnectionInfo & { chainId?: number } | undefined
-    abstract storageNodeRegistryChainRPC: ConnectionInfo & { chainId?: number }
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -85,7 +84,6 @@ class StreamrEthereum {
     _getSigner?: () => Signer
     _getDataUnionChainSigner?: () => Promise<Signer>
     _getStreamRegistryChainSigner?: () => Promise<Signer>
-    _getStorageNodeRegistryChainSigner?: () => Promise<Signer>
 
     constructor(
         @inject(Config.Auth) authConfig: AllAuthConfig,
@@ -98,7 +96,6 @@ class StreamrEthereum {
             this._getSigner = () => new Wallet(key, this.getMainnetProvider())
             this._getDataUnionChainSigner = async () => new Wallet(key, this.getDataUnionChainProvider())
             this._getStreamRegistryChainSigner = async () => new Wallet(key, this.getStreamRegistryChainProvider())
-            this._getStorageNodeRegistryChainSigner = async () => new Wallet(key, this.getStorageNodeRegistryChainProvider())
         } else if ('ethereum' in authConfig && authConfig.ethereum) {
             const { ethereum } = authConfig
             this._getAddress = async () => {
@@ -143,23 +140,6 @@ class StreamrEthereum {
                 const { chainId } = await metamaskProvider.getNetwork()
                 if (chainId !== ethereumConfig.streamRegistryChainRPC.chainId) {
                     const sideChainId = ethereumConfig.streamRegistryChainRPC.chainId
-                    throw new Error(
-                        `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
-                    )
-                }
-                const metamaskSigner = metamaskProvider.getSigner()
-                return metamaskSigner
-            }
-
-            this._getStorageNodeRegistryChainSigner = async () => {
-                if (!ethereumConfig.storageNodeRegistryChainRPC || !ethereumConfig.storageNodeRegistryChainRPC.chainId) {
-                    throw new Error('Streamr storageNodeRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
-                }
-
-                const metamaskProvider = new Web3Provider(ethereum)
-                const { chainId } = await metamaskProvider.getNetwork()
-                if (chainId !== ethereumConfig.storageNodeRegistryChainRPC.chainId) {
-                    const sideChainId = ethereumConfig.storageNodeRegistryChainRPC.chainId
                     throw new Error(
                         `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
@@ -220,14 +200,6 @@ class StreamrEthereum {
         return this._getStreamRegistryChainSigner()
     }
 
-    async getStorageNodeRegistryChainSigner(): Promise<Signer> {
-        if (!this._getStorageNodeRegistryChainSigner) {
-            // _getDataUnionChainSigner is assigned in constructor
-            throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
-        }
-        return this._getStorageNodeRegistryChainSigner()
-    }
-
     /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
     getMainnetProvider(): Provider {
         if (!this.ethereumConfig.mainChainRPC) {
@@ -261,15 +233,6 @@ class StreamrEthereum {
         }
 
         return new JsonRpcProvider(this.ethereumConfig.streamRegistryChainRPC)
-    }
-
-    /** @returns Ethers.js Provider, a connection to the Storage Node Registry Chain */
-    getStorageNodeRegistryChainProvider(): Provider {
-        if (!this.ethereumConfig.storageNodeRegistryChainRPC) {
-            throw new Error('EthereumConfig has no storageNodeRegistryChainRPC configuration.')
-        }
-
-        return new JsonRpcProvider(this.ethereumConfig.storageNodeRegistryChainRPC)
     }
 }
 

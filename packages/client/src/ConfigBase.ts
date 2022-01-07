@@ -148,10 +148,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         url: 'https://rpc.xdaichain.com/',
         chainId: 100
     },
-    storageNodeRegistryChainRPC: {
-        url: 'https://rpc.xdaichain.com/',
-        chainId: 100
-    },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
     tokenSidechainAddress: '0x256eb8a51f382650B2A1e946b8811953640ee47D',
     binanceAdapterAddress: '0x193888692673b5dD46e6BC90bA8cBFeDa515c8C1',

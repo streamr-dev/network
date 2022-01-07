@@ -116,9 +116,6 @@
         "streamRegistryChainRPC": {
             "$ref": "#/definitions/chainConnectionInfo"
         },
-        "storageNodeRegistryChainRPC": {
-            "$ref": "#/definitions/chainConnectionInfo"
-        },
         "dataUnionBinanceWithdrawalChainRPC": {
             "$ref": "#/definitions/chainConnectionInfo"
         },
