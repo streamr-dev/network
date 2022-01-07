@@ -2,7 +2,6 @@ function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
-
 const sideChainConfig = {
     url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     timeout: toNumber(process.env.TEST_TIMEOUT),
