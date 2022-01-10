@@ -45,6 +45,11 @@
         },
         "storageNode":{
           "type": "string"
+        },
+        "streamIdPrefix": {
+          "type": "string",
+          "description": "Base streamId before granularities (sec, min, hour) for the firehose metrics stream",
+          "default": "streamr.eth/metrics/nodes/firehose/"
         }
       }
     }

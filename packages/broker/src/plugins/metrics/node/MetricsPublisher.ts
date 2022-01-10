@@ -1,4 +1,4 @@
-import { StreamPermission, StreamrClient } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
 import { PERIOD_LENGTHS, Sample } from './Sample'
 
@@ -16,43 +16,24 @@ export class MetricsPublisher {
     private readonly nodeAddress: string
     private readonly client: StreamrClient
     private readonly storageNodeAddress: string
+    private readonly streamIdPrefix: string
 
-    constructor(nodeAddress: string, client: StreamrClient, storageNodeAddress: string) {
+    constructor(nodeAddress: string, client: StreamrClient, storageNodeAddress: string, streamIdPrefix: string) {
         this.nodeAddress = nodeAddress
         this.client = client
         this.storageNodeAddress = storageNodeAddress
+        this.streamIdPrefix = streamIdPrefix
     }
 
     async publish(sample: Sample): Promise<void> {
         const periodLength = sample.period.end - sample.period.start
         const streamId = this.getStreamId(periodLength)
+        const partitionKey = this.nodeAddress.toLowerCase()
         try {
-            await this.client.publish(streamId, sample)
+            await this.client.publish(streamId, sample, undefined, partitionKey)
         } catch (e: any) {
             logger.warn(`Unable to publish NodeMetrics: ${e.message}`)
         }
-    }
-
-    async ensureStreamsCreated(): Promise<void> {
-        for (const periodLength of Object.keys(STREAM_ID_SUFFIXES)) {
-            await this.ensureStreamCreated(Number(periodLength))
-        }
-    }
-
-    private async ensureStreamCreated(periodLength: number): Promise<string> {
-        const streamId = this.getStreamId(periodLength)
-        const stream = await this.client.getOrCreateStream({
-            id: streamId
-        })
-        await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
-        if (periodLength !== PERIOD_LENGTHS.FIVE_SECONDS) {
-            try {
-                await stream.addToStorageNode(this.storageNodeAddress)
-            } catch (err: any) {
-                logger.warn('Unable to add %s to storage node, reason: %s', streamId, err.message)
-            }
-        }
-        return stream.id
     }
 
     /**
@@ -164,7 +145,7 @@ export class MetricsPublisher {
     getStreamId(periodLength: number): string {
         const suffix = STREAM_ID_SUFFIXES[periodLength]
         if (suffix !== undefined) {
-            return `${this.nodeAddress.toLowerCase()}/streamr/node/metrics/${suffix}`
+            return `${this.streamIdPrefix}${suffix}`
         } else {
             throw new Error(`Invalid period length: ${periodLength}`)
         }
