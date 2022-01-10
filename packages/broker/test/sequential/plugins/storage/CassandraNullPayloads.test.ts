@@ -55,9 +55,8 @@ async function storeMockMessages({
     const storePromises = []
     for (let i = 0; i < count; i++) {
         const timestamp = Math.floor((i / (count - 1)) * (1E10))
-        const stream = toStreamID(streamId)
         const msg = new StreamMessage({
-            messageId: new MessageIDStrict(stream, 0, timestamp, 0, '', ''),
+            messageId: new MessageIDStrict(toStreamID(streamId), 0, timestamp, 0, '', ''),
             content: JSON.stringify({})
         })
         storePromises.push(storage.store(msg))
