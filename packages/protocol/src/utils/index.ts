@@ -13,7 +13,7 @@ import {
     getPathFromStreamID,
     getAddressAndPathFromStreamID,
     KEY_EXCHANGE_STREAM_PREFIX,
-    formKeyExchangeStreamId,
+    formKeyExchangeStreamID,
     isKeyExchangeStream,
     getRecipient,
     isPathOnlyFormat
@@ -40,7 +40,7 @@ export {
     getPathFromStreamID,
     getAddressAndPathFromStreamID,
     KEY_EXCHANGE_STREAM_PREFIX,
-    formKeyExchangeStreamId,
+    formKeyExchangeStreamID,
     isKeyExchangeStream,
     getRecipient,
     isPathOnlyFormat,

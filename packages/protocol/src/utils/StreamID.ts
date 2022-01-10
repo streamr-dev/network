@@ -4,7 +4,7 @@ export type StreamID = string & { readonly __brand: 'streamId' } // Nominal typi
 
 export const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
 
-export function formKeyExchangeStreamId(recipient: EthereumAddress): StreamID {
+export function formKeyExchangeStreamID(recipient: EthereumAddress): StreamID {
     return (KEY_EXCHANGE_STREAM_PREFIX + recipient.toLowerCase()) as StreamID
 }
 
