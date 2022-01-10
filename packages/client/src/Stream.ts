@@ -2,7 +2,6 @@
  * Wrapper for Stream metadata and (some) methods.
  */
 import fetch from 'node-fetch'
-import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
@@ -18,7 +17,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
-import { EthereumAddress, StreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {

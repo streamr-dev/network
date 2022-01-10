@@ -21,11 +21,11 @@ import {
     isKeyExchangeStream,
     EthereumAddress,
     getPathFromStreamID,
+    getAddressFromStreamID,
     toStreamID,
 } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { getAddressFromStreamID } from 'streamr-client-protocol/dist/src/utils/StreamID'
 
 export type PermissionQueryResult = {
     id: string

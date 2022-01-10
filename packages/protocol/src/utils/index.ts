@@ -1,5 +1,5 @@
 import OrderingUtil from "./OrderingUtil"
-import StreamMessageValidator from "./StreamMessageValidator"
+import StreamMessageValidator, { StreamMetadata } from "./StreamMessageValidator"
 import SigningUtil from "./SigningUtil"
 export * from "./SPID"
 import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
@@ -23,6 +23,7 @@ import { EthereumAddress } from "./types"
 export {
     OrderingUtil,
     StreamMessageValidator,
+    StreamMetadata,
     SigningUtil,
     SmartContractRecord,
     TrackerRegistry,
