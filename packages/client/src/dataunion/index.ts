@@ -48,7 +48,7 @@ export default class DataUnionAPI {
     async getSidechainTokenBalance(address: EthereumAddress): Promise<BigNumber> {
         const { tokenSidechainAddress } = this.options
         const addr = getAddress(address)
-        const provider = this.ethereum.getSidechainProvider()
+        const provider = this.ethereum.getDataUnionChainProvider()
         const token = new Contract(tokenSidechainAddress, balanceOfAbi, provider)
         return token.balanceOf(addr)
     }

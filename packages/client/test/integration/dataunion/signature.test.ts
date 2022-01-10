@@ -35,7 +35,7 @@ describe('DataUnion signature', () => {
 
         // product is needed for join requests to analyze the DU version
         const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
-        await authFetch(createProductUrl, adminClient.session, {
+        await authFetch(createProductUrl, {
             method: 'POST',
             body: JSON.stringify({
                 beneficiaryAddress: dataUnionAddress,
