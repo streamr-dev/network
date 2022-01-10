@@ -2,6 +2,11 @@ function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
+const sideChainConfig = {
+    url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
+    timeout: toNumber(process.env.TEST_TIMEOUT),
+}
+
 /**
  * Streamr client constructor options that work in the test environment
  */
@@ -12,7 +17,7 @@ export default {
     theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
     restUrl: process.env.REST_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}/api/v1`,
     streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
-    streamStorageRegistrySidechainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
+    streamStorageRegistryChainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
     tokenAddress: process.env.TOKEN_ADDRESS || '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
     tokenSidechainAddress: process.env.TOKEN_ADDRESS_SIDECHAIN || '0x73Be21733CC5D08e1a14Ea9a399fb27DB3BEf8fF',
     withdrawServerUrl: process.env.WITHDRAW_SERVER_URL || 'http://localhost:3000',
@@ -44,14 +49,12 @@ export default {
         contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     },
-    sidechain: {
-        url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
-        timeout: toNumber(process.env.TEST_TIMEOUT),
-    },
-    mainnet: {
+    mainChainRPC: {
         url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
         timeout: toNumber(process.env.TEST_TIMEOUT),
     },
+    streamRegistryChainRPC: sideChainConfig,
+    dataUnionChainRPC: sideChainConfig,
     autoConnect: false,
     autoDisconnect: false,
     maxRetries: 2,
