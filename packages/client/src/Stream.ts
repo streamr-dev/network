@@ -18,7 +18,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -117,7 +117,7 @@ class StreamrStream implements StreamMetadata {
     protected _nodeRegistry: NodeRegistry
     protected _ethereuem: Ethereum
 
-    /** @internal **/
+    /** @internal */
     constructor(
         props: StreamrStreamConstructorOptions,
         @inject(BrubeckContainer) private _container: DependencyContainer

@@ -1,7 +1,7 @@
 /**
  * Organises async Publish steps into a Pipeline
  */
-import { StreamID, StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from './utils/log'

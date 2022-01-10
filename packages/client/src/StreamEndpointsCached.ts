@@ -11,33 +11,6 @@ import { StreamRegistry } from './StreamRegistry'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
-function preloadGetStream(streamId: StreamID) {
-    return {
-        id: streamId,
-        partitions: 1,
-        name: streamId,
-        config: { fields: [] },
-        description: 'Rewards stream for Brubeck Testnets 2 and 3',
-        dateCreated: '2021-09-10T14:19:27Z',
-        lastUpdated: '2021-09-10T14:19:27Z',
-        requireSignedData: false,
-        requireEncryptedData: false,
-        autoConfigure: true,
-        storageDays: 365,
-        inactivityThresholdHours: 48
-    }
-}
-
-function preloadGetStreamValidationInfo(streamId: StreamID) {
-    return {
-        id: streamId,
-        partitions: 1,
-        requireSignedData: false,
-        requireEncryptedData: false,
-        storageDays: 365
-    }
-}
-
 @scoped(Lifecycle.ContainerScoped)
 export class StreamEndpointsCached implements Context {
     id = instanceId(this)
