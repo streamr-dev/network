@@ -1,7 +1,20 @@
 import assert from 'assert'
-import { toStreamID, Utils } from '../../../src'
+import {
+    formKeyExchangeStreamID,
+    getAddressAndPathFromStreamID, getAddressFromStreamID, getPathFromStreamID,
+    isPathOnlyFormat,
+    KEY_EXCHANGE_STREAM_PREFIX,
+    toStreamID,
+    Utils
+} from '../../../src'
 
 const address = '0xaAAAaaaaAA123456789012345678901234567890'
+
+describe('formKeyExchangeStreamID', () => {
+    it('forms key-exchange stream ids', () => {
+        expect(formKeyExchangeStreamID('0xFaFa1234')).toEqual(KEY_EXCHANGE_STREAM_PREFIX + '0xfafa1234')
+    })
+})
 
 describe('toStreamID', () => {
     it('path-only format', () => {
@@ -32,7 +45,7 @@ describe('toStreamID', () => {
     })
 
     it('legacy format', () => {
-        const id = 'abcdeFGHJI1234567890ab'
+        const id = '7wa7APtlTq6EC5iTCBy6dw'
         const actual = toStreamID(id)
         expect(actual).toBe(id)
     })
@@ -50,6 +63,28 @@ describe('toStreamID', () => {
     })
 })
 
+describe('isPathOnlyFormat', () => {
+    it('returns true on path-only format', () => {
+        expect(isPathOnlyFormat('/foo/bar')).toEqual(true)
+    })
+
+    it('returns false on key-exchange format', () => {
+        expect(isPathOnlyFormat(formKeyExchangeStreamID(address))).toEqual(false)
+    })
+
+    it('returns false on legacy format', () => {
+        expect(isPathOnlyFormat('7wa7APtlTq6EC5iTCBy6dw')).toEqual(false)
+    })
+
+    it('returns false on full stream id format', () => {
+        expect(isPathOnlyFormat(`${address}/foo/bar`)).toEqual(false)
+    })
+
+    it('returns false on empty string', () => {
+        expect(isPathOnlyFormat('')).toEqual(false)
+    })
+})
+
 describe('isKeyExchangeStream', () => {
     it('returns true for streams that start with the correct prefix', () => {
         assert(Utils.isKeyExchangeStream('SYSTEM/keyexchange/0x1234'))
@@ -57,6 +92,49 @@ describe('isKeyExchangeStream', () => {
     })
     it('returns false for other streams', () => {
         assert(!Utils.isKeyExchangeStream('SYSTEM/keyexchangefoo'))
+    })
+})
+
+describe('getAddressAndPathFromStreamID', () => {
+    it('returns undefined for legacy stream id', () => {
+        expect(getAddressAndPathFromStreamID(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+    })
+
+    it('returns undefined for key-exchange stream id', () => {
+        expect(getAddressAndPathFromStreamID(formKeyExchangeStreamID(address))).toBeUndefined()
+    })
+
+    it('returns address and path for full stream id', () => {
+        expect(getAddressAndPathFromStreamID(toStreamID('/foo/bar', address)))
+            .toEqual([address.toLowerCase(), '/foo/bar'])
+    })
+})
+
+describe('getAddressFromStreamID', () => {
+    it('returns undefined for legacy stream id', () => {
+        expect(getAddressFromStreamID(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+    })
+
+    it('returns undefined for key-exchange stream id', () => {
+        expect(getAddressFromStreamID(formKeyExchangeStreamID(address))).toBeUndefined()
+    })
+
+    it('returns address for full stream id', () => {
+        expect(getAddressFromStreamID(toStreamID('/foo/bar', address))).toEqual(address.toLowerCase())
+    })
+})
+
+describe('getPathFromStreamID', () => {
+    it('returns undefined for legacy stream id', () => {
+        expect(getPathFromStreamID(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+    })
+
+    it('returns undefined for key-exchange stream id', () => {
+        expect(getPathFromStreamID(formKeyExchangeStreamID(address))).toBeUndefined()
+    })
+
+    it('returns path for full stream id', () => {
+        expect(getPathFromStreamID(toStreamID('/foo/bar', address))).toEqual('/foo/bar')
     })
 })
 
