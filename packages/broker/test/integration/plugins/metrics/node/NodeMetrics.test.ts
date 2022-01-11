@@ -69,7 +69,6 @@ describe('NodeMetrics', () => {
                         storageNode: storageNodeAccount.address,
                         streamIdPrefix
                     },
-
                 }
             },
             storageNodeRegistry
@@ -91,9 +90,13 @@ describe('NodeMetrics', () => {
 
         const streamId = `${streamIdPrefix}sec`
         const streamPartition = keyToArrayIndex(NUM_OF_PARTITIONS, metricsGeneratingBroker.getNodeId().toLowerCase())
+        const address = await client2.getAddress()
+        const streamPartition = keyToArrayIndex(10, address)
+
         await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
         })
+
         const message = await messageQueue.pop(30 * 1000)
         expect(message.content).toMatchObject({
             broker: {
