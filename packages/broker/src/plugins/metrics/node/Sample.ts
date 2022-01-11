@@ -68,7 +68,7 @@ export class SampleFactory {
         const metricsReport = await this.metricsContext.report(true)
         return {
             broker: {
-                messagesToNetworkPerSec: -1, // TODO: can we get these from client somehow?
+                messagesToNetworkPerSec: -1, // TODO: NET-636: can we get these from client somehow?
                 bytesToNetworkPerSec: -1,
             },
             network: {
