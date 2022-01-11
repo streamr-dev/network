@@ -26,7 +26,7 @@ describe('NodeMetrics', () => {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
             jsonRpcProvider: `http://10.200.10.1:8546`
         }
-        nodeAddress = tmpAccount.address
+        // nodeAddress = tmpAccount.address
         tracker = await startTestTracker(trackerPort)
         // eslint-disable-next-line no-console
         console.log("HERE1")
