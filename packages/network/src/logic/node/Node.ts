@@ -96,8 +96,6 @@ export class Node extends EventEmitter {
             .addRecordedMetric('onDataReceived:gapMismatch')
             .addRecordedMetric('onDataReceived:ignoredDuplicate')
             .addRecordedMetric('propagateMessage')
-            .addRecordedMetric('onSubscribeRequest')
-            .addRecordedMetric('onUnsubscribeRequest')
             .addRecordedMetric('onNodeDisconnect')
             .addFixedMetric('latency')
 
