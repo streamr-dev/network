@@ -42,19 +42,19 @@ describe('NodeMetrics', () => {
         console.log("HERE3")
 
         const secStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
-        await secStream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await secStream.grantPublicPermission(StreamPermission.PUBLISH)
         await secStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
 
         const minStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/min`, partitions: 10})
-        await minStream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await minStream.grantPublicPermission(StreamPermission.PUBLISH)
         await minStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
 
         const hourStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/hour`, partitions: 10})
-        await hourStream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await hourStream.grantPublicPermission(StreamPermission.PUBLISH)
         await hourStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
 
         const dayStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/day`, partitions: 10})
-        await dayStream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await dayStream.grantPublicPermission(StreamPermission.PUBLISH)
         await dayStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
         streamIdPrefix = secStream.id.replace('sec', '')
 
