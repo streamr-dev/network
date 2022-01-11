@@ -9,10 +9,6 @@ import { Storage } from './Storage'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 
-interface AuthenticatedRequest<Q> extends Request<Record<string,any>,any,any,Q,Record<string,any>> {
-    stream?: Record<string, unknown>
-}
-
 const logger = new Logger(module)
 
 // TODO: move this to protocol-js
@@ -106,17 +102,19 @@ const createEndpointRoute = (
     })
 }
 
-type LastRequest = AuthenticatedRequest<{
+type BaseRequest<Q> = Request<Record<string,any>,any,any,Q,Record<string,any>>
+
+type LastRequest = BaseRequest<{
     count?: string
 }>
 
-type FromRequest = AuthenticatedRequest<{
+type FromRequest = BaseRequest<{
     fromTimestamp?: string
     fromSequenceNumber?: string
     publisherId?: string
 }>
 
-type RangeRequest = AuthenticatedRequest<{
+type RangeRequest = BaseRequest<{
     fromTimestamp?: string
     toTimestamp?: string
     fromSequenceNumber?: string
