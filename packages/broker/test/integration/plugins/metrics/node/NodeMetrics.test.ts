@@ -15,7 +15,7 @@ describe('NodeMetrics', () => {
     let broker1: Broker
     let storageNode: Broker
     let client1: StreamrClient
-    // let nodeAddress: string
+    let nodeAddress: string
     let client2: StreamrClient
     let streamIdPrefix: string
 
@@ -26,7 +26,7 @@ describe('NodeMetrics', () => {
             contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
             jsonRpcProvider: `http://10.200.10.1:8546`
         }
-        // nodeAddress = tmpAccount.address
+        nodeAddress = tmpAccount.address
         tracker = await startTestTracker(trackerPort)
         // eslint-disable-next-line no-console
         console.log("HERE1")
@@ -41,23 +41,10 @@ describe('NodeMetrics', () => {
         // eslint-disable-next-line no-console
         console.log("HERE3")
 
-        const secStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
-        await secStream.grantPublicPermission(StreamPermission.PUBLISH)
-        await secStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
-
-        streamIdPrefix = secStream.id.replace('sec', '')
-
-        const minStream = await client2.getOrCreateStream({ id: `${streamIdPrefix}/min`, partitions: 10})
-        await minStream.grantPublicPermission(StreamPermission.PUBLISH)
-        await minStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
-
-        const hourStream = await client2.getOrCreateStream({ id: `${streamIdPrefix}/hour`, partitions: 10})
-        await hourStream.grantPublicPermission(StreamPermission.PUBLISH)
-        await hourStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
-
-        const dayStream = await client2.getOrCreateStream({ id: `${streamIdPrefix}/day`, partitions: 10})
-        await dayStream.grantPublicPermission(StreamPermission.PUBLISH)
-        await dayStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
+        const stream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
+        await stream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
+        streamIdPrefix = stream.id.replace('sec', '')
 
         storageNode = await startBroker({
             name: 'storageNode',
@@ -113,8 +100,7 @@ describe('NodeMetrics', () => {
 
         const streamId = `${streamIdPrefix}sec`
         const streamPartition = keyToArrayIndex(10, (await client2.getUserInfo()).username)
-        // eslint-disable-next-line no-console
-        console.log("HERE111")
+
         await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
         })
