@@ -41,10 +41,22 @@ describe('NodeMetrics', () => {
         // eslint-disable-next-line no-console
         console.log("HERE3")
 
-        const stream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
-        await stream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
-        streamIdPrefix = stream.id.replace('sec', '')
+        const secStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
+        await secStream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await secStream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
+
+        const minStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/min`, partitions: 10})
+        await minStream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await minStream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
+
+        const hourStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/hour`, partitions: 10})
+        await hourStream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await hourStream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
+
+        const dayStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/day`, partitions: 10})
+        await dayStream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await dayStream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
+        streamIdPrefix = secStream.id.replace('sec', '')
 
         storageNode = await startBroker({
             name: 'storageNode',
