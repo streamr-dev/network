@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 import '../src/logLevel'
-import StreamrClient from 'streamr-client'
+import _ from 'lodash'
+import StreamrClient, { StreamPermission } from 'streamr-client'
 import { createClientCommand } from '../src/command'
+import { getPermissionId } from '../src/permission'
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
     const stream = await client.getStream(streamId)
-    const obj = stream.toObject()
+    const obj: any = stream.toObject()
     if (options.includePermissions) {
-        // TODO the data of stream.getPermissions() should be transformed somehow (NET-610)
-        // @ts-expect-error permissions not on {}
-        obj.permissions = await stream.getPermissions()
+        const permissions = await stream.getPermissions()
+        obj.permissions = _.mapValues(permissions, (p: StreamPermission[]) => p.map(getPermissionId))
     }
     console.info(JSON.stringify(obj, null, 2))
 })
