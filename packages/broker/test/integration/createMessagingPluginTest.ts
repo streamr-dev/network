@@ -14,7 +14,6 @@ interface MessagingPluginApi<T> {
 
 interface Ports {
     plugin: number,
-    legacyWebsocket: number
     tracker: number
 }
 
@@ -62,7 +61,6 @@ export const createMessagingPluginTest = <T>(
                 name: 'broker',
                 privateKey: brokerUser.privateKey,
                 trackerPort: ports.tracker,
-                wsPort: ports.legacyWebsocket,
                 apiAuthentication: {
                     keys: [MOCK_API_KEY]
                 },

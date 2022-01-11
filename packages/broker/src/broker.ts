@@ -4,7 +4,6 @@ import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
@@ -50,14 +49,12 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const streamrClient = new StreamrClient(config.client)
     const networkNode = await streamrClient.getNode()
     const nodeId = networkNode.getNodeId()
-    const subscriptionManager = new SubscriptionManager(networkNode)
     const apiAuthenticator = createApiAuthenticator(config)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
             name,
             networkNode,
-            subscriptionManager,
             streamrClient,
             apiAuthenticator,
             brokerConfig: config,

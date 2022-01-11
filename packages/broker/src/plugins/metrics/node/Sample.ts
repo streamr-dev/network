@@ -32,7 +32,6 @@ export interface Sample {
     period: Period,
 }
 
-const CONTEXT_PUBLISHER = 'broker/publisher'
 const CONTEXT_STORAGE = 'broker/cassandra'
 
 const areStorageMetricsAvailable = (metricsContext: MetricsContext): boolean => {
@@ -69,8 +68,8 @@ export class SampleFactory {
         const metricsReport = await this.metricsContext.report(true)
         return {
             broker: {
-                messagesToNetworkPerSec: (metricsReport.metrics[CONTEXT_PUBLISHER].messages as any).rate,
-                bytesToNetworkPerSec: (metricsReport.metrics[CONTEXT_PUBLISHER].bytes as any).rate,
+                messagesToNetworkPerSec: -1, // TODO: can we get these from client somehow?
+                bytesToNetworkPerSec: -1,
             },
             network: {
                 avgLatencyMs: metricsReport.metrics.node.latency as number,

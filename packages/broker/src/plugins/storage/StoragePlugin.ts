@@ -52,11 +52,11 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             }
         }
         this.storageConfig.getSPIDs().forEach((spid) => {
-            this.subscriptionManager.subscribe(spid.streamId, spid.streamPartition)
+            this.networkNode.subscribe(spid)
         })
         this.storageConfig.addChangeListener({
-            onSPIDAdded: (spid: SPID) => this.subscriptionManager.subscribe(spid.streamId, spid.streamPartition),
-            onSPIDRemoved: (spid: SPID) => this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
+            onSPIDAdded: (spid: SPID) => this.networkNode.subscribe(spid),
+            onSPIDRemoved: (spid: SPID) => this.networkNode.unsubscribe(spid)
         })
         this.networkNode.addMessageListener(this.messageListener)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, metricsContext))
@@ -88,18 +88,17 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             this.pluginConfig.storageConfig.refreshInterval,
             this.streamrClient)
         this.assignmentMessageListener = storageConfig.
-            startAssignmentEventListener(this.pluginConfig.storageConfig.streamrAddress, this.subscriptionManager)
+            startAssignmentEventListener(this.pluginConfig.storageConfig.streamrAddress)
         await storageConfig.startChainEventsListener()
         return storageConfig
     }
 
     async stop(): Promise<void> {
         this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, 
-            this.pluginConfig.storageConfig.streamrAddress, 
-            this.subscriptionManager)
+            this.pluginConfig.storageConfig.streamrAddress)
         this.networkNode.removeMessageListener(this.messageListener!)
         this.storageConfig!.getSPIDs().forEach((spid) => {
-            this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
+            this.networkNode.unsubscribe(spid)
         })
         this.storageConfig!.stopChainEventsListener()
         await Promise.all([

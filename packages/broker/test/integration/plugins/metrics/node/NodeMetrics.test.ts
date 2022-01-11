@@ -7,7 +7,6 @@ import { v4 as uuid } from 'uuid'
 import { keyToArrayIndex } from 'streamr-client-protocol'
 
 const httpPort = 47741
-const wsPort = 47742
 const trackerPort = 47745
 
 describe('NodeMetrics', () => {
@@ -58,15 +57,10 @@ describe('NodeMetrics', () => {
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
             trackerPort,
-            wsPort,
             extraPlugins: {
                 metrics: {
                     consoleAndPM2IntervalInSeconds: 0,
                     nodeMetrics: {
-                        client: {
-                            wsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
-                            httpUrl: `http://127.0.0.1:${httpPort}/api/v1`,
-                        },
                         storageNode: storageNodeAccount.address,
                         streamIdPrefix
                     },
@@ -91,7 +85,7 @@ describe('NodeMetrics', () => {
         const messageQueue = new Queue<any>()
 
         const streamId = `${streamIdPrefix}sec`
-        const streamPartition = keyToArrayIndex(10, (await client2.getUserInfo()).username)
+        const streamPartition = keyToArrayIndex(10, 'key')
         await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
         })

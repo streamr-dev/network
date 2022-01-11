@@ -17,7 +17,6 @@ interface TestConfig {
     trackerPort: number
     privateKey: string
     httpPort?: null | number
-    wsPort?: null | number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: ApiAuthenticationConfig
     enableCassandra?: boolean
@@ -34,7 +33,6 @@ export const formConfig = ({
     trackerPort,
     privateKey,
     httpPort = null,
-    wsPort = null,
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
@@ -61,14 +59,6 @@ export const formConfig = ({
                     refreshInterval: storageConfigRefreshInterval
                 }
             }
-        }
-    }
-    if (wsPort) {
-        plugins['legacyWebsocket'] = {
-            port: wsPort,
-            pingInterval: 3000,
-            privateKeyFileName,
-            certFileName
         }
     }
 

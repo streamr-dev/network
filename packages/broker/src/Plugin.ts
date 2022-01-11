@@ -1,6 +1,5 @@
 import { NetworkNode } from 'streamr-network'
 import { Config } from './config'
-import { SubscriptionManager } from './SubscriptionManager'
 import express from 'express'
 import { validateConfig } from './helpers/validateConfig'
 import { Schema } from 'ajv'
@@ -10,7 +9,6 @@ import { ApiAuthenticator } from './apiAuthenticator'
 export interface PluginOptions {
     name: string
     networkNode: NetworkNode
-    subscriptionManager: SubscriptionManager
     streamrClient: StreamrClient
     apiAuthenticator: ApiAuthenticator
     brokerConfig: Config
@@ -21,7 +19,6 @@ export abstract class Plugin<T> {
 
     readonly name: string
     readonly networkNode: NetworkNode
-    readonly subscriptionManager: SubscriptionManager
     readonly streamrClient: StreamrClient
     readonly apiAuthenticator: ApiAuthenticator
     readonly brokerConfig: Config
@@ -32,7 +29,6 @@ export abstract class Plugin<T> {
     constructor(options: PluginOptions) {
         this.name = options.name
         this.networkNode = options.networkNode
-        this.subscriptionManager = options.subscriptionManager
         this.streamrClient = options.streamrClient
         this.apiAuthenticator = options.apiAuthenticator
         this.brokerConfig = options.brokerConfig

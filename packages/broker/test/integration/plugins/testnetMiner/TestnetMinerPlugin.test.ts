@@ -83,7 +83,6 @@ describe('TestnetMinerPlugin', () => {
             name: 'broker',
             privateKey: brokerWallet.privateKey,
             trackerPort: TRACKER_PORT,
-            wsPort: LEGACY_WEBSOCKET_PORT,
             extraPlugins: {
                 testnetMiner: {
                     rewardStreamIds: [rewardStreamId],
