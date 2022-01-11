@@ -1,14 +1,14 @@
-import StreamrClient from 'streamr-client'
-import {Tracker} from 'streamr-network'
+import StreamrClient, { StreamPermission } from 'streamr-client'
+import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
-import { startBroker, createClient, Queue, getPrivateKey, startTestTracker } from '../../../../utils'
+import { createClient, getPrivateKey, Queue, startBroker, startTestTracker } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
+import { v4 as uuid } from 'uuid'
+import { keyToArrayIndex } from 'streamr-client-protocol'
 
 const httpPort = 47741
 const wsPort = 47742
 const trackerPort = 47745
-
-jest.setTimeout(60000)
 
 describe('NodeMetrics', () => {
     let tracker: Tracker
@@ -17,6 +17,7 @@ describe('NodeMetrics', () => {
     let client1: StreamrClient
     let nodeAddress: string
     let client2: StreamrClient
+    let streamIdPrefix: string
 
     beforeAll(async () => {
         const tmpAccount = new Wallet(await getPrivateKey())
@@ -27,12 +28,18 @@ describe('NodeMetrics', () => {
         }
         nodeAddress = tmpAccount.address
         tracker = await startTestTracker(trackerPort)
+
         client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
         client2 = await createClient(tracker, tmpAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+
+        const stream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
+        await stream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
+        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
+        streamIdPrefix = stream.id.replace('sec', '')
 
         storageNode = await startBroker({
             name: 'storageNode',
@@ -61,13 +68,14 @@ describe('NodeMetrics', () => {
                             wsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
                             httpUrl: `http://127.0.0.1:${httpPort}/api/v1`,
                         },
-                        storageNode: storageNodeAccount.address
-                    }
+                        storageNode: storageNodeAccount.address,
+                        streamIdPrefix
+                    },
                 }
             },
             storageNodeRegistry
         })
-    })
+    }, 80 * 1000)
 
     afterAll(async () => {
         await Promise.allSettled([
@@ -81,10 +89,15 @@ describe('NodeMetrics', () => {
 
     it('should retrieve the a `sec` metrics', async () => {
         const messageQueue = new Queue<any>()
-        const streamId = `${nodeAddress.toLowerCase()}/streamr/node/metrics/sec`
-        await client2.subscribe(streamId, (content: any) => {
+
+        const streamId = `${streamIdPrefix}sec`
+        const address = await client2.getAddress()
+        const streamPartition = keyToArrayIndex(10, address)
+
+        await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
         })
+
         const message = await messageQueue.pop(30 * 1000)
         expect(message.content).toMatchObject({
             broker: {
@@ -103,5 +116,5 @@ describe('NodeMetrics', () => {
                 end: expect.any(Number)
             }
         })
-    })
+    }, 35000)
 })

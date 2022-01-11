@@ -8,8 +8,8 @@ import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 
 const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.dataUnionChainRPC)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainChainRPC)
 const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
 
 describe('DataUnion admin fee', () => {

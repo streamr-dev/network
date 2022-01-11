@@ -16,7 +16,7 @@ import {
 } from '../devEnvironment'
 import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
-import { EthereumAddress } from '../../../src/types'
+import { EthereumAddress } from 'streamr-client-protocol'
 import authFetch from '../../../src/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-transfer')
@@ -123,7 +123,7 @@ describe('DataUnion earnings transfer methods', () => {
 
         // product is needed for join requests to analyze the DU version
         const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
-        await authFetch(createProductUrl, adminClient.session, {
+        await authFetch(createProductUrl, {
             method: 'POST',
             body: JSON.stringify({
                 beneficiaryAddress: dataUnion.getAddress(),
