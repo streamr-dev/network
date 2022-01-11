@@ -51,9 +51,11 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 this.cassandra!.store(msg)
             }
         }
+        // TODO: NET-637 use client instead of networkNode?
         this.storageConfig.getSPIDs().forEach((spid) => {
             this.networkNode.subscribe(spid)
         })
+        // TODO: NET-637 use client instead of networkNode?
         this.storageConfig.addChangeListener({
             onSPIDAdded: (spid: SPID) => this.networkNode.subscribe(spid),
             onSPIDRemoved: (spid: SPID) => this.networkNode.unsubscribe(spid)

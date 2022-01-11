@@ -206,7 +206,7 @@ export class StorageConfig {
                 }
             }
         }
-        // TODO: use client instead of networkNode?
+        // TODO: NET-637 use client instead of networkNode?
         this.networkNode.addMessageListener(messageListener)
         this.networkNode.subscribe(new SPID(assignmentStreamId, 0))
         return messageListener
@@ -238,7 +238,7 @@ export class StorageConfig {
         messageListener: (msg: StreamMessage<AssignmentMessage>) => void,
         streamrAddress: string
     ): void {
-        // TODO: use client instead of networkNode?
+        // TODO: NET-637 use client instead of networkNode?
         this.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         this.networkNode.unsubscribe(new SPID(assignmentStreamId, 0))
