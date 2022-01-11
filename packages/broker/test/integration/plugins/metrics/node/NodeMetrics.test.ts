@@ -40,8 +40,8 @@ describe('NodeMetrics', () => {
         })
         // eslint-disable-next-line no-console
         console.log("HERE3")
-        
-        const stream = await client2.getOrCreateStream({ id: `metrics/nodes/${uuid()}/sec`, partitions: 10})
+
+        const stream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/sec`, partitions: 10})
         await stream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
         await stream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
         streamIdPrefix = stream.id.replace('sec', '')
