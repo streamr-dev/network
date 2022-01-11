@@ -4,7 +4,6 @@ import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
@@ -49,8 +48,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const brokerAddress = wallet.address
 
     const streamrClient = new StreamrClient(config.client)
-    const publisher = new Publisher(streamrClient)
-    // Start network node
     const networkNode = await streamrClient.getNode()
     const nodeId = networkNode.getNodeId()
     const subscriptionManager = new SubscriptionManager(networkNode)
@@ -61,7 +58,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             name,
             networkNode,
             subscriptionManager,
-            publisher,
             streamrClient,
             apiAuthenticator,
             brokerConfig: config,
@@ -78,8 +74,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         getNodeId: () => networkNode.getNodeId(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
-            //await streamrClient.startNode()
-            await publisher.start()
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
             if (httpServerRoutes.length > 0) {

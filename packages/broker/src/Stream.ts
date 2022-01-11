@@ -30,10 +30,6 @@ export class Stream<C> {
         }
     }
 
-    forEachConnection(cb: (connection: C) => void): void {
-        this.getConnections().forEach(cb)
-    }
-
     getConnections(): C[] {
         return this.connections
     }
@@ -44,10 +40,6 @@ export class Stream<C> {
 
     setSubscribed(): void {
         this.state = 'subscribed'
-    }
-
-    isSubscribing(): boolean {
-        return this.state === 'subscribing'
     }
 
     isSubscribed(): boolean {
@@ -64,9 +56,5 @@ export class Stream<C> {
 
     getId(): string {
         return this.id
-    }
-
-    getPartition(): number {
-        return this.partition
     }
 }

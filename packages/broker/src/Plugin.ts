@@ -1,18 +1,16 @@
 import { NetworkNode } from 'streamr-network'
 import { Config } from './config'
-import { Publisher } from './Publisher'
 import { SubscriptionManager } from './SubscriptionManager'
 import express from 'express'
 import { validateConfig } from './helpers/validateConfig'
 import { Schema } from 'ajv'
-import { StreamrClient, STREAM_CLIENT_DEFAULTS } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { ApiAuthenticator } from './apiAuthenticator'
 
 export interface PluginOptions {
     name: string
     networkNode: NetworkNode
     subscriptionManager: SubscriptionManager
-    publisher: Publisher
     streamrClient: StreamrClient
     apiAuthenticator: ApiAuthenticator
     brokerConfig: Config
@@ -24,7 +22,6 @@ export abstract class Plugin<T> {
     readonly name: string
     readonly networkNode: NetworkNode
     readonly subscriptionManager: SubscriptionManager
-    readonly publisher: Publisher
     readonly streamrClient: StreamrClient
     readonly apiAuthenticator: ApiAuthenticator
     readonly brokerConfig: Config
@@ -36,7 +33,6 @@ export abstract class Plugin<T> {
         this.name = options.name
         this.networkNode = options.networkNode
         this.subscriptionManager = options.subscriptionManager
-        this.publisher = options.publisher
         this.streamrClient = options.streamrClient
         this.apiAuthenticator = options.apiAuthenticator
         this.brokerConfig = options.brokerConfig
@@ -69,9 +65,5 @@ export abstract class Plugin<T> {
 
     getConfigSchema(): Schema|undefined {
         return undefined
-    }
-
-    getRestUrl(): string {
-        return this.brokerConfig.client.restUrl ?? STREAM_CLIENT_DEFAULTS.restUrl
     }
 }

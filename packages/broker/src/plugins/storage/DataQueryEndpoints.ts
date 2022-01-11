@@ -6,10 +6,13 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { Logger, Metrics, MetricsContext } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Storage } from './Storage'
-import { AuthenticatedRequest } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 import { StreamFetcher } from "../../StreamFetcher"
+
+interface AuthenticatedRequest<Q> extends Request<Record<string,any>,any,any,Q,Record<string,any>> {
+    stream?: Record<string, unknown>
+}
 
 const logger = new Logger(module)
 
