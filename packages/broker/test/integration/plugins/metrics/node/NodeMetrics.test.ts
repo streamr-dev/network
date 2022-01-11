@@ -100,6 +100,8 @@ describe('NodeMetrics', () => {
 
         const streamId = `${streamIdPrefix}sec`
         const streamPartition = keyToArrayIndex(10, (await client2.getUserInfo()).username)
+        // eslint-disable-next-line no-console
+        console.log("HERE111")
         await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
         })
