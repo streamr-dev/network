@@ -182,10 +182,6 @@ jobs:
             type=semver,pattern=v{{version}}
             type=raw,value=dev
             type=schedule,pattern=nightly
-      - name: Setup qemu
-        uses: docker/setup-qemu-action@v1.2.0
-        with:
-          platforms: arm64
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
         with:
@@ -196,7 +192,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           load: false
           # only one of these should have tags
