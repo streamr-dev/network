@@ -5,7 +5,6 @@ import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
 import { Plugin, PluginOptions } from '../../Plugin'
-import { StreamFetcher } from '../../StreamFetcher'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig, AssignmentMessage } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -60,8 +59,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             onSPIDRemoved: (spid: SPID) => this.subscriptionManager.unsubscribe(spid.streamId, spid.streamPartition)
         })
         this.networkNode.addMessageListener(this.messageListener)
-        const streamFetcher = new StreamFetcher(this.streamrClient!)
-        this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, streamFetcher, metricsContext))
+        this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
     }

@@ -9,7 +9,6 @@ import {
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
-import { StreamFetcher } from "../../../../src/StreamFetcher"
 import { toStreamID } from 'streamr-client-protocol'
 
 const { MessageLayer } = Protocol
@@ -52,7 +51,7 @@ describe('DataQueryEndpoints', () => {
                 }))
             },
         }
-        app.use(restEndpointRouter(storage, streamFetcher as unknown as StreamFetcher, new MetricsContext(null as any)))
+        app.use(restEndpointRouter(storage, new MetricsContext(null as any)))
     })
 
     describe('Getting last events', () => {

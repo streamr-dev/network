@@ -2,10 +2,9 @@ import { NetworkNode, Protocol } from 'streamr-network'
 import { SPID } from 'streamr-client-protocol'
 
 export class SubscriptionManager {
-    streams = new Map<Protocol.SPIDKey, number>()
+    private readonly streams = new Map<Protocol.SPIDKey, number>()
 
-    constructor(public networkNode: NetworkNode) {
-    }
+    constructor(public readonly networkNode: NetworkNode) {}
 
     subscribe(streamId: string, streamPartition = 0): void {
         const key = Protocol.SPID.toKey(streamId, streamPartition)

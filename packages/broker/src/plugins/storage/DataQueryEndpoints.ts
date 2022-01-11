@@ -8,7 +8,6 @@ import { Readable, Transform } from 'stream'
 import { Storage } from './Storage'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
-import { StreamFetcher } from "../../StreamFetcher"
 
 interface AuthenticatedRequest<Q> extends Request<Record<string,any>,any,any,Q,Record<string,any>> {
     stream?: Record<string, unknown>
@@ -128,7 +127,7 @@ type RangeRequest = AuthenticatedRequest<{
     toOffset?: string   // no longer supported
 }>
 
-export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsContext: MetricsContext): Router => {
+export const router = (storage: Storage, metricsContext: MetricsContext): Router => {
     const router = express.Router()
     const metrics = metricsContext.create('broker/http')
         .addRecordedMetric('outBytes')
@@ -150,9 +149,7 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
             } else {
                 next()
             }
-        },
-        // authentication
-        // authenticator(streamFetcher, StreamPermission.SUBSCRIBE, ???),
+        }
     )
 
     // eslint-disable-next-line max-len
