@@ -15,7 +15,7 @@ describe('NodeMetrics', () => {
     let broker1: Broker
     let storageNode: Broker
     let client1: StreamrClient
-    let nodeAddress: string
+    // let nodeAddress: string
     let client2: StreamrClient
     let streamIdPrefix: string
 
