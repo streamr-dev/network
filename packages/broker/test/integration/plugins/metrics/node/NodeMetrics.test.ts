@@ -103,6 +103,8 @@ describe('NodeMetrics', () => {
         await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
         })
+        // eslint-disable-next-line no-console
+        console.log("HERE111")
         const message = await messageQueue.pop(30 * 1000)
         expect(message.content).toMatchObject({
             broker: {
