@@ -45,18 +45,19 @@ describe('NodeMetrics', () => {
         await secStream.grantPublicPermission(StreamPermission.PUBLISH)
         await secStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
 
-        const minStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/min`, partitions: 10})
+        streamIdPrefix = secStream.id.replace('sec', '')
+
+        const minStream = await client2.getOrCreateStream({ id: `${streamIdPrefix}/min`, partitions: 10})
         await minStream.grantPublicPermission(StreamPermission.PUBLISH)
         await minStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
 
-        const hourStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/hour`, partitions: 10})
+        const hourStream = await client2.getOrCreateStream({ id: `${streamIdPrefix}/hour`, partitions: 10})
         await hourStream.grantPublicPermission(StreamPermission.PUBLISH)
         await hourStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
 
-        const dayStream = await client2.getOrCreateStream({ id: `/metrics/nodes/${uuid()}/day`, partitions: 10})
+        const dayStream = await client2.getOrCreateStream({ id: `${streamIdPrefix}/day`, partitions: 10})
         await dayStream.grantPublicPermission(StreamPermission.PUBLISH)
         await dayStream.grantPublicPermission(StreamPermission.SUBSCRIBE)
-        streamIdPrefix = secStream.id.replace('sec', '')
 
         storageNode = await startBroker({
             name: 'storageNode',
