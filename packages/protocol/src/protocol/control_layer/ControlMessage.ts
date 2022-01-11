@@ -11,9 +11,6 @@ export const PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 = 'PLACEHOLDER_REQUEST_ID_PROTOC
 
 export enum ControlMessageType {
     BroadcastMessage = 0,
-    ResendResponseResending = 4,
-    ResendResponseResent = 5,
-    ResendResponseNoResend = 6,
     ErrorResponse = 7,
     UnsubscribeRequest = 10,
     PublishStreamConnectionRequest = 14,
