@@ -10,16 +10,12 @@ on:
   pull_request:
     branches:
       - '*'
-  schedule:
-    # run every day at 00:00
-    - cron: '0 0 * * *'
 concurrency:
   group: network-build-${{ github.head_ref }}
   cancel-in-progress: true
 defaults:
   run:
     working-directory: packages/network
-
 jobs:
   test:
     name: Lint & Test
