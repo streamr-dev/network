@@ -91,12 +91,13 @@ describe('NodeMetrics', () => {
         const messageQueue = new Queue<any>()
 
         const streamId = `${streamIdPrefix}sec`
-        const streamPartition = keyToArrayIndex(10, (await client2.getUserInfo()).username)
+        const address = await client2.getAddress()
+        const streamPartition = keyToArrayIndex(10, address)
 
         await client2.subscribe({ streamId, streamPartition }, (content: any) => {
             messageQueue.push({ content })
         })
-        
+
         const message = await messageQueue.pop(30 * 1000)
         expect(message.content).toMatchObject({
             broker: {
