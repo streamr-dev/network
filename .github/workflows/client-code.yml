@@ -51,7 +51,7 @@ jobs:
       matrix:
         node-version: [16.x]
     env:
-      TEST_REPEATS: 5
+      TEST_REPEATS: 1
     steps:
       - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.5.1
@@ -82,7 +82,7 @@ jobs:
         ]
     env:
       TEST_NAME: ${{ matrix.test-name }}
-      TEST_REPEATS: 2
+      TEST_REPEATS: 1
 
     steps:
       - uses: actions/checkout@v2.4.0
