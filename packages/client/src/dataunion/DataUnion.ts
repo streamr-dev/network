@@ -186,7 +186,7 @@ export class DataUnion {
      * @returns await on call .wait to actually send the tx
      */
     private async getWithdrawAllTx(sendToMainnet: boolean = true): Promise<ContractTransaction> {
-        const signer = await this.client.ethereum.getSidechainSigner()
+        const signer = await this.client.ethereum.getDataUnionChainSigner()
         const address = await signer.getAddress()
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
 
@@ -227,7 +227,7 @@ export class DataUnion {
      * @returns await on call .wait to actually send the tx
      */
     private async getWithdrawAllToTx(recipientAddress: EthereumAddress, sendToMainnet: boolean = true): Promise<ContractTransaction> {
-        const signer = await this.client.ethereum.getSidechainSigner()
+        const signer = await this.client.ethereum.getDataUnionChainSigner()
         const address = await signer.getAddress()
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const withdrawable = await duSidechain.getWithdrawableEarnings(address)

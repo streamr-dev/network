@@ -78,7 +78,6 @@ export class NodeMetrics {
     }
 
     async start(): Promise<void> {
-        await this.publisher.ensureStreamsCreated()
         const existingSamples = await this.publisher.fetchExistingSamples()
         this.hourAggregator.addSamples(existingSamples.minutes)
         this.dayAggregator.addSamples(existingSamples.hours)

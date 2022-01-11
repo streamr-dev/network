@@ -17,8 +17,8 @@ import { EthereumAddress } from 'streamr-client-protocol'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.dataUnionChainRPC)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainChainRPC)
 const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
 const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
 
@@ -80,7 +80,7 @@ async function testWithdraw(
 
     // product is needed for join requests to analyze the DU version
     const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
-    await authFetch(createProductUrl, adminClient.session, {
+    await authFetch(createProductUrl, {
         method: 'POST',
         body: JSON.stringify({
             beneficiaryAddress: dataUnion.getAddress(),

@@ -118,7 +118,7 @@ export class StreamEndpoints implements Context {
     /**
      * @category Important
      */
-    async getOrCreateStream(props: { id: string }): Promise<Stream> {
+    async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
         this.debug('getOrCreateStream %o', {
             props,
         })

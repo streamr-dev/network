@@ -57,16 +57,17 @@ export type AllAuthConfig = XOR<AuthConfig, DeprecatedAuthConfig>
 // Ethereum Config
 
 export abstract class EthereumConfig {
-    abstract binanceRPC: ConnectionInfo & { chainId?: number }
+    abstract dataUnionBinanceWithdrawalChainRPC: ConnectionInfo & { chainId?: number }
     // address on sidechain
     abstract binanceAdapterAddress: EthereumAddress
     // AMB address on BSC. used to port TXs to BSC
     abstract binanceSmartChainAMBAddress: EthereumAddress
     abstract withdrawServerUrl: string
-    abstract mainnet?: ConnectionInfo|string
-    abstract sidechain: ConnectionInfo & { chainId?: number }
+    abstract mainChainRPC?: ConnectionInfo|string
+    abstract dataUnionChainRPC: ConnectionInfo & { chainId?: number }
     abstract tokenAddress: EthereumAddress
     abstract tokenSidechainAddress: EthereumAddress
+    abstract streamRegistryChainRPC: ConnectionInfo & { chainId?: number } | undefined
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -81,7 +82,8 @@ class StreamrEthereum {
 
     _getAddress?: () => Promise<string>
     _getSigner?: () => Signer
-    _getSidechainSigner?: () => Promise<Signer>
+    _getDataUnionChainSigner?: () => Promise<Signer>
+    _getStreamRegistryChainSigner?: () => Promise<Signer>
 
     constructor(
         @inject(Config.Auth) authConfig: AllAuthConfig,
@@ -92,7 +94,8 @@ class StreamrEthereum {
             const address = getAddress(computeAddress(key))
             this._getAddress = async () => address
             this._getSigner = () => new Wallet(key, this.getMainnetProvider())
-            this._getSidechainSigner = async () => new Wallet(key, this.getSidechainProvider())
+            this._getDataUnionChainSigner = async () => new Wallet(key, this.getDataUnionChainProvider())
+            this._getStreamRegistryChainSigner = async () => new Wallet(key, this.getStreamRegistryChainProvider())
         } else if ('ethereum' in authConfig && authConfig.ethereum) {
             const { ethereum } = authConfig
             this._getAddress = async () => {
@@ -112,15 +115,15 @@ class StreamrEthereum {
                 const metamaskSigner = metamaskProvider.getSigner()
                 return metamaskSigner
             }
-            this._getSidechainSigner = async () => {
-                if (!ethereumConfig.sidechain || !ethereumConfig.sidechain.chainId) {
-                    throw new Error('Streamr sidechain not configured (with chainId) in the StreamrClient options!')
+            this._getDataUnionChainSigner = async () => {
+                if (!ethereumConfig.dataUnionChainRPC || !ethereumConfig.dataUnionChainRPC.chainId) {
+                    throw new Error('Streamr dataUnionChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
 
                 const metamaskProvider = new Web3Provider(ethereum)
                 const { chainId } = await metamaskProvider.getNetwork()
-                if (chainId !== ethereumConfig.sidechain.chainId) {
-                    const sideChainId = ethereumConfig.sidechain.chainId
+                if (chainId !== ethereumConfig.dataUnionChainRPC.chainId) {
+                    const sideChainId = ethereumConfig.dataUnionChainRPC.chainId
                     throw new Error(
                         `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
@@ -128,6 +131,23 @@ class StreamrEthereum {
                 const metamaskSigner = metamaskProvider.getSigner()
                 return metamaskSigner
             }
+            this._getStreamRegistryChainSigner = async () => {
+                if (!ethereumConfig.streamRegistryChainRPC || !ethereumConfig.streamRegistryChainRPC.chainId) {
+                    throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
+                }
+
+                const metamaskProvider = new Web3Provider(ethereum)
+                const { chainId } = await metamaskProvider.getNetwork()
+                if (chainId !== ethereumConfig.streamRegistryChainRPC.chainId) {
+                    const sideChainId = ethereumConfig.streamRegistryChainRPC.chainId
+                    throw new Error(
+                        `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
+                    )
+                }
+                const metamaskSigner = metamaskProvider.getSigner()
+                return metamaskSigner
+            }
+
             // TODO: handle events
             // ethereum.on('accountsChanged', (accounts) => { })
             // https://docs.metamask.io/guide/ethereum-provider.html#events says:
@@ -163,39 +183,56 @@ class StreamrEthereum {
         return this._getSigner()
     }
 
-    async getSidechainSigner(): Promise<Signer> {
-        if (!this._getSidechainSigner) {
-            // _getSidechainSigner is assigned in constructor
+    async getDataUnionChainSigner(): Promise<Signer> {
+        if (!this._getDataUnionChainSigner) {
+            // _getDataUnionChainSigner is assigned in constructor
             throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
         }
 
-        return this._getSidechainSigner()
+        return this._getDataUnionChainSigner()
+    }
+
+    async getStreamRegistryChainSigner(): Promise<Signer> {
+        if (!this._getStreamRegistryChainSigner) {
+            // _getDataUnionChainSigner is assigned in constructor
+            throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
+        }
+        return this._getStreamRegistryChainSigner()
     }
 
     /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
     getMainnetProvider(): Provider {
-        if (!this.ethereumConfig.mainnet) {
+        if (!this.ethereumConfig.mainChainRPC) {
             return getDefaultProvider()
         }
 
-        return new JsonRpcProvider(this.ethereumConfig.mainnet)
+        return new JsonRpcProvider(this.ethereumConfig.mainChainRPC)
     }
 
     /** @returns Ethers.js Provider, a connection to Binance Smart Chain */
     getBinanceProvider(): Provider {
-        if (!this.ethereumConfig.binanceRPC) {
-            throw new Error('StreamrCliEthereumConfigent has no binance configuration.')
+        if (!this.ethereumConfig.dataUnionBinanceWithdrawalChainRPC) {
+            throw new Error('StreamrClientEthereumConfig has no data union binance withdrawal configuration.')
         }
-        return new JsonRpcProvider(this.ethereumConfig.binanceRPC)
+        return new JsonRpcProvider(this.ethereumConfig.dataUnionBinanceWithdrawalChainRPC)
     }
 
     /** @returns Ethers.js Provider, a connection to the Streamr EVM sidechain */
-    getSidechainProvider(): Provider {
-        if (!this.ethereumConfig.sidechain) {
-            throw new Error('EthereumConfig has no sidechain configuration.')
+    getDataUnionChainProvider(): Provider {
+        if (!this.ethereumConfig.dataUnionChainRPC) {
+            throw new Error('EthereumConfig has no dataunion chain configuration.')
         }
 
-        return new JsonRpcProvider(this.ethereumConfig.sidechain)
+        return new JsonRpcProvider(this.ethereumConfig.dataUnionChainRPC)
+    }
+
+    /** @returns Ethers.js Provider, a connection to the Stream Registry Chain */
+    getStreamRegistryChainProvider(): Provider {
+        if (!this.ethereumConfig.streamRegistryChainRPC) {
+            throw new Error('EthereumConfig has no streamRegistryChainRPC configuration.')
+        }
+
+        return new JsonRpcProvider(this.ethereumConfig.streamRegistryChainRPC)
     }
 }
 
