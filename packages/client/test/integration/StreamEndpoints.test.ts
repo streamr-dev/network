@@ -202,7 +202,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 await client.getOrCreateStream({
                     id: `${otherAddress}${newPath}`,
                 })
-            }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${wallet.address}"`)
+            }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${wallet.address.toLowerCase()}"`)
         })
     })
 
