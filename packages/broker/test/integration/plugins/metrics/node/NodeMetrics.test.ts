@@ -28,13 +28,19 @@ describe('NodeMetrics', () => {
         }
         nodeAddress = tmpAccount.address
         tracker = await startTestTracker(trackerPort)
+        // eslint-disable-next-line no-console
         console.log("HERE1")
         client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
+        // eslint-disable-next-line no-console
+        console.log("HERE2")
         client2 = await createClient(tracker, tmpAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
+        // eslint-disable-next-line no-console
+        console.log("HERE3")
+
 
         const stream = await client2.getOrCreateStream({ id: `metrics/nodes/${uuid()}/sec`, partitions: 10})
         await stream.grantUserPermission(StreamPermission.PUBLISH, nodeAddress)
@@ -76,6 +82,8 @@ describe('NodeMetrics', () => {
             },
             storageNodeRegistry
         })
+        // eslint-disable-next-line no-console
+        console.log("HERE4")
     }, 80 * 1000)
 
     afterAll(async () => {
