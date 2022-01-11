@@ -36,8 +36,6 @@ export const formConfig = ({
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    privateKeyFileName = null,
-    certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
     storageNodeRegistry,

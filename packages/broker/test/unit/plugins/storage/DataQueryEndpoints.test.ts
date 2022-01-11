@@ -23,9 +23,6 @@ const createEmptyStream = () => {
 describe('DataQueryEndpoints', () => {
     let app: express.Express
     let storage: Storage
-    let streamFetcher: {
-        authenticate: (streamId: string, sessionToken: string|undefined) => Promise<Record<string, never>>
-    }
 
     function testGetRequest(url: string, sessionToken = 'mock-session-token') {
         return request(app)
@@ -44,13 +41,6 @@ describe('DataQueryEndpoints', () => {
     beforeEach(() => {
         app = express()
         storage = {} as Storage
-        streamFetcher = {
-            authenticate() {
-                return new Promise(((resolve) => {
-                    resolve({})
-                }))
-            },
-        }
         app.use(restEndpointRouter(storage, new MetricsContext(null as any)))
     })
 
