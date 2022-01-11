@@ -72,7 +72,7 @@ describe('NodeMetrics', () => {
         const storageClient = await createClient(tracker, storageNodeAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
-        await storageClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
+        await storageClient.setNode(`{"http": "http://10.200.10.1${httpPort}/api/v1"}`)
         broker1 = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,
@@ -83,8 +83,8 @@ describe('NodeMetrics', () => {
                     consoleAndPM2IntervalInSeconds: 0,
                     nodeMetrics: {
                         client: {
-                            wsUrl: `ws://127.0.0.1:${wsPort}/api/v1/ws`,
-                            httpUrl: `http://127.0.0.1:${httpPort}/api/v1`,
+                            wsUrl: `ws://10.200.10.1:${wsPort}/api/v1/ws`,
+                            httpUrl: `http://10.200.10.1:${httpPort}/api/v1`,
                         },
                         storageNode: storageNodeAccount.address,
                         streamIdPrefix
