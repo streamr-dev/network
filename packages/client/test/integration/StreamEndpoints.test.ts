@@ -336,8 +336,19 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
         ]
 
         it('Stream.getPermissions', async () => {
-            const permissions = await createdStream.getPermissions()
-            return expect(permissions.length).toBeGreaterThan(0)
+            const stream = await createTestStream(client, module)
+            await stream.grantPublicPermission(StreamPermission.PUBLISH)
+            const permissions = await stream.getPermissions()
+            return expect(permissions).toEqual({
+                [wallet.address.toLowerCase()]: [
+                    StreamPermission.EDIT,
+                    StreamPermission.DELETE,
+                    StreamPermission.PUBLISH,
+                    StreamPermission.SUBSCRIBE,
+                    StreamPermission.GRANT
+                ],
+                public: [StreamPermission.PUBLISH]
+            })
         })
 
         describe('Stream.hasPermission', () => {
@@ -414,7 +425,6 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 const previousPermissions = await createdStream.getPermissions()
                 await createdStream.grantPublicPermission(StreamPermission.SUBSCRIBE) // public read
                 const permissions = await createdStream.getPermissions()
-                expect(permissions).toHaveLength(previousPermissions.length)
                 expect(permissions).toEqual(previousPermissions)
             })
 

@@ -62,6 +62,16 @@ export type FilteredStreamListQueryResult = {
 export type SingleStreamQueryResult = {
     stream: StreamPermissionsQueryResult | null
 }
+
+interface PermissionsAssignment {
+    address: EthereumAddress,
+    permissions: StreamPermission[]
+}
+
+export type PublicPermissionId = 'public'
+const PUBLIC_PERMISSION_ID: PublicPermissionId = 'public'
+const PUBLIC_PERMISSION_ADDRESS = '0x0000000000000000000000000000000000000000'
+
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry implements Context {
     id
@@ -434,21 +444,49 @@ export class StreamRegistry implements Context {
         return results
     }
 
-    async getAllPermissionsForStream(streamIdOrPath: string): Promise<StreamPermissions[]> {
+    /**
+     * The user addresses are in lowercase format
+     */
+    async getAllPermissionsForStream(streamIdOrPath: string): Promise<Record<EthereumAddress|PublicPermissionId, StreamPermission[]>> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting all permissions for stream %s', streamId)
         const response = await this.sendStreamQuery(StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)) as SingleStreamQueryResult
         if (!response.stream) {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
+        const result: Record<EthereumAddress, StreamPermission[]> = {}
+        response.stream.permissions
+            .map(StreamRegistry.getPermissionsAssignment)
+            .forEach((assignment: PermissionsAssignment) => {
+                const key = (assignment.address === PUBLIC_PERMISSION_ADDRESS) ? PUBLIC_PERMISSION_ID : assignment.address
+                result[key] = assignment.permissions
+            })
+        return result
+    }
+
+    /* eslint-disable padding-line-between-statements */
+    private static getPermissionsAssignment(permissionResult: PermissionQueryResult): PermissionsAssignment {
         const now = Date.now()
-        return response.stream.permissions.map((permissionResult) => ({
-            canEdit: permissionResult.canEdit,
-            canDelete: permissionResult.canDelete,
-            canPublish: BigNumber.from(permissionResult.publishExpiration).gt(now),
-            canSubscribe: BigNumber.from(permissionResult.subscribeExpiration).gt(now),
-            canGrant: permissionResult.canGrant
-        }))
+        const permissions = []
+        if (permissionResult.canEdit) {
+            permissions.push(StreamPermission.EDIT)
+        }
+        if (permissionResult.canDelete) {
+            permissions.push(StreamPermission.DELETE)
+        }
+        if (BigNumber.from(permissionResult.publishExpiration).gt(now)) {
+            permissions.push(StreamPermission.PUBLISH)
+        }
+        if (BigNumber.from(permissionResult.subscribeExpiration).gt(now)) {
+            permissions.push(StreamPermission.SUBSCRIBE)
+        }
+        if (permissionResult.canGrant) {
+            permissions.push(StreamPermission.GRANT)
+        }
+        return {
+            address: permissionResult.userAddress,
+            permissions
+        }
     }
 
     async listStreams(filter: StreamListQuery = {}): Promise<Stream[]> {

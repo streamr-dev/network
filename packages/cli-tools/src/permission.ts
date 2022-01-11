@@ -20,6 +20,10 @@ export const PERMISSIONS = new Map<string,StreamPermission>([
     ['grant', StreamPermission.GRANT]
 ])
 
+export const getPermissionId = (permission: StreamPermission): string => {
+    return Array.from(PERMISSIONS.entries()).find(([_id, p]) => p === permission)![0]
+}
+
 export const runModifyPermissionsCommand = (
     modifyUserPermission: (stream: Stream, permission: StreamPermission, target: string) => Promise<void>,
     modifyPublicPermission: (stream: Stream, permission: StreamPermission) => Promise<void>,
