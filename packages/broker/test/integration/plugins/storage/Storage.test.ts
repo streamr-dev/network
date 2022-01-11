@@ -419,13 +419,13 @@ describe('Storage', () => {
         })
 
         it('requestFrom correctly returns messages', async () => {
-            const streamingResults = storage.requestFrom(streamId, 0, 91000, 0,  null)
+            const streamingResults = storage.requestFrom(streamId, 0, 91000, 0)
             const results = await toArray(streamingResults)
             expect(results.map((msg) => msg.messageId.sequenceNumber)).toEqual([90, 91, 92, 93, 94, 95, 96, 97, 98, 99])
         })
 
         it('requestRange correctly returns range of messages', async () => {
-            const streamingResults = storage.requestRange(streamId, 0, 41000, 0, 50000, 0, null, null)
+            const streamingResults = storage.requestRange(streamId, 0, 41000, 0, 50000, 0, undefined, undefined)
             const results = await toArray(streamingResults)
             expect(results.map((msg) => msg.messageId.sequenceNumber)).toEqual([40, 41, 42, 43, 44, 45, 46, 47, 48, 49])
         })
