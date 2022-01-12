@@ -58,10 +58,7 @@ describe('tracker endpoint', () => {
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
-            location: {
-                country: 'FI',
-                city: 'Helsinki'
-            }
+            location: undefined
         })
         nodeTwo.setExtraMetadata({
             foo: 'bar'
@@ -287,8 +284,10 @@ describe('tracker endpoint', () => {
                 city: 'Zug'
             },
             'node-2': {
-                country: 'FI',
-                city: 'Helsinki'
+                country: null,
+                city: null,
+                latitude: null,
+                longitude: null
             }
         })
     })
