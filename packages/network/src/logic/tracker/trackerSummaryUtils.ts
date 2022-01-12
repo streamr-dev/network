@@ -1,9 +1,11 @@
 import { SPID, SPIDKey, StreamID } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
+import { Location } from '../../identifiers'
 
 type OverLayWithRtts = Record<SPIDKey,Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] >>
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
+type NodesWithLocations = { [key: string]: Location }
 
 export function getTopology(
     overlayPerStream: OverlayPerStream,
@@ -68,6 +70,19 @@ export function addRttsToNodeConnections(
             }
         })
     }
+}
+
+export function getNodesWithLocationData(nodes: ReadonlyArray<string>, locations: Readonly<{[key: string]: Location}>): NodesWithLocations {
+    return Object.assign({}, ...nodes.map((nodeId: string) => {
+        return {
+            [nodeId]: locations[nodeId] || {
+                latitude: null,
+                longitude: null,
+                country: null,
+                city: null,
+            }
+        }
+    }))
 }
 
 export function findStreamsForNode(

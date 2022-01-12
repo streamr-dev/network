@@ -4,7 +4,7 @@ RUN npm set unsafe-perm true && \
 	# explicitly use npm v8
 	npm install -g npm@8 --no-audit
 COPY . .
-RUN npm run bootstrap-pkg -- streamr-broker
+RUN npm config set python "$(which python3)" && npm run bootstrap-pkg -- streamr-broker
 
 RUN npm run prune-pkg -- streamr-broker
 

@@ -9,9 +9,6 @@ on:
   pull_request:
     branches:
       - '*'
-  schedule:
-    # run every day at 00:00
-    - cron: '0 0 * * *'
 
 concurrency:
   group: network-browser-${{ github.head_ref }}

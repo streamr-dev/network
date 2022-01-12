@@ -6,10 +6,8 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { Logger, Metrics, MetricsContext } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Storage } from './Storage'
-import { AuthenticatedRequest } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
-import { StreamFetcher } from "../../StreamFetcher"
 
 const logger = new Logger(module)
 
@@ -104,17 +102,19 @@ const createEndpointRoute = (
     })
 }
 
-type LastRequest = AuthenticatedRequest<{
+type BaseRequest<Q> = Request<Record<string,any>,any,any,Q,Record<string,any>>
+
+type LastRequest = BaseRequest<{
     count?: string
 }>
 
-type FromRequest = AuthenticatedRequest<{
+type FromRequest = BaseRequest<{
     fromTimestamp?: string
     fromSequenceNumber?: string
     publisherId?: string
 }>
 
-type RangeRequest = AuthenticatedRequest<{
+type RangeRequest = BaseRequest<{
     fromTimestamp?: string
     toTimestamp?: string
     fromSequenceNumber?: string
@@ -125,7 +125,7 @@ type RangeRequest = AuthenticatedRequest<{
     toOffset?: string   // no longer supported
 }>
 
-export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsContext: MetricsContext): Router => {
+export const router = (storage: Storage, metricsContext: MetricsContext): Router => {
     const router = express.Router()
     const metrics = metricsContext.create('broker/http')
         .addRecordedMetric('outBytes')
@@ -147,9 +147,7 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
             } else {
                 next()
             }
-        },
-        // authentication
-        // authenticator(streamFetcher, StreamPermission.SUBSCRIBE, ???),
+        }
     )
 
     // eslint-disable-next-line max-len

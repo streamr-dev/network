@@ -17,7 +17,6 @@ interface TestConfig {
     trackerPort: number
     privateKey: string
     httpPort?: null | number
-    wsPort?: null | number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: ApiAuthenticationConfig
     enableCassandra?: boolean
@@ -34,12 +33,9 @@ export const formConfig = ({
     trackerPort,
     privateKey,
     httpPort = null,
-    wsPort = null,
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    privateKeyFileName = null,
-    certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
     storageNodeRegistry,
@@ -61,14 +57,6 @@ export const formConfig = ({
                     refreshInterval: storageConfigRefreshInterval
                 }
             }
-        }
-    }
-    if (wsPort) {
-        plugins['legacyWebsocket'] = {
-            port: wsPort,
-            pingInterval: 3000,
-            privateKeyFileName,
-            certFileName
         }
     }
 

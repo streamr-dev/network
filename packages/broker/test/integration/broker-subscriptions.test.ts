@@ -8,8 +8,6 @@ import { startBroker, createClient, createTestStream, getPrivateKey, getSPIDKeys
 
 jest.setTimeout(50000)
 
-const wsPort1 = 13391
-const wsPort2 = 13392
 const trackerPort = 13410
 const mqttPort1 = 13551
 const mqttPort2 = 13552
@@ -48,7 +46,6 @@ describe('broker subscriptions', () => {
             name: 'broker1',
             privateKey: broker1User.privateKey,
             trackerPort,
-            wsPort: wsPort1,
             extraPlugins: {
                 mqtt: {
                     port: mqttPort1
@@ -59,7 +56,6 @@ describe('broker subscriptions', () => {
             name: 'broker2',
             privateKey: broker2User.privateKey,
             trackerPort,
-            wsPort: wsPort2,
             extraPlugins: {
                 mqtt: {
                     port: mqttPort2
