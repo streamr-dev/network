@@ -27,7 +27,7 @@ describe('NegotiatedProtocolVersions', () => {
             'faulty',
             [8,9],
             [33])
-        ).toThrow('Supported ControlLayer versions: [1,2]. Are you using an outdated library?')
+        ).toThrow('Supported ControlLayer versions: [2]. Are you using an outdated library?')
     })
 
     it('non-existent peerId get request returns undefined', () => {
