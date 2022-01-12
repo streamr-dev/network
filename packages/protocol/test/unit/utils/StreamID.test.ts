@@ -90,46 +90,46 @@ describe('isKeyExchangeStream', () => {
     })
 })
 
-describe('getAddressAndPathFromStreamID', () => {
+describe('getAddressAndPath', () => {
     it('returns undefined for legacy stream id', () => {
-        expect(StreamIDUtils.getAddressAndPathFromStreamID(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+        expect(StreamIDUtils.getAddressAndPath(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getAddressAndPathFromStreamID(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getAddressAndPath(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
     })
 
     it('returns address and path for full stream id', () => {
-        expect(StreamIDUtils.getAddressAndPathFromStreamID(StreamIDUtils.toStreamID('/foo/bar', address)))
+        expect(StreamIDUtils.getAddressAndPath(StreamIDUtils.toStreamID('/foo/bar', address)))
             .toEqual([address.toLowerCase(), '/foo/bar'])
     })
 })
 
-describe('getAddressFromStreamID', () => {
+describe('getAddress', () => {
     it('returns undefined for legacy stream id', () => {
-        expect(StreamIDUtils.getAddressFromStreamID(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+        expect(StreamIDUtils.getAddress(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getAddressFromStreamID(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getAddress(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
     })
 
     it('returns address for full stream id', () => {
-        expect(StreamIDUtils.getAddressFromStreamID(StreamIDUtils.toStreamID('/foo/bar', address))).toEqual(address.toLowerCase())
+        expect(StreamIDUtils.getAddress(StreamIDUtils.toStreamID('/foo/bar', address))).toEqual(address.toLowerCase())
     })
 })
 
-describe('getPathFromStreamID', () => {
+describe('getPath', () => {
     it('returns undefined for legacy stream id', () => {
-        expect(StreamIDUtils.getPathFromStreamID(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+        expect(StreamIDUtils.getPath(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getPathFromStreamID(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getPath(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
     })
 
     it('returns path for full stream id', () => {
-        expect(StreamIDUtils.getPathFromStreamID(StreamIDUtils.toStreamID('/foo/bar', address))).toEqual('/foo/bar')
+        expect(StreamIDUtils.getPath(StreamIDUtils.toStreamID('/foo/bar', address))).toEqual('/foo/bar')
     })
 })
 

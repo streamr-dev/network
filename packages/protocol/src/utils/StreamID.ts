@@ -50,17 +50,17 @@ export class StreamIDUtils {
         return streamId.startsWith(StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX)
     }
     
-    static getAddressFromStreamID(streamId: StreamID): string | undefined {
-        const addressAndPath = StreamIDUtils.getAddressAndPathFromStreamID(streamId)
+    static getAddress(streamId: StreamID): string | undefined {
+        const addressAndPath = StreamIDUtils.getAddressAndPath(streamId)
         return addressAndPath?.[0]
     }
     
-    static getPathFromStreamID(streamId: StreamID): string | undefined {
-        const addressAndPath = StreamIDUtils.getAddressAndPathFromStreamID(streamId)
+    static getPath(streamId: StreamID): string | undefined {
+        const addressAndPath = StreamIDUtils.getAddressAndPath(streamId)
         return addressAndPath?.[1]
     }
     
-    static getAddressAndPathFromStreamID(streamId: StreamID): [string, string] | undefined {
+    static getAddressAndPath(streamId: StreamID): [string, string] | undefined {
         const firstSlashIdx = streamId.indexOf('/')
         if (firstSlashIdx !== -1 && !StreamIDUtils.isKeyExchangeStream(streamId)) {
             return [streamId.substring(0, firstSlashIdx), streamId.substring(firstSlashIdx)]

@@ -178,7 +178,7 @@ export class StreamRegistry implements Context {
         }
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.createStream(
-            StreamIDUtils.getPathFromStreamID(streamId)!,
+            StreamIDUtils.getPath(streamId)!,
             JSON.stringify(normalizedProperties)
         )
         await tx.wait()
@@ -186,7 +186,7 @@ export class StreamRegistry implements Context {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(streamId: StreamID): Promise<void> {
-        const address = StreamIDUtils.getAddressFromStreamID(streamId)
+        const address = StreamIDUtils.getAddress(streamId)
         const userAddress = await this.ethereum.getAddress()
         if (address === undefined || address.toLowerCase() !== userAddress.toLowerCase()) { // TODO: add check for ENS??
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
