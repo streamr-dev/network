@@ -7,8 +7,6 @@ import { Serializer } from '../../Serializer'
 const serializerByVersionAndType: {[version: string]: { [type: number]: Serializer<ControlMessage> }} = {}
 const LATEST_VERSION = 2
 
-export const PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 = 'PLACEHOLDER_REQUEST_ID_PROTOCOL_V1'
-
 export enum ControlMessageType {
     BroadcastMessage = 0,
     ErrorResponse = 7,
