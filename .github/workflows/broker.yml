@@ -137,7 +137,7 @@ jobs:
     needs: [test-unit, test-integration, test-docker]
     runs-on: self-hosted
     # only push for main and tags
-    if: ${{ always() && github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ always() }}
 
     steps:
       - uses: actions/checkout@v2.4.0
