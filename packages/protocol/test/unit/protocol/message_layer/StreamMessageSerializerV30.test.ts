@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { StreamMessage, MessageRef, MessageID, toStreamID } from '../../../../src/index'
+import { StreamMessage, MessageRef, MessageID, StreamIDUtils } from '../../../../src/index'
 
 const VERSION = 30
 
@@ -10,7 +10,7 @@ const content = {
 
 // Message definitions
 const message = new StreamMessage({
-    messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+    messageId: new MessageID(StreamIDUtils.toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
     prevMsgRef: new MessageRef(1564046132168, 5),
     content: JSON.stringify(content),
     messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,

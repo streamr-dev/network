@@ -1,4 +1,4 @@
-import { MessageLayer, toStreamID } from '../../src'
+import { MessageLayer, StreamIDUtils } from '../../src'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -42,8 +42,14 @@ describe('deserialize', () => {
 
         run(() => {
             return new StreamMessage({
-                // eslint-disable-next-line max-len
-                messageId: new MessageID(toStreamID('kxeE-gyxS8CkuWYlfBKMVg'), 0, 1567671580680, 0, '0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963', '7kcxFuyOs4ozeAcVfzJF'),
+                messageId: new MessageID(
+                    StreamIDUtils.toStreamID('kxeE-gyxS8CkuWYlfBKMVg'),
+                    0,
+                    1567671580680,
+                    0,
+                    '0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963',
+                    '7kcxFuyOs4ozeAcVfzJF'
+                ),
                 prevMsgRef: new MessageRef(1567671579675, 0),
                 content: '{"random": 0.8314497807870005}',
             })

@@ -7,7 +7,7 @@ import { startTracker } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
-import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
+import { MessageID, StreamMessage, StreamIDUtils } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
@@ -111,7 +111,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         })
         const i = 1
         const msg1 = new StreamMessage({
-            messageId: new MessageID(toStreamID('stream-1'), 0, i, 0, 'node-endpoint1', 'msgChainId'),
+            messageId: new MessageID(StreamIDUtils.toStreamID('stream-1'), 0, i, 0, 'node-endpoint1', 'msgChainId'),
             prevMsgRef: null,
             content: {
                 messageNo: i

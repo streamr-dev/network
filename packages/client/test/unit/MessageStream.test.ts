@@ -3,10 +3,10 @@ import { counterId } from '../../src/utils'
 import { Context } from '../../src/utils/Context'
 import { Debug, Msg, LeaksDetector } from '../utils'
 import MessageStream from '../../src/MessageStream'
-import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
+import { StreamMessage, MessageID, StreamIDUtils } from 'streamr-client-protocol'
 
 describe('MessageStream', () => {
-    const streamId = toStreamID('streamId')
+    const streamId = StreamIDUtils.toStreamID('streamId')
     let context: Context
     let leaksDetector: LeaksDetector
 
