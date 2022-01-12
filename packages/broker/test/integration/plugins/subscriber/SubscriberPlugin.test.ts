@@ -35,8 +35,6 @@ const createMockPlugin = async (tracker: Tracker) => {
     return new SubscriberPlugin({
         name: 'subscriber',
         networkNode: undefined as any,
-        subscriptionManager: undefined as any,
-        publisher: undefined as any,
         streamrClient: await createClient(tracker, wallet.privateKey),
         apiAuthenticator: undefined as any,
         brokerConfig,

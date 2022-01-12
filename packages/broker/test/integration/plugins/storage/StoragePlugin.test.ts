@@ -7,7 +7,7 @@ import { Wallet } from 'ethers'
 
 const SPIDS: Protocol.SPID[] = [new Protocol.SPID('foo', 0), new Protocol.SPID('bar', 0)]
 
-const createMockPlugin = async (networkNode: any, subscriptionManager: any) => {
+const createMockPlugin = async (networkNode: any) => {
     const wallet = new Wallet(await getPrivateKey())
     const brokerConfig: any = {
         client: {
@@ -35,8 +35,6 @@ const createMockPlugin = async (networkNode: any, subscriptionManager: any) => {
     return new StoragePlugin({
         name: 'storage',
         networkNode,
-        subscriptionManager,
-        publisher: undefined as any,
         streamrClient: {
             getNode: () => Promise.resolve({
                 getMetricsContext: () => new MetricsContext(undefined as any)
@@ -51,7 +49,6 @@ const createMockPlugin = async (networkNode: any, subscriptionManager: any) => {
 describe('StoragePlugin', () => {
 
     let networkNode: any
-    let subscriptionManager: any
     let storageConfig: any
     let storageConfigFactory: any
 
@@ -59,9 +56,6 @@ describe('StoragePlugin', () => {
         networkNode = {
             addMessageListener: jest.fn(),
             removeMessageListener: jest.fn(),
-            subscribe: jest.fn()
-        }
-        subscriptionManager = {
             subscribe: jest.fn(),
             unsubscribe: jest.fn()
         }
@@ -75,16 +69,16 @@ describe('StoragePlugin', () => {
     })
 
     test('happy path: start and stop', async () => {
-        const plugin = await createMockPlugin(networkNode, subscriptionManager)
+        const plugin = await createMockPlugin(networkNode)
         await plugin.start()
-        expect(subscriptionManager.subscribe).toBeCalledTimes(SPIDS.length)
+        expect(networkNode.subscribe).toBeCalledTimes(SPIDS.length)
         expect(networkNode.addMessageListener).toBeCalledTimes(1)
         expect(storageConfig.startAssignmentEventListener).toBeCalledTimes(1)
         expect(storageConfig.startChainEventsListener).toBeCalledTimes(1)
         // @ts-expect-error private field
         const cassandraClose = jest.spyOn(plugin.cassandra!, 'close')
         await plugin.stop()
-        expect(subscriptionManager.unsubscribe).toBeCalledTimes(SPIDS.length)
+        expect(networkNode.unsubscribe).toBeCalledTimes(SPIDS.length)
         expect(networkNode.removeMessageListener).toBeCalledTimes(1)
         expect(storageConfig.stopAssignmentEventListener).toBeCalledTimes(1)
         expect(storageConfig.stopChainEventsListener).toBeCalledTimes(1)

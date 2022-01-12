@@ -5,7 +5,6 @@ import { Broker } from "../../../../src/broker"
 import StreamrClient from 'streamr-client'
 
 const httpPort1 = 12501
-const wsPort1 = 12502
 const trackerPort = 12503
 
 describe('StorageNode', () => {
@@ -28,7 +27,6 @@ describe('StorageNode', () => {
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
-            wsPort: wsPort1,
             httpPort: httpPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,

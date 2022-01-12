@@ -4,7 +4,7 @@ import { Logger } from 'streamr-network'
 import { ParsedQs } from 'qs'
 import { parsePositiveInteger, parseQueryParameter } from '../../helpers/parser'
 import { Connection } from './Connection'
-import { closeWithError } from '../../helpers/closeWebsocket'
+import { closeWithError } from './closeWebsocket'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 
 const logger = new Logger(module)

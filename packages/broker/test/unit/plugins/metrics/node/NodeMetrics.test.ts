@@ -24,9 +24,6 @@ describe('NodeMetrics', () => {
 
     beforeEach(() => {
         const metricsContext = new MetricsContext('')
-        const brokerMetricsProducer = metricsContext.create('broker/publisher')
-            .addRecordedMetric('bytes')
-            .addRecordedMetric('messages')
         const webRtcMetricsProducer = metricsContext.create('WebRtcEndpoint')
             .addRecordedMetric('inSpeed')
             .addRecordedMetric('outSpeed')
@@ -38,8 +35,6 @@ describe('NodeMetrics', () => {
             .addRecordedMetric('readBytes')
             .addRecordedMetric('writeBytes')
         updateMockMetricsData = (value: number) => {
-            brokerMetricsProducer.record('bytes', value)
-            brokerMetricsProducer.record('messages', value)
             webRtcMetricsProducer.record('inSpeed', value)
             webRtcMetricsProducer.record('outSpeed', value)
             webRtcMetricsProducer.record('failedConnection', value)
@@ -148,8 +143,8 @@ describe('NodeMetrics', () => {
         expect(publishListener).toBeCalledTimes(1)
         expect(publishListener).toBeCalledWith({
             broker: {
-                messagesToNetworkPerSec: 0,
-                bytesToNetworkPerSec: 0
+                messagesToNetworkPerSec: -1,
+                bytesToNetworkPerSec: -1
             },
             network: {
                 avgLatencyMs: 0,
@@ -175,8 +170,8 @@ describe('NodeMetrics', () => {
         expect(publishListener).toBeCalledTimes(1)
         expect(publishListener).toBeCalledWith({
             broker: {
-                messagesToNetworkPerSec: MOCK_METRICS_VALUE,
-                bytesToNetworkPerSec: MOCK_METRICS_VALUE
+                messagesToNetworkPerSec: -1,
+                bytesToNetworkPerSec: -1
             },
             network: {
                 avgLatencyMs: MOCK_METRICS_VALUE,

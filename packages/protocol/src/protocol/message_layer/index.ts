@@ -1,7 +1,6 @@
 import MessageID from "./MessageID"
 import MessageIDStrict from "./MessageIDStrict"
 import MessageRef from "./MessageRef"
-import MessageRefStrict from "./MessageRefStrict"
 import StreamMessage from "./StreamMessage"
 import { StreamMessageType } from "./StreamMessage"
 import GroupKeyMessage from "./GroupKeyMessage"
@@ -22,7 +21,6 @@ export {
     MessageID,
     MessageIDStrict,
     MessageRef,
-    MessageRefStrict,
     StreamMessage,
     StreamMessageType,
     GroupKeyMessage,

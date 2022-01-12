@@ -1,12 +1,12 @@
-import { ControlLayer, toStreamID } from 'streamr-client-protocol'
+import { ControlLayer, ErrorCode } from 'streamr-client-protocol'
 
 import { decode } from '../../src/protocol/utils'
 
 describe('encoder', () => {
-    const controlMessage = new ControlLayer.ResendResponseNoResend({
+    const controlMessage = new ControlLayer.ErrorResponse({
         requestId: 'requestId',
-        streamId: toStreamID('streamId'),
-        streamPartition: 0,
+        errorMessage: 'This is an error',
+        errorCode: ErrorCode.AUTHENTICATION_FAILED
     })
 
     it('decode', () => {
