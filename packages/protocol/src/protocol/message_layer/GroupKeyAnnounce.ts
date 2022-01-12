@@ -3,7 +3,7 @@ import { validateIsArray } from '../../utils/validations'
 import GroupKeyMessage from './GroupKeyMessage'
 import StreamMessage from './StreamMessage'
 import EncryptedGroupKey, { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
-import { StreamID, toStreamID } from '../../utils/StreamID'
+import { StreamID, StreamIDUtils } from '../../utils/StreamID'
 
 export interface Options {
     streamId: StreamID
@@ -39,7 +39,7 @@ export default class GroupKeyAnnounce extends GroupKeyMessage {
     static fromArray(arr: GroupKeyAnnounceSerialized): GroupKeyAnnounce {
         const [streamId, encryptedGroupKeys] = arr
         return new GroupKeyAnnounce({
-            streamId: toStreamID(streamId),
+            streamId: StreamIDUtils.toStreamID(streamId),
             encryptedGroupKeys: encryptedGroupKeys.map((it) => EncryptedGroupKey.fromArray(it)),
         })
     }

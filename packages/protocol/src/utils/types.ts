@@ -1,1 +1,1 @@
-export type EthereumAddress = string
+export type EthereumAddress = string // TODO: validate regex?

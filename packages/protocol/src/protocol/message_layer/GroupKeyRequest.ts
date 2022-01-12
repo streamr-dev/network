@@ -2,7 +2,7 @@ import { validateIsArray, validateIsString } from '../../utils/validations'
 
 import GroupKeyMessage from './GroupKeyMessage'
 import StreamMessage from './StreamMessage'
-import { StreamID, toStreamID } from '../../utils/StreamID'
+import { StreamID, StreamIDUtils } from '../../utils/StreamID'
 
 interface Options {
     requestId: string
@@ -40,7 +40,7 @@ export default class GroupKeyRequest extends GroupKeyMessage {
         const [requestId, streamId, rsaPublicKey, groupKeyIds] = args
         return new GroupKeyRequest({
             requestId,
-            streamId: toStreamID(streamId),
+            streamId: StreamIDUtils.toStreamID(streamId),
             rsaPublicKey,
             groupKeyIds,
         })

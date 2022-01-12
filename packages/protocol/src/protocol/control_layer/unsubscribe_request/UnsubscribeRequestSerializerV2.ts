@@ -3,7 +3,7 @@ import ControlMessage from '../ControlMessage'
 import UnsubscribeRequest from './UnsubscribeRequest'
 
 import { Serializer } from '../../../Serializer'
-import { toStreamID } from '../../../utils/StreamID'
+import { StreamIDUtils } from '../../../utils/StreamID'
 
 const VERSION = 2
 
@@ -30,7 +30,7 @@ export default class UnsubscribeRequestSerializerV2 extends Serializer<Unsubscri
         return new UnsubscribeRequest({
             version,
             requestId,
-            streamId: toStreamID(streamId),
+            streamId: StreamIDUtils.toStreamID(streamId),
             streamPartition
         })
     }
