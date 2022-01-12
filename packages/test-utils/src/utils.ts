@@ -285,14 +285,15 @@ export class KeyServer {
     constructor() {
         const app = express()
         app.use(cors())
-
-        // try avoid sequential tests starting from same address
-        let c = (Math.round((Math.random() * 1000)) % 1000)
-        app.get('/key', (req, res) => {
-            c = ((c + 1) % 1000)
+        let c = 1
+        app.get('/key', (_req, res) => {
             const hexString = c.toString(16)
             const privateKey = '0x' + hexString.padStart(64, '0')
             res.send(privateKey)
+            c += 1
+            if (c > 1000) {
+                c = 1
+            }
         })
         this.server = app.listen(KeyServer.KEY_SERVER_PORT)
     }
