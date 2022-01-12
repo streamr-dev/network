@@ -3,7 +3,7 @@ import ControlMessage, { PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 } from '../ControlMe
 import PublishStreamConnectionRequest from './PublishStreamConnectionRequest'
 
 import { Serializer } from '../../../Serializer'
-import { toStreamID } from '../../../utils/StreamID'
+import { StreamIDUtils } from '../../../utils/StreamID'
 
 const VERSION = 1
 
@@ -29,7 +29,7 @@ export default class PublishStreamConnectionRequestSerializerV1 extends Serializ
 
         return new PublishStreamConnectionRequest({
             version,
-            streamId: toStreamID(streamId),
+            streamId: StreamIDUtils.toStreamID(streamId),
             streamPartition,
             senderId,
             requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1

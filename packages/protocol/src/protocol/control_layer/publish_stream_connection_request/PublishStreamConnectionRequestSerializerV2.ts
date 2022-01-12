@@ -3,7 +3,7 @@ import ControlMessage from '../ControlMessage'
 import PublishStreamConnectionRequest from "./PublishStreamConnectionRequest"
 
 import { Serializer } from '../../../Serializer'
-import { toStreamID } from '../../../utils/StreamID'
+import { StreamIDUtils } from '../../../utils/StreamID'
 
 const VERSION = 2
 
@@ -32,7 +32,7 @@ export default class PublishStreamConnectionRequestSerializerV2 extends Serializ
         return new PublishStreamConnectionRequest({
             version,
             requestId,
-            streamId: toStreamID(streamId),
+            streamId: StreamIDUtils.toStreamID(streamId),
             streamPartition,
             senderId,
         })

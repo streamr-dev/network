@@ -1,4 +1,4 @@
-import { EthereumAddress, isPathOnlyFormat, StreamID, toStreamID as toStreamIDSync } from 'streamr-client-protocol'
+import { EthereumAddress, StreamIDUtils, StreamID } from 'streamr-client-protocol'
 import Ethereum from './Ethereum'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 
@@ -8,9 +8,9 @@ export class StreamIDBuilder {
 
     async toStreamID(streamIdOrPath: string): Promise<StreamID> {
         let address: EthereumAddress | undefined
-        if (isPathOnlyFormat(streamIdOrPath) && this.ethereum.isAuthenticated()) {
+        if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath) && this.ethereum.isAuthenticated()) {
             address = await this.ethereum.getAddress()
         }
-        return toStreamIDSync(streamIdOrPath, address)
+        return StreamIDUtils.toStreamID(streamIdOrPath, address)
     }
 }

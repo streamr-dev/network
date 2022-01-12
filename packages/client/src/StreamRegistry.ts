@@ -18,11 +18,8 @@ import {
     SIDLike,
     SPID,
     StreamID,
-    isKeyExchangeStream,
     EthereumAddress,
-    getPathFromStreamID,
-    getAddressFromStreamID,
-    toStreamID,
+    StreamIDUtils,
 } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
@@ -181,7 +178,7 @@ export class StreamRegistry implements Context {
         }
         await this.connectToStreamRegistryContract()
         const tx = await this.streamRegistryContract!.createStream(
-            getPathFromStreamID(streamId)!,
+            StreamIDUtils.getPathFromStreamID(streamId)!,
             JSON.stringify(normalizedProperties)
         )
         await tx.wait()
@@ -189,7 +186,7 @@ export class StreamRegistry implements Context {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(streamId: StreamID): Promise<void> {
-        const address = getAddressFromStreamID(streamId)
+        const address = StreamIDUtils.getAddressFromStreamID(streamId)
         const userAddress = await this.ethereum.getAddress()
         if (address === undefined || address.toLowerCase() !== userAddress.toLowerCase()) { // TODO: add check for ENS??
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
@@ -388,7 +385,7 @@ export class StreamRegistry implements Context {
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)
-        if (isKeyExchangeStream(streamId)) {
+        if (StreamIDUtils.isKeyExchangeStream(streamId)) {
             return new Stream({ id: streamId, partitions: 1 }, this.container)
         }
         let metadata
@@ -403,7 +400,7 @@ export class StreamRegistry implements Context {
     async getStreamFromGraph(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s from theGraph', streamId)
-        if (isKeyExchangeStream(streamId)) {
+        if (StreamIDUtils.isKeyExchangeStream(streamId)) {
             return new Stream({ id: streamId, partitions: 1 }, this.container)
         }
         const response = await this.sendStreamQuery(
@@ -431,7 +428,7 @@ export class StreamRegistry implements Context {
                 try {
                     // toStreamID isn't strictly needed here since we are iterating over a result set from the Graph
                     // (we could just cast). _If_ this ever throws, one of our core assumptions is wrong.
-                    const stream = this.parseStream(toStreamID(id), metadata)
+                    const stream = this.parseStream(StreamIDUtils.toStreamID(id), metadata)
                     resStreams.push(stream)
                 } catch (err) {
                     this.debug(`Skipping stream ${id} cannot parse metadata: ${metadata}`)
@@ -492,7 +489,7 @@ export class StreamRegistry implements Context {
     async listStreams(filter: StreamListQuery = {}): Promise<Stream[]> {
         this.debug('Getting all streams from thegraph that match filter %o', filter)
         const response = await this.sendStreamQuery(StreamRegistry.buildGetFilteredStreamListQuery(filter)) as FilteredStreamListQueryResult
-        return response.streams.map((streamobj) => this.parseStream(toStreamID(streamobj.id), streamobj.metadata))
+        return response.streams.map((streamobj) => this.parseStream(StreamIDUtils.toStreamID(streamobj.id), streamobj.metadata))
     }
 
     async getStreamPublishers(streamIdOrPath: string, pagesize: number = 1000) {

@@ -8,15 +8,7 @@ import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
 import {
     StreamID,
-    toStreamID,
-    getAddressFromStreamID,
-    getPathFromStreamID,
-    getAddressAndPathFromStreamID,
-    KEY_EXCHANGE_STREAM_PREFIX,
-    formKeyExchangeStreamID,
-    isKeyExchangeStream,
-    getRecipient,
-    isPathOnlyFormat
+    StreamIDUtils
 } from "./StreamID"
 import { EthereumAddress } from "./types"
 
@@ -36,14 +28,6 @@ export {
     parseAddressFromNodeId,
     keyToArrayIndex,
     StreamID,
-    toStreamID,
-    getAddressFromStreamID,
-    getPathFromStreamID,
-    getAddressAndPathFromStreamID,
-    KEY_EXCHANGE_STREAM_PREFIX,
-    formKeyExchangeStreamID,
-    isKeyExchangeStream,
-    getRecipient,
-    isPathOnlyFormat,
+    StreamIDUtils,
     EthereumAddress
 }
