@@ -3,13 +3,13 @@ import StreamMessageError from '../../errors/StreamMessageError'
 import ValidationError from '../../errors/ValidationError'
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import { validateIsNotEmptyString, validateIsString, validateIsType } from '../../utils/validations'
-import { SPID } from '../../utils/SPID'
 
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
+import { StreamPartitionID } from "../../utils/StreamPartitionID"
 
 const serializerByVersion: {[version: string]: Serializer<StreamMessage> } = {}
 const BYE_KEY = '_bye'
@@ -137,7 +137,6 @@ export default class StreamMessage<T = unknown> {
     signature: string | null
     parsedContent?: T
     serializedContent: string
-    spid: SPID
 
     /**
      * Create a new StreamMessage identical to the passed-in streamMessage.
@@ -211,20 +210,19 @@ export default class StreamMessage<T = unknown> {
         validateIsNotEmptyString('content', this.serializedContent)
 
         StreamMessage.validateSequence(this)
-
-        this.spid = SPID.from(this.messageId)
     }
 
     getStreamId(): StreamID {
         return this.messageId.streamId
     }
 
+    // TODO: delete or rename to partition
     getStreamPartition(): number {
         return this.messageId.streamPartition
     }
 
-    getSPID(): SPID {
-        return this.spid
+    getStreamPartitionID(): StreamPartitionID {
+        return this.messageId.getStreamPartitionID()
     }
 
     getTimestamp(): number {

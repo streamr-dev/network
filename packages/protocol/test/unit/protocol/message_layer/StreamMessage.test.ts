@@ -2,7 +2,13 @@ import assert from 'assert'
 
 import sinon from 'sinon'
 
-import { MessageRef, MessageIDStrict, EncryptedGroupKey, StreamIDUtils } from '../../../../src/index'
+import {
+    MessageRef,
+    MessageIDStrict,
+    EncryptedGroupKey,
+    StreamIDUtils,
+    StreamPartitionIDUtils
+} from '../../../../src/index'
 import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import { Serializer } from '../../../../src/Serializer'
@@ -48,9 +54,7 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getNewGroupKey(), newGroupKey)
             assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.strictEqual(streamMessage.signature, 'signature')
-            assert.strictEqual(streamMessage.getSPID().streamId, streamMessage.getStreamId())
-            assert.strictEqual(streamMessage.getSPID().streamPartition, streamMessage.getStreamPartition())
-            assert.strictEqual(streamMessage.getSPID(), streamMessage.spid)
+            assert.strictEqual(streamMessage.getStreamPartitionID(), StreamPartitionIDUtils.parse('streamId#0'))
         })
 
         it('create StreamMessage with minimum fields defined', () => {
