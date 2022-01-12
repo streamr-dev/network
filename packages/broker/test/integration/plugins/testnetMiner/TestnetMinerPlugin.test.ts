@@ -15,7 +15,6 @@ jest.setTimeout(30000)
 const logger = new Logger(module)
 
 const TRACKER_PORT = 12461
-const LEGACY_WEBSOCKET_PORT = 12462
 const CLAIM_SERVER_PORT = 12463
 const MOCK_REWARD_CODE = 'mock-reward-code'
 
@@ -83,7 +82,6 @@ describe('TestnetMinerPlugin', () => {
             name: 'broker',
             privateKey: brokerWallet.privateKey,
             trackerPort: TRACKER_PORT,
-            wsPort: LEGACY_WEBSOCKET_PORT,
             extraPlugins: {
                 testnetMiner: {
                     rewardStreamIds: [rewardStreamId],

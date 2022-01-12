@@ -1,10 +1,9 @@
 /* eslint-disable no-underscore-dangle, object-curly-newline */
 import StreamrClient, { Stream } from 'streamr-client'
 import { StorageConfig, StorageConfigListener } from '../../../../src/plugins/storage/StorageConfig'
-import { Protocol } from 'streamr-network'
+import { NetworkNode, Protocol } from 'streamr-network'
 
 describe('StorageConfig', () => {
-
     let client: StreamrClient
     beforeAll(async () => {
         client = {} as StreamrClient
@@ -25,7 +24,7 @@ describe('StorageConfig', () => {
         let listener: StorageConfigListener
 
         beforeEach(async () => {
-            config = new StorageConfig('nodeId', 1, 0, client)
+            config = new StorageConfig('nodeId', 1, 0, client, {} as NetworkNode)
             // @ts-expect-error private
             config.setSPIDKeys(new Set(['existing1#0', 'existing2#0', 'existing2#1', 'existing3#0']))
             listener = {
@@ -110,9 +109,9 @@ describe('StorageConfig', () => {
     
         beforeEach(() => {
             configs = [
-                new StorageConfig('nodeId', 3, 0, client),
-                new StorageConfig('nodeId', 3, 1, client),
-                new StorageConfig('nodeId', 3, 2, client),
+                new StorageConfig('nodeId', 3, 0, client, {} as NetworkNode),
+                new StorageConfig('nodeId', 3, 1, client, {} as NetworkNode),
+                new StorageConfig('nodeId', 3, 2, client, {} as NetworkNode),
             ]
         })
 

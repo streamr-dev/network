@@ -6,7 +6,8 @@ import {
     findStreamsForNode,
     getNodeConnections,
     getTopology,
-    getStreamSizes
+    getStreamSizes,
+    getNodesWithLocationData
 } from './trackerSummaryUtils'
 import { Logger } from '../../helpers/Logger'
 import { Tracker } from './Tracker'
@@ -119,7 +120,7 @@ export function trackerHttpEndpoints(
     })
     app.get('/location/', (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /location/')
-        res.json(tracker.getAllNodeLocations())
+        res.json(getNodesWithLocationData(tracker.getNodes(), tracker.getAllNodeLocations()))
     })
     app.get('/location/:nodeId/', (req: express.Request, res: express.Response) => {
         const nodeId = req.params.nodeId

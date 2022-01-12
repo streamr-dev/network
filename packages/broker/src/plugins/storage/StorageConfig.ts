@@ -1,6 +1,5 @@
-import { Logger } from 'streamr-network'
+import { Logger, NetworkNode } from 'streamr-network'
 import { StreamMessage, keyToArrayIndex, SPID, SPIDKey } from 'streamr-client-protocol'
-import { SubscriptionManager } from '../../SubscriptionManager'
 import StreamrClient from 'streamr-client'
 import { EthereumStorageEvent } from 'streamr-client/dist/types/src/NodeRegistry'
 
@@ -40,9 +39,16 @@ export class StorageConfig {
     private poller!: ReturnType<typeof setTimeout>
     private stopPoller: boolean
     streamrClient: StreamrClient
+    networkNode: NetworkNode
 
     // use createInstance method instead: it fetches the up-to-date config from API
-    constructor(clusterId: string, clusterSize: number, myIndexInCluster: number, streamrClient: StreamrClient) {
+    constructor(
+        clusterId: string,
+        clusterSize: number,
+        myIndexInCluster: number,
+        streamrClient: StreamrClient,
+        networkNode: NetworkNode
+    ) {
         this.spidKeys = new Set<SPIDKey>()
         this.listeners = []
         this.clusterId = clusterId
@@ -50,6 +56,7 @@ export class StorageConfig {
         this.myIndexInCluster = myIndexInCluster
         this.stopPoller = false
         this.streamrClient = streamrClient
+        this.networkNode = networkNode
     }
 
     static async createInstance(
@@ -59,7 +66,8 @@ export class StorageConfig {
         pollInterval: number,
         streamrClient: StreamrClient
     ): Promise<StorageConfig> {
-        const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, streamrClient)
+        const networkNode = await streamrClient.getNode()
+        const instance = new StorageConfig(clusterId, clusterSize, myIndexInCluster, streamrClient, networkNode)
         // eslint-disable-next-line no-underscore-dangle
         if (pollInterval !== 0) {
             await instance.poll(pollInterval)
@@ -184,8 +192,7 @@ export class StorageConfig {
     }
 
     startAssignmentEventListener(
-        streamrAddress: string,
-        subscriptionManager: SubscriptionManager): (msg: StreamMessage<AssignmentMessage>
+        streamrAddress: string): (msg: StreamMessage<AssignmentMessage>
     ) => void {
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
         const messageListener = (msg: StreamMessage<AssignmentMessage>) => {
@@ -199,8 +206,9 @@ export class StorageConfig {
                 }
             }
         }
-        subscriptionManager.networkNode.addMessageListener(messageListener)
-        subscriptionManager.subscribe(assignmentStreamId, 0)
+        // TODO: NET-637 use client instead of networkNode?
+        this.networkNode.addMessageListener(messageListener)
+        this.networkNode.subscribe(new SPID(assignmentStreamId, 0))
         return messageListener
     }
 
@@ -228,12 +236,12 @@ export class StorageConfig {
 
     stopAssignmentEventListener(
         messageListener: (msg: StreamMessage<AssignmentMessage>) => void,
-        streamrAddress: string,
-        subscriptionManager: SubscriptionManager
+        streamrAddress: string
     ): void {
-        subscriptionManager.networkNode.removeMessageListener(messageListener)
+        // TODO: NET-637 use client instead of networkNode?
+        this.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
-        subscriptionManager.unsubscribe(assignmentStreamId, 0)
+        this.networkNode.unsubscribe(new SPID(assignmentStreamId, 0))
     }
 
     async startChainEventsListener(): Promise<void> {
