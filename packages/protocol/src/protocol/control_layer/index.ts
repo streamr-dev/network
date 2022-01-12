@@ -8,15 +8,10 @@ import ControlMessage from "./ControlMessage"
 import { ControlMessageType } from "./ControlMessage"
 
 // Serializers are imported because of their side effects: they statically register themselves to the factory class
-import './broadcast_message/BroadcastMessageSerializerV1'
 import './broadcast_message/BroadcastMessageSerializerV2'
-import './error_response/ErrorResponseSerializerV1'
 import './error_response/ErrorResponseSerializerV2'
-import './unsubscribe_request/UnsubscribeRequestSerializerV1'
 import './unsubscribe_request/UnsubscribeRequestSerializerV2'
-import './publish_stream_connection_request/PublishStreamConnectionRequestSerializerV1'
 import './publish_stream_connection_request/PublishStreamConnectionRequestSerializerV2'
-import './publish_stream_connection_response/PublishStreamConnectionResponseSerializerV1'
 import './publish_stream_connection_response/PublishStreamConnectionResponseSerializerV2'
 
 export {
