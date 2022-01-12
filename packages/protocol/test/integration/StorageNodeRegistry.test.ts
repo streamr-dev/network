@@ -5,37 +5,28 @@ const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localh
 
 describe('StorageNodeRegistry', () => {
 
-    test('throw exception if address is wrong (ENS)', async (done) => {
-        try {
+    test('throw exception if address is wrong (ENS)', async () => {
+        await expect(async () => (
             await getStorageNodeRegistryFromContract({
                 contractAddress: 'address', jsonRpcProvider
             })
-        } catch (e) {
-            expect(e.toString()).toContain('ENS')
-            done()
-        }
+        )).rejects.toThrow('ENS')
     })
 
-    test('throw exception if address is wrong', async (done) => {
-        try {
+    test('throw exception if address is wrong', async () => {
+        await expect(async () => (
             await getStorageNodeRegistryFromContract({
                 contractAddress: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', jsonRpcProvider
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: call revert exception')
-            done()
-        }
+        )).rejects.toThrow('call revert exception')
     })
 
-    test('throw exception if jsonRpcProvider is wrong', async (done) => {
-        try {
+    test('throw exception if jsonRpcProvider is wrong', async () => {
+        await expect(async () => (
             await getStorageNodeRegistryFromContract({
                 contractAddress, jsonRpcProvider: 'jsonRpcProvider'
             })
-        } catch (e) {
-            expect(e.toString()).toContain('Error: could not detect network')
-            done()
-        }
+        )).rejects.toThrow('could not detect network')
     })
 
     describe('getAllStorageNodes', () => {
@@ -47,7 +38,7 @@ describe('StorageNodeRegistry', () => {
             expect(storageNodeRegistry.getAllStorageNodes()).toStrictEqual([
                 {
                     address: "0xde1112f631486CfC759A50196853011528bC5FA0",
-                    url: "http://10.200.10.1:8891",
+                    url: "http://10.200.10.1:8891/api/v1",
                 }
             ])
         })
@@ -61,7 +52,7 @@ describe('StorageNodeRegistry', () => {
 
             expect(
                 storageNodeRegistry.getStorageNodeHTTP("0xde1112f631486CfC759A50196853011528bC5FA0")
-            ).toEqual("http://10.200.10.1:8891")
+            ).toEqual("http://10.200.10.1:8891/api/v1")
         })
 
         test('throw error if address not found', async () => {
@@ -80,14 +71,14 @@ describe('StorageNodeRegistry', () => {
             const storageNodeRegistry = createStorageNodeRegistry([
                 {
                     address: "0xde1112f631486CfC759A50196853011528bC5FA0",
-                    url: "http://10.200.10.1:8891",
+                    url: "http://10.200.10.1:8891/api/v1",
                 }
             ])
 
             expect(storageNodeRegistry.getAllStorageNodes()).toStrictEqual([
                 {
                     address: "0xde1112f631486CfC759A50196853011528bC5FA0",
-                    url: "http://10.200.10.1:8891",
+                    url: "http://10.200.10.1:8891/api/v1",
                 }
             ])
         })

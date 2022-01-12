@@ -80,7 +80,7 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
         await wait(500)
         if (client) {
             client.debug('disconnecting after test')
-            await client.disconnect()
+            await client.destroy()
         }
 
         const openSockets = Connection.getOpen()

@@ -1,23 +1,21 @@
 import assert from 'assert'
 
 import {
-    StreamMessage, MessageID, MessageRef, GroupKeyMessage, GroupKeyErrorResponse
+    StreamMessage, MessageID, MessageRef, GroupKeyMessage, GroupKeyErrorResponse, toStreamID
 } from '../../../../src/index'
-
-import { ErrorCode } from '../../../../src/protocol/message_layer/GroupKeyErrorResponse'
 
 // Message definitions
 const message = new GroupKeyErrorResponse({
     requestId: 'requestId',
-    streamId: 'streamId',
-    errorCode: ErrorCode.PLACEHOLDER,
+    streamId: toStreamID('streamId'),
+    errorCode: 'ErrorCode',
     errorMessage: 'errorMessage',
     groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
 })
-const serializedMessage = JSON.stringify(['requestId', 'streamId', 'PLACEHOLDER', 'errorMessage', ['groupKeyId1', 'groupKeyId2']])
+const serializedMessage = JSON.stringify(['requestId', 'streamId', 'ErrorCode', 'errorMessage', ['groupKeyId1', 'groupKeyId2']])
 
 const streamMessage = new StreamMessage({
-    messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+    messageId: new MessageID(toStreamID('streamId'), 0, 1, 0, 'publisherId', 'msgChainId'),
     prevMsgRef: new MessageRef(0, 0),
     content: serializedMessage,
     messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,

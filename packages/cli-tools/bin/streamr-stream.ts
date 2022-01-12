@@ -14,4 +14,4 @@ program
     .command('resend', 'request resend of a stream')
     .command('grant-permission', 'grant permission')
     .command('revoke-permission', 'revoke permission')
-    .parse(process.argv)
+    .parse()

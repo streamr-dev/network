@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { SubscribeRequest, ControlMessage } from '../../../../src/index'
+import { SubscribeRequest, ControlMessage, toStreamID } from '../../../../src/index'
 
 const VERSION = 2
 
@@ -8,7 +8,7 @@ const VERSION = 2
 const message = new SubscribeRequest({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
     sessionToken: 'sessionToken',
 })

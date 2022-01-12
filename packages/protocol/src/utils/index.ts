@@ -1,18 +1,24 @@
-import TimestampUtil from "./TimestampUtil"
 import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator from "./StreamMessageValidator"
-import CachingStreamMessageValidator from "./CachingStreamMessageValidator"
 import SigningUtil from "./SigningUtil"
 export * from "./SPID"
 import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
 import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
+import { keyToArrayIndex } from "./HashUtil"
+import {
+    StreamID,
+    toStreamID,
+    KEY_EXCHANGE_STREAM_PREFIX,
+    formKeyExchangeStreamId,
+    isKeyExchangeStream,
+    getRecipient
+} from "./StreamID"
+import { EthereumAddress } from "./types"
 
 export {
-    TimestampUtil,
     OrderingUtil,
     StreamMessageValidator,
-    CachingStreamMessageValidator,
     SigningUtil,
     SmartContractRecord,
     TrackerRegistry,
@@ -22,5 +28,13 @@ export {
     createStorageNodeRegistry,
     getStorageNodeRegistryFromContract,
     generateMnemonicFromAddress,
-    parseAddressFromNodeId
+    parseAddressFromNodeId,
+    keyToArrayIndex,
+    StreamID,
+    toStreamID,
+    KEY_EXCHANGE_STREAM_PREFIX,
+    formKeyExchangeStreamId,
+    isKeyExchangeStream,
+    getRecipient,
+    EthereumAddress
 }

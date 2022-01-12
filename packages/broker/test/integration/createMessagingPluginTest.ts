@@ -1,8 +1,9 @@
+import { Wallet } from '@ethersproject/wallet'
 import { Stream, StreamrClient } from 'streamr-client'
-import { startTracker, Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network'
 import { Broker } from '../../src/broker'
-import { Message } from '../helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, createMockUser, Queue } from '../utils'
+import { Message } from '../../src/helpers/PayloadFormat'
+import { createClient, startBroker, createTestStream, Queue, getPrivateKey, startTestTracker } from '../utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish'|'subscribe', streamId: string, apiKey: string) => Promise<T>
@@ -17,17 +18,16 @@ interface Ports {
     tracker: number
 }
 
-const MOCK_MESSAGE = { 
-    content: { 
-        foo: 'bar' 
-    }, 
+const MOCK_MESSAGE = {
+    content: {
+        foo: 'bar'
+    },
     metadata: {
         timestamp: 11111111
-    } 
+    }
 }
 const MOCK_API_KEY = 'mock-api-key'
-
-const brokerUser = createMockUser()
+let brokerUser: Wallet
 
 const assertReceivedMessage = (message: Message) => {
     const { content, metadata } = message
@@ -39,12 +39,12 @@ const assertReceivedMessage = (message: Message) => {
 }
 
 export const createMessagingPluginTest = <T>(
-    pluginName: string, 
-    api: MessagingPluginApi<T>, 
-    ports: Ports, 
+    pluginName: string,
+    api: MessagingPluginApi<T>,
+    ports: Ports,
     testModule: NodeJS.Module,
     pluginConfig: any = {}
-) => {
+): any => {
 
     describe(`Plugin: ${pluginName}`, () => {
 
@@ -56,11 +56,8 @@ export const createMessagingPluginTest = <T>(
         let messageQueue: Queue<Message>
 
         beforeAll(async () => {
-            tracker = await startTracker({
-                id: 'tracker-1',
-                host: '127.0.0.1',
-                port: ports.tracker,
-            })
+            brokerUser = new Wallet(await getPrivateKey())
+            tracker = await startTestTracker(ports.tracker)
             broker = await startBroker({
                 name: 'broker',
                 privateKey: brokerUser.privateKey,
@@ -87,9 +84,7 @@ export const createMessagingPluginTest = <T>(
         })
 
         beforeEach(async () => {
-            streamrClient = createClient(ports.legacyWebsocket, brokerUser.privateKey, {
-                autoDisconnect: false
-            })
+            streamrClient = await createClient(tracker, brokerUser.privateKey)
             stream = await createTestStream(streamrClient, testModule)
             messageQueue = new Queue<Message>()
         })
@@ -98,11 +93,12 @@ export const createMessagingPluginTest = <T>(
             if (pluginClient !== undefined) {
                 await api.closeClient(pluginClient)
             }
-            await streamrClient?.ensureDisconnected()
+            streamrClient?.debug('destroy after test')
+            await streamrClient?.destroy()
         })
 
         test('publish', async () => {
-            streamrClient.subscribe(stream.id, (content: any, metadata: any) => {
+            await streamrClient.subscribe(stream.id, (content: any, metadata: any) => {
                 messageQueue.push({ content, metadata: metadata.messageId })
             })
             pluginClient = await api.createClient('publish', stream.id, MOCK_API_KEY)
@@ -118,7 +114,5 @@ export const createMessagingPluginTest = <T>(
             const message = await messageQueue.pop()
             assertReceivedMessage(message)
         })
-
     })
-
 }

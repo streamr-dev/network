@@ -3,11 +3,12 @@ import TrackerMessage from '../TrackerMessage'
 import InstructionMessage from './InstructionMessage'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
 export default class InstructionMessageSerializerV2 extends Serializer<InstructionMessage> {
-    toArray(instructionMessage: InstructionMessage) {
+    toArray(instructionMessage: InstructionMessage): any[] {
         return [
             VERSION,
             TrackerMessage.TYPES.InstructionMessage,
@@ -19,7 +20,7 @@ export default class InstructionMessageSerializerV2 extends Serializer<Instructi
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): InstructionMessage {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -31,7 +32,12 @@ export default class InstructionMessageSerializerV2 extends Serializer<Instructi
         ] = arr
 
         return new InstructionMessage({
-            version, requestId, streamId, streamPartition, nodeIds, counter
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition,
+            nodeIds,
+            counter
         })
     }
 }

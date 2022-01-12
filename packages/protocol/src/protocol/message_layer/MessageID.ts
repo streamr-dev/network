@@ -1,17 +1,18 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
-
+import { StreamID, toStreamID } from '../../utils/StreamID'
+export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     timestamp: number
     sequenceNumber: number
     publisherId: string
     msgChainId: string
 
-    constructor(streamId: string, streamPartition: number, timestamp: number, sequenceNumber: number, publisherId: string, msgChainId: string) {
+    constructor(streamId: StreamID, streamPartition: number, timestamp: number, sequenceNumber: number, publisherId: string, msgChainId: string) {
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsNotNegativeInteger('timestamp', timestamp)
@@ -24,7 +25,7 @@ export default class MessageID {
         this.msgChainId = msgChainId
     }
 
-    toArray() {
+    toArray(): MessageIDArray {
         return [
             this.streamId,
             this.streamPartition,
@@ -35,7 +36,7 @@ export default class MessageID {
         ]
     }
 
-    static fromArray(arr: any[]) {
+    static fromArray(arr: MessageIDArray): MessageID {
         const [
             streamId,
             streamPartition,
@@ -45,14 +46,18 @@ export default class MessageID {
             msgChainId,
         ] = arr
 
-        return new MessageID(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
+        return new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
     }
 
-    serialize() {
+    serialize(): string {
         return JSON.stringify(this.toArray())
     }
 
-    toMessageRef() {
+    toMessageRef(): MessageRef {
         return new MessageRef(this.timestamp, this.sequenceNumber)
+    }
+
+    clone(): MessageID {
+        return new MessageID(...this.toArray() as [StreamID, number, number, number, string, string])
     }
 }

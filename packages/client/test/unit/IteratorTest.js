@@ -100,7 +100,7 @@ export default function IteratorTest(name, fn) {
                 for await (const msg of s) {
                     yield msg
                     if (received.length === MAX_ITEMS) {
-                        await s.throw(err)
+                        throw err
                     }
                 }
             }

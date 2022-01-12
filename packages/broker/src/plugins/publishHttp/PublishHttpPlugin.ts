@@ -10,10 +10,10 @@ export class PublishHttpPlugin extends Plugin<void> {
         }
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.addHttpServerRouter(createEndpoint(this.streamrClient!))
     }
 
-    async stop() {
+    async stop(): Promise<void> {
     }
 }

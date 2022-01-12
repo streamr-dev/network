@@ -1,4 +1,4 @@
-import { Tracker } from '../../src/logic/Tracker'
+import { Tracker } from '../../src/logic/tracker/Tracker'
 import WebSocket from 'ws'
 import { waitForEvent, wait } from 'streamr-test-utils'
 
@@ -9,9 +9,12 @@ import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'
 
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_simulator_test: any
+
 describe('ws-endpoint', () => {
     const endpoints: ServerWsEndpoint[] = []
-
+    
     it('create five endpoints and init connection between them, should be able to start and stop successfully', async () => {
         for (let i = 0; i < 5; i++) {
             // eslint-disable-next-line no-await-in-loop
@@ -52,10 +55,10 @@ describe('ws-endpoint', () => {
             await clients[i].stop()
         }
     })
-
+    
     it('server and client form correct peerInfo on connection', async () => {
         const client = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
-        const server = await startServerWsEndpoint('127.0.0.1', 30696, PeerInfo.newNode('server'))
+        const server = await startServerWsEndpoint('127.0.0.1', 30697, PeerInfo.newNode('server'))
 
         const e1 = waitForEvent(client, Event.PEER_CONNECTED)
         const e2 = waitForEvent(server, Event.PEER_CONNECTED)
@@ -71,16 +74,17 @@ describe('ws-endpoint', () => {
         await client.stop()
         await server.stop()
     })
-
+    
     describe('test direct connections from simple websocket', () => {
         const trackerPort = 38481
         let tracker: Tracker
 
         beforeEach(async () => {
             tracker = await startTracker({
-                host: '127.0.0.1',
-                port: trackerPort,
-                id: 'tracker'
+                listen: {
+                    hostname: '127.0.0.1',
+                    port: trackerPort
+                }
             })
             // @ts-expect-error TODO: do this proper way (pass via constructor)
             tracker.trackerServer.endpoint.handshakeTimer = 3000
@@ -91,10 +95,37 @@ describe('ws-endpoint', () => {
         })
 
         it('tracker checks that peerId is given by incoming connections', async () => {
+            if (typeof _streamr_simulator_test !== 'undefined') {
+                return
+            }
             const ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws`)
             const close = await waitForEvent(ws, 'close')
             expect(close[0]).toEqual(DisconnectionCode.FAILED_HANDSHAKE)
             expect(close[1]).toContain('Handshake not received from connection behind UUID')
         })
     })
+    
+    describe('Duplicate connections from same nodeId are closed', () => {
+        it('Duplicate connection is closed', async () => {
+            const client1 = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
+            const client2 = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
+
+            const server = await startServerWsEndpoint('127.0.0.1', 38483, PeerInfo.newNode('server'))
+   
+            await client1.connect(server.getUrl(), PeerInfo.newTracker('server'))
+           
+            const disconnectPromise = waitForEvent(client2, Event.PEER_DISCONNECTED)
+            client2.connect(server.getUrl(), PeerInfo.newTracker('server')).then(()=>{ return }).catch((_ue) => {})
+        
+            await disconnectPromise
+
+            try {
+                await client1.stop()
+                await client2.stop()
+                await server.stop()
+            }
+            catch(_ue) {
+            }
+        })
+    }) 
 })

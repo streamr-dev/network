@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
-import { ResendFromRequest, ControlMessage } from '../../../../src/index'
+import { ResendFromRequest, ControlMessage, toStreamID } from '../../../../src/index'
 
 const VERSION = 1
 
@@ -9,12 +9,13 @@ const VERSION = 1
 const message = new ResendFromRequest({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
     fromMsgRef: new MessageRef(132846894, 0),
     publisherId: 'publisherId',
     sessionToken: 'sessionToken',
 })
+// eslint-disable-next-line max-len
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.ResendFromRequest, 'streamId', 0, 'requestId', [132846894, 0], 'publisherId', null, 'sessionToken'])
 
 describe('ResendFromRequestSerializerV1', () => {

@@ -7,6 +7,7 @@ $.verbose = false
 
 const packages = JSON.parse(await $`lerna list --all --json --loglevel=silent --toposort`)
 const pkgNames = new Set(packages.map(({ name }) => name))
+const pkgVersions = packages.map(({ version }) => version)
 const pkgJSONs = packages.reduce((obj, info) => {
     const pkgJSONPath = join(info.location, 'package.json')
     obj[info.name] = require(pkgJSONPath)
@@ -14,13 +15,13 @@ const pkgJSONs = packages.reduce((obj, info) => {
 }, {})
 
 const legend = `${chalk.green('✓')}${chalk.white(' = Symlink')}`
-
+const headerNames = [...pkgNames].map((name, index) => `${chalk.white(name)}\n${chalk.grey(pkgVersions[index])}`)
 // package names are column names
-const table = new Table({ head: [legend, 'Local Version', ...pkgNames].map((s) => chalk.white(s)) });
+const table = new Table({ head: [legend, ...headerNames] })
 
 
 const warnings = []
-packages.forEach((pkg) => {
+packages.forEach((pkg, index) => {
     const pkgJSON = pkgJSONs[pkg.name]
     // all dependencies of pkg
     const deps = Object.entries({ ...pkgJSON.dependencies, ...pkgJSON.devDependencies })
@@ -38,14 +39,19 @@ packages.forEach((pkg) => {
         const [ name, semverRange ] = dep
         const { version } = pkgJSONs[name]
         const shouldLink = semver.satisfies(version, semverRange)
-        if (!shouldLink) {
-            warnings.push(`${chalk.white(pkg.name)} depends on non-linked ${chalk.white(name)}: ${chalk.yellow(semverRange)}`)
+        const exact = semver.eq(version, semver.minVersion(semverRange))
+
+        if (!exact) {
+            warnings.push(`${chalk.white(pkg.name)} dependency on ${chalk.white(name)} ${chalk.grey(version)} not exact match for range: ${chalk.yellow(semverRange)}`)
         }
-        return `${shouldLink ? `${chalk.green('✓')} ${semverRange}`: chalk.yellow(semverRange)}`
+        if (!shouldLink) {
+            warnings.push(`${chalk.white(pkg.name)} depends on non-linked ${chalk.white(name)}: ${chalk.red(semverRange)}`)
+        }
+        return `${(shouldLink && exact) ? `${chalk.green('✓')} ${semverRange}` : (shouldLink ? chalk.yellow(semverRange) : chalk.red(semverRange))}`
     })
 
     table.push({
-        [chalk.white(pkg.name)]: [chalk.grey(pkg.version), ...depsOutput]
+        [headerNames[index]]: depsOutput
     })
 })
 

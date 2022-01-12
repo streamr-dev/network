@@ -1,10 +1,10 @@
 import { MetricsContext, startTracker } from '../../src/composition'
-import { TrackerNode } from '../../src/protocol/TrackerNode'
-import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
+import { NodeToTracker } from '../../src/protocol/NodeToTracker'
+import { Tracker, Event as TrackerEvent } from '../../src/logic/tracker/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
-import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
@@ -13,44 +13,57 @@ import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 describe('WebRTC multisignaller test', () => {
     let tracker1: Tracker
     let tracker2: Tracker
-    let trackerNode1: TrackerNode
-    let trackerNode2: TrackerNode
+    let nodeToTracker1: NodeToTracker
+    let nodeToTracker2: NodeToTracker
     let endpoint1: WebRtcEndpoint
     let endpoint2: WebRtcEndpoint
 
     beforeEach(async () => {
         tracker1 = await startTracker({
-            host: '127.0.0.1',
-            port: 28715,
-            id: 'tracker1'
+            listen: {
+                hostname: '127.0.0.1',
+                port: 28715
+            }
         })
         tracker2 = await startTracker({
-            host: '127.0.0.1',
-            port: 28716,
-            id: 'tracker2'
+            listen: {
+                hostname: '127.0.0.1',
+                port: 28716
+            }
         })
 
         const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'), new MetricsContext(''))
         const ep2 = new NodeClientWsEndpoint(PeerInfo.newNode('node-2'), new MetricsContext(''))
 
-        trackerNode1 = new TrackerNode(ep1)
-        trackerNode2 = new TrackerNode(ep2)
+        nodeToTracker1 = new NodeToTracker(ep1)
+        nodeToTracker2 = new NodeToTracker(ep2)
 
-        trackerNode1.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker('tracker1'))
-        await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker('tracker1'))
-        await waitForEvent(tracker1, TrackerEvent.NODE_CONNECTED)
-        trackerNode1.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker('tracker2'))
-        await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
-        trackerNode2.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker('tracker2'))
-        await waitForEvent(tracker2, TrackerEvent.NODE_CONNECTED)
+        await runAndWaitForEvents(
+            () => {nodeToTracker1.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker(tracker1.getConfigRecord().id))},[
+                [tracker1, TrackerEvent.NODE_CONNECTED]
+            ])
+        
+        await runAndWaitForEvents(
+            () => { nodeToTracker2.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker(tracker1.getConfigRecord().id))}, [
+                [tracker1, TrackerEvent.NODE_CONNECTED]
+            ])
+        
+        await runAndWaitForEvents(
+            () => { nodeToTracker1.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker(tracker2.getConfigRecord().id))}, [
+                [tracker2, TrackerEvent.NODE_CONNECTED]
+            ])
+        
+        await runAndWaitForEvents(
+            () => {nodeToTracker2.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker(tracker2.getConfigRecord().id))},[
+                [tracker2, TrackerEvent.NODE_CONNECTED]
+            ])
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
         endpoint1 = new WebRtcEndpoint(
             peerInfo1,
             ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo1, trackerNode1),
+            new RtcSignaller(peerInfo1, nodeToTracker1),
             new MetricsContext(''),
             new NegotiatedProtocolVersions(peerInfo1),
             NodeWebRtcConnectionFactory
@@ -58,7 +71,7 @@ describe('WebRTC multisignaller test', () => {
         endpoint2 = new WebRtcEndpoint(
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
-            new RtcSignaller(peerInfo2, trackerNode2),
+            new RtcSignaller(peerInfo2, nodeToTracker2),
             new MetricsContext(''),
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory
@@ -69,25 +82,28 @@ describe('WebRTC multisignaller test', () => {
         await Promise.allSettled([
             tracker1.stop(),
             tracker2.stop(),
-            trackerNode1.stop(),
-            trackerNode2.stop(),
+            nodeToTracker1.stop(),
+            nodeToTracker2.stop(),
             endpoint1.stop(),
             endpoint2.stop(),
         ])
     })
 
     it('WebRTC connection is established and signalling works if endpoints use different trackers for signalling', async () => {
-        endpoint1.connect('node-2', 'tracker1', true).catch(() => null)
-        endpoint2.connect('node-1', 'tracker2', false).catch(() => null)
-        await Promise.all([
-            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
-            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        await runAndWaitForEvents([
+            () => { endpoint1.connect('node-2', tracker1.getConfigRecord().id, true).catch(() => null) },
+            () => {endpoint2.connect('node-1', tracker2.getConfigRecord().id, false).catch(() => null)}],[
+            [endpoint1, EndpointEvent.PEER_CONNECTED],
+            [endpoint2, EndpointEvent.PEER_CONNECTED]
         ])
-
-        endpoint1.send('node-2', 'Hello')
-        await waitForEvent(endpoint2, EndpointEvent.MESSAGE_RECEIVED)
-        endpoint2.send('node-1', 'Hello')
-        await waitForEvent(endpoint1, EndpointEvent.MESSAGE_RECEIVED)
+        await runAndWaitForEvents(
+            ()=> {endpoint1.send('node-2', 'Hello')}, [
+                [endpoint2, EndpointEvent.MESSAGE_RECEIVED]
+            ])
+        await runAndWaitForEvents(
+            ()=> { endpoint2.send('node-1', 'Hello')}, [
+                [endpoint1, EndpointEvent.MESSAGE_RECEIVED]
+            ])
     })
 
 })

@@ -4,11 +4,12 @@ import MessageRef from '../../message_layer/MessageRef'
 import ResendFromRequest from './ResendFromRequest'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 1
 
 export default class ResendFromRequestSerializerV1 extends Serializer<ResendFromRequest> {
-    toArray(resendFromRequest: ResendFromRequest) {
+    toArray(resendFromRequest: ResendFromRequest): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.ResendFromRequest,
@@ -22,7 +23,7 @@ export default class ResendFromRequestSerializerV1 extends Serializer<ResendFrom
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): ResendFromRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -38,7 +39,13 @@ export default class ResendFromRequestSerializerV1 extends Serializer<ResendFrom
 
         const [ fromTimestamp, fromSequenceNumber ] = fromMsgRefArray
         return new ResendFromRequest({
-            version, requestId, streamId, streamPartition, fromMsgRef: new MessageRef(fromTimestamp, fromSequenceNumber), publisherId, sessionToken
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition,
+            fromMsgRef: new MessageRef(fromTimestamp, fromSequenceNumber),
+            publisherId,
+            sessionToken
         })
     }
 }

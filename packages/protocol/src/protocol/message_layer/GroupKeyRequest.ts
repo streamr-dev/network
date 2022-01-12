@@ -2,13 +2,16 @@ import { validateIsArray, validateIsString } from '../../utils/validations'
 
 import GroupKeyMessage from './GroupKeyMessage'
 import StreamMessage from './StreamMessage'
+import { StreamID, toStreamID } from '../../utils/StreamID'
 
 interface Options {
     requestId: string
-    streamId: string
+    streamId: StreamID
     rsaPublicKey: string
     groupKeyIds: string[]
 }
+
+export type GroupKeyRequestSerialized = [string, string, string, string[]]
 
 export default class GroupKeyRequest extends GroupKeyMessage {
 
@@ -29,18 +32,22 @@ export default class GroupKeyRequest extends GroupKeyMessage {
         this.groupKeyIds = groupKeyIds
     }
 
-    toArray() {
+    toArray(): GroupKeyRequestSerialized {
         return [this.requestId, this.streamId, this.rsaPublicKey, this.groupKeyIds]
     }
 
-    static fromArray(arr: any[]) {
-        const [requestId, streamId, rsaPublicKey, groupKeyIds] = arr
+    static fromArray(args: GroupKeyRequestSerialized): GroupKeyRequest {
+        const [requestId, streamId, rsaPublicKey, groupKeyIds] = args
         return new GroupKeyRequest({
             requestId,
-            streamId,
+            streamId: toStreamID(streamId),
             rsaPublicKey,
             groupKeyIds,
         })
+    }
+
+    static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyRequestSerialized> {
+        return streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
     }
 }
 

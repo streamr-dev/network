@@ -3,11 +3,12 @@ import ControlMessage from '../ControlMessage'
 import SubscribeResponse from './SubscribeResponse'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
 export default class SubscribeResponseSerializerV2 extends Serializer<SubscribeResponse> {
-    toArray(subscribeResponse: SubscribeResponse) {
+    toArray(subscribeResponse: SubscribeResponse): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.SubscribeResponse,
@@ -17,7 +18,7 @@ export default class SubscribeResponseSerializerV2 extends Serializer<SubscribeR
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): SubscribeResponse {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -27,7 +28,10 @@ export default class SubscribeResponseSerializerV2 extends Serializer<SubscribeR
         ] = arr
 
         return new SubscribeResponse({
-            version, requestId, streamId, streamPartition
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition
         })
     }
 }

@@ -1,42 +1,49 @@
-import sinon from 'sinon'
+import 'reflect-metadata'
+import { container, DependencyContainer } from 'tsyringe'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
-import clientOptions from '../integration/config'
-import { Todo } from '../../src/types'
+import clientOptions from '../../src/ConfigTest'
+import { LoginEndpoints } from '../../src/LoginEndpoints'
 
 describe('Session', () => {
     let session: Session
-    let msg: Todo
-    let clientSessionToken: Todo
+    let msg: any
+    let clientSessionToken: StreamrClient
+    let loginFunction: jest.MockedFunction<any>
+    let logoutFunction: jest.MockedFunction<any>
 
-    const createClient = (opts = {}) => new StreamrClient({
+    const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => new StreamrClient({
         ...clientOptions,
         autoConnect: false,
         autoDisconnect: false,
         ...opts,
-    })
+    }, parentContainer)
+
+    function setup(opts?: any) {
+        const childContainer = container.createChildContainer()
+        logoutFunction = jest.fn(async () => {})
+        loginFunction = jest.fn().mockImplementationOnce(async () => ({
+            token: 'session-token1',
+        })).mockImplementationOnce(async () => ({
+            token: 'session-token2',
+        }))
+
+        childContainer.register<LoginEndpoints>(LoginEndpoints, {
+            useValue: {
+                loginWithChallengeResponse: loginFunction as LoginEndpoints['loginWithChallengeResponse'],
+                logoutEndpoint: logoutFunction,
+            } as LoginEndpoints
+        })
+
+        clientSessionToken = createClient(opts, childContainer)
+
+        session = clientSessionToken.session
+    }
 
     beforeEach(() => {
-        clientSessionToken = createClient({
-            auth: {
-                sessionToken: 'session-token',
-            },
-        })
-        clientSessionToken.logoutEndpoint = sinon.stub().resolves()
-
-        session = new Session(clientSessionToken)
-        session.options.unauthenticated = false
-        session.loginFunction = sinon.stub()
-        // @ts-expect-error
-        session.loginFunction.onCall(0).resolves({
-            token: 'session-token1',
-        })
-        // @ts-expect-error
-        session.loginFunction.onCall(1).resolves({
-            token: 'session-token2',
-        })
+        setup()
     })
 
     afterAll(async () => {
@@ -46,80 +53,77 @@ describe('Session', () => {
 
     describe('instantiation', () => {
         it('should get token if set with a token', async () => {
-            const sessionToken = await clientSessionToken.session.getSessionToken()
-            expect(sessionToken).toBe(clientSessionToken.session.options.sessionToken)
+            const clientNone = createClient({
+                auth: {
+                    sessionToken: 'test'
+                },
+            })
+            const sessionToken = await clientNone.getSessionToken()
+            expect(sessionToken).toBe(clientNone.options.auth.sessionToken)
         })
 
-        it('should return undefined with no authentication', async () => {
+        it('should return empty string with no authentication', async () => {
             const clientNone = createClient({
                 auth: {},
             })
-            clientNone.onError = () => {}
             const sessionToken = await clientNone.session.getSessionToken()
-            expect(sessionToken).toBe(undefined)
+            expect(sessionToken).toBe('')
         })
 
         it('login function should throw if only session token provided', async () => {
-            clientSessionToken.onError = () => {}
+            const clientNone = createClient({
+                auth: {
+                    sessionToken: 'only-session-token',
+                    privateKey: undefined,
+                },
+            })
             await expect(async () => (
-                clientSessionToken.session.loginFunction()
+                clientNone.session.sendLogin()
             )).rejects.toThrow(
                 'Need either "privateKey", "ethereum" or "sessionToken" to login.'
             )
         })
 
-        it('login function should throw if no authentication', async () => {
+        it('login should throw if no authentication', async () => {
             const clientNone = createClient({
                 auth: {},
             })
-            clientNone.onError = () => {}
-            await clientNone.session.loginFunction().catch((err) => {
+            await clientNone.session.sendLogin().catch((err) => {
                 expect(err.message).toEqual(
                     'Need either "privateKey", "ethereum" or "sessionToken" to login.'
                 )
             })
-            clientNone.onError = () => {}
-
-            await expect(async () => (
-                clientSessionToken.session.loginFunction()
-            )).rejects.toThrow(
-                'Need either "privateKey", "ethereum" or "sessionToken" to login.'
-            )
         })
     })
 
     describe('getSessionToken', () => {
         it('should set sessionToken', async () => {
             await session.getSessionToken()
-            // @ts-expect-error
-            expect(session.loginFunction.calledOnce).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(1)
             expect(session.options.sessionToken === 'session-token1').toBeTruthy()
         })
 
-        it('should not call loginFunction if token set', async () => {
+        it('should not call sendLogin if token set', async () => {
             session.options.sessionToken = 'session-token1'
             await session.getSessionToken()
-            // @ts-expect-error
-            expect(session.loginFunction.notCalled).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(0)
         })
 
-        it('should call loginFunction if new token required', async () => {
+        it('should call sendLogin if new token required', async () => {
             session.options.sessionToken = 'expired-session-token'
             await session.getSessionToken(true)
-            // @ts-expect-error
-            expect(session.loginFunction.calledOnce).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(1)
             expect(session.options.sessionToken === 'session-token1').toBeTruthy()
         })
     })
 
     describe('Internal state', () => {
-        describe('loginFunction resolves', () => {
+        describe('sendLogin resolves', () => {
             it('should return same value when calling getSessionToken() twice while logging in', async () => {
                 const p1 = session.getSessionToken()
                 const p2 = session.getSessionToken()
                 const [sessionToken1, sessionToken2] = await Promise.all([p1, p2])
-                // @ts-expect-error
-                expect(session.loginFunction.calledOnce).toBeTruthy()
+                expect(loginFunction).toHaveBeenCalledTimes(1)
                 expect(sessionToken1).toEqual(sessionToken2)
             })
 
@@ -130,16 +134,13 @@ describe('Session', () => {
             })
         })
 
-        describe('loginFunction rejects', () => {
+        describe('sendLogin rejects', () => {
             beforeEach(() => {
-                session = new Session(undefined as any)
-                session.options.unauthenticated = false
                 msg = 'Need either "privateKey", "ethereum" or "sessionToken" to login.'
-                session.loginFunction = sinon.stub().rejects(new Error(msg))
-                clientSessionToken.onError = () => {}
+                loginFunction.mockReset().mockImplementation(async () => { throw new Error(msg) })
             })
 
-            it('should fail simultaneous requests with one call to loginFunction', async () => {
+            it('should fail simultaneous requests with one call to sendLogin', async () => {
                 await Promise.all([
                     expect(async () => (
                         session.getSessionToken()
@@ -148,19 +149,17 @@ describe('Session', () => {
                         session.getSessionToken()
                     )).rejects.toThrow(msg)
                 ])
-                // @ts-expect-error
-                expect(session.loginFunction.calledOnce).toBeTruthy()
+                expect(loginFunction).toHaveBeenCalledTimes(1)
             })
 
-            it('should fail both requests with two calls to loginFunction', async () => {
+            it('should fail both requests with two calls to sendLogin', async () => {
                 await expect(async () => (
                     session.getSessionToken()
                 )).rejects.toThrow(msg)
                 await expect(async () => (
                     session.getSessionToken()
                 )).rejects.toThrow(msg)
-                // @ts-expect-error
-                expect(session.loginFunction.calledTwice).toBeTruthy()
+                expect(loginFunction).toHaveBeenCalledTimes(2)
             })
         })
     })
@@ -169,22 +168,20 @@ describe('Session', () => {
         it('should call the logout endpoint', async () => {
             await session.getSessionToken()
             await session.logout()
-            expect(clientSessionToken.logoutEndpoint.calledOnce).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(1)
         })
 
         it('should call the logout endpoint again', async () => {
-            clientSessionToken.onError = () => {}
             await session.getSessionToken()
             await session.logout()
             await session.getSessionToken()
             await session.logout()
-            expect(clientSessionToken.logoutEndpoint.calledTwice).toBeTruthy()
+            expect(loginFunction).toHaveBeenCalledTimes(2)
         })
 
         it('should throw if already logging out', async () => {
             await session.getSessionToken()
             session.logout()
-            clientSessionToken.onError = () => {}
             await expect(async () => (
                 session.logout()
             )).rejects.toThrow('Already logging out!')
@@ -192,7 +189,6 @@ describe('Session', () => {
 
         it('should throw if already logged out', async () => {
             await session.getSessionToken()
-            clientSessionToken.onError = () => {}
             await session.logout()
             await expect(async () => (
                 session.logout()

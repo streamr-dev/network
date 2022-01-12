@@ -2,10 +2,11 @@ import crypto from 'crypto'
 import fs from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
-import { GroupKey } from '../../src/stream/encryption/Encryption'
-import { GroupKeyPersistence } from '../../src/stream/encryption/GroupKeyStore'
-import { uid, addAfterFn, describeRepeats } from '../utils'
+import { GroupKey } from '../../src/encryption/Encryption'
+import { GroupKeyPersistence } from '../../src/encryption/GroupKeyStore'
+import { uid, addAfterFn, describeRepeats, mockContext } from '../utils'
 import LeakDetector from 'jest-leak-detector'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 
 // this will produce a deprecation warning for rmdir, but the replacement, rm, is not available in Node 12.
 // TODO: replace rmdir with rm after dropping support for node 12.
@@ -13,7 +14,7 @@ const { mkdtemp, rmdir, copyFile } = fs.promises
 
 describeRepeats('GroupKeyPersistence', () => {
     let clientId: string
-    let streamId: string
+    let streamId: StreamID
     let store: GroupKeyPersistence
     let leakDetector: LeakDetector
 
@@ -21,8 +22,9 @@ describeRepeats('GroupKeyPersistence', () => {
 
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
-        streamId = uid('stream')
+        streamId = toStreamID(uid('stream'))
         store = new GroupKeyPersistence({
+            context: mockContext(),
             clientId,
             streamId,
         })
@@ -69,6 +71,7 @@ describeRepeats('GroupKeyPersistence', () => {
 
     it('can get set and delete with multiple instances in parallel', async () => {
         const store2 = new GroupKeyPersistence({
+            context: mockContext(),
             clientId,
             streamId,
         })
@@ -103,8 +106,9 @@ describeRepeats('GroupKeyPersistence', () => {
     })
 
     it('does not conflict with other streamIds', async () => {
-        const streamId2 = uid('stream')
+        const streamId2 = toStreamID(uid('stream'))
         const store2 = new GroupKeyPersistence({
+            context: mockContext(),
             clientId,
             streamId: streamId2,
         })
@@ -125,6 +129,7 @@ describeRepeats('GroupKeyPersistence', () => {
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
         const store2 = new GroupKeyPersistence({
+            context: mockContext(),
             clientId: clientId2,
             streamId,
         })
@@ -145,6 +150,7 @@ describeRepeats('GroupKeyPersistence', () => {
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
         const store2 = new GroupKeyPersistence({
+            context: mockContext(),
             clientId: clientId2,
             streamId,
         })
@@ -168,6 +174,7 @@ describeRepeats('GroupKeyPersistence', () => {
         // @ts-expect-error migrationsPath is only on ServerPersistentStore
         await copyFile(join(store.store.migrationsPath, '001-initial.sql'), join(migrationsPath, '001-initial.sql'))
         const store2 = new GroupKeyPersistence({
+            context: mockContext(),
             clientId: clientId2,
             streamId,
             migrationsPath,
@@ -181,6 +188,7 @@ describeRepeats('GroupKeyPersistence', () => {
         expect(await store2.get(groupKey.id)).toEqual(groupKey)
 
         const store3 = new GroupKeyPersistence({
+            context: mockContext(),
             clientId: clientId2,
             streamId,
         })

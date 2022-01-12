@@ -38,7 +38,7 @@ export const scheduleAtInterval = async (
 export const scheduleAtFixedRate = (
     task: (now: number) => Promise<void>, 
     interval: number
-) => {
+): { stop: () => void }  => {
     let timer: NodeJS.Timer|undefined
     let stopRequested = false
     const scheduleNext = () => {

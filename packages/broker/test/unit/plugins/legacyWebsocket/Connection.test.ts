@@ -6,6 +6,7 @@ import { Protocol } from "streamr-network"
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import Mock = jest.Mock
 import stream from 'stream'
+import { toStreamID } from "streamr-client-protocol"
 
 class FakeWebSocket extends EventEmitter {
     send: Mock
@@ -32,7 +33,7 @@ class FakeDuplexStream extends EventEmitter {
 // Just any protocol message really, content doesn't matter
 const protocolMessage = new Protocol.ControlLayer.SubscribeRequest({
     requestId: 'requestId',
-    streamId: 'streamId',
+    streamId: toStreamID('streamId'),
     streamPartition: 0,
     sessionToken: 'sessionToken'
 })
@@ -71,8 +72,8 @@ describe('Connection', () => {
     describe('stream management', () => {
         describe('addStream', () => {
             it('adds stream to the connection', () => {
-                const stream1 = new Stream('stream', 0, '')
-                const stream2 = new Stream('stream', 1, '')
+                const stream1 = new Stream<any>('stream', 0, '')
+                const stream2 = new Stream<any>('stream', 1, '')
                 connection.addStream(stream1)
                 connection.addStream(stream2)
                 expect(connection.getStreams()).toEqual([stream1, stream2])
@@ -80,9 +81,9 @@ describe('Connection', () => {
         })
 
         describe('removeStream', () => {
-            let stream1: Stream
-            let stream2: Stream
-            let stream3: Stream
+            let stream1: Stream<any>
+            let stream2: Stream<any>
+            let stream3: Stream<any>
 
             beforeEach(() => {
                 stream1 = new Stream('stream1', 0, '')
@@ -121,18 +122,18 @@ describe('Connection', () => {
                 connection.addStream(new Stream('stream2', 0, ''))
                 connection.addStream(new Stream('stream3', 0, ''))
                 expect(connection.getStreamsAsString()).toEqual([
-                    'stream1::0',
-                    'stream2::0',
-                    'stream3::0',
+                    'stream1#0',
+                    'stream2#0',
+                    'stream3#0',
                 ])
             })
         })
 
         describe('forEachStream', () => {
             it('iterates over each stream', () => {
-                const stream1 = new Stream('stream1', 0, '')
-                const stream2 = new Stream('stream2', 0, '')
-                const stream3 = new Stream('stream3', 0, '')
+                const stream1 = new Stream<any>('stream1', 0, '')
+                const stream2 = new Stream<any>('stream2', 0, '')
+                const stream3 = new Stream<any>('stream3', 0, '')
                 connection.addStream(stream1)
                 connection.addStream(stream2)
                 connection.addStream(stream3)

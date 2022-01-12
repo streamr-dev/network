@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
-import { Logger, Protocol } from 'streamr-network'
+import { Logger } from 'streamr-network'
+import { ControlMessage, ControlLayer, SPIDKey } from 'streamr-client-protocol'
 import { Stream } from '../../Stream'
 import WebSocket from "ws"
 import stream from "stream"
@@ -15,7 +16,7 @@ function generateId(): string {
 }
 
 export interface Connection {
-    on(eventName: 'message', handler: (msg: Protocol.ControlMessage) => void): this
+    on(eventName: 'message', handler: (msg: ControlMessage) => void): this
     on(eventName: 'close', handler: () => void): this
     on(eventName: 'highBackPressure', handler: () => void): this
     on(eventName: 'lowBackPressure', handler: () => void): this
@@ -27,7 +28,7 @@ export class Connection extends EventEmitter {
     readonly messageLayerVersion: number
     private readonly socket: WebSocket
     private readonly duplexStream: stream.Duplex
-    private readonly streams: Stream[] = []
+    private readonly streams: Stream<Connection>[] = []
     private dead = false
     private highBackPressure = false
     private respondedPong = true
@@ -49,14 +50,14 @@ export class Connection extends EventEmitter {
             if (this.dead) {
                 return
             }
-            let message: Protocol.ControlMessage | undefined
+            let message: ControlMessage | undefined
             try {
-                message = Protocol.ControlMessage.deserialize(data.toString(), false)
+                message = ControlMessage.deserialize(data.toString(), false)
             } catch (err) {
-                this.send(new Protocol.ControlLayer.ErrorResponse({
+                this.send(new ControlLayer.ErrorResponse({
                     requestId: '', // Can't echo the requestId of the request since parsing the request failed
                     errorMessage: err.message || err,
-                    errorCode: Protocol.ControlLayer.ErrorCode.INVALID_REQUEST,
+                    errorCode: ControlLayer.ErrorCode.INVALID_REQUEST,
                 }))
             }
             if (message !== undefined) {
@@ -89,7 +90,7 @@ export class Connection extends EventEmitter {
         return this.socket.bufferedAmount
     }
 
-    getStreams(): Stream[] {
+    getStreams(): Stream<Connection>[] {
         return this.streams.slice() // return copy
     }
 
@@ -105,23 +106,23 @@ export class Connection extends EventEmitter {
         return this.respondedPong
     }
 
-    addStream(stream: Stream): void {
+    addStream(stream: Stream<Connection>): void {
         this.streams.push(stream)
     }
 
     removeStream(streamId: string, streamPartition: number): void {
-        const i = this.streams.findIndex((s: Stream) => s.id === streamId && s.partition === streamPartition)
+        const i = this.streams.findIndex((s: Stream<Connection>) => s.id === streamId && s.partition === streamPartition)
         if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
 
-    forEachStream(cb: (stream: Stream) => void): void {
+    forEachStream(cb: (stream: Stream<Connection>) => void): void {
         this.getStreams().forEach(cb)
     }
 
-    getStreamsAsString(): string[] {
-        return this.streams.map((s: Stream) => s.toString())
+    getStreamsAsString(): SPIDKey[] {
+        return this.streams.map((s: Stream<Connection>) => s.getSPIDKey())
     }
 
     ping(): void {
@@ -129,7 +130,7 @@ export class Connection extends EventEmitter {
         logger.trace(`sent ping to ${this.id}`)
     }
 
-    send(msg: Protocol.ControlLayer.ControlMessage): void {
+    send(msg: ControlMessage): void {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         logger.trace('send: %s: %o', this.id, serialized)
         let shouldContinueWriting = true
@@ -162,7 +163,7 @@ export class Connection extends EventEmitter {
         } catch (e) {
             // no need to check this error
         } finally {
-            logger.warn('connection %s was terminated, reason: %s', this.id, reason)
+            logger.info('connection %s was terminated, reason: %s', this.id, reason)
             this.dead = true
             this.emit('close')
         }

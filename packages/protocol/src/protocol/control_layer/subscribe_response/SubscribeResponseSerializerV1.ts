@@ -3,11 +3,12 @@ import ControlMessage, { PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 } from '../ControlMe
 import SubscribeResponse from './SubscribeResponse'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 1
 
 export default class SubscribeResponseSerializerV1 extends Serializer<SubscribeResponse> {
-    toArray(subscribeResponse: SubscribeResponse) {
+    toArray(subscribeResponse: SubscribeResponse): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.SubscribeResponse,
@@ -16,7 +17,7 @@ export default class SubscribeResponseSerializerV1 extends Serializer<SubscribeR
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): SubscribeResponse {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -25,7 +26,10 @@ export default class SubscribeResponseSerializerV1 extends Serializer<SubscribeR
         ] = arr
 
         return new SubscribeResponse({
-            version, streamId, streamPartition, requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1
+            version,
+            streamId: toStreamID(streamId),
+            streamPartition,
+            requestId: PLACEHOLDER_REQUEST_ID_PROTOCOL_V1
         })
     }
 }

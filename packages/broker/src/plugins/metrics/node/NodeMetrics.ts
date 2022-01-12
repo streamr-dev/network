@@ -77,8 +77,7 @@ export class NodeMetrics {
         this.minuteAggregator = new Aggregator(PERIOD_LENGTHS.ONE_MINUTE, this.sampleFactory, createListener(this.hourAggregator))
     }
 
-    async start() {
-        await this.publisher.ensureStreamsCreated()
+    async start(): Promise<void> {
         const existingSamples = await this.publisher.fetchExistingSamples()
         this.hourAggregator.addSamples(existingSamples.minutes)
         this.dayAggregator.addSamples(existingSamples.hours)
@@ -87,7 +86,7 @@ export class NodeMetrics {
         }, PERIOD_LENGTHS.FIVE_SECONDS)
     }
 
-    async collectSample(now: number) {
+    async collectSample(now: number): Promise<void> {
         const sample = await this.sampleFactory.createPrimary({
             start: now - PERIOD_LENGTHS.FIVE_SECONDS,
             end: now
@@ -99,7 +98,7 @@ export class NodeMetrics {
         }
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.scheduler?.stop()
         await this.publisher.stop()
     }

@@ -1,16 +1,14 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext, NetworkNode, Protocol } from 'streamr-network'
-const { ControlLayer, MessageLayer, Errors } = Protocol
+import { MetricsContext, Metrics, NetworkNode } from 'streamr-network'
+import { StreamMessage, ControlLayer, ControlMessage, Errors } from 'streamr-client-protocol'
 import WebSocket from "ws"
 import { RequestHandler } from './RequestHandler'
 import { Connection } from './Connection'
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Publisher } from '../../Publisher'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Logger } from 'streamr-network'
 import { StreamStateManager } from '../../StreamStateManager'
-import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { Stream } from '../../Stream'
 import { StreamFetcher } from '../../StreamFetcher'
 import http from "http"
@@ -18,6 +16,7 @@ import https from "https"
 import { parse as parseQuery } from 'querystring'
 // @ts-expect-error no type definitions
 import Cutter from 'utf8-binary-cutter'
+import StreamrClient from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -31,15 +30,15 @@ export class WebsocketServer extends EventEmitter {
         }
 
         // Validate that the requested versions are supported
-        if (ControlLayer.ControlMessage.getSupportedVersions().indexOf(controlLayerVersion) < 0) {
+        if (ControlMessage.getSupportedVersions().indexOf(controlLayerVersion) < 0) {
             throw new Errors.UnsupportedVersionError(controlLayerVersion, `Supported ControlLayer versions: ${
-                JSON.stringify(ControlLayer.ControlMessage.getSupportedVersions())
+                JSON.stringify(ControlMessage.getSupportedVersions())
             }. Are you using an outdated library?`)
         }
 
-        if (MessageLayer.StreamMessage.getSupportedVersions().indexOf(messageLayerVersion) < 0) {
+        if (StreamMessage.getSupportedVersions().indexOf(messageLayerVersion) < 0) {
             throw new Errors.UnsupportedVersionError(messageLayerVersion, `Supported MessageLayer versions: ${
-                JSON.stringify(MessageLayer.StreamMessage.getSupportedVersions())
+                JSON.stringify(StreamMessage.getSupportedVersions())
             }. Are you using an outdated library?`)
         }
     }
@@ -59,9 +58,8 @@ export class WebsocketServer extends EventEmitter {
         publisher: Publisher,
         metricsContext: MetricsContext,
         subscriptionManager: SubscriptionManager,
-        storageNodeRegistry: StorageNodeRegistry,
-        streamrUrl: string,
         pingIntervalInMs = 60 * 1000,
+        streamrClient: StreamrClient
     ) {
         super()
         this.httpServer = httpServer
@@ -105,17 +103,16 @@ export class WebsocketServer extends EventEmitter {
                 }
             })
 
-        const streams = new StreamStateManager()
+        const streams = new StreamStateManager<Connection>()
         this.requestHandler = new RequestHandler(
             streamFetcher,
             publisher,
             streams,
             subscriptionManager,
             this.metrics,
-            storageNodeRegistry,
-            streamrUrl
+            streamrClient
         )
-        networkNode.addMessageListener((msg: Protocol.MessageLayer.StreamMessage) => this.broadcastMessage(msg, streams))
+        networkNode.addMessageListener((msg: StreamMessage) => this.broadcastMessage(msg, streams))
 
         this.wss = new WebSocket.Server({
             server: httpServer,
@@ -248,7 +245,7 @@ export class WebsocketServer extends EventEmitter {
         this.connections.delete(connection)
 
         // Unsubscribe from all streams
-        connection.forEachStream((stream: Stream) => {
+        connection.forEachStream((stream: Stream<Connection>) => {
             // for cleanup, spoof an UnsubscribeRequest to ourselves on the removed connection
             this.requestHandler.unsubscribe(
                 connection,
@@ -269,7 +266,7 @@ export class WebsocketServer extends EventEmitter {
 
     private pingConnections() {
         function logAndForceClose(connection: Connection, reason: string | Error): void {
-            logger.error(`Failed to ping connection: ${connection.id}, reason ${reason}`)
+            logger.info(`Failed to ping connection: ${connection.id}, reason ${reason}`)
             connection.forceClose(reason.toString())
         }
 
@@ -283,13 +280,13 @@ export class WebsocketServer extends EventEmitter {
             try {
                 connection.ping()
             } catch (e) {
-                logger.error(`Failed to ping connection: ${connection.id}, error ${e}`)
+                logger.info(`Failed to ping connection: ${connection.id}, error ${e}`)
                 logAndForceClose(connection, 'failed to ping')
             }
         })
     }
 
-    private broadcastMessage(streamMessage: Protocol.StreamMessage, streams: StreamStateManager) {
+    private broadcastMessage(streamMessage: StreamMessage, streams: StreamStateManager<Connection>) {
         const streamId = streamMessage.getStreamId()
         const streamPartition = streamMessage.getStreamPartition()
         const stream = streams.get(streamId, streamPartition)

@@ -1,15 +1,18 @@
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { Location } from '../identifiers'
+import { NodeId } from '../logic/node/Node'
+import { TrackerId } from '../logic/tracker/Tracker'
+
+export type PeerId = NodeId | TrackerId | string
 
 export enum PeerType {
     Tracker = 'tracker',
     Node = 'node',
-    Storage = 'storage',
     Unknown = 'unknown'
 }
 
 interface ObjectRepresentation {
-    peerId: string
+    peerId: PeerId
     peerType: string
     controlLayerVersions: number[] | null
     messageLayerVersions: number[] | null
@@ -22,11 +25,11 @@ const defaultMessageLayerVersions = MessageLayer.StreamMessage.getSupportedVersi
 
 export class PeerInfo {
     static newTracker(
-        peerId: string,
+        peerId: TrackerId,
         peerName?: string | null | undefined,
         controlLayerVersions?: number[],
         messageLayerVersions?: number[],
-        location?: Location | null | undefined
+        location?: Location
     ): PeerInfo {
         return new PeerInfo(
             peerId,
@@ -39,11 +42,11 @@ export class PeerInfo {
     }
 
     static newNode(
-        peerId: string,
+        peerId: NodeId,
         peerName?: string | null | undefined,
         controlLayerVersions?: number[] | undefined,
         messageLayerVersions?: number[] | undefined,
-        location?: Location | null | undefined
+        location?: Location
     ): PeerInfo  {
         return new PeerInfo(
             peerId,
@@ -55,24 +58,7 @@ export class PeerInfo {
         )
     }
 
-    static newStorage(
-        peerId: string,
-        peerName?: string | null | undefined,
-        controlLayerVersions?: number[] | undefined,
-        messageLayerVersions?: number[] | undefined,
-        location?: Location | null | undefined
-    ): PeerInfo  {
-        return new PeerInfo(
-            peerId,
-            PeerType.Storage,
-            controlLayerVersions || defaultControlLayerVersions,
-            messageLayerVersions || defaultMessageLayerVersions,
-            peerName,
-            location
-        )
-    }
-
-    static newUnknown(peerId: string): PeerInfo  {
+    static newUnknown(peerId: PeerId): PeerInfo  {
         return new PeerInfo(peerId, PeerType.Unknown, defaultControlLayerVersions, defaultMessageLayerVersions)
     }
 
@@ -83,24 +69,24 @@ export class PeerInfo {
             controlLayerVersions || defaultControlLayerVersions,
             messageLayerVersions || defaultMessageLayerVersions,
             peerName,
-            location
+            location ?? undefined
         )
     }
 
-    readonly peerId: string
+    readonly peerId: PeerId
     readonly peerType: PeerType
     readonly controlLayerVersions: number[]
     readonly messageLayerVersions: number[]
     readonly peerName: string | null
-    readonly location: Location
+    readonly location: Location | undefined
 
     constructor(
-        peerId: string,
+        peerId: PeerId,
         peerType: PeerType,
         controlLayerVersions?: number[],
         messageLayerVersions?: number[],
         peerName?: string | null | undefined,
-        location?: Location | null | undefined
+        location?: Location
     ) {
         if (!peerId) {
             throw new Error('peerId not given')
@@ -123,12 +109,7 @@ export class PeerInfo {
         this.controlLayerVersions = controlLayerVersions
         this.messageLayerVersions = messageLayerVersions
         this.peerName = peerName ? peerName : null
-        this.location = location || {
-            latitude: null,
-            longitude: null,
-            country: null,
-            city: null
-        }
+        this.location = location
     }
 
     isTracker(): boolean {
@@ -136,11 +117,7 @@ export class PeerInfo {
     }
 
     isNode(): boolean {
-        return this.peerType === PeerType.Node || this.isStorage()
-    }
-
-    isStorage(): boolean {
-        return this.peerType === PeerType.Storage
+        return this.peerType === PeerType.Node
     }
 
     toString(): string {

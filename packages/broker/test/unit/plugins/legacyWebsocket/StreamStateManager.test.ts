@@ -5,10 +5,10 @@ import { Stream } from '../../../../src/Stream'
 jest.useFakeTimers()
 
 describe('StreamStateManager', () => {
-    let streams: StreamStateManager
+    let streams: StreamStateManager<any>
 
     beforeEach(() => {
-        streams = new StreamStateManager()
+        streams = new StreamStateManager<any>()
     })
 
     afterEach(() => {
@@ -30,7 +30,7 @@ describe('StreamStateManager', () => {
     })
 
     describe('get', () => {
-        let stream: Stream
+        let stream: Stream<any>
         beforeEach(() => {
             stream = streams.create('streamId', 4)
         })
@@ -70,7 +70,7 @@ describe('StreamStateManager', () => {
     })
 
     describe('timeout behavior', () => {
-        let stream: Stream
+        let stream: Stream<any>
 
         beforeEach(() => {
             stream = streams.create('streamId', 0)

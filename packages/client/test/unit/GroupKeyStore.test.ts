@@ -1,19 +1,21 @@
 import LeakDetector from 'jest-leak-detector'
 import crypto from 'crypto'
-import { GroupKey } from '../../src/stream/encryption/Encryption'
-import GroupKeyStore from '../../src/stream/encryption/GroupKeyStore'
-import { uid, describeRepeats } from '../utils'
+import { GroupKey } from '../../src/encryption/Encryption'
+import GroupKeyStore from '../../src/encryption/GroupKeyStore'
+import { uid, describeRepeats, mockContext } from '../utils'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 
 describeRepeats('GroupKeyStore', () => {
     let clientId: string
-    let streamId: string
+    let streamId: StreamID
     let store: GroupKeyStore
     let leakDetector: LeakDetector
 
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
-        streamId = uid('stream')
+        streamId = toStreamID(uid('stream'))
         store = new GroupKeyStore({
+            context: mockContext(),
             clientId,
             streamId,
             groupKeys: [],

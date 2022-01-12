@@ -1,11 +1,11 @@
 import StreamMessage from '../protocol/message_layer/StreamMessage'
+import StreamMessageError from '../errors/StreamMessageError'
 import ValidationError from '../errors/ValidationError'
 import GroupKeyRequest from '../protocol/message_layer/GroupKeyRequest'
 import GroupKeyMessage from '../protocol/message_layer/GroupKeyMessage'
 
 import SigningUtil from './SigningUtil'
-
-const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
+import { getRecipient, isKeyExchangeStream, KEY_EXCHANGE_STREAM_PREFIX, StreamID } from './StreamID'
 
 export interface StreamMetadata {
     partitions: number,
@@ -16,9 +16,9 @@ export interface StreamMetadata {
 export interface Options {
     requireBrubeckValidation?: boolean
 
-    getStream: (streamId: string) => Promise<StreamMetadata>
-    isPublisher: (address: string, streamId: string) => Promise<boolean>
-    isSubscriber: (address: string, streamId: string) => Promise<boolean>
+    getStream: (streamId: StreamID) => Promise<StreamMetadata>
+    isPublisher: (address: string, streamId: StreamID) => Promise<boolean>
+    isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>
     verify?: (address: string, payload: string, signature: string) => Promise<boolean>
 }
 
@@ -37,13 +37,11 @@ const PUBLIC_USER = '0x0000000000000000000000000000000000000000'
  * TODO later: support for unsigned messages can be removed when deprecated system-wide.
  */
 export default class StreamMessageValidator {
-
-    requireBrubeckValidation?: boolean
-
-    getStream: (streamId: string) => Promise<StreamMetadata>
-    isPublisher: (address: string, streamId: string) => Promise<boolean>
-    isSubscriber: (address: string, streamId: string) => Promise<boolean>
-    verify: (address: string, payload: string, signature: string) => Promise<boolean>
+    readonly requireBrubeckValidation: boolean
+    readonly getStream: (streamId: StreamID) => Promise<StreamMetadata>
+    readonly isPublisher: (address: string, streamId: StreamID) => Promise<boolean>
+    readonly isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>
+    readonly verify: (address: string, payload: string, signature: string) => Promise<boolean>
 
     /**
      * @param getStream async function(streamId): returns the metadata required for stream validation for streamId.
@@ -65,9 +63,9 @@ export default class StreamMessageValidator {
     }
 
     static checkInjectedFunctions(
-        getStream: (streamId: string) => Promise<StreamMetadata>,
-        isPublisher: (address: string, streamId: string) => Promise<boolean>,
-        isSubscriber: (address: string, streamId: string) => Promise<boolean>,
+        getStream: (streamId: StreamID) => Promise<StreamMetadata>,
+        isPublisher: (address: string, streamId: StreamID) => Promise<boolean>,
+        isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>,
         verify: (address: string, payload: string, signature: string) => Promise<boolean>
     ): void | never {
         if (typeof getStream !== 'function') {
@@ -108,7 +106,7 @@ export default class StreamMessageValidator {
             case StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE:
                 return this.validateGroupKeyResponseOrAnnounce(streamMessage)
             default:
-                throw new ValidationError(`Unknown message type: ${streamMessage.messageType}!`)
+                throw new StreamMessageError(`Unknown message type: ${streamMessage.messageType}!`, streamMessage)
         }
     }
 
@@ -133,15 +131,15 @@ export default class StreamMessageValidator {
             try {
                 success = await verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature!)
             } catch (err) {
-                throw new ValidationError(`An error occurred during address recovery from signature: ${err}`)
+                throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
             }
 
             if (!success) {
-                throw new ValidationError(`Signature validation failed for message: ${streamMessage.serialize()}`)
+                throw new StreamMessageError('Signature validation failed', streamMessage)
             }
         } else {
             // We should never end up here, as StreamMessage construction throws if the signature type is invalid
-            throw new ValidationError(`Unrecognized signature type: ${streamMessage.signatureType}`)
+            throw new StreamMessageError(`Unrecognized signature type: ${streamMessage.signatureType}`, streamMessage)
         }
     }
 
@@ -150,22 +148,25 @@ export default class StreamMessageValidator {
 
         // Checks against stream metadata
         if ((stream.requireSignedData || this.requireBrubeckValidation) && !streamMessage.signature) {
-            throw new ValidationError(`Stream data is required to be signed. Message: ${streamMessage.serialize()}`)
+            throw new StreamMessageError('Stream data is required to be signed.', streamMessage)
         }
 
         if (streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE){
             if (stream.requireEncryptedData){
-                throw new ValidationError(`Non-public streams require data to be encrypted. Message: ${streamMessage.serialize()}`)
+                throw new StreamMessageError('Non-public streams require data to be encrypted.', streamMessage)
             } else if (this.requireBrubeckValidation){
                 const isPublicStream = await this.isSubscriber(PUBLIC_USER, streamMessage.getStreamId())
                 if (!isPublicStream){
-                    throw new ValidationError(`Non-public streams require data to be encrypted. Message: ${streamMessage.serialize()}`)
+                    throw new StreamMessageError('Non-public streams require data to be encrypted.', streamMessage)
                 }
             }
         }
 
         if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= stream.partitions) {
-            throw new ValidationError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${stream.partitions - 1}). Message: ${streamMessage.serialize()}`)
+            throw new StreamMessageError(
+                `Partition ${streamMessage.getStreamPartition()} is out of range (0..${stream.partitions - 1})`,
+                streamMessage
+            )
         }
 
         if (streamMessage.signature) {
@@ -175,66 +176,77 @@ export default class StreamMessageValidator {
             // Check that the sender of the message is a valid publisher of the stream
             const senderIsPublisher = await this.isPublisher(sender, streamMessage.getStreamId())
             if (!senderIsPublisher) {
-                throw new ValidationError(`${sender} is not a publisher on stream ${streamMessage.getStreamId()}. Message: ${streamMessage.serialize()}`)
+                throw new StreamMessageError(`${sender} is not a publisher on stream ${streamMessage.getStreamId()}.`, streamMessage)
             }
         }
     }
 
     private async validateGroupKeyRequest(streamMessage: StreamMessage): Promise<void> {
         if (!streamMessage.signature) {
-            throw new ValidationError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks). Message: ${streamMessage.serialize()}`)
+            throw new StreamMessageError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks).`, streamMessage)
         }
-        if (!StreamMessageValidator.isKeyExchangeStream(streamMessage.getStreamId())) {
-            throw new ValidationError(`Group key requests can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}. Message: ${streamMessage.serialize()}`)
+        if (!isKeyExchangeStream(streamMessage.getStreamId())) {
+            throw new StreamMessageError(
+                `Group key requests can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}.`,
+                streamMessage
+            )
         }
 
         const groupKeyRequest = GroupKeyRequest.fromStreamMessage(streamMessage)
         const sender = streamMessage.getPublisherId()
-        const recipient = streamMessage.getStreamId().substring(KEY_EXCHANGE_STREAM_PREFIX.length)
+        const recipient = getRecipient(streamMessage.getStreamId())
 
         await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
         // Check that the recipient of the request is a valid publisher of the stream
-        const recipientIsPublisher = await this.isPublisher(recipient, groupKeyRequest.streamId)
+        const recipientIsPublisher = await this.isPublisher(recipient!, groupKeyRequest.streamId)
         if (!recipientIsPublisher) {
-            throw new ValidationError(`${recipient} is not a publisher on stream ${groupKeyRequest.streamId}. Group key request: ${streamMessage.serialize()}`)
+            throw new StreamMessageError(`${recipient} is not a publisher on stream ${groupKeyRequest.streamId}.`, streamMessage)
         }
 
         // Check that the sender of the request is a valid subscriber of the stream
         const senderIsSubscriber = await this.isSubscriber(sender, groupKeyRequest.streamId)
         if (!senderIsSubscriber) {
-            throw new ValidationError(`${sender} is not a subscriber on stream ${groupKeyRequest.streamId}. Group key request: ${streamMessage.serialize()}`)
+            throw new StreamMessageError(`${sender} is not a subscriber on stream ${groupKeyRequest.streamId}.`, streamMessage)
         }
     }
 
     private async validateGroupKeyResponseOrAnnounce(streamMessage: StreamMessage): Promise<void> {
         if (!streamMessage.signature) {
-            throw new ValidationError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks). Message: ${streamMessage.serialize()}`)
+            throw new StreamMessageError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks).`, streamMessage)
         }
-        if (!StreamMessageValidator.isKeyExchangeStream(streamMessage.getStreamId())) {
-            throw new ValidationError(`${streamMessage.messageType} can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}. Message: ${streamMessage.serialize()}`)
+        if (!isKeyExchangeStream(streamMessage.getStreamId())) {
+            throw new StreamMessageError(
+                `${streamMessage.messageType} can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}.`,
+                streamMessage
+            )
         }
 
         await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
         const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage) // can be GroupKeyResponse or GroupKeyAnnounce, only streamId is read
         const sender = streamMessage.getPublisherId()
-        const recipient = streamMessage.getStreamId().substring(KEY_EXCHANGE_STREAM_PREFIX.length)
 
         // Check that the sender of the request is a valid publisher of the stream
         const senderIsPublisher = await this.isPublisher(sender, groupKeyMessage.streamId)
         if (!senderIsPublisher) {
-            throw new ValidationError(`${sender} is not a publisher on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}: ${streamMessage.serialize()}`)
+            throw new StreamMessageError(
+                `${sender} is not a publisher on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
+                streamMessage
+            )
         }
 
-        // Check that the recipient of the request is a valid subscriber of the stream
-        const recipientIsSubscriber = await this.isSubscriber(recipient, groupKeyMessage.streamId)
-        if (!recipientIsSubscriber) {
-            throw new ValidationError(`${recipient} is not a subscriber on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}: ${streamMessage.serialize()}`)
+        if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+            // permit publishers to send error responses to invalid subscribers
+            const recipient = getRecipient(streamMessage.getStreamId())
+            // Check that the recipient of the request is a valid subscriber of the stream
+            const recipientIsSubscriber = await this.isSubscriber(recipient!, groupKeyMessage.streamId)
+            if (!recipientIsSubscriber) {
+                throw new StreamMessageError(
+                    `${recipient} is not a subscriber on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
+                    streamMessage
+                )
+            }
         }
-    }
-
-    static isKeyExchangeStream(streamId: string): boolean {
-        return streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
     }
 }

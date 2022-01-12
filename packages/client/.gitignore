@@ -27,7 +27,6 @@ node_modules
 # Users Environment Variables
 .lock-wscript
 dist/*
-examples/webpack/dist/*
 
 # IntelliJ IDEA
 .idea/workspace.xml

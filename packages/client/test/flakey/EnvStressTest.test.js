@@ -1,9 +1,8 @@
 import { pTimeout } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import clientOptions from '../../src/ConfigTest'
 
 import { fakePrivateKey, uid } from '../utils'
-
-const clientOptions = require('../integration/config')
 
 const TEST_REPEATS = 6
 const MAX_CONCURRENCY = 24

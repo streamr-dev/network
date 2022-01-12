@@ -4,11 +4,12 @@ import MessageRef from '../../message_layer/MessageRef'
 import ResendRangeRequest from './ResendRangeRequest'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 1
 
 export default class ResendRangeRequestSerializerV1 extends Serializer<ResendRangeRequest> {
-    toArray(resendRangeRequest: ResendRangeRequest) {
+    toArray(resendRangeRequest: ResendRangeRequest): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.ResendRangeRequest,
@@ -23,7 +24,7 @@ export default class ResendRangeRequestSerializerV1 extends Serializer<ResendRan
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): ResendRangeRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -42,7 +43,7 @@ export default class ResendRangeRequestSerializerV1 extends Serializer<ResendRan
         return new ResendRangeRequest({
             version,
             requestId,
-            streamId,
+            streamId: toStreamID(streamId),
             streamPartition,
             fromMsgRef: new MessageRef(fromTimestamp, fromSequenceNumber),
             toMsgRef: new MessageRef(toTimestamp, toSequenceNumber),

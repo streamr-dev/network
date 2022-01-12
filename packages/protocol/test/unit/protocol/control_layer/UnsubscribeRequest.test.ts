@@ -3,6 +3,7 @@ import assert from 'assert'
 import UnsubscribeRequest from '../../../../src/protocol/control_layer/unsubscribe_request/UnsubscribeRequest'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
+import { toStreamID } from '../../../../src'
 
 describe('UnsubscribeRequest', () => {
     describe('constructor', () => {
@@ -16,14 +17,14 @@ describe('UnsubscribeRequest', () => {
         it('throws on null streamPartition', () => {
             assert.throws(() => new UnsubscribeRequest({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: null as any,
             }), ValidationError)
         })
         it('throws on null requestId (since V2)', () => {
             assert.throws(() => new UnsubscribeRequest({
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
             }), ValidationError)
         })
@@ -31,14 +32,14 @@ describe('UnsubscribeRequest', () => {
             assert.doesNotThrow(() => new UnsubscribeRequest({
                 version: 1,
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
             }))
         })
         it('should create the latest version', () => {
             const msg = new UnsubscribeRequest({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
             })
             assert(msg instanceof UnsubscribeRequest)

@@ -9,8 +9,8 @@ const logger = new Logger(module)
 
 export interface MqttServerListener {
     onMessageReceived(topic: string, payload: string): void
-    onSubscribed(topics: string): void
-    onUnsubscribed(topics: string): void
+    onSubscribed(topics: string, clientId: string): void
+    onUnsubscribed(topics: string, clientId: string): void
 }
 
 export class MqttServer {
@@ -34,26 +34,26 @@ export class MqttServer {
                 this.listener?.onMessageReceived(packet.topic, packet.payload.toString())
             }
         })
-        this.aedes.on('subscribe', (subscriptions: ISubscription[]) => {
+        this.aedes.on('subscribe', (subscriptions: ISubscription[], client: aedes.Client) => {
             const topics = subscriptions.map((subscription) => subscription.topic)
-            topics.forEach((topic) => this.listener?.onSubscribed(topic))
+            topics.forEach((topic) => this.listener?.onSubscribed(topic, client.id))
         })
-        this.aedes.on('unsubscribe', (topics: string[]) => {
-            topics.forEach((topic) => this.listener?.onUnsubscribed(topic))
+        this.aedes.on('unsubscribe', (topics: string[], client: aedes.Client) => {
+            topics.forEach((topic) => this.listener?.onUnsubscribed(topic, client.id))
         })
     }
 
-    setListener(listener: MqttServerListener) {
+    setListener(listener: MqttServerListener): void {
         this.listener = listener
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.server = net.createServer(this.aedes.handle)
         await util.promisify((callback: any) => this.server!.listen(this.port, callback))()
         logger.info(`MQTT server listening on port ${this.port}`)
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         if (!this.aedes.closed) {
             const closeAedes = util.promisify((callback: any) => this.aedes.close(callback))()
             const closeServer = util.promisify((callback: any) => this.server!.close(callback))()
@@ -62,7 +62,7 @@ export class MqttServer {
         }
     }
 
-    publish(topic: string, payload: string) {
+    publish(topic: string, payload: string): void {
         const packet: aedes.PublishPacket = {
             topic,
             payload,
@@ -79,7 +79,12 @@ export class MqttServer {
     }
 
     private static createAuthenicationHandler(apiAuthenticator: ApiAuthenticator): aedes.AuthenticateHandler {
-        return (_client: aedes.Client, _username: Readonly<string>|undefined, password: Readonly<Buffer>|undefined, done: (error: aedes.AuthenticateError|null, success: boolean|null) => void) => {
+        return (
+            _client: aedes.Client,
+            _username: Readonly<string>|undefined,
+            password: Readonly<Buffer>|undefined,
+            done: (error: aedes.AuthenticateError|null, success: boolean|null) => void
+        ) => {
             if (apiAuthenticator.isValidAuthentication(password?.toString())) {
                 done(null, true)
             } else {

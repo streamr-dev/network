@@ -3,11 +3,12 @@ import ControlMessage from '../ControlMessage'
 import ResendResponseResent from './ResendResponseResent'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 1
 
 export default class ResendResponseResentSerializerV1 extends Serializer<ResendResponseResent> {
-    toArray(resendResponseResent: ResendResponseResent) {
+    toArray(resendResponseResent: ResendResponseResent): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.ResendResponseResent,
@@ -17,7 +18,7 @@ export default class ResendResponseResentSerializerV1 extends Serializer<ResendR
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): ResendResponseResent {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -27,7 +28,10 @@ export default class ResendResponseResentSerializerV1 extends Serializer<ResendR
         ] = arr
 
         return new ResendResponseResent({
-            version, requestId, streamId, streamPartition
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition
         })
     }
 }

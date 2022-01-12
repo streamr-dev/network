@@ -12,39 +12,37 @@ const logger = new Logger(module)
 export interface MetricsPluginConfig {
     consoleAndPM2IntervalInSeconds: number
     nodeMetrics: {
-        client: {
-            wsUrl: string
-            httpUrl: string
-        }
         storageNode: string
+        streamIdPrefix: string
     } | null
 }
 
 export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
-    private readonly volumeLogger: VolumeLogger
+    private volumeLogger?: VolumeLogger
     private nodeMetrics?: NodeMetrics
 
     constructor(options: PluginOptions) {
         super(options)
-        this.volumeLogger = new VolumeLogger(
-            this.pluginConfig.consoleAndPM2IntervalInSeconds,
-            this.metricsContext,
-        )
-        if (this.pluginConfig.nodeMetrics !== null) {
-            const metricsPublisher = new MetricsPublisher(this.nodeId, {
-                ethereumPrivateKey: this.brokerConfig.ethereumPrivateKey,
-                storageNode: this.pluginConfig.nodeMetrics.storageNode,
-                storageNodes: this.storageNodeRegistry.getStorageNodes(),
-                clientWsUrl: this.pluginConfig.nodeMetrics.client.wsUrl,
-                clientHttpUrl: this.pluginConfig.nodeMetrics.client.httpUrl
-            })
-            this.nodeMetrics = new NodeMetrics(this.metricsContext, metricsPublisher) 
-        }
     }
 
     async start(): Promise<void> {
+        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
+        this.volumeLogger = new VolumeLogger(
+            this.pluginConfig.consoleAndPM2IntervalInSeconds,
+            metricsContext,
+        )
+
+        if (this.pluginConfig.nodeMetrics !== null) {
+            const metricsPublisher = new MetricsPublisher(
+                this.nodeId,
+                this.streamrClient!,
+                this.pluginConfig.nodeMetrics.storageNode,
+                this.pluginConfig.nodeMetrics.streamIdPrefix
+            )
+            this.nodeMetrics = new NodeMetrics(metricsContext, metricsPublisher)
+        }
         try {
-            this.addHttpServerRouter(volumeEndpoint(this.metricsContext))
+            this.addHttpServerRouter(volumeEndpoint(metricsContext))
             if (this.nodeMetrics !== undefined) {
                 await this.nodeMetrics.start()
             }
@@ -59,7 +57,7 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
         if (this.nodeMetrics !== undefined) {
             await this.nodeMetrics.stop()
         }
-        await this.volumeLogger.stop()
+        await this.volumeLogger!.stop()
     }
 
     getConfigSchema(): Schema {

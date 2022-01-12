@@ -1,4 +1,4 @@
-import { LocationManager } from '../../src/logic/LocationManager'
+import { LocationManager } from '../../src/logic/tracker/LocationManager'
 
 describe('LocationManager', () => {
     let locationManager: LocationManager
@@ -13,24 +13,19 @@ describe('LocationManager', () => {
                 nodeId: 'nodeId',
                 location: {
                     city: 'Helsinki',
-                    country: 'Finland',
-                    latitude: null,
-                    longitude: null
+                    country: 'Finland'
                 },
                 address: '193.166.4.1'
             })
             expect(locationManager.getNodeLocation('nodeId')).toEqual({
                 city: 'Helsinki',
-                country: 'Finland',
-                latitude: null,
-                longitude: null
+                country: 'Finland'
             })
         })
 
         it('passing empty location but valid address', () => {
             locationManager.updateLocation({
                 nodeId: 'nodeId',
-                location: null,
                 address: '193.166.4.1'
             })
             expect(locationManager.getNodeLocation('nodeId')).toEqual({
@@ -44,7 +39,6 @@ describe('LocationManager', () => {
         it('passing empty location and address', () => {
             locationManager.updateLocation({
                 nodeId: 'nodeId',
-                location: null,
                 address: null as any
             })
             expect(locationManager.getNodeLocation('nodeId')).toBeUndefined()
@@ -55,7 +49,6 @@ describe('LocationManager', () => {
             locationManager.logger.warn = jest.fn()
             locationManager.updateLocation({
                 nodeId: 'nodeId',
-                location: null,
                 address: 'dsjklgasdjklgjasdklgj'
             })
             expect(locationManager.getNodeLocation('nodeId')).toBeUndefined()
@@ -66,22 +59,17 @@ describe('LocationManager', () => {
                 nodeId: 'nodeId',
                 location: {
                     city: 'Helsinki',
-                    country: 'Finland',
-                    latitude: null,
-                    longitude: null
+                    country: 'Finland'
                 },
                 address: '193.166.4.1'
             })
             locationManager.updateLocation({
                 nodeId: 'nodeId',
-                location: null,
                 address: '/193.166.4.1'
             })
             expect(locationManager.getNodeLocation('nodeId')).toEqual({
                 city: 'Helsinki',
-                country: 'Finland',
-                latitude: null,
-                longitude: null
+                country: 'Finland'
             })
         })
     })
@@ -89,12 +77,10 @@ describe('LocationManager', () => {
     it('getAllNodeLocations', () => {
         locationManager.updateLocation({
             nodeId: 'node-1',
-            location: null,
             address: '193.166.4.1'
         })
         locationManager.updateLocation({
             nodeId: 'node-2',
-            location: null,
             address: '8.8.8.8'
         })
         expect(locationManager.getAllNodeLocations()).toEqual({
@@ -116,12 +102,10 @@ describe('LocationManager', () => {
     it('removeNode', () => {
         locationManager.updateLocation({
             nodeId: 'node-1',
-            location: null,
             address: '193.166.4.1'
         })
         locationManager.updateLocation({
             nodeId: 'node-2',
-            location: null,
             address: '8.8.8.8'
         })
         locationManager.removeNode('node-2')

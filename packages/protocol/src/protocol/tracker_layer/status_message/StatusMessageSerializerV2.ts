@@ -7,7 +7,7 @@ import { Serializer } from '../../../Serializer'
 const VERSION = 2
 
 export default class StatusMessageSerializerV2 extends Serializer<StatusMessage> {
-    toArray(statusMessage: StatusMessage) {
+    toArray(statusMessage: StatusMessage): any[] {
         return [
             VERSION,
             TrackerMessage.TYPES.StatusMessage,
@@ -16,7 +16,7 @@ export default class StatusMessageSerializerV2 extends Serializer<StatusMessage>
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): StatusMessage {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars

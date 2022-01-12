@@ -1,55 +1,56 @@
-import { Protocol } from 'streamr-network'
-const { ControlLayer, Utils, ControlMessageType } = Protocol
+import type { Metrics } from 'streamr-network'
+import {
+    SubscribeRequest,
+    UnsubscribeRequest,
+    ResendLastRequest,
+    ResendFromRequest,
+    ResendRangeRequest,
+    PublishRequest,
+    Utils,
+    ControlMessageType,
+    ControlMessage,
+    StreamMessage,
+    ControlLayer,
+    ErrorCode
+} from 'streamr-client-protocol'
 import { ArrayMultimap } from '@teppeis/multimaps'
 import { HttpError } from '../../errors/HttpError'
 import { FailedToPublishError } from '../../errors/FailedToPublishError'
 import { Logger } from 'streamr-network'
 import { StreamStateManager } from '../../StreamStateManager' 
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Publisher } from '../../Publisher'
 import { SubscriptionManager } from '../../SubscriptionManager'
 import { Connection } from './Connection'
 import { StreamFetcher } from '../../StreamFetcher'
-import { StorageNodeRegistry } from '../../StorageNodeRegistry'
 import { createResponse as createHistoricalDataResponse, HistoricalDataResponse } from './historicalData'
 import { GenericError } from '../../errors/GenericError'
+import StreamrClient, { StreamPermission } from 'streamr-client'
 
 const logger = new Logger(module)
-
-type SubscribeRequest = Protocol.ControlLayer.SubscribeRequest
-type UnsubscribeRequest = Protocol.ControlLayer.UnsubscribeRequest
-type ResendLastRequest = Protocol.ControlLayer.ResendLastRequest
-type ResendFromRequest = Protocol.ControlLayer.ResendFromRequest
-type ResendRangeRequest = Protocol.ControlLayer.ResendRangeRequest
-type PublishRequest = Protocol.ControlLayer.PublishRequest
 
 export class RequestHandler {
 
     streamFetcher: StreamFetcher
     publisher: Publisher
-    streams: StreamStateManager
+    streams: StreamStateManager<Connection>
     subscriptionManager: SubscriptionManager
     metrics: Metrics
-    storageNodeRegistry: StorageNodeRegistry
-    streamrUrl: string
     ongoingResendResponses: ArrayMultimap<string,HistoricalDataResponse> = new ArrayMultimap()
+    streamrClient: StreamrClient
 
-    constructor(   
+    constructor(
         streamFetcher: StreamFetcher,
         publisher: Publisher,
-        streams: StreamStateManager,
+        streams: StreamStateManager<Connection>,
         subscriptionManager: SubscriptionManager,
         metrics: Metrics,
-        storageNodeRegistry: StorageNodeRegistry,
-        streamrUrl: string
+        streamrClient: StreamrClient
     ) {
         this.streamFetcher = streamFetcher
         this.publisher = publisher
         this.streams = streams
         this.subscriptionManager = subscriptionManager
         this.metrics = metrics
-        this.storageNodeRegistry = storageNodeRegistry,
-        this.streamrUrl = streamrUrl
         this.metrics.addQueriedMetric('numOfOngoingResends', () => this.ongoingResendResponses.size)
         this.metrics.addQueriedMetric('meanAgeOfOngoingResends', () => {
             if (this.ongoingResendResponses.size > 0) {
@@ -64,30 +65,31 @@ export class RequestHandler {
                 return 0
             }
         })
+        this.streamrClient = streamrClient
     }
 
-    handleRequest(connection: Connection, request: Protocol.ControlLayer.ControlMessage): Promise<any> {
+    handleRequest(connection: Connection, request: ControlMessage): Promise<any> {
         logger.debug(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
         switch (request.type) {
-            case ControlLayer.ControlMessage.TYPES.SubscribeRequest:
+            case ControlMessage.TYPES.SubscribeRequest:
                 return this.subscribe(connection, request as SubscribeRequest)
-            case ControlLayer.ControlMessage.TYPES.UnsubscribeRequest:
+            case ControlMessage.TYPES.UnsubscribeRequest:
                 return this.unsubscribe(connection, request as UnsubscribeRequest)
-            case ControlLayer.ControlMessage.TYPES.PublishRequest:
+            case ControlMessage.TYPES.PublishRequest:
                 return this.publish(connection, request as PublishRequest)
-            case ControlLayer.ControlMessage.TYPES.ResendLastRequest:
-            case ControlLayer.ControlMessage.TYPES.ResendFromRequest:
-            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest:
+            case ControlMessage.TYPES.ResendLastRequest:
+            case ControlMessage.TYPES.ResendFromRequest:
+            case ControlMessage.TYPES.ResendRangeRequest:
                 return this.resend(connection, request as (ResendLastRequest|ResendFromRequest|ResendRangeRequest))
-            default:
+            default: {
                 connection.send(new ControlLayer.ErrorResponse({
                     version: request.version,
                     requestId: request.requestId,
                     errorMessage: `Unknown request type: ${request.type}`,
-                    // @ts-expect-error
-                    errorCode: 'INVALID_REQUEST',
+                    errorCode: ErrorCode.INVALID_REQUEST,
                 }))
                 return Promise.resolve()
+            }
         }
     }
 
@@ -99,7 +101,8 @@ export class RequestHandler {
             // This can be removed when support for unsigned messages is dropped!
             if (!streamMessage.signature) {
                 // checkPermission is cached
-                await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(), request.sessionToken, 'stream_publish')
+                await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(),
+                    streamMessage.getPublisherId(), StreamPermission.PUBLISH)
             }
 
             await this.publisher.validateAndPublish(streamMessage)
@@ -108,36 +111,35 @@ export class RequestHandler {
             let errorCode
             if (err instanceof HttpError && err.code === 401) {
                 errorMessage = `Authentication failed while trying to publish to stream ${streamMessage.getStreamId()}`
-                errorCode = 'AUTHENTICATION_FAILED'
+                errorCode = ErrorCode.AUTHENTICATION_FAILED
             } else if (err instanceof HttpError && err.code === 403) {
                 errorMessage = `You are not allowed to write to stream ${streamMessage.getStreamId()}`
-                errorCode = 'PERMISSION_DENIED'
+                errorCode = ErrorCode.PERMISSION_DENIED
             } else if (err instanceof HttpError && err.code === 404) {
                 errorMessage = `Stream ${streamMessage.getStreamId()} not found.`
-                errorCode = 'NOT_FOUND'
+                errorCode = ErrorCode.NOT_FOUND
             } else if (err instanceof FailedToPublishError) {
                 errorMessage = err.message
-                errorCode = 'FUTURE_TIMESTAMP'
+                errorCode = ErrorCode.FUTURE_TIMESTAMP
             } else {
                 errorMessage = `Publish request failed: ${err.message || err}`
-                errorCode = 'REQUEST_FAILED'
+                errorCode = ErrorCode.REQUEST_FAILED
             }
 
             connection.send(new ControlLayer.ErrorResponse({
                 version: request.version,
                 requestId: request.requestId,
                 errorMessage,
-                // @ts-expect-error
                 errorCode,
             }))
         }
     }
 
     private async resend(connection: Connection, request: ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
-        await this._validateSubscribeOrResendRequest(request)
+        await this.validateSubscribeOrResendRequest(request)
         let streamingStorageData
         try {
-            const response = await createHistoricalDataResponse(request, this.storageNodeRegistry)
+            const response = await createHistoricalDataResponse(request, this.streamrClient)
             streamingStorageData = response.data
             this.ongoingResendResponses.put(connection.id, response)
         } catch (e: any) {
@@ -148,17 +150,17 @@ export class RequestHandler {
     }
 
     private async sendResendResponse(
-        connection: Connection, 
+        connection: Connection,
         request: ResendFromRequest|ResendLastRequest|ResendRangeRequest,
         streamingStorageData: NodeJS.ReadableStream
     ) {
         let sentMessages = 0
-    
-        const msgHandler = (streamMessage: Protocol.StreamMessage) => {
+
+        const msgHandler = (streamMessage: StreamMessage) => {
             if (sentMessages === 0) {
                 connection.send(new ControlLayer.ResendResponseResending(request))
             }
-    
+
             this.metrics.record('outBytes', streamMessage.getSerializedContent().length)
             this.metrics.record('outMessages', 1)
             sentMessages += 1
@@ -168,7 +170,7 @@ export class RequestHandler {
                 streamMessage,
             }))
         }
-    
+
         const doneHandler = () => {
             logger.info('Finished resend %s: %d messages', request.requestId, sentMessages)
             if (sentMessages === 0) {
@@ -188,7 +190,7 @@ export class RequestHandler {
             }
             this.ongoingResendResponses.delete(connection.id)
         }
-    
+
         try {
             if (connection.isDead()) {
                 return
@@ -213,7 +215,7 @@ export class RequestHandler {
         }
     }
 
-    private sendError(e: Error, request: Protocol.ControlMessage, connection: Connection) {
+    private sendError(e: Error, request: ControlMessage, connection: Connection) {
         if (e instanceof GenericError) {
             logger.warn(e.message)
             connection.send(new ControlLayer.ErrorResponse({
@@ -230,7 +232,7 @@ export class RequestHandler {
 
     private async subscribe(connection: Connection, request: SubscribeRequest) {
         try {
-            await this._validateSubscribeOrResendRequest(request)
+            await this.validateSubscribeOrResendRequest(request)
 
             if (connection.isDead()) {
                 return
@@ -266,34 +268,35 @@ export class RequestHandler {
             let errorCode
             if (err instanceof HttpError && err.code === 401) {
                 errorMessage = `Authentication failed while trying to subscribe to stream ${request.streamId}`
-                errorCode = 'AUTHENTICATION_FAILED'
+                errorCode = ErrorCode.AUTHENTICATION_FAILED
             } else if (err instanceof HttpError && err.code === 403) {
                 errorMessage = `You are not allowed to subscribe to stream ${request.streamId}`
-                errorCode = 'PERMISSION_DENIED'
+                errorCode = ErrorCode.PERMISSION_DENIED
             } else if (err instanceof HttpError && err.code === 404) {
                 errorMessage = `Stream ${request.streamId} not found.`
-                errorCode = 'NOT_FOUND'
+                errorCode = ErrorCode.NOT_FOUND
             } else {
                 errorMessage = `Subscribe request failed: ${err}`
-                errorCode = 'REQUEST_FAILED'
+                errorCode = ErrorCode.REQUEST_FAILED
             }
 
             connection.send(new ControlLayer.ErrorResponse({
                 version: request.version,
                 requestId: request.requestId,
                 errorMessage,
-                // @ts-expect-error
                 errorCode,
             }))
         }
     }
 
-    async unsubscribe(connection: Connection, request: UnsubscribeRequest, noAck = false) {
+    async unsubscribe(connection: Connection, request: UnsubscribeRequest, noAck = false): Promise<void> {
         const stream = this.streams.get(request.streamId, request.streamPartition)
 
         if (stream) {
-            logger.trace('handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"', connection.id,
-                request.streamId, request.streamPartition)
+            logger.trace(
+                'handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"',
+                connection.id, request.streamId, request.streamPartition
+            )
 
             stream.removeConnection(connection)
             connection.removeStream(request.streamId, request.streamPartition)
@@ -335,33 +338,31 @@ export class RequestHandler {
                     version: request.version,
                     requestId: request.requestId,
                     errorMessage: `Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`,
-                    // @ts-expect-error
-                    errorCode: 'INVALID_REQUEST',
+                    errorCode: ErrorCode.INVALID_REQUEST,
                 }))
             }
         }
     }
 
-    private async _validateSubscribeOrResendRequest(request: SubscribeRequest|ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
-        if (Utils.StreamMessageValidator.isKeyExchangeStream(request.streamId)) {
+    // TODO rename method
+    private async validateSubscribeOrResendRequest(request: SubscribeRequest|ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
+        if (Utils.isKeyExchangeStream(request.streamId)) {
             if (request.streamPartition !== 0) {
                 throw new Error(`Key exchange streams only have partition 0. Tried to subscribe to ${request.streamId}:${request.streamPartition}`)
             }
-        } else {
-            await this.streamFetcher.checkPermission(request.streamId, request.sessionToken, 'stream_subscribe')
         }
     }
 
-    onConnectionClose(connectionId: string) {
+    onConnectionClose(connectionId: string): void {
         const ongoingResendResponses = this.ongoingResendResponses.get(connectionId)
         if (ongoingResendResponses.length > 0) {
             logger.info('Abort %s ongoing resends for connection %s', ongoingResendResponses.length, connectionId)
             ongoingResendResponses.forEach((response)=> response.abort())
-            this.ongoingResendResponses.delete(connectionId)   
+            this.ongoingResendResponses.delete(connectionId)
         }
     }
 
-    close() {
+    close(): void {
         this.streams.close()
     }
 }

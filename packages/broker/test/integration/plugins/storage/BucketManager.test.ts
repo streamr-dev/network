@@ -58,7 +58,7 @@ describe('BucketManager', () => {
     test('calling getBucketId() will try to find bucket in database and then create if not found and store in database', async () => {
         const timestamp = Date.now()
 
-        const storeBucketsSpy = jest.spyOn(bucketManager, '_storeBuckets')
+        const storeBucketsSpy = jest.spyOn(bucketManager, 'storeBuckets' as any)
 
         expect(Object.values(bucketManager.streams)).toHaveLength(0)
         expect(Object.values(bucketManager.buckets)).toHaveLength(0)
@@ -177,6 +177,7 @@ describe('BucketManager', () => {
         expect(buckets.length).toEqual(50)
     })
 
+    // eslint-disable-next-line max-len
     test('getBucketsByTimestamp(streamId, 0, fromTs, toTs) when there are buckets in database for stream streamId outside and inside range [fromTs, toTs]', async () => {
         const timestamp = new Date()
         await insertBuckets(timestamp)
@@ -188,6 +189,7 @@ describe('BucketManager', () => {
         expect(buckets.length).toEqual(40)
     })
 
+    // eslint-disable-next-line max-len
     test('getBucketsByTimestamp(streamId, 0, undefined, toTs) when there are buckets in database for stream streamId after (and before) toTs', async () => {
         const timestamp = new Date()
         await insertBuckets(timestamp)

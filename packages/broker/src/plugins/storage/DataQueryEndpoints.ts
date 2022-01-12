@@ -1,16 +1,15 @@
 /**
  * Endpoints for RESTful data requests
  */
-import express, { Request, Response } from 'express'
-import { MetricsContext, Protocol } from 'streamr-network'
-import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
-import { Logger } from 'streamr-network'
+import express, { Request, Response, Router } from 'express'
+import { StreamMessage } from 'streamr-client-protocol'
+import { Logger, Metrics, MetricsContext } from 'streamr-network'
 import { Readable, Transform } from 'stream'
-import { Todo } from '../../types'
 import { Storage } from './Storage'
-import { authenticator } from '../../RequestAuthenticatorMiddleware'
+import { AuthenticatedRequest } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
+import { StreamFetcher } from "../../StreamFetcher"
 
 const logger = new Logger(module)
 
@@ -32,7 +31,7 @@ class ResponseTransform extends Transform {
         this.version = version
     }
 
-    _transform(input: Protocol.MessageLayer.StreamMessage, _encoding: string, done: () => void) {
+    _transform(input: StreamMessage, _encoding: string, done: () => void) {
         if (this.firstMessage) {
             this.firstMessage = false
             this.push(this.format.header)
@@ -52,7 +51,7 @@ class ResponseTransform extends Transform {
     }
 }
 
-function parseIntIfExists(x: Todo) {
+function parseIntIfExists(x: string | undefined): number | undefined {
     return x === undefined ? undefined : parseInt(x)
 }
 
@@ -66,7 +65,7 @@ const sendError = (message: string, res: Response) => {
 const createEndpointRoute = (
     name: string,
     router: express.Router,
-    metrics: Metrics, 
+    metrics: Metrics,
     processRequest: (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => void
 ) => {
     router.get(`${LEGACY_API_ROUTE_PREFIX}/streams/:id/data/partitions/:partition/${name}`, (req: Request, res: Response) => {
@@ -77,7 +76,7 @@ const createEndpointRoute = (
             metrics.record(name + 'Requests', 1)
             const streamId = req.params.id
             const partition = parseInt(req.params.partition)
-            const version = parseIntIfExists(req.query.version)
+            const version = parseIntIfExists(req.query.version as string)
             processRequest(req, streamId, partition, 
                 (data: Readable) => {
                     data.once('data', () => {
@@ -105,7 +104,28 @@ const createEndpointRoute = (
     })
 }
 
-export const router = (storage: Storage, streamFetcher: Todo, metricsContext: MetricsContext) => {
+type LastRequest = AuthenticatedRequest<{
+    count?: string
+}>
+
+type FromRequest = AuthenticatedRequest<{
+    fromTimestamp?: string
+    fromSequenceNumber?: string
+    publisherId?: string
+}>
+
+type RangeRequest = AuthenticatedRequest<{
+    fromTimestamp?: string
+    toTimestamp?: string
+    fromSequenceNumber?: string
+    toSequenceNumber?: string
+    publisherId?: string
+    msgChainId?: string
+    fromOffset?: string // no longer supported
+    toOffset?: string   // no longer supported
+}>
+
+export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsContext: MetricsContext): Router => {
     const router = express.Router()
     const metrics = metricsContext.create('broker/http')
         .addRecordedMetric('outBytes')
@@ -129,11 +149,12 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
             }
         },
         // authentication
-        authenticator(streamFetcher, 'stream_subscribe'),
+        // authenticator(streamFetcher, StreamPermission.SUBSCRIBE, ???),
     )
 
-    createEndpointRoute('last', router, metrics, (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
-        const count = req.query.count === undefined ? 1 : parseIntIfExists(req.query.count as string)
+    // eslint-disable-next-line max-len
+    createEndpointRoute('last', router, metrics, (req: LastRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
+        const count = req.query.count === undefined ? 1 : parseIntIfExists(req.query.count)
         if (Number.isNaN(count)) {
             onError(`Query parameter "count" not a number: ${req.query.count}`)
         } else {
@@ -145,7 +166,8 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         }
     })
 
-    createEndpointRoute('from', router, metrics, (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
+    // eslint-disable-next-line max-len
+    createEndpointRoute('from', router, metrics, (req: FromRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
         const { publisherId } = req.query
@@ -159,12 +181,13 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
                 partition,
                 fromTimestamp,
                 fromSequenceNumber,
-                (publisherId as string) || null
+                publisherId
             ))
         }
     })
 
-    createEndpointRoute('range', router, metrics, (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
+    // eslint-disable-next-line max-len
+    createEndpointRoute('range', router, metrics, (req: RangeRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const toTimestamp = parseIntIfExists(req.query.toTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
@@ -177,6 +200,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         } else if (Number.isNaN(fromTimestamp)) {
             onError(`Query parameter "fromTimestamp" not a number: ${req.query.fromTimestamp}`)
         } else if (toTimestamp === undefined) {
+            // eslint-disable-next-line max-len
             onError('Query parameter "toTimestamp" required as well. To request all messages since a timestamp, use the endpoint /streams/:id/data/partitions/:partition/from')
         } else if (Number.isNaN(toTimestamp)) {
             onError(`Query parameter "toTimestamp" not a number: ${req.query.toTimestamp}`)
@@ -190,12 +214,11 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
                 fromSequenceNumber,
                 toTimestamp,
                 toSequenceNumber,
-                (publisherId as string) || null,
-                (msgChainId as string) || null
+                publisherId,
+                msgChainId
             ))
         }
     })
 
     return router
 }
-

@@ -8,6 +8,7 @@ import { once } from "events"
 import fs from "fs"
 import http from 'http'
 import https from "https"
+import { Schema } from 'ajv'
 
 const logger = new Logger(module)
 
@@ -42,13 +43,12 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         this.websocketServer = new WebsocketServer(
             httpServer,
             this.networkNode,
-            new StreamFetcher(this.brokerConfig.streamrUrl),
+            new StreamFetcher(this.streamrClient!),
             this.publisher,
-            this.metricsContext,
+            (await (this.streamrClient!.getNode())).getMetricsContext(),
             this.subscriptionManager,
-            this.storageNodeRegistry,
-            this.brokerConfig.streamrUrl,
             this.pluginConfig.pingInterval,
+            this.streamrClient!
         )
         httpServer.listen(this.pluginConfig.port)
         await once(httpServer, 'listening')
@@ -59,8 +59,8 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
     async stop(): Promise<unknown> {
         return this.websocketServer!.close()
     }
-
-    getConfigSchema(): Record<string, unknown> {
+    
+    getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

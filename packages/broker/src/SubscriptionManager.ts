@@ -1,31 +1,26 @@
-import { NetworkNode } from 'streamr-network'
-import { Todo } from './types'
+import { NetworkNode, Protocol } from 'streamr-network'
+import { SPID } from 'streamr-client-protocol'
 
 export class SubscriptionManager {
+    streams = new Map<Protocol.SPIDKey, number>()
 
-    networkNode: NetworkNode
-    streams: Map<Todo,Todo>
-
-    constructor(networkNode: NetworkNode) {
-        this.networkNode = networkNode
-        this.streams = new Map()
+    constructor(public networkNode: NetworkNode) {
     }
 
-    subscribe(streamId: string, streamPartition = 0) {
-        const key = `${streamId}::${streamPartition}`
-        this.streams.set(key, (this.streams.get(key) || 0) + 1)
-
-        this.networkNode.subscribe(streamId, streamPartition)
+    subscribe(streamId: string, streamPartition = 0): void {
+        const key = Protocol.SPID.toKey(streamId, streamPartition)
+        this.streams.set(key, this.streams.get(key) || 0)
+        this.networkNode.subscribe(new SPID(streamId, streamPartition))
     }
 
-    unsubscribe(streamId: string, streamPartition = 0) {
-        const key = `${streamId}::${streamPartition}`
+    unsubscribe(streamId: string, streamPartition = 0): void {
+        const key = Protocol.SPID.toKey(streamId, streamPartition)
         this.streams.set(key, (this.streams.get(key) || 0) - 1)
 
-        if (this.streams.get(key) <= 0) {
+        if ((this.streams.get(key) || 0) <= 0) {
             this.streams.delete(key)
 
-            this.networkNode.unsubscribe(streamId, streamPartition)
+            this.networkNode.unsubscribe(new SPID(streamId, streamPartition))
         }
     }
 }

@@ -1,14 +1,15 @@
 import crypto from 'crypto'
 
 import { ethers } from 'ethers'
-import { MessageLayer } from 'streamr-client-protocol'
+import { MessageLayer, toStreamID } from 'streamr-client-protocol'
 
-import EncryptionUtil, { GroupKey } from '../../src/stream/encryption/Encryption'
+import EncryptionUtil, { GroupKey } from '../../src/encryption/Encryption'
 
 const { StreamMessage, MessageID } = MessageLayer
 
 // wrap these tests so can run same tests as if in browser
 function TestEncryptionUtil({ isBrowser = false } = {}) {
+    const streamId = toStreamID('streamId')
     describe(`EncryptionUtil ${isBrowser ? 'Browser' : 'Server'}`, () => {
         beforeAll(() => {
             // this is the toggle used in EncryptionUtil to
@@ -16,23 +17,30 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             // @ts-expect-error
             process.browser = !!isBrowser
         })
+
         afterAll(() => {
             // @ts-expect-error
             process.browser = !isBrowser
         })
 
-        it('rsa decryption after encryption equals the initial plaintext', async () => {
-            const encryptionUtil = await EncryptionUtil.create()
-            const plaintext = 'some random text'
-            const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey())
-            expect(encryptionUtil.decryptWithPrivateKey(ciphertext).toString('utf8')).toStrictEqual(plaintext)
-        })
+        describe('EncryptionUtil instance', () => {
+            let encryptionUtil: EncryptionUtil
 
-        it('rsa decryption after encryption equals the initial plaintext (hex strings)', async () => {
-            const encryptionUtil = await EncryptionUtil.create()
-            const plaintext = 'some random text'
-            const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey(), true)
-            expect(encryptionUtil.decryptWithPrivateKey(ciphertext, true).toString('utf8')).toStrictEqual(plaintext)
+            beforeEach(async () => {
+                encryptionUtil = await EncryptionUtil.create()
+            }, 10000)
+
+            it('rsa decryption after encryption equals the initial plaintext', () => {
+                const plaintext = 'some random text'
+                const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey())
+                expect(encryptionUtil.decryptWithPrivateKey(ciphertext).toString('utf8')).toStrictEqual(plaintext)
+            })
+
+            it('rsa decryption after encryption equals the initial plaintext (hex strings)', () => {
+                const plaintext = 'some random text'
+                const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey(), true)
+                expect(encryptionUtil.decryptWithPrivateKey(ciphertext, true).toString('utf8')).toStrictEqual(plaintext)
+            })
         })
 
         it('aes decryption after encryption equals the initial plaintext', () => {
@@ -63,14 +71,11 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         it('StreamMessage gets encrypted', () => {
             const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
-                messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
-                // @ts-expect-error
-                prevMesssageRef: null,
+                messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
                 content: {
                     foo: 'bar',
                 },
-                // @ts-expect-error
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                 signature: null,
@@ -83,14 +88,11 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         it('StreamMessage decryption after encryption equals the initial StreamMessage', () => {
             const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
-                messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
-                // @ts-expect-error
-                prevMesssageRef: null,
+                messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
                 content: {
                     foo: 'bar',
                 },
-                // @ts-expect-error
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                 signature: null,

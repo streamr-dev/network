@@ -2,13 +2,14 @@ import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { Logger } from '../helpers/Logger'
-import { PeerInfo } from './PeerInfo'
+import { PeerId, PeerInfo } from './PeerInfo'
 import { MessageQueue, QueueItem } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
+import crypto from 'crypto'
 
 export interface ConstructorOptions {
-    selfId: string
-    targetPeerId: string
+    selfId: PeerId
+    targetPeerId: PeerId
     routerId: string
     stunUrls: string[]
     bufferThresholdLow?: number
@@ -44,8 +45,13 @@ interface Events {
 // i.e. no this.on('event')
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-export function isOffering(myId: string, theirId: string): boolean {
-    return myId < theirId
+export function isOffering(myId: PeerId, theirId: PeerId): boolean {
+    return offeringHash(myId + theirId) < offeringHash(theirId + myId)
+}
+
+function offeringHash(idPair: string): number {
+    const buffer = crypto.createHash('md5').update(idPair).digest()
+    return buffer.readInt32LE()
 }
 
 /**
@@ -99,7 +105,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
     protected readonly id: string
     protected readonly maxMessageSize: number
-    protected readonly selfId: string
+    protected readonly selfId: PeerId
     protected readonly stunUrls: ReadonlyArray<string>
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
@@ -159,12 +165,12 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         if (this.isFinished) {
             throw new Error('Connection already closed.')
         }
-        this.doConnect()
+       
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
-            this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
+        this.doConnect()
     }
 
     getDeferredConnectionAttempt(): DeferredConnectionAttempt | null {
@@ -214,10 +220,11 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.baseLogger.warn(`doClose (subclass) threw: %s`, e)
         }
 
+        if (!this.hasOpened) {
+            this.emit('failed')
+        }
+
         if (err) {
-            if (!this.hasOpened) {
-                this.emit('failed')
-            }
             this.emitClose(err)
             return
         }
@@ -254,7 +261,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         return this.peerInfo
     }
 
-    getPeerId(): string {
+    getPeerId(): PeerId {
         return this.peerInfo.peerId
     }
 
@@ -268,8 +275,13 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
         if (this.isOpen()) {
             if (this.pingAttempts >= this.maxPingPongAttempts) {
+                if (this.pingTimeoutRef) {
+                    clearTimeout(this.pingTimeoutRef)
+                    this.pingTimeoutRef = null
+                }
                 this.baseLogger.debug(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
                 this.close(new Error('pong not received'))
+                return
             } else {
                 this.rttStart = Date.now()
                 try {
@@ -284,6 +296,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
         if (this.pingTimeoutRef) {
             clearTimeout(this.pingTimeoutRef)
+            this.pingTimeoutRef = null
         }
         this.pingTimeoutRef = setTimeout(() => this.ping(), this.pingInterval)
     }
@@ -481,7 +494,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         clearTimeout(this.connectionTimeoutRef!)
         this.connectionTimeoutRef = setTimeout(() => {
             if (this.isFinished) { return }
-            this.baseLogger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
             this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
     }

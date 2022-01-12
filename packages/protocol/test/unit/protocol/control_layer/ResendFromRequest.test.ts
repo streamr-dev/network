@@ -4,13 +4,14 @@ import ResendFromRequest from '../../../../src/protocol/control_layer/resend_req
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
+import { toStreamID } from '../../../../src'
 
 describe('ResendFromRequest', () => {
     describe('constructor', () => {
         it('throws on null requestId', () => {
             assert.throws(() => new ResendFromRequest({
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 fromMsgRef: new MessageRef(132846894, 0),
                 publisherId: 'publisherId',
@@ -20,7 +21,7 @@ describe('ResendFromRequest', () => {
         it('should create the latest version', () => {
             const msg = new ResendFromRequest({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 fromMsgRef: new MessageRef(132846894, 0),
                 publisherId: 'publisherId',
@@ -39,7 +40,7 @@ describe('ResendFromRequest', () => {
         it('publisherId and sessionToken can be null', () => {
             const msg = new ResendFromRequest({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: toStreamID('streamId'),
                 streamPartition: 0,
                 fromMsgRef: new MessageRef(132846894, 0),
                 publisherId: null,

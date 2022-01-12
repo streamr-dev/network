@@ -3,11 +3,12 @@ import ControlMessage from '../ControlMessage'
 import ResendLastRequest from './ResendLastRequest'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
 export default class ResendLastRequestSerializerV2 extends Serializer<ResendLastRequest> {
-    toArray(resendLastRequest: ResendLastRequest) {
+    toArray(resendLastRequest: ResendLastRequest): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.ResendLastRequest,
@@ -19,7 +20,7 @@ export default class ResendLastRequestSerializerV2 extends Serializer<ResendLast
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): ResendLastRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -31,7 +32,12 @@ export default class ResendLastRequestSerializerV2 extends Serializer<ResendLast
         ] = arr
 
         return new ResendLastRequest({
-            version, requestId, streamId, streamPartition, numberLast, sessionToken
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition,
+            numberLast,
+            sessionToken
         })
     }
 }

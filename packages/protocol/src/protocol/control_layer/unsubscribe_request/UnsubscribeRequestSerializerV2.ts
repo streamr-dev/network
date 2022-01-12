@@ -3,11 +3,12 @@ import ControlMessage from '../ControlMessage'
 import UnsubscribeRequest from './UnsubscribeRequest'
 
 import { Serializer } from '../../../Serializer'
+import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
 export default class UnsubscribeRequestSerializerV2 extends Serializer<UnsubscribeRequest> {
-    toArray(unsubscribeRequest: UnsubscribeRequest) {
+    toArray(unsubscribeRequest: UnsubscribeRequest): any[] {
         return [
             VERSION,
             ControlMessage.TYPES.UnsubscribeRequest,
@@ -17,7 +18,7 @@ export default class UnsubscribeRequestSerializerV2 extends Serializer<Unsubscri
         ]
     }
 
-    fromArray(arr: any[]) {
+    fromArray(arr: any[]): UnsubscribeRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -27,7 +28,10 @@ export default class UnsubscribeRequestSerializerV2 extends Serializer<Unsubscri
         ] = arr
 
         return new UnsubscribeRequest({
-            version, requestId, streamId, streamPartition
+            version,
+            requestId,
+            streamId: toStreamID(streamId),
+            streamPartition
         })
     }
 }
