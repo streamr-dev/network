@@ -78,9 +78,6 @@ export class NodeMetrics {
     }
 
     async start(): Promise<void> {
-        const existingSamples = await this.publisher.fetchExistingSamples()
-        this.hourAggregator.addSamples(existingSamples.minutes)
-        this.dayAggregator.addSamples(existingSamples.hours)
         this.scheduler = scheduleAtFixedRate(async (now) => {
             await this.collectSample(now)
         }, PERIOD_LENGTHS.FIVE_SECONDS)
@@ -100,6 +97,5 @@ export class NodeMetrics {
 
     async stop(): Promise<void> {
         this.scheduler?.stop()
-        await this.publisher.stop()
     }
 }
