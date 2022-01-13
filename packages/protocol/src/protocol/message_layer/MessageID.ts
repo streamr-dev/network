@@ -2,7 +2,7 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../ut
 
 import MessageRef from './MessageRef'
 import { StreamID, StreamIDUtils } from '../../utils/StreamID'
-import { StreamPartitionID, StreamPartitionIDUtils } from "../../utils/StreamPartitionID"
+import { StreamPartitionID, StreamPartitionIDUtils } from "../../utils/StreamPartID"
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 

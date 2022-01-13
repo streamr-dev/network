@@ -6,7 +6,7 @@ import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageN
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
 import { StreamID, StreamIDUtils } from "./StreamID"
-import { StreamPartitionID, StreamPartitionIDUtils } from "./StreamPartitionID"
+import { StreamPartID, StreamPartIDUtils } from "./StreamPartID"
 import { EthereumAddress } from "./types"
 
 export {
@@ -26,7 +26,7 @@ export {
     keyToArrayIndex,
     StreamID,
     StreamIDUtils,
-    StreamPartitionID,
-    StreamPartitionIDUtils,
+    StreamPartID,
+    StreamPartIDUtils,
     EthereumAddress
 }

@@ -4,7 +4,7 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import { keyToArrayIndex } from './HashUtil'
 
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
-import { StreamPartitionID } from "./StreamPartitionID"
+import { StreamPartitionID } from "./StreamPartID"
 
 type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
 

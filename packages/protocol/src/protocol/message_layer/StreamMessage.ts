@@ -9,7 +9,7 @@ import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
-import { StreamPartitionID } from "../../utils/StreamPartitionID"
+import { StreamPartitionID } from "../../utils/StreamPartID"
 
 const serializerByVersion: {[version: string]: Serializer<StreamMessage> } = {}
 const BYE_KEY = '_bye'
