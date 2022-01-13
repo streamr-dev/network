@@ -29,7 +29,7 @@ export class StreamPartitionIDUtils {
 
     static parse(streamPartitionIdAsStr: string): StreamPartitionID | never {
         const [streamId, partition] = getParts(streamPartitionIdAsStr)
-        StreamIDUtils.toStreamID(streamId)
+        StreamIDUtils.toStreamID(streamId) // throws if not valid
         ensureValidPartition(partition)
         return streamPartitionIdAsStr as StreamPartitionID
     }
