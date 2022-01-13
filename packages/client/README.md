@@ -36,11 +36,24 @@ The client is available on [npm](https://www.npmjs.com/package/streamr-client) a
 npm install streamr-client
 ```
 
-## Usage
+## Usage ("Cheat-Sheet", "Get Started", "Quick Start" ?)
 
 Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
 
 In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+
+
+### Importing `streamr-client`
+When using Node.js remember to import the library with:
+
+```js
+import { StreamrClient } from 'streamr-client'
+```
+
+For usage in the browser include the correspondent build(?):
+```html
+<script src="https://unpkg.com/streamr-client@6.0.0-alpha.19/streamr-client.web.js"></script>
+```
 
 ### Creating a StreamrClient instance
 
@@ -52,18 +65,57 @@ const client = new StreamrClient({
 })
 ```
 
-When using Node.js remember to import the library with:
+### Using Metamask as your client's identity provider
+```typescript
+import detectEthereumProvider from '@metamask/detect-provider'
 
-```js
-import { StreamrClient } from 'streamr-client'
+const client = new StreamrClient({
+    auth: {
+        ethereum: detectEthereumProvider() // or using window.ethereum
+    }
+})
+```
+
+### Getting the client's address
+```typescript
+const address = await client.getAddress()
+```
+
+### Creating a stream 
+```typescript
+const STREAM_ID = `${address}/some-stream-id`
+
+const stream = await client.createStream({
+    id: STREAM_ID
+})
+```
+
+In order to  enable historical data resends, add the stream to a storage node:
+```typescript
+import { StorageNode, StreamrClient } from StreamrClient
+
+await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+```
+
+### Fetching existent streams
+Getting an existent stream is pretty straight-forward
+```typescript
+const stream = await client.getStream(STREAM_ID)
+```
+
+The method `getOrCreateStream` allows for a seamless creation/fetching process:
+```typescript
+const stream = await client.getOrCreateStream({
+    id: `${address}/doc-tests`
+})
 ```
 
 ### Subscribing to real-time events in a stream
 
-```js
+```typescript
 const sub = await client.subscribe({
-    stream: 'streamId',
-    partition: 0, // Optional, defaults to zero. Use for partitioned streams to select partition.
+    stream: STREAM_ID,
+    streamPartition: 0, // Optional, defaults to zero. Use for partitioned streams to select partition.
     // optional resend options here
 }, (message, metadata) => {
     // This is the message handler which gets called for every incoming message in the stream.
@@ -73,9 +125,9 @@ const sub = await client.subscribe({
 
 ### Resending historical data
 
-```js
+```typescript
 const sub = await client.resend({
-    stream: 'streamId',
+    stream: STREAM_ID,
     resend: {
         last: 5,
     },
@@ -86,21 +138,6 @@ const sub = await client.resend({
 ```
 
 See "Subscription options" for resend options
-
-### Programmatically creating a stream
-
-```js
-const stream = await client.createStream({
-    id: '/foo/bar', // or 0x1234567890123456789012345678901234567890/foo/bar or mydomain.eth/foo/bar
-})
-console.log(`Stream ${stream.id} has been created!`)
-
-// Optional: to enable historical data resends, add the stream to a storage node
-const { StorageNode, StreamrClient } = require('streamr-client').StreamrClient
-await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
-
-// Do something with the stream, for example call stream.publish(message)
-```
 
 ### Publishing data points to a stream
 
@@ -113,22 +150,22 @@ const msg = {
 }
 
 // Publish using the stream id only
-await client.publish('my-stream-id', msg)
+await client.publish(STREAM_ID, msg)
 
 // The first argument can also be the stream object
 await client.publish(stream, msg)
 
 // Publish with a specific timestamp as a Date object (default is now)
-await client.publish('my-stream-id', msg, new Date(54365472))
+await client.publish(STREAM_ID, msg, new Date(54365472))
 
 // Publish with a specific timestamp in ms
-await client.publish('my-stream-id', msg, 54365472)
+await client.publish(STREAM_ID, msg, 54365472)
 
 // Publish with a specific timestamp as a ISO8601 string
-await client.publish('my-stream-id', msg, '2019-01-01T00:00:00.123Z')
+await client.publish(STREAM_ID, msg, '2019-01-01T00:00:00.123Z')
 
 // Publish with a specific partition key (read more about partitioning further down this readme)
-await client.publish('my-stream-id', msg, Date.now(), 'my-partition-key')
+await client.publish(STREAM_ID, msg, Date.now(), 'my-partition-key')
 
 // For convenience, stream.publish(...) equals client.publish(stream, ...)
 await stream.publish(msg)
