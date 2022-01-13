@@ -281,10 +281,10 @@ const selectStoragePath = async (): Promise<inquirer.Answers> => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
-    const parentDirPath = path.dirname(answers.storagePath)
-    const parentDirExists = existsSync(parentDirPath)
-    if (!parentDirExists) {
-        mkdirSync(parentDirPath, {
+    const dirPath = path.dirname(answers.storagePath)
+    const dirExists = existsSync(dirPath)
+    if (!dirExists) {
+        mkdirSync(dirPath, {
             recursive: true
         })
     }

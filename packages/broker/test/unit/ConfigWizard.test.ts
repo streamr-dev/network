@@ -87,9 +87,9 @@ describe('ConfigWizard', () => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
 
-        it ('happy path; create parent directories if needed', async () => {
-            const parentDirPath = tmpDataDir + '/newdir1/newdir2/'
-            const configPath = parentDirPath + 'test-config.json'
+        it ('happy path; create directories if needed', async () => {
+            const dirPath = tmpDataDir + '/newdir1/newdir2/'
+            const configPath = dirPath + 'test-config.json'
             const configFileLocation: string = await createStorageFile(CONFIG, {
                 storagePath: configPath
             })
@@ -98,8 +98,8 @@ describe('ConfigWizard', () => {
         })
 
         it ('should throw when no permissions on path', async () => {
-            const parentDirPath = '/home/'
-            const configPath = parentDirPath + 'test-config.json'
+            const dirPath = '/home/'
+            const configPath = dirPath + 'test-config.json'
             await expect(createStorageFile(CONFIG, {
                 storagePath: configPath
             })).rejects.toThrow()
