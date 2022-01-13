@@ -9,7 +9,6 @@ jest.setTimeout(30000)
 
 const trackerPort = 17711
 const httpPort = 17712
-const wsPort = 17713
 
 describe('local propagation', () => {
     let tracker: Tracker
@@ -31,7 +30,6 @@ describe('local propagation', () => {
             privateKey: brokerWallet.privateKey,
             trackerPort,
             httpPort,
-            wsPort
         })
 
         client1 = await createClient(tracker, privateKey)

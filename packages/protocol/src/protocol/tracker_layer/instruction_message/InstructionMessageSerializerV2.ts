@@ -3,6 +3,7 @@ import TrackerMessage from '../TrackerMessage'
 import InstructionMessage from './InstructionMessage'
 
 import { Serializer } from '../../../Serializer'
+import { StreamIDUtils } from '../../../utils/StreamID'
 
 const VERSION = 2
 
@@ -31,7 +32,12 @@ export default class InstructionMessageSerializerV2 extends Serializer<Instructi
         ] = arr
 
         return new InstructionMessage({
-            version, requestId, streamId, streamPartition, nodeIds, counter
+            version,
+            requestId,
+            streamId: StreamIDUtils.toStreamID(streamId),
+            streamPartition,
+            nodeIds,
+            counter
         })
     }
 }

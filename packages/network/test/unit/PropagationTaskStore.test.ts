@@ -1,4 +1,4 @@
-import { MessageIDStrict, SPID, StreamMessage } from 'streamr-client-protocol'
+import { MessageIDStrict, SPID, StreamMessage, StreamIDUtils } from 'streamr-client-protocol'
 import { NodeId } from '../../src/logic/node/Node'
 import { wait } from 'streamr-test-utils'
 import {
@@ -10,7 +10,7 @@ function makeTask(streamId: string, partition: number, ts: number, neighbors: st
     // Contents (apart from messageId) not so important here, but generate some for variety
     return {
         message: new StreamMessage({
-            messageId: new MessageIDStrict(streamId, partition, ts, 0, '', ''),
+            messageId: new MessageIDStrict(StreamIDUtils.toStreamID(streamId), partition, ts, 0, '', ''),
             content: {
                 message: `${streamId}-${partition}-${ts}`
             }

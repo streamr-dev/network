@@ -15,9 +15,6 @@ import StreamrClient, { ConfigTest, Stream, StreamPermission } from 'streamr-cli
 import { Broker } from '../../src/broker'
 
 const httpPort = 12341
-const wsPort1 = 12351
-const wsPort2 = 12352
-const wsPort3 = 12353
 const trackerPort = 12370
 
 jest.setTimeout(40000)
@@ -54,7 +51,6 @@ describe('broker: end-to-end', () => {
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
             httpPort: httpPort,
-            wsPort: wsPort1,
             streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
             storageNodeRegistry,
@@ -66,7 +62,6 @@ describe('broker: end-to-end', () => {
             name: 'brokerNode1',
             privateKey: await getPrivateKey(),
             trackerPort,
-            wsPort: wsPort2,
             enableCassandra: false,
             storageNodeRegistry
         })
@@ -74,7 +69,6 @@ describe('broker: end-to-end', () => {
             name: 'brokerNode2',
             privateKey: await getPrivateKey(),
             trackerPort,
-            wsPort: wsPort3,
             enableCassandra: false,
             storageNodeRegistry
         })

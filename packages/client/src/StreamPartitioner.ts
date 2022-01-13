@@ -1,18 +1,18 @@
 /**
  * Derive partitions for StreamMessages.
  */
-import { Utils } from 'streamr-client-protocol'
+import { StreamID, Utils } from 'streamr-client-protocol'
 import { CacheFn } from './utils'
 import { Config, CacheConfig } from './Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamRegistry } from './StreamRegistry'
 
 export type PartitionKey = string | number | undefined
 
 @scoped(Lifecycle.ContainerScoped)
 export default class StreamPartitioner {
     constructor(
-        private streamEndpoints: StreamEndpointsCached,
+        private streamRegistry: StreamRegistry,
         @inject(Config.Cache) private cacheOptions: CacheConfig,
     ) {
         // NOTE: ensure cache partitions by streamId + partitionCount.
@@ -21,14 +21,14 @@ export default class StreamPartitioner {
         // to the same partition
     }
 
-    public async compute(streamId: string, partitionKey: PartitionKey) {
+    public async compute(streamId: StreamID, partitionKey: PartitionKey) {
         // no need to fetch stream partition info if partition key is 0
         // partition 0 should always exist
         if (partitionKey === 0) {
             return 0
         }
 
-        const stream = await this.streamEndpoints.getStream(streamId)
+        const stream = await this.streamRegistry.getStream(streamId)
         return this.computeStreamPartition(stream.id, stream.partitions, partitionKey)
     }
 
@@ -36,7 +36,7 @@ export default class StreamPartitioner {
         this.computeStreamPartition.clear()
     }
 
-    protected computeStreamPartition = CacheFn((_streamId: string, partitionCount: number, partitionKey: PartitionKey) => {
+    protected computeStreamPartition = CacheFn((_streamId: StreamID, partitionCount: number, partitionKey: PartitionKey) => {
         if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {
             throw new Error(`partitionCount is not a safe positive integer! ${partitionCount}`)
         }

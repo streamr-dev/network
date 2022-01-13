@@ -3,13 +3,14 @@ import assert from 'assert'
 import InstructionMessage from '../../../../src/protocol/tracker_layer/instruction_message/InstructionMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
+import { StreamIDUtils } from '../../../../src'
 
 describe('InstructionMessage', () => {
     describe('constructor', () => {
         it('throws on null counter', () => {
             assert.throws(() => new InstructionMessage({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: StreamIDUtils.toStreamID('streamId'),
                 streamPartition: 0,
                 nodeIds: [],
                 counter: null as any
@@ -18,7 +19,7 @@ describe('InstructionMessage', () => {
         it('throws on null nodeIds', () => {
             assert.throws(() => new InstructionMessage({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: StreamIDUtils.toStreamID('streamId'),
                 streamPartition: 0,
                 nodeIds: null as any,
                 counter: 1
@@ -27,7 +28,7 @@ describe('InstructionMessage', () => {
         it('throws on null streamPartition', () => {
             assert.throws(() => new InstructionMessage({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: StreamIDUtils.toStreamID('streamId'),
                 streamPartition: null as any,
                 nodeIds: [],
                 counter: 1
@@ -45,7 +46,7 @@ describe('InstructionMessage', () => {
         it('throws on null requestId', () => {
             assert.throws(() => new InstructionMessage({
                 requestId: null as any,
-                streamId: 'streamId',
+                streamId: StreamIDUtils.toStreamID('streamId'),
                 streamPartition: 0,
                 nodeIds: [],
                 counter: 1
@@ -54,7 +55,7 @@ describe('InstructionMessage', () => {
         it('should create the latest version', () => {
             const msg = new InstructionMessage({
                 requestId: 'requestId',
-                streamId: 'streamId',
+                streamId: StreamIDUtils.toStreamID('streamId'),
                 streamPartition: 0,
                 nodeIds: [],
                 counter: 1

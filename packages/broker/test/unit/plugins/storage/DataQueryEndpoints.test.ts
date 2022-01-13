@@ -9,7 +9,7 @@ import {
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
-import { StreamFetcher } from "../../../../src/StreamFetcher"
+import { StreamIDUtils } from 'streamr-client-protocol'
 
 const { MessageLayer } = Protocol
 const { MessageID } = MessageLayer
@@ -23,9 +23,6 @@ const createEmptyStream = () => {
 describe('DataQueryEndpoints', () => {
     let app: express.Express
     let storage: Storage
-    let streamFetcher: {
-        authenticate: (streamId: string, sessionToken: string|undefined) => Promise<Record<string, never>>
-    }
 
     function testGetRequest(url: string, sessionToken = 'mock-session-token') {
         return request(app)
@@ -36,7 +33,14 @@ describe('DataQueryEndpoints', () => {
 
     function createStreamMessage(content: any): Protocol.StreamMessage {
         return new Protocol.StreamMessage({
-            messageId: new MessageID('streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(
+                StreamIDUtils.toStreamID('streamId'),
+                0,
+                new Date(2017, 3, 1, 12, 0, 0).getTime(),
+                0,
+                'publisherId',
+                'msgChainId'
+            ),
             content,
         })
     }
@@ -44,14 +48,7 @@ describe('DataQueryEndpoints', () => {
     beforeEach(() => {
         app = express()
         storage = {} as Storage
-        streamFetcher = {
-            authenticate() {
-                return new Promise(((resolve) => {
-                    resolve({})
-                }))
-            },
-        }
-        app.use(restEndpointRouter(storage, streamFetcher as unknown as StreamFetcher, new MetricsContext(null as any)))
+        app.use(restEndpointRouter(storage, new MetricsContext(null as any)))
     })
 
     describe('Getting last events', () => {

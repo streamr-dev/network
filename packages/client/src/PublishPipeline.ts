@@ -16,9 +16,10 @@ import Signer from './Signer'
 import Encrypt from './Encrypt'
 import Validator from './Validator'
 import { DestroySignal } from './DestroySignal'
+import { StreamIDBuilder } from './StreamIDBuilder'
 
 export class FailedToPublishError extends Error {
-    streamId
+    streamId: string
     msg
     reason
     constructor(streamId: string, data: PublishMetadata | StreamMessage, reason?: Error) {
@@ -75,6 +76,7 @@ export default class PublishPipeline implements Context, Stoppable {
         private signer: Signer,
         private validator: Validator,
         private destroySignal: DestroySignal,
+        private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => Encrypt)) private encryption: Encrypt,
     ) {
         this.id = instanceId(this)
@@ -108,7 +110,8 @@ export default class PublishPipeline implements Context, Stoppable {
         for await (const [publishMetadata, defer] of src) {
             const { streamId, ...options } = publishMetadata
             try {
-                const streamMessage = await this.messageCreator.create(streamId, options)
+                const normalizedStreamId = await this.streamIdBuilder.toStreamID(streamId)
+                const streamMessage = await this.messageCreator.create(normalizedStreamId, options)
                 yield [streamMessage, defer]
             } catch (err) {
                 defer.reject(err)

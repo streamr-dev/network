@@ -5,8 +5,7 @@ import GroupKeyRequest from '../protocol/message_layer/GroupKeyRequest'
 import GroupKeyMessage from '../protocol/message_layer/GroupKeyMessage'
 
 import SigningUtil from './SigningUtil'
-
-const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
+import { StreamIDUtils, StreamID } from './StreamID'
 
 export interface StreamMetadata {
     partitions: number,
@@ -17,9 +16,9 @@ export interface StreamMetadata {
 export interface Options {
     requireBrubeckValidation?: boolean
 
-    getStream: (streamId: string) => Promise<StreamMetadata>
-    isPublisher: (address: string, streamId: string) => Promise<boolean>
-    isSubscriber: (address: string, streamId: string) => Promise<boolean>
+    getStream: (streamId: StreamID) => Promise<StreamMetadata>
+    isPublisher: (address: string, streamId: StreamID) => Promise<boolean>
+    isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>
     verify?: (address: string, payload: string, signature: string) => Promise<boolean>
 }
 
@@ -38,13 +37,11 @@ const PUBLIC_USER = '0x0000000000000000000000000000000000000000'
  * TODO later: support for unsigned messages can be removed when deprecated system-wide.
  */
 export default class StreamMessageValidator {
-
-    requireBrubeckValidation?: boolean
-
-    getStream: (streamId: string) => Promise<StreamMetadata>
-    isPublisher: (address: string, streamId: string) => Promise<boolean>
-    isSubscriber: (address: string, streamId: string) => Promise<boolean>
-    verify: (address: string, payload: string, signature: string) => Promise<boolean>
+    readonly requireBrubeckValidation: boolean
+    readonly getStream: (streamId: StreamID) => Promise<StreamMetadata>
+    readonly isPublisher: (address: string, streamId: StreamID) => Promise<boolean>
+    readonly isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>
+    readonly verify: (address: string, payload: string, signature: string) => Promise<boolean>
 
     /**
      * @param getStream async function(streamId): returns the metadata required for stream validation for streamId.
@@ -66,9 +63,9 @@ export default class StreamMessageValidator {
     }
 
     static checkInjectedFunctions(
-        getStream: (streamId: string) => Promise<StreamMetadata>,
-        isPublisher: (address: string, streamId: string) => Promise<boolean>,
-        isSubscriber: (address: string, streamId: string) => Promise<boolean>,
+        getStream: (streamId: StreamID) => Promise<StreamMetadata>,
+        isPublisher: (address: string, streamId: StreamID) => Promise<boolean>,
+        isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>,
         verify: (address: string, payload: string, signature: string) => Promise<boolean>
     ): void | never {
         if (typeof getStream !== 'function') {
@@ -188,21 +185,21 @@ export default class StreamMessageValidator {
         if (!streamMessage.signature) {
             throw new StreamMessageError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks).`, streamMessage)
         }
-        if (!StreamMessageValidator.isKeyExchangeStream(streamMessage.getStreamId())) {
+        if (!StreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
             throw new StreamMessageError(
-                `Group key requests can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}.`,
+                `Group key requests can only occur on stream ids of form ${`${StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX}{address}`}.`,
                 streamMessage
             )
         }
 
         const groupKeyRequest = GroupKeyRequest.fromStreamMessage(streamMessage)
         const sender = streamMessage.getPublisherId()
-        const recipient = streamMessage.getStreamId().substring(KEY_EXCHANGE_STREAM_PREFIX.length)
+        const recipient = StreamIDUtils.getRecipient(streamMessage.getStreamId())
 
         await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
         // Check that the recipient of the request is a valid publisher of the stream
-        const recipientIsPublisher = await this.isPublisher(recipient, groupKeyRequest.streamId)
+        const recipientIsPublisher = await this.isPublisher(recipient!, groupKeyRequest.streamId)
         if (!recipientIsPublisher) {
             throw new StreamMessageError(`${recipient} is not a publisher on stream ${groupKeyRequest.streamId}.`, streamMessage)
         }
@@ -218,9 +215,9 @@ export default class StreamMessageValidator {
         if (!streamMessage.signature) {
             throw new StreamMessageError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks).`, streamMessage)
         }
-        if (!StreamMessageValidator.isKeyExchangeStream(streamMessage.getStreamId())) {
+        if (!StreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
             throw new StreamMessageError(
-                `${streamMessage.messageType} can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}.`,
+                `${streamMessage.messageType} can only occur on stream ids of form ${`${StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX}{address}`}.`,
                 streamMessage
             )
         }
@@ -241,9 +238,9 @@ export default class StreamMessageValidator {
 
         if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
             // permit publishers to send error responses to invalid subscribers
-            const recipient = streamMessage.getStreamId().substring(KEY_EXCHANGE_STREAM_PREFIX.length)
+            const recipient = StreamIDUtils.getRecipient(streamMessage.getStreamId())
             // Check that the recipient of the request is a valid subscriber of the stream
-            const recipientIsSubscriber = await this.isSubscriber(recipient, groupKeyMessage.streamId)
+            const recipientIsSubscriber = await this.isSubscriber(recipient!, groupKeyMessage.streamId)
             if (!recipientIsSubscriber) {
                 throw new StreamMessageError(
                     `${recipient} is not a subscriber on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
@@ -251,9 +248,5 @@ export default class StreamMessageValidator {
                 )
             }
         }
-    }
-
-    static isKeyExchangeStream(streamId: string): boolean {
-        return streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
     }
 }

@@ -93,9 +93,6 @@
                 }
             }
         },
-        "binanceRPC": {
-            "$ref": "#/definitions/chainConnectionInfo"
-        },
         "binanceAdapterAddress": {
             "type": "string",
             "format": "ethereum-address"
@@ -108,7 +105,7 @@
             "type": "string",
             "format": "uri"
         },
-        "mainnet": {
+        "mainChainRPC": {
             "anyOf": [{
                 "$ref": "#/definitions/connectionInfo"
             }, {
@@ -116,7 +113,13 @@
                 "format": "uri"
             }]
         },
-        "sidechain": {
+        "streamRegistryChainRPC": {
+            "$ref": "#/definitions/chainConnectionInfo"
+        },
+        "dataUnionBinanceWithdrawalChainRPC": {
+            "$ref": "#/definitions/chainConnectionInfo"
+        },
+        "dataUnionChainRPC": {
             "$ref": "#/definitions/chainConnectionInfo"
         },
         "tokenAddress": {
@@ -320,13 +323,13 @@
             "type" : "string",
             "format": "uri"
         },
-        "streamRegistrySidechainAddress" : {
+        "streamRegistryChainAddress" : {
             "type" : "string"
         },
-        "nodeRegistrySidechainAddress" : {
+        "nodeRegistryChainAddress" : {
             "type" : "string"
         },
-        "streamStorageRegistrySidechainAddress" : {
+        "streamStorageRegistryChainAddress" : {
             "type" : "string"
         }
     },

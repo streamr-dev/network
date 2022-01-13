@@ -9,7 +9,6 @@ import * as Protocol from 'streamr-client-protocol'
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'
-import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
 import { getDefaultFile } from './config'
 
 const createLogger = () => {
@@ -31,8 +30,7 @@ const generateApiKey = (): string => {
 export const DEFAULT_CONFIG_PORTS: { [plugin: string]: number } = {
     WS: WebsocketConfigSchema.properties.port.default,
     MQTT: MqttConfigSchema.properties.port.default,
-    HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default,
-    LEGACY_WS: LegacyWebsocketConfigSchema.properties.port.default,
+    HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default
 }
 
 const PLUGIN_NAMES: {[pluginName: string]: string} = {
@@ -113,7 +111,6 @@ export const CONFIG_TEMPLATE: any = {
         }]
     },
     plugins: {
-        legacyWebsocket: {},
         testnetMiner: {
             rewardStreamIds: [
                 'streamr.eth/brubeck-testnet/rewards/5hhb49',
@@ -133,11 +130,7 @@ export const CONFIG_TEMPLATE: any = {
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
             nodeMetrics: {
-                storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-                client: {
-                    wsUrl: `ws://127.0.0.1:${DEFAULT_CONFIG_PORTS.LEGACY_WS}/api/v1/ws`,
-                    httpUrl: "https://streamr.network/api/v1",
-                }
+                storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916"
             }
         },
     },

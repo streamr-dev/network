@@ -7,6 +7,7 @@ import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
 import GapFillFailedError from '../../../src/errors/GapFillFailedError'
 import MessageID from '../../../src/protocol/message_layer/MessageID'
 import MessageRef from '../../../src/protocol/message_layer/MessageRef'
+import { StreamIDUtils } from '../../../src'
 
 /**
  * Split an array into numChunks chunks.
@@ -49,7 +50,7 @@ const createMsg = ({
 } = {}) => {
     const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null
     return new StreamMessage({
-        messageId: new MessageID('streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId),
+        messageId: new MessageID(StreamIDUtils.toStreamID('streamId'), 0, timestamp, sequenceNumber, publisherId, msgChainId),
         prevMsgRef,
         content,
     })

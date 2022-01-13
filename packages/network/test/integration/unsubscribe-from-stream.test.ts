@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 
-import { MessageLayer, SPIDKey } from 'streamr-client-protocol'
+import { MessageLayer, SPID, SPIDKey, StreamIDUtils } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -37,15 +37,15 @@ describe('node unsubscribing from a stream', () => {
         nodeA.start()
         nodeB.start()
 
-        nodeA.subscribe('s', 2)
-        nodeB.subscribe('s', 2)
+        nodeA.subscribe(new SPID('s', 2))
+        nodeB.subscribe(new SPID('s', 2))
         await Promise.all([
             waitForEvent(nodeA, NodeEvent.NODE_SUBSCRIBED),
             waitForEvent(nodeB, NodeEvent.NODE_SUBSCRIBED),
         ])
 
-        nodeA.subscribe('s', 1)
-        nodeB.subscribe('s', 1)
+        nodeA.subscribe(new SPID('s', 1))
+        nodeB.subscribe(new SPID('s', 1))
         await Promise.all([
             waitForEvent(nodeA, NodeEvent.NODE_SUBSCRIBED),
             waitForEvent(nodeB, NodeEvent.NODE_SUBSCRIBED),
@@ -64,15 +64,15 @@ describe('node unsubscribing from a stream', () => {
             actual.push(`${streamMessage.getStreamId()}#${streamMessage.getStreamPartition()}`)
         })
 
-        nodeB.unsubscribe('s', 2)
+        nodeB.unsubscribe(new SPID('s', 2))
         await waitForEvent(nodeA, NodeEvent.NODE_UNSUBSCRIBED)
 
         nodeA.publish(new StreamMessage({
-            messageId: new MessageID('s', 2, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(StreamIDUtils.toStreamID('s'), 2, 0, 0, 'publisherId', 'msgChainId'),
             content: {},
         }))
         nodeA.publish(new StreamMessage({
-            messageId: new MessageID('s', 1, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(StreamIDUtils.toStreamID('s'), 1, 0, 0, 'publisherId', 'msgChainId'),
             content: {},
         }))
         await waitForEvent(nodeB, NodeEvent.UNSEEN_MESSAGE_RECEIVED)
@@ -80,10 +80,10 @@ describe('node unsubscribing from a stream', () => {
     })
 
     test('connection between nodes is not kept if no shared streams', async () => {
-        nodeB.unsubscribe('s', 2)
+        nodeB.unsubscribe(new SPID('s', 2))
         await waitForEvent(nodeA, NodeEvent.NODE_UNSUBSCRIBED)
 
-        nodeA.unsubscribe('s', 1)
+        nodeA.unsubscribe(new SPID('s', 1))
         await waitForEvent(nodeB, NodeEvent.NODE_UNSUBSCRIBED)
 
         const [aEventArgs, bEventArgs] = await Promise.all([

@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
-import { StreamMessage, MessageID, BroadcastMessage, ControlMessage } from '../../../../src/index'
+import { StreamMessage, MessageID, BroadcastMessage, ControlMessage, StreamIDUtils } from '../../../../src/index'
 
 describe('BroadcastMessage', () => {
     describe('constructor', () => {
@@ -20,7 +20,7 @@ describe('BroadcastMessage', () => {
         })
         it('should create the latest version', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageID('streamId', 0, 1529549961116, 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(StreamIDUtils.toStreamID('streamId'), 0, 1529549961116, 0, 'publisherId', 'msgChainId'),
                 content: {},
             })
             const msg = new BroadcastMessage({

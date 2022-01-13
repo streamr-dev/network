@@ -13,6 +13,7 @@ export interface MetricsPluginConfig {
     consoleAndPM2IntervalInSeconds: number
     nodeMetrics: {
         storageNode: string
+        streamIdPrefix: string
     } | null
 }
 
@@ -30,8 +31,14 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
             this.pluginConfig.consoleAndPM2IntervalInSeconds,
             metricsContext,
         )
+
         if (this.pluginConfig.nodeMetrics !== null) {
-            const metricsPublisher = new MetricsPublisher(this.nodeId, this.streamrClient!, this.pluginConfig.nodeMetrics.storageNode)
+            const metricsPublisher = new MetricsPublisher(
+                this.nodeId,
+                this.streamrClient!,
+                this.pluginConfig.nodeMetrics.storageNode,
+                this.pluginConfig.nodeMetrics.streamIdPrefix
+            )
             this.nodeMetrics = new NodeMetrics(metricsContext, metricsPublisher)
         }
         try {

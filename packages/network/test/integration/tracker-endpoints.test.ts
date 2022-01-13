@@ -5,6 +5,7 @@ import http from 'http'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
+import { SPID } from 'streamr-client-protocol'
 
 function getHttp(url: string) {
     return new Promise((resolve, reject) => {
@@ -57,20 +58,17 @@ describe('tracker endpoint', () => {
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
-            location: {
-                country: 'FI',
-                city: 'Helsinki'
-            }
+            location: undefined
         })
         nodeTwo.setExtraMetadata({
             foo: 'bar'
         })
 
-        nodeOne.subscribe('stream-1', 0)
-        nodeTwo.subscribe('stream-1', 0)
+        nodeOne.subscribe(new SPID('stream-1', 0))
+        nodeTwo.subscribe(new SPID('stream-1', 0))
 
-        nodeOne.subscribe('stream-2', 0)
-        nodeOne.subscribe('sandbox/test/stream-3', 0)
+        nodeOne.subscribe(new SPID('stream-2', 0))
+        nodeOne.subscribe(new SPID('sandbox/test/stream-3', 0))
 
         nodeOne.start()
         nodeTwo.start()
@@ -286,8 +284,10 @@ describe('tracker endpoint', () => {
                 city: 'Zug'
             },
             'node-2': {
-                country: 'FI',
-                city: 'Helsinki'
+                country: null,
+                city: null,
+                latitude: null,
+                longitude: null
             }
         })
     })

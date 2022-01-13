@@ -13,8 +13,10 @@ import { BrubeckContainer } from './Container'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
 import Ethereum from './Ethereum'
-import { EthereumAddress, NotFoundError } from '.'
+import { NotFoundError } from '.'
 import { until } from './utils'
+import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
+import { StreamIDBuilder } from './StreamIDBuilder'
 
 const log = debug('StreamrClient:NodeRegistry')
 
@@ -68,33 +70,35 @@ type StorageNodeQueryResult = {
 @scoped(Lifecycle.ContainerScoped)
 export class NodeRegistry {
     clientConfig: StrictStreamrClientConfig
-    sideChainProvider: Provider
+    chainProvider: Provider
     nodeRegistryContractReadonly: NodeRegistryContract
     streamStorageRegistryContractReadonly: StreamStorageRegistryContract
 
-    sideChainSigner?: Signer
+    chainSigner?: Signer
     nodeRegistryContract?: NodeRegistryContract
     streamStorageRegistryContract?: StreamStorageRegistryContract
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Ethereum) private ethereum: Ethereum,
+        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(Config.Root) clientConfig: StrictStreamrClientConfig
     ) {
         log('creating NodeRegistryOnchain')
         this.clientConfig = clientConfig
-        this.sideChainProvider = this.ethereum.getSidechainProvider()
-        this.nodeRegistryContractReadonly = new Contract(this.clientConfig.nodeRegistrySidechainAddress,
-            NodeRegistryArtifact, this.sideChainProvider) as NodeRegistryContract
-        this.streamStorageRegistryContractReadonly = new Contract(this.clientConfig.streamStorageRegistrySidechainAddress,
-            StreamStorageRegistryArtifact, this.sideChainProvider) as StreamStorageRegistryContract
+        this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
+        this.nodeRegistryContractReadonly = new Contract(this.clientConfig.nodeRegistryChainAddress,
+            NodeRegistryArtifact, this.chainProvider) as NodeRegistryContract
+        this.streamStorageRegistryContractReadonly = new Contract(this.clientConfig.streamStorageRegistryChainAddress,
+            StreamStorageRegistryArtifact, this.chainProvider) as StreamStorageRegistryContract
     }
 
     // --------------------------------------------------------------------------------------------
     // Read from the NodeRegistry or StreamStorageRegistry contract
     // --------------------------------------------------------------------------------------------
 
-    async isStreamStoredInStorageNodeFromContract(streamId: string, nodeAddress: string): Promise<boolean> {
+    async isStreamStoredInStorageNodeFromContract(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
         return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
     }
@@ -104,12 +108,12 @@ export class NodeRegistry {
     // --------------------------------------------------------------------------------------------
 
     private async connectToNodeRegistryContract() {
-        if (!this.sideChainSigner || !this.nodeRegistryContract) {
-            this.sideChainSigner = await this.ethereum.getSidechainSigner()
-            this.nodeRegistryContract = new Contract(this.clientConfig.nodeRegistrySidechainAddress,
-                NodeRegistryArtifact, this.sideChainSigner) as NodeRegistryContract
-            this.streamStorageRegistryContract = new Contract(this.clientConfig.streamStorageRegistrySidechainAddress,
-                StreamStorageRegistryArtifact, this.sideChainSigner) as StreamStorageRegistryContract
+        if (!this.chainSigner || !this.nodeRegistryContract) {
+            this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
+            this.nodeRegistryContract = new Contract(this.clientConfig.nodeRegistryChainAddress,
+                NodeRegistryArtifact, this.chainSigner) as NodeRegistryContract
+            this.streamStorageRegistryContract = new Contract(this.clientConfig.streamStorageRegistryChainAddress,
+                StreamStorageRegistryArtifact, this.chainSigner) as StreamStorageRegistryContract
         }
     }
 
@@ -138,7 +142,8 @@ export class NodeRegistry {
         await tx.wait()
     }
 
-    async addStreamToStorageNode(streamId: string, nodeAddress: string): Promise<void> {
+    async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
 
@@ -148,7 +153,8 @@ export class NodeRegistry {
             () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
-    async removeStreamFromStorageNode(streamId: string, nodeAddress: string): Promise<void> {
+    async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Removing stream %s from node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
 
@@ -170,7 +176,8 @@ export class NodeRegistry {
         return metadata.http
     }
 
-    async isStreamStoredInStorageNode(streamId: string, nodeAddress: string): Promise<boolean> {
+    async isStreamStoredInStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
         const res = await this.sendNodeQuery(NodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
         if (res.node === null) {
@@ -179,7 +186,8 @@ export class NodeRegistry {
         return res.node.storedStreams.find((stream) => stream.id === streamId) !== undefined
     }
 
-    async getStorageNodesOf(streamId: string): Promise<EthereumAddress[]> {
+    async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Getting storage nodes of stream %s', streamId)
         const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
         return res.stream.storageNodes.map((node) => node.id)
@@ -188,7 +196,10 @@ export class NodeRegistry {
     async getStoredStreamsOf(nodeAddress: string): Promise<Stream[]> {
         log('Getting stored streams of node %s', nodeAddress)
         const res = await this.sendNodeQuery(NodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
-        return res.node.storedStreams.map((stream) => this.parseStream(stream.id, stream.metadata))
+        return res.node.storedStreams.map((stream) => {
+            const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(stream.metadata)
+            return new Stream({ ...parsedProps, id: StreamIDUtils.toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
+        })
     }
 
     async getAllStorageNodes(): Promise<EthereumAddress[]> {
@@ -217,11 +228,6 @@ export class NodeRegistry {
             }
         }
         return resJson.data
-    }
-
-    parseStream(id: string, propsString: string): Stream {
-        const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(propsString)
-        return new Stream({ ...parsedProps, id }, this.container)
     }
 
     async registerStorageEventListener(callback: (arg0: EthereumStorageEvent) => any) {
@@ -266,7 +272,7 @@ export class NodeRegistry {
         return JSON.stringify({ query })
     }
 
-    private static buildStoredStreamQuery(streamid: string): string {
+    private static buildStoredStreamQuery(streamid: StreamID): string {
         const query = `{
             stream (id: "${streamid}") {
                 id,

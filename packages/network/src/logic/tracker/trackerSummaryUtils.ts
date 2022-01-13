@@ -1,14 +1,16 @@
-import { SPID, SPIDKey } from 'streamr-client-protocol'
+import { SPID, SPIDKey, StreamID } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
+import { Location } from '../../identifiers'
 
 type OverLayWithRtts = Record<SPIDKey,Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] >>
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
+type NodesWithLocations = { [key: string]: Location }
 
 export function getTopology(
     overlayPerStream: OverlayPerStream,
     connectionRtts: OverlayConnectionRtts,
-    streamId: string | null = null,
+    streamId: StreamID | null = null,
     partition: number | null = null
 ): OverLayWithRtts {
     const topology: OverLayWithRtts = {}
@@ -24,7 +26,7 @@ export function getTopology(
     return topology
 }
 
-export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): OverlaySizes {
+export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): OverlaySizes {
     const spidKeys = findSPIDKeys(overlayPerStream, streamId, partition)
     const streamSizes: OverlaySizes = spidKeys.map((spidKey) => {
         const spid = SPID.from(spidKey)
@@ -70,6 +72,19 @@ export function addRttsToNodeConnections(
     }
 }
 
+export function getNodesWithLocationData(nodes: ReadonlyArray<string>, locations: Readonly<{[key: string]: Location}>): NodesWithLocations {
+    return Object.assign({}, ...nodes.map((nodeId: string) => {
+        return {
+            [nodeId]: locations[nodeId] || {
+                latitude: null,
+                longitude: null,
+                country: null,
+                city: null,
+            }
+        }
+    }))
+}
+
 export function findStreamsForNode(
     overlayPerStream: OverlayPerStream,
     nodeId: NodeId
@@ -99,7 +114,7 @@ function getNodeToNodeConnectionRtts(
     }
 }
 
-function findSPIDKeys(overlayPerStream: OverlayPerStream, streamId: string | null = null, partition: number | null = null): string[] {
+function findSPIDKeys(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): string[] {
     let keys
 
     if (streamId && partition === null) {

@@ -1,9 +1,9 @@
 import assert from 'assert'
 
-import { PublishStreamConnectionResponse, ControlMessage } from '../../../../src/index'
+import { PublishStreamConnectionResponse, ControlMessage, StreamIDUtils } from '../../../../src/index'
 
 const VERSION = 2
-const streamId = 'stream'
+const streamId = StreamIDUtils.toStreamID('stream')
 const streamPartition = 0
 const senderId = 'node'
 const accepted = true

@@ -2,11 +2,9 @@
  * Wrapper for Stream metadata and (some) methods.
  */
 import fetch from 'node-fetch'
-import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
-import { EthereumAddress } from './types'
 import { until } from './utils'
 
 import { Rest } from './Rest'
@@ -19,6 +17,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
+import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -63,6 +62,10 @@ export interface StreamProperties {
     inactivityThresholdHours?: number
 }
 
+export interface StreamrStreamConstructorOptions extends StreamProperties {
+    id: StreamID
+}
+
 const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
 export type Field = {
@@ -90,8 +93,8 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 }
 
 class StreamrStream implements StreamMetadata {
-    streamId: string
-    id: string
+    streamId: StreamID
+    id: StreamID
     // @ts-expect-error
     name: string
     description?: string
@@ -113,8 +116,9 @@ class StreamrStream implements StreamMetadata {
     protected _nodeRegistry: NodeRegistry
     protected _ethereuem: Ethereum
 
+    /** @internal */
     constructor(
-        props: StreamProperties,
+        props: StreamrStreamConstructorOptions,
         @inject(BrubeckContainer) private _container: DependencyContainer
     ) {
         Object.assign(this, props)
@@ -396,7 +400,7 @@ class StreamrStream implements StreamMetadata {
         ))
     }
 
-    private static async isStreamStoredInStorageNode(streamId: string, nodeurl: string) {
+    private static async isStreamStoredInStorageNode(streamId: StreamID, nodeurl: string) {
         const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
         const response = await fetch(url)
         if (response.status === 200) {

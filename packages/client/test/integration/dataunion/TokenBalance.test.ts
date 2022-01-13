@@ -6,13 +6,13 @@ import * as Token from '../../../contracts/TestToken.json'
 import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from '../devEnvironment'
 import { BigNumber, providers } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
-import { EthereumAddress } from '../../../src/types'
+import { EthereumAddress } from 'streamr-client-protocol'
 import { until } from '../../../src/utils'
 import debug from 'debug'
 import StreamrClient from '../../../src'
 
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainnet)
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.sidechain)
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainChainRPC)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.dataUnionChainRPC)
 const tokenAdminMainnetWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
 const tokenAdminSidechainWallet = new Wallet(tokenAdminPrivateKey, providerSidechain)
 const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminMainnetWallet)

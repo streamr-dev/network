@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 
 import { ethers } from 'ethers'
-import { MessageLayer } from 'streamr-client-protocol'
+import { MessageLayer, StreamIDUtils } from 'streamr-client-protocol'
 
 import EncryptionUtil, { GroupKey } from '../../src/encryption/Encryption'
 
@@ -9,6 +9,7 @@ const { StreamMessage, MessageID } = MessageLayer
 
 // wrap these tests so can run same tests as if in browser
 function TestEncryptionUtil({ isBrowser = false } = {}) {
+    const streamId = StreamIDUtils.toStreamID('streamId')
     describe(`EncryptionUtil ${isBrowser ? 'Browser' : 'Server'}`, () => {
         beforeAll(() => {
             // this is the toggle used in EncryptionUtil to
@@ -70,7 +71,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         it('StreamMessage gets encrypted', () => {
             const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
-                messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
                 content: {
                     foo: 'bar',
                 },
@@ -87,7 +88,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         it('StreamMessage decryption after encryption equals the initial StreamMessage', () => {
             const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
-                messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
                 content: {
                     foo: 'bar',
                 },

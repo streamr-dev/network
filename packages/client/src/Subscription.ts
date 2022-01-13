@@ -2,14 +2,9 @@
  * The client.subscribe() return value.
  * Primary interface for consuming StreamMessages.
  */
-import { SPID, SPIDKeyShape } from 'streamr-client-protocol'
+import { SPID, SPIDKeyShape, StreamID } from 'streamr-client-protocol'
 import MessageStream, { MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
 import SubscriptionSession from './SubscriptionSession'
-
-export type SubscriptionOptions = {
-  streamId: string,
-  streamPartition: number
-}
 
 export { MessageStreamOnMessage as SubscriptionOnMessage }
 
@@ -18,7 +13,7 @@ export default class Subscription<T = unknown> extends MessageStream<T> implemen
     spid: SPID
     /** prevent buffered data from yielding */
     isUnsubscribed = false
-    streamId
+    streamId: StreamID
     streamPartition
     key
 

@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { StreamIDUtils, TrackerLayer } from 'streamr-client-protocol'
 
 import { InstructionRetryManager } from '../../src/logic/node/InstructionRetryManager'
 
@@ -19,7 +19,7 @@ describe('InstructionRetryManager', () => {
     function createInstruction(streamId: string, counter: number) {
         return new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId,
+            streamId: StreamIDUtils.toStreamID(streamId),
             streamPartition: 0,
             nodeIds: [],
             counter

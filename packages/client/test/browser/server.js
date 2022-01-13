@@ -1,9 +1,10 @@
 const path = require('path')
 
 const express = require('express')
+const { KeyServer } = require('streamr-test-utils')
 
 const app = express()
-const keyserver = require('../keyserver')
+const keyserver = new KeyServer()
 
 // viewed at http://localhost:8880
 app.use('/static', express.static(path.join(__dirname, '/../../dist')))
@@ -28,5 +29,5 @@ server = app.listen(8880, () => {
 })
 
 server.once('close', () => {
-    keyserver?.close()
+    keyserver?.destroy()
 })
