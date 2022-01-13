@@ -10,7 +10,7 @@ export class StreamIDUtils {
      * Create an instance of `StreamID` from a given string stream id or path.
      *
      * Supported formats:
-     *  - full stream id format, e.g., '0x0000000000000000000000000000000000000000/foo/bar'
+     *  - full stream id format, e.g., '0x0000000000000000000000000000000000000000/foo/bar' or 'name.eth/foo/bar'
      *  - path-only format, e.g. , '/foo/bar'
      *  - key-exchange format, e.g., SYSTEM/keyexchange/0x0000000000000000000000000000000000000000
      *  - legacy format, e.g., '7wa7APtlTq6EC5iTCBy6dw'
@@ -53,6 +53,10 @@ export class StreamIDUtils {
     static getAddress(streamId: StreamID): string | undefined {
         const addressAndPath = StreamIDUtils.getAddressAndPath(streamId)
         return addressAndPath?.[0]
+    }
+
+    static isENSAddress(address: string): boolean {
+        return address.indexOf('.') !== -1
     }
     
     static getPath(streamId: StreamID): string | undefined {

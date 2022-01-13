@@ -83,8 +83,43 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             expect(newStream.id).toEqual(expectedId)
         })
 
-        it('invalid id', async () => {
-            await expect(async () => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow()
+        it('legacy format', async () => {
+            const streamId = '7wa7APtlTq6EC5iTCBy6dw'
+            await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
+        })
+
+        it('key-exchange format', async () => {
+            const streamId = 'SYSTEM/keyexchange/0x0000000000000000000000000000000000000000'
+            await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
+        })
+
+        describe('ENS', () => {
+
+            it('domain owned by user', async () => {
+                const streamId = 'testdomain1.eth/foobar'
+                const ensOwnerClient = new StreamrClient({
+                    ...clientOptions,
+                    auth: {
+                        privateKey: '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
+                    },
+                })
+                const newStream = await ensOwnerClient.createStream({
+                    id: streamId,
+                })
+                await until(async () => { return ensOwnerClient.streamExistsOnTheGraph(streamId) }, 100000, 1000)
+                expect(newStream.id).toEqual(streamId)
+            })
+
+            it('domain not owned by user', async () => {
+                const streamId = 'testdomain1.eth/foobar'
+                await expect(async () => client.createStream({ id: streamId })).rejects.toThrow()
+            })
+
+            it('domain not registered', async () => {
+                const streamId = 'some-non-registered-address.eth/foobar'
+                await expect(async () => client.createStream({ id: streamId })).rejects.toThrow()
+            })
+
         })
     })
 
