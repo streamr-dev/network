@@ -1,7 +1,7 @@
 /**
  * MessageChains
  */
-import { MessageRef, MessageID, MessageIDStrict, SPID } from 'streamr-client-protocol'
+import { MessageRef, MessageID, SPID } from 'streamr-client-protocol'
 import { CacheConfig } from './Config'
 import { randomString, CacheFn } from './utils'
 
@@ -51,7 +51,7 @@ export default class MessageChain {
         const isBackdated = prevMsgRef && prevMsgRef.timestamp > timestamp
         // increment if timestamp the same, otherwise 0
         const nextSequenceNumber = isSameTimestamp ? prevMsgRef!.sequenceNumber + 1 : 0
-        const messageId = new MessageIDStrict(spid.streamId, spid.streamPartition, timestamp, nextSequenceNumber, publisherId, msgChainId)
+        const messageId = new MessageID(spid.streamId, spid.streamPartition, timestamp, nextSequenceNumber, publisherId, msgChainId)
         // update latest timestamp + sequence for this streamId+partition
         // (see note above about clobbering sequencing)
         // don't update latest if timestamp < previous timestamp

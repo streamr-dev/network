@@ -123,15 +123,15 @@ describe('DataQueryEndpoints', () => {
                     .expect(streamMessages.map((msg) => msg.serialize(Protocol.StreamMessage.LATEST_VERSION)), done)
             })
 
-            it('responds with specific version protocol serialization of messages given format=protocol&version=30', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?format=protocol&version=30')
-                    .expect(streamMessages.map((msg) => msg.serialize(30)), done)
+            it('responds with specific version protocol serialization of messages given format=protocol&version=32', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?format=protocol&version=32')
+                    .expect(streamMessages.map((msg) => msg.serialize(32)), done)
             })
 
             it('responds with raw format', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=2&format=raw&version=30')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=2&format=raw&version=32')
                     .expect('Content-Type', 'text/plain')
-                    .expect(streamMessages.map((msg) => msg.serialize(30)).join('\n'), done)
+                    .expect(streamMessages.map((msg) => msg.serialize(32)).join('\n'), done)
             })
 
             it('invokes storage#requestLast once with correct arguments', async () => {

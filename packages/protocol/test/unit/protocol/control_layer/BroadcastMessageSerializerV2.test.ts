@@ -1,9 +1,9 @@
 import assert from 'assert'
 
-import { StreamMessage, BroadcastMessage, ControlMessage } from '../../../../src/index'
+import { StreamMessage, BroadcastMessage, ControlMessage, ContentType, EncryptionType } from '../../../../src/index'
 
-const streamMessage = StreamMessage.deserialize([30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
-    [1529549961000, 0], StreamMessage.MESSAGE_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'])
+const streamMessage = StreamMessage.deserialize([32, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
+    [1529549961000, 0], StreamMessage.MESSAGE_TYPES.MESSAGE, ContentType.JSON, EncryptionType.NONE, null, '{"valid": "json"}', null, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'])
 
 const VERSION = 2
 
@@ -13,7 +13,7 @@ const message = new BroadcastMessage({
     requestId: 'requestId',
     streamMessage,
 })
-const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.BroadcastMessage, 'requestId', JSON.parse(streamMessage.serialize(30))])
+const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.BroadcastMessage, 'requestId', JSON.parse(streamMessage.serialize(32))])
 
 describe('BroadcastMessageSerializerV2', () => {
     describe('deserialize', () => {
@@ -23,7 +23,7 @@ describe('BroadcastMessageSerializerV2', () => {
     })
     describe('serialize', () => {
         it('correctly serializes messages', () => {
-            assert.deepStrictEqual(message.serialize(VERSION, 30), serializedMessage)
+            assert.deepStrictEqual(message.serialize(VERSION, 32), serializedMessage)
         })
     })
 })

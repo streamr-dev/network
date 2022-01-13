@@ -8,7 +8,7 @@ import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { StreamIDUtils } from "streamr-client-protocol"
 
-const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
+const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -33,7 +33,7 @@ function buildMsg({
     content?: any
 }) {
     return new StreamMessage({
-        messageId: new MessageIDStrict(StreamIDUtils.toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+        messageId: new MessageID(StreamIDUtils.toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: JSON.stringify(content)
     })
 }
@@ -56,7 +56,7 @@ function buildEncryptedMsg({
     content?: string
 }) {
     return new StreamMessage({
-        messageId: new MessageIDStrict(StreamIDUtils.toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+        messageId: new MessageID(StreamIDUtils.toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content,
         encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
     })
