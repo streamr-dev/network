@@ -173,24 +173,121 @@ await stream.publish(msg)
 
 ----
 
-## Client options
+## Client configuration
 
-| Option                   | Default value                    | Description                                                                                                                                                                                                                                                                                                                             |
-| :----------------------- | :------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| url                      | wss://streamr.network/api/v1/ws  | Address of the Streamr websocket endpoint to connect to.                                                                                                                                                                                                                                                                                |
-| restUrl                  | <https://streamr.network/api/v1> | Base URL of the Streamr REST API.                                                                                                                                                                                                                                                                                                       |
-| auth                     | {}                               | Object that can contain different information to authenticate. More details below.                                                                                                                                                                                                                                                      |
-| publishWithSignature     | 'auto'                           | Determines if data points published to streams are signed or not. Possible values are: 'auto', 'always' and 'never'. Signing requires `auth.privateKey` or `auth.ethereum`.  'auto' will sign only if one of them is set. 'always' will throw an exception if none of them is set.                                                      |
-| verifySignatures         | 'auto'                           | Determines under which conditions signed and unsigned data points are accepted or rejected. 'always' accepts only signed and verified data points. 'never' accepts all data points. 'auto' verifies all signed data points before accepting them and accepts unsigned data points only for streams not supposed to contain signed data. |
-| autoConnect              | true                             | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.                                                                                                                                                                                          |
-| autoDisconnect           | true                             | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.                                                                                                                                        |
-| orderMessages            | true                             | If set to `true`, the subscriber handles messages in the correct order, requests missing messages and drops duplicates. Otherwise, the subscriber processes messages as they arrive without any check.                                                                                                                                  |
-| maxPublishQueueSize      | 10000                            | Only in effect when `autoConnect = true`. Controls the maximum number of messages to retain in internal queue when client has disconnected and is reconnecting to Streamr.                                                                                                                                                              |
-| publisherGroupKeys       | {}                               | Object defining the group key as a hex string used to encrypt for each stream id.                                                                                                                                                                                                                                                       |
-| publisherStoreKeyHistory | true                             | If `true`, the client will locally store every key used to encrypt messages at some point. If set to `false`, the client will not be able to answer subscribers asking for historical keys during resend requests.                                                                                                                      |
-| subscriberGroupKeys      | {}                               | Object defining, for each stream id, an object containing the group key used to decrypt for each publisher id. Not needed if `keyExchange` is defined.                                                                                                                                                                                  |
-| keyExchange              | {}                               | Defines RSA key pair to use for group key exchange. Can define `publicKey` and `privateKey` fields as strings in the PEM format, or stay empty to generate a key pair automatically. Can be set to `null` if no key exchange is required.                                                                                               |
+|   Option    | Possible Values | Default value  |  Description |
+| :--- | :--- | :--- | :--- |
+| restUrl  | string | <https://streamr.network/api/v1> | Base URL of the Streamr REST API.   |
+| auth | AUTH_OBJECT | Object that can contain different information to authenticate. More details below.  |
+| publishWithSignature | 'auto', 'always', 'never' | 'auto'   | Determines if data points published to streams are signed or not. Signing requires `auth.privateKey` or `auth.ethereum`.  'auto' will sign only if one of them is set. 'always' will throw an exception if none of them is set.  |
+| verifySignatures | 'auto', 'always', 'never' | 'auto'   | Determines under which conditions signed and unsigned data points are accepted or rejected. 'always' accepts only signed and verified data points. 'never' accepts all data points. 'auto' verifies all signed data points before accepting them and accepts unsigned data points only for streams not supposed to contain signed data. |
+| autoConnect  | boolean | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.  |
+| autoDisconnect | boolean  | true | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.|
+| orderMessages| boolean | true | If set to `true`, the subscriber handles messages in the correct order, requests missing messages and drops duplicates. Otherwise, the subscriber processes messages as they arrive without any check.  |
+| maxPublishQueueSize  | number | 10000| Only in effect when `autoConnect = true`. Controls the maximum number of messages to retain in internal queue when client has disconnected and is reconnecting to Streamr.  |
+| publisherGroupKeys   | {}   | Object defining the group key as a hex string used to encrypt for each stream id.   |
+| publisherStoreKeyHistory | true | If `true`, the client will locally store every key used to encrypt messages at some point. If set to `false`, the client will not be able to answer subscribers asking for historical keys during resend requests.  |
+| groupKeys  | {}   | Object defining, for each stream id, an object containing the group key used to decrypt for each publisher id. Not needed if `keyExchange` is defined.  |
+| keyExchange  | {}   | Defines RSA key pair to use for group key exchange. Can define `publicKey` and `privateKey` fields as strings in the PEM format, or stay empty to generate a key pair automatically. Can be set to `null` if no key exchange is required. |
+| debug| TODO |
+| network| TODO |
+| storageNodeRegistry| TODO |
+| streamrNodeAddress| TODO |
+| dataUnion| TODO |
+| cache| TODO |
+| binanceRPC| TODO |
+| binanceAdapterAddress| TODO |
+| binanceSmartChainAMBAddress| TODO |
+| withdrawServerUrl| TODO |
+| mainnet| TODO |
+| sidechain| TODO |
+| tokenAddress| TODO |
+| tokenSidechainAddress| TODO |
+| publishAutoDisconnectDelay| TODO |
+| gapFill| TODO |
+| maxGapRequests| TODO |
+| maxRetries| TODO |
+| retryResendAfter| TODO |
+| gapFillTimeout| TODO |
 
+```typescript
+const client = new StreamrClient({
+    id: 'client-id', // used to identify the client on logs
+    auth: {
+        privateKey: string,
+        ethereum: window.provider()
+    },
+    debug: {},
+    network: {
+        trackers: TrackerInfo[],
+        disconnectionWaitTime?: number,
+        peerPingInterval?: number,
+        newWebrtcConnectionTimeout?: number,
+        webrtcDatachannelBufferThresholdLow?: number,
+        webrtcDatachannelBufferThresholdHigh?: number,
+        stunUrls?: string[],
+        rttUpdateTimeout?: number,
+        trackerConnectionMaintenanceInterval?: number,
+        webrtcDisallowPrivateAddresses?: boolean,
+        acceptProxyConnections?: boolean,
+    },
+    storageNodeRegistry: [{
+        contractAddress: string,
+        jsonRpcProvider: string,
+    }],
+    streamrNodeAddress: string,
+    keyExchange: {},
+    dataUnion: {
+        minimumWithdrawTokenWei: BigNumber | number | string,
+        payForTransport: boolean,
+        factoryMainnetAddress: EthereumAddress,
+        factorySidechainAddress: EthereumAddress,
+        templateMainnetAddress: EthereumAddress,
+        templateSidechainAddress: EthereumAddress,
+    },
+    cache: {
+        maxSize: number,
+        maxAge: number,
+    },
+    // EthereumConfig
+    binanceRPC: ConnectionInfo & {
+        chainId?: number,
+    },
+    binanceAdapterAddress: EthereumAddress,
+    binanceSmartChainAMBAddress: EthereumAddress,
+    withdrawServerUrl: string,
+    mainnet?: ConnectionInfo | string,
+    sidechain: ConnectionInfo & {
+        chainId?: number,
+    },
+    tokenAddress: EthereumAddress,
+    tokenSidechainAddress: EthereumAddress,
+    // ConnectionConfig
+    restUrl: string,
+    autoConnect: boolean,
+    autoDisconnect: boolean,
+    // PublishConfig
+    maxPublishQueueSize: number,
+    publishWithSignature: Todo,
+    publisherStoreKeyHistory: boolean,
+    publishAutoDisconnectDelay: number,
+    // SubscribeConfig
+    orderMessages: boolean,
+    gapFill: boolean,
+    maxGapRequests: number,
+    maxRetries: number,
+    verifySignatures: Todo,
+    retryResendAfter: number,
+    gapFillTimeout: number,
+    // EncryptionConfig
+    groupKeys: {},
+
+})
+
+
+EthereumConfig & ConnectionConfig & PublishConfig & SubscribeConfig & EncryptionConfig
+    
+```
 ## Authentication options
 
 Note: **Authenticating with an API key has been deprecated. Cryptographic keys/wallets is the only supported authentication method.**
