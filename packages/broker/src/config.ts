@@ -1,5 +1,7 @@
 import { BrubeckClientConfig } from 'streamr-client'
 import { SmartContractRecord } from 'streamr-client-protocol'
+import path from 'path'
+import * as os from 'os'
 
 export interface NetworkSmartContract {
     contractAddress: string
@@ -23,4 +25,9 @@ export interface Config {
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig
+}
+
+export const getDefaultFile = (): string => {
+    const relativePath = '.streamr/config/default.json'
+    return path.join(os.homedir(), relativePath)
 }

@@ -10,7 +10,7 @@
 
 import { format } from 'util'
 import ValidationError from '../errors/ValidationError'
-import { StreamID, toStreamID } from './StreamID'
+import { StreamID, StreamIDUtils } from './StreamID'
 
 type RequiredKeys<T, Keys extends keyof T> = Omit<T, Keys> & Required<Pick<T, Keys>>
 
@@ -80,7 +80,7 @@ export class SPID implements SPIDKeyShape {
      * @param partition - stream partition
      */
     constructor(id: string, partition: number) {
-        this.streamId = toStreamID(id) // TODO: should 1st param be of type StreamID instead
+        this.streamId = StreamIDUtils.toStreamID(id) // TODO: should 1st param be of type StreamID instead
         this.streamPartition = partition
         this.validate()
 

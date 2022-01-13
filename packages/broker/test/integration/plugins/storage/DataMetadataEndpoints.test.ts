@@ -8,7 +8,6 @@ import { Broker } from "../../../../src/broker"
 
 jest.setTimeout(30000)
 const httpPort1 = 12371
-const wsPort1 = 12372
 const trackerPort = 12375
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
@@ -51,7 +50,6 @@ describe('DataMetadataEndpoints', () => {
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
             httpPort: httpPort1,
-            wsPort: wsPort1,
             enableCassandra: true,
             streamrAddress: engineAndEditorAccount.address,
             storageNodeRegistry

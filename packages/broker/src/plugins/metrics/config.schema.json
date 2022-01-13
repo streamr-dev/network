@@ -20,29 +20,10 @@
         "null"
       ],
       "required": [
-        "client",
         "storageNode"
       ],
       "additionalProperties": false,
       "properties": {
-        "client": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "wsUrl",
-            "httpUrl"
-          ],
-          "properties": {
-            "wsUrl": {
-              "type": "string",
-              "description": "WebSocket URL to configure metrics reporting StreamrClient with"
-            },
-            "httpUrl": {
-              "type": "string",
-              "description": "Core API URL to configure metrics reporting StreamrClient with"
-            }
-          }
-        },
         "storageNode":{
           "type": "string"
         },

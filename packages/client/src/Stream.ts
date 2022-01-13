@@ -2,7 +2,6 @@
  * Wrapper for Stream metadata and (some) methods.
  */
 import fetch from 'node-fetch'
-import { StreamMetadata } from 'streamr-client-protocol/dist/src/utils/StreamMessageValidator'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
@@ -18,7 +17,7 @@ import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
 export type StreamPartDefinitionOptions = {
@@ -61,6 +60,10 @@ export interface StreamProperties {
     requireEncryptedData?: boolean
     storageDays?: number
     inactivityThresholdHours?: number
+}
+
+export interface StreamrStreamConstructorOptions extends StreamProperties {
+    id: StreamID
 }
 
 const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
@@ -113,12 +116,13 @@ class StreamrStream implements StreamMetadata {
     protected _nodeRegistry: NodeRegistry
     protected _ethereuem: Ethereum
 
+    /** @internal */
     constructor(
-        props: StreamProperties,
+        props: StreamrStreamConstructorOptions,
         @inject(BrubeckContainer) private _container: DependencyContainer
     ) {
         Object.assign(this, props)
-        this.id = toStreamID(props.id)
+        this.id = props.id
         this.streamId = this.id
         this.partitions = props.partitions ? props.partitions : 1
         this._rest = _container.resolve<Rest>(Rest)

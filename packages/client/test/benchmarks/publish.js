@@ -1,10 +1,11 @@
 const { format } = require('util')
 const { Benchmark } = require('benchmark')
 const fetch = require('node-fetch')
+const { KeyServer } = require('streamr-test-utils')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
-const keyserver = require('../keyserver')
+const keyserver = new KeyServer()
 
 const { ConfigTest: clientOptions } = StreamrClient
 
@@ -139,7 +140,7 @@ async function run() {
     })
 
     suite.on('complete', async () => {
-        keyserver.close()
+        keyserver.destroy()
         log('Disconnecting clients')
         const tasks = [
             client1.disconnect(),

@@ -6,7 +6,8 @@ import {
     findStreamsForNode,
     getNodeConnections,
     getTopology,
-    getStreamSizes
+    getStreamSizes,
+    getNodesWithLocationData
 } from './trackerSummaryUtils'
 import { Logger } from '../../helpers/Logger'
 import { Tracker } from './Tracker'
@@ -14,7 +15,7 @@ import http from 'http'
 import https from 'https'
 import morgan from 'morgan'
 import compression from 'compression'
-import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, StreamIDUtils } from 'streamr-client-protocol'
 
 const staticLogger = new Logger(module)
 
@@ -31,7 +32,7 @@ const validateStreamId = (req: express.Request, res: express.Response): StreamID
         respondWithError(res, 'streamId cannot be empty')
         return null
     }
-    return toStreamID(streamId)
+    return StreamIDUtils.toStreamID(streamId)
 }
 
 const validatePartition = (req: express.Request, res: express.Response): number | null  => {
@@ -119,7 +120,7 @@ export function trackerHttpEndpoints(
     })
     app.get('/location/', (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /location/')
-        res.json(tracker.getAllNodeLocations())
+        res.json(getNodesWithLocationData(tracker.getNodes(), tracker.getAllNodeLocations()))
     })
     app.get('/location/:nodeId/', (req: express.Request, res: express.Response) => {
         const nodeId = req.params.nodeId

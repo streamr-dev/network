@@ -5,7 +5,7 @@ import { DependencyContainer } from 'tsyringe'
 import fetch from 'node-fetch'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { PublishRequest, StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
+import { StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../src/StreamrClient'
@@ -133,23 +133,6 @@ export type CreateMessageOpts = {
     batchIndex: number,
     /** total messages */
     total: number
-}
-
-export type PublishOpts = {
-    testName: string,
-    delay: number
-    timeout: number
-    /** set false to allow gc message content */
-    retainMessages: boolean,
-    waitForLast: boolean
-    waitForLastCount: number
-    waitForLastTimeout: number
-    beforeEach: (m: any) => any
-    afterEach: (msg: any, request: PublishRequest) => Promise<void> | void
-    timestamp: number | (() => number)
-    partitionKey: string
-    createMessage: (opts: CreateMessageOpts) => Promise<any> | any
-    batchSize: number
 }
 
 export const createMockAddress = () => '0x000000000000000000000000000' + Date.now()

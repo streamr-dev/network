@@ -16,9 +16,6 @@ on:
   pull_request:
     branches:
       - '*'
-  schedule:
-    # run every day at 00:00
-    - cron: '0 0 * * *'
 concurrency:
   group: client-code-build-${{ github.head_ref }}
   cancel-in-progress: true
