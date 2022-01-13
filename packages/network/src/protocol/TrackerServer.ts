@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { SPID, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { RtcSubTypes } from '../identifiers'
@@ -43,13 +43,14 @@ export class TrackerServer extends EventEmitter {
 
     async sendInstruction(
         receiverNodeId: NodeId, 
-        spid: SPID, 
+        streamPartId: StreamPartID, 
         nodeIds: NodeId[], counter: number
     ): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         await this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
             requestId: uuidv4(),
-            streamId: spid.streamId,
-            streamPartition: spid.streamPartition,
+            streamId,
+            streamPartition,
             nodeIds,
             counter
         }))

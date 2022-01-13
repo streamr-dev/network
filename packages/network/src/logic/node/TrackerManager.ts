@@ -1,4 +1,4 @@
-import { SPID, TrackerLayer, Utils } from 'streamr-client-protocol'
+import { StreamPartID, TrackerLayer, Utils } from 'streamr-client-protocol'
 import { Location, Rtts, TrackerInfo } from '../../identifiers'
 import { TrackerId } from '../tracker/Tracker'
 import { TrackerConnector } from './TrackerConnector'
@@ -21,14 +21,14 @@ interface NodeDescriptor {
 }
 
 interface Subscriber {
-    subscribeToStreamIfHaveNotYet: (spid: SPID, sendStatus?: boolean) => void
+    subscribeToStreamIfHaveNotYet: (streamPartId: StreamPartID, sendStatus?: boolean) => void
     subscribeToStreamsOnNode: (
         nodeIds: NodeId[],
-        spid: SPID,
+        streamPartId: StreamPartID,
         trackerId: TrackerId,
         reattempt: boolean
     ) => Promise<PromiseSettledResult<NodeId>[]>,
-    unsubscribeFromStreamOnNode: (node: NodeId, spid: SPID, sendStatus?: boolean) => void
+    unsubscribeFromStreamOnNode: (node: NodeId, streamPartId: StreamPartID, sendStatus?: boolean) => void
 }
 
 type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
@@ -71,7 +71,7 @@ export class TrackerManager {
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.trackerConnector = new TrackerConnector(
-            streamManager.getSPIDs.bind(streamManager),
+            streamManager.getStreamPartIDs.bind(streamManager),
             this.nodeToTracker.connectToTracker.bind(this.nodeToTracker),
             this.nodeToTracker.disconnectFromTracker.bind(this.nodeToTracker),
             this.trackerRegistry,
@@ -98,13 +98,13 @@ export class TrackerManager {
         })
     }
 
-    sendStreamStatus(spid: SPID): void {
-        const trackerId = this.getTrackerId(spid)
-        this.sendStatus(spid, trackerId)
+    sendStreamStatus(streamPartId: StreamPartID): void {
+        const trackerId = this.getTrackerId(streamPartId)
+        this.sendStatus(streamPartId, trackerId)
     }
 
-    onNewStream(spid: SPID): void {
-        this.trackerConnector.onNewStream(spid)
+    onNewStream(streamPartId: StreamPartID): void {
+        this.trackerConnector.onNewStream(streamPartId)
     }
 
     async connectToSignallingOnlyTracker(trackerId: TrackerId, trackerAddress: string): Promise<void> {
@@ -115,10 +115,9 @@ export class TrackerManager {
         this.trackerConnector.removeSignallingOnlyTrackerConnection(trackerId)
     }
 
-    onUnsubscribeFromStream(spid: SPID): void {
-        const key = spid.toKey()
-        this.instructionThrottler.removeStream(key)
-        this.instructionRetryManager.removeStream(key)
+    onUnsubscribeFromStream(streamPartId: StreamPartID): void {
+        this.instructionThrottler.removeStream(streamPartId)
+        this.instructionRetryManager.removeStream(streamPartId)
     }
 
     start(): void {
@@ -133,10 +132,9 @@ export class TrackerManager {
         await this.nodeToTracker.stop()
     }
 
-    private getStreamsForTracker(trackerId: TrackerId): Array<SPID> {
-        return [...this.streamManager.getSPIDKeys()]
-            .map((key) => SPID.from(key))
-            .filter((spid) => this.getTrackerId(spid) === trackerId)
+    private getStreamsForTracker(trackerId: TrackerId): Array<StreamPartID> {
+        return [...this.streamManager.getStreamPartIDs()]
+            .filter((streamPartId) => this.getTrackerId(streamPartId) === trackerId)
     }
 
     private shouldIncludeRttInfo(trackerId: TrackerId): boolean {
@@ -150,11 +148,11 @@ export class TrackerManager {
         return false
     }
 
-    private async sendStatus(spid: SPID, trackerId: TrackerId): Promise<void> {
-        if (!this.streamManager.isBehindProxy(spid)) {
+    private async sendStatus(streamPartId: StreamPartID, trackerId: TrackerId): Promise<void> {
+        if (!this.streamManager.isBehindProxy(streamPartId)) {
             const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
             const status = {
-                stream: this.streamManager.getStreamStatus(spid),
+                stream: this.streamManager.getStreamStatus(streamPartId),
                 ...nodeDescriptor
             }
             try {
@@ -171,13 +169,13 @@ export class TrackerManager {
         trackerId: TrackerId,
         reattempt = false
     ): Promise<void> {
-        const spid = instructionMessage.getSPID()
+        const streamPartId = instructionMessage.getStreamPartID()
         const { nodeIds, counter } = instructionMessage
 
         this.instructionRetryManager.add(instructionMessage, trackerId)
 
         // Check that tracker matches expected tracker
-        const expectedTrackerId = this.getTrackerId(spid)
+        const expectedTrackerId = this.getTrackerId(streamPartId)
         if (trackerId !== expectedTrackerId) {
             this.metrics.record('unexpectedTrackerInstructions', 1)
             logger.warn(`got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
@@ -185,19 +183,19 @@ export class TrackerManager {
         }
 
         this.metrics.record('trackerInstructions', 1)
-        logger.trace('received instructions for %s, nodes to connect %o', spid, nodeIds)
+        logger.trace('received instructions for %s, nodes to connect %o', streamPartId, nodeIds)
 
-        this.subscriber.subscribeToStreamIfHaveNotYet(spid, false)
-        const currentNodes = this.streamManager.getNeighborsForStream(spid)
+        this.subscriber.subscribeToStreamIfHaveNotYet(streamPartId, false)
+        const currentNodes = this.streamManager.getNeighborsForStream(streamPartId)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {
-            this.subscriber.unsubscribeFromStreamOnNode(nodeId, spid, false)
+            this.subscriber.unsubscribeFromStreamOnNode(nodeId, streamPartId, false)
         })
 
-        const results = await this.subscriber.subscribeToStreamsOnNode(nodeIds, spid, trackerId, reattempt)
-        if (this.streamManager.isSetUp(spid)) {
-            this.streamManager.updateCounter(spid, counter)
+        const results = await this.subscriber.subscribeToStreamsOnNode(nodeIds, streamPartId, trackerId, reattempt)
+        if (this.streamManager.isSetUp(streamPartId)) {
+            this.streamManager.updateCounter(streamPartId, counter)
         }
 
         // Log success / failures
@@ -213,24 +211,24 @@ export class TrackerManager {
             }
         })
         if (!reattempt || failedInstructions) {
-            this.sendStreamStatus(spid)
+            this.sendStreamStatus(streamPartId)
         }
 
         logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
-            subscribedNodeIds, unsubscribedNodeIds, spid, counter)
+            subscribedNodeIds, unsubscribedNodeIds, streamPartId, counter)
 
         if (subscribedNodeIds.length !== nodeIds.length) {
-            logger.trace('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)', spid, counter)
+            logger.trace('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)', streamPartId, counter)
         } else {
-            logger.trace('Tracker instructions fulfilled (streamId=%s, counter=%d)', spid, counter)
+            logger.trace('Tracker instructions fulfilled (streamId=%s, counter=%d)', streamPartId, counter)
         }
     }
 
-    getTrackerId(spid: SPID): TrackerId {
-        return this.trackerRegistry.getTracker(spid).id
+    getTrackerId(streamPartId: StreamPartID): TrackerId {
+        return this.trackerRegistry.getTracker(streamPartId).id
     }
 
-    getTrackerAddress(spid: SPID): TrackerId {
-        return this.trackerRegistry.getTracker(spid).ws
+    getTrackerAddress(streamPartId: StreamPartID): TrackerId {
+        return this.trackerRegistry.getTracker(streamPartId).ws
     }
 }

@@ -1,4 +1,4 @@
-import { SmartContractRecord, TrackerLayer } from 'streamr-client-protocol'
+import { SmartContractRecord, StreamID, TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from './logic/node/Node'
 import { MetricsContext } from './helpers/MetricsContext'
 
@@ -14,7 +14,7 @@ export interface Location {
 }
 
 export interface StreamStatus {
-    id: string
+    id: StreamID
     partition: number,
     neighbors: NodeId[]
     counter: number // TODO this field could be a field of "Status" interface, not this interface?

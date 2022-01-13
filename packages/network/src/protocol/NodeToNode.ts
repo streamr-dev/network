@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { ControlLayer, MessageLayer, SPID } from 'streamr-client-protocol'
+import { ControlLayer, MessageLayer, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/IWebRtcEndpoint'
@@ -132,29 +132,32 @@ export class NodeToNode extends EventEmitter {
         return [controlLayerVersion, messageLayerVersion]
     }
 
-    async requestPublishOnlyStreamConnection(nodeId: NodeId, spid: SPID): Promise<void> {
+    async requestPublishOnlyStreamConnection(nodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         await this.send(nodeId, new ControlLayer.PublishStreamConnectionRequest({
             requestId: '',
             senderId: nodeId,
-            streamId: spid.streamId,
-            streamPartition: spid.streamPartition
+            streamId,
+            streamPartition
         }))
     }
 
-    async leaveStreamOnNode(nodeId: NodeId, spid: SPID): Promise<void> {
+    async leaveStreamOnNode(nodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         await this.send(nodeId, new ControlLayer.UnsubscribeRequest({
             requestId: '',
-            streamId: spid.streamId,
-            streamPartition: spid.streamPartition
+            streamId,
+            streamPartition
         }))
     }
 
-    async respondToPublishOnlyStreamConnectionRequest(nodeId: NodeId, spid: SPID, accepted: boolean): Promise<void> {
+    async respondToPublishOnlyStreamConnectionRequest(nodeId: NodeId, streamPartId: StreamPartID, accepted: boolean): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         await this.send(nodeId, new ControlLayer.PublishStreamConnectionResponse({
             requestId: '',
             senderId: nodeId,
-            streamId: spid.streamId,
-            streamPartition: spid.streamPartition,
+            streamId,
+            streamPartition,
             accepted
         }))
     }

@@ -1,6 +1,6 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
-import { MessageLayer, SPID, StreamIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -8,6 +8,8 @@ import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { TrackerInfo } from '../../src/identifiers'
 
 const { StreamMessage, MessageID } = MessageLayer
+
+const defaultStreamPartId = StreamPartIDUtils.parse('stream-0#0')
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
@@ -18,7 +20,6 @@ describe('Publish only connection tests', () => {
     let contactNode2: NetworkNode
     let publisherNode: NetworkNode
     let trackerInfo: TrackerInfo
-    const streamSPID = new SPID('stream-0', 0)
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -45,8 +46,8 @@ describe('Publish only connection tests', () => {
         await contactNode2.start()
 
         await Promise.all([
-            contactNode.subscribe(new SPID('stream-0', 0)),
-            contactNode2.subscribe(new SPID('stream-0', 0)),
+            contactNode.subscribe(defaultStreamPartId),
+            contactNode2.subscribe(defaultStreamPartId),
             waitForEvent(contactNode, NodeEvent.NODE_SUBSCRIBED),
             waitForEvent(contactNode2, NodeEvent.NODE_SUBSCRIBED),
         ])
@@ -71,52 +72,52 @@ describe('Publish only connection tests', () => {
     it('publisher node can form one-way connections', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
         ])
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node-2'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.getOutboundNodesForStream(streamSPID)).toContainValues(['contact-node', 'contact-node-2'])
+        expect(publisherNode.streams.getOutboundNodesForStream(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
-        expect(publisherNode.streams.getNeighborsForStream(streamSPID)).toBeArrayOfSize(0)
+        expect(publisherNode.streams.getNeighborsForStream(defaultStreamPartId)).toBeArrayOfSize(0)
     })
 
     it('publisher node can close one way connections', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node-2'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
         ])
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.getOutboundNodesForStream(streamSPID)).toContainValues(['contact-node', 'contact-node-2'])
+        expect(publisherNode.streams.getOutboundNodesForStream(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
-        expect(publisherNode.streams.getNeighborsForStream(streamSPID)).toBeArrayOfSize(0)
+        expect(publisherNode.streams.getNeighborsForStream(defaultStreamPartId)).toBeArrayOfSize(0)
 
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            publisherNode.leavePurePublishingStream(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.leavePurePublishingStream(defaultStreamPartId, 'contact-node'),
         ])
         
         // @ts-expect-error private
-        expect(publisherNode.streams.hasOutOnlyConnection(streamSPID, 'contact-node')).toBeFalse()
+        expect(publisherNode.streams.hasOutOnlyConnection(defaultStreamPartId, 'contact-node')).toBeFalse()
         // @ts-expect-error private
-        expect(publisherNode.streams.hasOutOnlyConnection(streamSPID, 'contact-node-2')).toBeTrue()
+        expect(publisherNode.streams.hasOutOnlyConnection(defaultStreamPartId, 'contact-node-2')).toBeTrue()
         await Promise.all([
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            publisherNode.leavePurePublishingStream(new SPID('stream-0', 0), 'contact-node-2'),
+            publisherNode.leavePurePublishingStream(defaultStreamPartId, 'contact-node-2'),
         ])
 
         // @ts-expect-error private
-        expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
+        expect(publisherNode.streams.isSetUp(defaultStreamPartId)).toBeFalse()
         // @ts-expect-error private
-        expect(contactNode.streams.getInboundNodesForStream(streamSPID)).toContainValues(['contact-node-2'])
+        expect(contactNode.streams.getInboundNodesForStream(defaultStreamPartId)).toContainValues(['contact-node-2'])
         // @ts-expect-error private
-        expect(contactNode.streams.hasInOnlyConnection(streamSPID, 'publisher')).toBeFalse()
+        expect(contactNode.streams.hasInOnlyConnection(defaultStreamPartId, 'publisher')).toBeFalse()
     })
 
     it('publisher cannot connect to non-contact node', async () => {
@@ -129,15 +130,15 @@ describe('Publish only connection tests', () => {
 
         await Promise.all([
             waitForEvent(nonContactNode, NodeEvent.NODE_SUBSCRIBED),
-            nonContactNode.subscribe(new SPID('stream-0', 0))
+            nonContactNode.subscribe(defaultStreamPartId)
         ])
 
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'non-contact-node')
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'non-contact-node')
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
+        expect(publisherNode.streams.isSetUp(defaultStreamPartId)).toBeFalse()
 
         await nonContactNode.stop()
 
@@ -145,7 +146,7 @@ describe('Publish only connection tests', () => {
 
     it('Published data is received using one-way stream connections', async () => {
         await Promise.all([
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED)
         ])
         await Promise.all([
@@ -163,83 +164,83 @@ describe('Publish only connection tests', () => {
     it('Node with existing subscription cannot create a publish only stream connection', async () => {
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            contactNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node-2'),
+            contactNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
         ])
         // @ts-expect-error private
-        expect(contactNode.streams.isSetUp(streamSPID)).toBeTrue()
+        expect(contactNode.streams.isSetUp(defaultStreamPartId)).toBeTrue()
     })
 
     it('Cannot open publish only stream connection to non-existing node (not connected to the streams tracker)', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'non-existing-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'non-existing-node'),
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
+        expect(publisherNode.streams.isSetUp(defaultStreamPartId)).toBeFalse()
     })
 
     it('Cannot open publish only stream connection to a node without an existing subscription to the given stream', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('non-existing-stream', 0), 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(StreamPartIDUtils.parse('non-existing-stream#0'), 'contact-node'),
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.isSetUp(streamSPID)).toBeFalse()
+        expect(publisherNode.streams.isSetUp(defaultStreamPartId)).toBeFalse()
     })
 
     it('Multiple calls to joinStreamAsPurePublisher do not cancel the first call', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.getOutboundNodesForStream(streamSPID)).toContainValue('contact-node')
+        expect(publisherNode.streams.getOutboundNodesForStream(defaultStreamPartId)).toContainValue('contact-node')
     })
 
     it('failed publish only connections do not clean out existing connections', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
         ])
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node-2'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
         ])
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-5', 0), 'non-existing-node'),
+            publisherNode.joinStreamAsPurePublisher(StreamPartIDUtils.parse('stream-5#0'), 'non-existing-node'),
         ])
 
         // @ts-expect-error private
-        expect(publisherNode.streams.getOutboundNodesForStream(streamSPID)).toContainValues(['contact-node', 'contact-node-2'])
+        expect(publisherNode.streams.getOutboundNodesForStream(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
-        expect(publisherNode.streams.getNeighborsForStream(streamSPID)).toBeArrayOfSize(0)
+        expect(publisherNode.streams.getNeighborsForStream(defaultStreamPartId)).toBeArrayOfSize(0)
     })
 
     it('If publish only connection is the only stream connection on contact node it will not unsubscribe', async () => {
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
-            contactNode2.unsubscribe(new SPID('stream-0', 0))
+            contactNode2.unsubscribe(defaultStreamPartId)
         ])
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
         ])
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            publisherNode.leavePurePublishingStream(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.leavePurePublishingStream(defaultStreamPartId, 'contact-node'),
         ])
         // @ts-expect-error private
-        expect(contactNode.streams.isSetUp(streamSPID)).toBeTrue()
+        expect(contactNode.streams.isSetUp(defaultStreamPartId)).toBeTrue()
     })
 
     it('will reconnect after lost connectivity', async () => {
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamAsPurePublisher(new SPID('stream-0', 0), 'contact-node'),
+            publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
         ])
 
         await Promise.all([

@@ -1,7 +1,11 @@
-import { MessageLayer, SPID, StreamIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamManager } from '../../src/logic/node/StreamManager'
 
 const { MessageID, MessageRef } = MessageLayer
+
+const streamOne = StreamIDUtils.toStreamID('stream-1')
+const streamTwo = StreamIDUtils.toStreamID('stream-2')
+const streamThree = StreamIDUtils.toStreamID('stream-3')
 
 describe('StreamManager', () => {
     let manager: StreamManager
@@ -11,40 +15,40 @@ describe('StreamManager', () => {
     })
 
     test('starts out empty', () => {
-        expect(manager.isSetUp(new SPID('streamId', 0))).toEqual(false)
-        expect(Array.from(manager.getSPIDKeys())).toEqual([])
+        expect(manager.isSetUp(StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID('streamId'), 0))).toEqual(false)
+        expect(Array.from(manager.getStreamPartIDs())).toEqual([])
     })
 
     test('setting up streams and testing values', () => {
-        manager.setUpStream(new SPID('stream-1', 0))
-        manager.setUpStream(new SPID('stream-2', 0))
-        manager.setUpStream(new SPID('stream-1', 1))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamOne, 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamTwo, 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamOne, 1))
 
-        expect(manager.isSetUp(new SPID('stream-1', 0))).toEqual(true)
-        expect(manager.isSetUp(new SPID('stream-1', 1))).toEqual(true)
-        expect(manager.isSetUp(new SPID('stream-2', 0))).toEqual(true)
+        expect(manager.isSetUp(StreamPartIDUtils.toStreamPartID(streamOne, 0))).toEqual(true)
+        expect(manager.isSetUp(StreamPartIDUtils.toStreamPartID(streamOne, 1))).toEqual(true)
+        expect(manager.isSetUp(StreamPartIDUtils.toStreamPartID(streamTwo, 0))).toEqual(true)
 
-        expect(Array.from(manager.getSPIDKeys())).toIncludeSameMembers(['stream-1#0', 'stream-1#1', 'stream-2#0'])
+        expect(Array.from(manager.getStreamPartIDs())).toIncludeSameMembers(['stream-1#0', 'stream-1#1', 'stream-2#0'])
 
-        expect(manager.getNeighborsForStream(new SPID('stream-1', 0))).toBeEmpty()
-        expect(manager.getNeighborsForStream(new SPID('stream-1', 1))).toBeEmpty()
-        expect(manager.getNeighborsForStream(new SPID('stream-2', 0))).toBeEmpty()
+        expect(manager.getNeighborsForStream(StreamPartIDUtils.toStreamPartID(streamOne, 0))).toBeEmpty()
+        expect(manager.getNeighborsForStream(StreamPartIDUtils.toStreamPartID(streamOne, 1))).toBeEmpty()
+        expect(manager.getNeighborsForStream(StreamPartIDUtils.toStreamPartID(streamTwo, 0))).toBeEmpty()
     })
 
     test('cannot re-setup same stream', () => {
-        manager.setUpStream(new SPID('stream-id', 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamThree, 0))
 
         expect(() => {
-            manager.setUpStream(new SPID('stream-id', 0))
-        }).toThrowError('Stream stream-id#0 already set up')
+            manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamThree, 0))
+        }).toThrowError('Stream part stream-3#0 already set up')
     })
 
     test('can duplicate detect on previously set up stream', () => {
-        manager.setUpStream(new SPID('stream-id', 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamThree, 0))
 
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
-                new MessageID(StreamIDUtils.toStreamID('stream-id'), 0, 10, 0, 'publisher-id', 'session-id'),
+                new MessageID(StreamIDUtils.toStreamID(streamThree), 0, 10, 0, 'publisher-id', 'session-id'),
                 new MessageRef(5, 0)
             )
         }).not.toThrowError()
@@ -53,49 +57,49 @@ describe('StreamManager', () => {
     test('cannot duplicate detect on non-existing stream', () => {
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
-                new MessageID(StreamIDUtils.toStreamID('stream-id'), 0, 10, 0, 'publisher-id', 'session-id'),
+                new MessageID(StreamIDUtils.toStreamID(streamThree), 0, 10, 0, 'publisher-id', 'session-id'),
                 new MessageRef(5, 0)
             )
-        }).toThrowError('Stream stream-id#0 is not set up')
+        }).toThrowError('Stream part stream-3#0 is not set up')
     })
 
     test('duplicate detection is per publisher, msgChainId', () => {
-        manager.setUpStream(new SPID('stream-id', 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamThree, 0))
         manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(StreamIDUtils.toStreamID('stream-id'), 0, 10, 0, 'publisher-1', 'session-1'),
+            new MessageID(StreamIDUtils.toStreamID(streamThree), 0, 10, 0, 'publisher-1', 'session-1'),
             new MessageRef(5, 0)
         )
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(StreamIDUtils.toStreamID('stream-id'), 0, 10, 0, 'publisher-1', 'session-1'),
+            new MessageID(StreamIDUtils.toStreamID(streamThree), 0, 10, 0, 'publisher-1', 'session-1'),
             new MessageRef(5, 0)
         )).toEqual(false)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(StreamIDUtils.toStreamID('stream-id'), 0, 10, 0, 'publisher-2', 'session-1'),
+            new MessageID(StreamIDUtils.toStreamID(streamThree), 0, 10, 0, 'publisher-2', 'session-1'),
             new MessageRef(5, 0)
         )).toEqual(true)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(StreamIDUtils.toStreamID('stream-id'), 0, 10, 0, 'publisher-1', 'session-2'),
+            new MessageID(StreamIDUtils.toStreamID(streamThree), 0, 10, 0, 'publisher-1', 'session-2'),
             new MessageRef(5, 0)
         )).toEqual(true)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(StreamIDUtils.toStreamID('stream-id'), 0, 10, 0, 'publisher-2', 'session-2'),
+            new MessageID(StreamIDUtils.toStreamID(streamThree), 0, 10, 0, 'publisher-2', 'session-2'),
             new MessageRef(5, 0)
         )).toEqual(true)
     })
 
     test('adding neighbor nodes to a set-up stream', () => {
-        const streamId = new SPID('stream-id', 0)
-        const streamId2 = new SPID('stream-id-2', 0)
+        const streamId = StreamPartIDUtils.toStreamPartID(streamThree, 0)
+        const streamId2 = StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID('stream-id-2'), 0)
 
-        manager.setUpStream(new SPID('stream-id', 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamThree, 0))
         manager.addNeighbor(streamId, 'node-1')
         manager.addNeighbor(streamId, 'node-2')
 
-        manager.setUpStream(new SPID('stream-id-2', 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID('stream-id-2'), 0))
         manager.addNeighbor(streamId2, 'node-1')
         manager.addNeighbor(streamId2, 'node-2')
         manager.addNeighbor(streamId2, 'node-3')
@@ -114,8 +118,8 @@ describe('StreamManager', () => {
     })
 
     test('removing node from stream removes it from neighbors', () => {
-        const streamId = new SPID('stream-id', 0)
-        const streamId2 = new SPID('stream-id-2', 0)
+        const streamId = StreamPartIDUtils.toStreamPartID(streamThree, 0)
+        const streamId2 = StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID('stream-id-2'), 0)
 
         manager.setUpStream(streamId)
         manager.addNeighbor(streamId, 'node-1')
@@ -148,52 +152,52 @@ describe('StreamManager', () => {
     })
 
     test('remove node from all streams', () => {
-        manager.setUpStream(new SPID('stream-1', 0))
-        manager.setUpStream(new SPID('stream-1', 1))
-        manager.setUpStream(new SPID('stream-2', 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamOne, 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamOne, 1))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamTwo, 0))
 
-        manager.addNeighbor(new SPID('stream-1', 0), 'node')
-        manager.addNeighbor(new SPID('stream-1', 0), 'should-not-be-removed')
+        manager.addNeighbor(StreamPartIDUtils.toStreamPartID(streamOne, 0), 'node')
+        manager.addNeighbor(StreamPartIDUtils.toStreamPartID(streamOne, 0), 'should-not-be-removed')
 
-        manager.addNeighbor(new SPID('stream-1', 1), 'node')
-        manager.addNeighbor(new SPID('stream-1', 1), 'should-not-be-removed')
+        manager.addNeighbor(StreamPartIDUtils.toStreamPartID(streamOne, 1), 'node')
+        manager.addNeighbor(StreamPartIDUtils.toStreamPartID(streamOne, 1), 'should-not-be-removed')
 
-        manager.addNeighbor(new SPID('stream-2', 0), 'node')
-        manager.addNeighbor(new SPID('stream-2', 0), 'should-not-be-removed')
+        manager.addNeighbor(StreamPartIDUtils.toStreamPartID(streamTwo, 0), 'node')
+        manager.addNeighbor(StreamPartIDUtils.toStreamPartID(streamTwo, 0), 'should-not-be-removed')
 
         manager.removeNodeFromAllStreams('node')
 
-        expect(manager.getNeighborsForStream(new SPID('stream-1', 0))).toIncludeSameMembers(['should-not-be-removed'])
-        expect(manager.getNeighborsForStream(new SPID('stream-1', 1))).toIncludeSameMembers(['should-not-be-removed'])
-        expect(manager.getNeighborsForStream(new SPID('stream-2', 0))).toIncludeSameMembers(['should-not-be-removed'])
+        expect(manager.getNeighborsForStream(StreamPartIDUtils.toStreamPartID(streamOne, 0))).toIncludeSameMembers(['should-not-be-removed'])
+        expect(manager.getNeighborsForStream(StreamPartIDUtils.toStreamPartID(streamOne, 1))).toIncludeSameMembers(['should-not-be-removed'])
+        expect(manager.getNeighborsForStream(StreamPartIDUtils.toStreamPartID(streamTwo, 0))).toIncludeSameMembers(['should-not-be-removed'])
 
-        expect(manager.hasNeighbor(new SPID('stream-1', 0), 'node')).toEqual(false)
-        expect(manager.hasNeighbor(new SPID('stream-2', 0), 'node')).toEqual(false)
+        expect(manager.hasNeighbor(StreamPartIDUtils.toStreamPartID(streamOne, 0), 'node')).toEqual(false)
+        expect(manager.hasNeighbor(StreamPartIDUtils.toStreamPartID(streamTwo, 0), 'node')).toEqual(false)
 
         expect(manager.isNodePresent('should-not-be-removed')).toEqual(true)
         expect(manager.isNodePresent('node')).toEqual(false)
     })
 
     test('remove stream', () => {
-        manager.setUpStream(new SPID('stream-1', 0))
-        manager.setUpStream(new SPID('stream-2', 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamOne, 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamTwo, 0))
 
-        manager.addNeighbor(new SPID('stream-1', 0), 'n1')
+        manager.addNeighbor(StreamPartIDUtils.toStreamPartID(streamOne, 0), 'n1')
 
-        manager.addNeighbor(new SPID('stream-2', 0), 'n1')
+        manager.addNeighbor(StreamPartIDUtils.toStreamPartID(streamTwo, 0), 'n1')
 
-        manager.removeStream(new SPID('stream-1', 0))
+        manager.removeStream(StreamPartIDUtils.toStreamPartID(streamOne, 0))
 
-        expect(manager.isSetUp(new SPID('stream-1', 0))).toEqual(false)
+        expect(manager.isSetUp(StreamPartIDUtils.toStreamPartID(streamOne, 0))).toEqual(false)
 
-        expect(Array.from(manager.getSPIDKeys())).toEqual(['stream-2#0'])
+        expect(Array.from(manager.getStreamPartIDs())).toEqual(['stream-2#0'])
     })
 
     test('updating counter', () => {
-        manager.setUpStream(new SPID('stream-1', 0))
-        manager.setUpStream(new SPID('stream-2', 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamOne, 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamTwo, 0))
 
-        manager.updateCounter(new SPID('stream-1', 0), 50)
-        manager.updateCounter(new SPID('stream-2', 0), 100)
+        manager.updateCounter(StreamPartIDUtils.toStreamPartID(streamOne, 0), 50)
+        manager.updateCounter(StreamPartIDUtils.toStreamPartID(streamTwo, 0), 100)
     })
 })

@@ -1,9 +1,9 @@
-import { SPID, SPIDKey, StreamID } from 'streamr-client-protocol'
+import { StreamPartID, StreamID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
 import { Location } from '../../identifiers'
 
-type OverLayWithRtts = Record<SPIDKey,Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] >>
+type OverLayWithRtts = Record<StreamPartID, Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] >>
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
 type NodesWithLocations = { [key: string]: Location }
 
@@ -15,10 +15,10 @@ export function getTopology(
 ): OverLayWithRtts {
     const topology: OverLayWithRtts = {}
 
-    const spidKeys = findSPIDKeys(overlayPerStream, streamId, partition)
-    spidKeys.forEach((spidKey) => {
-        const streamOverlay = overlayPerStream[spidKey].state()
-        topology[spidKey] = Object.assign({}, ...Object.entries(streamOverlay).map(([nodeId, neighbors]) => {
+    const streamPartIds = findStreamPartIDs(overlayPerStream, streamId, partition)
+    streamPartIds.forEach((streamPartId) => {
+        const streamOverlay = overlayPerStream[streamPartId].state()
+        topology[streamPartId] = Object.assign({}, ...Object.entries(streamOverlay).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, neighbors, connectionRtts)
         }))
     })
@@ -27,13 +27,13 @@ export function getTopology(
 }
 
 export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): OverlaySizes {
-    const spidKeys = findSPIDKeys(overlayPerStream, streamId, partition)
-    const streamSizes: OverlaySizes = spidKeys.map((spidKey) => {
-        const spid = SPID.from(spidKey)
+    const streamPartIds = findStreamPartIDs(overlayPerStream, streamId, partition)
+    const streamSizes: OverlaySizes = streamPartIds.map((streamPartId) => {
+        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         return {
-            streamId: spid.streamId,
-            partition: spid.streamPartition,
-            nodeCount: overlayPerStream[spidKey].getNumberOfNodes()
+            streamId,
+            partition,
+            nodeCount: overlayPerStream[streamPartId].getNumberOfNodes()
         }
     })
     return streamSizes
@@ -91,11 +91,11 @@ export function findStreamsForNode(
 ): Array<{ streamId: string, partition: number, topologySize: number}> {
     return Object.entries(overlayPerStream)
         .filter(([_, overlayTopology]) => overlayTopology.hasNode(nodeId))
-        .map(([spidKey, overlayTopology]) => {
-            const spid = SPID.from(spidKey)
+        .map(([streamPartId, overlayTopology]) => {
+            const [streamId, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId as StreamPartID)
             return {
-                streamId: spid.streamId,
-                partition: spid.streamPartition,
+                streamId,
+                partition,
                 topologySize: overlayTopology.getNumberOfNodes()
             }
         })
@@ -114,21 +114,15 @@ function getNodeToNodeConnectionRtts(
     }
 }
 
-function findSPIDKeys(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): string[] {
-    let keys
-
-    if (streamId && partition === null) {
-        keys = Object.keys(overlayPerStream).filter((spidKey) => spidKey.includes(streamId))
+function findStreamPartIDs(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): StreamPartID[] {
+    if (streamId === null) {
+        return Object.keys(overlayPerStream) as StreamPartID[]
+    } else if (partition === null) {
+        return Object.keys(overlayPerStream)
+            .filter((streamPartId) => streamPartId.includes(streamId)) as StreamPartID[]
     } else {
-        let askedKey: SPID | null = null
-        if (streamId && partition != null && Number.isSafeInteger(partition) && partition >= 0) {
-            askedKey = new SPID(streamId, partition)
-        }
-
-        keys = askedKey
-            ? Object.keys(overlayPerStream).filter((spidKey) => spidKey === askedKey!.toString())
-            : Object.keys(overlayPerStream)
+        const targetStreamPartId = StreamPartIDUtils.toStreamPartID(streamId, partition)
+        return Object.keys(overlayPerStream)
+            .filter((candidateStreamPartId) => targetStreamPartId === candidateStreamPartId) as StreamPartID[]
     }
-
-    return keys
 }

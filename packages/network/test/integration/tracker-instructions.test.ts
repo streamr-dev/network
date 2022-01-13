@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { runAndWaitForEvents, waitForCondition, waitForEvent } from 'streamr-test-utils'
-import { SPID, TrackerLayer } from 'streamr-client-protocol'
+import { StreamIDUtils, StreamPartIDUtils, TrackerLayer } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
@@ -14,7 +14,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
     let node1: NetworkNode
     let node2: NetworkNode
 
-    const s1 = new SPID('stream-1', 0)
+    const streamOne = StreamIDUtils.toStreamID('stream-1')
+    const streamPartOne = StreamPartIDUtils.toStreamPartID(streamOne, 0)
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -39,8 +40,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         await runAndWaitForEvents([
-            () => {node1.subscribeToStreamIfHaveNotYet(s1)},
-            () => {node2.subscribeToStreamIfHaveNotYet(s1)},
+            () => {node1.subscribeToStreamIfHaveNotYet(streamPartOne)},
+            () => {node2.subscribeToStreamIfHaveNotYet(streamPartOne)},
             () => {node1.start()},
             () => {node2.start()}
         ], [
@@ -60,16 +61,16 @@ describe('check tracker, nodes and statuses from nodes', () => {
     it('if failed to follow tracker instructions, inform tracker about current status', async () => {
         const trackerInstruction1 = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: s1.streamId,
-            streamPartition: s1.streamPartition,
+            streamId: streamOne,
+            streamPartition: 0,
             nodeIds: ['node2', 'unknown'],
             counter: 0
         })
 
         const trackerInstruction2 = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: s1.streamId,
-            streamPartition: s1.streamPartition,
+            streamId: streamOne,
+            streamPartition: 0,
             nodeIds: ['node1', 'unknown'],
             counter: 0
         })

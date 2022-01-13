@@ -1,25 +1,25 @@
-import { SPID, SPIDKey } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { Status } from '../../identifiers'
 import { NodeId } from '../node/Node'
 
 export const COUNTER_UNSUBSCRIBE = -1
 
-type Counters = Record<NodeId, Record<SPIDKey, number>>
+type Counters = Record<NodeId, Record<StreamPartID, number>>
 
 export class InstructionCounter {
     private readonly counters: Counters = {}
 
     constructor() {}
 
-    setOrIncrement(nodeId: NodeId, spidKey: SPIDKey): number {
-        this.getAndSetIfNecessary(nodeId, spidKey)
-        this.counters[nodeId][spidKey] += 1
-        return this.counters[nodeId][spidKey]
+    setOrIncrement(nodeId: NodeId, streamPartId: StreamPartID): number {
+        this.getAndSetIfNecessary(nodeId, streamPartId)
+        this.counters[nodeId][streamPartId] += 1
+        return this.counters[nodeId][streamPartId]
     }
 
     isMostRecent(status: Status, source: NodeId): boolean {
-        const spidKey = SPID.toKey(status.stream.id, status.stream.partition)
-        const currentCounter = this.getAndSetIfNecessary(source, spidKey)
+        const streamPartId = StreamPartIDUtils.toStreamPartID(status.stream.id, status.stream.partition)
+        const currentCounter = this.getAndSetIfNecessary(source, streamPartId)
         return (status.stream.counter >= currentCounter || status.stream.counter === COUNTER_UNSUBSCRIBE)
     }
 
@@ -27,19 +27,19 @@ export class InstructionCounter {
         delete this.counters[nodeId]
     }
 
-    removeStream(spidKey: SPIDKey): void {
+    removeStream(streamPartId: StreamPartID): void {
         Object.keys(this.counters).forEach((nodeId) => {
-            delete this.counters[nodeId][spidKey]
+            delete this.counters[nodeId][streamPartId]
         })
     }
 
-    private getAndSetIfNecessary(nodeId: NodeId, spidKey: SPIDKey): number {
+    private getAndSetIfNecessary(nodeId: NodeId, streamPartId: StreamPartID): number {
         if (this.counters[nodeId] === undefined) {
             this.counters[nodeId] = {}
         }
-        if (this.counters[nodeId][spidKey] === undefined) {
-            this.counters[nodeId][spidKey] = 0
+        if (this.counters[nodeId][streamPartId] === undefined) {
+            this.counters[nodeId][streamPartId] = 0
         }
-        return this.counters[nodeId][spidKey]
+        return this.counters[nodeId][streamPartId]
     }
 }

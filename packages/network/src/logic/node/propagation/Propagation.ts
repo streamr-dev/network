@@ -1,8 +1,8 @@
-import { SPID, StreamMessage } from 'streamr-client-protocol'
+import { StreamPartID, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../Node'
 import { PropagationTaskStore } from './PropagationTaskStore'
 
-type GetNeighborsFn = (spid: SPID) => ReadonlyArray<NodeId>
+type GetNeighborsFn = (streamPartId: StreamPartID) => ReadonlyArray<NodeId>
 
 type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => void
 
@@ -48,8 +48,8 @@ export class Propagation {
      * Node should invoke this when it learns about a new message
      */
     feedUnseenMessage(message: StreamMessage, source: NodeId | null): void {
-        const spid = message.getSPID()
-        const targetNeighbors = this.getNeighbors(spid).filter((n) => n !== source)
+        const streamPartId = message.getStreamPartID()
+        const targetNeighbors = this.getNeighbors(streamPartId).filter((n) => n !== source)
 
         targetNeighbors.forEach((neighborId) => {
             this.sendToNeighbor(neighborId, message)
@@ -67,8 +67,8 @@ export class Propagation {
     /**
      * Node should invoke this when it learns about a new node stream assignment
      */
-    onNeighborJoined(neighborId: NodeId, spid: SPID): void {
-        const tasksOfStream = this.activeTaskStore.get(spid)
+    onNeighborJoined(neighborId: NodeId, streamPartId: StreamPartID): void {
+        const tasksOfStream = this.activeTaskStore.get(streamPartId)
         tasksOfStream.forEach(({ handledNeighbors, source, message}) => {
             if (!handledNeighbors.has(neighborId) && neighborId !== source) {
                 this.sendToNeighbor(neighborId, message)

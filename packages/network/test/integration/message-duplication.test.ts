@@ -1,6 +1,6 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
-import { MessageLayer, SPID, StreamIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartIDUtils, StreamIDUtils } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -69,12 +69,12 @@ describe('duplicate message detection and avoidance', () => {
             return waitForEvent(node, NodeEvent.NODE_SUBSCRIBED)
         }))
         // Become subscribers (one-by-one, for well connected graph)
-        const spid = new SPID('stream-id', 0)
-        otherNodes[0].subscribe(spid)
-        otherNodes[1].subscribe(spid)
-        otherNodes[2].subscribe(spid)
-        otherNodes[3].subscribe(spid)
-        otherNodes[4].subscribe(spid)
+        const streamPartId = StreamPartIDUtils.parse('stream-id#0')
+        otherNodes[0].subscribe(streamPartId)
+        otherNodes[1].subscribe(streamPartId)
+        otherNodes[2].subscribe(streamPartId)
+        otherNodes[3].subscribe(streamPartId)
+        otherNodes[4].subscribe(streamPartId)
 
         await allNodesSubscribed
 

@@ -1,9 +1,9 @@
-import { SPID, SPIDKey } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { Instruction, InstructionSender, SendInstructionFn } from '../../src/logic/tracker/InstructionSender'
 import { Metrics, MetricsContext } from '../../src/helpers/MetricsContext'
 
-const MOCK_SPID_1 = 'stream-id#1'
-const MOCK_SPID_2 = 'stream-id#2'
+const MOCK_SPID_1 = StreamPartIDUtils.parse('stream-id#1')
+const MOCK_SPID_2 = StreamPartIDUtils.parse('stream-id#2')
 const STARTUP_TIME = 1234567890
 
 const DEBOUNCE_WAIT = 100
@@ -11,11 +11,11 @@ const MAX_WAIT = 2000
 
 let mockInstructionIdSuffix = 0
 
-const createMockInstruction = (spidKey: SPIDKey): Instruction => {
+const createMockInstruction = (streamPartId: StreamPartID): Instruction => {
     mockInstructionIdSuffix++
     return {
         nodeId: `mock-node-id-${mockInstructionIdSuffix}`,
-        spidKey,
+        streamPartId,
         newNeighbors: [],
         counterValue: 0
     }
@@ -45,8 +45,8 @@ describe('InstructionSender', () => {
     function assertSendsCalled(instructions: readonly Instruction[]): void {
         expect(send).toBeCalledTimes(instructions.length)
         for (let i = 0; i < instructions.length; ++i) {
-            const { nodeId, spidKey, newNeighbors, counterValue } = instructions[i]
-            expect(send).toHaveBeenNthCalledWith(i + 1, nodeId, SPID.from(spidKey), newNeighbors, counterValue)
+            const { nodeId, streamPartId, newNeighbors, counterValue } = instructions[i]
+            expect(send).toHaveBeenNthCalledWith(i + 1, nodeId, streamPartId, newNeighbors, counterValue)
         }
     }
 

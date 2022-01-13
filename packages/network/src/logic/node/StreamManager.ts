@@ -1,10 +1,9 @@
-import { MessageLayer, SPID, SPIDKey } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamStatus } from '../../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { NodeId } from './Node'
 import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
 import _ from 'lodash'
-import { transformIterable } from '../../helpers/transformIterable'
 
 interface StreamState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
@@ -20,16 +19,13 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
 }
 
 export class StreamManager {
-    private readonly streams: Map<SPIDKey,StreamState> = new Map<SPIDKey,StreamState>()
+    private readonly streams = new Map<StreamPartID,StreamState>()
 
-    setUpStream(spid: SPID, isBehindProxy = false): void {
-        if (!(spid instanceof SPID)) {
-            throw new Error('streamId not instance of SPID')
+    setUpStream(streamPartId: StreamPartID, isBehindProxy = false): void {
+        if (this.isSetUp(streamPartId)) {
+            throw new Error(`Stream part ${streamPartId} already set up`)
         }
-        if (this.isSetUp(spid)) {
-            throw new Error(`Stream ${spid} already set up`)
-        }
-        this.streams.set(spid.toKey(), {
+        this.streams.set(streamPartId, {
             detectors: new Map(),
             neighbors: new Set(),
             counter: 0,
@@ -43,11 +39,11 @@ export class StreamManager {
         messageId: MessageLayer.MessageID,
         previousMessageReference: MessageLayer.MessageRef | null
     ): boolean | never {
-        const spid = SPID.from(messageId)
-        this.verifyThatIsSetUp(spid)
+        const streamPartId = messageId.getStreamPartID()
+        this.ensureThatIsSetUp(streamPartId)
 
         const detectorKey = keyForDetector(messageId)
-        const { detectors } = this.streams.get(spid.toKey())!
+        const { detectors } = this.streams.get(streamPartId)!
         if (!detectors.has(detectorKey)) {
             detectors.set(detectorKey, new DuplicateMessageDetector())
         }
@@ -60,81 +56,81 @@ export class StreamManager {
         )
     }
 
-    updateCounter(spid: SPID, counter: number): void {
-        this.streams.get(spid.toKey())!.counter = counter
+    updateCounter(streamPartId: StreamPartID, counter: number): void {
+        this.streams.get(streamPartId)!.counter = counter
     }
 
-    addNeighbor(spid: SPID, node: NodeId): void {
-        this.verifyThatIsSetUp(spid)
-        const { neighbors } = this.streams.get(spid.toKey())!
+    addNeighbor(streamPartId: StreamPartID, node: NodeId): void {
+        this.ensureThatIsSetUp(streamPartId)
+        const { neighbors } = this.streams.get(streamPartId)!
         neighbors.add(node)
     }
 
-    addInOnlyNeighbor(spid: SPID, node: NodeId): void {
-        this.verifyThatIsSetUp(spid)
-        const { inOnly } = this.streams.get(spid.toKey())!
+    addInOnlyNeighbor(streamPartId: StreamPartID, node: NodeId): void {
+        this.ensureThatIsSetUp(streamPartId)
+        const { inOnly } = this.streams.get(streamPartId)!
         inOnly.add(node)
     }
 
-    addOutOnlyNeighbor(spid: SPID, node: NodeId): void {
-        this.verifyThatIsSetUp(spid)
-        const { outOnly } = this.streams.get(spid.toKey())!
+    addOutOnlyNeighbor(streamPartId: StreamPartID, node: NodeId): void {
+        this.ensureThatIsSetUp(streamPartId)
+        const { outOnly } = this.streams.get(streamPartId)!
         outOnly.add(node)
     }
 
-    removeNodeFromStream(spid: SPID, node: NodeId): void {
-        this.verifyThatIsSetUp(spid)
-        const { neighbors, inOnly, outOnly } = this.streams.get(spid.toKey())!
+    removeNodeFromStream(streamPartId: StreamPartID, node: NodeId): void {
+        this.ensureThatIsSetUp(streamPartId)
+        const { neighbors, inOnly, outOnly } = this.streams.get(streamPartId)!
         neighbors.delete(node)
         inOnly.delete(node)
         outOnly.delete(node)
     }
 
-    getStreamStatus(spid: SPID): StreamStatus {
-        const streamState = this.streams.get(spid.toKey())
+    getStreamStatus(streamPartId: StreamPartID): StreamStatus {
+        const streamState = this.streams.get(streamPartId)
+        const [id, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         if (streamState !== undefined) {
             return {
-                id: spid.streamId,
-                partition: spid.streamPartition,
+                id,
+                partition,
                 neighbors: [...streamState.neighbors],
                 counter: streamState.counter
             }
         } else {
             return {
-                id: spid.streamId,
-                partition: spid.streamPartition,
+                id,
+                partition,
                 neighbors: [],
                 counter: COUNTER_UNSUBSCRIBE
             }
         }
     }
 
-    removeNodeFromAllStreams(node: NodeId): [SPID[], SPID[]] {
-        const streams: SPID[] = []
-        const notRemovedProxies: SPID[] = []
-        this.streams.forEach(({ neighbors, inOnly, outOnly }, spidKey) => {
-            const spid = SPID.from(spidKey)
+    removeNodeFromAllStreams(node: NodeId): [StreamPartID[], StreamPartID[]] {
+        const streamParts: StreamPartID[] = []
+        const notRemovedProxies: StreamPartID[] = []
+        this.streams.forEach(({ neighbors, inOnly, outOnly }, streamPartId) => {
             const isRemoved = neighbors.delete(node)
             if (isRemoved) {
-                streams.push(spid)
+                streamParts.push(streamPartId)
             }
-            if (this.isBehindProxy(spid)) {
-                notRemovedProxies.push(spid)
+            if (this.isBehindProxy(streamPartId)) {
+                notRemovedProxies.push(streamPartId)
             } else {
                 inOnly.delete(node)
                 outOnly.delete(node)
             }
         })
-        return [streams, notRemovedProxies]
+        return [streamParts, notRemovedProxies]
     }
 
-    removeStream(spid: SPID): void {
-        this.verifyThatIsSetUp(spid)
-        this.streams.delete(spid.toKey())
+    removeStream(streamPartId: StreamPartID): void {
+        this.ensureThatIsSetUp(streamPartId)
+        this.streams.delete(streamPartId)
     }
 
-    isSetUp(spid: SPID): boolean {
-        return this.streams.has(spid.toKey())
+    isSetUp(streamPartId: StreamPartID): boolean {
+        return this.streams.has(streamPartId)
     }
 
     isNodePresent(node: NodeId): boolean {
@@ -143,34 +139,30 @@ export class StreamManager {
         })
     }
 
-    getSPIDs(): Iterable<SPID> {
-        return transformIterable(this.getSPIDKeys(), (spidKey) => SPID.from(spidKey))
-    }
-
-    getSPIDKeys(): IterableIterator<SPIDKey> {
+    getStreamPartIDs(): IterableIterator<StreamPartID> {
         return this.streams.keys()
     }
 
-    getNeighborsForStream(spid: SPID): ReadonlyArray<NodeId> {
-        this.verifyThatIsSetUp(spid)
-        return [...this.streams.get(spid.toKey())!.neighbors]
+    getNeighborsForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+        this.ensureThatIsSetUp(streamPartId)
+        return [...this.streams.get(streamPartId)!.neighbors]
     }
 
-    getOutboundNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
-        this.verifyThatIsSetUp(spid)
-        const { neighbors, outOnly } = this.streams.get(spid.toKey())!
+    getOutboundNodesForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+        this.ensureThatIsSetUp(streamPartId)
+        const { neighbors, outOnly } = this.streams.get(streamPartId)!
         return [...neighbors, ...outOnly]
     }
 
-    getInboundNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
-        this.verifyThatIsSetUp(spid)
-        const { neighbors, inOnly } = this.streams.get(spid.toKey())!
+    getInboundNodesForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+        this.ensureThatIsSetUp(streamPartId)
+        const { neighbors, inOnly } = this.streams.get(streamPartId)!
         return [...neighbors, ...inOnly]
     }
 
-    getAllNodesForStream(spid: SPID): ReadonlyArray<NodeId> {
-        this.verifyThatIsSetUp(spid)
-        const { neighbors, inOnly, outOnly } = this.streams.get(spid.toKey())!
+    getAllNodesForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+        this.ensureThatIsSetUp(streamPartId)
+        const { neighbors, inOnly, outOnly } = this.streams.get(streamPartId)!
         return [...neighbors, ...inOnly, ...outOnly]
     }
 
@@ -182,38 +174,38 @@ export class StreamManager {
         return _.uniq(nodes)
     }
 
-    hasNeighbor(spid: SPID, node: NodeId): boolean {
-        this.verifyThatIsSetUp(spid)
-        return this.streams.get(spid.toKey())!.neighbors.has(node)
+    hasNeighbor(streamPartId: StreamPartID, node: NodeId): boolean {
+        this.ensureThatIsSetUp(streamPartId)
+        return this.streams.get(streamPartId)!.neighbors.has(node)
     }
 
-    hasOutOnlyConnection(spid: SPID, node: NodeId): boolean {
-        this.verifyThatIsSetUp(spid)
-        return this.streams.get(spid.toKey())!.outOnly.has(node)
+    hasOutOnlyConnection(streamPartId: StreamPartID, node: NodeId): boolean {
+        this.ensureThatIsSetUp(streamPartId)
+        return this.streams.get(streamPartId)!.outOnly.has(node)
     }
 
-    hasInOnlyConnection(spid: SPID, node: NodeId): boolean {
-        this.verifyThatIsSetUp(spid)
-        return this.streams.get(spid.toKey())!.inOnly.has(node)
+    hasInOnlyConnection(streamPartId: StreamPartID, node: NodeId): boolean {
+        this.ensureThatIsSetUp(streamPartId)
+        return this.streams.get(streamPartId)!.inOnly.has(node)
     }
 
-    hasInboundConnection(spid: SPID, node: NodeId): boolean {
-        return this.hasInOnlyConnection(spid, node) || this.hasNeighbor(spid, node)
+    hasInboundConnection(streamPartId: StreamPartID, node: NodeId): boolean {
+        return this.hasInOnlyConnection(streamPartId, node) || this.hasNeighbor(streamPartId, node)
     }
 
-    isBehindProxy(spid: SPID): boolean {
+    isBehindProxy(streamPartId: StreamPartID): boolean {
         try {
-            this.verifyThatIsSetUp(spid)
-            return this.streams.get(spid.toKey())!.isBehindProxy
+            this.ensureThatIsSetUp(streamPartId)
+            return this.streams.get(streamPartId)!.isBehindProxy
         }
         catch (err) {
             return false
         }
     }
 
-    private verifyThatIsSetUp(spid: SPID): void | never {
-        if (!this.isSetUp(spid)) {
-            throw new Error(`Stream ${spid} is not set up`)
+    private ensureThatIsSetUp(streamPartId: StreamPartID): void | never {
+        if (!this.isSetUp(streamPartId)) {
+            throw new Error(`Stream part ${streamPartId} is not set up`)
         }
     }
 }
