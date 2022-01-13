@@ -45,7 +45,7 @@ export class StreamPartIDUtils {
     static getStreamIDAndStreamPartition(streamPartId: StreamPartID): [StreamID, number] {
         let pair = pairCache.get(streamPartId)
         if (pair === undefined) {
-            pair = getParts(streamPartId) as [StreamID, number]
+            pair = parseElements(streamPartId) as [StreamID, number]
             pairCache.set(streamPartId, pair)
         }
         return pair
