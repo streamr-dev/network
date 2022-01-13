@@ -56,7 +56,7 @@ describe('TrackerRegistry', () => {
     })
 
     describe('getTracker', () => {
-        test('get tracker by SPID', async () => {
+        test('get tracker by StreamPartID', async () => {
             const trackerRegistry = await getTrackerRegistryFromContract({
                 contractAddress, jsonRpcProvider
             })

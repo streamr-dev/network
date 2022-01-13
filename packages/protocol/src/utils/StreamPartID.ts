@@ -13,7 +13,7 @@ function ensureValidStreamPartition(streamPartition: number): void | never {
     }
 }
 
-function getParts(str: string): [string, number] {
+function parseElements(str: string): [string, number] {
     const lastIdx = str.lastIndexOf(DELIMITER)
     if (lastIdx === -1 || lastIdx === str.length - 1) {
         throw new Error(`not valid streamPartID string: ${str}`)
@@ -28,7 +28,7 @@ export class StreamPartIDUtils {
     }
 
     static parse(streamPartIdAsStr: string): StreamPartID | never {
-        const [streamId, streamPartition] = getParts(streamPartIdAsStr)
+        const [streamId, streamPartition] = parseElements(streamPartIdAsStr)
         StreamIDUtils.toStreamID(streamId) // throws if not valid
         ensureValidStreamPartition(streamPartition)
         return streamPartIdAsStr as StreamPartID
