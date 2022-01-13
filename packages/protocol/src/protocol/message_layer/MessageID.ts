@@ -2,7 +2,7 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../ut
 
 import MessageRef from './MessageRef'
 import { StreamID, StreamIDUtils } from '../../utils/StreamID'
-import { StreamPartitionID, StreamPartitionIDUtils } from "../../utils/StreamPartID"
+import { StreamPartID, StreamPartIDUtils } from "../../utils/StreamPartID"
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
@@ -50,8 +50,8 @@ export default class MessageID {
         return new MessageID(StreamIDUtils.toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
     }
 
-    getStreamPartitionID(): StreamPartitionID {
-        return StreamPartitionIDUtils.toStreamPartitionID(this.streamId, this.streamPartition)
+    getStreamPartID(): StreamPartID {
+        return StreamPartIDUtils.toStreamPartID(this.streamId, this.streamPartition)
     }
 
     serialize(): string {

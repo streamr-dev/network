@@ -7,7 +7,7 @@ import {
     MessageIDStrict,
     EncryptedGroupKey,
     StreamIDUtils,
-    StreamPartitionIDUtils
+    StreamPartIDUtils
 } from '../../../../src/index'
 import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
@@ -54,7 +54,7 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getNewGroupKey(), newGroupKey)
             assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.strictEqual(streamMessage.signature, 'signature')
-            assert.strictEqual(streamMessage.getStreamPartitionID(), StreamPartitionIDUtils.parse('streamId#0'))
+            assert.strictEqual(streamMessage.getStreamPartID(), StreamPartIDUtils.parse('streamId#0'))
         })
 
         it('create StreamMessage with minimum fields defined', () => {

@@ -9,7 +9,7 @@ import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
-import { StreamPartitionID } from "../../utils/StreamPartID"
+import { StreamPartID } from "../../utils/StreamPartID"
 
 const serializerByVersion: {[version: string]: Serializer<StreamMessage> } = {}
 const BYE_KEY = '_bye'
@@ -221,8 +221,8 @@ export default class StreamMessage<T = unknown> {
         return this.messageId.streamPartition
     }
 
-    getStreamPartitionID(): StreamPartitionID {
-        return this.messageId.getStreamPartitionID()
+    getStreamPartID(): StreamPartID {
+        return this.messageId.getStreamPartID()
     }
 
     getTimestamp(): number {
