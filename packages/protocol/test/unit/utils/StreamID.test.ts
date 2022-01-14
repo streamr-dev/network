@@ -1,6 +1,7 @@
 import assert from 'assert'
 import {
-    StreamIDUtils
+    StreamIDUtils,
+    toStreamID
 } from '../../../src'
 
 const address = '0xaAAAaaaaAA123456789012345678901234567890'
@@ -14,14 +15,14 @@ describe('formKeyExchangeStreamID', () => {
 describe('toStreamID', () => {
     it('path-only format', () => {
         const path = '/foo/BAR'
-        const actual = StreamIDUtils.toStreamID(path, address)
+        const actual = toStreamID(path, address)
         expect(actual).toBe('0xaaaaaaaaaa123456789012345678901234567890/foo/BAR')
     })
 
     it('path-only format with no address', () => {
         const path = '/foo/BAR'
         return expect(() => {
-            StreamIDUtils.toStreamID(path)
+            toStreamID(path)
         }).toThrowError('path-only format "/foo/BAR" provided without address')
     })
 
@@ -29,31 +30,31 @@ describe('toStreamID', () => {
         const address = '0xbbbbbBbBbB123456789012345678901234567890'
         const path = '/foo/BAR'
         const id = address + path
-        const actual = StreamIDUtils.toStreamID(id)
+        const actual = toStreamID(id)
         expect(actual).toBe(address.toLowerCase() + path)
     })
 
     it('full stream id format with ENS domain', () => {
         const id = 'example.eth/foo/BAR'
-        const actual = StreamIDUtils.toStreamID(id)
+        const actual = toStreamID(id)
         expect(actual).toBe(id)
     })
 
     it('legacy format', () => {
         const id = '7wa7APtlTq6EC5iTCBy6dw'
-        const actual = StreamIDUtils.toStreamID(id)
+        const actual = toStreamID(id)
         expect(actual).toBe(id)
     })
 
     it('key-exchange format', () => {
         const id = 'SYSTEM/keyexchange/0xcccccccccc123456789012345678901234567890'
-        const actual = StreamIDUtils.toStreamID(id)
+        const actual = toStreamID(id)
         expect(actual).toBe(id)
     })
 
     it('empty string throws error', () => {
         return expect(() => {
-            StreamIDUtils.toStreamID('')
+            toStreamID('')
         }).toThrowError('stream id may not be empty')
     })
 })
@@ -92,7 +93,7 @@ describe('isKeyExchangeStream', () => {
 
 describe('getAddressAndPath', () => {
     it('returns undefined for legacy stream id', () => {
-        expect(StreamIDUtils.getAddressAndPath(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+        expect(StreamIDUtils.getAddressAndPath(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
     })
 
     it('returns undefined for key-exchange stream id', () => {
@@ -100,14 +101,14 @@ describe('getAddressAndPath', () => {
     })
 
     it('returns address and path for full stream id', () => {
-        expect(StreamIDUtils.getAddressAndPath(StreamIDUtils.toStreamID('/foo/bar', address)))
+        expect(StreamIDUtils.getAddressAndPath(toStreamID('/foo/bar', address)))
             .toEqual([address.toLowerCase(), '/foo/bar'])
     })
 })
 
 describe('getAddress', () => {
     it('returns undefined for legacy stream id', () => {
-        expect(StreamIDUtils.getAddress(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+        expect(StreamIDUtils.getAddress(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
     })
 
     it('returns undefined for key-exchange stream id', () => {
@@ -115,7 +116,7 @@ describe('getAddress', () => {
     })
 
     it('returns address for full stream id', () => {
-        expect(StreamIDUtils.getAddress(StreamIDUtils.toStreamID('/foo/bar', address))).toEqual(address.toLowerCase())
+        expect(StreamIDUtils.getAddress(toStreamID('/foo/bar', address))).toEqual(address.toLowerCase())
     })
 })
 
@@ -131,7 +132,7 @@ describe('isENSAddress', () => {
 
 describe('getPath', () => {
     it('returns undefined for legacy stream id', () => {
-        expect(StreamIDUtils.getPath(StreamIDUtils.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
+        expect(StreamIDUtils.getPath(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
     })
 
     it('returns undefined for key-exchange stream id', () => {
@@ -139,18 +140,18 @@ describe('getPath', () => {
     })
 
     it('returns path for full stream id', () => {
-        expect(StreamIDUtils.getPath(StreamIDUtils.toStreamID('/foo/bar', address))).toEqual('/foo/bar')
+        expect(StreamIDUtils.getPath(toStreamID('/foo/bar', address))).toEqual('/foo/bar')
     })
 })
 
 describe('getRecipient', () => {
     it('returns recipient in the case of a key-exchange stream', () => {
-        const streamId = StreamIDUtils.toStreamID('SYSTEM/keyexchange/0x1234')
+        const streamId = toStreamID('SYSTEM/keyexchange/0x1234')
         expect(StreamIDUtils.getRecipient(streamId)).toEqual('0x1234')
     })
 
     it('returns undefined in the case of a non-key-exchange stream', () => {
-        const streamId = StreamIDUtils.toStreamID('/foo/BAR', address)
+        const streamId = toStreamID('/foo/BAR', address)
         expect(StreamIDUtils.getRecipient(streamId)).toBeUndefined()
     })
 })

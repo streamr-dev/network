@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 const fs = require('fs')
-const os = require('os')
-const path = require('path')
 
 const program = require('commander')
 
 const CURRENT_VERSION = require('../package.json').version
 const { createBroker } = require('../dist/src/broker')
+const { getDefaultFile } = require('../dist/src/config')
 
 program
     .version(CURRENT_VERSION)
@@ -18,10 +17,10 @@ program
     .option('--test', 'test the configuration (does not start the broker)')
     .action(async (configFile) => {
         if (configFile == null) {
-            configFile = path.join(os.homedir(), '/.streamr/broker-config.json')
+            configFile = getDefaultFile()
             if (!fs.existsSync(configFile)) {
                 // eslint-disable-next-line max-len
-                console.error('Config file not found in the default location ~/.streamr/broker-config.json. You can run "streamr-broker-init" to generate a config file interactively, or specify the config file as argument: "streamr-broker path-to-config/file.json"')
+                console.error(`Config file not found in the default location "${configFile}". You can run "streamr-broker-init" to generate a config file interactively, or specify the config file as argument: "streamr-broker path-to-config/file.json"`)
                 process.exit(1)
             }
         }

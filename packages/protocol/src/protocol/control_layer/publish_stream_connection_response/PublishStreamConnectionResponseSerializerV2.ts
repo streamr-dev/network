@@ -2,7 +2,7 @@ import ControlMessage from '../ControlMessage'
 
 import PublishStreamConnectionResponse from "./PublishStreamConnectionResponse"
 import { Serializer } from '../../../Serializer'
-import { StreamIDUtils } from '../../../utils/StreamID'
+import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 
@@ -33,7 +33,7 @@ export default class PublishStreamConnectionResponseSerializerV2 extends Seriali
         return new PublishStreamConnectionResponse({
             version,
             requestId,
-            streamId: StreamIDUtils.toStreamID(streamId),
+            streamId: toStreamID(streamId),
             streamPartition,
             senderId,
             accepted
