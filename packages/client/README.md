@@ -388,7 +388,7 @@ const subscription = await client.subscribe(
 const subscriptions = client.getSubscriptions()
 
 // unsubscribing from an existent subscription:
-await client.unsubscribe({stream: stream.id})
+await client.unsubscribe({stream: STREAM_ID})
 
 // or, unsubscribe them all:
 const streams = await client.removeAll()
@@ -403,10 +403,10 @@ The second argument to `client.subscribe(options, callback)` is the callback fun
 | payload       | A JS object containing the message payload itself                                                                                                                                                                                |
 | streamMessage | The whole [StreamMessage](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/message_layer/StreamMessage.js) object containing various metadata, for example `streamMessage.getTimestamp()` etc. |
 
-```js
+```typescript
 const sub = await client.subscribe({
-    streamId: 'my-stream-id',
-}, (payload, streamMessage) => {
+    streamId: STREAM_ID,
+}, (payload: any, streamMessage: StreamMessage) => {
     console.log({
         payload, streamMessage
     })
@@ -428,7 +428,7 @@ Note that only one of the resend options can be used for a particular subscripti
 ```js
 // Resend N most recent messages
 const sub1 = await client.subscribe({
-    streamId: 'my-stream-id',
+    streamId: STREAM_ID,
     resend: {
         last: 10,
     }
@@ -464,21 +464,29 @@ const sub3 = await client.subscribe({
     }
 }, onMessage)
 ```
+> ⚠️ Seems like the `subscribe` method no longer returns and eventEmitter and the `.on('resend', ...)` expected behavior is not available
 
 If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
 
 ```js
+// THIS CODE DOES NOT CURRENTLY WORK! 
+// COULD NOT FIND A REPLACEMENT
 const sub = await client.subscribe(options)
 sub.on('resent', () => {
     console.log('All caught up and received all requested historical messages! Now switching to real time!')
 })
 ```
 
-### Storage
+## Storage
 
-You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice. By default storage is not enabled on streams.
+You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
-`await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)`
+```typescript
+import { StorageNode } from 'streamr-client')
+...
+await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+```
+
 
 ## Stream API
 
