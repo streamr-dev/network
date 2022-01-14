@@ -96,7 +96,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
         describe('ENS', () => {
 
             it('domain owned by user', async () => {
-                const streamId = 'testdomain1.eth/foobar'
+                const streamId = 'testdomain1.eth/foobar/' + Date.now()
                 const ensOwnerClient = new StreamrClient({
                     ...clientOptions,
                     auth: {
