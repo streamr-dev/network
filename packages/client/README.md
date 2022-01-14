@@ -798,7 +798,7 @@ Note that this private key can be used to authenticate to the Streamr API
 by passing it in the authentication options, as described earlier in this document.
 
 ## Events
-> ⚠️ Events for `streamr-client` seem to not be a thing anymore. Asked Eric about it
+> ⚠️ Events for `streamr-client` seem to be used internally and the very few that remain should not be of use to users.
 
 The client and the subscriptions can fire events as detailed below.
 You can bind to them using `on`.
