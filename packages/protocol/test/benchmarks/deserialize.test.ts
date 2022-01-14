@@ -1,4 +1,4 @@
-import { MessageLayer, StreamIDUtils } from '../../src'
+import { MessageLayer, toStreamID } from '../../src'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -43,7 +43,7 @@ describe('deserialize', () => {
         run(() => {
             return new StreamMessage({
                 messageId: new MessageID(
-                    StreamIDUtils.toStreamID('kxeE-gyxS8CkuWYlfBKMVg'),
+                    toStreamID('kxeE-gyxS8CkuWYlfBKMVg'),
                     0,
                     1567671580680,
                     0,

@@ -1,7 +1,7 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
-import { StreamID, StreamIDUtils } from '../../utils/StreamID'
+import { StreamID, toStreamID } from '../../../src/utils/StreamID'
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
@@ -46,7 +46,7 @@ export default class MessageID {
             msgChainId,
         ] = arr
 
-        return new MessageID(StreamIDUtils.toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
+        return new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
     }
 
     serialize(): string {
