@@ -59,7 +59,7 @@ const client = new StreamrClient({
     }
 })
 ```
-More `StreamrClient` creation options can be found in the [Installation](#Installation) section.
+> ℹ️ More `StreamrClient` creation options can be found in the [Installation](#installation) section.
 
 ### Getting the client's address
 ```typescript
@@ -197,6 +197,81 @@ await stream.publish(msg)
 | gapFillTimeout| TODO |
 
 ```typescript
+// this is what a user should be altering, at most, from their configs:
+const client = new StreamrClient({
+    id: 
+    auth: {
+        privateKey?: string,
+        ethereum?: window.provider()
+    },
+    groupKeys: {
+        'foo': 'bar'
+    },
+    debug: {
+        inspectOpts: {
+            depth: number, // max 88
+            maxStringLength: number // max 3
+        }
+    },
+    // PublishConfig
+    maxPublishQueueSize: number,
+    publishWithSignature: Todo,
+    publisherStoreKeyHistory: boolean,
+    publishAutoDisconnectDelay: number,
+    // SubscribeConfig
+    orderMessages: boolean,
+    gapFill: boolean,
+    maxGapRequests: number,
+    maxRetries: number,
+    verifySignatures: Todo,
+    retryResendAfter: number,
+    gapFillTimeout: number,
+})
+
+// the following should, imo, come from preset configs exported by streamr-client 
+import {
+    NetworkMainnetConfig,
+    StorageNodeRegistryMainnetConfig,
+    DataUnionMainnetConfig,
+    EthereumMainnetConfig,  
+    
+    NetworkTestnetConfig,
+    StorageNodeRegistryTestnetConfig,
+    DataUnionTestnetConfig,
+    EthereumTestnetConfig,  
+} from 'streamr-client'
+
+const mainnetClient = new StreamrClient({
+    network: NetworkMainnetConfig,
+    storageNodeRegistry: StorageNodeRegistryMainnetConfig,
+    // needs to be broken down to individual parameters
+    binanceRPC: EthereumMainnetConfig.binanceRPC,
+    binanceAdapterAddress: EthereumMainnetConfig.binanceAdapterAddress,
+    binanceSmartChainAMBAddress: EthereumMainnetConfig.binanceSmartChainAMBAddress,
+    withdrawServerUrl: EthereumMainnetConfig.withdrawServerUrl,
+    mainnet: EthereumMainnetConfig.mainnet,
+    sidechain: EthereumMainnetConfig.sidechain,
+    tokenAddress: EthereumMainnetConfig.tokenAddress,
+    tokenSidechainAddress: EthereumMainnetConfig.tokenSidechainAddress,
+})
+
+const testnetClient = new StreamrClient({
+    network: NetworkTestnetConfig,
+    storageNodeRegistry: StorageNodeRegistryTestnetConfig,
+    // needs to be broken down to individual parameters
+    binanceRPC: EthereumTestnetConfig.binanceRPC,
+    binanceAdapterAddress: EthereumTestnetConfig.binanceAdapterAddress,
+    binanceSmartChainAMBAddress: EthereumTestnetConfig.binanceSmartChainAMBAddress,
+    withdrawServerUrl: EthereumTestnetConfig.withdrawServerUrl,
+    mainnet: EthereumTestnetConfig.mainnet,
+    sidechain: EthereumTestnetConfig.sidechain,
+    tokenAddress: EthereumTestnetConfig.tokenAddress,
+    tokenSidechainAddress: EthereumTestnetConfig.tokenSidechainAddress,
+})
+// this is the homunculus config that the client can take in
+// most of these fields should never be modified by users
+// and some others, such as `storageNodeRegistry` or 
+// `dataUnion` should come from pre-packed configuration objects
 const client = new StreamrClient({
     id: 'client-id', // used to identify the client on logs
     auth: {
