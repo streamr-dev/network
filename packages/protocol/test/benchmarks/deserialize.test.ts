@@ -1,4 +1,4 @@
-import { MessageLayer, StreamIDUtils, toStreamID } from '../../src'
+import { MessageLayer, toStreamID } from '../../src'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
