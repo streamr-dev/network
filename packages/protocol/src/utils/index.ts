@@ -11,7 +11,7 @@ import {
     toStreamID,
     StreamIDUtils
 } from "./StreamID"
-import { EthereumAddress } from "./types"
+import { EthereumAddress, ENSName } from "./types"
 
 export {
     OrderingUtil,
@@ -31,5 +31,6 @@ export {
     toStreamID,
     StreamID,
     StreamIDUtils,
-    EthereumAddress
+    EthereumAddress,
+    ENSName
 }

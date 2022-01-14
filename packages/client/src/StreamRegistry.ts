@@ -175,18 +175,18 @@ export class StreamRegistry implements Context {
             id: streamId
         }
 
-        const addressAndPath = StreamIDUtils.getAddressAndPath(streamId)
-        if (addressAndPath === undefined) {
+        const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
+        if (domainAndPath === undefined) {
             throw new Error(`stream id "${streamId}" not valid`)
         }
-        const [address, path] = addressAndPath
+        const [domain, path] = domainAndPath
 
         await this.connectToStreamRegistryContract()
         let tx
-        if (StreamIDUtils.isENSAddress(address)) {
-            tx = await this.streamRegistryContract!.createStreamWithENS(address, path, JSON.stringify(normalizedProperties))
+        if (StreamIDUtils.isENSName(domain)) {
+            tx = await this.streamRegistryContract!.createStreamWithENS(domain, path, JSON.stringify(normalizedProperties))
         } else {
-            await this.ensureStreamIdInNamespaceOfAuthenticatedUser(address, streamId)
+            await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             tx = await this.streamRegistryContract!.createStream(path, JSON.stringify(normalizedProperties))
         }
 
@@ -194,7 +194,7 @@ export class StreamRegistry implements Context {
         return new Stream(normalizedProperties, this.container)
     }
 
-    private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: string, streamId: StreamID): Promise<void> {
+    private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
         const userAddress = await this.ethereum.getAddress()
         if (address.toLowerCase() !== userAddress.toLowerCase()) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
