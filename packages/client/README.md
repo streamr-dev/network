@@ -484,8 +484,16 @@ You can enable data storage on your streams to retain historical data in one or 
 ```typescript
 import { StorageNode } from 'streamr-client')
 ...
+// assign a stream to storage
 await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+// wait for the operation to complete
+await stream.waitUntilStorageNodeAssigned()
+// fetch the storage nodes for a stream
+const storageNodes = stream.getStorageNodes()
+// remove the stream from a storage node
+await stream.removeFromStorageNode(StorageNode.STREAMR_GERMANY)
 ```
+
 
 
 ## Stream API
@@ -497,9 +505,42 @@ All the below functions return a Promise which gets resolved with the result.
 | getStream(streamId)                                 | Fetches a stream object from the API.                                                                                                                |
 | listStreams(query)                                  | Fetches an array of stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com).                     |
 | getStreamByName(name)                               | Fetches a stream which exactly matches the given name.                                                                                               |
-| createStream(\[properties])                         | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). If you specify `id`, it can be a full streamId or a path (e.g. `/foo/bar` will create a stream with id `<your-ethereum-address>/foo/bar` if you have authenticated with a private key)|
+| createStream(\[properties])                         | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). You must specify the `id`. It must start with your ethereum address.|
 | getOrCreateStream(properties)                       | Gets a stream with the id or name given in `properties`, or creates it if one is not found.                                                          |
 | publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given stream.                                                                                                         |
+
+```typescript
+// getStream
+const stream: Stream = await client.getStream(STREAM_ID)
+
+// getStreamByName
+const stream = await client.getStreamByName('stream-name')
+
+// listStreams
+const streams: Stream[] = await client.listStreams({
+    name?: string;
+    uiChannel?: boolean;
+    noConfig?: boolean;
+    search?: string;
+    sortBy?: string;
+    order?: 'asc' | 'desc';
+    max?: number;
+    offset?: number;
+    grantedAccess?: boolean;
+    publicAccess?: boolean;
+    operation?: StreamOperation;
+})
+
+// createStream
+const stream = await client.createStream({
+    id: `${await client.getAddress()}/stream-01`
+})
+// getOrCreateStream
+const stream = await client.getOrCreateStream({
+    id: `${await client.getAddress()}/stream-01`
+})
+
+```
 
 ### Stream object
 
@@ -510,11 +551,35 @@ All the below functions return a Promise which gets resolved with the result.
 | update()                                  | Updates the properties of this stream object by sending them to the API.                                                                                                                                                                                                      |
 | delete()                                  | Deletes this stream.                                                                                                                                                                                                                                                          |
 | getPermissions()                          | Returns the list of permissions for this stream.                                                                                                                                                                                                                              |
-| hasPermission(operation, user)            | Returns a permission object, or null if no such permission was found. Valid `operation` values for streams are: stream_get, stream_edit, stream_delete, stream_publish, stream_subscribe, and stream_share. `user` is the username of a user, or null for public permissions. |
+| hasPermission(operation, user)            | Returns a permission object, or null if no such permission was found. Valid `operation` values for streams are: `stream_get`, `stream_edit`, `stream_delete`, `stream_publish`, `stream_subscribe`, and `stream_share`. `user` is the address of a user, or null for public permissions. |
+| hasPermissions(operations[], user) | Returns an array of permissions |
 | grantPermission(operation, user)          | Grants the permission to do `operation` to `user`, which are defined as above.                                                                                                                                                                                                |
-| revokePermission(permissionId)            | Revokes a permission identified by its `id`.                                                                                                                                                                                                                                  |
+| grantPermissions(operations[], user)          | Grants the permissions to do `operation` array to `user`, which are defined as above.                                                                                                                                                                                    |
+| revokePermission(permissionId)            | Revokes a permission identified by its `id`.                       
+|
+| revokeUserPermission(operation, user)            | Revokes the permission for `operation` previously granted to `user`        |
+| revokeUserPermissions(operations[], user)            | Revokes the permissions for `operation` array previously granted to `user`        |
+| revokeAllUserPermissions(user) | Revokes all permissions to `user` for that stream |
+| revokeAllPublicPermissions() | Revokes all permissions to `user` for that stream |
 | detectFields()                            | Updates the stream field config (schema) to match the latest data point in the stream.                                                                                                                                                                                        |
 | publish(message, timestamp, partitionKey) | Publishes a new message to this stream.                                                                                                                                                                                                                                       |
+| getMyPermissions() | returns an array of `StreamPermission` |
+| hasUserPermission(operation, user) | Returns the StreamPermission for `user` on `operation`, if found, or `undefined` |
+| hasUserPermissions(operations[], user) |  Returns an array of StreamPermissions for `user` under `operations`
+| hasPublicPermission(operation) | Checks if the public permission for `operation` exists on the stream |
+| hasPublicPermissions(operations[]) | Checks all `operations` array for the public permission
+| grantUserPermission | Alias of `grantPermission`
+| grantUserPermissions | Alias of `grantPermissions`
+| grantPublicPermission(operation) | Grants public permission to the `operation`
+| grantPublicPermissions(operations[]) | Grants public permissions to the `operations` array
+| revokePublicPermission(operation) | Removes the public permission on the `operation`
+| revokePublicPermissions(operations[]) | Removes the public permissions for the `operations` array
+| revokePermissions(operations[], user) | Removes the `operations` array permissions from `user`
+| getUserPermissions(user) | Returns a `Promise` with an array of `StreamPermission` for `user`
+| getPublicPermissions | Returns public permissions for the stream
+| getMatchingPermissions(operations[], user) | Finds permissions matching `operations` array and `user` for the stream
+| revokeMatchingPermissions(operations[], user) | Removes permissions matching `operations` array and `user`
+| revokeAllPermissions(user) | Removes all permissions for `user`
 
 ## Data Unions
 
