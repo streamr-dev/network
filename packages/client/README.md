@@ -65,17 +65,6 @@ const client = new StreamrClient({
 })
 ```
 
-### Using Metamask as your client's identity provider
-```typescript
-import detectEthereumProvider from '@metamask/detect-provider'
-
-const client = new StreamrClient({
-    auth: {
-        ethereum: detectEthereumProvider() // or using window.ethereum
-    }
-})
-```
-
 ### Getting the client's address
 ```typescript
 const address = await client.getAddress()
@@ -282,13 +271,10 @@ const client = new StreamrClient({
     // EncryptionConfig
     groupKeys: {},
 
-})
-
-
-EthereumConfig & ConnectionConfig & PublishConfig & SubscribeConfig & EncryptionConfig
-    
+})    
 ```
-## Authentication options
+
+## Authentication
 
 Note: **Authenticating with an API key has been deprecated. Cryptographic keys/wallets is the only supported authentication method.**
 
@@ -310,6 +296,17 @@ Authenticating with an Ethereum private key contained in an Ethereum (web3) prov
 const client = new StreamrClient({
     auth: {
         ethereum: window.ethereum,
+    }
+})
+```
+
+Authenticating with Metamask's Ethereum private key contained in an Ethereum (web3) provider:
+```typescript
+import detectEthereumProvider from '@metamask/detect-provider'
+
+const client = new StreamrClient({
+    auth: {
+        ethereum: detectEthereumProvider()
     }
 })
 ```
@@ -371,7 +368,7 @@ const client = new StreamrClient({
 await client.connect()
 ```
 
-## Managing subscriptions
+## Stream subscriptions
 
 | Name                         | Description                                                                                                                                                                     |
 | :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -379,6 +376,23 @@ await client.connect()
 | unsubscribe(Subscription)    | Unsubscribes the given `Subscription`. Returns a promise.                                                                                                                       |
 | unsubscribeAll(`streamId`)   | Unsubscribes all `Subscriptions` for `streamId`. Returns a promise.                                                                                                             |
 | getSubscriptions() | Returns a list of all active `Subscriptions` on this client. Returns a promise.                                                                                                            |
+
+```typescript
+// subscribing to a stream:
+const subscription = await client.subscribe(
+    { stream: STREAM_ID },
+    (message) => { ... }
+)
+
+// fetching all streams the client is subscribed to:
+const subscriptions = client.getSubscriptions()
+
+// unsubscribing from an existent subscription:
+await client.unsubscribe({stream: stream.id})
+
+// or, unsubscribe them all:
+const streams = await client.removeAll()
+```
 
 ### Message handler callback
 
