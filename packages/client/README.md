@@ -436,7 +436,7 @@ const sub1 = await client.subscribe({
 
 // Resend from a specific message reference up to the newest message
 const sub2 = await client.subscribe({
-    streamId: 'my-stream-id',
+    streamId: STREAM_ID,
     resend: {
         from: {
             timestamp: 12345,
@@ -449,7 +449,7 @@ const sub2 = await client.subscribe({
 
 // Resend a limited range of messages
 const sub3 = await client.subscribe({
-    streamId: 'my-stream-id',
+    streamId: STREAM_ID,
     resend: {
         from: {
             timestamp: 12345,
@@ -790,6 +790,7 @@ a Data Union deployed by a particular address with particular "name" will have a
 | `*` generateEthereumAccount()           | `{address, privatekey}` | Generates a random Ethereum account  |
 | getTokenBalance(address)                | `BigNumber`             | Mainnet DATA token balance |
 | getSidechainTokenBalance(address)       | `BigNumber`             | Sidechain DATA token balance |
+| await client.getAddress() | `string` | The client's Ethereum address
 
 `*` The static function `StreamrClient.generateEthereumAccount()` generates a new
 Ethereum private key and returns an object with fields `address` and `privateKey`.
@@ -797,6 +798,7 @@ Note that this private key can be used to authenticate to the Streamr API
 by passing it in the authentication options, as described earlier in this document.
 
 ## Events
+> ⚠️ Events for `streamr-client` seem to not be a thing anymore. Asked Eric about it
 
 The client and the subscriptions can fire events as detailed below.
 You can bind to them using `on`.
@@ -842,7 +844,7 @@ By default, streams only have 1 partition when they are created. The partition c
 
 ```js
 const stream = await client.createStream({
-    name: 'My partitioned stream',
+    id: `${await client.getAddress()}/partitioned-stream`,
     partitions: 10,
 })
 console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partitions.`)
@@ -857,7 +859,7 @@ The library allows the user to choose a _partition key_, which simplifies publis
 The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
 
 ```js
-await client.publish('my-stream-id', msg, Date.now(), msg.vehicleId)
+await client.publish(STREAM_ID, msg, Date.now(), msg.vehicleId)
 
 // or, equivalently
 await stream.publish(msg, Date.now(), msg.vehicleId)
@@ -869,7 +871,7 @@ By default, the JS client subscribes to the first partition (partition `0`) in a
 
 ```js
 const sub = await client.subscribe({
-    stream: 'my-stream-id',
+    stream: STREAM_ID,
     partition: 4, // defaults to 0
 }, (payload) => {
     console.log('Got message %o', payload)
@@ -885,7 +887,7 @@ const handler = (payload, streamMessage) => {
 
 await Promise.all([2, 3, 4].map(async (partition) => {
     await client.subscribe({
-        stream: 'my-stream-id',
+        stream: STREAM_ID,
         partition,
     }, handler)
 }))
