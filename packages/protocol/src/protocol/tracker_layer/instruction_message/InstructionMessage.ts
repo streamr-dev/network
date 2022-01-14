@@ -5,7 +5,8 @@ import {
 } from '../../../utils/validations'
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
 import { StreamID } from '../../../utils'
-import { StreamPartID, StreamPartIDUtils } from "../../../utils"
+import { StreamPartID } from "../../../utils"
+import { toStreamPartID } from "../../../utils/StreamPartID"
 
 export interface Options extends TrackerMessageOptions {
     streamId: StreamID
@@ -36,6 +37,6 @@ export default class InstructionMessage extends TrackerMessage {
     }
 
     getStreamPartID(): StreamPartID {
-        return StreamPartIDUtils.toStreamPartID(this.streamId, this.streamPartition)
+        return toStreamPartID(this.streamId, this.streamPartition)
     }
 }

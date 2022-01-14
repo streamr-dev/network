@@ -5,7 +5,7 @@ import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 /**
  * Tests for error scenarios during signalling
@@ -79,8 +79,8 @@ describe('Signalling error scenarios', () => {
         })
 
         await runAndWaitForEvents([
-            () => { nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(streamId, 0)) },
-            () => { nodeTwo.subscribe(StreamPartIDUtils.toStreamPartID(streamId, 0)) }], [
+            () => { nodeOne.subscribe(toStreamPartID(streamId, 0)) },
+            () => { nodeTwo.subscribe(toStreamPartID(streamId, 0)) }], [
             [nodeOne, NodeEvent.NODE_CONNECTED],
             [nodeTwo, NodeEvent.NODE_CONNECTED]
         ], 30000)
@@ -136,8 +136,8 @@ describe('Signalling error scenarios', () => {
         })
 
         await runAndWaitForEvents([
-            () => { nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(streamId, 0)) },
-            () => { nodeTwo.subscribe(StreamPartIDUtils.toStreamPartID(streamId, 0)) }], [
+            () => { nodeOne.subscribe(toStreamPartID(streamId, 0)) },
+            () => { nodeTwo.subscribe(toStreamPartID(streamId, 0)) }], [
             [nodeOne, NodeEvent.NODE_CONNECTED],
             [nodeTwo, NodeEvent.NODE_CONNECTED]
         ], 30000)
@@ -190,8 +190,8 @@ describe('Signalling error scenarios', () => {
         })
 
         await runAndWaitForEvents([
-            () => { nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(otherStreamId, 0)) },
-            () => { nodeTwo.subscribe(StreamPartIDUtils.toStreamPartID(otherStreamId, 0)) }], [
+            () => { nodeOne.subscribe(toStreamPartID(otherStreamId, 0)) },
+            () => { nodeTwo.subscribe(toStreamPartID(otherStreamId, 0)) }], [
 
             // @ts-expect-error private field
             [nodeOne.trackerManager.nodeToTracker, NodeToTrackerEvent.TRACKER_DISCONNECTED],
@@ -233,8 +233,8 @@ describe('Signalling error scenarios', () => {
         })
 
         await runAndWaitForEvents([
-            () => { nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(otherStreamId, 0)) },
-            () => { nodeTwo.subscribe(StreamPartIDUtils.toStreamPartID(otherStreamId, 0)) }], [
+            () => { nodeOne.subscribe(toStreamPartID(otherStreamId, 0)) },
+            () => { nodeTwo.subscribe(toStreamPartID(otherStreamId, 0)) }], [
 
             // @ts-expect-error private field
             [nodeOne.trackerManager.nodeToTracker, NodeToTrackerEvent.TRACKER_DISCONNECTED],

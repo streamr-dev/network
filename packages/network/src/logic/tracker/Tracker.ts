@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { SmartContractRecord, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { SmartContractRecord, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { TrackerServer, Event as TrackerServerEvent } from '../../protocol/TrackerServer'
@@ -167,7 +167,7 @@ export class Tracker extends EventEmitter {
         })
         this.extraMetadatas[source] = extra
 
-        const streamPartId = StreamPartIDUtils.toStreamPartID(stream.id, stream.partition)
+        const streamPartId = toStreamPartID(stream.id, stream.partition)
 
         // update topology
         this.createTopology(streamPartId)
@@ -196,7 +196,7 @@ export class Tracker extends EventEmitter {
     }
 
     private updateNodeOnStream(node: NodeId, status: StreamStatus): void {
-        const streamPartId = StreamPartIDUtils.toStreamPartID(status.id, status.partition)
+        const streamPartId = toStreamPartID(status.id, status.partition)
         if (status.counter === COUNTER_UNSUBSCRIBE) {
             this.leaveAndCheckEmptyOverlay(streamPartId, this.overlayPerStream[streamPartId], node)
         } else {

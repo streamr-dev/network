@@ -2,7 +2,7 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../ut
 
 import MessageRef from './MessageRef'
 import { StreamID, toStreamID } from '../../../src/utils/StreamID'
-import { StreamPartID, StreamPartIDUtils } from "../../utils/StreamPartID"
+import { StreamPartID, toStreamPartID } from "../../utils/StreamPartID"
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
@@ -51,7 +51,7 @@ export default class MessageID {
     }
 
     getStreamPartID(): StreamPartID {
-        return StreamPartIDUtils.toStreamPartID(this.streamId, this.streamPartition)
+        return toStreamPartID(this.streamId, this.streamPartition)
     }
 
     serialize(): string {

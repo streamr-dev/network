@@ -1,4 +1,4 @@
-import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Status } from '../../identifiers'
 import { NodeId } from '../node/Node'
 
@@ -18,7 +18,7 @@ export class InstructionCounter {
     }
 
     isMostRecent(status: Status, source: NodeId): boolean {
-        const streamPartId = StreamPartIDUtils.toStreamPartID(status.stream.id, status.stream.partition)
+        const streamPartId = toStreamPartID(status.stream.id, status.stream.partition)
         const currentCounter = this.getAndSetIfNecessary(source, streamPartId)
         return (status.stream.counter >= currentCounter || status.stream.counter === COUNTER_UNSUBSCRIBE)
     }

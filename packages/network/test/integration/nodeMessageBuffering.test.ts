@@ -1,5 +1,5 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { MessageLayer, StreamPartID, StreamIDUtils, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker, Tracker } from '../../src/composition'
 

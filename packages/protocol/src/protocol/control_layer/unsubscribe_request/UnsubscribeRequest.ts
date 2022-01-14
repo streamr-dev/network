@@ -1,7 +1,8 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
 import { StreamID } from '../../../utils/StreamID'
-import { StreamPartID, StreamPartIDUtils } from "../../../utils"
+import { StreamPartID } from "../../../utils"
+import { toStreamPartID } from "../../../utils/StreamPartID"
 
 export interface Options extends ControlMessageOptions {
     streamId: StreamID
@@ -24,6 +25,6 @@ export default class UnsubscribeRequest extends ControlMessage {
     }
 
     getStreamPartID(): StreamPartID {
-        return StreamPartIDUtils.toStreamPartID(this.streamId, this.streamPartition)
+        return toStreamPartID(this.streamId, this.streamPartition)
     }
 }

@@ -1,4 +1,4 @@
-import { StreamPartID, StreamID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartID, StreamID, StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
 import { Location } from '../../identifiers'
@@ -121,7 +121,7 @@ function findStreamPartIDs(overlayPerStream: OverlayPerStream, streamId: StreamI
         return Object.keys(overlayPerStream)
             .filter((streamPartId) => streamPartId.includes(streamId)) as StreamPartID[]
     } else {
-        const targetStreamPartId = StreamPartIDUtils.toStreamPartID(streamId, partition)
+        const targetStreamPartId = toStreamPartID(streamId, partition)
         return Object.keys(overlayPerStream)
             .filter((candidateStreamPartId) => targetStreamPartId === candidateStreamPartId) as StreamPartID[]
     }

@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
-import { StreamPartIDUtils, TrackerLayer, toStreamID } from 'streamr-client-protocol'
+import { TrackerLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
@@ -82,7 +82,7 @@ describe('multi trackers', () => {
 
     test('node sends stream status to specific tracker', async () => {
         // first stream, first tracker
-        nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(FIRST_STREAM, 0))
+        nodeOne.subscribe(toStreamPartID(FIRST_STREAM, 0))
 
         await wait(500)
 
@@ -91,7 +91,7 @@ describe('multi trackers', () => {
         expect(getStreamPartIDs(trackerThree)).not.toContain(`${FIRST_STREAM}#0`)
 
         // second stream, second tracker
-        nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(SECOND_STREAM, 0))
+        nodeOne.subscribe(toStreamPartID(SECOND_STREAM, 0))
 
         await wait(500)
 
@@ -100,7 +100,7 @@ describe('multi trackers', () => {
         expect(getStreamPartIDs(trackerThree)).not.toContain(`${SECOND_STREAM}#0`)
 
         // third stream, third tracker
-        nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(THIRD_STREAM, 0))
+        nodeOne.subscribe(toStreamPartID(THIRD_STREAM, 0))
 
         await wait(500)
 
@@ -122,8 +122,8 @@ describe('multi trackers', () => {
         let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         // first stream, first tracker
-        nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(FIRST_STREAM_2, 0))
-        nodeTwo.subscribe(StreamPartIDUtils.toStreamPartID(FIRST_STREAM_2, 0))
+        nodeOne.subscribe(toStreamPartID(FIRST_STREAM_2, 0))
+        nodeTwo.subscribe(toStreamPartID(FIRST_STREAM_2, 0))
 
         await nodePromise
 
@@ -143,8 +143,8 @@ describe('multi trackers', () => {
         nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         // second stream, second tracker
-        nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(SECOND_STREAM_2, 0))
-        nodeTwo.subscribe(StreamPartIDUtils.toStreamPartID(SECOND_STREAM_2, 0))
+        nodeOne.subscribe(toStreamPartID(SECOND_STREAM_2, 0))
+        nodeTwo.subscribe(toStreamPartID(SECOND_STREAM_2, 0))
 
         await nodePromise2
 
@@ -164,8 +164,8 @@ describe('multi trackers', () => {
         nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         // third stream, third tracker
-        nodeOne.subscribe(StreamPartIDUtils.toStreamPartID(THIRD_STREAM_2, 0))
-        nodeTwo.subscribe(StreamPartIDUtils.toStreamPartID(THIRD_STREAM_2, 0))
+        nodeOne.subscribe(toStreamPartID(THIRD_STREAM_2, 0))
+        nodeTwo.subscribe(toStreamPartID(THIRD_STREAM_2, 0))
 
         await nodePromise3
 
