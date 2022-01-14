@@ -1,4 +1,4 @@
-import { StreamIDUtils, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { MetricsContext, Tracker } from '../src/composition'
 import { PeerInfo } from '../src/connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from '../src/connection/ws/ServerWsEndpoint'
@@ -20,7 +20,7 @@ export const startServerWsEndpoint = async (
 }
 
 export const createStreamPartId = (streamIdAsStr: string, streamPartition: number): StreamPartID => {
-    return StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID(streamIdAsStr), streamPartition)
+    return StreamPartIDUtils.toStreamPartID(toStreamID(streamIdAsStr), streamPartition)
 }
 
 export const getStreamPartIDs = (nodeOrTracker: Node|Tracker): StreamPartID[] => {

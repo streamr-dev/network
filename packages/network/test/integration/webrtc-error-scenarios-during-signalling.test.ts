@@ -5,7 +5,7 @@ import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 
 /**
  * Tests for error scenarios during signalling
@@ -14,8 +14,8 @@ describe('Signalling error scenarios', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
     let nodeTwo: NetworkNode
-    const streamId = StreamIDUtils.toStreamID('stream-1')
-    const otherStreamId = StreamIDUtils.toStreamID('stream-2')
+    const streamId = toStreamID('stream-1')
+    const otherStreamId = toStreamID('stream-2')
 
     beforeEach(async () => {
         tracker = await startTracker({

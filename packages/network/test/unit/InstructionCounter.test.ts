@@ -1,6 +1,6 @@
 import { Status } from '../../src/identifiers'
 import { InstructionCounter } from '../../src/logic/tracker/InstructionCounter'
-import { StreamIDUtils, StreamPartID } from "streamr-client-protocol"
+import { StreamPartID, toStreamID } from "streamr-client-protocol"
 
 describe('InstructionCounter', () => {
     let instructionCounter: InstructionCounter
@@ -12,7 +12,7 @@ describe('InstructionCounter', () => {
     it('if counters have not been set', () => {
         const status: Partial<Status> = {
             stream: {
-                id: StreamIDUtils.toStreamID('stream-1'),
+                id: toStreamID('stream-1'),
                 partition: 0,
                 neighbors: [],
                 counter: 123

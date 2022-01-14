@@ -8,13 +8,13 @@ import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { NodeId } from '../../src/logic/node/Node'
-import { StreamIDUtils } from "streamr-client-protocol"
+import { toStreamID } from "streamr-client-protocol"
 
 const WAIT_TIME = 2000
 
 const formStatus = (counter1: number, nodes1: NodeId[]): Partial<Status> => ({
     stream: {
-        id: StreamIDUtils.toStreamID('stream-1'),
+        id: toStreamID('stream-1'),
         partition: 0,
         neighbors: nodes1,
         counter: counter1

@@ -6,8 +6,8 @@ import {
     MessageRef,
     MessageIDStrict,
     EncryptedGroupKey,
-    StreamIDUtils,
-    toStreamID
+    toStreamID,
+    StreamPartIDUtils
 } from '../../../../src/index'
 import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'

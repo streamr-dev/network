@@ -1,4 +1,4 @@
-import { StreamID, StreamIDUtils } from "./StreamID"
+import { StreamID, StreamIDUtils, toStreamID } from "./StreamID"
 import LRUCache = require("lru-cache")
 
 const DELIMITER = '#'
@@ -29,7 +29,7 @@ export class StreamPartIDUtils {
 
     static parse(streamPartIdAsStr: string): StreamPartID | never {
         const [streamId, streamPartition] = parseElements(streamPartIdAsStr)
-        StreamIDUtils.toStreamID(streamId) // throws if not valid
+        toStreamID(streamId) // throws if not valid
         ensureValidStreamPartition(streamPartition)
         return streamPartIdAsStr as StreamPartID
     }

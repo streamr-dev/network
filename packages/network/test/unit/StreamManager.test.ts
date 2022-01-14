@@ -1,11 +1,11 @@
-import { MessageLayer, StreamIDUtils, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { StreamManager } from '../../src/logic/node/StreamManager'
 
 const { MessageID, MessageRef } = MessageLayer
 
-const streamOne = StreamIDUtils.toStreamID('stream-1')
-const streamTwo = StreamIDUtils.toStreamID('stream-2')
-const streamThree = StreamIDUtils.toStreamID('stream-3')
+const streamOne = toStreamID('stream-1')
+const streamTwo = toStreamID('stream-2')
+const streamThree = toStreamID('stream-3')
 
 describe('StreamManager', () => {
     let manager: StreamManager
@@ -15,7 +15,7 @@ describe('StreamManager', () => {
     })
 
     test('starts out empty', () => {
-        expect(manager.isSetUp(StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID('streamId'), 0))).toEqual(false)
+        expect(manager.isSetUp(StreamPartIDUtils.toStreamPartID(toStreamID('streamId'), 0))).toEqual(false)
         expect(Array.from(manager.getStreamPartIDs())).toEqual([])
     })
 
@@ -93,13 +93,13 @@ describe('StreamManager', () => {
 
     test('adding neighbor nodes to a set-up stream', () => {
         const streamId = StreamPartIDUtils.toStreamPartID(streamThree, 0)
-        const streamId2 = StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID('stream-id-2'), 0)
+        const streamId2 = StreamPartIDUtils.toStreamPartID(toStreamID('stream-id-2'), 0)
 
         manager.setUpStream(StreamPartIDUtils.toStreamPartID(streamThree, 0))
         manager.addNeighbor(streamId, 'node-1')
         manager.addNeighbor(streamId, 'node-2')
 
-        manager.setUpStream(StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID('stream-id-2'), 0))
+        manager.setUpStream(StreamPartIDUtils.toStreamPartID(toStreamID('stream-id-2'), 0))
         manager.addNeighbor(streamId2, 'node-1')
         manager.addNeighbor(streamId2, 'node-2')
         manager.addNeighbor(streamId2, 'node-3')
@@ -119,7 +119,7 @@ describe('StreamManager', () => {
 
     test('removing node from stream removes it from neighbors', () => {
         const streamId = StreamPartIDUtils.toStreamPartID(streamThree, 0)
-        const streamId2 = StreamPartIDUtils.toStreamPartID(StreamIDUtils.toStreamID('stream-id-2'), 0)
+        const streamId2 = StreamPartIDUtils.toStreamPartID(toStreamID('stream-id-2'), 0)
 
         manager.setUpStream(streamId)
         manager.addNeighbor(streamId, 'node-1')
