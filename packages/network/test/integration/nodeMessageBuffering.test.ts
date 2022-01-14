@@ -1,5 +1,5 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { MessageLayer, SPID, StreamIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, SPID, toStreamID } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker, Tracker } from '../../src/composition'
 
@@ -47,7 +47,7 @@ describe('message buffering of Node', () => {
     test('first message to unknown stream eventually gets delivered', (done) => {
         destinationNode.addMessageListener((streamMessage) => {
             expect(streamMessage.messageId).toEqual(
-                new MessageID(StreamIDUtils.toStreamID('id'), 0, 1, 0, 'publisher-id', 'session-id')
+                new MessageID(toStreamID('id'), 0, 1, 0, 'publisher-id', 'session-id')
             )
             expect(streamMessage.getParsedContent()).toEqual({
                 hello: 'world'
@@ -59,7 +59,7 @@ describe('message buffering of Node', () => {
 
         // "Client" pushes data
         sourceNode.publish(new StreamMessage({
-            messageId: new MessageID(StreamIDUtils.toStreamID('id'), 0, 1, 0, 'publisher-id', 'session-id'),
+            messageId: new MessageID(toStreamID('id'), 0, 1, 0, 'publisher-id', 'session-id'),
             content: {
                 hello: 'world'
             },

@@ -15,7 +15,7 @@ import { Stream, StreamProperties } from './Stream'
 import Ethereum from './Ethereum'
 import { NotFoundError } from '.'
 import { until } from './utils'
-import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
 
 const log = debug('StreamrClient:NodeRegistry')
@@ -198,7 +198,7 @@ export class NodeRegistry {
         const res = await this.sendNodeQuery(NodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
         return res.node.storedStreams.map((stream) => {
             const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(stream.metadata)
-            return new Stream({ ...parsedProps, id: StreamIDUtils.toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
+            return new Stream({ ...parsedProps, id: toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
         })
     }
 

@@ -1,5 +1,6 @@
 import { StreamrClient } from '../../src/index'
 import { Stream } from '../../src/Stream'
+import { toStreamID } from 'streamr-client-protocol'
 
 export default class StubbedStreamrClient extends StreamrClient {
     // @ts-expect-error
@@ -14,7 +15,7 @@ export default class StubbedStreamrClient extends StreamrClient {
     // @ts-expect-error
     async getStream(): Promise<Stream> {
         return new Stream({
-            id: 'streamId',
+            id: toStreamID('streamId'),
             partitions: 1,
         }, this.container)
     }
