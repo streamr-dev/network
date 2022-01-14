@@ -27,21 +27,17 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 
 [Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Storage](#storage) ·[Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
+## Usage ("Cheat-Sheet", "Get Started", "Quick Start" ?)
+Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
 
-## Installation
+>In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
+### Installation
 The client is available on [npm](https://www.npmjs.com/package/streamr-client) and can be installed simply by:
 
 ```
 npm install streamr-client
 ```
-
-## Usage ("Cheat-Sheet", "Get Started", "Quick Start" ?)
-
-Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
-
-In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
-
 
 ### Importing `streamr-client`
 When using Node.js remember to import the library with:
@@ -50,13 +46,12 @@ When using Node.js remember to import the library with:
 import { StreamrClient } from 'streamr-client'
 ```
 
-For usage in the browser include the correspondent build(?):
+For usage in the browser include the latest build:
 ```html
-<script src="https://unpkg.com/streamr-client@6.0.0-alpha.19/streamr-client.web.js"></script>
+<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
 ```
 
 ### Creating a StreamrClient instance
-
 ```js
 const client = new StreamrClient({
     auth: {
@@ -64,6 +59,7 @@ const client = new StreamrClient({
     }
 })
 ```
+More `StreamrClient` creation options can be found in the [Installation](#Installation) section.
 
 ### Getting the client's address
 ```typescript
@@ -79,12 +75,13 @@ const stream = await client.createStream({
 })
 ```
 
-In order to  enable historical data resends, add the stream to a storage node:
+In order to  enable historical data `resends` add first the stream to a storage node:
 ```typescript
 import { StorageNode, StreamrClient } from StreamrClient
 
 await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
 ```
+> ℹ️ Visit the [Storage section](#storage) for more options.
 
 ### Fetching existent streams
 Getting an existent stream is pretty straight-forward
