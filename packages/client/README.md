@@ -627,8 +627,7 @@ All the below functions return a Promise which gets resolved with the result.
 | hasPermissions(operations[], user) | Returns an array of permissions |
 | grantPermission(operation, user)          | Grants the permission to do `operation` to `user`, which are defined as above.                                                                                                                                                                                                |
 | grantPermissions(operations[], user)          | Grants the permissions to do `operation` array to `user`, which are defined as above.                                                                                                                                                                                    |
-| revokePermission(permissionId)            | Revokes a permission identified by its `id`.                       
-|
+| revokePermission(permissionId)            | Revokes a permission identified by its `id`.                       |
 | revokeUserPermission(operation, user)            | Revokes the permission for `operation` previously granted to `user`        |
 | revokeUserPermissions(operations[], user)            | Revokes the permissions for `operation` array previously granted to `user`        |
 | revokeAllUserPermissions(user) | Revokes all permissions to `user` for that stream |
