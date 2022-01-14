@@ -1,6 +1,6 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
-import { MessageLayer, StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, StreamIDUtils, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -153,7 +153,7 @@ describe('Publish only connection tests', () => {
             waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
             waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
             publisherNode.publish(new StreamMessage({
-                messageId: new MessageID(StreamIDUtils.toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
                 content: {
                     hello: 'world'
                 },
@@ -253,7 +253,7 @@ describe('Publish only connection tests', () => {
             waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
             waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
             publisherNode.publish(new StreamMessage({
-                messageId: new MessageID(StreamIDUtils.toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
                 content: {
                     hello: 'world'
                 },

@@ -1,11 +1,11 @@
-import { MessageIDStrict, StreamPartID, StreamMessage, StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
+import { MessageIDStrict, StreamPartID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Propagation } from '../../src/logic/node/propagation/Propagation'
 import { NodeId } from '../../src/logic/node/Node'
 import { wait } from 'streamr-test-utils'
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
     return new StreamMessage({
-        messageId: new MessageIDStrict(StreamIDUtils.toStreamID(streamId), partition, ts, 0, 'publisher', 'msgChain'),
+        messageId: new MessageIDStrict(toStreamID(streamId), partition, ts, 0, 'publisher', 'msgChain'),
         content: {
             msgNo
         }

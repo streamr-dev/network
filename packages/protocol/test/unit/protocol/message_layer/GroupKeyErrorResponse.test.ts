@@ -1,13 +1,18 @@
 import assert from 'assert'
 
 import {
-    StreamMessage, MessageID, MessageRef, GroupKeyMessage, GroupKeyErrorResponse, StreamIDUtils
+    StreamMessage,
+    MessageID,
+    MessageRef,
+    GroupKeyMessage,
+    GroupKeyErrorResponse,
+    toStreamID
 } from '../../../../src/index'
 
 // Message definitions
 const message = new GroupKeyErrorResponse({
     requestId: 'requestId',
-    streamId: StreamIDUtils.toStreamID('streamId'),
+    streamId: toStreamID('streamId'),
     errorCode: 'ErrorCode',
     errorMessage: 'errorMessage',
     groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
@@ -15,7 +20,7 @@ const message = new GroupKeyErrorResponse({
 const serializedMessage = JSON.stringify(['requestId', 'streamId', 'ErrorCode', 'errorMessage', ['groupKeyId1', 'groupKeyId2']])
 
 const streamMessage = new StreamMessage({
-    messageId: new MessageID(StreamIDUtils.toStreamID('streamId'), 0, 1, 0, 'publisherId', 'msgChainId'),
+    messageId: new MessageID(toStreamID('streamId'), 0, 1, 0, 'publisherId', 'msgChainId'),
     prevMsgRef: new MessageRef(0, 0),
     content: serializedMessage,
     messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,

@@ -1,10 +1,10 @@
 import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
-import { PublishStreamConnectionResponse, ControlMessage, StreamIDUtils } from '../../../../src/index'
+import { PublishStreamConnectionResponse, ControlMessage, toStreamID } from '../../../../src/index'
 
 describe('PublishStreamConnectionResponse', () => {
-    const streamId = StreamIDUtils.toStreamID('stream')
+    const streamId = toStreamID('stream')
     const streamPartition = 0
     const senderId = 'node'
     const accepted = true

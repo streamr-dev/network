@@ -5,7 +5,7 @@ import { STREAMR_DOCKER_DEV_HOST, createTestStream, getPrivateKey } from "../../
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
 import { ConfigTest, StreamrClient } from 'streamr-client'
-import { StreamIDUtils } from 'streamr-client-protocol'
+import { toStreamID } from 'streamr-client-protocol'
 
 jest.setTimeout(30000)
 
@@ -56,7 +56,7 @@ async function storeMockMessages({
     for (let i = 0; i < count; i++) {
         const timestamp = Math.floor((i / (count - 1)) * (1E10))
         const msg = new StreamMessage({
-            messageId: new MessageIDStrict(StreamIDUtils.toStreamID(streamId), 0, timestamp, 0, '', ''),
+            messageId: new MessageIDStrict(toStreamID(streamId), 0, timestamp, 0, '', ''),
             content: JSON.stringify({})
         })
         storePromises.push(storage.store(msg))

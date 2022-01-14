@@ -1,12 +1,18 @@
 import assert from 'assert'
 
-import { StreamMessage, MessageRef, MessageIDStrict, EncryptedGroupKey, StreamIDUtils } from '../../../../src/index'
+import {
+    StreamMessage,
+    MessageRef,
+    MessageIDStrict,
+    EncryptedGroupKey,
+    toStreamID
+} from '../../../../src/index'
 
 const VERSION = 32
 
 // Message definitions
 const message = new StreamMessage({
-    messageId: new MessageIDStrict(StreamIDUtils.toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+    messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
     prevMsgRef: new MessageRef(1564046132168, 5),
     content: 'encrypted-content',
     messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,

@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { runAndWaitForEvents } from 'streamr-test-utils'
-import { StreamIDUtils, StreamPartIDUtils, TrackerLayer } from 'streamr-client-protocol'
+import { StreamIDUtils, toStreamID, StreamPartIDUtils, TrackerLayer } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
@@ -13,7 +13,7 @@ describe('Check tracker instructions to node', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
     let nodeTwo: NetworkNode
-    const streamId = StreamIDUtils.toStreamID('stream-1')
+    const streamId = toStreamID('stream-1')
     const streamPartId = StreamPartIDUtils.toStreamPartID(streamId, 0)
 
     beforeAll(async () => {

@@ -6,7 +6,7 @@ import { GroupKey } from '../../src/encryption/Encryption'
 import { GroupKeyPersistence } from '../../src/encryption/GroupKeyStore'
 import { uid, addAfterFn, describeRepeats, mockContext } from '../utils'
 import LeakDetector from 'jest-leak-detector'
-import { StreamID, StreamIDUtils } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 
 // this will produce a deprecation warning for rmdir, but the replacement, rm, is not available in Node 12.
 // TODO: replace rmdir with rm after dropping support for node 12.
@@ -22,7 +22,7 @@ describeRepeats('GroupKeyPersistence', () => {
 
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
-        streamId = StreamIDUtils.toStreamID(uid('stream'))
+        streamId = toStreamID(uid('stream'))
         store = new GroupKeyPersistence({
             context: mockContext(),
             clientId,
@@ -106,7 +106,7 @@ describeRepeats('GroupKeyPersistence', () => {
     })
 
     it('does not conflict with other streamIds', async () => {
-        const streamId2 = StreamIDUtils.toStreamID(uid('stream'))
+        const streamId2 = toStreamID(uid('stream'))
         const store2 = new GroupKeyPersistence({
             context: mockContext(),
             clientId,

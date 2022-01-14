@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 
-import { MessageLayer, StreamIDUtils, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, StreamIDUtils, StreamPartID, toStreamID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -71,11 +71,11 @@ describe('node unsubscribing from a stream', () => {
         await waitForEvent(nodeA, NodeEvent.NODE_UNSUBSCRIBED)
 
         nodeA.publish(new StreamMessage({
-            messageId: new MessageID(StreamIDUtils.toStreamID('s'), 2, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('s'), 2, 0, 0, 'publisherId', 'msgChainId'),
             content: {},
         }))
         nodeA.publish(new StreamMessage({
-            messageId: new MessageID(StreamIDUtils.toStreamID('s'), 1, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('s'), 1, 0, 0, 'publisherId', 'msgChainId'),
             content: {},
         }))
         await waitForEvent(nodeB, NodeEvent.UNSEEN_MESSAGE_RECEIVED)

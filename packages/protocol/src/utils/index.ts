@@ -5,7 +5,7 @@ import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry,
 import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
-import { StreamID, StreamIDUtils } from "./StreamID"
+import { StreamID,toStreamID, StreamIDUtils } from "./StreamID"
 import { StreamPartID, StreamPartIDUtils } from "./StreamPartID"
 import { EthereumAddress } from "./types"
 
@@ -24,6 +24,7 @@ export {
     generateMnemonicFromAddress,
     parseAddressFromNodeId,
     keyToArrayIndex,
+    toStreamID,
     StreamID,
     StreamIDUtils,
     StreamPartID,
