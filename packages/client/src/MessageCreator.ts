@@ -2,7 +2,13 @@
  * Central place to fetch async dependencies and convert message metadata into StreamMessages.
  */
 import { inject, scoped, Lifecycle } from 'tsyringe'
-import { StreamMessage, SPID, StreamMessageEncrypted, StreamMessageSigned, StreamID } from 'streamr-client-protocol'
+import {
+    StreamMessage,
+    StreamMessageEncrypted,
+    StreamMessageSigned,
+    StreamID,
+    toStreamPartID
+} from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from './utils'
 import { Stoppable } from './utils/Stoppable'
@@ -74,11 +80,11 @@ export default class StreamMessageCreator implements IMessageCreator, Stoppable 
                 this.ethereum.getAddress(),
             ])
 
-            const spid = SPID.from({ streamId, streamPartition })
+            const streamPartId = toStreamPartID(streamId, streamPartition)
             const publisherId = publisherIdChecksumCase.toLowerCase()
 
             // chain messages
-            const chain = this.getMsgChain(spid, {
+            const chain = this.getMsgChain(streamPartId, {
                 publisherId, msgChainId
             })
 

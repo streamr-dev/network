@@ -6,7 +6,7 @@ import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } fr
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { Config } from './Config'
-import { StreamMessage, SPID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 
@@ -167,27 +167,27 @@ export default class BrubeckNode implements Context {
         }
     }
 
-    openPublishProxyConnectionOnStreamPartition(spid: SPID, nodeId: string): void | Promise<void> {
+    openPublishProxyConnectionOnStreamPartition(streamPartId: StreamPartID, nodeId: string): void | Promise<void> {
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
                 return this.startNode().then((node) => {
-                    return node.joinStreamAsPurePublisher(spid, nodeId)
+                    return node.joinStreamAsPurePublisher(streamPartId, nodeId)
                 })
             }
-            return this.cachedNode.joinStreamAsPurePublisher(spid, nodeId)
+            return this.cachedNode.joinStreamAsPurePublisher(streamPartId, nodeId)
         } finally {
-            this.debug('openProxyConnectionOnStream << %o', spid, nodeId)
+            this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
 
-    closePublishProxyConnectionOnStreamPartition(spid: SPID, nodeId: string): void {
+    closePublishProxyConnectionOnStreamPartition(streamPartId: StreamPartID, nodeId: string): void {
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
                 return
             }
-            this.cachedNode.leavePurePublishingStream(spid, nodeId)
+            this.cachedNode.leavePurePublishingStream(streamPartId, nodeId)
         } finally {
-            this.debug('closeProxyConnectionOnStream << %o', spid, nodeId)
+            this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
 }

@@ -2,7 +2,7 @@
  * Public Resends API
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { SPID, SIDLike, MessageRef, StreamMessage } from 'streamr-client-protocol'
+import { MessageRef, StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 import split2 from 'split2'
 import { Readable } from 'stream'
@@ -21,6 +21,7 @@ import { BrubeckContainer } from './Container'
 import { StreamRegistry } from './StreamRegistry'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import { createQueryString } from './Rest'
+import { StreamDefinition } from "./StreamDefinition"
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -57,13 +58,14 @@ async function fetchStream(url: string, opts = {}, abortController = new AbortCo
     }
 }
 
-const createUrl = (baseUrl: string, endpointSuffix: string, spid: SPID, query: QueryDict = {}) => {
+const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}) => {
     const queryMap = {
         ...query,
         format: 'raw'
     }
+    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
     const queryString = createQueryString(queryMap)
-    return `${baseUrl}/streams/${encodeURIComponent(spid.streamId)}/data/partitions/${spid.streamPartition}/${endpointSuffix}?${queryString}`
+    return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
 }
 
 export type ResendRef = MessageRef | {
@@ -101,7 +103,7 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
     return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
-export type ResendOptions = (SIDLike | { stream: SIDLike }) & (ResendOptionsStrict | { resend: ResendOptionsStrict })
+export type ResendOptions = StreamDefinition & (ResendOptionsStrict | { resend: ResendOptionsStrict })
 
 export function isResendOptions(options: any): options is ResendOptions {
     if (options && typeof options === 'object' && 'resend' in options && options.resend) {

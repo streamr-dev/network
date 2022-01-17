@@ -3,8 +3,6 @@ import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './
 import { StreamID } from './StreamID'
 
 export default class OrderingUtil extends MsgChainEmitter {
-    streamId: StreamID
-    streamPartition: number
     inOrderHandler: MessageHandler
     gapHandler: GapHandler
     propagationTimeout?: number
@@ -13,8 +11,6 @@ export default class OrderingUtil extends MsgChainEmitter {
     orderedChains: { [key: string]: OrderedMsgChain}
 
     constructor(
-        streamId: StreamID,
-        streamPartition: number,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
         propagationTimeout?: number,
@@ -22,8 +18,6 @@ export default class OrderingUtil extends MsgChainEmitter {
         maxGapRequests?: number
     ) {
         super()
-        this.streamId = streamId
-        this.streamPartition = streamPartition
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
         this.propagationTimeout = propagationTimeout
