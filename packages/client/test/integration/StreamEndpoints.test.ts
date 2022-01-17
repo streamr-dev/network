@@ -1,4 +1,5 @@
 import { Wallet } from 'ethers'
+import { v4 as uuid } from 'uuid'
 
 import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
@@ -6,6 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
+import { StreamListQuery } from '../../src'
 
 jest.setTimeout(40000)
 const DELAY_BETWEEN_TESTS = 4000
@@ -188,34 +190,42 @@ const getName = () => uid('test-stream/slashes')
             return expect(result.length).toBe(0)
         })
 
+        /* eslint-disable-next-line no-await-in-loop */
         it('max and offset', async () => {
-            const name = 'filter-' + Date.now()
+            const streamIds = []
+            const searchTerm = `listStreams-${Date.now()}`
             for (let i = 0; i < 3; i++) {
-                // eslint-disable-next-line no-await-in-loop
-                const props = { id: await createRelativeTestStreamId(module), name }
-                props.name = name + i
-                // eslint-disable-next-line no-await-in-loop
-                await client.createStream(props)
+                const orderSuffix = uuid()
+                const path = await createRelativeTestStreamId(module, orderSuffix)
+                const stream = await client.createStream({
+                    id: path,
+                    name: `${searchTerm}-${i}`
+                })
+                streamIds.push(stream.id)
             }
-            await until(async () => { return (await client.listStreams({ name })).length === 3 }, 20000, 1000)
-            let resultList = await client.listStreams({
-                name
+            streamIds.sort()
+            await until(async () => { 
+                return (await client.listStreams({ name: searchTerm })).length === streamIds.length
+            }, 20000, 1000)
+
+            const listStreamsIds = async (query: StreamListQuery) => {
+                const streams = await client.listStreams({
+                    name: searchTerm,
+                    sortBy: 'id',
+                    ...query
+                })
+                return streams.map((s) => s.id)
+            }
+
+            const resultList1 = await listStreamsIds({
+                max: 2
             })
-            expect(resultList.length).toBe(3)
-            resultList = await client.listStreams({
-                name,
-                max: 2,
-            })
-            expect(resultList.length).toBe(2)
-            expect(resultList[0].name.endsWith('0')).toBe(true)
-            expect(resultList[1].name.endsWith('1')).toBe(true)
-            resultList = await client.listStreams({
-                name,
+            expect(resultList1).toEqual([streamIds[0], streamIds[1]])
+            const resultList2 = await listStreamsIds({
                 max: 2,
                 offset: 1
             })
-            expect(resultList[0].name.endsWith('1')).toBe(true)
-            return expect(resultList[1].name.endsWith('2')).toBe(true)
+            expect(resultList2).toEqual([streamIds[1], streamIds[2]])
         })
     })
 
