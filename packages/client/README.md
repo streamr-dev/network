@@ -27,7 +27,7 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 
 [Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Storage](#storage) ·[Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
-## Usage ("Cheat-Sheet", "Get Started", "Quick Start" ?)
+## Get Started
 Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
 
 >In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
@@ -49,6 +49,12 @@ import { StreamrClient } from 'streamr-client'
 For usage in the browser include the latest build:
 ```html
 <script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
+
+<!-- for Corea package (5x) -->
+<script src="https://unpkg.com/streamr-client@5.5.7/streamr-client.web.js"></script>
+
+<!-- for Brubeck package (6x) -->
+<script src="https://unpkg.com/streamr-client@6.0.0-alpha.19/streamr-client.web.js"></script>
 ```
 
 ### Creating a StreamrClient instance
@@ -651,7 +657,17 @@ All the below functions return a Promise which gets resolved with the result.
 | getMatchingPermissions(operations[], user) | Finds permissions matching `operations` array and `user` for the stream
 | revokeMatchingPermissions(operations[], user) | Removes permissions matching `operations` array and `user`
 | revokeAllPermissions(user) | Removes all permissions for `user`
+### Stream Operations and Permissions 
+The matrix below outlines the role types and permissions for streams.
 
+|Permissions | User can | Subscriber | Publisher | Editor | Owner |
+|:--|:--|:--|:--|:--|:--|
+| stream_get | Fetch stream details|✔️|✔️|✔️|✔️|
+| stream_edit | Edit stream details| | |✔️|✔️|
+| stream_delete | Delete the stream| | | |✔️|
+| stream_publish | Publish to stream| |✔️|✔️|✔️|
+| stream_subscribe | Subscribe to stream|✔️| |✔️|✔️|
+| stream_share | Edit stream permissions| | | |✔️|
 ## Data Unions
 
 This library provides functions for working with Data Unions. Please see the [TypeScript generated function documentation](https://streamr-dev.github.io/streamr-client-javascript/classes/dataunion_dataunion.dataunion.html) for information on each Data Union endpoint.
@@ -859,9 +875,9 @@ a Data Union deployed by a particular address with particular "name" will have a
 | Name                                    | Returns                 |   Description    |
 | :-------------------------------------- | :---------------------- | :--------------- |
 | `*` generateEthereumAccount()           | `{address, privatekey}` | Generates a random Ethereum account  |
-| getTokenBalance(address)                | `BigNumber`             | Mainnet DATA token balance |
-| getSidechainTokenBalance(address)       | `BigNumber`             | Sidechain DATA token balance |
-| await client.getAddress() | `string` | The client's Ethereum address
+| getTokenBalance(address)                | `Promise<BigNumber>`             | Mainnet DATA token balance |
+| getSidechainTokenBalance(address)       | `Promise<BigNumber>`             | Sidechain DATA token balance |
+| client.getAddress() | `Promise<string>` | The client's Ethereum address
 
 `*` The static function `StreamrClient.generateEthereumAccount()` generates a new
 Ethereum private key and returns an object with fields `address` and `privateKey`.
