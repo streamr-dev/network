@@ -2,8 +2,8 @@ import {
     ContentType,
     EncryptionType,
     MessageLayer,
+    toStreamID,
     SigningUtil,
-    StreamIDUtils,
     StreamMessageType,
     StreamMessage
 } from '../../src'
@@ -21,7 +21,7 @@ describe('deserialize', () => {
 
         streamMessage = new StreamMessage({
             messageId: new MessageID(
-                StreamIDUtils.toStreamID('/foo/bar', address),
+                toStreamID('/foo/bar', address),
                 0,
                 1587141844396,
                 0,
@@ -80,7 +80,7 @@ describe('deserialize', () => {
         run(() => {
             return new StreamMessage({
                 messageId: new MessageID(
-                    StreamIDUtils.toStreamID('kxeE-gyxS8CkuWYlfBKMVg'),
+                    toStreamID('kxeE-gyxS8CkuWYlfBKMVg'),
                     0,
                     1567671580680,
                     0,

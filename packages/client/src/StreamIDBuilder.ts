@@ -1,4 +1,4 @@
-import { EthereumAddress, StreamIDUtils, StreamID } from 'streamr-client-protocol'
+import { EthereumAddress, toStreamID, StreamIDUtils, StreamID } from 'streamr-client-protocol'
 import Ethereum from './Ethereum'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 
@@ -11,6 +11,6 @@ export class StreamIDBuilder {
         if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath) && this.ethereum.isAuthenticated()) {
             address = await this.ethereum.getAddress()
         }
-        return StreamIDUtils.toStreamID(streamIdOrPath, address)
+        return toStreamID(streamIdOrPath, address)
     }
 }

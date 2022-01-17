@@ -2,7 +2,7 @@ import { validateIsArray, validateIsString } from '../../utils/validations'
 
 import StreamMessage from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
-import { StreamID, StreamIDUtils } from '../../utils/StreamID'
+import { StreamID, toStreamID } from '../../../src/utils/StreamID'
 
 // TODO define as enum
 export type ErrorCode = string
@@ -48,7 +48,7 @@ export default class GroupKeyErrorResponse extends GroupKeyMessage {
         const [requestId, streamId, errorCode, errorMessage, groupKeyIds] = arr
         return new GroupKeyErrorResponse({
             requestId,
-            streamId: StreamIDUtils.toStreamID(streamId),
+            streamId: toStreamID(streamId),
             errorCode,
             errorMessage,
             groupKeyIds,

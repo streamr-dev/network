@@ -19,7 +19,7 @@ import {
     SPID,
     StreamID,
     EthereumAddress,
-    StreamIDUtils,
+    StreamIDUtils, toStreamID,
 } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
@@ -428,7 +428,7 @@ export class StreamRegistry implements Context {
                 try {
                     // toStreamID isn't strictly needed here since we are iterating over a result set from the Graph
                     // (we could just cast). _If_ this ever throws, one of our core assumptions is wrong.
-                    const stream = this.parseStream(StreamIDUtils.toStreamID(id), metadata)
+                    const stream = this.parseStream(toStreamID(id), metadata)
                     resStreams.push(stream)
                 } catch (err) {
                     this.debug(`Skipping stream ${id} cannot parse metadata: ${metadata}`)
@@ -489,7 +489,7 @@ export class StreamRegistry implements Context {
     async listStreams(filter: StreamListQuery = {}): Promise<Stream[]> {
         this.debug('Getting all streams from thegraph that match filter %o', filter)
         const response = await this.sendStreamQuery(StreamRegistry.buildGetFilteredStreamListQuery(filter)) as FilteredStreamListQueryResult
-        return response.streams.map((streamobj) => this.parseStream(StreamIDUtils.toStreamID(streamobj.id), streamobj.metadata))
+        return response.streams.map((streamobj) => this.parseStream(toStreamID(streamobj.id), streamobj.metadata))
     }
 
     async getStreamPublishers(streamIdOrPath: string, pagesize: number = 1000) {
