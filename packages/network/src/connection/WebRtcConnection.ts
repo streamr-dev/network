@@ -51,7 +51,7 @@ export function isOffering(myId: PeerId, theirId: PeerId): boolean {
 
 function offeringHash(idPair: string): number {
     const buffer = crypto.createHash('md5').update(idPair).digest()
-    return buffer.readInt32LE(0)
+    return buffer.readInt32LE()
 }
 
 /**
