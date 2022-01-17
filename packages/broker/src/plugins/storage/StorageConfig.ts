@@ -248,22 +248,27 @@ export class StorageConfig {
         const clientAddress = (await this.streamrClient.getAddress()).toLowerCase()
         this.streamrClient.registerStorageEventListener(
             async (event: EthereumStorageEvent) => {
-                skipPollResultSoonAfterEvent = true
                 if (event.nodeAddress.toLowerCase() !== clientAddress) { return }
-                const stream = await this.streamrClient.getStream(event.streamId)
-                const streamKeys = new Set(
-                    getSPIDKeys(stream.id, stream.partitions)
-                        .filter ((key: SPIDKey) => this.belongsToMeInCluster(key))
-                )
-                if (event.type === 'added') {
-                    this.addSPIDKeys(streamKeys)
+                skipPollResultSoonAfterEvent = true
+                try {
+                    const stream = await this.streamrClient.getStream(event.streamId)
+                    const streamKeys = new Set(
+                        getSPIDKeys(stream.id, stream.partitions)
+                            .filter((key: SPIDKey) => this.belongsToMeInCluster(key))
+                    )
+                    if (event.type === 'added') {
+                        this.addSPIDKeys(streamKeys)
+                    }
+                    if (event.type === 'removed') {
+                        this.removeSPIDKeys(streamKeys)
+                    }
+                } catch (e) {
+                    logger.warn('chainEventsListener: %s', e)
+                } finally {
+                    setTimeout(() => {
+                        skipPollResultSoonAfterEvent = false
+                    }, 10000)
                 }
-                if (event.type === 'removed') {
-                    this.removeSPIDKeys(streamKeys)
-                }
-                setTimeout(() => {
-                    skipPollResultSoonAfterEvent = false
-                }, 10000)
             }
         )
     }
