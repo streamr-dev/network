@@ -17,7 +17,7 @@ import {
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 
-import { Stream, StreamPermission } from './Stream'
+import { Stream } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
 import { Config, ConnectionConfig } from './Config'
@@ -27,18 +27,10 @@ import { StreamRegistry } from './StreamRegistry'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
 
-export interface StreamListQuery {
-    name?: string
-    uiChannel?: boolean
-    noConfig?: boolean
-    search?: string
-    sortBy?: string
+export interface SearchStreamsOptions {
     order?: 'asc'|'desc'
     max?: number
     offset?: number
-    grantedAccess?: boolean
-    publicAccess?: boolean
-    permission?: StreamPermission
 }
 
 export interface StreamValidationInfo {

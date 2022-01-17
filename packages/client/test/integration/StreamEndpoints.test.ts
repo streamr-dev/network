@@ -7,7 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
-import { StreamListQuery } from '../../src'
+import { SearchStreamsOptions } from '../../src/StreamEndpoints'
 
 jest.setTimeout(40000)
 const DELAY_BETWEEN_TESTS = 4000
@@ -17,7 +17,7 @@ const getName = () => uid('test-stream/slashes')
 /**
  * These tests should be run in sequential order!
  */
- describe('StreamEndpoints', () => {
+describe('StreamEndpoints', () => {
 
     let client: StreamrClient
     let wallet: Wallet
@@ -174,54 +174,49 @@ const getName = () => uid('test-stream/slashes')
         })
     })
 
-    describe('listStreams', () => {
+    describe('searchStreams', () => {
         it('filters by given criteria (match)', async () => {
-            const result = await client.listStreams({
-                name: createdStream.name,
-            })
+            const result = await client.searchStreams(createdStream.id)
             expect(result.length).toBe(1)
             return expect(result[0].id).toBe(createdStream.id)
         })
 
-        it('filters by given criteria (no  match)', async () => {
-            const result = await client.listStreams({
-                name: `non-existent-${Date.now()}`,
-            })
+        it('filters by given criteria (no match)', async () => {
+            const result = await client.searchStreams(`non-existent-${Date.now()}`)
             return expect(result.length).toBe(0)
         })
 
-        /* eslint-disable-next-line no-await-in-loop */
+        /* eslint-disable no-await-in-loop */
         it('max and offset', async () => {
             const streamIds = []
-            const searchTerm = `listStreams-${Date.now()}`
+            const searchTerm = `searchStreams-${Date.now()}`
             for (let i = 0; i < 3; i++) {
                 const orderSuffix = uuid()
-                const path = await createRelativeTestStreamId(module, orderSuffix)
+                const path = await createRelativeTestStreamId(module, `${searchTerm}-${orderSuffix}`)
                 const stream = await client.createStream({
-                    id: path,
-                    name: `${searchTerm}-${i}`
+                    id: path
                 })
                 streamIds.push(stream.id)
             }
             streamIds.sort()
-            await until(async () => { 
-                return (await client.listStreams({ name: searchTerm })).length === streamIds.length
+            await until(async () => {
+                const streams = await client.searchStreams(searchTerm)
+                return streams.length === streamIds.length
             }, 20000, 1000)
 
-            const listStreamsIds = async (query: StreamListQuery) => {
-                const streams = await client.listStreams({
-                    name: searchTerm,
-                    sortBy: 'id',
+            const searchStreamsIds = async (query: SearchStreamsOptions) => {
+                const streams = await client.searchStreams(searchTerm, {
+                    order: 'asc',
                     ...query
                 })
                 return streams.map((s) => s.id)
             }
 
-            const resultList1 = await listStreamsIds({
+            const resultList1 = await searchStreamsIds({
                 max: 2
             })
             expect(resultList1).toEqual([streamIds[0], streamIds[1]])
-            const resultList2 = await listStreamsIds({
+            const resultList2 = await searchStreamsIds({
                 max: 2,
                 offset: 1
             })

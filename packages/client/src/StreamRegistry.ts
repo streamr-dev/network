@@ -13,7 +13,7 @@ import { Context } from './utils/Context'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamPermission, StreamPermissions, StreamProperties } from './Stream'
 import { NotFoundError } from './authFetch'
-import { StreamListQuery } from './StreamEndpoints'
+import { SearchStreamsOptions } from './StreamEndpoints'
 import {
     SIDLike,
     SPID,
@@ -486,10 +486,10 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async listStreams(filter: StreamListQuery = {}): Promise<Stream[]> {
-        this.debug('Getting all streams from thegraph that match filter %o', filter)
-        const response = await this.sendStreamQuery(StreamRegistry.buildGetFilteredStreamListQuery(filter)) as FilteredStreamListQueryResult
-        return response.streams.map((streamobj) => this.parseStream(toStreamID(streamobj.id), streamobj.metadata))
+    async searchStreams(term: string, opts: SearchStreamsOptions = {}): Promise<Stream[]> {
+        this.debug('Getting all streams from thegraph that match filter %s %o', term, opts)
+        const response = await this.sendStreamQuery(StreamRegistry.buildGetFilteredStreamListQuery(term, opts)) as FilteredStreamListQueryResult
+        return response.streams.map((s) => this.parseStream(toStreamID(s.id), s.metadata))
     }
 
     async getStreamPublishers(streamIdOrPath: string, pagesize: number = 1000) {
@@ -585,25 +585,15 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    private static buildGetFilteredStreamListQuery(filter: StreamListQuery): string {
-        const nameparam = filter.name ? `metadata_contains: "name\\\\\\":\\\\\\"${filter.name}"` : ''
-        const maxparam = filter.max ? `, first: ${filter.max}` : ''
-        const offsetparam = filter.offset ? `, skip: ${filter.offset}` : ''
-        const orderByParam = filter.sortBy ? `, orderBy: ${filter.sortBy}` : ''
-        const ascDescParama = filter.order ? `, orderDirection: ${filter.order}` : ''
+    private static buildGetFilteredStreamListQuery(term: string, opts: SearchStreamsOptions): string {
+        const termParam = `metadata_contains: "${term}"`
+        const maxParam = opts.max ? `, first: ${opts.max}` : ''
+        const offsetParam = opts.offset ? `, skip: ${opts.offset}` : ''
+        const orderParam = opts.order ? `, orderBy: id, orderDirection: ${opts.order}` : ''
         const query = `{
-            streams (where: {${nameparam}}${maxparam}${offsetparam}${orderByParam}${ascDescParama}) {
+            streams (where: {${termParam}}${maxParam}${offsetParam}${orderParam}) {
                 id,
-                metadata,
-                permissions {
-                    id,
-                    userAddress,
-                    canEdit,
-                    canDelete,
-                    publishExpiration,
-                    subscribeExpiration,
-                    canGrant,
-                }
+                metadata
             }
         }`
         return JSON.stringify({ query })
