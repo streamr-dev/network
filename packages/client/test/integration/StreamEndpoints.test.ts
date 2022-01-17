@@ -159,11 +159,6 @@ const getName = () => uid('test-stream/slashes')
             expect(resultList[0].name.endsWith('1')).toBe(true)
             return expect(resultList[1].name.endsWith('2')).toBe(true)
         })
-
-        it('get a non-existing Stream', async () => {
-            const name = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
-            return expect(() => client.getStreamByName(name)).rejects.toThrow()
-        })
     })
 
     describe('getOrCreate', () => {
