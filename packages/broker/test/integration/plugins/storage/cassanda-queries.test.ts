@@ -5,7 +5,7 @@ import { Readable, PassThrough } from 'stream'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { StreamIDUtils } from "streamr-client-protocol"
+import { toStreamID } from "streamr-client-protocol"
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -17,7 +17,7 @@ const MOCK_PUBLISHER_ID = 'publisherId'
 const MOCK_MSG_CHAIN_ID = 'msgChainId'
 const createMockMessage = (i: number) => {
     return new StreamMessage({
-        messageId: new MessageID(StreamIDUtils.toStreamID(MOCK_STREAM_ID), 0, i, 0, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID),
+        messageId: new MessageID(toStreamID(MOCK_STREAM_ID), 0, i, 0, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID),
         content: {
             value: i
         }

@@ -121,36 +121,6 @@ export class Tracker extends EventEmitter {
 
         this.metrics.record('processNodeStatus', 1)
         const status = statusMessage.status as Status
-        const legacyMessageStreams = (status as any).streams
-        if (legacyMessageStreams !== undefined) {
-            // backwards compatibility for testnet2 brokers
-            // https://linear.app/streamr/issue/FRONT-635/add-back-the-tracker-backwards-compatibility
-            // TODO remove this when testnet3 completes
-            const streamKeys = Object.keys(legacyMessageStreams)
-            if (streamKeys.length === 1) {
-                const streamKey = streamKeys[0]
-                status.stream = {
-                    streamKey,
-                    ...legacyMessageStreams[streamKey]
-                }
-            } else {
-                throw new Error(`Assertion failed: ${streamKeys.length} streams in a status messages`)
-            }
-        }
-        if ((status.stream as any).inboundNodes !== undefined) {
-            // backwards compatibility to support old status message
-            // which contained "inboundNodes" and "outboundNodes" field instead of "neighbors" field
-            // TODO remove this e.g. at the same time we remove the above FRONT-635 hack
-            status.stream.neighbors = (status.stream as any).inboundNodes  // status.stream.outboundNodes has exactly the same content
-        }
-        // backwards compatibility to convert status.stream.streamKey -> status.stream.spid
-        // TODO remove this e.g. at the same time we remove the above FRONT-635 hack
-        if ((status.stream as any).streamKey !== undefined) {
-            const DELIMITER = '::'
-            const [ streamId, streamPartition ] = (status.stream as any).streamKey.split(DELIMITER)
-            status.stream.id = streamId
-            status.stream.partition = parseInt(streamPartition)
-        }
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
         if (!isMostRecent) {
             return

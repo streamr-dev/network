@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 
 import { ethers } from 'ethers'
-import { MessageLayer, StreamIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, toStreamID } from 'streamr-client-protocol'
 
 import EncryptionUtil, { GroupKey } from '../../src/encryption/Encryption'
 
@@ -9,7 +9,7 @@ const { StreamMessage, MessageID } = MessageLayer
 
 // wrap these tests so can run same tests as if in browser
 function TestEncryptionUtil({ isBrowser = false } = {}) {
-    const streamId = StreamIDUtils.toStreamID('streamId')
+    const streamId = toStreamID('streamId')
     describe(`EncryptionUtil ${isBrowser ? 'Browser' : 'Server'}`, () => {
         beforeAll(() => {
             // this is the toggle used in EncryptionUtil to

@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
-import { SPID, StreamIDUtils, TrackerLayer } from 'streamr-client-protocol'
+import { SPID, toStreamID, TrackerLayer } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
@@ -9,13 +9,13 @@ import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { getSPIDKeys } from '../utils'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
-const FIRST_STREAM = 'stream-1' // assigned to trackerOne (arbitrarily by hashing algo)
-const SECOND_STREAM = 'stream-3' // assigned to trackerTwo
-const THIRD_STREAM = 'stream-2' // assigned to trackerThree
+const FIRST_STREAM = 'stream-7' // assigned to trackerOne (arbitrarily by hashing algo)
+const SECOND_STREAM = 'stream-8' // assigned to trackerTwo
+const THIRD_STREAM = 'stream-1' // assigned to trackerThree
 
 const FIRST_STREAM_2 = 'stream-13' // assigned to trackerOne
-const SECOND_STREAM_2 = 'stream-10' // assigned to trackerTwo
-const THIRD_STREAM_2 = 'stream-15' // assigned to trackerThree
+const SECOND_STREAM_2 = 'stream-17' // assigned to trackerTwo
+const THIRD_STREAM_2 = 'stream-21' // assigned to trackerThree
 
 // Leave out WebRTC related events
 const TRACKER_NODE_EVENTS_OF_INTEREST = [
@@ -178,7 +178,7 @@ describe('multi trackers', () => {
     test('node ignores instructions from unexpected tracker', async () => {
         const unexpectedInstruction = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: StreamIDUtils.toStreamID('stream-2'),
+            streamId: toStreamID('stream-2'),
             streamPartition: 0,
             nodeIds: [
                 'node-address-1',

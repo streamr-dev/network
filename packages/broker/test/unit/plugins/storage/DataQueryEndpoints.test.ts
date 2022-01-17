@@ -9,7 +9,7 @@ import {
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
-import { StreamIDUtils } from 'streamr-client-protocol'
+import { toStreamID } from 'streamr-client-protocol'
 
 const { MessageLayer } = Protocol
 const { MessageID } = MessageLayer
@@ -34,7 +34,7 @@ describe('DataQueryEndpoints', () => {
     function createStreamMessage(content: any): Protocol.StreamMessage {
         return new Protocol.StreamMessage({
             messageId: new MessageID(
-                StreamIDUtils.toStreamID('streamId'),
+                toStreamID('streamId'),
                 0,
                 new Date(2017, 3, 1, 12, 0, 0).getTime(),
                 0,
@@ -123,15 +123,15 @@ describe('DataQueryEndpoints', () => {
                     .expect(streamMessages.map((msg) => msg.serialize(Protocol.StreamMessage.LATEST_VERSION)), done)
             })
 
-            it('responds with specific version protocol serialization of messages given format=protocol&version=30', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?format=protocol&version=30')
-                    .expect(streamMessages.map((msg) => msg.serialize(30)), done)
+            it('responds with specific version protocol serialization of messages given format=protocol&version=32', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?format=protocol&version=32')
+                    .expect(streamMessages.map((msg) => msg.serialize(32)), done)
             })
 
             it('responds with raw format', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=2&format=raw&version=30')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=2&format=raw&version=32')
                     .expect('Content-Type', 'text/plain')
-                    .expect(streamMessages.map((msg) => msg.serialize(30)).join('\n'), done)
+                    .expect(streamMessages.map((msg) => msg.serialize(32)).join('\n'), done)
             })
 
             it('invokes storage#requestLast once with correct arguments', async () => {
