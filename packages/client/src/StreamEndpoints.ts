@@ -99,14 +99,6 @@ export class StreamEndpoints implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    async getStreamByName(name: string): Promise<Stream> {
-        this.debug('getStreamByName %o', {
-            name,
-        })
-        const streams = await this.streamRegistry.listStreams({ name })
-        return streams[0] ? streams[0] : Promise.reject(new NotFoundError('Stream: name=' + name))
-    }
-
     /**
      * @category Important
      */

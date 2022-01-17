@@ -113,23 +113,6 @@ describe('StreamEndpoints', () => {
         })
     })
 
-    describe('getStreamByName', () => {
-        it('get an existing Stream', async () => {
-            const name = 'name-' + Date.now()
-            const props = { id: await createRelativeTestStreamId(module), name }
-            const stream = await client.createStream(props)
-            await until(async () => { return client.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
-            // await new Promise((resolve) => setTimeout(resolve, 5000))
-            const existingStream = await client.getStreamByName(stream.name)
-            expect(existingStream.id).toEqual(stream.id)
-        })
-
-        it('get a non-existing Stream', async () => {
-            const name = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
-            return expect(() => client.getStreamByName(name)).rejects.toThrow(NotFoundError)
-        })
-    })
-
     describe('getOrCreate', () => {
         it('existing Stream by id', async () => {
             const existingStream = await client.getOrCreateStream({
