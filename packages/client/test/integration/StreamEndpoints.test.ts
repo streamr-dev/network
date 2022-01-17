@@ -128,39 +128,6 @@ const getName = () => uid('test-stream/slashes')
         })
     })
 
-    describe('liststreams with search and filters', () => {
-        it('get streamlist', async () => {
-            // create n streams to test offset and max
-            const name = 'filter-' + Date.now()
-            for (let i = 0; i < 3; i++) {
-                // eslint-disable-next-line no-await-in-loop
-                const props = { id: await createRelativeTestStreamId(module), name }
-                props.name = name + i
-                // eslint-disable-next-line no-await-in-loop
-                await client.createStream(props)
-            }
-            await until(async () => { return (await client.listStreams({ name })).length === 3 }, 20000, 1000)
-            let resultList = await client.listStreams({
-                name
-            })
-            expect(resultList.length).toBe(3)
-            resultList = await client.listStreams({
-                name,
-                max: 2,
-            })
-            expect(resultList.length).toBe(2)
-            expect(resultList[0].name.endsWith('0')).toBe(true)
-            expect(resultList[1].name.endsWith('1')).toBe(true)
-            resultList = await client.listStreams({
-                name,
-                max: 2,
-                offset: 1
-            })
-            expect(resultList[0].name.endsWith('1')).toBe(true)
-            return expect(resultList[1].name.endsWith('2')).toBe(true)
-        })
-    })
-
     describe('getOrCreate', () => {
         it('existing Stream by id', async () => {
             const existingStream = await client.getOrCreateStream({
@@ -219,6 +186,36 @@ const getName = () => uid('test-stream/slashes')
                 name: `non-existent-${Date.now()}`,
             })
             return expect(result.length).toBe(0)
+        })
+
+        it('max and offset', async () => {
+            const name = 'filter-' + Date.now()
+            for (let i = 0; i < 3; i++) {
+                // eslint-disable-next-line no-await-in-loop
+                const props = { id: await createRelativeTestStreamId(module), name }
+                props.name = name + i
+                // eslint-disable-next-line no-await-in-loop
+                await client.createStream(props)
+            }
+            await until(async () => { return (await client.listStreams({ name })).length === 3 }, 20000, 1000)
+            let resultList = await client.listStreams({
+                name
+            })
+            expect(resultList.length).toBe(3)
+            resultList = await client.listStreams({
+                name,
+                max: 2,
+            })
+            expect(resultList.length).toBe(2)
+            expect(resultList[0].name.endsWith('0')).toBe(true)
+            expect(resultList[1].name.endsWith('1')).toBe(true)
+            resultList = await client.listStreams({
+                name,
+                max: 2,
+                offset: 1
+            })
+            expect(resultList[0].name.endsWith('1')).toBe(true)
+            return expect(resultList[1].name.endsWith('2')).toBe(true)
         })
     })
 
