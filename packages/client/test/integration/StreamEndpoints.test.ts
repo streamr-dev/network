@@ -8,11 +8,15 @@ import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
 
 jest.setTimeout(40000)
+const DELAY_BETWEEN_TESTS = 4000
+
+const getName = () => uid('test-stream/slashes')
 
 /**
  * These tests should be run in sequential order!
  */
-function TestStreamEndpoints(getName: () => string, delay: number) {
+ describe('StreamEndpoints', () => {
+
     let client: StreamrClient
     let wallet: Wallet
     let createdStream: Stream
@@ -20,7 +24,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
     let storageNodeAddress: string
 
     beforeAll(async () => {
-        await wait(delay)
+        await wait(DELAY_BETWEEN_TESTS)
         wallet = new Wallet(await getPrivateKey())
         otherWallet = new Wallet(await getPrivateKey())
         client = new StreamrClient({
@@ -652,15 +656,5 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
                 (sp) => (sp.streamId === stream.id)
             )).toBeFalsy()
         })
-    })
-}
-
-describe('StreamEndpoints', () => {
-    // describe('using normal name', () => {
-    //     TestStreamEndpoints(() => uid('test-stream'), 0)
-    // })
-
-    describe('using name with slashes', () => {
-        TestStreamEndpoints(() => uid('test-stream/slashes'), 4000)
     })
 })
