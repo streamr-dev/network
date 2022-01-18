@@ -7,13 +7,14 @@ import { instanceId } from './utils'
 import { Context } from './utils/Context'
 import SubscriptionSession from './SubscriptionSession'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
-import { SPID, SIDLike, StreamMessage } from 'streamr-client-protocol'
-import Subscriber, { SubscribeOptions } from './Subscriber'
+import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import Subscriber from './Subscriber'
 import { BrubeckContainer } from './Container'
 import { Config } from './Config'
 import OrderMessages from './OrderMessages'
 import Resends, { isResendOptions, ResendOptions, ResendOptionsStrict } from './Resends'
 import Signal from './utils/Signal'
+import { definitionToStreamPartID, StreamDefinition } from "./StreamDefinition"
 
 export class ResendSubscription<T> extends Subscription<T> {
     onResent = Signal.once()
@@ -30,7 +31,7 @@ export class ResendSubscription<T> extends Subscription<T> {
             container.resolve(Config.Subscribe),
             this,
             container.resolve(Resends),
-            subSession.spid,
+            subSession.streamPartId,
         )
         this.pipe(this.resendThenRealtime)
         this.pipe(this.orderMessages.transform())
@@ -40,9 +41,11 @@ export class ResendSubscription<T> extends Subscription<T> {
     }
 
     async getResent() {
+        const [id, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(this.streamPartId)
         const resentMsgs = await this.resends.resend<T>({
-            ...this.spid.toObject(),
-            resend: this.resendOptions,
+            ...this.resendOptions,
+            id,
+            partition,
         })
 
         this.onBeforeFinally(async () => {
@@ -83,9 +86,9 @@ export default class ResendSubscribe implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    subscribe<T>(options: SubscribeOptions, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>>
+    subscribe<T>(options: StreamDefinition, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>>
     subscribe<T>(options: ResendOptions, onMessage?: SubscriptionOnMessage<T>): Promise<ResendSubscription<T>>
-    subscribe<T>(options: SubscribeOptions | ResendOptions, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T> | ResendSubscription<T>> {
+    subscribe<T>(options: StreamDefinition | ResendOptions, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T> | ResendSubscription<T>> {
         if (isResendOptions(options)) {
             return this.resendSubscribe(options, onMessage)
         }
@@ -98,9 +101,8 @@ export default class ResendSubscribe implements Context {
         onMessage?: SubscriptionOnMessage<T>
     ): Promise<ResendSubscription<T>> {
         const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
-        const spidOptions = ('stream' in options && options.stream ? options.stream : options) as SIDLike
-        const spid = SPID.fromDefaults(spidOptions, { streamPartition: 0 })
-        const subSession = this.subscriber.getOrCreateSubscriptionSession<T>(spid)
+        const streamPartId = definitionToStreamPartID(options)
+        const subSession = this.subscriber.getOrCreateSubscriptionSession<T>(streamPartId)
         const sub = new ResendSubscription<T>(subSession, this.resends, resendOptions, this.container)
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)

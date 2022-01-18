@@ -15,8 +15,6 @@ import { Stream, StreamPermission, StreamPermissions, StreamProperties } from '.
 import { NotFoundError } from './authFetch'
 import { StreamListQuery } from './StreamEndpoints'
 import {
-    SIDLike,
-    SPID,
     StreamID,
     EthereumAddress,
     StreamIDUtils, toStreamID,
@@ -158,22 +156,15 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async createStream(props: StreamProperties | SIDLike): Promise<Stream> {
-        this.debug('createStream %o', props)
-        let completeProps: StreamProperties
-        if ((props as StreamProperties).id) {
-            completeProps = props as StreamProperties
-        } else {
-            const sid = SPID.parse(props as SIDLike)
-            completeProps = { id: sid.streamId, ...sid }
-        }
-        completeProps.partitions ??= 1
+    async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
+        const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
+        props.partitions ??= 1
 
-        const streamId = await this.streamIdBuilder.toStreamID(completeProps.id)
+        const streamId = await this.streamIdBuilder.toStreamID(props.id)
         await this.ensureStreamIdInNamespaceOfAuthenticatedUser(streamId)
 
         const normalizedProperties = {
-            ...completeProps,
+            ...props,
             id: streamId
         }
         await this.connectToStreamRegistryContract()

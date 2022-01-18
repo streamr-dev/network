@@ -183,13 +183,17 @@ export class NodeRegistry {
         if (res.node === null) {
             throw new NotFoundError('Node not found, id: ' + nodeAddress)
         }
-        return res.node.storedStreams.find((stream) => stream.id === streamId) !== undefined
+        const found = res.node.storedStreams.find((stream) => stream.id === streamId)
+        return found !== undefined
     }
 
     async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Getting storage nodes of stream %s', streamId)
         const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
+        if (res.stream == null) {
+            return []
+        }
         return res.stream.storageNodes.map((node) => node.id)
     }
 

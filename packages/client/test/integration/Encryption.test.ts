@@ -296,7 +296,7 @@ describeRepeats('decryption', () => {
 
                     const published: any[] = []
                     publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
-                        if (!streamMessage.spid.matches(testStream.id)) { return }
+                        if (streamMessage.getStreamId() !== testStream.id) { return }
                         published.push(streamMessage.getParsedContent())
                     })
                     await getPublishTestStreamMessages(publisher, testStream)(NUM_MESSAGES)
@@ -335,7 +335,7 @@ describeRepeats('decryption', () => {
 
                 const published: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
                 })
                 await getPublishTestStreamMessages(publisher, stream)(NUM_MESSAGES)
@@ -361,7 +361,7 @@ describeRepeats('decryption', () => {
                 await publisher.rotateGroupKey(stream.id)
                 const publishedStreamMessages: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     publishedStreamMessages.push(streamMessage.clone())
                     await publisher.rotateGroupKey(stream.id)
                 })
@@ -401,11 +401,11 @@ describeRepeats('decryption', () => {
                 const contentClear: any[] = []
                 const streamMessagesPublished: StreamMessage<any>[] = []
                 publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())
                 })
                 publisher.publisher.publishQueue.forEach(([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     streamMessagesPublished.push(streamMessage)
                 })
 
@@ -434,7 +434,7 @@ describeRepeats('decryption', () => {
                 })
                 const published: any[] = []
                 publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
                 })
                 await publishTestMessages(NUM_MESSAGES, {
@@ -497,7 +497,7 @@ describeRepeats('decryption', () => {
                     contentClear = []
 
                     publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
-                        if (!streamMessage.spid.matches(stream.id)) { return }
+                        if (streamMessage.getStreamId() !== stream.id) { return }
                         contentClear.push(streamMessage.getParsedContent())
                     })
 
@@ -510,7 +510,7 @@ describeRepeats('decryption', () => {
                         // @ts-expect-error
                         groupKeys: keys,
                     })
-                    const subSession = subscriber.getSubscriptionSession(sub)
+                    const subSession = subscriber.getSubscriptionSession(sub.streamPartId)
                     if (!subSession) { throw new Error('no subsession?') }
                     subSession.pipeline.forEachBefore((streamMessage, index) => {
                         if (index === BAD_INDEX) {
@@ -642,7 +642,7 @@ describeRepeats('decryption', () => {
                 await publisher.rotateGroupKey(testStream.id)
                 const published: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
-                    if (!streamMessage.spid.matches(testStream.id)) { return }
+                    if (streamMessage.getStreamId() !== testStream.id) { return }
                     published.push(streamMessage.getParsedContent())
                     await publisher.rotateGroupKey(testStream.id)
                 })
@@ -713,7 +713,7 @@ describeRepeats('decryption', () => {
 
                 const contentClear: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
-                    if (!streamMessage.spid.matches(testStream.id)) { return }
+                    if (streamMessage.getStreamId() !== testStream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())
                 })
                 await getPublishTestStreamMessages(publisher, testStream)(NUM_MESSAGES)

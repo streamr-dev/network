@@ -18,10 +18,9 @@ import { authRequest } from './authFetch'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
-import { StreamRegistry } from './StreamRegistry'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import { createQueryString } from './Rest'
-import { StreamDefinition } from "./StreamDefinition"
+import { definitionToStreamPartID, StreamDefinition } from './StreamDefinition'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -127,7 +126,6 @@ export default class Resend implements Context {
     constructor(
         context: Context,
         private nodeRegistry: NodeRegistry,
-        private streamRegistry: StreamRegistry,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
         @inject(BrubeckContainer) private container: DependencyContainer
     ) {
@@ -146,10 +144,9 @@ export default class Resend implements Context {
         const resendOptions = (
             (options && typeof options === 'object' && 'resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
         )
-        const spidOptions = (options && typeof options === 'object' && 'stream' in options && options.stream ? options.stream : options) as SIDLike
-        const spid = SPID.fromDefaults(spidOptions, { streamPartition: 0 })
+        const streamPartId = definitionToStreamPartID(options)
 
-        const sub = await this.resendMessages<T>(spid, resendOptions)
+        const sub = await this.resendMessages<T>(streamPartId, resendOptions)
 
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
@@ -158,15 +155,15 @@ export default class Resend implements Context {
         return sub
     }
 
-    resendMessages<T>(spid: SPID, options: ResendOptionsStrict): Promise<MessageStream<T>> {
+    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptionsStrict): Promise<MessageStream<T>> {
         if (isResendLast(options)) {
-            return this.last<T>(spid, {
+            return this.last<T>(streamPartId, {
                 count: options.last,
             })
         }
 
         if (isResendRange(options)) {
-            return this.range<T>(spid, {
+            return this.range<T>(streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
@@ -177,39 +174,35 @@ export default class Resend implements Context {
         }
 
         if (isResendFrom(options)) {
-            return this.from<T>(spid, {
+            return this.from<T>(streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId,
             })
         }
 
-        throw new ContextError(this, `can not resend without valid resend options: ${inspect({ spid, options })}`)
+        throw new ContextError(this, `can not resend without valid resend options: ${inspect({ streamPartId, options })}`)
     }
 
-    async getStreamNodes(sidLike: SIDLike) {
-        const sid = SPID.parse(sidLike)
-        const stream = await this.streamRegistry.getStream(sid.streamId)
-        return stream.getStorageNodes()
-    }
-
-    private async fetchStream<T>(endpointSuffix: 'last' | 'range' | 'from', spid: SPID, query: QueryDict = {}) {
+    private async fetchStream<T>(
+        endpointSuffix: 'last' | 'range' | 'from',
+        streamPartId: StreamPartID,
+        query: QueryDict = {}
+    ) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
-        debug('fetching resend %s %s %o', endpointSuffix, spid.key, query)
-        const nodeAdresses = await this.getStreamNodes(spid)
+        debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
+        const nodeAdresses = await this.nodeRegistry.getStorageNodesOf(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAdresses.length) {
-            const err = new ContextError(this, `no storage assigned: ${inspect(spid)}`)
+            const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
             err.code = 'NO_STORAGE_NODES'
             throw err
         }
 
-        // just pick first node
-        // TODO: handle multiple nodes
-        const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(nodeAdresses[0])
-        const url = createUrl(nodeUrl, endpointSuffix, spid, query)
+        const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(nodeAdresses[0]) // TODO: handle multiple nodes
+        const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
-            spid,
+            streamPartId,
             this.container.resolve<Context>(Context as any),
             this.container
         )
@@ -231,19 +224,19 @@ export default class Resend implements Context {
         return messageStream
     }
 
-    async last<T>(spid: SPID, { count }: { count: number }): Promise<MessageStream<T>> {
+    private async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream<T>> {
         if (count <= 0) {
             const emptyStream = new MessageStream<T>(this)
             emptyStream.endWrite()
             return emptyStream
         }
 
-        return this.fetchStream('last', spid, {
+        return this.fetchStream('last', streamPartId, {
             count,
         })
     }
 
-    async from<T>(spid: SPID, {
+    async from<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         publisherId
@@ -252,14 +245,14 @@ export default class Resend implements Context {
         fromSequenceNumber?: number,
         publisherId?: string
     }): Promise<MessageStream<T>> {
-        return this.fetchStream('from', spid, {
+        return this.fetchStream('from', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
             publisherId,
         })
     }
 
-    async range<T>(spid: SPID, {
+    async range<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         toTimestamp,
@@ -274,7 +267,7 @@ export default class Resend implements Context {
         publisherId?: string,
         msgChainId?: string
     }): Promise<MessageStream<T>> {
-        return this.fetchStream('range', spid, {
+        return this.fetchStream('range', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
             toTimestamp,

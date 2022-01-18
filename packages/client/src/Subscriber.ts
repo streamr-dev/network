@@ -7,61 +7,56 @@ import { allSettledValues, instanceId } from './utils'
 import { Context } from './utils/Context'
 import SubscriptionSession from './SubscriptionSession'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
-import { SPIDLike, SPID, SIDLike } from 'streamr-client-protocol'
+import { StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from './Container'
+import { definitionToStreamPartID, matches, StreamDefinition } from './StreamDefinition'
 
 export { Subscription, SubscriptionSession }
-
-export type SubscribeOptions = SIDLike | { stream: SIDLike }
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Subscriber implements Context {
     id
     debug
-    readonly subSessions: Map<string, SubscriptionSession<unknown>> = new Map()
+    readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
 
     constructor(context: Context, @inject(BrubeckContainer) private container: DependencyContainer) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
     }
 
-    async subscribe<T>(opts: SubscribeOptions, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
-        if (opts && typeof opts === 'object' && 'stream' in opts) {
-            return this.subscribe(opts.stream, onMessage)
-        }
-
-        const spid = SPID.fromDefaults(opts, { streamPartition: 0 })
-        return this.subscribeTo(spid, onMessage)
+    async subscribe<T>(
+        streamDefinition: StreamDefinition,
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<Subscription<T>> {
+        return this.subscribeTo(definitionToStreamPartID(streamDefinition), onMessage)
     }
 
-    async subscribeTo<T>(spid: SPID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
-        const sub: Subscription<T> = await this.add(spid)
+    /** @internal */
+    async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
+        const sub: Subscription<T> = await this.add(streamPartId)
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
         }
-
         return sub
     }
 
-    getOrCreateSubscriptionSession<T>(spidLike: SPIDLike) {
-        const spid = SPID.from(spidLike)
-        const { key } = spid
-        if (this.subSessions.has(key)) {
-            return this.getSubscriptionSession<T>(spid)!
+    /** @internal */
+    getOrCreateSubscriptionSession<T>(streamPartId: StreamPartID) {
+        if (this.subSessions.has(streamPartId)) {
+            return this.getSubscriptionSession<T>(streamPartId)!
         }
-        this.debug('creating new SubscriptionSession: %s', spid.key)
-        const subSession = new SubscriptionSession<T>(this, spid, this.container)
-        this.subSessions.set(key, subSession as SubscriptionSession<unknown>)
+        this.debug('creating new SubscriptionSession: %s', streamPartId)
+        const subSession = new SubscriptionSession<T>(this, streamPartId, this.container)
+        this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)
         subSession.onRetired(() => {
-            this.subSessions.delete(key)
+            this.subSessions.delete(streamPartId)
         })
         return subSession
     }
 
+    /** @internal */
     async addSubscription<T>(sub: Subscription<T>): Promise<Subscription<T>> {
-        const { spid } = sub
-        // get/create subscription session
-        const subSession = this.getOrCreateSubscriptionSession<T>(spid)
+        const subSession = this.getOrCreateSubscriptionSession<T>(sub.streamPartId)
 
         // add subscription to subSession
         try {
@@ -76,19 +71,17 @@ export default class Subscriber implements Context {
         return sub
     }
 
-    async add<T>(spid: SPID): Promise<Subscription<T>> {
-        // get/create subscription session
-        const subSession = this.getOrCreateSubscriptionSession<T>(spid)
+    private async add<T>(streamPartId: StreamPartID): Promise<Subscription<T>> {
+        const subSession = this.getOrCreateSubscriptionSession<T>(streamPartId)
 
         // create subscription
         const sub = new Subscription<T>(subSession)
         return this.addSubscription(sub)
     }
 
-    async remove(sub: Subscription<any>): Promise<void> {
+    private async remove(sub: Subscription<any>): Promise<void> {
         if (!sub) { return }
-        const { key } = sub.spid
-        const subSession = this.subSessions.get(key)
+        const subSession = this.subSessions.get(sub.streamPartId)
         if (!subSession) {
             return
         }
@@ -96,8 +89,11 @@ export default class Subscriber implements Context {
         await subSession.remove(sub)
     }
 
-    async unsubscribe(streamMatcher?: SIDLike) {
-        return this.removeAll(streamMatcher)
+    async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
+        if (streamDefinitionOrSubscription instanceof Subscription) {
+            return this.remove(streamDefinitionOrSubscription)
+        }
+        return this.removeAll(streamDefinitionOrSubscription)
     }
 
     unsubscribeAll = this.removeAll.bind(this)
@@ -105,8 +101,10 @@ export default class Subscriber implements Context {
     /**
      * Remove all subscriptions, optionally only those matching options.
      */
-    async removeAll(streamMatcher?: SIDLike) {
-        const subs = !streamMatcher ? this.getAllSubscriptions() : this.getSubscriptions(streamMatcher)
+    private async removeAll(streamDefinition?: StreamDefinition): Promise<unknown> {
+        const subs = !streamDefinition
+            ? this.getAllSubscriptions()
+            : this.getSubscriptions(streamDefinition)
         return allSettledValues(subs.map((sub) => (
             this.remove(sub)
         )))
@@ -128,9 +126,9 @@ export default class Subscriber implements Context {
      * Count all matching subscriptions.
      */
 
-    count(streamMatcher?: SIDLike): number {
-        if (streamMatcher === undefined) { return this.countAll() }
-        return this.getSubscriptions(streamMatcher).length
+    count(streamDefinition?: StreamDefinition): number {
+        if (streamDefinition === undefined) { return this.countAll() }
+        return this.getSubscriptions(streamDefinition).length
     }
 
     /**
@@ -148,9 +146,9 @@ export default class Subscriber implements Context {
      * Get subscription session for matching sub options.
      */
 
-    getSubscriptionSession<T = unknown>(spidLike: SPIDLike): SubscriptionSession<T> | undefined {
-        const { key } = SPID.from(spidLike)
-        const subSession = this.subSessions.get(key)
+    /** @internal */
+    getSubscriptionSession<T = unknown>(streamPartId: StreamPartID): SubscriptionSession<T> | undefined {
+        const subSession = this.subSessions.get(streamPartId)
         if (!subSession) {
             return undefined
         }
@@ -166,13 +164,13 @@ export default class Subscriber implements Context {
      * Get subscriptions matching streamId or streamId + streamPartition
      */
 
-    getSubscriptions<T = unknown>(streamMatcher?: SIDLike) {
-        if (!streamMatcher) {
+    getSubscriptions<T = unknown>(streamDefinition?: StreamDefinition) {
+        if (!streamDefinition) {
             return this.getAllSubscriptions()
         }
 
         return [...this.subSessions.values()].filter((subSession) => {
-            return subSession.spid.matches(streamMatcher)
+            return matches(streamDefinition, subSession.streamPartId)
         }).flatMap((subSession) => ([
             ...subSession.subscriptions
         ])) as Subscription<T>[]

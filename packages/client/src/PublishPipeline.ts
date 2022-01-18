@@ -17,14 +17,18 @@ import Encrypt from './Encrypt'
 import Validator from './Validator'
 import { DestroySignal } from './DestroySignal'
 import { StreamIDBuilder } from './StreamIDBuilder'
+import {
+    definitionToStreamPartElements,
+    StreamDefinition
+} from './StreamDefinition'
 
 export class FailedToPublishError extends Error {
-    streamId: string
+    definition: string
     msg
     reason
-    constructor(streamId: string, data: PublishMetadata | StreamMessage, reason?: Error) {
-        super(`Failed to publish to stream ${streamId} due to: ${reason && reason.stack ? reason.stack : reason}.`)
-        this.streamId = streamId
+    constructor(definition: StreamDefinition, data: PublishMetadata | StreamMessage, reason?: Error) {
+        super(`Failed to publish to stream ${definition} due to: ${reason && reason.stack ? reason.stack : reason}.`)
+        this.definition = JSON.stringify(definition)
         this.msg = data
         this.reason = reason
         if (Error.captureStackTrace) {
@@ -50,7 +54,7 @@ export type PublishMetadata<T = unknown> = {
 
 export type PublishMetadataStrict<T = unknown> = PublishMetadata<T> & {
     timestamp: number
-    streamId: string
+    streamDefinition: StreamDefinition
     partitionKey?: number | string
 }
 
@@ -108,10 +112,11 @@ export default class PublishPipeline implements Context, Stoppable {
 
     private async* toStreamMessage(src: AsyncGenerator<PublishQueueIn>): AsyncGenerator<PublishQueueOut> {
         for await (const [publishMetadata, defer] of src) {
-            const { streamId, ...options } = publishMetadata
+            const { streamDefinition, ...options } = publishMetadata
             try {
-                const normalizedStreamId = await this.streamIdBuilder.toStreamID(streamId)
-                const streamMessage = await this.messageCreator.create(normalizedStreamId, options)
+                const [streamId, partition] = definitionToStreamPartElements(streamDefinition)
+                options.partitionKey ??= partition
+                const streamMessage = await this.messageCreator.create(streamId, options)
                 yield [streamMessage, defer]
             } catch (err) {
                 defer.reject(err)
@@ -192,7 +197,7 @@ export default class PublishPipeline implements Context, Stoppable {
             await this.streamMessageQueue.push([publishMetadata, defer])
             return await defer
         } catch (err) {
-            const error = new FailedToPublishError(publishMetadata.streamId, publishMetadata, err)
+            const error = new FailedToPublishError(publishMetadata.streamDefinition, publishMetadata, err)
             defer.reject(error)
             throw error
         } finally {

@@ -1,7 +1,7 @@
 /**
  * Public Publishing API
  */
-import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from './utils'
@@ -17,7 +17,6 @@ import Validator from './Validator'
 import BrubeckNode from './BrubeckNode'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { definitionToStreamPartID, StreamDefinition } from './StreamDefinition'
-import { Stream } from './Stream'
 
 export type { PublishMetadata }
 
@@ -72,13 +71,11 @@ export default class BrubeckPublisher implements Context, Stoppable {
         partitionKey
     }: PublishMetadata<T>): Promise<StreamMessage<T>> {
         const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-        const streamPartId = definitionToStreamPartID(streamDefinition)
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         return this.pipeline.publish({
-            streamId,
+            streamDefinition,
             content,
             timestamp: timestampAsNumber,
-            partitionKey: partitionKey != null ? partitionKey : streamPartition,
+            partitionKey,
         })
     }
 
@@ -115,12 +112,12 @@ export default class BrubeckPublisher implements Context, Stoppable {
     }
 
     /** @internal */
-    async* publishFrom<T>(stream: Stream, seq: AsyncIterable<T>) {
+    async* publishFrom<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<T>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
             for await (const msg of items) {
-                yield await this.publish(stream.id, msg)
+                yield await this.publish(streamDefinition, msg)
             }
         } finally {
             this.inProgress.delete(items)
@@ -128,12 +125,12 @@ export default class BrubeckPublisher implements Context, Stoppable {
     }
 
     /** @internal */
-    async* publishFromMetadata<T>(stream: Stream, seq: AsyncIterable<PublishMetadata<T>>) {
+    async* publishFromMetadata<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<PublishMetadata<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
             for await (const msg of items) {
-                yield await this.publishMessage(stream.id, msg)
+                yield await this.publishMessage(streamDefinition, msg)
             }
         } finally {
             this.inProgress.delete(items)

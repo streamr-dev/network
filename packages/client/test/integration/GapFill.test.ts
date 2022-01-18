@@ -29,7 +29,7 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
     })
 }
 
-describeRepeats('GapFill', () => {
+describe('GapFill', () => {
     let expectErrors = 0 // check no errors by default
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let onError = jest.fn()
@@ -58,7 +58,7 @@ describeRepeats('GapFill', () => {
         // await storageNodeClient.setNode(storageNodeTestConfig.url)
         await stream.addToStorageNode(storageNodeTestConfig.address)
         client.debug('connecting before test <<')
-        publishTestMessages = getPublishTestStreamMessages(client, stream, { waitForLast: true })
+        publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
         return client
     }
 
@@ -181,7 +181,7 @@ describeRepeats('GapFill', () => {
                 })
 
                 const sub = await client.resend<typeof Msg>({
-                    stream,
+                    id: stream.id,
                     last: MAX_MESSAGES,
                 })
 
@@ -227,7 +227,7 @@ describeRepeats('GapFill', () => {
                 })
 
                 const sub = await client.resend({
-                    stream,
+                    id: stream.id,
                     last: MAX_MESSAGES,
                 })
 
@@ -247,7 +247,7 @@ describeRepeats('GapFill', () => {
 
                 await expect(async () => {
                     await client.resend({
-                        stream,
+                        id: stream.id,
                         last: MAX_MESSAGES,
                     })
                 }).rejects.toThrow('storage')
@@ -279,7 +279,7 @@ describeRepeats('GapFill', () => {
             }
 
             const sub = await client.subscribe({
-                stream,
+                id: stream.id
             })
 
             const publishedTask = publishTestMessages(MAX_MESSAGES)
@@ -323,7 +323,7 @@ describeRepeats('GapFill', () => {
             })
 
             const sub = await client.resend({
-                stream,
+                id: stream.id,
                 last: MAX_MESSAGES,
             })
 

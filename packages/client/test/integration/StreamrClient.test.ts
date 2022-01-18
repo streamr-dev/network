@@ -20,10 +20,10 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
+import { matches } from '../../src/StreamDefinition'
 
 import { Stream } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
-// import Subscription from '../../src/brubeck/Subscription'
 
 jest.setTimeout(60000)
 
@@ -410,7 +410,7 @@ describeRepeats('StreamrClient', () => {
                 const subs = await Promise.all(eachPartition.map((streamPartition) => {
                     return client.subscribe<typeof Msg>({
                         streamId: partitionStream.id,
-                        streamPartition,
+                        partition: streamPartition,
                     })
                 }))
 
@@ -440,7 +440,7 @@ describeRepeats('StreamrClient', () => {
             const gotMessages = Defer()
             const published: any[] = []
             client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
-                if (!streamMessage.spid.matches(stream.id)) { return }
+                if (!matches(stream.id, streamMessage.getStreamPartID())) { return }
                 onMessage()
                 published.push(streamMessage.getParsedContent())
                 if (published.length === 3) {

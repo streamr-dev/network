@@ -1,4 +1,3 @@
-// import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats, collect } from '../utils'
@@ -9,8 +8,6 @@ import { Stream } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
 import Subscriber from '../../src/Subscriber'
 import { Todo } from '../../src/types'
-
-// const { ControlMessage } = ControlLayer
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -70,9 +67,7 @@ describeRepeats('Subscriber', () => {
         })
 
         it('works when passing { stream: stream }', async () => {
-            const sub = await M.subscribe({
-                stream,
-            })
+            const sub = await M.subscribe(stream.id)
             expect(M.count(stream.id)).toBe(1)
 
             const published = await publishTestMessages()

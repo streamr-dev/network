@@ -6,6 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
+import { toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(40000)
 
@@ -634,9 +635,8 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             expect(storageNodes.length).toBe(1)
             expect(storageNodes[0]).toStrictEqual(storageNodeAddress.toLowerCase())
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            return expect(storedStreamParts.some(
-                (sp) => (sp.streamId === stream.id) && (sp.streamPartition === 0)
-            )).toBeTruthy()
+            const expectedStreamPartId = toStreamPartID(stream.id, 0)
+            return expect(storedStreamParts.some((sp) => sp === expectedStreamPartId)).toBeTruthy()
         })
 
         it('remove', async () => {
@@ -648,9 +648,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            return expect(storedStreamParts.some(
-                (sp) => (sp.streamId === stream.id)
-            )).toBeFalsy()
+            return expect(storedStreamParts.some((sp) => (sp.startsWith(stream.id)))).toBeFalsy()
         })
     })
 }
