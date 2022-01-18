@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add permission commands: `stream grant-permission` and `stream revoke-permission`
 - Remove `typescript` and `ts-node` as run-time dependencies
 - (Breaking) Remove `--msg-chain-id` parameter from `stream resend from`
-- (Breaking) `streamr stream create` argument is a stream ID, not a name
+- (Breaking) `stream create` argument is a stream ID, not a name
 - Support path notation when defining a stream ID
 - (Breaking) Remove `misc get-session-token` command
 - (Breaking) Change permission names and arguments:
