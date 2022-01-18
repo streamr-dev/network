@@ -488,7 +488,7 @@ export class StreamRegistry implements Context {
 
     async searchStreams(term: string, opts: SearchStreamsOptions = {}): Promise<Stream[]> {
         this.debug('Getting all streams from thegraph that match filter %s %o', term, opts)
-        const response = await this.sendStreamQuery(StreamRegistry.buildGetFilteredStreamListQuery(term, opts)) as FilteredStreamListQueryResult
+        const response = await this.sendStreamQuery(StreamRegistry.buildSearchStreamsQuery(term, opts)) as FilteredStreamListQueryResult
         return response.streams.map((s) => this.parseStream(toStreamID(s.id), s.metadata))
     }
 
@@ -585,7 +585,7 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    private static buildGetFilteredStreamListQuery(term: string, opts: SearchStreamsOptions): string {
+    private static buildSearchStreamsQuery(term: string, opts: SearchStreamsOptions): string {
         // the metadata field contains all stream properties (including the id property),
         // so there is no need search over other fields
         const termParam = `metadata_contains: "${term}"`
