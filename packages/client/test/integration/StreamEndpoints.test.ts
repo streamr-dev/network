@@ -175,9 +175,10 @@ describe('StreamEndpoints', () => {
             const searchTerm = `searchStreams-${Date.now()}`
             for (let i = 0; i < 3; i++) {
                 const orderSuffix = uuid()
-                const path = await createRelativeTestStreamId(module, `${searchTerm}-${orderSuffix}`)
+                const path = await createRelativeTestStreamId(module, orderSuffix)
                 const stream = await client.createStream({
-                    id: path
+                    id: path,
+                    description: searchTerm
                 })
                 streamIds.push(stream.id)
             }
