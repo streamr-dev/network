@@ -587,18 +587,30 @@ export class StreamRegistry implements Context {
 
     private static buildSearchStreamsQuery(term: string, opts: SearchStreamsOptions): string {
         // the metadata field contains all stream properties (including the id property),
-        // so there is no need search over other fields
-        const termParam = `metadata_contains: "${term}"`
-        const maxParam = opts.max ? `, first: ${opts.max}` : ''
-        const offsetParam = opts.offset ? `, skip: ${opts.offset}` : ''
-        const orderParam = opts.order ? `, orderBy: id, orderDirection: ${opts.order}` : ''
-        const query = `{
-            streams (where: {${termParam}}${maxParam}${offsetParam}${orderParam}) {
-                id,
-                metadata
-            }
-        }`
-        return JSON.stringify({ query })
+        // so there is no need search over other fields in the where clause
+        const query = `
+            query ($term: String!, $first: Int, $skip: Int, $orderBy: String, $orderDirection: String) {
+                streams (
+                    where: {
+                        metadata_contains: $term
+                    }
+                    first: $first
+                    skip: $skip
+                    orderBy: $orderBy
+                    orderDirection: $orderDirection
+                ) {
+                    id,
+                    metadata
+                }
+            }`
+        const variables = {
+            term,
+            first: opts.max,
+            skip: opts.offset,
+            orderBy: (opts.order !== undefined) ? 'id' : undefined,
+            orderDirection: opts.order,
+        }
+        return JSON.stringify({ query, variables })
     }
 
     private static buildGetStreamPublishersQuery(streamId: StreamID, pagesize: number, lastId?: string): string {

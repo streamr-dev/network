@@ -164,6 +164,17 @@ describe('StreamEndpoints', () => {
             return expect(result[0].id).toBe(createdStream.id)
         })
 
+        it('escaped char', async () => {
+            const description = 'searchStreams.escapedChar"' + Date.now()
+            await createTestStream(client, module, {
+                description
+            })
+            // the content is escaped twice because it is stored in a JSON field ("description")
+            // in a strigifyed JSON ("metadata" object)
+            const result = await client.searchStreams(description.replace('"', '\\\\"'))
+            expect(result.length).toBe(1)
+        })
+
         it('filters by given criteria (no match)', async () => {
             const result = await client.searchStreams(`non-existent-${Date.now()}`)
             return expect(result.length).toBe(0)
