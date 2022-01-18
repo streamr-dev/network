@@ -25,8 +25,7 @@ export class TrackerRegistry<T extends TrackerInfo> {
     }
 
     getTracker(streamPartId: StreamPartID): T {
-        const key = streamPartId.replace('#', '::') // TODO temporary backwards compatibility
-        const index = keyToArrayIndex(this.records.length, key)
+        const index = keyToArrayIndex(this.records.length, streamPartId)
         return this.records[index]
     }
 

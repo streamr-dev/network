@@ -9,13 +9,13 @@ import { Event as NodeEvent } from '../../src/logic/node/Node'
 import { getStreamPartIDs } from '../utils'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
-const FIRST_STREAM = toStreamID('stream-1') // assigned to trackerOne (arbitrarily by hashing algo)
-const SECOND_STREAM = toStreamID('stream-3') // assigned to trackerTwo
-const THIRD_STREAM = toStreamID('stream-2') // assigned to trackerThree
+const FIRST_STREAM = toStreamID('stream-7') // assigned to trackerOne (arbitrarily by hashing algo)
+const SECOND_STREAM = toStreamID('stream-8') // assigned to trackerTwo
+const THIRD_STREAM = toStreamID('stream-1') // assigned to trackerThree
 
 const FIRST_STREAM_2 = toStreamID('stream-13') // assigned to trackerOne
-const SECOND_STREAM_2 = toStreamID('stream-10') // assigned to trackerTwo
-const THIRD_STREAM_2 = toStreamID('stream-15') // assigned to trackerThree
+const SECOND_STREAM_2 = toStreamID('stream-17') // assigned to trackerTwo
+const THIRD_STREAM_2 = toStreamID('stream-21') // assigned to trackerThree
 
 // Leave out WebRTC related events
 const TRACKER_NODE_EVENTS_OF_INTEREST = [

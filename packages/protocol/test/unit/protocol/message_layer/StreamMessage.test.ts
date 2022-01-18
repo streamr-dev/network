@@ -4,7 +4,7 @@ import sinon from 'sinon'
 
 import {
     MessageRef,
-    MessageIDStrict,
+    MessageID,
     EncryptedGroupKey,
     toStreamID,
     StreamPartIDUtils
@@ -22,7 +22,7 @@ const newGroupKey = new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex')
 
 const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {
     return new StreamMessage({
-        messageId: new MessageIDStrict(toStreamID('streamId'), 0, timestamp, sequenceNumber, 'publisherId', 'msgChainId'),
+        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, 'publisherId', 'msgChainId'),
         prevMsgRef: new MessageRef(timestamp, 5),
         content: JSON.stringify(content),
         messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
@@ -59,7 +59,7 @@ describe('StreamMessage', () => {
 
         it('create StreamMessage with minimum fields defined', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
@@ -82,7 +82,7 @@ describe('StreamMessage', () => {
 
         it('create StreamMessage with object as content instead of string', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content,
             })
             assert.deepStrictEqual(streamMessage.getContent(), content)
@@ -91,7 +91,7 @@ describe('StreamMessage', () => {
 
         it('can detect signed/encrypted etc', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
             })
             expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
@@ -100,7 +100,7 @@ describe('StreamMessage', () => {
             expect(StreamMessage.isUnsigned(streamMessage)).toBe(true)
 
             const signedMessage = new StreamMessage({
-                messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
                 signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something'
@@ -111,7 +111,7 @@ describe('StreamMessage', () => {
             expect(StreamMessage.isSigned(signedMessage)).toBe(true)
             expect(StreamMessage.isUnsigned(signedMessage)).toBe(false)
             const encryptedMessage = new StreamMessage({
-                messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
                 signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something',
@@ -133,7 +133,7 @@ describe('StreamMessage', () => {
 
         it('should throw if content is not defined', () => {
             assert.throws(() => new StreamMessage({
-                messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 // missing content
             } as any), ValidationError)
         })
@@ -235,7 +235,7 @@ describe('StreamMessage', () => {
     describe('clone', () => {
         it('works', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
             })
             const streamMessageClone = streamMessage.clone()
@@ -246,7 +246,7 @@ describe('StreamMessage', () => {
 
         it('works with encrypted messages', () => {
             const encryptedMessage = new StreamMessage({
-                messageId: new MessageIDStrict(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
                 signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something',

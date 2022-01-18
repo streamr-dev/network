@@ -29,10 +29,10 @@ const TRACKERS = [
     },
 ]
 
-const T1_STREAM = StreamPartIDUtils.parse('streamOne#0')
+const T1_STREAM = StreamPartIDUtils.parse('streamOne#2')
 const T2_STREAM = StreamPartIDUtils.parse('streamOne#15')
-const T3_STREAM = StreamPartIDUtils.parse('streamSix#0')
-const T4_STREAM = StreamPartIDUtils.parse('streamTwo#0')
+const T3_STREAM = StreamPartIDUtils.parse('streamSix#3')
+const T4_STREAM = StreamPartIDUtils.parse('streamTwo#7')
 
 describe(TrackerConnector, () => {
     let streams: Array<StreamPartID>
