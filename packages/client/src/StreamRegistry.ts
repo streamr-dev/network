@@ -586,6 +586,8 @@ export class StreamRegistry implements Context {
     }
 
     private static buildGetFilteredStreamListQuery(term: string, opts: SearchStreamsOptions): string {
+        // the metadata field contains all stream properties (including the id property),
+        // so there is no need search over other fields
         const termParam = `metadata_contains: "${term}"`
         const maxParam = opts.max ? `, first: ${opts.max}` : ''
         const offsetParam = opts.offset ? `, skip: ${opts.offset}` : ''
