@@ -29,7 +29,7 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
     })
 }
 
-describe('GapFill', () => {
+describeRepeats('GapFill', () => {
     let expectErrors = 0 // check no errors by default
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let onError = jest.fn()

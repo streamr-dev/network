@@ -49,7 +49,7 @@ type StoredStreamQueryResult = {
         id: string,
         metadata: string,
         storageNodes: NodeQueryResult[],
-    },
+    } | null,
 }
 
 type AllNodesQueryResult = {
@@ -191,7 +191,7 @@ export class NodeRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Getting storage nodes of stream %s', streamId)
         const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
-        if (res.stream == null) {
+        if (res.stream === null) {
             return []
         }
         return res.stream.storageNodes.map((node) => node.id)

@@ -41,7 +41,7 @@ export function definitionToStreamPartID(definition: StreamDefinition): StreamPa
         if (definition.includes('#')) { // TODO: replace with constant from protocol / or isStreamPartID()
             return StreamPartIDUtils.parse(definition)
         } else {
-            return toStreamPartID(toStreamID(definition), DEFAULT_PARTITION)
+            return toStreamPartID(toStreamID(definition), DEFAULT_PARTITION) // streamIdBuilder.toStreamID()
         }
     } else if (typeof definition === 'object') {
         return toStreamPartID(pickStreamId(definition), definition.partition ?? DEFAULT_PARTITION)
