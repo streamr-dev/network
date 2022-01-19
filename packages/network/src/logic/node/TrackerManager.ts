@@ -3,7 +3,7 @@ import { Location, Rtts, TrackerInfo } from '../../identifiers'
 import { TrackerId } from '../tracker/Tracker'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../protocol/NodeToTracker'
-import { StreamManager } from './StreamManager'
+import { StreamPartManager } from './StreamPartManager'
 import { Logger } from '../../helpers/Logger'
 import { NodeId } from './Node'
 import { InstructionThrottler } from './InstructionThrottler'
@@ -45,7 +45,7 @@ export class TrackerManager {
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private readonly trackerConnector: TrackerConnector
     private readonly nodeToTracker: NodeToTracker
-    private readonly streamManager: StreamManager
+    private readonly streamManager: StreamPartManager
     private readonly rttUpdateInterval: number
     private readonly instructionThrottler: InstructionThrottler
     private readonly instructionRetryManager: InstructionRetryManager
@@ -56,7 +56,7 @@ export class TrackerManager {
     constructor(
         nodeToTracker: NodeToTracker,
         opts: TrackerManagerOptions,
-        streamManager: StreamManager,
+        streamManager: StreamPartManager,
         metrics: Metrics,
         getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
@@ -152,7 +152,7 @@ export class TrackerManager {
         if (!this.streamManager.isBehindProxy(streamPartId)) {
             const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
             const status = {
-                stream: this.streamManager.getStreamStatus(streamPartId),
+                stream: this.streamManager.getStreamPartStatus(streamPartId),
                 ...nodeDescriptor
             }
             try {
@@ -186,7 +186,7 @@ export class TrackerManager {
         logger.trace('received instructions for %s, nodes to connect %o', streamPartId, nodeIds)
 
         this.subscriber.subscribeToStreamIfHaveNotYet(streamPartId, false)
-        const currentNodes = this.streamManager.getNeighborsForStream(streamPartId)
+        const currentNodes = this.streamManager.getNeighborsForStreamPart(streamPartId)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {

@@ -1,5 +1,5 @@
 import { TrackerManager } from './TrackerManager'
-import { StreamManager } from './StreamManager'
+import { StreamPartManager } from './StreamPartManager'
 import { NodeToNode } from '../../protocol/NodeToNode'
 import { Event, Node, NodeId } from './Node'
 import {
@@ -14,7 +14,7 @@ const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
     trackerManager: TrackerManager,
-    streamManager: StreamManager,
+    streamManager: StreamPartManager,
     nodeToNode: NodeToNode,
     node: Node,
     nodeConnectTimeout: number,
@@ -36,7 +36,7 @@ const DEFAULT_RECONNECTION_TIMEOUT = 10 * 1000
 
 export class ProxyStreamConnectionManager {
     private readonly trackerManager: TrackerManager
-    private readonly streamManager: StreamManager
+    private readonly streamManager: StreamPartManager
     private readonly nodeToNode: NodeToNode
     private readonly node: Node
     private readonly nodeConnectTimeout: number
@@ -70,13 +70,13 @@ export class ProxyStreamConnectionManager {
             }
         }
 
-        this.streamManager.removeNodeFromStream(streamPartId, nodeId)
+        this.streamManager.removeNodeFromStreamPart(streamPartId, nodeId)
         // Finally if the stream has no neighbors or in/out connections, remove the stream
-        if (this.streamManager.getAllNodesForStream(streamPartId).length === 0
+        if (this.streamManager.getAllNodesForStreamPart(streamPartId).length === 0
             && !this.connections.has(streamPartId)
             && this.streamManager.isBehindProxy(streamPartId)
         ) {
-            this.streamManager.removeStream(streamPartId)
+            this.streamManager.removeStreamPart(streamPartId)
         }
     }
 
@@ -95,7 +95,7 @@ export class ProxyStreamConnectionManager {
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         try {
             if (!this.streamManager.isSetUp(streamPartId)) {
-                this.streamManager.setUpStream(streamPartId, true)
+                this.streamManager.setUpStreamPart(streamPartId, true)
             } else if (!this.streamManager.isBehindProxy(streamPartId)) {
                 const reason = `Could not open a proxy outgoing stream connection ${streamPartId}, bidirectional stream already exists`
                 logger.warn(reason)

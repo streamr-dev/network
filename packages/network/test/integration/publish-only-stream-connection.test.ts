@@ -79,9 +79,9 @@ describe('Publish only connection tests', () => {
             publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.getOutboundNodesForStream(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
+        expect(publisherNode.streams.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
-        expect(publisherNode.streams.getNeighborsForStream(defaultStreamPartId)).toBeArrayOfSize(0)
+        expect(publisherNode.streams.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
     })
 
     it('publisher node can close one way connections', async () => {
@@ -94,9 +94,9 @@ describe('Publish only connection tests', () => {
             publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.getOutboundNodesForStream(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
+        expect(publisherNode.streams.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
-        expect(publisherNode.streams.getNeighborsForStream(defaultStreamPartId)).toBeArrayOfSize(0)
+        expect(publisherNode.streams.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
 
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
@@ -115,7 +115,7 @@ describe('Publish only connection tests', () => {
         // @ts-expect-error private
         expect(publisherNode.streams.isSetUp(defaultStreamPartId)).toBeFalse()
         // @ts-expect-error private
-        expect(contactNode.streams.getInboundNodesForStream(defaultStreamPartId)).toContainValues(['contact-node-2'])
+        expect(contactNode.streams.getInboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node-2'])
         // @ts-expect-error private
         expect(contactNode.streams.hasInOnlyConnection(defaultStreamPartId, 'publisher')).toBeFalse()
     })
@@ -197,7 +197,7 @@ describe('Publish only connection tests', () => {
             publisherNode.joinStreamAsPurePublisher(defaultStreamPartId, 'contact-node'),
         ])
         // @ts-expect-error private
-        expect(publisherNode.streams.getOutboundNodesForStream(defaultStreamPartId)).toContainValue('contact-node')
+        expect(publisherNode.streams.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValue('contact-node')
     })
 
     it('failed publish only connections do not clean out existing connections', async () => {
@@ -215,9 +215,9 @@ describe('Publish only connection tests', () => {
         ])
 
         // @ts-expect-error private
-        expect(publisherNode.streams.getOutboundNodesForStream(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
+        expect(publisherNode.streams.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
-        expect(publisherNode.streams.getNeighborsForStream(defaultStreamPartId)).toBeArrayOfSize(0)
+        expect(publisherNode.streams.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
     })
 
     it('If publish only connection is the only stream connection on contact node it will not unsubscribe', async () => {

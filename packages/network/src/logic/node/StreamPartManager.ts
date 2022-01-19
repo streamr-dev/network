@@ -18,10 +18,10 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
     return `${publisherId}-${msgChainId}`
 }
 
-export class StreamManager {
+export class StreamPartManager {
     private readonly streams = new Map<StreamPartID,StreamState>()
 
-    setUpStream(streamPartId: StreamPartID, isBehindProxy = false): void {
+    setUpStreamPart(streamPartId: StreamPartID, isBehindProxy = false): void {
         if (this.isSetUp(streamPartId)) {
             throw new Error(`Stream part ${streamPartId} already set up`)
         }
@@ -78,7 +78,7 @@ export class StreamManager {
         outOnly.add(node)
     }
 
-    removeNodeFromStream(streamPartId: StreamPartID, node: NodeId): void {
+    removeNodeFromStreamPart(streamPartId: StreamPartID, node: NodeId): void {
         this.ensureThatIsSetUp(streamPartId)
         const { neighbors, inOnly, outOnly } = this.streams.get(streamPartId)!
         neighbors.delete(node)
@@ -86,7 +86,7 @@ export class StreamManager {
         outOnly.delete(node)
     }
 
-    getStreamStatus(streamPartId: StreamPartID): StreamStatus {
+    getStreamPartStatus(streamPartId: StreamPartID): StreamStatus {
         const streamState = this.streams.get(streamPartId)
         const [id, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         if (streamState !== undefined) {
@@ -106,7 +106,7 @@ export class StreamManager {
         }
     }
 
-    removeNodeFromAllStreams(node: NodeId): [StreamPartID[], StreamPartID[]] {
+    removeNodeFromAllStreamParts(node: NodeId): [StreamPartID[], StreamPartID[]] {
         const streamParts: StreamPartID[] = []
         const notRemovedProxies: StreamPartID[] = []
         this.streams.forEach(({ neighbors, inOnly, outOnly }, streamPartId) => {
@@ -124,7 +124,7 @@ export class StreamManager {
         return [streamParts, notRemovedProxies]
     }
 
-    removeStream(streamPartId: StreamPartID): void {
+    removeStreamPart(streamPartId: StreamPartID): void {
         this.ensureThatIsSetUp(streamPartId)
         this.streams.delete(streamPartId)
     }
@@ -143,24 +143,24 @@ export class StreamManager {
         return this.streams.keys()
     }
 
-    getNeighborsForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         this.ensureThatIsSetUp(streamPartId)
         return [...this.streams.get(streamPartId)!.neighbors]
     }
 
-    getOutboundNodesForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+    getOutboundNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         this.ensureThatIsSetUp(streamPartId)
         const { neighbors, outOnly } = this.streams.get(streamPartId)!
         return [...neighbors, ...outOnly]
     }
 
-    getInboundNodesForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+    getInboundNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         this.ensureThatIsSetUp(streamPartId)
         const { neighbors, inOnly } = this.streams.get(streamPartId)!
         return [...neighbors, ...inOnly]
     }
 
-    getAllNodesForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+    getAllNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         this.ensureThatIsSetUp(streamPartId)
         const { neighbors, inOnly, outOnly } = this.streams.get(streamPartId)!
         return [...neighbors, ...inOnly, ...outOnly]
