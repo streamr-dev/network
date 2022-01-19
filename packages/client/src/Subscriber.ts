@@ -9,7 +9,8 @@ import SubscriptionSession from './SubscriptionSession'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
 import { StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from './Container'
-import { definitionToStreamPartID, matches, StreamDefinition } from './StreamDefinition'
+import { StreamIDBuilder } from './StreamIDBuilder'
+import { StreamDefinition } from './types'
 
 export { Subscription, SubscriptionSession }
 
@@ -19,7 +20,11 @@ export default class Subscriber implements Context {
     debug
     readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
 
-    constructor(context: Context, @inject(BrubeckContainer) private container: DependencyContainer) {
+    constructor(
+        context: Context,
+        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
+        @inject(BrubeckContainer) private container: DependencyContainer
+    ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
     }
@@ -28,7 +33,8 @@ export default class Subscriber implements Context {
         streamDefinition: StreamDefinition,
         onMessage?: SubscriptionOnMessage<T>
     ): Promise<Subscription<T>> {
-        return this.subscribeTo(definitionToStreamPartID(streamDefinition), onMessage)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        return this.subscribeTo(streamPartId, onMessage)
     }
 
     /** @internal */
@@ -170,7 +176,7 @@ export default class Subscriber implements Context {
         }
 
         return [...this.subSessions.values()].filter((subSession) => {
-            return matches(streamDefinition, subSession.streamPartId)
+            return StreamIDBuilder.match(streamDefinition, subSession.streamPartId)
         }).flatMap((subSession) => ([
             ...subSession.subscriptions
         ])) as Subscription<T>[]

@@ -14,7 +14,8 @@ import { Config } from './Config'
 import OrderMessages from './OrderMessages'
 import Resends, { isResendOptions, ResendOptions, ResendOptionsStrict } from './Resends'
 import Signal from './utils/Signal'
-import { definitionToStreamPartID, StreamDefinition } from "./StreamDefinition"
+import { StreamIDBuilder } from './StreamIDBuilder'
+import { StreamDefinition } from './types'
 
 export class ResendSubscription<T> extends Subscription<T> {
     onResent = Signal.once()
@@ -80,6 +81,7 @@ export default class ResendSubscribe implements Context {
         context: Context,
         private resends: Resends,
         private subscriber: Subscriber,
+        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer
     ) {
         this.id = instanceId(this)
@@ -101,7 +103,7 @@ export default class ResendSubscribe implements Context {
         onMessage?: SubscriptionOnMessage<T>
     ): Promise<ResendSubscription<T>> {
         const resendOptions = ('resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
-        const streamPartId = definitionToStreamPartID(options)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
         const subSession = this.subscriber.getOrCreateSubscriptionSession<T>(streamPartId)
         const sub = new ResendSubscription<T>(subSession, this.resends, resendOptions, this.container)
         if (onMessage) {

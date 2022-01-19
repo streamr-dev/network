@@ -24,7 +24,7 @@ import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { definitionToStreamPartID, StreamDefinition } from './StreamDefinition'
+import { StreamDefinition } from './types'
 
 export interface StreamListQuery {
     name?: string
@@ -135,7 +135,7 @@ export class StreamEndpoints implements Context {
     }
 
     async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject> {
-        const streamPartId = definitionToStreamPartID(streamDefinition)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         this.debug('getStreamLast %o', {
             streamPartId,

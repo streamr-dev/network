@@ -20,7 +20,6 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
-import { matches } from '../../src/StreamDefinition'
 
 import { Stream } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
@@ -129,13 +128,13 @@ describeRepeats('StreamrClient', () => {
                 const subTask = client.subscribe<{ test: string }>({
                     streamId: stream.id,
                 }, () => {})
-                expect(client.subscriber.getSubscriptions()).toHaveLength(1) // has subscription immediately
+                expect(client.subscriber.getAllSubscriptions()).toHaveLength(1) // has subscription immediately
 
                 const sub = await subTask
 
                 expect(client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
-                expect(client.subscriber.getSubscriptions()).toHaveLength(0)
+                expect(client.subscriber.getAllSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe then unsubscribe before subscribed', async () => {
@@ -440,7 +439,7 @@ describeRepeats('StreamrClient', () => {
             const gotMessages = Defer()
             const published: any[] = []
             client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
-                if (!matches(stream.id, streamMessage.getStreamPartID())) { return }
+                if (stream.id !== streamMessage.getStreamId()) { return }
                 onMessage()
                 published.push(streamMessage.getParsedContent())
                 if (published.length === 3) {

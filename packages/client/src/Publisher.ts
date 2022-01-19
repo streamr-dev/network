@@ -16,7 +16,7 @@ import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
 import Validator from './Validator'
 import BrubeckNode from './BrubeckNode'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { definitionToStreamPartID, StreamDefinition } from './StreamDefinition'
+import { StreamDefinition } from './types'
 
 export type { PublishMetadata }
 
@@ -206,24 +206,24 @@ export default class BrubeckPublisher implements Context, Stoppable {
     }
 
     async setPublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = definitionToStreamPartID(streamDefinition)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await this.node.openPublishProxyConnectionOnStreamPartition(streamPartId, nodeId)
     }
 
     async removePublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = definitionToStreamPartID(streamDefinition)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await this.node.closePublishProxyConnectionOnStreamPartition(streamPartId, nodeId)
     }
 
     async setPublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
-        const streamPartId = definitionToStreamPartID(streamDefinition)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled([
             ...nodeIds.map((nodeId) => this.node.openPublishProxyConnectionOnStreamPartition(streamPartId, nodeId))
         ])
     }
 
     async removePublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
-        const streamPartId = definitionToStreamPartID(streamDefinition)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled([
             ...nodeIds.map(async (nodeId) => this.node.closePublishProxyConnectionOnStreamPartition(streamPartId, nodeId))
         ])

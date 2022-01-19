@@ -17,10 +17,7 @@ import Encrypt from './Encrypt'
 import Validator from './Validator'
 import { DestroySignal } from './DestroySignal'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import {
-    definitionToStreamPartElements,
-    StreamDefinition
-} from './StreamDefinition'
+import { StreamDefinition } from './types'
 
 export class FailedToPublishError extends Error {
     definition: string
@@ -114,7 +111,7 @@ export default class PublishPipeline implements Context, Stoppable {
         for await (const [publishMetadata, defer] of src) {
             const { streamDefinition, ...options } = publishMetadata
             try {
-                const [streamId, partition] = definitionToStreamPartElements(streamDefinition)
+                const [streamId, partition] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
                 options.partitionKey ??= partition // TODO: add runtime check for both partitionKey AND partition set?
                 const streamMessage = await this.messageCreator.create(streamId, options)
                 yield [streamMessage, defer]

@@ -11,14 +11,13 @@ import LeakDetector from 'jest-leak-detector'
 import { StreamrClient } from '../src/StreamrClient'
 import { counterId, CounterId, AggregatedError, instanceId } from '../src/utils'
 import { Debug, format } from '../src/utils/log'
-import { MaybeAsync } from '../src/types'
+import { MaybeAsync, StreamDefinition } from '../src/types'
 import { StreamProperties } from '../src/Stream'
 import clientOptions from '../src/ConfigTest'
 
 import Signal from '../src/utils/Signal'
 import { PublishMetadata } from '../src/Publisher'
 import { Pipeline } from '../src/utils/Pipeline'
-import { StreamDefinition } from '../src/StreamDefinition'
 
 export { clientOptions }
 

@@ -13,14 +13,6 @@ function ensureValidStreamPartition(streamPartition: number): void | never {
     }
 }
 
-function parseElements(str: string): [string, number] {
-    const lastIdx = str.lastIndexOf(DELIMITER)
-    if (lastIdx === -1 || lastIdx === str.length - 1) {
-        throw new Error(`not valid streamPartID string: ${str}`)
-    }
-    return [str.substring(0, lastIdx), parseInt(str.substring(lastIdx + 1))]
-}
-
 export function toStreamPartID(streamId: StreamID, streamPartition: number): StreamPartID | never {
     ensureValidStreamPartition(streamPartition)
     return `${streamId}${DELIMITER}${streamPartition}` as StreamPartID
@@ -28,7 +20,10 @@ export function toStreamPartID(streamId: StreamID, streamPartition: number): Str
 
 export class StreamPartIDUtils {
     static parse(streamPartIdAsStr: string): StreamPartID | never {
-        const [streamId, streamPartition] = parseElements(streamPartIdAsStr)
+        const [streamId, streamPartition] = StreamPartIDUtils.parseRawElements(streamPartIdAsStr)
+        if (streamPartition === undefined) {
+            throw new Error(`not valid streamPartID string: ${streamPartIdAsStr}`)
+        }
         toStreamID(streamId) // throws if not valid
         ensureValidStreamPartition(streamPartition)
         return streamPartIdAsStr as StreamPartID
@@ -45,9 +40,17 @@ export class StreamPartIDUtils {
     static getStreamIDAndStreamPartition(streamPartId: StreamPartID): [StreamID, number] {
         let pair = pairCache.get(streamPartId)
         if (pair === undefined) {
-            pair = parseElements(streamPartId) as [StreamID, number]
+            pair = StreamPartIDUtils.parseRawElements(streamPartId) as [StreamID, number]
             pairCache.set(streamPartId, pair)
         }
         return pair
+    }
+
+    static parseRawElements(str: string): [string, number | undefined] {
+        const lastIdx = str.lastIndexOf(DELIMITER)
+        if (lastIdx === -1 || lastIdx === str.length - 1) {
+            return [str, undefined]
+        }
+        return [str.substring(0, lastIdx), parseInt(str.substring(lastIdx + 1))]
     }
 }

@@ -20,7 +20,8 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import { createQueryString } from './Rest'
-import { definitionToStreamPartID, StreamDefinition } from './StreamDefinition'
+import { StreamIDBuilder } from './StreamIDBuilder'
+import { StreamDefinition } from './types'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -126,6 +127,7 @@ export default class Resend implements Context {
     constructor(
         context: Context,
         private nodeRegistry: NodeRegistry,
+        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
         @inject(BrubeckContainer) private container: DependencyContainer
     ) {
@@ -144,7 +146,7 @@ export default class Resend implements Context {
         const resendOptions = (
             (options && typeof options === 'object' && 'resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
         )
-        const streamPartId = definitionToStreamPartID(options)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
 
         const sub = await this.resendMessages<T>(streamPartId, resendOptions)
 
