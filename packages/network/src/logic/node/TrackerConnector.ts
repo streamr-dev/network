@@ -42,7 +42,7 @@ export class TrackerConnector {
         this.signallingOnlyTrackers = new Set()
     }
 
-    onNewStream(streamPartId: StreamPartID): void {
+    onNewStreamPart(streamPartId: StreamPartID): void {
         const trackerInfo = this.trackerRegistry.getTracker(streamPartId)
         this.connectTo(trackerInfo)
     }

@@ -116,10 +116,10 @@ describe(TrackerConnector, () => {
         setUpConnector(1000000000)
         connector.start()
 
-        connector.onNewStream(T2_STREAM)
+        connector.onNewStreamPart(T2_STREAM)
         expect(activeConnections).toEqual(new Set<string>(['t2']))
 
-        connector.onNewStream(T4_STREAM)
+        connector.onNewStreamPart(T4_STREAM)
         expect(activeConnections).toEqual(new Set<string>(['t2', 't4']))
     })
 })

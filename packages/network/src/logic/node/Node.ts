@@ -209,7 +209,7 @@ export class Node extends EventEmitter {
         if (!this.streamPartManager.isSetUp(streamPartId)) {
             logger.trace('add %s to streams', streamPartId)
             this.streamPartManager.setUpStreamPart(streamPartId)
-            this.trackerManager.onNewStream(streamPartId) // TODO: perhaps we should react based on event from StreamManager?
+            this.trackerManager.onNewStreamPart(streamPartId) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
                 this.trackerManager.sendStreamPartStatus(streamPartId)
             }
@@ -221,7 +221,7 @@ export class Node extends EventEmitter {
     unsubscribeFromStream(streamPartId: StreamPartID, sendStatus = true): void {
         logger.trace('remove %s from streams', streamPartId)
         this.streamPartManager.removeStreamPart(streamPartId)
-        this.trackerManager.onUnsubscribeFromStream(streamPartId)
+        this.trackerManager.onUnsubscribeFromStreamPart(streamPartId)
         if (sendStatus) {
             this.trackerManager.sendStreamPartStatus(streamPartId)
         }

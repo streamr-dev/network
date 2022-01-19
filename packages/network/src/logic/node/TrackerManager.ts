@@ -103,8 +103,8 @@ export class TrackerManager {
         this.sendStatus(streamPartId, trackerId)
     }
 
-    onNewStream(streamPartId: StreamPartID): void {
-        this.trackerConnector.onNewStream(streamPartId)
+    onNewStreamPart(streamPartId: StreamPartID): void {
+        this.trackerConnector.onNewStreamPart(streamPartId)
     }
 
     async connectToSignallingOnlyTracker(trackerId: TrackerId, trackerAddress: string): Promise<void> {
@@ -115,7 +115,7 @@ export class TrackerManager {
         this.trackerConnector.removeSignallingOnlyTrackerConnection(trackerId)
     }
 
-    onUnsubscribeFromStream(streamPartId: StreamPartID): void {
+    onUnsubscribeFromStreamPart(streamPartId: StreamPartID): void {
         this.instructionThrottler.removeStreamPart(streamPartId)
         this.instructionRetryManager.removeStreamPart(streamPartId)
     }
