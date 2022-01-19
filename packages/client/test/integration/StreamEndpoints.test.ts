@@ -1,4 +1,5 @@
 import { Wallet } from 'ethers'
+import { v4 as uuid } from 'uuid'
 
 import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
@@ -6,14 +7,19 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
+import { SearchStreamsOptions } from '../../src/StreamRegistry'
 import { toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(40000)
+const DELAY_BETWEEN_TESTS = 4000
+
+const getName = () => uid('test-stream/slashes')
 
 /**
  * These tests should be run in sequential order!
  */
-function TestStreamEndpoints(getName: () => string, delay: number) {
+describe('StreamEndpoints', () => {
+
     let client: StreamrClient
     let wallet: Wallet
     let createdStream: Stream
@@ -21,7 +27,7 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
     let storageNodeAddress: string
 
     beforeAll(async () => {
-        await wait(delay)
+        await wait(DELAY_BETWEEN_TESTS)
         wallet = new Wallet(await getPrivateKey())
         otherWallet = new Wallet(await getPrivateKey())
         client = new StreamrClient({
@@ -108,61 +114,6 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
         })
     })
 
-    describe('getStreamByName', () => {
-        it('get an existing Stream', async () => {
-            const name = 'name-' + Date.now()
-            const props = { id: await createRelativeTestStreamId(module), name }
-            const stream = await client.createStream(props)
-            await until(async () => { return client.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
-            // await new Promise((resolve) => setTimeout(resolve, 5000))
-            const existingStream = await client.getStreamByName(stream.name)
-            expect(existingStream.id).toEqual(stream.id)
-        })
-
-        it('get a non-existing Stream', async () => {
-            const name = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
-            return expect(() => client.getStreamByName(name)).rejects.toThrow(NotFoundError)
-        })
-    })
-
-    describe('liststreams with search and filters', () => {
-        it('get streamlist', async () => {
-            // create n streams to test offset and max
-            const name = 'filter-' + Date.now()
-            for (let i = 0; i < 3; i++) {
-                // eslint-disable-next-line no-await-in-loop
-                const props = { id: await createRelativeTestStreamId(module), name }
-                props.name = name + i
-                // eslint-disable-next-line no-await-in-loop
-                await client.createStream(props)
-            }
-            await until(async () => { return (await client.listStreams({ name })).length === 3 }, 20000, 1000)
-            let resultList = await client.listStreams({
-                name
-            })
-            expect(resultList.length).toBe(3)
-            resultList = await client.listStreams({
-                name,
-                max: 2,
-            })
-            expect(resultList.length).toBe(2)
-            expect(resultList[0].name.endsWith('0')).toBe(true)
-            expect(resultList[1].name.endsWith('1')).toBe(true)
-            resultList = await client.listStreams({
-                name,
-                max: 2,
-                offset: 1
-            })
-            expect(resultList[0].name.endsWith('1')).toBe(true)
-            return expect(resultList[1].name.endsWith('2')).toBe(true)
-        })
-
-        it('get a non-existing Stream', async () => {
-            const name = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
-            return expect(() => client.getStreamByName(name)).rejects.toThrow()
-        })
-    })
-
     describe('getOrCreate', () => {
         it('existing Stream by id', async () => {
             const existingStream = await client.getOrCreateStream({
@@ -207,20 +158,65 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
         })
     })
 
-    describe('listStreams', () => {
+    describe('searchStreams', () => {
         it('filters by given criteria (match)', async () => {
-            const result = await client.listStreams({
-                name: createdStream.name,
-            })
+            const result = await client.searchStreams(createdStream.id)
             expect(result.length).toBe(1)
             return expect(result[0].id).toBe(createdStream.id)
         })
 
-        it('filters by given criteria (no  match)', async () => {
-            const result = await client.listStreams({
-                name: `non-existent-${Date.now()}`,
+        it('escaped char', async () => {
+            const description = 'searchStreams.escapedChar"' + Date.now()
+            await createTestStream(client, module, {
+                description
             })
+            // the content is escaped twice because it is stored in a JSON field ("description")
+            // in a strigifyed JSON ("metadata" object)
+            const result = await client.searchStreams(description.replace('"', '\\\\"'))
+            expect(result.length).toBe(1)
+        })
+
+        it('filters by given criteria (no match)', async () => {
+            const result = await client.searchStreams(`non-existent-${Date.now()}`)
             return expect(result.length).toBe(0)
+        })
+
+        /* eslint-disable no-await-in-loop */
+        it('max and offset', async () => {
+            const streamIds = []
+            const searchTerm = `searchStreams-${Date.now()}`
+            for (let i = 0; i < 3; i++) {
+                const orderSuffix = uuid()
+                const path = await createRelativeTestStreamId(module, orderSuffix)
+                const stream = await client.createStream({
+                    id: path,
+                    description: searchTerm
+                })
+                streamIds.push(stream.id)
+            }
+            streamIds.sort()
+            await until(async () => {
+                const streams = await client.searchStreams(searchTerm)
+                return streams.length === streamIds.length
+            }, 20000, 1000)
+
+            const searchStreamsIds = async (query: SearchStreamsOptions) => {
+                const streams = await client.searchStreams(searchTerm, {
+                    order: 'asc',
+                    ...query
+                })
+                return streams.map((s) => s.id)
+            }
+
+            const resultList1 = await searchStreamsIds({
+                max: 2
+            })
+            expect(resultList1).toEqual([streamIds[0], streamIds[1]])
+            const resultList2 = await searchStreamsIds({
+                max: 2,
+                offset: 1
+            })
+            expect(resultList2).toEqual([streamIds[1], streamIds[2]])
         })
     })
 
@@ -650,15 +646,5 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
             return expect(storedStreamParts.some((sp) => (sp.startsWith(stream.id)))).toBeFalsy()
         })
-    })
-}
-
-describe('StreamEndpoints', () => {
-    // describe('using normal name', () => {
-    //     TestStreamEndpoints(() => uid('test-stream'), 0)
-    // })
-
-    describe('using name with slashes', () => {
-        TestStreamEndpoints(() => uid('test-stream/slashes'), 4000)
     })
 })

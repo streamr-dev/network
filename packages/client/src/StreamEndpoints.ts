@@ -15,7 +15,7 @@ import {
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 
-import { Stream, StreamPermission } from './Stream'
+import { Stream } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
 import { Config, ConnectionConfig } from './Config'
@@ -25,20 +25,6 @@ import { StreamRegistry } from './StreamRegistry'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamDefinition } from './types'
-
-export interface StreamListQuery {
-    name?: string
-    uiChannel?: boolean
-    noConfig?: boolean
-    search?: string
-    sortBy?: string
-    order?: 'asc'|'desc'
-    max?: number
-    offset?: number
-    grantedAccess?: boolean
-    publicAccess?: boolean
-    permission?: StreamPermission
-}
 
 export interface StreamValidationInfo {
     id: string
@@ -104,14 +90,6 @@ export class StreamEndpoints implements Context {
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-    }
-
-    async getStreamByName(name: string): Promise<Stream> {
-        this.debug('getStreamByName %o', {
-            name,
-        })
-        const streams = await this.streamRegistry.listStreams({ name })
-        return streams[0] ? streams[0] : Promise.reject(new NotFoundError('Stream: name=' + name))
     }
 
     /**
