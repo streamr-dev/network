@@ -46,7 +46,7 @@ export class NetworkNode extends Node {
     }
 
     getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
-        return this.streams.getNeighborsForStreamPart(streamPartId)
+        return this.streamPartManager.getNeighborsForStreamPart(streamPartId)
     }
 
     getRtt(nodeId: NodeId): number|undefined {
