@@ -1,14 +1,11 @@
 import { StreamID, toStreamID } from "./StreamID"
-import LRUCache = require("lru-cache")
 
 const DELIMITER = '#'
 
 export type StreamPartID = string & { readonly __brand: 'streamPartID' } // Nominal typing
 
-const pairCache = new LRUCache<StreamPartID, [StreamID, number]>(1000)
-
 function ensureValidStreamPartition(streamPartition: number): void | never {
-    if (!Number.isSafeInteger(streamPartition) || streamPartition < 0 || streamPartition > 100) {
+    if (!Number.isSafeInteger(streamPartition) || streamPartition < 0 || streamPartition >= 100) {
         throw new Error(`invalid streamPartition value: ${streamPartition}`)
     }
 }
@@ -38,12 +35,7 @@ export class StreamPartIDUtils {
     }
 
     static getStreamIDAndStreamPartition(streamPartId: StreamPartID): [StreamID, number] {
-        let pair = pairCache.get(streamPartId)
-        if (pair === undefined) {
-            pair = StreamPartIDUtils.parseRawElements(streamPartId) as [StreamID, number]
-            pairCache.set(streamPartId, pair)
-        }
-        return pair
+        return StreamPartIDUtils.parseRawElements(streamPartId) as [StreamID, number]
     }
 
     static parseRawElements(str: string): [string, number | undefined] {
