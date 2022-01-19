@@ -3,10 +3,10 @@ import cors from 'cors'
 import { MetricsContext } from '../../helpers/MetricsContext'
 import {
     addRttsToNodeConnections,
-    findStreamsForNode,
+    findStreamsPartsForNode,
     getNodeConnections,
     getTopology,
-    getStreamSizes,
+    getStreamPartSizes,
     getNodesWithLocationData
 } from './trackerSummaryUtils'
 import { Logger } from '../../helpers/Logger'
@@ -115,7 +115,7 @@ export function trackerHttpEndpoints(
     app.get('/nodes/:nodeId/streams', async (req: express.Request, res: express.Response) => {
         const nodeId = req.params.nodeId
         staticLogger.debug(`request to /nodes/${nodeId}/streams`)
-        const result = findStreamsForNode(tracker.getOverlayPerStream(), nodeId)
+        const result = findStreamsPartsForNode(tracker.getOverlayPerStream(), nodeId)
         res.json(result)
     })
     app.get('/location/', (req: express.Request, res: express.Response) => {
@@ -140,7 +140,7 @@ export function trackerHttpEndpoints(
     })
     app.get('/topology-size/', async (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology-size/')
-        res.json(getStreamSizes(tracker.getOverlayPerStream()))
+        res.json(getStreamPartSizes(tracker.getOverlayPerStream()))
     })
     app.get('/topology-size/:streamId/', async (req: express.Request, res: express.Response) => {
         const streamId = validateStreamId(req, res)
@@ -149,7 +149,7 @@ export function trackerHttpEndpoints(
         }
         
         staticLogger.debug(`request to /topology-size/${streamId}/`)
-        res.json(getStreamSizes(tracker.getOverlayPerStream(), streamId, null))
+        res.json(getStreamPartSizes(tracker.getOverlayPerStream(), streamId, null))
     })
     app.get('/topology-size/:streamId/:partition/', async (req: express.Request, res: express.Response) => {
         const streamId = validateStreamId(req, res)
@@ -163,6 +163,6 @@ export function trackerHttpEndpoints(
         }
 
         staticLogger.debug(`request to /topology-size/${streamId}/${askedPartition}/`)
-        res.json(getStreamSizes(tracker.getOverlayPerStream(), streamId, askedPartition))
+        res.json(getStreamPartSizes(tracker.getOverlayPerStream(), streamId, askedPartition))
     })
 }
