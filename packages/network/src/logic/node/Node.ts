@@ -211,7 +211,7 @@ export class Node extends EventEmitter {
             this.streams.setUpStreamPart(streamPartId)
             this.trackerManager.onNewStream(streamPartId) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
-                this.trackerManager.sendStreamStatus(streamPartId)
+                this.trackerManager.sendStreamPartStatus(streamPartId)
             }
         } else if (this.streams.isSetUp(streamPartId) && this.streams.isBehindProxy(streamPartId)) {
             logger.trace(`Could not join stream ${streamPartId} as stream is set to be behind proxy`)
@@ -223,7 +223,7 @@ export class Node extends EventEmitter {
         this.streams.removeStreamPart(streamPartId)
         this.trackerManager.onUnsubscribeFromStream(streamPartId)
         if (sendStatus) {
-            this.trackerManager.sendStreamStatus(streamPartId)
+            this.trackerManager.sendStreamPartStatus(streamPartId)
         }
     }
 
@@ -311,7 +311,7 @@ export class Node extends EventEmitter {
         this.streams.addNeighbor(streamPartId, node)
         this.propagation.onNeighborJoined(node, streamPartId)
         if (sendStatus) {
-            this.trackerManager.sendStreamStatus(streamPartId)
+            this.trackerManager.sendStreamPartStatus(streamPartId)
         }
         this.emit(Event.NODE_SUBSCRIBED, node, streamPartId)
         return node
@@ -323,7 +323,7 @@ export class Node extends EventEmitter {
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamPartId)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedStreams(node)
         if (sendStatus) {
-            this.trackerManager.sendStreamStatus(streamPartId)
+            this.trackerManager.sendStreamPartStatus(streamPartId)
         }
     }
 
@@ -332,7 +332,7 @@ export class Node extends EventEmitter {
         const [streams, proxiedStreams] = this.streams.removeNodeFromAllStreamParts(node)
         logger.trace('removed all subscriptions of node %s', node)
         streams.forEach((s) => {
-            this.trackerManager.sendStreamStatus(s)
+            this.trackerManager.sendStreamPartStatus(s)
         })
         proxiedStreams.forEach((s) => {
             this.proxyStreamConnectionManager.reconnect(node, s)

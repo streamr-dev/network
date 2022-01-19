@@ -13,7 +13,7 @@ export interface Location {
     city?: string
 }
 
-export interface StreamStatus {
+export interface StreamPartStatus {
     id: StreamID
     partition: number,
     neighbors: NodeId[]
@@ -21,7 +21,7 @@ export interface StreamStatus {
 }
 
 export interface Status {
-    stream: StreamStatus
+    stream: StreamPartStatus // TODO rename field to streamPart?
     rtts: Rtts | null
     location?: Location
     started: string

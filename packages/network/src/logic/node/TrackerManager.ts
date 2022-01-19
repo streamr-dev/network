@@ -98,7 +98,7 @@ export class TrackerManager {
         })
     }
 
-    sendStreamStatus(streamPartId: StreamPartID): void {
+    sendStreamPartStatus(streamPartId: StreamPartID): void {
         const trackerId = this.getTrackerId(streamPartId)
         this.sendStatus(streamPartId, trackerId)
     }
@@ -211,7 +211,7 @@ export class TrackerManager {
             }
         })
         if (!reattempt || failedInstructions) {
-            this.sendStreamStatus(streamPartId)
+            this.sendStreamPartStatus(streamPartId)
         }
 
         logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',

@@ -1,5 +1,5 @@
 import { MessageLayer, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { StreamStatus } from '../../identifiers'
+import { StreamPartStatus } from '../../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { NodeId } from './Node'
 import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
@@ -86,7 +86,7 @@ export class StreamPartManager {
         outOnly.delete(node)
     }
 
-    getStreamPartStatus(streamPartId: StreamPartID): StreamStatus {
+    getStreamPartStatus(streamPartId: StreamPartID): StreamPartStatus {
         const streamState = this.streams.get(streamPartId)
         const [id, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         if (streamState !== undefined) {
