@@ -1,7 +1,7 @@
 import { createTestStream, fakePrivateKey, getCreateClient, getPrivateKey } from '../utils'
 import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
 import { wait } from 'streamr-test-utils'
-import { StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(50000)
 

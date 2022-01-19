@@ -1,8 +1,7 @@
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
-    describeRepeats,
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,

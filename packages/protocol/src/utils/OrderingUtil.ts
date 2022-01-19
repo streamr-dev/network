@@ -1,6 +1,5 @@
 import StreamMessage from '../protocol/message_layer/StreamMessage'
 import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './OrderedMsgChain'
-import { StreamID } from './StreamID'
 
 export default class OrderingUtil extends MsgChainEmitter {
     inOrderHandler: MessageHandler
