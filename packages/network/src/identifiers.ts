@@ -17,7 +17,7 @@ export interface StreamPartStatus {
     id: StreamID
     partition: number,
     neighbors: NodeId[]
-    counter: number // TODO this field could be a field of "Status" interface, not this interface?
+    counter: number
 }
 
 export interface Status {

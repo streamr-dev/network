@@ -216,7 +216,6 @@ export default class StreamMessage<T = unknown> {
         return this.messageId.streamId
     }
 
-    // TODO: delete or rename to partition
     getStreamPartition(): number {
         return this.messageId.streamPartition
     }
