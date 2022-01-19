@@ -81,7 +81,7 @@ export function trackerHttpEndpoints(
 
     app.get('/topology/', (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology/')
-        res.json(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts()))
+        res.json(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts()))
     })
     app.get('/topology/:streamId/', (req: express.Request, res: express.Response) => {
         const streamId = validateStreamId(req, res)
@@ -90,7 +90,7 @@ export function trackerHttpEndpoints(
         }
 
         staticLogger.debug(`request to /topology/${streamId}/`)
-        res.json(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, null))
+        res.json(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts(), streamId, null))
     })
     app.get('/topology/:streamId/:partition/', (req: express.Request, res: express.Response) => {
         const streamId = validateStreamId(req, res)
@@ -104,10 +104,10 @@ export function trackerHttpEndpoints(
         }
 
         staticLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
-        res.json(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, askedPartition))
+        res.json(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts(), streamId, askedPartition))
     })
     cachedJsonGet(app,'/node-connections/', 5 * 60 * 1000, () => {
-        const topologyUnion = getNodeConnections(tracker.getNodes(), tracker.getOverlayPerStream())
+        const topologyUnion = getNodeConnections(tracker.getNodes(), tracker.getOverlayPerStreamPart())
         return Object.assign({}, ...Object.entries(topologyUnion).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, Array.from(neighbors), tracker.getOverlayConnectionRtts())
         }))
@@ -115,7 +115,7 @@ export function trackerHttpEndpoints(
     app.get('/nodes/:nodeId/streams', async (req: express.Request, res: express.Response) => {
         const nodeId = req.params.nodeId
         staticLogger.debug(`request to /nodes/${nodeId}/streams`)
-        const result = findStreamsPartsForNode(tracker.getOverlayPerStream(), nodeId)
+        const result = findStreamsPartsForNode(tracker.getOverlayPerStreamPart(), nodeId)
         res.json(result)
     })
     app.get('/location/', (req: express.Request, res: express.Response) => {
@@ -140,7 +140,7 @@ export function trackerHttpEndpoints(
     })
     app.get('/topology-size/', async (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology-size/')
-        res.json(getStreamPartSizes(tracker.getOverlayPerStream()))
+        res.json(getStreamPartSizes(tracker.getOverlayPerStreamPart()))
     })
     app.get('/topology-size/:streamId/', async (req: express.Request, res: express.Response) => {
         const streamId = validateStreamId(req, res)
@@ -149,7 +149,7 @@ export function trackerHttpEndpoints(
         }
         
         staticLogger.debug(`request to /topology-size/${streamId}/`)
-        res.json(getStreamPartSizes(tracker.getOverlayPerStream(), streamId, null))
+        res.json(getStreamPartSizes(tracker.getOverlayPerStreamPart(), streamId, null))
     })
     app.get('/topology-size/:streamId/:partition/', async (req: express.Request, res: express.Response) => {
         const streamId = validateStreamId(req, res)
@@ -163,6 +163,6 @@ export function trackerHttpEndpoints(
         }
 
         staticLogger.debug(`request to /topology-size/${streamId}/${askedPartition}/`)
-        res.json(getStreamPartSizes(tracker.getOverlayPerStream(), streamId, askedPartition))
+        res.json(getStreamPartSizes(tracker.getOverlayPerStreamPart(), streamId, askedPartition))
     })
 }

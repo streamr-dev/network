@@ -34,7 +34,7 @@ export interface TrackerOptions {
     topologyStabilization?: TopologyStabilizationOptions
 }
 
-export type OverlayPerStream = Record<StreamPartID, OverlayTopology>
+export type OverlayPerStreamPart = Record<StreamPartID, OverlayTopology>
 
 // nodeId => connected nodeId => rtt
 export type OverlayConnectionRtts = Record<NodeId,Record<NodeId,number>>
@@ -48,7 +48,7 @@ export class Tracker extends EventEmitter {
     private readonly trackerServer: TrackerServer
     /** @internal */
     public readonly peerInfo: PeerInfo
-    private readonly overlayPerStream: OverlayPerStream
+    private readonly overlayPerStreamPart: OverlayPerStreamPart
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
@@ -74,7 +74,7 @@ export class Tracker extends EventEmitter {
         this.peerInfo = opts.peerInfo
 
         this.logger = new Logger(module)
-        this.overlayPerStream = {}
+        this.overlayPerStreamPart = {}
         this.overlayConnectionRtts = {}
         this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
@@ -160,17 +160,17 @@ export class Tracker extends EventEmitter {
     }
 
     private createTopology(streamPartId: StreamPartID) {
-        if (this.overlayPerStream[streamPartId] == null) {
-            this.overlayPerStream[streamPartId] = new OverlayTopology(this.maxNeighborsPerNode)
+        if (this.overlayPerStreamPart[streamPartId] == null) {
+            this.overlayPerStreamPart[streamPartId] = new OverlayTopology(this.maxNeighborsPerNode)
         }
     }
 
     private updateNodeOnStream(node: NodeId, status: StreamPartStatus): void {
         const streamPartId = toStreamPartID(status.id, status.partition)
         if (status.counter === COUNTER_UNSUBSCRIBE) {
-            this.leaveAndCheckEmptyOverlay(streamPartId, this.overlayPerStream[streamPartId], node)
+            this.leaveAndCheckEmptyOverlay(streamPartId, this.overlayPerStreamPart[streamPartId], node)
         } else {
-            this.overlayPerStream[streamPartId].update(node, status.neighbors)
+            this.overlayPerStreamPart[streamPartId].update(node, status.neighbors)
         }
     }
 
@@ -178,8 +178,8 @@ export class Tracker extends EventEmitter {
         if (this.stopped) {
             return
         }
-        if (this.overlayPerStream[streamPartId]) {
-            const instructions = this.overlayPerStream[streamPartId].formInstructions(node, forceGenerate)
+        if (this.overlayPerStreamPart[streamPartId]) {
+            const instructions = this.overlayPerStreamPart[streamPartId].formInstructions(node, forceGenerate)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
                 const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamPartId)
                 await this.instructionSender.addInstruction({
@@ -197,7 +197,7 @@ export class Tracker extends EventEmitter {
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
         delete this.extraMetadatas[node]
-        Object.entries(this.overlayPerStream)
+        Object.entries(this.overlayPerStreamPart)
             .forEach(([streamPartId, overlayTopology]) => {
                 this.leaveAndCheckEmptyOverlay(streamPartId as StreamPartID, overlayTopology, node)
             })
@@ -209,7 +209,7 @@ export class Tracker extends EventEmitter {
 
         if (overlayTopology.isEmpty()) {
             this.instructionCounter.removeStreamPart(streamPartId)
-            delete this.overlayPerStream[streamPartId]
+            delete this.overlayPerStreamPart[streamPartId]
         } else {
             neighbors.forEach((neighbor) => {
                 this.formAndSendInstructions(neighbor, streamPartId, true)
@@ -218,7 +218,7 @@ export class Tracker extends EventEmitter {
     }
 
     getStreamParts(): Iterable<StreamPartID> {
-        return Object.keys(this.overlayPerStream) as StreamPartID[]
+        return Object.keys(this.overlayPerStreamPart) as StreamPartID[]
     }
 
     getAllNodeLocations(): Readonly<Record<NodeId,Location>> {
@@ -241,8 +241,8 @@ export class Tracker extends EventEmitter {
         return this.overlayConnectionRtts
     }
 
-    getOverlayPerStream(): Readonly<OverlayPerStream> {
-        return this.overlayPerStream
+    getOverlayPerStreamPart(): Readonly<OverlayPerStreamPart> {
+        return this.overlayPerStreamPart
     }
 
     getConfigRecord(): SmartContractRecord {
