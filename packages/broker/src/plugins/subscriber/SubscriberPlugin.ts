@@ -34,9 +34,9 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
 
     private async subscribeToStreams(): Promise<void> {
         await Promise.all([
-            ...this.streamParts.map(async (spid) => {
-                if (this.streamrClient!.getSubscriptions(spid).length === 0) {
-                    await this.streamrClient!.subscribe(spid, (_message: any) => {})
+            ...this.streamParts.map(async (streamPart) => {
+                if (this.streamrClient!.getSubscriptions(streamPart).length === 0) {
+                    await this.streamrClient!.subscribe(streamPart, (_message: any) => {})
                 }
             })
         ])

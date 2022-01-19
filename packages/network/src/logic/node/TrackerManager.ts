@@ -86,8 +86,8 @@ export class TrackerManager {
 
         this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => {
             logger.trace('connected to tracker %s', trackerId)
-            this.getStreamsForTracker(trackerId).forEach((spid) => {
-                this.sendStatus(spid, trackerId)
+            this.getStreamPartsForTracker(trackerId).forEach((streamPart) => {
+                this.sendStatus(streamPart, trackerId)
             })
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (instructionMessage, trackerId) => {
@@ -132,7 +132,7 @@ export class TrackerManager {
         await this.nodeToTracker.stop()
     }
 
-    private getStreamsForTracker(trackerId: TrackerId): Array<StreamPartID> {
+    private getStreamPartsForTracker(trackerId: TrackerId): Array<StreamPartID> {
         return [...this.streamManager.getStreamParts()]
             .filter((streamPartId) => this.getTrackerId(streamPartId) === trackerId)
     }

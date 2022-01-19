@@ -52,8 +52,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             }
         }
         // TODO: NET-637 use client instead of networkNode?
-        this.storageConfig.getStreamParts().forEach((spid) => {
-            this.networkNode.subscribe(spid)
+        this.storageConfig.getStreamParts().forEach((streamPart) => {
+            this.networkNode.subscribe(streamPart)
         })
         // TODO: NET-637 use client instead of networkNode?
         this.storageConfig.addChangeListener({
@@ -99,8 +99,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, 
             this.pluginConfig.storageConfig.streamrAddress)
         this.networkNode.removeMessageListener(this.messageListener!)
-        this.storageConfig!.getStreamParts().forEach((spid) => {
-            this.networkNode.unsubscribe(spid)
+        this.storageConfig!.getStreamParts().forEach((streamPart) => {
+            this.networkNode.unsubscribe(streamPart)
         })
         this.storageConfig!.stopChainEventsListener()
         await Promise.all([

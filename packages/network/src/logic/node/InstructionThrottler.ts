@@ -15,13 +15,13 @@ type HandleFn = (instructionMessage: TrackerLayer.InstructionMessage, trackerId:
  * InstructionThrottler makes sure that
  *  1. no more than one instruction is handled at a time
  *  2. any new instructions arriving while an instruction is being handled are queued in a
- *     way where only the most latest instruction per spidKey is kept in queue.
+ *     way where only the most latest instruction per stream part is kept in queue.
  */
 export class InstructionThrottler {
     private readonly logger: Logger
     private readonly handleFn: HandleFn
     private queue: Queue = {}
-    private instructionCounter: Record<StreamPartID,number> = {} // spidKey => counter
+    private instructionCounter: Record<StreamPartID,number> = {}
     private ongoingPromises: Record<StreamPartID, {
         promise: CancelablePromiseType<void> | null
         handling: boolean
