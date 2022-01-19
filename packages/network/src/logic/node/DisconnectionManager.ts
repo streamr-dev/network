@@ -3,14 +3,14 @@ import { NameDirectory } from '../../NameDirectory'
 import { Logger } from '../../helpers/Logger'
 
 type GetAllNodesFn = () => ReadonlyArray<NodeId>
-type HasSharedStreamsFn = (nodeId: NodeId) => boolean
+type HasSharedStreamPartsFn = (nodeId: NodeId) => boolean
 type DisconnectFn = (nodeId: NodeId, reason: string) => void
 
 const logger = new Logger(module)
 
 export interface DisconnectionManagerOptions {
     getAllNodes: GetAllNodesFn,
-    hasSharedStreams: HasSharedStreamsFn,
+    hasSharedStreamParts: HasSharedStreamPartsFn,
     disconnect: DisconnectFn,
     disconnectionDelayInMs: number,
     cleanUpIntervalInMs: number
@@ -31,7 +31,7 @@ export class DisconnectionManager {
 
     private readonly disconnectionTimers = new Map<NodeId, NodeJS.Timeout>()
     private readonly getAllNodes: GetAllNodesFn
-    private readonly hasSharedStreams: HasSharedStreamsFn
+    private readonly hasSharedStreams: HasSharedStreamPartsFn
     private readonly disconnect: DisconnectFn
     private readonly disconnectionDelayInMs: number
     private readonly cleanUpIntervalInMs: number
@@ -39,7 +39,7 @@ export class DisconnectionManager {
 
     constructor({
         getAllNodes,
-        hasSharedStreams,
+        hasSharedStreamParts: hasSharedStreams,
         disconnect,
         disconnectionDelayInMs,
         cleanUpIntervalInMs
@@ -71,7 +71,7 @@ export class DisconnectionManager {
         })
     }
 
-    scheduleDisconnectionIfNoSharedStreams(nodeId: NodeId): void {
+    scheduleDisconnectionIfNoSharedStreamParts(nodeId: NodeId): void {
         if (!this.hasSharedStreams(nodeId)) {
             this.cancelScheduledDisconnection(nodeId)
             this.disconnectionTimers.set(nodeId, setTimeout(() => {

@@ -102,7 +102,7 @@ export class Node extends EventEmitter {
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
             getAllNodes: this.nodeToNode.getAllConnectionNodeIds,
-            hasSharedStreams: this.streamPartManager.isNodePresent.bind(this.streamPartManager),
+            hasSharedStreamParts: this.streamPartManager.isNodePresent.bind(this.streamPartManager),
             disconnect: this.nodeToNode.disconnectFromNode.bind(this.nodeToNode),
             disconnectionDelayInMs: opts.disconnectionWaitTime ?? 30 * 1000,
             cleanUpIntervalInMs: 2 * 60 * 1000
@@ -321,7 +321,7 @@ export class Node extends EventEmitter {
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, node)
         logger.trace('node %s unsubscribed from stream %s', node, streamPartId)
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamPartId)
-        this.disconnectionManager.scheduleDisconnectionIfNoSharedStreams(node)
+        this.disconnectionManager.scheduleDisconnectionIfNoSharedStreamParts(node)
         if (sendStatus) {
             this.trackerManager.sendStreamPartStatus(streamPartId)
         }
