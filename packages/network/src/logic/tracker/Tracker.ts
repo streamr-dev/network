@@ -217,7 +217,7 @@ export class Tracker extends EventEmitter {
         }
     }
 
-    getStreamPartIDs(): Iterable<StreamPartID> {
+    getStreamParts(): Iterable<StreamPartID> {
         return Object.keys(this.overlayPerStream) as StreamPartID[]
     }
 

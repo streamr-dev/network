@@ -1,4 +1,4 @@
-import type { StreamMessage, SPID } from 'streamr-client-protocol'
+import type { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
@@ -47,18 +47,18 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.cassandra = await this.getCassandraStorage(metricsContext)
         this.storageConfig = await this.createStorageConfig()
         this.messageListener = (msg) => {
-            if (this.storageConfig!.hasSPID(msg.getSPID())) {
+            if (this.storageConfig!.hasStreamPart(msg.getStreamPartID())) {
                 this.cassandra!.store(msg)
             }
         }
         // TODO: NET-637 use client instead of networkNode?
-        this.storageConfig.getSPIDs().forEach((spid) => {
+        this.storageConfig.getStreamParts().forEach((spid) => {
             this.networkNode.subscribe(spid)
         })
         // TODO: NET-637 use client instead of networkNode?
         this.storageConfig.addChangeListener({
-            onSPIDAdded: (spid: SPID) => this.networkNode.subscribe(spid),
-            onSPIDRemoved: (spid: SPID) => this.networkNode.unsubscribe(spid)
+            onStreamPartAdded: (streamPart: StreamPartID) => this.networkNode.subscribe(streamPart),
+            onStreamPartRemoved: (streamPart: StreamPartID) => this.networkNode.unsubscribe(streamPart)
         })
         this.networkNode.addMessageListener(this.messageListener)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, metricsContext))
@@ -99,7 +99,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, 
             this.pluginConfig.storageConfig.streamrAddress)
         this.networkNode.removeMessageListener(this.messageListener!)
-        this.storageConfig!.getSPIDs().forEach((spid) => {
+        this.storageConfig!.getStreamParts().forEach((spid) => {
             this.networkNode.unsubscribe(spid)
         })
         this.storageConfig!.stopChainEventsListener()

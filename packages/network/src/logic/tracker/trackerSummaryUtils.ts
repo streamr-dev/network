@@ -15,8 +15,8 @@ export function getTopology(
 ): OverLayWithRtts {
     const topology: OverLayWithRtts = {}
 
-    const streamPartIds = findStreamPartIDs(overlayPerStream, streamId, partition)
-    streamPartIds.forEach((streamPartId) => {
+    const streamParts = findStreamParts(overlayPerStream, streamId, partition)
+    streamParts.forEach((streamPartId) => {
         const streamOverlay = overlayPerStream[streamPartId].state()
         topology[streamPartId] = Object.assign({}, ...Object.entries(streamOverlay).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, neighbors, connectionRtts)
@@ -27,8 +27,8 @@ export function getTopology(
 }
 
 export function getStreamSizes(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): OverlaySizes {
-    const streamPartIds = findStreamPartIDs(overlayPerStream, streamId, partition)
-    const streamSizes: OverlaySizes = streamPartIds.map((streamPartId) => {
+    const streamParts = findStreamParts(overlayPerStream, streamId, partition)
+    const streamSizes: OverlaySizes = streamParts.map((streamPartId) => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         return {
             streamId,
@@ -114,7 +114,7 @@ function getNodeToNodeConnectionRtts(
     }
 }
 
-function findStreamPartIDs(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): StreamPartID[] {
+function findStreamParts(overlayPerStream: OverlayPerStream, streamId: StreamID | null = null, partition: number | null = null): StreamPartID[] {
     if (streamId === null) {
         return Object.keys(overlayPerStream) as StreamPartID[]
     } else if (partition === null) {

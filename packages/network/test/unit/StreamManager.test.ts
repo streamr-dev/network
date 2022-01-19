@@ -16,7 +16,7 @@ describe('StreamManager', () => {
 
     test('starts out empty', () => {
         expect(manager.isSetUp(toStreamPartID(toStreamID('streamId'), 0))).toEqual(false)
-        expect(Array.from(manager.getStreamPartIDs())).toEqual([])
+        expect(Array.from(manager.getStreamParts())).toEqual([])
     })
 
     test('setting up streams and testing values', () => {
@@ -28,7 +28,7 @@ describe('StreamManager', () => {
         expect(manager.isSetUp(toStreamPartID(streamOne, 1))).toEqual(true)
         expect(manager.isSetUp(toStreamPartID(streamTwo, 0))).toEqual(true)
 
-        expect(Array.from(manager.getStreamPartIDs())).toIncludeSameMembers(['stream-1#0', 'stream-1#1', 'stream-2#0'])
+        expect(Array.from(manager.getStreamParts())).toIncludeSameMembers(['stream-1#0', 'stream-1#1', 'stream-2#0'])
 
         expect(manager.getNeighborsForStream(toStreamPartID(streamOne, 0))).toBeEmpty()
         expect(manager.getNeighborsForStream(toStreamPartID(streamOne, 1))).toBeEmpty()
@@ -190,7 +190,7 @@ describe('StreamManager', () => {
 
         expect(manager.isSetUp(toStreamPartID(streamOne, 0))).toEqual(false)
 
-        expect(Array.from(manager.getStreamPartIDs())).toEqual(['stream-2#0'])
+        expect(Array.from(manager.getStreamParts())).toEqual(['stream-2#0'])
     })
 
     test('updating counter', () => {

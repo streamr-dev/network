@@ -12,12 +12,12 @@ enum ConnectionState {
     ERROR
 }
 
-type GetStreamPartIDsFn = () => Iterable<StreamPartID>
+type getStreamPartsFn = () => Iterable<StreamPartID>
 type ConnectToTrackerFn = (trackerAddress: string, trackerPeerInfo: PeerInfo) => Promise<unknown>
 type DisconnectFromTrackerFn = (trackerId: TrackerId) => void
 
 export class TrackerConnector {
-    private readonly getStreamPartIDs: GetStreamPartIDsFn
+    private readonly getStreamParts: getStreamPartsFn
     private readonly connectToTracker: ConnectToTrackerFn
     private readonly disconnectFromTracker: DisconnectFromTrackerFn
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
@@ -27,13 +27,13 @@ export class TrackerConnector {
     private readonly signallingOnlyTrackers: Set<TrackerId>
 
     constructor(
-        getStreamPartIDs: GetStreamPartIDsFn,
+        getStreamParts: getStreamPartsFn,
         connectToTracker: ConnectToTrackerFn,
         disconnectFromTracker: DisconnectFromTrackerFn,
         trackerRegistry: Utils.TrackerRegistry<TrackerInfo>,
         maintenanceInterval: number
     ) {
-        this.getStreamPartIDs = getStreamPartIDs
+        this.getStreamParts = getStreamParts
         this.connectToTracker = connectToTracker
         this.disconnectFromTracker = disconnectFromTracker
         this.trackerRegistry = trackerRegistry
@@ -105,7 +105,7 @@ export class TrackerConnector {
         if (this.signallingOnlyTrackers.has(trackerId)) {
             return true
         }
-        for (const streamPartId of this.getStreamPartIDs()) {
+        for (const streamPartId of this.getStreamParts()) {
             if (this.trackerRegistry.getTracker(streamPartId).id === trackerId) {
                 return true
             }

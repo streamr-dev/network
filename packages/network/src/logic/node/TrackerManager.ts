@@ -71,7 +71,7 @@ export class TrackerManager {
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.trackerConnector = new TrackerConnector(
-            streamManager.getStreamPartIDs.bind(streamManager),
+            streamManager.getStreamParts.bind(streamManager),
             this.nodeToTracker.connectToTracker.bind(this.nodeToTracker),
             this.nodeToTracker.disconnectFromTracker.bind(this.nodeToTracker),
             this.trackerRegistry,
@@ -133,7 +133,7 @@ export class TrackerManager {
     }
 
     private getStreamsForTracker(trackerId: TrackerId): Array<StreamPartID> {
-        return [...this.streamManager.getStreamPartIDs()]
+        return [...this.streamManager.getStreamParts()]
             .filter((streamPartId) => this.getTrackerId(streamPartId) === trackerId)
     }
 

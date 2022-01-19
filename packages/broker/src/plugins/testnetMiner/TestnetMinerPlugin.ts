@@ -8,7 +8,7 @@ import { withTimeout } from '../../helpers/withTimeout'
 import { fetchOrThrow } from '../../helpers/fetchOrThrow'
 import { version as CURRENT_VERSION } from '../../../package.json'
 import { Schema } from 'ajv'
-import { SPID } from 'streamr-client-protocol'
+import { StreamID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
@@ -44,7 +44,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     dummyMessagesReceived: number
     rewardSubscriptionRetryRef: NodeJS.Timeout | null
     subscriptionRetryInterval: number
-    streamId: string
+    streamId: StreamID
 
     constructor(options: PluginOptions) {
         super(options)
@@ -54,7 +54,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
-        this.streamId = this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)]
+        this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)])
     }
 
     async start(): Promise<void> {
@@ -112,7 +112,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private getPeers(): Peer[] {
-        const neighbors = this.networkNode.getNeighborsForStream(new SPID(this.streamId, REWARD_STREAM_PARTITION))
+        const neighbors = this.networkNode.getNeighborsForStream(toStreamPartID(this.streamId, REWARD_STREAM_PARTITION))
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
             rtt: this.networkNode.getRtt(nodeId)

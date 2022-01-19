@@ -139,7 +139,7 @@ export class StreamManager {
         })
     }
 
-    getStreamPartIDs(): IterableIterator<StreamPartID> {
+    getStreamParts(): IterableIterator<StreamPartID> {
         return this.streams.keys()
     }
 

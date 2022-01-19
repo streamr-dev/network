@@ -6,7 +6,7 @@ import { TrackerLayer, toStreamID, toStreamPartID } from 'streamr-client-protoco
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
-import { getStreamPartIDs } from '../utils'
+import { getStreamParts } from '../utils'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
 const FIRST_STREAM = toStreamID('stream-7') // assigned to trackerOne (arbitrarily by hashing algo)
@@ -86,27 +86,27 @@ describe('multi trackers', () => {
 
         await wait(500)
 
-        expect(getStreamPartIDs(trackerOne)).toContain(`${FIRST_STREAM}#0`)
-        expect(getStreamPartIDs(trackerTwo)).not.toContain(`${FIRST_STREAM}#0`)
-        expect(getStreamPartIDs(trackerThree)).not.toContain(`${FIRST_STREAM}#0`)
+        expect(getStreamParts(trackerOne)).toContain(`${FIRST_STREAM}#0`)
+        expect(getStreamParts(trackerTwo)).not.toContain(`${FIRST_STREAM}#0`)
+        expect(getStreamParts(trackerThree)).not.toContain(`${FIRST_STREAM}#0`)
 
         // second stream, second tracker
         nodeOne.subscribe(toStreamPartID(SECOND_STREAM, 0))
 
         await wait(500)
 
-        expect(getStreamPartIDs(trackerOne)).not.toContain(`${SECOND_STREAM}#0`)
-        expect(getStreamPartIDs(trackerTwo)).toContain(`${SECOND_STREAM}#0`)
-        expect(getStreamPartIDs(trackerThree)).not.toContain(`${SECOND_STREAM}#0`)
+        expect(getStreamParts(trackerOne)).not.toContain(`${SECOND_STREAM}#0`)
+        expect(getStreamParts(trackerTwo)).toContain(`${SECOND_STREAM}#0`)
+        expect(getStreamParts(trackerThree)).not.toContain(`${SECOND_STREAM}#0`)
 
         // third stream, third tracker
         nodeOne.subscribe(toStreamPartID(THIRD_STREAM, 0))
 
         await wait(500)
 
-        expect(getStreamPartIDs(trackerOne)).not.toContain(`${THIRD_STREAM}#0`)
-        expect(getStreamPartIDs(trackerTwo)).not.toContain(`${THIRD_STREAM}#0`)
-        expect(getStreamPartIDs(trackerThree)).toContain(`${THIRD_STREAM}#0`)
+        expect(getStreamParts(trackerOne)).not.toContain(`${THIRD_STREAM}#0`)
+        expect(getStreamParts(trackerTwo)).not.toContain(`${THIRD_STREAM}#0`)
+        expect(getStreamParts(trackerThree)).toContain(`${THIRD_STREAM}#0`)
     })
 
     test('only one specific tracker sends instructions about stream', async () => {
@@ -188,6 +188,6 @@ describe('multi trackers', () => {
         })
         // @ts-expect-error private field
         await nodeOne.trackerManager.handleTrackerInstruction(unexpectedInstruction, trackerOne.getTrackerId())
-        expect(getStreamPartIDs(nodeOne)).not.toContain('stream-2#0')
+        expect(getStreamParts(nodeOne)).not.toContain('stream-2#0')
     })
 })

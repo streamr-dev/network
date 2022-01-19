@@ -340,8 +340,8 @@ export class Node extends EventEmitter {
         this.emit(Event.NODE_DISCONNECTED, node)
     }
 
-    getStreamPartIDs(): Iterable<StreamPartID> {
-        return this.streams.getStreamPartIDs()
+    getStreamParts(): Iterable<StreamPartID> {
+        return this.streams.getStreamParts()
     }
 
     getNeighbors(): ReadonlyArray<NodeId> {
