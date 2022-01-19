@@ -158,9 +158,9 @@ export class Node extends EventEmitter {
                 rtts: includeRtt ? this.nodeToNode.getRtts() : null
             }),
             {
-                subscribeToStreamIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
-                subscribeToStreamsOnNode: this.subscribeToStreamsOnNode.bind(this),
-                unsubscribeFromStreamOnNode: this.unsubscribeFromStreamOnNode.bind(this)
+                subscribeToStreamPartIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
+                subscribeToStreamPartOnNodes: this.subscribeToStreamsOnNode.bind(this),
+                unsubscribeFromStreamPartOnNode: this.unsubscribeFromStreamOnNode.bind(this)
             }
         )
         this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({

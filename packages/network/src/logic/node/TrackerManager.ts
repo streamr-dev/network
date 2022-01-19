@@ -21,14 +21,14 @@ interface NodeDescriptor {
 }
 
 interface Subscriber {
-    subscribeToStreamIfHaveNotYet: (streamPartId: StreamPartID, sendStatus?: boolean) => void
-    subscribeToStreamsOnNode: (
+    subscribeToStreamPartIfHaveNotYet: (streamPartId: StreamPartID, sendStatus?: boolean) => void
+    subscribeToStreamPartOnNodes: (
         nodeIds: NodeId[],
         streamPartId: StreamPartID,
         trackerId: TrackerId,
         reattempt: boolean
     ) => Promise<PromiseSettledResult<NodeId>[]>,
-    unsubscribeFromStreamOnNode: (node: NodeId, streamPartId: StreamPartID, sendStatus?: boolean) => void
+    unsubscribeFromStreamPartOnNode: (node: NodeId, streamPartId: StreamPartID, sendStatus?: boolean) => void
 }
 
 type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
@@ -185,15 +185,15 @@ export class TrackerManager {
         this.metrics.record('trackerInstructions', 1)
         logger.trace('received instructions for %s, nodes to connect %o', streamPartId, nodeIds)
 
-        this.subscriber.subscribeToStreamIfHaveNotYet(streamPartId, false)
+        this.subscriber.subscribeToStreamPartIfHaveNotYet(streamPartId, false)
         const currentNodes = this.streamManager.getNeighborsForStreamPart(streamPartId)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {
-            this.subscriber.unsubscribeFromStreamOnNode(nodeId, streamPartId, false)
+            this.subscriber.unsubscribeFromStreamPartOnNode(nodeId, streamPartId, false)
         })
 
-        const results = await this.subscriber.subscribeToStreamsOnNode(nodeIds, streamPartId, trackerId, reattempt)
+        const results = await this.subscriber.subscribeToStreamPartOnNodes(nodeIds, streamPartId, trackerId, reattempt)
         if (this.streamManager.isSetUp(streamPartId)) {
             this.streamManager.updateCounter(streamPartId, counter)
         }
