@@ -7,7 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
-import { SearchStreamsOptions } from '../../src/StreamEndpoints'
+import { SearchStreamsOptions } from '../../src/StreamRegistry'
 
 jest.setTimeout(40000)
 const DELAY_BETWEEN_TESTS = 4000

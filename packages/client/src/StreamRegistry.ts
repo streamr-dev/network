@@ -13,7 +13,6 @@ import { Context } from './utils/Context'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamPermission, StreamPermissions, StreamProperties } from './Stream'
 import { NotFoundError } from './authFetch'
-import { SearchStreamsOptions } from './StreamEndpoints'
 import {
     SIDLike,
     SPID,
@@ -23,6 +22,12 @@ import {
 } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
+
+export interface SearchStreamsOptions {
+    order?: 'asc'|'desc'
+    max?: number
+    offset?: number
+}
 
 export type PermissionQueryResult = {
     id: string

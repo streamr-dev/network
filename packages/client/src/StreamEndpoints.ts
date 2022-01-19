@@ -27,12 +27,6 @@ import { StreamRegistry } from './StreamRegistry'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
 
-export interface SearchStreamsOptions {
-    order?: 'asc'|'desc'
-    max?: number
-    offset?: number
-}
-
 export interface StreamValidationInfo {
     id: string
     partitions: number
