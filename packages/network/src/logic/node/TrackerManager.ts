@@ -152,12 +152,12 @@ export class TrackerManager {
         if (!this.streamManager.isBehindProxy(streamPartId)) {
             const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
             const status = {
-                stream: this.streamManager.getStreamPartStatus(streamPartId),
+                streamPart: this.streamManager.getStreamPartStatus(streamPartId),
                 ...nodeDescriptor
             }
             try {
                 await this.nodeToTracker.sendStatus(trackerId, status)
-                logger.trace('sent status %j to tracker %s', status.stream, trackerId)
+                logger.trace('sent status %j to tracker %s', status.streamPart, trackerId)
             } catch (e) {
                 logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
             }

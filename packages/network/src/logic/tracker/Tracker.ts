@@ -125,7 +125,7 @@ export class Tracker extends EventEmitter {
             return
         }
 
-        const { stream, rtts, location, extra } = status
+        const { streamPart, rtts, location, extra } = status
         // update RTTs and location
         if (rtts) {
             this.overlayConnectionRtts[source] = rtts
@@ -137,11 +137,11 @@ export class Tracker extends EventEmitter {
         })
         this.extraMetadatas[source] = extra
 
-        const streamPartId = toStreamPartID(stream.id, stream.partition)
+        const streamPartId = toStreamPartID(streamPart.id, streamPart.partition)
 
         // update topology
         this.createTopology(streamPartId)
-        this.updateNodeOnStream(source, stream)
+        this.updateNodeOnStream(source, streamPart)
         this.formAndSendInstructions(source, streamPartId)
     }
 

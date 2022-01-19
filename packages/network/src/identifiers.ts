@@ -21,7 +21,7 @@ export interface StreamPartStatus {
 }
 
 export interface Status {
-    stream: StreamPartStatus // TODO rename field to streamPart?
+    streamPart: StreamPartStatus
     rtts: Rtts | null
     location?: Location
     started: string

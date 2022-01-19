@@ -13,7 +13,7 @@ import { toStreamID } from "streamr-client-protocol"
 const WAIT_TIME = 2000
 
 const formStatus = (counter1: number, nodes1: NodeId[]): Partial<Status> => ({
-    stream: {
+    streamPart: {
         id: toStreamID('stream-1'),
         partition: 0,
         neighbors: nodes1,

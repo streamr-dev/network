@@ -18,9 +18,9 @@ export class InstructionCounter {
     }
 
     isMostRecent(status: Status, source: NodeId): boolean {
-        const streamPartId = toStreamPartID(status.stream.id, status.stream.partition)
+        const streamPartId = toStreamPartID(status.streamPart.id, status.streamPart.partition)
         const currentCounter = this.getAndSetIfNecessary(source, streamPartId)
-        return (status.stream.counter >= currentCounter || status.stream.counter === COUNTER_UNSUBSCRIBE)
+        return (status.streamPart.counter >= currentCounter || status.streamPart.counter === COUNTER_UNSUBSCRIBE)
     }
 
     removeNode(nodeId: NodeId): void {

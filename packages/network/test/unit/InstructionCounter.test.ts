@@ -11,7 +11,7 @@ describe('InstructionCounter', () => {
 
     it('if counters have not been set', () => {
         const status: Partial<Status> = {
-            stream: {
+            streamPart: {
                 id: toStreamID('stream-1'),
                 partition: 0,
                 neighbors: [],
@@ -29,7 +29,7 @@ describe('InstructionCounter', () => {
         instructionCounter.setOrIncrement('node', 'stream-2#0' as StreamPartID)
         instructionCounter.setOrIncrement('node', 'stream-2#0' as StreamPartID)
         const status1 = {
-            stream: {
+            streamPart: {
                 id: 'stream-1',
                 partition: 0,
                 neighbors: [],
@@ -37,7 +37,7 @@ describe('InstructionCounter', () => {
             }
         }
         const status2 = {
-            stream: {
+            streamPart: {
                 id: 'stream-2',
                 partition: 0,
                 neighbors: [],
@@ -55,7 +55,7 @@ describe('InstructionCounter', () => {
         instructionCounter.setOrIncrement('node-2', 'stream-1#0' as StreamPartID)
         instructionCounter.setOrIncrement('node-2', 'stream-1#0' as StreamPartID)
         const status1 = {
-            stream: {
+            streamPart: {
                 id: 'stream-1',
                 partition: 0,
                 neighbors: [],
@@ -63,7 +63,7 @@ describe('InstructionCounter', () => {
             }
         }
         const status2 = {
-            stream: {
+            streamPart: {
                 id: 'stream-1',
                 partition: 0,
                 neighbors: [],
@@ -80,7 +80,7 @@ describe('InstructionCounter', () => {
         instructionCounter.setOrIncrement('node', 'stream-1#0' as StreamPartID)
         instructionCounter.removeNode('node')
         const status = {
-            stream: {
+            streamPart: {
                 id: 'stream-1',
                 partition: 0,
                 neighbors: [],
@@ -96,7 +96,7 @@ describe('InstructionCounter', () => {
         instructionCounter.setOrIncrement('node', 'stream-1#0' as StreamPartID)
         instructionCounter.removeStreamPart('stream-1#0' as StreamPartID)
         const status = {
-            stream: {
+            streamPart: {
                 id: 'stream-1',
                 partition: 0,
                 neighbors: [],
