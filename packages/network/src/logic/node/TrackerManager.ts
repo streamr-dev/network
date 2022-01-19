@@ -116,8 +116,8 @@ export class TrackerManager {
     }
 
     onUnsubscribeFromStream(streamPartId: StreamPartID): void {
-        this.instructionThrottler.removeStream(streamPartId)
-        this.instructionRetryManager.removeStream(streamPartId)
+        this.instructionThrottler.removeStreamPart(streamPartId)
+        this.instructionRetryManager.removeStreamPart(streamPartId)
     }
 
     start(): void {

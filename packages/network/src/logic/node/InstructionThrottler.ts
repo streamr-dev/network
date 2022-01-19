@@ -61,7 +61,7 @@ export class InstructionThrottler {
         }
     }
 
-    removeStream(streamPartId: StreamPartID): void {
+    removeStreamPart(streamPartId: StreamPartID): void {
         if (this.stopped) {
             return
         }

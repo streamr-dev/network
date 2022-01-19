@@ -208,7 +208,7 @@ export class Tracker extends EventEmitter {
         this.instructionCounter.removeNode(node)
 
         if (overlayTopology.isEmpty()) {
-            this.instructionCounter.removeStream(streamPartId)
+            this.instructionCounter.removeStreamPart(streamPartId)
             delete this.overlayPerStream[streamPartId]
         } else {
             neighbors.forEach((neighbor) => {

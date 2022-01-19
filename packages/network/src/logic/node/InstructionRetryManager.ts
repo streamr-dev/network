@@ -70,14 +70,14 @@ export class InstructionRetryManager {
         }
     }
 
-    removeStream(streamPartId: StreamPartID): void {
+    removeStreamPart(streamPartId: StreamPartID): void {
         if (this.stopped) {
             return
         }
         if (streamPartId in this.instructionRetryIntervals) {
             clearTimeout(this.instructionRetryIntervals[streamPartId].interval)
             delete this.instructionRetryIntervals[streamPartId]
-            this.logger.debug('stream %s successfully removed', streamPartId)
+            this.logger.debug('stream part %s successfully removed', streamPartId)
         }
     }
 

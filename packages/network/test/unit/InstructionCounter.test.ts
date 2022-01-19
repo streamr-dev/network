@@ -90,11 +90,11 @@ describe('InstructionCounter', () => {
         expect(instructionCounter.isMostRecent(status as any, 'node')).toEqual(true)
     })
 
-    it('removeStream unsets counters', () => {
+    it('removeStreamPart unsets counters', () => {
         instructionCounter.setOrIncrement('node', 'stream-1#0' as StreamPartID)
         instructionCounter.setOrIncrement('node', 'stream-1#0' as StreamPartID)
         instructionCounter.setOrIncrement('node', 'stream-1#0' as StreamPartID)
-        instructionCounter.removeStream('stream-1#0' as StreamPartID)
+        instructionCounter.removeStreamPart('stream-1#0' as StreamPartID)
         const status = {
             stream: {
                 id: 'stream-1',
@@ -116,7 +116,7 @@ describe('InstructionCounter', () => {
         expect(instructionCounter.setOrIncrement('node-b', 'stream-2#0' as StreamPartID)).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-b', 'stream-3#0' as StreamPartID)).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1#0' as StreamPartID)).toEqual(4)
-        instructionCounter.removeStream('stream-1#0' as StreamPartID)
+        instructionCounter.removeStreamPart('stream-1#0' as StreamPartID)
         expect(instructionCounter.setOrIncrement('node-a', 'stream-1#0' as StreamPartID)).toEqual(1)
         expect(instructionCounter.setOrIncrement('node-b', 'stream-1#0' as StreamPartID)).toEqual(1)
         instructionCounter.removeNode('node-a')

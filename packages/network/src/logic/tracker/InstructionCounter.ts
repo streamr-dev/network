@@ -27,7 +27,7 @@ export class InstructionCounter {
         delete this.counters[nodeId]
     }
 
-    removeStream(streamPartId: StreamPartID): void {
+    removeStreamPart(streamPartId: StreamPartID): void {
         Object.keys(this.counters).forEach((nodeId) => {
             delete this.counters[nodeId][streamPartId]
         })
