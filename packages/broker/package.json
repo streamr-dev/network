@@ -73,7 +73,7 @@
     "split2": "^3.2.2",
     "streamr-client": "^6.0.0-alpha.20",
     "streamr-client-protocol": "^10.0.0",
-    "streamr-network": "^30.1.1",
+    "streamr-network": "^31.0.0",
     "streamr-test-utils": "^2.0.0",
     "strict-event-emitter-types": "^2.0.0",
     "terminal-kit": "^2.1.5",
