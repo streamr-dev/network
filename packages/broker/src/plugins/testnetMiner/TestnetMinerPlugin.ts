@@ -112,7 +112,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private getPeers(): Peer[] {
-        const neighbors = this.networkNode.getNeighborsForStream(toStreamPartID(this.streamId, REWARD_STREAM_PARTITION))
+        const neighbors = this.networkNode.getNeighborsForStreamPart(toStreamPartID(this.streamId, REWARD_STREAM_PARTITION))
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
             rtt: this.networkNode.getRtt(nodeId)

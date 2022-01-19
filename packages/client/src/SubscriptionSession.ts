@@ -150,7 +150,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
             if (!this.shouldBeSubscribed()) { return true } // abort
             const node = await this.node.getNode()
             if (!this.shouldBeSubscribed()) { return true } // abort
-            return node.getNeighborsForStream(this.streamPartId).length >= numNeighbours
+            return node.getNeighborsForStreamPart(this.streamPartId).length >= numNeighbours
         }, timeout)
     }
 

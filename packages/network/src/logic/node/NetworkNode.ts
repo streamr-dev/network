@@ -21,11 +21,11 @@ export class NetworkNode extends Node {
         this.onDataReceived(streamMessage)
     }
 
-    async joinStreamAsPurePublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+    async joinStreamPartAsPurePublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
         await this.openOutgoingStreamConnection(streamPartId, contactNodeId)
     }
 
-    async leavePurePublishingStream(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+    async leavePurePublishingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
         await this.closeOutgoingStreamConnection(streamPartId, contactNodeId)
     }
 
@@ -45,7 +45,7 @@ export class NetworkNode extends Node {
         this.unsubscribeFromStream(streamPartId)
     }
 
-    getNeighborsForStream(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         return this.streams.getNeighborsForStreamPart(streamPartId)
     }
 

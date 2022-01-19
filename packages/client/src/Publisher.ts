@@ -207,25 +207,25 @@ export default class BrubeckPublisher implements Context, Stoppable {
 
     async setPublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.openPublishProxyConnectionOnStreamPartition(streamPartId, nodeId)
+        await this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId)
     }
 
     async removePublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.closePublishProxyConnectionOnStreamPartition(streamPartId, nodeId)
+        await this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId)
     }
 
     async setPublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled([
-            ...nodeIds.map((nodeId) => this.node.openPublishProxyConnectionOnStreamPartition(streamPartId, nodeId))
+            ...nodeIds.map((nodeId) => this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId))
         ])
     }
 
     async removePublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled([
-            ...nodeIds.map(async (nodeId) => this.node.closePublishProxyConnectionOnStreamPartition(streamPartId, nodeId))
+            ...nodeIds.map(async (nodeId) => this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId))
         ])
     }
 
