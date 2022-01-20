@@ -125,23 +125,22 @@ export class Tracker extends EventEmitter {
             return
         }
 
-        const { streamPart, rtts, location, extra } = status
         // update RTTs and location
-        if (rtts) {
-            this.overlayConnectionRtts[source] = rtts
+        if (status.rtts) {
+            this.overlayConnectionRtts[source] = status.rtts
         }
         this.locationManager.updateLocation({
             nodeId: source,
-            location,
+            location: status.location,
             address: this.trackerServer.resolveAddress(source),
         })
-        this.extraMetadatas[source] = extra
+        this.extraMetadatas[source] = status.extra
 
-        const streamPartId = toStreamPartID(streamPart.id, streamPart.partition)
+        const streamPartId = toStreamPartID(status.streamPart.id, status.streamPart.partition)
 
         // update topology
         this.createTopology(streamPartId)
-        this.updateNodeOnStream(source, streamPart)
+        this.updateNodeOnStream(source, status.streamPart)
         this.formAndSendInstructions(source, streamPartId)
     }
 
