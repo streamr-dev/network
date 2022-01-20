@@ -30,7 +30,7 @@ const { StreamMessage } = MessageLayer
 
 const MAX_MESSAGES = 10
 
-describe('StreamrClient', () => {
+describeRepeats('StreamrClient', () => {
     let expectErrors = 0 // check no errors by default
     let errors: any[] = []
 

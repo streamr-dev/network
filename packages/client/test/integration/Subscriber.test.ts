@@ -13,7 +13,7 @@ const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
 jest.setTimeout(60000)
 
-describe('Subscriber', () => {
+describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
@@ -385,7 +385,6 @@ describe('Subscriber', () => {
 
                 const onSuppressError = jest.fn()
                 sub2.onError(onSuppressError)
-
 
                 const client2 = await createClient({
                     auth: client.options.auth,
