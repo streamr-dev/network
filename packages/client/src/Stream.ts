@@ -18,19 +18,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
 import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
-
-// TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
-export type StreamPartDefinitionOptions = {
-    streamId?: string,
-    streamPartition?: number,
-    id?: string,
-    partition?: number,
-    stream?: StreamrStream|string
-}
-
-export type StreamPartDefinition = string | StreamPartDefinitionOptions
-
-export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
+import { DEFAULT_PARTITION } from './StreamIDBuilder'
 
 export interface StreamPermissions {
     canEdit: boolean
