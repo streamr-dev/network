@@ -17,7 +17,7 @@ export interface PropagationTask {
  * - Items have a TTL, after which they are considered stale and not returned when querying
 **/
 export class PropagationTaskStore {
-    private readonly streamLookup = new Map<StreamPartID, Set<MessageID>>()
+    private readonly streamPartLookup = new Map<StreamPartID, Set<MessageID>>()
     private readonly tasks: FifoMapWithTtl<MessageID, PropagationTask>
 
     constructor(ttlInMs: number, maxTasks: number) {
@@ -26,11 +26,11 @@ export class PropagationTaskStore {
             maxSize: maxTasks,
             onItemDropped: (messageId: MessageID) => {
                 const streamPartId = messageId.getStreamPartID()
-                const messageIdsForStream = this.streamLookup.get(streamPartId)
+                const messageIdsForStream = this.streamPartLookup.get(streamPartId)
                 if (messageIdsForStream !== undefined) {
                     messageIdsForStream.delete(messageId)
                     if (messageIdsForStream.size === 0) {
-                        this.streamLookup.delete(streamPartId)
+                        this.streamPartLookup.delete(streamPartId)
                     }
                 }
             }
@@ -40,10 +40,10 @@ export class PropagationTaskStore {
     add(task: PropagationTask): void {
         const messageId = task.message.messageId
         const streamPartId = messageId.getStreamPartID()
-        if (!this.streamLookup.has(streamPartId)) {
-            this.streamLookup.set(streamPartId, new Set<MessageID>())
+        if (!this.streamPartLookup.has(streamPartId)) {
+            this.streamPartLookup.set(streamPartId, new Set<MessageID>())
         }
-        this.streamLookup.get(streamPartId)!.add(messageId)
+        this.streamPartLookup.get(streamPartId)!.add(messageId)
         this.tasks.set(messageId, task)
     }
 
@@ -52,7 +52,7 @@ export class PropagationTaskStore {
     }
 
     get(streamPartId: StreamPartID): Array<PropagationTask> {
-        const messageIds = this.streamLookup.get(streamPartId)
+        const messageIds = this.streamPartLookup.get(streamPartId)
         const tasks: Array<PropagationTask> = []
         if (messageIds !== undefined) {
             messageIds.forEach((messageId) => {

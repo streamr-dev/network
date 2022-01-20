@@ -117,7 +117,6 @@ export class StorageConfig {
     async refresh(): Promise<void> {
         const streamsToStore = await this.streamrClient.getStoredStreamsOf(this.clusterId)
         if (!skipPollResultSoonAfterEvent) {
-
             const streamParts = new Set<StreamPartID>(streamsToStore.flatMap((stream: { id: StreamID, partitions: number }) => ([
                 ...createStreamPartIDs(stream.id, stream.partitions)
             ])).filter ((streamPart: StreamPartID) => this.belongsToMeInCluster(streamPart)))

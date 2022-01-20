@@ -7,15 +7,15 @@ import { TopologyStabilizationOptions } from './Tracker'
 
 /**
  * Instructions are collected to buffers and sent after a short delay. For each stream
- * there is a separate buffer.
+ * part there is a separate buffer.
  * 
  * We use debouncing to delay the sending. It means that we send the buffered instructions 
  * when either of these conditions is satisfied: 
- * - the topology stabilizes: no new instructions has been formed for the stream in 
- *   X milliseconds
+ * - the topology stabilizes: no new instructions has been formed for the stream part 
+ *   in X milliseconds
  * - the buffer times out: we have buffered an instruction for Y milliseconds
  * 
- * When an instruction is added to a stream buffer, it may overwrite an existing
+ * When an instruction is added to a the buffer, it may overwrite an existing
  * instruction in the buffer if the both instructions share the same nodeId. In that 
  * situation we expect that the previous instruction is no longer valid (it has a lower
  * counterValue) and can be ignored.
@@ -35,7 +35,7 @@ export interface Instruction {
     counterValue: number
 }
 
-class StreamInstructionBuffer {
+class StreamPartInstructionBuffer {
     private readonly instructions = new Map<NodeId, Instruction>()
     private readonly debouncedOnReady: _.DebouncedFunc<() => void>
 
@@ -68,7 +68,7 @@ export type SendInstructionFn = (
 ) => Promise<void>
 
 export class InstructionSender {
-    private readonly streamBuffers = new Map<StreamPartID, StreamInstructionBuffer>()
+    private readonly streamPartBuffers = new Map<StreamPartID, StreamPartInstructionBuffer>()
     private readonly options: TopologyStabilizationOptions
     private readonly sendInstruction: SendInstructionFn
     private readonly metrics: Metrics
@@ -89,25 +89,25 @@ export class InstructionSender {
     }
 
     stop(): void {
-        this.streamBuffers.forEach((entry) => entry.stop())
+        this.streamPartBuffers.forEach((entry) => entry.stop())
     }
 
-    private getOrCreateBuffer(streamPartId: StreamPartID): StreamInstructionBuffer {
-        const existingBuffer = this.streamBuffers.get(streamPartId)
+    private getOrCreateBuffer(streamPartId: StreamPartID): StreamPartInstructionBuffer {
+        const existingBuffer = this.streamPartBuffers.get(streamPartId)
         if (existingBuffer !== undefined) {
             return existingBuffer
         } else {
-            const newBuffer = new StreamInstructionBuffer(this.options, () => {
-                this.streamBuffers.get(streamPartId)?.stop()
-                this.streamBuffers.delete(streamPartId)
+            const newBuffer = new StreamPartInstructionBuffer(this.options, () => {
+                this.streamPartBuffers.get(streamPartId)?.stop()
+                this.streamPartBuffers.delete(streamPartId)
                 this.sendInstructions(newBuffer)
             })
-            this.streamBuffers.set(streamPartId, newBuffer)
+            this.streamPartBuffers.set(streamPartId, newBuffer)
             return newBuffer
         }
     }
 
-    private async sendInstructions(buffer: StreamInstructionBuffer): Promise<void> {
+    private async sendInstructions(buffer: StreamPartInstructionBuffer): Promise<void> {
         const promises = Array.from(buffer.getInstructions())
             .map(async ({ nodeId, streamPartId, newNeighbors, counterValue }) => {
                 this.metrics.record('instructionsSent', 1)

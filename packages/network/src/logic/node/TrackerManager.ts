@@ -45,7 +45,7 @@ export class TrackerManager {
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private readonly trackerConnector: TrackerConnector
     private readonly nodeToTracker: NodeToTracker
-    private readonly streamManager: StreamPartManager
+    private readonly streamPartManager: StreamPartManager
     private readonly rttUpdateInterval: number
     private readonly instructionThrottler: InstructionThrottler
     private readonly instructionRetryManager: InstructionRetryManager
@@ -56,13 +56,13 @@ export class TrackerManager {
     constructor(
         nodeToTracker: NodeToTracker,
         opts: TrackerManagerOptions,
-        streamManager: StreamPartManager,
+        streamPartManager: StreamPartManager,
         metrics: Metrics,
         getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
     ) {
         this.nodeToTracker =  nodeToTracker
-        this.streamManager = streamManager
+        this.streamPartManager = streamPartManager
         this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
         this.metrics = metrics
             .addRecordedMetric('unexpectedTrackerInstructions')
@@ -71,7 +71,7 @@ export class TrackerManager {
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
         this.trackerConnector = new TrackerConnector(
-            streamManager.getStreamParts.bind(streamManager),
+            streamPartManager.getStreamParts.bind(streamPartManager),
             this.nodeToTracker.connectToTracker.bind(this.nodeToTracker),
             this.nodeToTracker.disconnectFromTracker.bind(this.nodeToTracker),
             this.trackerRegistry,
@@ -133,7 +133,7 @@ export class TrackerManager {
     }
 
     private getStreamPartsForTracker(trackerId: TrackerId): Array<StreamPartID> {
-        return [...this.streamManager.getStreamParts()]
+        return [...this.streamPartManager.getStreamParts()]
             .filter((streamPartId) => this.getTrackerId(streamPartId) === trackerId)
     }
 
@@ -149,10 +149,10 @@ export class TrackerManager {
     }
 
     private async sendStatus(streamPartId: StreamPartID, trackerId: TrackerId): Promise<void> {
-        if (!this.streamManager.isBehindProxy(streamPartId)) {
+        if (!this.streamPartManager.isBehindProxy(streamPartId)) {
             const nodeDescriptor = this.getNodeDescriptor(this.shouldIncludeRttInfo(trackerId))
             const status = {
-                streamPart: this.streamManager.getStreamPartStatus(streamPartId),
+                streamPart: this.streamPartManager.getStreamPartStatus(streamPartId),
                 ...nodeDescriptor
             }
             try {
@@ -186,7 +186,7 @@ export class TrackerManager {
         logger.trace('received instructions for %s, nodes to connect %o', streamPartId, nodeIds)
 
         this.subscriber.subscribeToStreamPartIfHaveNotYet(streamPartId, false)
-        const currentNodes = this.streamManager.getNeighborsForStreamPart(streamPartId)
+        const currentNodes = this.streamPartManager.getNeighborsForStreamPart(streamPartId)
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {
@@ -194,8 +194,8 @@ export class TrackerManager {
         })
 
         const results = await this.subscriber.subscribeToStreamPartOnNodes(nodeIds, streamPartId, trackerId, reattempt)
-        if (this.streamManager.isSetUp(streamPartId)) {
-            this.streamManager.updateCounter(streamPartId, counter)
+        if (this.streamPartManager.isSetUp(streamPartId)) {
+            this.streamPartManager.updateCounter(streamPartId, counter)
         }
 
         // Log success / failures
@@ -214,13 +214,13 @@ export class TrackerManager {
             this.sendStreamPartStatus(streamPartId)
         }
 
-        logger.trace('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
+        logger.trace('subscribed to %j and unsubscribed from %j (streamPartId=%s, counter=%d)',
             subscribedNodeIds, unsubscribedNodeIds, streamPartId, counter)
 
         if (subscribedNodeIds.length !== nodeIds.length) {
-            logger.trace('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)', streamPartId, counter)
+            logger.trace('error: failed to fulfill all tracker instructions (streamPartId=%s, counter=%d)', streamPartId, counter)
         } else {
-            logger.trace('Tracker instructions fulfilled (streamId=%s, counter=%d)', streamPartId, counter)
+            logger.trace('Tracker instructions fulfilled (streamPartId=%s, counter=%d)', streamPartId, counter)
         }
     }
 

@@ -32,7 +32,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
         this.subscriptionIntervalRef = null
     }
 
-    private async subscribeToStreams(): Promise<void> {
+    private async subscribeToStreamParts(): Promise<void> {
         await Promise.all([
             ...this.streamParts.map(async (streamPart) => {
                 const isAlreadySubscribed = (await this.streamrClient!.getSubscriptions(streamPart)).length > 0
@@ -46,7 +46,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
     private async subscriptionIntervalFn(): Promise<void> {
         if (this.streamrClient) {
             try {
-                await this.subscribeToStreams()
+                await this.subscribeToStreamParts()
             } catch (err) {
                 logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
             }
@@ -55,7 +55,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
     }
 
     async start(): Promise<void> {
-        await this.subscribeToStreams()
+        await this.subscribeToStreamParts()
         this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
         logger.info('Subscriber plugin started')
     }

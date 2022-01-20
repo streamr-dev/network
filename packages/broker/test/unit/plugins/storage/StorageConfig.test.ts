@@ -35,7 +35,7 @@ describe('StorageConfig', () => {
             config.addChangeListener(listener)
         })
 
-        it('setStreams', () => {
+        it('setStreamParts', () => {
             // @ts-expect-error private
             config.setStreamParts(new Set(['existing2#0', 'existing3#0', 'new1#0', 'new2#0']))
             expect(listener.onStreamPartAdded).toBeCalledTimes(2)
@@ -53,7 +53,7 @@ describe('StorageConfig', () => {
             expect(config.hasStreamPart(StreamPartIDUtils.parse('other#0'))).toBeFalsy()
         })
 
-        it('addStream', () => {
+        it('addStreamParts', () => {
             // @ts-expect-error private
             config.addStreamParts(new Set(['loremipsum#0', 'foo#0', 'bar#0']))
             expect(listener.onStreamPartAdded).toBeCalledTimes(3)
@@ -62,7 +62,7 @@ describe('StorageConfig', () => {
             expect(listener.onStreamPartAdded).toHaveBeenCalledWith(StreamPartIDUtils.parse('bar#0'))
         })
 
-        it('removeStreams', () => {
+        it('removeStreamParts', () => {
             // @ts-expect-error private
             config.removeStreamParts(new Set(['existing2#0', 'existing2#1']))
             expect(listener.onStreamPartRemoved).toBeCalledTimes(2)

@@ -18,5 +18,5 @@ createClientCommand((async (client: StreamrClient, storageNodeAddress: string) =
     }
 }))
     .arguments('<storageNodeAddress>')
-    .description('list streams parts in a storage node')
+    .description('list stream parts in a storage node')
     .parseAsync()

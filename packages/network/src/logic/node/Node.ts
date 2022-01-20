@@ -159,13 +159,13 @@ export class Node extends EventEmitter {
             }),
             {
                 subscribeToStreamPartIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
-                subscribeToStreamPartOnNodes: this.subscribeToStreamsOnNode.bind(this),
-                unsubscribeFromStreamPartOnNode: this.unsubscribeFromStreamOnNode.bind(this)
+                subscribeToStreamPartOnNodes: this.subscribeToStreamPartOnNodes.bind(this),
+                unsubscribeFromStreamPartOnNode: this.unsubscribeFromStreamPartOnNode.bind(this)
             }
         )
         this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({
             trackerManager: this.trackerManager,
-            streamManager: this.streamPartManager,
+            streamPartManager: this.streamPartManager,
             node: this,
             nodeToNode: this.nodeToNode,
             acceptProxyConnections: this.acceptProxyConnections,
@@ -227,7 +227,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    subscribeToStreamsOnNode(
+    subscribeToStreamPartOnNodes(
         nodeIds: NodeId[],
         streamPartId: StreamPartID,
         trackerId: TrackerId,
@@ -236,7 +236,7 @@ export class Node extends EventEmitter {
         const subscribePromises = nodeIds.map(async (nodeId) => {
             await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
             this.disconnectionManager.cancelScheduledDisconnection(nodeId)
-            this.subscribeToStreamOnNode(nodeId, streamPartId, false)
+            this.subscribeToStreamPartOnNode(nodeId, streamPartId, false)
             return nodeId
         })
         return Promise.allSettled(subscribePromises)
@@ -307,7 +307,7 @@ export class Node extends EventEmitter {
         return this.trackerManager.stop()
     }
 
-    private subscribeToStreamOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): NodeId {
+    private subscribeToStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): NodeId {
         this.streamPartManager.addNeighbor(streamPartId, node)
         this.propagation.onNeighborJoined(node, streamPartId)
         if (sendStatus) {
@@ -317,7 +317,7 @@ export class Node extends EventEmitter {
         return node
     }
 
-    private unsubscribeFromStreamOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): void {
+    private unsubscribeFromStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): void {
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, node)
         logger.trace('node %s unsubscribed from stream %s', node, streamPartId)
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamPartId)

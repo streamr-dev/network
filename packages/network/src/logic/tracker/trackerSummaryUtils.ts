@@ -17,8 +17,8 @@ export function getTopology(
 
     const streamParts = findStreamParts(overlayPerStreamPart, streamId, partition)
     streamParts.forEach((streamPartId) => {
-        const streamOverlay = overlayPerStreamPart[streamPartId].state()
-        topology[streamPartId] = Object.assign({}, ...Object.entries(streamOverlay).map(([nodeId, neighbors]) => {
+        const overlay = overlayPerStreamPart[streamPartId].state()
+        topology[streamPartId] = Object.assign({}, ...Object.entries(overlay).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, neighbors, connectionRtts)
         }))
     })
@@ -32,7 +32,7 @@ export function getStreamPartSizes(
     partition: number | null = null
 ): OverlaySizes {
     const streamParts = findStreamParts(overlayPerStreamPart, streamId, partition)
-    const streamSizes: OverlaySizes = streamParts.map((streamPartId) => {
+    const sizes: OverlaySizes = streamParts.map((streamPartId) => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
         return {
             streamId,
@@ -40,7 +40,7 @@ export function getStreamPartSizes(
             nodeCount: overlayPerStreamPart[streamPartId].getNumberOfNodes()
         }
     })
-    return streamSizes
+    return sizes
 }
 
 export function getNodeConnections(nodes: readonly NodeId[], overlayPerStreamPart: OverlayPerStreamPart): Record<NodeId,Set<NodeId>> {

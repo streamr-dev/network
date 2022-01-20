@@ -276,9 +276,9 @@ export class NodeRegistry {
         return JSON.stringify({ query })
     }
 
-    private static buildStoredStreamQuery(streamid: StreamID): string {
+    private static buildStoredStreamQuery(streamId: StreamID): string {
         const query = `{
-            stream (id: "${streamid}") {
+            stream (id: "${streamId}") {
                 id,
                 metadata,
                 storageNodes {

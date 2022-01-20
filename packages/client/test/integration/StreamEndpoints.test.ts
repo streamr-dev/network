@@ -103,8 +103,8 @@ describe('StreamEndpoints', () => {
         })
 
         it('get a non-existing Stream', async () => {
-            const streamid = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
-            return expect(() => client.getStream(streamid)).rejects.toThrow(NotFoundError)
+            const streamId = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
+            return expect(() => client.getStream(streamId)).rejects.toThrow(NotFoundError)
         })
 
         it('get all Streams', async () => {

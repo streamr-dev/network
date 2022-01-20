@@ -5,7 +5,7 @@ import { NodeId } from './Node'
 import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
 import _ from 'lodash'
 
-interface StreamState {
+interface StreamPartState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
     neighbors: Set<NodeId>
     counter: number,
@@ -19,13 +19,13 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
 }
 
 export class StreamPartManager {
-    private readonly streams = new Map<StreamPartID,StreamState>()
+    private readonly streamParts = new Map<StreamPartID,StreamPartState>()
 
     setUpStreamPart(streamPartId: StreamPartID, isBehindProxy = false): void {
         if (this.isSetUp(streamPartId)) {
             throw new Error(`Stream part ${streamPartId} already set up`)
         }
-        this.streams.set(streamPartId, {
+        this.streamParts.set(streamPartId, {
             detectors: new Map(),
             neighbors: new Set(),
             counter: 0,
@@ -43,7 +43,7 @@ export class StreamPartManager {
         this.ensureThatIsSetUp(streamPartId)
 
         const detectorKey = keyForDetector(messageId)
-        const { detectors } = this.streams.get(streamPartId)!
+        const { detectors } = this.streamParts.get(streamPartId)!
         if (!detectors.has(detectorKey)) {
             detectors.set(detectorKey, new DuplicateMessageDetector())
         }
@@ -57,44 +57,44 @@ export class StreamPartManager {
     }
 
     updateCounter(streamPartId: StreamPartID, counter: number): void {
-        this.streams.get(streamPartId)!.counter = counter
+        this.streamParts.get(streamPartId)!.counter = counter
     }
 
     addNeighbor(streamPartId: StreamPartID, node: NodeId): void {
         this.ensureThatIsSetUp(streamPartId)
-        const { neighbors } = this.streams.get(streamPartId)!
+        const { neighbors } = this.streamParts.get(streamPartId)!
         neighbors.add(node)
     }
 
     addInOnlyNeighbor(streamPartId: StreamPartID, node: NodeId): void {
         this.ensureThatIsSetUp(streamPartId)
-        const { inOnly } = this.streams.get(streamPartId)!
+        const { inOnly } = this.streamParts.get(streamPartId)!
         inOnly.add(node)
     }
 
     addOutOnlyNeighbor(streamPartId: StreamPartID, node: NodeId): void {
         this.ensureThatIsSetUp(streamPartId)
-        const { outOnly } = this.streams.get(streamPartId)!
+        const { outOnly } = this.streamParts.get(streamPartId)!
         outOnly.add(node)
     }
 
     removeNodeFromStreamPart(streamPartId: StreamPartID, node: NodeId): void {
         this.ensureThatIsSetUp(streamPartId)
-        const { neighbors, inOnly, outOnly } = this.streams.get(streamPartId)!
+        const { neighbors, inOnly, outOnly } = this.streamParts.get(streamPartId)!
         neighbors.delete(node)
         inOnly.delete(node)
         outOnly.delete(node)
     }
 
     getStreamPartStatus(streamPartId: StreamPartID): StreamPartStatus {
-        const streamState = this.streams.get(streamPartId)
+        const state = this.streamParts.get(streamPartId)
         const [id, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
-        if (streamState !== undefined) {
+        if (state !== undefined) {
             return {
                 id,
                 partition,
-                neighbors: [...streamState.neighbors],
-                counter: streamState.counter
+                neighbors: [...state.neighbors],
+                counter: state.counter
             }
         } else {
             return {
@@ -109,7 +109,7 @@ export class StreamPartManager {
     removeNodeFromAllStreamParts(node: NodeId): [StreamPartID[], StreamPartID[]] {
         const streamParts: StreamPartID[] = []
         const notRemovedProxies: StreamPartID[] = []
-        this.streams.forEach(({ neighbors, inOnly, outOnly }, streamPartId) => {
+        this.streamParts.forEach(({ neighbors, inOnly, outOnly }, streamPartId) => {
             const isRemoved = neighbors.delete(node)
             if (isRemoved) {
                 streamParts.push(streamPartId)
@@ -126,49 +126,49 @@ export class StreamPartManager {
 
     removeStreamPart(streamPartId: StreamPartID): void {
         this.ensureThatIsSetUp(streamPartId)
-        this.streams.delete(streamPartId)
+        this.streamParts.delete(streamPartId)
     }
 
     isSetUp(streamPartId: StreamPartID): boolean {
-        return this.streams.has(streamPartId)
+        return this.streamParts.has(streamPartId)
     }
 
     isNodePresent(node: NodeId): boolean {
-        return [...this.streams.values()].some(({ neighbors, inOnly, outOnly }) => {
+        return [...this.streamParts.values()].some(({ neighbors, inOnly, outOnly }) => {
             return neighbors.has(node) || inOnly.has(node) || outOnly.has(node)
         })
     }
 
     getStreamParts(): IterableIterator<StreamPartID> {
-        return this.streams.keys()
+        return this.streamParts.keys()
     }
 
     getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         this.ensureThatIsSetUp(streamPartId)
-        return [...this.streams.get(streamPartId)!.neighbors]
+        return [...this.streamParts.get(streamPartId)!.neighbors]
     }
 
     getOutboundNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         this.ensureThatIsSetUp(streamPartId)
-        const { neighbors, outOnly } = this.streams.get(streamPartId)!
+        const { neighbors, outOnly } = this.streamParts.get(streamPartId)!
         return [...neighbors, ...outOnly]
     }
 
     getInboundNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         this.ensureThatIsSetUp(streamPartId)
-        const { neighbors, inOnly } = this.streams.get(streamPartId)!
+        const { neighbors, inOnly } = this.streamParts.get(streamPartId)!
         return [...neighbors, ...inOnly]
     }
 
     getAllNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
         this.ensureThatIsSetUp(streamPartId)
-        const { neighbors, inOnly, outOnly } = this.streams.get(streamPartId)!
+        const { neighbors, inOnly, outOnly } = this.streamParts.get(streamPartId)!
         return [...neighbors, ...inOnly, ...outOnly]
     }
 
     getAllNodes(): ReadonlyArray<NodeId> {
         const nodes: NodeId[] = []
-        this.streams.forEach(({ neighbors }) => {
+        this.streamParts.forEach(({ neighbors }) => {
             nodes.push(...neighbors)
         })
         return _.uniq(nodes)
@@ -176,17 +176,17 @@ export class StreamPartManager {
 
     hasNeighbor(streamPartId: StreamPartID, node: NodeId): boolean {
         this.ensureThatIsSetUp(streamPartId)
-        return this.streams.get(streamPartId)!.neighbors.has(node)
+        return this.streamParts.get(streamPartId)!.neighbors.has(node)
     }
 
     hasOutOnlyConnection(streamPartId: StreamPartID, node: NodeId): boolean {
         this.ensureThatIsSetUp(streamPartId)
-        return this.streams.get(streamPartId)!.outOnly.has(node)
+        return this.streamParts.get(streamPartId)!.outOnly.has(node)
     }
 
     hasInOnlyConnection(streamPartId: StreamPartID, node: NodeId): boolean {
         this.ensureThatIsSetUp(streamPartId)
-        return this.streams.get(streamPartId)!.inOnly.has(node)
+        return this.streamParts.get(streamPartId)!.inOnly.has(node)
     }
 
     hasInboundConnection(streamPartId: StreamPartID, node: NodeId): boolean {
@@ -196,7 +196,7 @@ export class StreamPartManager {
     isBehindProxy(streamPartId: StreamPartID): boolean {
         try {
             this.ensureThatIsSetUp(streamPartId)
-            return this.streams.get(streamPartId)!.isBehindProxy
+            return this.streamParts.get(streamPartId)!.isBehindProxy
         }
         catch (err) {
             return false

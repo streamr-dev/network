@@ -14,7 +14,7 @@ const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
     trackerManager: TrackerManager,
-    streamManager: StreamPartManager,
+    streamPartManager: StreamPartManager,
     nodeToNode: NodeToNode,
     node: Node,
     nodeConnectTimeout: number,
@@ -36,7 +36,7 @@ const DEFAULT_RECONNECTION_TIMEOUT = 10 * 1000
 
 export class ProxyStreamConnectionManager {
     private readonly trackerManager: TrackerManager
-    private readonly streamManager: StreamPartManager
+    private readonly streamPartManager: StreamPartManager
     private readonly nodeToNode: NodeToNode
     private readonly node: Node
     private readonly nodeConnectTimeout: number
@@ -45,7 +45,7 @@ export class ProxyStreamConnectionManager {
 
     constructor(opts: ProxyStreamConnectionManagerOptions) {
         this.trackerManager = opts.trackerManager
-        this.streamManager = opts.streamManager
+        this.streamPartManager = opts.streamPartManager
         this.nodeToNode = opts.nodeToNode
         this.node = opts.node
         this.nodeConnectTimeout = opts.nodeConnectTimeout
@@ -70,13 +70,13 @@ export class ProxyStreamConnectionManager {
             }
         }
 
-        this.streamManager.removeNodeFromStreamPart(streamPartId, nodeId)
+        this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
         // Finally if the stream has no neighbors or in/out connections, remove the stream
-        if (this.streamManager.getAllNodesForStreamPart(streamPartId).length === 0
+        if (this.streamPartManager.getAllNodesForStreamPart(streamPartId).length === 0
             && !this.connections.has(streamPartId)
-            && this.streamManager.isBehindProxy(streamPartId)
+            && this.streamPartManager.isBehindProxy(streamPartId)
         ) {
-            this.streamManager.removeStreamPart(streamPartId)
+            this.streamPartManager.removeStreamPart(streamPartId)
         }
     }
 
@@ -94,14 +94,14 @@ export class ProxyStreamConnectionManager {
     async openOutgoingStreamConnection(streamPartId: StreamPartID, targetNodeId: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         try {
-            if (!this.streamManager.isSetUp(streamPartId)) {
-                this.streamManager.setUpStreamPart(streamPartId, true)
-            } else if (!this.streamManager.isBehindProxy(streamPartId)) {
+            if (!this.streamPartManager.isSetUp(streamPartId)) {
+                this.streamPartManager.setUpStreamPart(streamPartId, true)
+            } else if (!this.streamPartManager.isBehindProxy(streamPartId)) {
                 const reason = `Could not open a proxy outgoing stream connection ${streamPartId}, bidirectional stream already exists`
                 logger.warn(reason)
                 this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, streamPartId, reason)
                 return
-            } else if (this.streamManager.hasOutOnlyConnection(streamPartId, targetNodeId)) {
+            } else if (this.streamPartManager.hasOutOnlyConnection(streamPartId, targetNodeId)) {
                 const reason = `Could not open a proxy outgoing stream connection ${streamPartId}, proxy stream connection already exists`
                 logger.warn(reason)
                 this.node.emit(Event.PUBLISH_STREAM_REJECTED, targetNodeId, streamPartId, reason)
@@ -132,7 +132,7 @@ export class ProxyStreamConnectionManager {
     }
 
     async closeOutgoingStreamConnection(streamPartId: StreamPartID, targetNodeId: NodeId): Promise<void> {
-        if (this.streamManager.isSetUp(streamPartId) && this.streamManager.hasOutOnlyConnection(streamPartId, targetNodeId)) {
+        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasOutOnlyConnection(streamPartId, targetNodeId)) {
             clearTimeout(this.getConnection(targetNodeId, streamPartId)!.reconnectionTimer!)
             this.removeConnection(streamPartId, targetNodeId)
             await this.nodeToNode.leaveStreamOnNode(targetNodeId, streamPartId)
@@ -146,11 +146,11 @@ export class ProxyStreamConnectionManager {
 
     processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
         const streamPartId = message.getStreamPartID()
-        if (this.streamManager.isSetUp(streamPartId) && this.streamManager.hasInOnlyConnection(streamPartId, nodeId)) {
+        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasInOnlyConnection(streamPartId, nodeId)) {
             this.removeConnection(streamPartId, nodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
         }
-        if (this.streamManager.isSetUp(streamPartId) && this.streamManager.hasOutOnlyConnection(streamPartId, nodeId)) {
+        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasOutOnlyConnection(streamPartId, nodeId)) {
             this.removeConnection(streamPartId, nodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
             logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
@@ -161,9 +161,9 @@ export class ProxyStreamConnectionManager {
         const streamPartId = message.getStreamPartID()
 
         // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
-        const isAccepted = this.streamManager.isSetUp(streamPartId) && this.acceptProxyConnections
+        const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections
         if (isAccepted) {
-            this.streamManager.addInOnlyNeighbor(streamPartId, nodeId)
+            this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
         }
         await this.nodeToNode.respondToPublishOnlyStreamConnectionRequest(nodeId, streamPartId, isAccepted)
     }
@@ -172,7 +172,7 @@ export class ProxyStreamConnectionManager {
         const streamPartId = message.getStreamPartID()
         if (message.accepted) {
             this.getConnection(nodeId, streamPartId)!.state = State.ACCEPTED
-            this.streamManager.addOutOnlyNeighbor(streamPartId, nodeId)
+            this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
             this.node.emit(Event.PUBLISH_STREAM_ACCEPTED, nodeId, streamPartId)
         } else {
             this.removeConnection(streamPartId, nodeId)
@@ -209,8 +209,8 @@ export class ProxyStreamConnectionManager {
     }
 
     stop(): void {
-        this.connections.forEach((stream: Map<NodeId, ProxyConnection>) => {
-            stream.forEach((connection: ProxyConnection) => {
+        this.connections.forEach((streamPart: Map<NodeId, ProxyConnection>) => {
+            streamPart.forEach((connection: ProxyConnection) => {
                 if (connection.reconnectionTimer !== undefined) {
                     clearTimeout(connection.reconnectionTimer)
                 }
