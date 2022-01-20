@@ -28,7 +28,8 @@ export function getTopology(
 
 export function getStreamPartSizes(
     overlayPerStreamPart: OverlayPerStreamPart,
-    streamId: StreamID | null = null, partition: number | null = null
+    streamId: StreamID | null = null,
+    partition: number | null = null
 ): OverlaySizes {
     const streamParts = findStreamParts(overlayPerStreamPart, streamId, partition)
     const streamSizes: OverlaySizes = streamParts.map((streamPartId) => {

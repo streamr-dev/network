@@ -2,6 +2,7 @@ import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
+    describeRepeats,
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,
@@ -22,7 +23,7 @@ const MAX_MESSAGES = 5
 
 jest.setTimeout(60000)
 
-describe('resends', () => {
+describeRepeats('resends', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient

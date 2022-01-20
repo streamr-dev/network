@@ -9,7 +9,10 @@ import {
     EncryptionType,
     SignatureType,
     StreamMessageType,
-    EthereumAddress, StreamPartIDUtils, StreamPartID, toStreamPartID
+    EthereumAddress,
+    StreamPartIDUtils,
+    StreamPartID,
+    toStreamPartID
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
