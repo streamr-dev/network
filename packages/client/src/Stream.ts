@@ -401,7 +401,7 @@ class StreamrStream implements StreamMetadata {
     }
 
     private static async isStreamStoredInStorageNode(streamId: StreamID, nodeurl: string) {
-        const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
+        const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/${DEFAULT_PARTITION}`
         const response = await fetch(url)
         if (response.status === 200) {
             return true

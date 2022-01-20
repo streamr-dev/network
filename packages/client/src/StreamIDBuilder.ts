@@ -11,7 +11,7 @@ import Ethereum from './Ethereum'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamDefinition } from './types'
 
-const DEFAULT_PARTITION = 0
+export const DEFAULT_PARTITION = 0
 
 /* eslint-disable no-else-return */
 function pickStreamId(definition: { id: string } | { stream: string } | { streamId: string }): StreamID {
