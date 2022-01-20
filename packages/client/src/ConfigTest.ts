@@ -21,9 +21,9 @@ export default {
     tokenSidechainAddress: process.env.TOKEN_ADDRESS_SIDECHAIN || '0x73Be21733CC5D08e1a14Ea9a399fb27DB3BEf8fF',
     withdrawServerUrl: process.env.WITHDRAW_SERVER_URL || 'http://localhost:3000',
     binanceAdapterAddress: process.env.BINANCE_ADAPTER || '0xdc5F6368cd31330adC259386e78604a5E29E9415',
-    streamRegistryChainAddress: '0xa86863053cECFD9f6f861e0Fd39a042238411b75',
-    nodeRegistryChainAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-    streamStorageRegistryChainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
+    streamRegistryChainAddress: '0xd04af489677001444280366Dd0885B03dAaDe71D',
+    nodeRegistryChainAddress: '0xCBAcfA0592B3D809aEc805d527f8ceAe9307D9C0',
+    streamStorageRegistryChainAddress: '0x00E680d549FE53a627a3db86a6F88fA2471CFfAa',
     dataUnion: {
         factoryMainnetAddress: process.env.DU_FACTORY_MAINNET || '0x4bbcBeFBEC587f6C4AF9AF9B48847caEa1Fe81dA',
         factorySidechainAddress: process.env.DU_FACTORY_SIDECHAIN || '0x4A4c4759eb3b7ABee079f832850cD3D0dC48D927',
@@ -48,7 +48,7 @@ export default {
         ],
     },
     storageNodeRegistry: {
-        contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+        contractAddress: '0xCBAcfA0592B3D809aEc805d527f8ceAe9307D9C0',
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     },
     mainChainRPC: {

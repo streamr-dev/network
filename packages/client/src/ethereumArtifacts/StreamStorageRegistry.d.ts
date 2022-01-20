@@ -12,6 +12,7 @@ import {
   Contract,
   ContractTransaction,
   Overrides,
+  PayableOverrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -21,21 +22,19 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface StreamStorageRegistryInterface extends ethers.utils.Interface {
   functions: {
-    "_trustedForwarder()": FunctionFragment;
     "addAndRemoveStorageNodes(string,address[],address[])": FunctionFragment;
     "addStorageNode(string,address)": FunctionFragment;
+    "initialize(address,address,address)": FunctionFragment;
     "isStorageNodeOf(string,address)": FunctionFragment;
     "isTrustedForwarder(address)": FunctionFragment;
     "nodeRegistry()": FunctionFragment;
     "pairs(string,address)": FunctionFragment;
     "removeStorageNode(string,address)": FunctionFragment;
     "streamRegistry()": FunctionFragment;
+    "upgradeTo(address)": FunctionFragment;
+    "upgradeToAndCall(address,bytes)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "_trustedForwarder",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "addAndRemoveStorageNodes",
     values: [string, string[], string[]]
@@ -43,6 +42,10 @@ interface StreamStorageRegistryInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "addStorageNode",
     values: [string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initialize",
+    values: [string, string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "isStorageNodeOf",
@@ -68,11 +71,12 @@ interface StreamStorageRegistryInterface extends ethers.utils.Interface {
     functionFragment: "streamRegistry",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "upgradeTo", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "upgradeToAndCall",
+    values: [string, BytesLike]
+  ): string;
 
-  decodeFunctionResult(
-    functionFragment: "_trustedForwarder",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "addAndRemoveStorageNodes",
     data: BytesLike
@@ -81,6 +85,7 @@ interface StreamStorageRegistryInterface extends ethers.utils.Interface {
     functionFragment: "addStorageNode",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isStorageNodeOf",
     data: BytesLike
@@ -102,14 +107,25 @@ interface StreamStorageRegistryInterface extends ethers.utils.Interface {
     functionFragment: "streamRegistry",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "upgradeToAndCall",
+    data: BytesLike
+  ): Result;
 
   events: {
     "Added(string,address)": EventFragment;
+    "AdminChanged(address,address)": EventFragment;
+    "BeaconUpgraded(address)": EventFragment;
     "Removed(string,address)": EventFragment;
+    "Upgraded(address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Added"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Removed"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
 export class StreamStorageRegistry extends Contract {
@@ -156,10 +172,6 @@ export class StreamStorageRegistry extends Contract {
   interface: StreamStorageRegistryInterface;
 
   functions: {
-    _trustedForwarder(overrides?: CallOverrides): Promise<[string]>;
-
-    "_trustedForwarder()"(overrides?: CallOverrides): Promise<[string]>;
-
     addAndRemoveStorageNodes(
       streamId: string,
       addNodes: string[],
@@ -183,6 +195,20 @@ export class StreamStorageRegistry extends Contract {
     "addStorageNode(string,address)"(
       streamId: string,
       nodeAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    initialize(
+      streamRegistryAddress: string,
+      nodeRegistryAddress: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "initialize(address,address,address)"(
+      streamRegistryAddress: string,
+      nodeRegistryAddress: string,
+      trustedForwarderAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -239,11 +265,29 @@ export class StreamStorageRegistry extends Contract {
     streamRegistry(overrides?: CallOverrides): Promise<[string]>;
 
     "streamRegistry()"(overrides?: CallOverrides): Promise<[string]>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
-
-  _trustedForwarder(overrides?: CallOverrides): Promise<string>;
-
-  "_trustedForwarder()"(overrides?: CallOverrides): Promise<string>;
 
   addAndRemoveStorageNodes(
     streamId: string,
@@ -268,6 +312,20 @@ export class StreamStorageRegistry extends Contract {
   "addStorageNode(string,address)"(
     streamId: string,
     nodeAddress: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  initialize(
+    streamRegistryAddress: string,
+    nodeRegistryAddress: string,
+    trustedForwarderAddress: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "initialize(address,address,address)"(
+    streamRegistryAddress: string,
+    nodeRegistryAddress: string,
+    trustedForwarderAddress: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -325,11 +383,29 @@ export class StreamStorageRegistry extends Contract {
 
   "streamRegistry()"(overrides?: CallOverrides): Promise<string>;
 
+  upgradeTo(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeTo(address)"(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  upgradeToAndCall(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeToAndCall(address,bytes)"(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
-    _trustedForwarder(overrides?: CallOverrides): Promise<string>;
-
-    "_trustedForwarder()"(overrides?: CallOverrides): Promise<string>;
-
     addAndRemoveStorageNodes(
       streamId: string,
       addNodes: string[],
@@ -353,6 +429,20 @@ export class StreamStorageRegistry extends Contract {
     "addStorageNode(string,address)"(
       streamId: string,
       nodeAddress: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    initialize(
+      streamRegistryAddress: string,
+      nodeRegistryAddress: string,
+      trustedForwarderAddress: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "initialize(address,address,address)"(
+      streamRegistryAddress: string,
+      nodeRegistryAddress: string,
+      trustedForwarderAddress: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -409,6 +499,28 @@ export class StreamStorageRegistry extends Contract {
     streamRegistry(overrides?: CallOverrides): Promise<string>;
 
     "streamRegistry()"(overrides?: CallOverrides): Promise<string>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {
@@ -420,6 +532,18 @@ export class StreamStorageRegistry extends Contract {
       { streamId: string; nodeAddress: string }
     >;
 
+    AdminChanged(
+      previousAdmin: null,
+      newAdmin: null
+    ): TypedEventFilter<
+      [string, string],
+      { previousAdmin: string; newAdmin: string }
+    >;
+
+    BeaconUpgraded(
+      beacon: string | null
+    ): TypedEventFilter<[string], { beacon: string }>;
+
     Removed(
       streamId: null,
       nodeAddress: string | null
@@ -427,13 +551,13 @@ export class StreamStorageRegistry extends Contract {
       [string, string],
       { streamId: string; nodeAddress: string }
     >;
+
+    Upgraded(
+      implementation: string | null
+    ): TypedEventFilter<[string], { implementation: string }>;
   };
 
   estimateGas: {
-    _trustedForwarder(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "_trustedForwarder()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     addAndRemoveStorageNodes(
       streamId: string,
       addNodes: string[],
@@ -457,6 +581,20 @@ export class StreamStorageRegistry extends Contract {
     "addStorageNode(string,address)"(
       streamId: string,
       nodeAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    initialize(
+      streamRegistryAddress: string,
+      nodeRegistryAddress: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "initialize(address,address,address)"(
+      streamRegistryAddress: string,
+      nodeRegistryAddress: string,
+      trustedForwarderAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -513,15 +651,31 @@ export class StreamStorageRegistry extends Contract {
     streamRegistry(overrides?: CallOverrides): Promise<BigNumber>;
 
     "streamRegistry()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    _trustedForwarder(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "_trustedForwarder()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     addAndRemoveStorageNodes(
       streamId: string,
       addNodes: string[],
@@ -545,6 +699,20 @@ export class StreamStorageRegistry extends Contract {
     "addStorageNode(string,address)"(
       streamId: string,
       nodeAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    initialize(
+      streamRegistryAddress: string,
+      nodeRegistryAddress: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "initialize(address,address,address)"(
+      streamRegistryAddress: string,
+      nodeRegistryAddress: string,
+      trustedForwarderAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -602,6 +770,28 @@ export class StreamStorageRegistry extends Contract {
 
     "streamRegistry()"(
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

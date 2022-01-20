@@ -1,29 +1,35 @@
 [
   {
+    "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
         "internalType": "address",
-        "name": "owner",
+        "name": "previousAdmin",
         "type": "address"
       },
       {
-        "internalType": "bool",
-        "name": "requiresWhitelist_",
-        "type": "bool"
-      },
-      {
-        "internalType": "address[]",
-        "name": "initialNodes",
-        "type": "address[]"
-      },
-      {
-        "internalType": "string[]",
-        "name": "initialMetadata",
-        "type": "string[]"
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    "name": "AdminChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "beacon",
+        "type": "address"
+      }
+    ],
+    "name": "BeaconUpgraded",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -125,6 +131,19 @@
       }
     ],
     "name": "RequiresWhitelistChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "implementation",
+        "type": "address"
+      }
+    ],
+    "name": "Upgraded",
     "type": "event"
   },
   {
@@ -271,6 +290,34 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "requiresWhitelist_",
+        "type": "bool"
+      },
+      {
+        "internalType": "address[]",
+        "name": "initialNodes",
+        "type": "address[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "initialMetadata",
+        "type": "string[]"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -435,6 +482,37 @@
     "name": "transferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newImplementation",
+        "type": "address"
+      }
+    ],
+    "name": "upgradeTo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newImplementation",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "upgradeToAndCall",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
