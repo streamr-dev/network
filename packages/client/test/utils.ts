@@ -233,7 +233,7 @@ export class LeaksDetector {
         'rovider/formatter',
     ])
 
-    private counter = CounterId(this.id)
+    private counter = CounterId(this.id, { maxPrefixes: 1024 })
 
     add(name: string, obj: any) {
         if (!obj || typeof obj !== 'object') { return }
