@@ -3,14 +3,18 @@ import '../src/logLevel'
 import EasyTable from 'easy-table'
 import StreamrClient from 'streamr-client'
 import { createClientCommand } from '../src/command'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 createClientCommand((async (client: StreamrClient, storageNodeAddress: string) => {
     const streamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
     if (streamParts.length > 0) {
-        console.info(EasyTable.print(streamParts.map(({ streamId, streamPartition }) => ({
-            streamId,
-            streamPartition,
-        }))))
+        console.info(EasyTable.print(streamParts.map((streamPartId) => {
+            const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+            return {
+                streamId,
+                streamPartition
+            }
+        })))
     }
 }))
     .arguments('<storageNodeAddress>')
