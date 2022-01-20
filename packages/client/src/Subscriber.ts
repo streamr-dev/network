@@ -110,7 +110,7 @@ export default class Subscriber implements Context {
     private async removeAll(streamDefinition?: StreamDefinition): Promise<unknown> {
         const subs = !streamDefinition
             ? this.getAllSubscriptions()
-            : this.getSubscriptions(streamDefinition)
+            : await this.getSubscriptions(streamDefinition)
         return allSettledValues(subs.map((sub) => (
             this.remove(sub)
         )))
@@ -132,9 +132,9 @@ export default class Subscriber implements Context {
      * Count all matching subscriptions.
      */
 
-    count(streamDefinition?: StreamDefinition): number {
+    async count(streamDefinition?: StreamDefinition): Promise<number> {
         if (streamDefinition === undefined) { return this.countAll() }
-        return this.getSubscriptions(streamDefinition).length
+        return (await this.getSubscriptions(streamDefinition)).length
     }
 
     /**
@@ -170,16 +170,22 @@ export default class Subscriber implements Context {
      * Get subscriptions matching streamId or streamId + streamPartition
      */
 
-    getSubscriptions<T = unknown>(streamDefinition?: StreamDefinition) {
+    async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
         if (!streamDefinition) {
             return this.getAllSubscriptions()
         }
 
-        return [...this.subSessions.values()].filter((subSession) => {
-            return StreamIDBuilder.match(streamDefinition, subSession.streamPartId)
-        }).flatMap((subSession) => ([
+        const results: SubscriptionSession<unknown>[] = []
+        await Promise.all([...this.subSessions.values()].map(async (subSession) => {
+            const isMatch = await this.streamIdBuilder.match(streamDefinition, subSession.streamPartId)
+            if (isMatch) {
+                results.push(subSession)
+            }
+        }))
+
+        return results.flatMap((subSession) => ([
             ...subSession.subscriptions
-        ])) as Subscription<T>[]
+        ]))
     }
 
     async stop() {

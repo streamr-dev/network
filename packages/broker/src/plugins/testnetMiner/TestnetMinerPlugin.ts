@@ -88,7 +88,8 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private async subscriptionIntervalFn(): Promise<void> {
-        if (this.streamrClient && this.streamrClient.getSubscriptions(this.streamId).length === 0) {
+        const isAlreadySubscribed = (await this.streamrClient!.getSubscriptions(this.streamId)).length > 0
+        if (!isAlreadySubscribed) {
             try {
                 await this.subscribe()
             } catch (err) {

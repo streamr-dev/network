@@ -60,7 +60,7 @@ describe('Subscriber Plugin', () => {
     })
 
     it('subscribes to the configured list of streams', async () => {
-        expect(plugin.streamrClient.getSubscriptions('stream-0')).toBeArrayOfSize(2)
-        expect(plugin.streamrClient.getSubscriptions('stream-1')).toBeArrayOfSize(1)
+        expect(await plugin.streamrClient.getSubscriptions('stream-0')).toBeArrayOfSize(2)
+        expect(await plugin.streamrClient.getSubscriptions('stream-1')).toBeArrayOfSize(1)
     })
 })

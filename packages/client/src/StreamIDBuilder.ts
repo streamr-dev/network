@@ -60,9 +60,8 @@ export class StreamIDBuilder {
         return [await this.toStreamID(streamId), streamPartition]
     }
 
-    // note: definition does not support path-only format
-    static match(definition: StreamDefinition, streamPartId: StreamPartID): boolean {
-        const [targetStreamId, targetPartition] = parseRawDefinition(definition)
+    async match(definition: StreamDefinition, streamPartId: StreamPartID): Promise<boolean> {
+        const [targetStreamId, targetPartition] = await this.toStreamPartElements(definition)
         return targetStreamId === StreamPartIDUtils.getStreamID(streamPartId)
             && (
                 targetPartition === undefined || targetPartition === StreamPartIDUtils.getStreamPartition(streamPartId)

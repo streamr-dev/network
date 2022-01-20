@@ -67,9 +67,9 @@ describeRepeats('GapFill', () => {
         onError = jest.fn()
     })
 
-    afterEach(() => {
+    afterEach(async () => {
         if (!subscriber || !stream) { return }
-        expect(subscriber.count(stream.id)).toBe(0)
+        expect(await subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
         expect(subscriber.getAllSubscriptions()).toEqual([])
     })
@@ -111,7 +111,7 @@ describeRepeats('GapFill', () => {
                     return undefined
                 })
 
-                expect(subscriber.count(stream.id)).toBe(1)
+                expect(await subscriber.count(stream.id)).toBe(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
@@ -136,7 +136,7 @@ describeRepeats('GapFill', () => {
                     return undefined
                 })
 
-                expect(subscriber.count(stream.id)).toBe(1)
+                expect(await subscriber.count(stream.id)).toBe(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
@@ -158,7 +158,7 @@ describeRepeats('GapFill', () => {
                     return undefined
                 })
 
-                expect(subscriber.count(stream.id)).toBe(1)
+                expect(await subscriber.count(stream.id)).toBe(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
