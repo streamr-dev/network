@@ -33,8 +33,7 @@ describe('StreamMessageValidator', () => {
 
     const defaultGetStreamResponse = {
         partitions: 10,
-        requireSignedData: true,
-        requireEncryptedData: false,
+        requireSignedData: true
     }
 
     const getValidator = (customConfig?: any) => {
@@ -192,8 +191,7 @@ describe('StreamMessageValidator', () => {
 
         it('accepts valid encrypted messages', async () => {
             getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-                requireEncryptedData: true,
+                ...defaultGetStreamResponse
             })
             msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
             await getValidator().validate(msg)
@@ -235,21 +233,6 @@ describe('StreamMessageValidator', () => {
                 verify,
                 requireBrubeckValidation: true
             }).validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
-                return true
-            })
-        })
-
-        it('rejects unencrypted messages if encryption is required', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-                requireEncryptedData: true,
-            })
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-
-            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)

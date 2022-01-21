@@ -31,7 +31,6 @@ export interface StreamValidationInfo {
     id: string
     partitions: number
     requireSignedData: boolean
-    requireEncryptedData: boolean
     storageDays: number
 }
 

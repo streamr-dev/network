@@ -9,8 +9,7 @@ import { StreamIDUtils, StreamID } from './StreamID'
 
 export interface StreamMetadata {
     partitions: number,
-    requireSignedData: boolean,
-    requireEncryptedData: boolean
+    requireSignedData: boolean
 }
 
 export interface Options {
@@ -45,7 +44,7 @@ export default class StreamMessageValidator {
 
     /**
      * @param getStream async function(streamId): returns the metadata required for stream validation for streamId.
-     *        The included fields should be at least: { partitions, requireSignedData, requireEncryptedData }
+     *        The included fields should be at least: { partitions, requireSignedData }
      * @param isPublisher async function(address, streamId): returns true if address is a permitted publisher on streamId
      * @param isSubscriber async function(address, streamId): returns true if address is a permitted subscriber on streamId
      * @param verify async function(address, payload, signature): returns true if the address and payload match the signature.
@@ -152,9 +151,7 @@ export default class StreamMessageValidator {
         }
 
         if (streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE){
-            if (stream.requireEncryptedData){
-                throw new StreamMessageError('Non-public streams require data to be encrypted.', streamMessage)
-            } else if (this.requireBrubeckValidation){
+            if (this.requireBrubeckValidation){
                 const isPublicStream = await this.isSubscriber(PUBLIC_USER, streamMessage.getStreamId())
                 if (!isPublicStream){
                     throw new StreamMessageError('Non-public streams require data to be encrypted.', streamMessage)

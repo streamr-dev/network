@@ -254,9 +254,7 @@
     $('#create').on('click', async () => {
         log('Creating...')
         stream = await publisher.getOrCreateStream({
-            id: '/' + streamName,
-            requireEncryptedData: true,
-        })
+            id: '/' + streamName)
         log(`Created: ${stream.id}`, 'createResult')
     })
 

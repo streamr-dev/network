@@ -59,10 +59,7 @@ export default class PublisherEncryption implements Stoppable {
             return
         }
 
-        if (
-            !stream.requireEncryptedData
-            && !(await (this.keyExchange.hasAnyGroupKey(stream.id)))
-        ) {
+        if (!(await (this.keyExchange.hasAnyGroupKey(stream.id)))) {
             // not needed
             return
         }

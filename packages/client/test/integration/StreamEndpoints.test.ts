@@ -40,8 +40,7 @@ describe('StreamEndpoints', () => {
     beforeAll(async () => {
         createdStream = await createTestStream(client, module, {
             name: getName(),
-            requireSignedData: true,
-            requireEncryptedData: false,
+            requireSignedData: true
         })
         const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
         // const storageNodeClient = new StreamrClient({
@@ -62,8 +61,7 @@ describe('StreamEndpoints', () => {
             const stream = await client.createStream({
                 id,
                 name,
-                requireSignedData: true,
-                requireEncryptedData: true,
+                requireSignedData: true
             })
             await until(async () => { return client.streamExistsOnTheGraph(stream.streamId) }, 100000, 1000)
             expect(stream.id).toBeTruthy()

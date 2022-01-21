@@ -76,9 +76,7 @@ describeRepeats('decryption', () => {
             privateKey: storageNodeTestConfig.privatekey
         } })
 
-        stream = await createTestStream(publisher, module, {
-            requireEncryptedData: true,
-        })
+        stream = await createTestStream(publisher, module)
 
         await stream.addToStorageNode(await storageNodeClient.getAddress())
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
@@ -250,9 +248,7 @@ describeRepeats('decryption', () => {
             }, TIMEOUT * 2)
 
             it('does not encrypt messages in stream without groupkey', async () => {
-                const stream2 = await createTestStream(publisher, module, {
-                    requireEncryptedData: false,
-                })
+                const stream2 = await createTestStream(publisher, module)
 
                 let didFindStream2 = false
 
@@ -605,9 +601,7 @@ describeRepeats('decryption', () => {
         })
 
         it('does encrypt messages in stream that does not require encryption but groupkey is set anyway', async () => {
-            const stream2 = await createTestStream(publisher, module, {
-                requireEncryptedData: false,
-            })
+            const stream2 = await createTestStream(publisher, module)
 
             let didFindStream2 = false
 
@@ -667,9 +661,7 @@ describeRepeats('decryption', () => {
         }, TIMEOUT * 2)
 
         it('sets group key per-stream', async () => {
-            const stream2 = await createTestStream(publisher, module, {
-                requireEncryptedData: false,
-            })
+            const stream2 = await createTestStream(publisher, module)
 
             function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                 const onSendTest = Defer()
