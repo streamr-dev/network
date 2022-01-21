@@ -2,12 +2,13 @@
  * Cached Subset of StreamEndpoints.
  */
 import { SPID, StreamID } from 'streamr-client-protocol'
-import { Lifecycle, scoped, inject, delay } from 'tsyringe'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 
 import { CacheAsyncFn, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { CacheConfig, Config } from './Config'
 import { StreamRegistry } from './StreamRegistry'
+import { StreamPermission } from './Stream'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
@@ -70,6 +71,18 @@ export class StreamEndpointsCached implements Context {
         cacheKey([maybeStreamId, ethAddress]: any) {
             const { streamId } = SPID.parse(maybeStreamId)
             return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
+        }
+    })
+
+    async isPublicSubscriptionStream(streamId: StreamID) {
+        return this.streamRegistry.hasPublicPermission(streamId, StreamPermission.SUBSCRIBE)
+    }
+
+    isPublic = CacheAsyncFn(this.isPublicSubscriptionStream.bind(this), {
+        ...this.cacheOptions,
+        cacheKey([maybeStreamId]): any {
+            const { streamId } = SPID.parse(maybeStreamId)
+            return ['PublicSubscribe', streamId].join(SEPARATOR)
         }
     })
 

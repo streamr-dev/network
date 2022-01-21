@@ -48,8 +48,14 @@ export default class PublisherEncryption implements Stoppable {
 
         const streamId = streamMessage.getStreamId()
         const stream = await this.streamEndpoints.getStream(streamId)
+        const isPublic = await this.streamEndpoints.isPublic(streamId)
+        if (isPublic) {
+            return
+        }
 
-        if (this.isStopped) { return }
+        if (this.isStopped) {
+            return
+        }
 
         if (
             !stream.requireEncryptedData
