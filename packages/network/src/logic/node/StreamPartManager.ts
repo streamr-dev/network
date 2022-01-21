@@ -88,7 +88,7 @@ export class StreamPartManager {
 
     getStreamPartStatus(streamPartId: StreamPartID): StreamPartStatus {
         const state = this.streamParts.get(streamPartId)
-        const [id, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+        const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         if (state !== undefined) {
             return {
                 id,

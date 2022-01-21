@@ -28,14 +28,14 @@ export class StreamPartIDUtils {
     }
 
     static getStreamID(streamPartId: StreamPartID): StreamID {
-        return this.getStreamIDAndStreamPartition(streamPartId)[0]
+        return this.getStreamIDAndPartition(streamPartId)[0]
     }
 
     static getStreamPartition(streamPartId: StreamPartID): number {
-        return this.getStreamIDAndStreamPartition(streamPartId)[1]
+        return this.getStreamIDAndPartition(streamPartId)[1]
     }
 
-    static getStreamIDAndStreamPartition(streamPartId: StreamPartID): [StreamID, number] {
+    static getStreamIDAndPartition(streamPartId: StreamPartID): [StreamID, number] {
         return StreamPartIDUtils.parseRawElements(streamPartId) as [StreamID, number]
     }
 

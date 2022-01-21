@@ -46,7 +46,7 @@ export class TrackerServer extends EventEmitter {
         streamPartId: StreamPartID, 
         nodeIds: NodeId[], counter: number
     ): Promise<void> {
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
             requestId: uuidv4(),
             streamId,

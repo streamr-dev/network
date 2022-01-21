@@ -41,8 +41,8 @@ describe('getter utilities', () => {
         expect(StreamPartIDUtils.getStreamPartition(streamPartId)).toEqual(10)
     })
 
-    it('getStreamIDAndStreamPartition', () => {
-        expect(StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)).toEqual([streamId, 10])
+    it('getStreamIDAndPartition', () => {
+        expect(StreamPartIDUtils.getStreamIDAndPartition(streamPartId)).toEqual([streamId, 10])
     })
 })
 

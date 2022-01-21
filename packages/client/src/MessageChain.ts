@@ -39,7 +39,7 @@ export default class MessageChain {
     prevMsgRef?: MessageRef
 
     constructor(streamPartId: StreamPartID, { publisherId, msgChainId = randomString(20) }: MessageChainOptions) {
-        [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+        [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.publisherId = publisherId
         this.msgChainId = msgChainId
     }

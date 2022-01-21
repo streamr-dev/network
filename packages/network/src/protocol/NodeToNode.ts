@@ -133,7 +133,7 @@ export class NodeToNode extends EventEmitter {
     }
 
     async requestPublishOnlyStreamConnection(nodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(nodeId, new ControlLayer.PublishStreamConnectionRequest({
             requestId: '',
             senderId: nodeId,
@@ -143,7 +143,7 @@ export class NodeToNode extends EventEmitter {
     }
 
     async leaveStreamOnNode(nodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(nodeId, new ControlLayer.UnsubscribeRequest({
             requestId: '',
             streamId,
@@ -152,7 +152,7 @@ export class NodeToNode extends EventEmitter {
     }
 
     async respondToPublishOnlyStreamConnectionRequest(nodeId: NodeId, streamPartId: StreamPartID, accepted: boolean): Promise<void> {
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(nodeId, new ControlLayer.PublishStreamConnectionResponse({
             requestId: '',
             senderId: nodeId,

@@ -42,7 +42,7 @@ export class ResendSubscription<T> extends Subscription<T> {
     }
 
     async getResent() {
-        const [id, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(this.streamPartId)
+        const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(this.streamPartId)
         const resentMsgs = await this.resends.resend<T>({
             ...this.resendOptions,
             id,

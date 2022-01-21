@@ -33,7 +33,7 @@ export function getStreamPartSizes(
 ): OverlaySizes {
     const streamParts = findStreamParts(overlayPerStreamPart, streamId, partition)
     const sizes: OverlaySizes = streamParts.map((streamPartId) => {
-        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         return {
             streamId,
             partition,
@@ -96,7 +96,7 @@ export function findStreamsPartsForNode(
     return Object.entries(overlayPerStreamPart)
         .filter(([_, overlayTopology]) => overlayTopology.hasNode(nodeId))
         .map(([streamPartId, overlayTopology]) => {
-            const [streamId, partition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId as StreamPartID)
+            const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId as StreamPartID)
             return {
                 streamId,
                 partition,

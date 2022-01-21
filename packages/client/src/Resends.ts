@@ -63,7 +63,7 @@ const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: Stream
         ...query,
         format: 'raw'
     }
-    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
     const queryString = createQueryString(queryMap)
     return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
 }

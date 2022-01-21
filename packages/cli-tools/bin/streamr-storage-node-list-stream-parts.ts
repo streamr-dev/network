@@ -9,7 +9,7 @@ createClientCommand((async (client: StreamrClient, storageNodeAddress: string) =
     const streamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
     if (streamParts.length > 0) {
         console.info(EasyTable.print(streamParts.map((streamPartId) => {
-            const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+            const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
             return {
                 streamId,
                 streamPartition

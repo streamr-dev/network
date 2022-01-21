@@ -117,7 +117,7 @@ export class StreamEndpoints implements Context {
 
     async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndStreamPartition(streamPartId)
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.debug('getStreamLast %o', {
             streamPartId,
             count,
