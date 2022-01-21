@@ -8,7 +8,7 @@ import { Stream, StreamPermission } from '../../src/Stream'
 import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
 import { SearchStreamsOptions } from '../../src/StreamRegistry'
-import { toStreamPartID } from 'streamr-client-protocol'
+import { StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(40000)
 const DELAY_BETWEEN_TESTS = 4000
@@ -644,7 +644,7 @@ describe('StreamEndpoints', () => {
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            return expect(storedStreamParts.some((sp) => (sp.startsWith(stream.id)))).toBeFalsy()
+            return expect(storedStreamParts.some((sp) => (StreamPartIDUtils.getStreamID(sp) === stream.id))).toBeFalsy()
         })
     })
 })
