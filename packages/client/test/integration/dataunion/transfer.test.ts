@@ -173,7 +173,7 @@ describe('DataUnion earnings transfer methods', () => {
                 privateKey: memberWallet.privateKey,
             },
         })
-        const memberDataUnion = memberClient.getDataUnion(dataUnion.getAddress())
+        const memberDataUnion = await memberClient.getDataUnion(dataUnion.getAddress())
 
         const statsBefore = await dataUnion.getMemberStats(memberWallet.address)
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)
