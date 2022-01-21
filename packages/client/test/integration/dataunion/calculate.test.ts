@@ -10,7 +10,7 @@ const log = debug('StreamrClient::DataUnion::integration-test-calculate')
 const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
 
 // This test will fail when new docker images are pushed with updated DU smart contracts
-// -> generate new codehashes for getDataUnionMainnetAddress() and getDataUnionSidechainAddress()
+// -> generate new codehashes for calculateDataUnionMainnetAddress() and calculateDataUnionSidechainAddress()
 
 describe('DataUnion calculate', () => {
 

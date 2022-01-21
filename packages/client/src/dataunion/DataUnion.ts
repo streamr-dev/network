@@ -373,21 +373,7 @@ export class DataUnion {
      * NOTE: Current version of streamr-client-javascript can only handle current version!
      */
     async getVersion(): Promise<number> {
-        const provider = this.client.ethereum.getMainnetProvider()
-        const du = new Contract(this.contractAddress, [{
-            name: 'version',
-            inputs: [],
-            outputs: [{ type: 'uint256' }],
-            stateMutability: 'view',
-            type: 'function'
-        }], provider)
-        try {
-            const version = await du.version()
-            return +version
-        } catch (e) {
-            // "not a data union"
-            return 0
-        }
+        return this.getContracts().getVersion(this.contractAddress)
     }
 
     // Admin functions
@@ -720,14 +706,14 @@ export class DataUnion {
     /** @internal */
     static _fromContractAddress(contractAddress: string, client: DataUnionAPI) {
         const contracts = new Contracts(client)
-        const sidechainAddress = contracts.getDataUnionSidechainAddress(contractAddress) // throws if bad address
+        const sidechainAddress = contracts.calculateDataUnionSidechainAddress(contractAddress) // throws if bad address
         return new DataUnion(contractAddress, sidechainAddress, client)
     }
 
     /** @internal */
     static _fromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}, client: DataUnionAPI) {
         const contracts = new Contracts(client)
-        const contractAddress = contracts.getDataUnionMainnetAddress(dataUnionName, deployerAddress) // throws if bad address
+        const contractAddress = contracts.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress) // throws if bad address
         return DataUnion._fromContractAddress(contractAddress, client) // eslint-disable-line no-underscore-dangle
     }
 
