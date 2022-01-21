@@ -31,7 +31,7 @@ describe('DataUnion signature', () => {
                 privateKey: memberWallet.privateKey
             }
         } as any)
-        const memberDataUnion = await memberClient.safeGetDataUnion(dataUnionAddress)
+        const memberDataUnion = await memberClient.getDataUnion(dataUnionAddress)
 
         // product is needed for join requests to analyze the DU version
         const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')

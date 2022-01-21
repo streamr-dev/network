@@ -36,7 +36,7 @@ async function addMember(dataUnionAddress: EthereumAddress, secret: string) {
             privateKey
         }
     } as any)
-    const memberDataUnion = memberClient.getDataUnion(dataUnionAddress) // TODO: await safeGetDataUnion
+    const memberDataUnion = await memberClient.getDataUnion(dataUnionAddress)
     const res = await memberDataUnion.join(secret)
     log('Member joined data union: %O', res)
 

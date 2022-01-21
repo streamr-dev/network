@@ -53,11 +53,7 @@ export default class DataUnionAPI {
         return token.balanceOf(addr)
     }
 
-    getDataUnion(contractAddress: EthereumAddress) {
-        return DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
-    }
-
-    async safeGetDataUnion(contractAddress: EthereumAddress) {
+    async getDataUnion(contractAddress: EthereumAddress) {
         const du = DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
         const version = await du.getVersion()
         if (version === 0) {
