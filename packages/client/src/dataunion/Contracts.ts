@@ -21,6 +21,7 @@ function validateAddress(name: string, address: EthereumAddress) {
     }
 }
 
+/* TODO: remove this class and inline its functions into DataUnion.ts */
 export default class Contracts {
     ethereum: StreamrEthereum
     factoryMainnetAddress: EthereumAddress
@@ -50,6 +51,12 @@ export default class Contracts {
         return factoryMainnet.mainnetAddress(deployerAddress, dataUnionName)
     }
 
+    /**
+     * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
+     *       i.e. can be used for "future deployments" but not necessarily old deployments
+     * This can be used when deploying, but not for getDataUnion
+     * TODO: rename this to calculateDataUnionMainnetAddress, see v5 branch, around PR #285
+     */
     getDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress) {
         validateAddress("deployer's address", deployerAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
@@ -64,6 +71,12 @@ export default class Contracts {
         return factoryMainnet.sidechainAddress(duMainnetAddress)
     }
 
+    /**
+     * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
+     *       i.e. can be used for "future deployments" but not necessarily old deployments
+     * This can be used when deploying, but not for getDataUnion
+     * TODO: rename this to calculateDataUnionSidechainAddress, see v5 branch, around PR #285
+     */
     getDataUnionSidechainAddress(mainnetAddress: EthereumAddress) {
         validateAddress('DU mainnet address', mainnetAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
