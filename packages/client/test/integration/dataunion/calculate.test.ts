@@ -2,8 +2,10 @@ import { Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
+import Contracts from '../../../src/dataunion/Contracts'
 import { clientOptions, providerMainnet, providerSidechain } from '../devEnvironment'
 import { getRandomClient, expectInvalidAddress } from '../../utils'
+import DataUnionAPI from '../../../src/dataunion'
 
 const log = debug('StreamrClient::DataUnion::integration-test-calculate')
 
@@ -24,14 +26,17 @@ describe('DataUnion calculate', () => {
         const adminClient = new StreamrClient(clientOptions as any)
 
         const dataUnionName = 'test-' + Date.now()
-        // eslint-disable-next-line no-underscore-dangle
-        const dataUnionPredicted = adminClient._getDataUnionFromName({ dataUnionName, deployerAddress: adminWalletMainnet.address })
+
+        // @ts-expect-error
+        const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
+        const mainnetAddressPredicted = contracts.calculateDataUnionMainnetAddress(dataUnionName, adminWalletMainnet.address)
+        const sidechainAddressPredicted = contracts.calculateDataUnionSidechainAddress(mainnetAddressPredicted)
 
         const dataUnionDeployed = await adminClient.deployDataUnion({ dataUnionName })
         const version = await dataUnionDeployed.getVersion()
 
-        expect(dataUnionPredicted.getAddress()).toBe(dataUnionDeployed.getAddress())
-        expect(dataUnionPredicted.getSidechainAddress()).toBe(dataUnionDeployed.getSidechainAddress())
+        expect(dataUnionDeployed.getAddress()).toBe(mainnetAddressPredicted)
+        expect(dataUnionDeployed.getSidechainAddress()).toBe(sidechainAddressPredicted)
         expect(version).toBe(2)
     }, 60000)
 
