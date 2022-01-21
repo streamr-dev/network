@@ -280,9 +280,13 @@ export default class Contracts {
         if (gasPrice) {
             ethersOptions.gasPrice = gasPrice
         }
+        const duFeeFraction = parseEther('0') // TODO: decide what the default values should be
+        const duBeneficiary = '0x0000000000000000000000000000000000000000' // TODO: decide what the default values should be
         const tx = await factoryMainnet.deployNewDataUnion(
             ownerAddress,
             adminFeeBN,
+            duFeeFraction,
+            duBeneficiary,
             agentAddressList,
             duName,
             ethersOptions
