@@ -69,7 +69,7 @@ const BRUBECK_CLIENT_DEFAULTS = {
         }
     },
     storageNodeRegistry: {
-        contractAddress: '0xCBAcfA0592B3D809aEc805d527f8ceAe9307D9C0',
+        contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
         jsonRpcProvider: 'http://127.0.0.1:8546',
     },
     network: {

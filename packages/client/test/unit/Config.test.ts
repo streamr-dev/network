@@ -107,7 +107,7 @@ describe('Config', () => {
             const clientDefaults = new StreamrClient()
             const clientOverrides = new StreamrClient({
                 storageNodeRegistry: {
-                    contractAddress: '0xCBAcfA0592B3D809aEc805d527f8ceAe9307D9C0',
+                    contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
                     jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
                 },
             })

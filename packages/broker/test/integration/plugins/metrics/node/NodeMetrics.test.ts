@@ -24,7 +24,7 @@ describe('NodeMetrics', () => {
         const tmpAccount = new Wallet(await getPrivateKey())
         const storageNodeAccount = new Wallet(await getPrivateKey())
         const storageNodeRegistry = {
-            contractAddress: '0xCBAcfA0592B3D809aEc805d527f8ceAe9307D9C0',
+            contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
             jsonRpcProvider: `http://10.200.10.1:8546`
         }
         nodeAddress = tmpAccount.address
