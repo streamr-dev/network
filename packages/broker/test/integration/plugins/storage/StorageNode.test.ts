@@ -8,7 +8,6 @@ import {
 import { Broker } from "../../../../src/broker"
 import StreamrClient from 'streamr-client'
 
-const httpPort1 = 12501
 const trackerPort = 12503
 
 describe('StorageNode', () => {
@@ -29,7 +28,7 @@ describe('StorageNode', () => {
     afterAll(async () => {
         await tracker?.stop()
         await storageNode?.stop()
-        await storageNodeClient?.stop()
+        await storageNodeClient?.destroy()
     })
 
     it('has node id same as address', async () => {

@@ -123,6 +123,7 @@ describe('cassanda-queries', () => {
     })
 
     afterAll(async () => {
+        await realClient?.shutdown()
         await storage?.close()
     })
 
