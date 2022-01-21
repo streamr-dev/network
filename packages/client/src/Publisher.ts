@@ -174,10 +174,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
                 throw err
             }
 
-            last = await this.streamEndpoints.getStreamLast({
-                id: streamMessage.getStreamId(),
-                partition: streamMessage.getStreamPartition()
-            }, count)
+            last = await this.streamEndpoints.getStreamLast(streamMessage.getStreamPartID(), count)
 
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {
