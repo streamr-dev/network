@@ -242,7 +242,7 @@ describe('DataUnion withdraw', () => {
         describe('by admin', () => {
 
             it('to member without signature', async () => {
-                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
+                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet) => {
                     const du = await memberClient.getDataUnion(dataUnionAddress)
                     return du.withdrawAllToMember(memberWallet.address, options)
                 }, null, false, options)
@@ -254,7 +254,7 @@ describe('DataUnion withdraw', () => {
                 return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
                     const duMember = await memberClient.getDataUnion(dataUnionAddress)
                     const duAdmin = await adminClient.getDataUnion(dataUnionAddress)
-                    const signature = duMember.signWithdrawAllTo(member2Wallet.address)
+                    const signature = await duMember.signWithdrawAllTo(member2Wallet.address)
                     return duAdmin.withdrawAllToSigned(memberWallet.address, member2Wallet.address, signature, options)
                 }, member2Wallet.address, false, options)
             }, 3600000)
@@ -266,7 +266,7 @@ describe('DataUnion withdraw', () => {
                 return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
                     const duMember = await memberClient.getDataUnion(dataUnionAddress)
                     const duAdmin = await adminClient.getDataUnion(dataUnionAddress)
-                    const signature = duMember.signWithdrawAmountTo(member2Wallet.address, withdrawAmount)
+                    const signature = await duMember.signWithdrawAmountTo(member2Wallet.address, withdrawAmount)
                     return duAdmin.withdrawAmountToSigned(memberWallet.address, member2Wallet.address, withdrawAmount, signature, options)
                 }, member2Wallet.address, false, options, withdrawAmount)
             }, 3600000)
