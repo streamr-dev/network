@@ -11,7 +11,7 @@ import { getPublishTestStreamMessages, createTestStream, getCreateClient, descri
 import { storageNodeTestConfig } from './devEnvironment'
 
 const MAX_MESSAGES = 10
-jest.setTimeout(50000)
+jest.setTimeout(3 * 60 * 1000)
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
     let count = 0
@@ -51,7 +51,7 @@ describeRepeats('GapFill', () => {
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module, {
             requireSignedData: true
-        })
+        }, 120000)
         // const storageNodeClient = await createClient({ auth: {
         //     privateKey: storageNodeTestConfig.privatekey
         // } })
@@ -243,7 +243,7 @@ describeRepeats('GapFill', () => {
                 // new stream, assign to storage node not called
                 stream = await createTestStream(client, module, {
                     requireSignedData: true,
-                })
+                }, 120000)
 
                 await expect(async () => {
                     await client.resend({

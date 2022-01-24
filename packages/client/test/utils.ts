@@ -165,15 +165,20 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) 
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
-// eslint-disable-next-line no-undef
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+export const createTestStream = async (
+    streamrClient: StreamrClient,
+    // eslint-disable-next-line no-undef
+    module: NodeModule,
+    props?: Partial<StreamProperties>,
+    graphTimeoutInMs = 20000
+) => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
     })
     await until(
         async () => { return streamrClient.streamExistsOnTheGraph(stream.id) },
-        20000,
+        graphTimeoutInMs,
         500, () => `timed out while waiting for streamrClient.streamExistsOnTheGraph(${stream.id})`
     )
     return stream
