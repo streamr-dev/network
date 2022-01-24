@@ -1,14 +1,14 @@
 import express, { Request, Response, Router } from 'express'
-import { Protocol } from 'streamr-network'
 import { StorageConfig } from './StorageConfig'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
+import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 const createHandler = (storageConfig: StorageConfig) => {
     return (req: Request, res: Response) => {
         const { id, partition } = req.params
         const isValidPartition = !Number.isNaN(parseInt(partition))
         if (isValidPartition) {
-            const found = storageConfig.hasSPID(new Protocol.SPID(id, Number(partition)))
+            const found = storageConfig.hasStreamPart(toStreamPartID(toStreamID(id), Number(partition)))
             if (found) {
                 res.status(200).send({})
             } else {

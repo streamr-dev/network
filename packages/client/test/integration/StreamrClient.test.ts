@@ -23,7 +23,6 @@ import * as G from '../../src/utils/GeneratorUtils'
 
 import { Stream } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
-// import Subscription from '../../src/brubeck/Subscription'
 
 jest.setTimeout(60000)
 
@@ -129,13 +128,13 @@ describeRepeats('StreamrClient', () => {
                 const subTask = client.subscribe<{ test: string }>({
                     streamId: stream.id,
                 }, () => {})
-                expect(client.subscriber.getSubscriptions()).toHaveLength(1) // has subscription immediately
+                expect(client.subscriber.getAllSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
 
-                expect(client.getSubscriptions()).toHaveLength(1)
+                expect(await client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
-                expect(client.subscriber.getSubscriptions()).toHaveLength(0)
+                expect(client.subscriber.getAllSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe then unsubscribe before subscribed', async () => {
@@ -143,11 +142,11 @@ describeRepeats('StreamrClient', () => {
                     streamId: stream.id,
                 }, () => {})
 
-                expect(client.getSubscriptions()).toHaveLength(1)
+                expect(await client.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const unsubTask = client.unsubscribe(stream)
 
-                expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
+                expect(await client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                 await unsubTask
                 await subTask
                 await wait(WAIT_TIME)
@@ -410,7 +409,7 @@ describeRepeats('StreamrClient', () => {
                 const subs = await Promise.all(eachPartition.map((streamPartition) => {
                     return client.subscribe<typeof Msg>({
                         streamId: partitionStream.id,
-                        streamPartition,
+                        partition: streamPartition,
                     })
                 }))
 
@@ -440,7 +439,7 @@ describeRepeats('StreamrClient', () => {
             const gotMessages = Defer()
             const published: any[] = []
             client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
-                if (!streamMessage.spid.matches(stream.id)) { return }
+                if (stream.id !== streamMessage.getStreamId()) { return }
                 onMessage()
                 published.push(streamMessage.getParsedContent())
                 if (published.length === 3) {
@@ -534,10 +533,6 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('decodes resent messages correctly', async () => {
-            // const storageNodeClient = await createClient({ auth: {
-            //     privateKey: storageNodeTestConfig.privatekey
-            // } })
-            // await storageNodeClient.setNode(storageNodeTestConfig.url)
             await stream.addToStorageNode(storageNodeTestConfig.address)// use actual storage nodes Address, actually register it
             await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeTestConfig.address) }, 100000, 1000)
 

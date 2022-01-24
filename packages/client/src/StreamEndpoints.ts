@@ -9,9 +9,10 @@ import {
     EncryptionType,
     SignatureType,
     StreamMessageType,
-    SIDLike,
-    SPID,
-    EthereumAddress
+    EthereumAddress,
+    StreamPartIDUtils,
+    StreamPartID,
+    toStreamPartID
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
@@ -26,6 +27,7 @@ import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
 import { NodeRegistry } from './NodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
+import { StreamDefinition } from './types'
 
 export interface StreamValidationInfo {
     id: string
@@ -113,11 +115,11 @@ export class StreamEndpoints implements Context {
         }
     }
 
-    async getStreamLast(streamObjectOrId: Stream|SIDLike|string, count = 1): Promise<StreamMessageAsObject> {
-        const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
+    async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.debug('getStreamLast %o', {
-            streamId,
-            streamPartition,
+            streamPartId,
             count,
         })
         const stream = await this.streamRegistry.getStream(streamId)
@@ -138,33 +140,32 @@ export class StreamEndpoints implements Context {
         return json
     }
 
-    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<SPID[]> {
+    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<StreamPartID[]> {
         const streams = await this.nodeRegistry.getStoredStreamsOf(nodeAddress)
 
-        const result: SPID[] = []
+        const result: StreamPartID[] = []
         streams.forEach((stream: Stream) => {
             for (let i = 0; i < stream.partitions; i++) {
-                result.push(new SPID(stream.id, i))
+                result.push(toStreamPartID(stream.id, i))
             }
         })
         return result
     }
 
-    async publishHttp(nodeUrl: string, streamObjectOrId: Stream|string, data: any, requestOptions: any = {}, keepAlive: boolean = true) {
-        let streamId
-        if (streamObjectOrId instanceof Stream) {
-            streamId = streamObjectOrId.id
-        } else {
-            streamId = streamObjectOrId
-        }
+    async publishHttp(
+        nodeUrl: string,
+        streamIdOrPath: string,
+        data: any,
+        requestOptions: any = {},
+        keepAlive: boolean = true
+    ) {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('publishHttp %o', {
             streamId, data,
         })
 
-        // Send data to the stream
-        const normalizedStreamId = await this.streamIdBuilder.toStreamID(streamId)
         await this.rest.post(
-            ['streams', normalizedStreamId, 'data'],
+            ['streams', streamId, 'data'],
             data,
             {
                 ...requestOptions,

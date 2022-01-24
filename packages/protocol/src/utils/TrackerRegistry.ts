@@ -4,7 +4,7 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import { keyToArrayIndex } from './HashUtil'
 
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
-import { SPID } from './SPID'
+import { StreamPartID } from "./StreamPartID"
 
 type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
 
@@ -24,8 +24,8 @@ export class TrackerRegistry<T extends TrackerInfo> {
         this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(spid: SPID): T {
-        const index = keyToArrayIndex(this.records.length, spid.toKey())
+    getTracker(streamPartId: StreamPartID): T {
+        const index = keyToArrayIndex(this.records.length, streamPartId)
         return this.records[index]
     }
 

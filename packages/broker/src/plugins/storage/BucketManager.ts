@@ -34,7 +34,7 @@ const instantiateNewHeap = () => new Heap((a: Bucket, b: Bucket) => {
 export class BucketManager {
 
     opts: BucketManagerOptions
-    streams: Record<StreamPartKey,StreamPartState>
+    streamParts: Record<StreamPartKey,StreamPartState>
     buckets: Record<BucketId,Bucket>
     cassandraClient: Client
     private checkFullBucketsTimeout?: NodeJS.Timeout
@@ -54,7 +54,7 @@ export class BucketManager {
             ...opts
         }
 
-        this.streams = Object.create(null)
+        this.streamParts = Object.create(null)
         this.buckets = Object.create(null)
 
         this.cassandraClient = cassandraClient
@@ -71,18 +71,18 @@ export class BucketManager {
 
         const key = toKey(streamId, partition)
 
-        if (this.streams[key]) {
+        if (this.streamParts[key]) {
             logger.trace(`stream ${key} found`)
             bucketId = this.findBucketId(key, timestamp)
 
             if (!bucketId) {
-                const stream = this.streams[key]
+                const stream = this.streamParts[key]
                 stream.minTimestamp = stream.minTimestamp !== undefined ? Math.min(stream.minTimestamp, timestamp) : timestamp
             }
         } else {
             logger.trace(`stream ${key} not found, create new`)
 
-            this.streams[key] = {
+            this.streamParts[key] = {
                 streamId,
                 partition,
                 buckets: instantiateNewHeap(),
@@ -103,7 +103,7 @@ export class BucketManager {
     }
 
     private getLatestInMemoryBucket(key: StreamPartKey): Bucket|undefined {
-        const stream = this.streams[key]
+        const stream = this.streamParts[key]
         if (stream) {
             return stream.buckets.peek()
         }
@@ -114,7 +114,7 @@ export class BucketManager {
         let bucketId
         logger.trace(`checking stream: ${key}, timestamp: ${timestamp} in BucketManager state`)
 
-        const stream = this.streams[key]
+        const stream = this.streamParts[key]
         if (stream) {
             const latestBucket = this.getLatestInMemoryBucket(key)
 
@@ -144,10 +144,10 @@ export class BucketManager {
     }
 
     private async checkFullBuckets(): Promise<void> {
-        const streamIds = Object.keys(this.streams)
+        const streamIds = Object.keys(this.streamParts)
 
         for (let i = 0; i < streamIds.length; i++) {
-            const stream = this.streams[streamIds[i]]
+            const stream = this.streamParts[streamIds[i]]
             const { streamId, partition } = stream
             const { minTimestamp } = stream
 
@@ -364,7 +364,7 @@ export class BucketManager {
         delete this.buckets[bucketId]
 
         const key = toKey(streamId, partition)
-        const stream = this.streams[key]
+        const stream = this.streamParts[key]
         if (stream) {
             const currentBuckets = stream.buckets.toArray()
             for (let i = 0; i < currentBuckets.length; i++) {
