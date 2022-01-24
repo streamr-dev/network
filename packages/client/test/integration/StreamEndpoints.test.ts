@@ -328,7 +328,8 @@ describe('StreamEndpoints', () => {
             // null, undefined are the public user.
         ]
 
-        it('Stream.getPermissions', async () => {
+        // TODO: fix flaky test in NET-653 / NET-606
+        it.skip('Stream.getPermissions', async () => {
             const stream = await createTestStream(client, module)
             await stream.grantPublicPermission(StreamPermission.PUBLISH)
             const permissions = await stream.getPermissions()
