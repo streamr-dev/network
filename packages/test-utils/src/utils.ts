@@ -293,6 +293,8 @@ export class KeyServer {
             c += 1
             if (c > 1000) {
                 c = 1
+            } else if (c === 10) { // 10th key broken...
+                c = 11
             }
         })
         this.server = app.listen(KeyServer.KEY_SERVER_PORT)
