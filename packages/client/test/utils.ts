@@ -173,7 +173,7 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
     })
     await until(
         async () => { return streamrClient.streamExistsOnTheGraph(stream.id) },
-        30000,
+        45000,
         500, () => `timed out while waiting for streamrClient.streamExistsOnTheGraph(${stream.id})`
     )
     return stream
