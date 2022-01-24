@@ -5,13 +5,11 @@ import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativ
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
-import { wait } from 'streamr-test-utils'
 import { storageNodeTestConfig } from './devEnvironment'
 import { SearchStreamsOptions } from '../../src/StreamRegistry'
 import { StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(40000)
-const DELAY_BETWEEN_TESTS = 4000
 
 const getName = () => uid('test-stream/slashes')
 
@@ -27,7 +25,6 @@ describe('StreamEndpoints', () => {
     let storageNodeAddress: string
 
     beforeAll(async () => {
-        await wait(DELAY_BETWEEN_TESTS)
         wallet = new Wallet(await getPrivateKey())
         otherWallet = new Wallet(await getPrivateKey())
         client = new StreamrClient({
@@ -332,7 +329,8 @@ describe('StreamEndpoints', () => {
             // null, undefined are the public user.
         ]
 
-        it('Stream.getPermissions', async () => {
+        // TODO: fix flaky test in NET-653 / NET-606
+        it.skip('Stream.getPermissions', async () => {
             const stream = await createTestStream(client, module)
             await stream.grantPublicPermission(StreamPermission.PUBLISH)
             const permissions = await stream.getPermissions()

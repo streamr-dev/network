@@ -1,19 +1,35 @@
 [
   {
+    "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
         "internalType": "address",
-        "name": "ensCacheAddr",
+        "name": "previousAdmin",
         "type": "address"
       },
       {
+        "indexed": false,
         "internalType": "address",
-        "name": "trustedForwarderAddress",
+        "name": "newAdmin",
         "type": "address"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    "name": "AdminChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "beacon",
+        "type": "address"
+      }
+    ],
+    "name": "BeaconUpgraded",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -191,6 +207,19 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "implementation",
+        "type": "address"
+      }
+    ],
+    "name": "Upgraded",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "DEFAULT_ADMIN_ROLE",
     "outputs": [
@@ -201,6 +230,34 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "requestorAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "ensName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "streamIdPath",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "metadataJsonString",
+        "type": "string"
+      }
+    ],
+    "name": "ENScreateStreamCallback",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -224,19 +281,6 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "_trustedForwarder",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -499,6 +543,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getTrustedRole",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "string",
@@ -667,6 +724,24 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "ensCacheAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "trustedForwarderAddress",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "forwarder",
         "type": "address"
       }
@@ -773,6 +848,19 @@
       }
     ],
     "name": "revokeRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "ensCacheAddr",
+        "type": "address"
+      }
+    ],
+    "name": "setEnsCache",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1100,7 +1188,55 @@
         "type": "string"
       }
     ],
-    "name": "trustedSetStream",
+    "name": "trustedSetStreamMetadata",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "streamId",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "metadata",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "canEdit",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "deletePerm",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "publishExpiration",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "subscribeExpiration",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "canGrant",
+        "type": "bool"
+      }
+    ],
+    "name": "trustedSetStreamWithPermission",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1176,6 +1312,37 @@
     "name": "updateStreamMetadata",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newImplementation",
+        "type": "address"
+      }
+    ],
+    "name": "upgradeTo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newImplementation",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "upgradeToAndCall",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   }
 ]
