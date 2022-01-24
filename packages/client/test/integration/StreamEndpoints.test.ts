@@ -104,8 +104,8 @@ describe('StreamEndpoints', () => {
                 const ensOwnerClient = new StreamrClient({
                     ...clientOptions,
                     auth: {
-                        // the private key of address 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0, see
-                        // preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
+                        // In dev environment the testdomain1.eth is owned by 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0.
+                        // The ownership is preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
                         privateKey: '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb'
                     },
                 })
