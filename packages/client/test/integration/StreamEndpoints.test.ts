@@ -104,7 +104,9 @@ describe('StreamEndpoints', () => {
                 const ensOwnerClient = new StreamrClient({
                     ...clientOptions,
                     auth: {
-                        privateKey: '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
+                        // the private key of address 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0, see
+                        // preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
+                        privateKey: '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb'
                     },
                 })
                 const newStream = await ensOwnerClient.createStream({
