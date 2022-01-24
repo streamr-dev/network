@@ -156,7 +156,7 @@ describeRepeats('resends', () => {
                 expect(receivedMsgs).toHaveLength(publishedStream2.length)
                 expect(receivedMsgs).toEqual(publishedStream2)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(client.count(stream2.id)).toBe(0)
+                expect(await client.count(stream2.id)).toBe(0)
             })
 
             it('handles errors in resend', async () => {
@@ -186,7 +186,7 @@ describeRepeats('resends', () => {
                     await sub.collect(5)
                 }).rejects.toThrow(err)
 
-                expect(client.count(stream2.id)).toBe(0)
+                expect(await client.count(stream2.id)).toBe(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
             })
 
@@ -214,7 +214,7 @@ describeRepeats('resends', () => {
                 const receivedMsgs = await sub.collect(3)
 
                 expect(receivedMsgs).toEqual(published)
-                expect(client.count(stream2.id)).toBe(0)
+                expect(await client.count(stream2.id)).toBe(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(onSubError).toHaveBeenCalledTimes(1)
             })
@@ -255,7 +255,7 @@ describeRepeats('resends', () => {
                 expect(receivedMsgs).toHaveLength(publishedStream2.length)
                 expect(receivedMsgs).toEqual(publishedStream2)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(client.count(stream.id)).toBe(0)
+                expect(await client.count(stream.id)).toBe(0)
             })
         })
     })
@@ -405,7 +405,7 @@ describeRepeats('resends', () => {
                     streamId: stream.id,
                     last: published.length,
                 })
-                expect(client.count(stream.id)).toBe(1)
+                expect(await client.count(stream.id)).toBe(1)
 
                 const onResent = jest.fn()
                 sub.onResent(onResent)
@@ -418,12 +418,12 @@ describeRepeats('resends', () => {
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(receivedMsgs).toEqual(published)
-                expect(client.count(stream.id)).toBe(0)
+                expect(await client.count(stream.id)).toBe(0)
             })
 
             it('client.subscribe works as regular subscribe when just passing streamId as string', async () => {
                 const sub = await client.subscribe(stream.id)
-                expect(client.count(stream.id)).toBe(1)
+                expect(await client.count(stream.id)).toBe(1)
 
                 published.push(...await publishTestMessages(2))
 
@@ -455,7 +455,7 @@ describeRepeats('resends', () => {
 
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(receivedMsgs).toEqual(published)
-                expect(client.count(stream.id)).toBe(0)
+                expect(await client.count(stream.id)).toBe(0)
             })
 
             it('ends resend if unsubscribed', async () => {
@@ -476,7 +476,7 @@ describeRepeats('resends', () => {
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(END_AFTER)
                 expect(msgs).toEqual(published.slice(0, END_AFTER))
-                expect(client.count(stream.id)).toBe(0)
+                expect(await client.count(stream.id)).toBe(0)
             })
 
             it('can return before start', async () => {
@@ -485,13 +485,13 @@ describeRepeats('resends', () => {
                     last: published.length,
                 })
 
-                expect(client.count(stream.id)).toBe(1)
+                expect(await client.count(stream.id)).toBe(1)
 
                 await sub.return()
                 published.push(...await publishTestMessages(2))
                 const received = await sub.collect(published.length)
                 expect(received).toHaveLength(0)
-                expect(client.count(stream.id)).toBe(0)
+                expect(await client.count(stream.id)).toBe(0)
             })
 
             it('can end asynchronously', async () => {
@@ -520,7 +520,7 @@ describeRepeats('resends', () => {
                 const msgs = received
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
-                expect(client.count(stream.id)).toBe(0)
+                expect(await client.count(stream.id)).toBe(0)
             })
 
             it('can end inside resend', async () => {
@@ -542,7 +542,7 @@ describeRepeats('resends', () => {
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(END_AFTER)
                 expect(msgs).toEqual(published.slice(0, END_AFTER))
-                expect(client.count(stream.id)).toBe(0)
+                expect(await client.count(stream.id)).toBe(0)
             })
 
             it('does not error if no storage assigned', async () => {
@@ -551,7 +551,7 @@ describeRepeats('resends', () => {
                     streamId: nonStoredStream.id,
                     last: 5,
                 })
-                expect(client.count(nonStoredStream.id)).toBe(1)
+                expect(await client.count(nonStoredStream.id)).toBe(1)
 
                 const onResent = jest.fn()
                 sub.onResent(onResent)
@@ -562,7 +562,7 @@ describeRepeats('resends', () => {
                 expect(receivedMsgs).toHaveLength(publishedMessages.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(receivedMsgs).toEqual(publishedMessages)
-                expect(client.count(nonStoredStream.id)).toBe(0)
+                expect(await client.count(nonStoredStream.id)).toBe(0)
             })
         })
     })
