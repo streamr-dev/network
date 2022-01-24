@@ -2,7 +2,7 @@
  * Subscription message processing pipeline
  */
 
-import { SPID, StreamMessage, StreamMessageError, GroupKeyErrorResponse } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID } from 'streamr-client-protocol'
 
 import OrderMessages from './OrderMessages'
 import MessageStream from './MessageStream'
@@ -19,7 +19,7 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 
 export default function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
-    spid: SPID,
+    streamPartId: StreamPartID,
     context: Context,
     container: DependencyContainer
 ): MessageStream<T> {
@@ -34,7 +34,7 @@ export default function SubscribePipeline<T = unknown>(
         container.resolve(Config.Subscribe),
         container.resolve(Context as any),
         container.resolve(Resends),
-        spid,
+        streamPartId,
     )
 
     const orderMessages = new OrderMessages<T>(
@@ -44,7 +44,7 @@ export default function SubscribePipeline<T = unknown>(
         },
         container.resolve(Context as any),
         container.resolve(Resends),
-        spid,
+        streamPartId,
     )
 
     /* eslint-enable object-curly-newline */

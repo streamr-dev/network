@@ -1,22 +1,25 @@
 import { Logger, NetworkNode } from 'streamr-network'
-import { StreamMessage, keyToArrayIndex, SPID, SPIDKey } from 'streamr-client-protocol'
+import { StreamMessage, keyToArrayIndex, StreamPartID, toStreamPartID, StreamID, toStreamID } from 'streamr-client-protocol'
 import StreamrClient from 'streamr-client'
+// TODO fix the import
 import { EthereumStorageEvent } from 'streamr-client/dist/types/src/NodeRegistry'
 
 const logger = new Logger(module)
 
+const ASSIGNMENT_STREAM_PARTITION = 0
+
 let skipPollResultSoonAfterEvent = false
 export interface StorageConfigListener {
-    onSPIDAdded: (spid: SPID) => void
-    onSPIDRemoved: (spid: SPID) => void
+    onStreamPartAdded: (streamPart: StreamPartID) => void
+    onStreamPartRemoved: (streamPart: StreamPartID) => void
 }
 
-const getSPIDKeys = (streamId: string, partitions: number): SPIDKey[] => {
-    const keys: SPIDKey[] = []
+const createStreamPartIDs = (streamId: StreamID, partitions: number): StreamPartID[] => {
+    const ids: StreamPartID[] = []
     for (let i = 0; i < partitions; i++) {
-        keys.push(SPID.toKey(streamId, i))
+        ids.push(toStreamPartID(streamId, i))
     }
-    return keys
+    return ids
 }
 
 export type AssignmentMessage = {
@@ -31,7 +34,7 @@ export class StorageConfig {
 
     static ASSIGNMENT_EVENT_STREAM_ID_SUFFIX = '/storage-node-assignments'
 
-    private spidKeys: Set<SPIDKey>
+    private streamParts: Set<StreamPartID>
     listeners: StorageConfigListener[]
     clusterId: string
     clusterSize: number
@@ -40,6 +43,7 @@ export class StorageConfig {
     private stopPoller: boolean
     streamrClient: StreamrClient
     networkNode: NetworkNode
+    private removeConfirmations = new Map<StreamPartID, number>()
 
     // use createInstance method instead: it fetches the up-to-date config from API
     constructor(
@@ -49,7 +53,7 @@ export class StorageConfig {
         streamrClient: StreamrClient,
         networkNode: NetworkNode
     ) {
-        this.spidKeys = new Set<SPIDKey>()
+        this.streamParts = new Set<StreamPartID>()
         this.listeners = []
         this.clusterId = clusterId
         this.clusterSize = clusterSize
@@ -98,13 +102,12 @@ export class StorageConfig {
         this.poller = setTimeout(() => this.poll(pollInterval), pollInterval)
     }
 
-    hasSPID(spid: SPID): boolean {
-        const key = SPID.toKey(spid.streamId, spid.streamPartition)
-        return this.spidKeys.has(key)
+    hasStreamPart(streamPart: StreamPartID): boolean {
+        return this.streamParts.has(streamPart)
     }
 
-    getSPIDs(): SPID[] {
-        return Array.from(this.spidKeys, (key) => SPID.from(key))
+    getStreamParts(): Set<StreamPartID> {
+        return this.streamParts
     }
 
     addChangeListener(listener: StorageConfigListener): void {
@@ -114,21 +117,20 @@ export class StorageConfig {
     async refresh(): Promise<void> {
         const streamsToStore = await this.streamrClient.getStoredStreamsOf(this.clusterId)
         if (!skipPollResultSoonAfterEvent) {
-
-            const spidKeys = new Set<SPIDKey>(streamsToStore.flatMap((stream: { id: string, partitions: number }) => ([
-                ...getSPIDKeys(stream.id, stream.partitions)
-            ])).filter ((key: SPIDKey) => this.belongsToMeInCluster(key)))
-            this.setSPIDKeys(spidKeys)
+            const streamParts = new Set<StreamPartID>(streamsToStore.flatMap((stream: { id: StreamID, partitions: number }) => ([
+                ...createStreamPartIDs(stream.id, stream.partitions)
+            ])).filter ((streamPart: StreamPartID) => this.belongsToMeInCluster(streamPart)))
+            this.setStreamParts(streamParts)
         }
     }
 
-    private setSPIDKeys(newKeys: Set<SPIDKey>): void {
-        const oldKeys = this.spidKeys
-        const added = new Set([...newKeys].filter((x) => !oldKeys.has(x)))
-        const removed = new Set([...oldKeys].filter((x) => !newKeys.has(x)))
+    private setStreamParts(newStreamParts: Set<StreamPartID>): void {
+        const oldStreamParts = this.streamParts
+        const added = new Set([...newStreamParts].filter((x) => !oldStreamParts.has(x)))
+        const removed = new Set([...oldStreamParts].filter((x) => !newStreamParts.has(x)))
 
         if (added.size > 0) {
-            this.addSPIDKeys(added)
+            this.addStreamParts(added)
         }
 
         if (removed.size > 0) {
@@ -136,58 +138,56 @@ export class StorageConfig {
         }
     }
 
-    private removeConfirmations = new Map<SPIDKey, number>()
-
-    private prepareToRemoveStreams(keysToRemove: Set<SPIDKey>): void {
+    private prepareToRemoveStreams(streamParts: Set<StreamPartID>): void {
         // only remove streams after removed for REMOVE_CONFIRMATIONS polls
         // works around timing issue between storage assignment events and storage endpoint
         // i.e. poll result may be outdated, so storage can be added, removed in
         // outdated poll, then added again in next poll
         const REMOVE_CONFIRMATIONS = 2
-        for (const key of keysToRemove) {
+        for (const streamPart of streamParts) {
             // count confirmations
-            const confirmations = (Number(this.removeConfirmations.get(key)) + 1) || 1
-            this.removeConfirmations.set(key, confirmations)
+            const confirmations = (Number(this.removeConfirmations.get(streamPart)) + 1) || 1
+            this.removeConfirmations.set(streamPart, confirmations)
         }
 
-        const confirmedForRemoval = new Set<SPIDKey>()
-        for (const [key, confirmations] of this.removeConfirmations) {
+        const confirmedForRemoval = new Set<StreamPartID>()
+        for (const [streamPart, confirmations] of this.removeConfirmations) {
             if (confirmations >= REMOVE_CONFIRMATIONS) {
                 // got enough confirmations, remove
-                confirmedForRemoval.add(key)
-                this.removeConfirmations.delete(key)
+                confirmedForRemoval.add(streamPart)
+                this.removeConfirmations.delete(streamPart)
             }
 
-            if (!keysToRemove.has(key)) {
+            if (!streamParts.has(streamPart)) {
                 if (confirmations === 1) {
-                    this.removeConfirmations.delete(key)
+                    this.removeConfirmations.delete(streamPart)
                 } else {
-                    this.removeConfirmations.set(key, confirmations - 1)
+                    this.removeConfirmations.set(streamPart, confirmations - 1)
                 }
             }
         }
 
-        return this.removeSPIDKeys(confirmedForRemoval)
+        return this.removeStreamParts(confirmedForRemoval)
     }
 
-    private addSPIDKeys(keysToAdd: Set<SPIDKey>): void {
-        logger.info('Add %d partitions to storage config: %s', keysToAdd.size, Array.from(keysToAdd).join(','))
-        this.spidKeys = new Set([...this.spidKeys, ...keysToAdd])
+    private addStreamParts(streamParts: Set<StreamPartID>): void {
+        logger.info('Add %d partitions to storage config: %s', streamParts.size, Array.from(streamParts).join(','))
+        this.streamParts = new Set([...this.streamParts, ...streamParts])
         this.listeners.forEach((listener) => {
-            keysToAdd.forEach((key: SPIDKey) => listener.onSPIDAdded(SPID.from(key)))
+            streamParts.forEach((streamPart: StreamPartID) => listener.onStreamPartAdded(streamPart))
         })
     }
 
-    private removeSPIDKeys(keysToRemove: Set<SPIDKey>): void {
-        logger.info('Remove %d partitions from storage config: %s', keysToRemove.size, Array.from(keysToRemove).join(','))
-        this.spidKeys = new Set([...this.spidKeys].filter((x) => !keysToRemove.has(x)))
+    private removeStreamParts(streamParts: Set<StreamPartID>): void {
+        logger.info('Remove %d partitions from storage config: %s', streamParts.size, Array.from(streamParts).join(','))
+        this.streamParts = new Set([...this.streamParts].filter((x) => !streamParts.has(x)))
         this.listeners.forEach((listener) => {
-            keysToRemove.forEach((key: SPIDKey) => listener.onSPIDRemoved(SPID.from(key)))
+            streamParts.forEach((streamPart: StreamPartID) => listener.onStreamPartRemoved(streamPart))
         })
     }
 
-    private belongsToMeInCluster(key: SPIDKey): boolean {
-        const hashedIndex = keyToArrayIndex(this.clusterSize, key.toString())
+    private belongsToMeInCluster(streamPart: StreamPartID): boolean {
+        const hashedIndex = keyToArrayIndex(this.clusterSize, streamPart)
         return hashedIndex === this.myIndexInCluster
     }
 
@@ -198,34 +198,34 @@ export class StorageConfig {
         const messageListener = (msg: StreamMessage<AssignmentMessage>) => {
             if (msg.messageId.streamId === assignmentStreamId) {
                 const content = msg.getParsedContent() as any
-                const keys = new Set(getSPIDKeys(content.stream.id, content.stream.partitions))
+                const streamParts = new Set(createStreamPartIDs(content.stream.id, content.stream.partitions))
                 if (content.event === 'STREAM_ADDED') {
-                    this.addSPIDKeys(keys)
+                    this.addStreamParts(streamParts)
                 } else if (content.event === 'STREAM_REMOVED') {
-                    this.removeSPIDKeys(keys)
+                    this.removeStreamParts(streamParts)
                 }
             }
         }
         // TODO: NET-637 use client instead of networkNode?
         this.networkNode.addMessageListener(messageListener)
-        this.networkNode.subscribe(new SPID(assignmentStreamId, 0))
+        this.networkNode.subscribe(toStreamPartID(assignmentStreamId, ASSIGNMENT_STREAM_PARTITION))
         return messageListener
     }
 
     onAssignmentEvent(content: { storageNode: string, stream: { id: string, partitions: number }, event: string }): void {
         if (content.storageNode && typeof content.storageNode === 'string' && content.storageNode.toLowerCase() === this.clusterId.toLowerCase()) {
             logger.trace('Received storage assignment message: %o', content)
-            const keys = new Set(
-                getSPIDKeys(content.stream.id, content.stream.partitions)
-                    .filter ((key: SPIDKey) => this.belongsToMeInCluster(key))
+            const streamParts = new Set(
+                createStreamPartIDs(toStreamID(content.stream.id), content.stream.partitions)
+                    .filter ((streamPart: StreamPartID) => this.belongsToMeInCluster(streamPart))
             )
 
-            logger.trace('Adding %d of %d partitions in stream %s to this instance', keys.size, content.stream.partitions, content.stream.id)
+            logger.trace('Adding %d of %d partitions in stream %s to this instance', streamParts.size, content.stream.partitions, content.stream.id)
 
             if (content.event === 'STREAM_ADDED') {
-                this.addSPIDKeys(keys)
+                this.addStreamParts(streamParts)
             } else if (content.event === 'STREAM_REMOVED') {
-                this.removeSPIDKeys(keys)
+                this.removeStreamParts(streamParts)
             }
         } else if (!content.storageNode) {
             logger.error('Received storage assignment message with no storageNode field present: %o', content)
@@ -241,29 +241,34 @@ export class StorageConfig {
         // TODO: NET-637 use client instead of networkNode?
         this.networkNode.removeMessageListener(messageListener)
         const assignmentStreamId = this.getAssignmentStreamId(streamrAddress)
-        this.networkNode.unsubscribe(new SPID(assignmentStreamId, 0))
+        this.networkNode.unsubscribe(toStreamPartID(assignmentStreamId, ASSIGNMENT_STREAM_PARTITION))
     }
 
     async startChainEventsListener(): Promise<void> {
         const clientAddress = (await this.streamrClient.getAddress()).toLowerCase()
         this.streamrClient.registerStorageEventListener(
             async (event: EthereumStorageEvent) => {
-                skipPollResultSoonAfterEvent = true
                 if (event.nodeAddress.toLowerCase() !== clientAddress) { return }
-                const stream = await this.streamrClient.getStream(event.streamId)
-                const streamKeys = new Set(
-                    getSPIDKeys(stream.id, stream.partitions)
-                        .filter ((key: SPIDKey) => this.belongsToMeInCluster(key))
-                )
-                if (event.type === 'added') {
-                    this.addSPIDKeys(streamKeys)
+                skipPollResultSoonAfterEvent = true
+                try {
+                    const stream = await this.streamrClient.getStream(event.streamId)
+                    const streamParts = new Set(
+                        createStreamPartIDs(stream.id, stream.partitions)
+                            .filter((streamPart: StreamPartID) => this.belongsToMeInCluster(streamPart))
+                    )
+                    if (event.type === 'added') {
+                        this.addStreamParts(streamParts)
+                    }
+                    if (event.type === 'removed') {
+                        this.removeStreamParts(streamParts)
+                    }
+                } catch (e) {
+                    logger.warn('chainEventsListener: %s', e)
+                } finally {
+                    setTimeout(() => {
+                        skipPollResultSoonAfterEvent = false
+                    }, 10000)
                 }
-                if (event.type === 'removed') {
-                    this.removeSPIDKeys(streamKeys)
-                }
-                setTimeout(() => {
-                    skipPollResultSoonAfterEvent = false
-                }, 10000)
             }
         )
     }
@@ -272,8 +277,8 @@ export class StorageConfig {
         return this.streamrClient.unRegisterStorageEventListeners()
     }
 
-    private getAssignmentStreamId(streamrAddress: string) {
-        return streamrAddress + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
+    private getAssignmentStreamId(streamrAddress: string): StreamID {
+        return toStreamID(streamrAddress + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX)
     }
 
     cleanup(): void {

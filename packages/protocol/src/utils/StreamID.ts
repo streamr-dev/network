@@ -1,6 +1,6 @@
 import { EthereumAddress } from './types'
 
-export type StreamID = string & { readonly __brand: 'streamId' } // Nominal typing
+export type StreamID = string & { readonly __brand: 'streamID' } // Nominal typing
 
 /**
  * Create an instance of `StreamID` from a given string stream id or path.
@@ -13,7 +13,7 @@ export type StreamID = string & { readonly __brand: 'streamId' } // Nominal typi
  *
  *  If `streamIdOrPath` is not in path-only format, `address` can be left undefined.
  */
-export function toStreamID(streamIdOrPath: string, address?: EthereumAddress): StreamID {
+export function toStreamID(streamIdOrPath: string, address?: EthereumAddress): StreamID | never {
     if (streamIdOrPath.length === 0) {
         throw new Error('stream id may not be empty')
     }

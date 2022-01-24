@@ -13,16 +13,19 @@ import { Context } from './utils/Context'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamPermission, StreamPermissions, StreamProperties } from './Stream'
 import { NotFoundError } from './authFetch'
-import { StreamListQuery } from './StreamEndpoints'
 import {
-    SIDLike,
-    SPID,
     StreamID,
     EthereumAddress,
     StreamIDUtils, toStreamID,
 } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
+
+export interface SearchStreamsOptions {
+    order?: 'asc'|'desc'
+    max?: number
+    offset?: number
+}
 
 export type PermissionQueryResult = {
     id: string
@@ -158,20 +161,14 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async createStream(props: StreamProperties | SIDLike): Promise<Stream> {
-        this.debug('createStream %o', props)
-        let completeProps: StreamProperties
-        if ((props as StreamProperties).id) {
-            completeProps = props as StreamProperties
-        } else {
-            const sid = SPID.parse(props as SIDLike)
-            completeProps = { id: sid.streamId, ...sid }
-        }
-        completeProps.partitions ??= 1
+    async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
+        const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
+        props.partitions ??= 1
 
-        const streamId = await this.streamIdBuilder.toStreamID(completeProps.id)
+        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+
         const normalizedProperties = {
-            ...completeProps,
+            ...props,
             id: streamId
         }
 
@@ -494,10 +491,10 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async listStreams(filter: StreamListQuery = {}): Promise<Stream[]> {
-        this.debug('Getting all streams from thegraph that match filter %o', filter)
-        const response = await this.sendStreamQuery(StreamRegistry.buildGetFilteredStreamListQuery(filter)) as FilteredStreamListQueryResult
-        return response.streams.map((streamobj) => this.parseStream(toStreamID(streamobj.id), streamobj.metadata))
+    async searchStreams(term: string, opts: SearchStreamsOptions = {}): Promise<Stream[]> {
+        this.debug('Getting all streams from thegraph that match filter %s %o', term, opts)
+        const response = await this.sendStreamQuery(StreamRegistry.buildSearchStreamsQuery(term, opts)) as FilteredStreamListQueryResult
+        return response.streams.map((s) => this.parseStream(toStreamID(s.id), s.metadata))
     }
 
     async getStreamPublishers(streamIdOrPath: string, pagesize: number = 1000) {
@@ -593,28 +590,32 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    private static buildGetFilteredStreamListQuery(filter: StreamListQuery): string {
-        const nameparam = filter.name ? `metadata_contains: "name\\\\\\":\\\\\\"${filter.name}"` : ''
-        const maxparam = filter.max ? `, first: ${filter.max}` : ''
-        const offsetparam = filter.offset ? `, skip: ${filter.offset}` : ''
-        const orderByParam = filter.sortBy ? `, orderBy: ${filter.sortBy}` : ''
-        const ascDescParama = filter.order ? `, orderDirection: ${filter.order}` : ''
-        const query = `{
-            streams (where: {${nameparam}}${maxparam}${offsetparam}${orderByParam}${ascDescParama}) {
-                id,
-                metadata,
-                permissions {
+    private static buildSearchStreamsQuery(term: string, opts: SearchStreamsOptions): string {
+        // the metadata field contains all stream properties (including the id property),
+        // so there is no need search over other fields in the where clause
+        const query = `
+            query ($term: String!, $first: Int, $skip: Int, $orderBy: String, $orderDirection: String) {
+                streams (
+                    where: {
+                        metadata_contains: $term
+                    }
+                    first: $first
+                    skip: $skip
+                    orderBy: $orderBy
+                    orderDirection: $orderDirection
+                ) {
                     id,
-                    userAddress,
-                    canEdit,
-                    canDelete,
-                    publishExpiration,
-                    subscribeExpiration,
-                    canGrant,
+                    metadata
                 }
-            }
-        }`
-        return JSON.stringify({ query })
+            }`
+        const variables = {
+            term,
+            first: opts.max,
+            skip: opts.offset,
+            orderBy: (opts.order !== undefined) ? 'id' : undefined,
+            orderDirection: opts.order,
+        }
+        return JSON.stringify({ query, variables })
     }
 
     private static buildGetStreamPublishersQuery(streamId: StreamID, pagesize: number, lastId?: string): string {

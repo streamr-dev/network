@@ -1,7 +1,8 @@
-import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
+import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
 import { StreamID, toStreamID } from '../../../src/utils/StreamID'
+import { StreamPartID, toStreamPartID } from "../../utils/StreamPartID"
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
@@ -16,6 +17,9 @@ export default class MessageID {
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsNotNegativeInteger('timestamp', timestamp)
+        validateIsNotNegativeInteger('sequenceNumber', sequenceNumber)
+        validateIsString('publisherId', publisherId)
+        validateIsString('msgChainId', msgChainId)
 
         this.streamId = streamId
         this.streamPartition = streamPartition
@@ -47,6 +51,10 @@ export default class MessageID {
         ] = arr
 
         return new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
+    }
+
+    getStreamPartID(): StreamPartID {
+        return toStreamPartID(this.streamId, this.streamPartition)
     }
 
     serialize(): string {

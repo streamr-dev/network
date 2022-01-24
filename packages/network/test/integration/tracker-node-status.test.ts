@@ -5,7 +5,7 @@ import { wait, runAndWaitForEvents } from 'streamr-test-utils'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
-import { SPID } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 /**
  * This test verifies that tracker receives status messages from nodes with list of neighbor connections
@@ -16,8 +16,9 @@ describe('check status message flow between tracker and two nodes', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
     let nodeTwo: NetworkNode
-    const streamId = 'stream-1'
-    const streamId2 = 'stream-2'
+    const streamPartIdOne = StreamPartIDUtils.parse('stream-1#0')
+    const streamPartIdTwo = StreamPartIDUtils.parse('stream-2#0')
+    const streamPartIdThree = StreamPartIDUtils.parse('stream-3#0')
 
     const location = {
         country: 'FI',
@@ -60,26 +61,26 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     it('tracker should receive status message from node', (done) => {
-        nodeOne.subscribe(new SPID(streamId, 0))
+        nodeOne.subscribe(streamPartIdOne)
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-1')
             done()
         })
 
-        nodeOne.subscribe(new SPID('stream-id', 0))
+        nodeOne.subscribe(streamPartIdThree)
         nodeOne.start()
     })
 
     it('tracker should receive status from second node', (done) => {
-        nodeTwo.subscribe(new SPID(streamId, 0))
+        nodeTwo.subscribe(streamPartIdOne)
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-2')
             done()
         })
 
-        nodeTwo.subscribe(new SPID('stream-id', 0))
+        nodeTwo.subscribe(streamPartIdThree)
         nodeTwo.start()
     })
        
@@ -105,8 +106,8 @@ describe('check status message flow between tracker and two nodes', () => {
             }
         })
 
-        nodeOne.subscribe(new SPID('stream-id', 0))
-        nodeTwo.subscribe(new SPID('stream-id', 0))
+        nodeOne.subscribe(streamPartIdThree)
+        nodeTwo.subscribe(streamPartIdThree)
         nodeOne.start()
         nodeTwo.start()
 
@@ -124,8 +125,8 @@ describe('check status message flow between tracker and two nodes', () => {
             ])
             
             await runAndWaitForEvents([
-                () => { nodeOne.subscribe(new SPID(streamId, 0)) },
-                () => { nodeTwo.subscribe(new SPID(streamId, 0)) } ], [
+                () => { nodeOne.subscribe(streamPartIdOne) },
+                () => { nodeTwo.subscribe(streamPartIdOne) } ], [
                 [nodeOne, NodeEvent.NODE_SUBSCRIBED],
                 [nodeTwo, NodeEvent.NODE_SUBSCRIBED],
             ])
@@ -151,8 +152,8 @@ describe('check status message flow between tracker and two nodes', () => {
                 }
             })
             
-            nodeOne.subscribe(new SPID(streamId2, 0))
-            nodeTwo.subscribe(new SPID(streamId2, 0))
+            nodeOne.subscribe(streamPartIdTwo)
+            nodeTwo.subscribe(streamPartIdTwo)
         })
     })
     
@@ -164,8 +165,8 @@ describe('check status message flow between tracker and two nodes', () => {
         nodeOne.start()
         nodeTwo.start()
 
-        nodeOne.subscribe(new SPID(streamId, 0))
-        nodeTwo.subscribe(new SPID(streamId, 0))
+        nodeOne.subscribe(streamPartIdOne)
+        nodeTwo.subscribe(streamPartIdOne)
 
         // @ts-expect-error private field
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {

@@ -29,11 +29,11 @@ describeRepeats('Validation', () => {
         return client
     }
 
-    afterEach(() => {
+    afterEach(async () => {
         if (!subscriber) { return }
-        expect(subscriber.count(stream.id)).toBe(0)
+        expect(await subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
-        expect(client.getSubscriptions(stream.id)).toEqual([])
+        expect(await client.getSubscriptions(stream.id)).toEqual([])
     })
 
     let subs: Subscription[] = []

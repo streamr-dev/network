@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { SPID, Utils } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, Utils } from 'streamr-client-protocol'
 import { TrackerConnector } from '../../src/logic/node/TrackerConnector'
 import { TrackerInfo } from '../../src/identifiers'
 import { TrackerId } from '../../src/logic/tracker/Tracker'
@@ -29,21 +29,21 @@ const TRACKERS = [
     },
 ]
 
-const T1_STREAM = SPID.from('streamOne#0')
-const T2_STREAM = SPID.from('streamOne#15')
-const T3_STREAM = SPID.from('streamSix#0')
-const T4_STREAM = SPID.from('streamTwo#0')
+const T1_STREAM = StreamPartIDUtils.parse('streamOne#2')
+const T2_STREAM = StreamPartIDUtils.parse('streamOne#15')
+const T3_STREAM = StreamPartIDUtils.parse('streamSix#3')
+const T4_STREAM = StreamPartIDUtils.parse('streamTwo#7')
 
 describe(TrackerConnector, () => {
-    let streams: Array<SPID>
+    let streams: Array<StreamPartID>
     let activeConnections: Set<TrackerId>
     let connector: TrackerConnector
 
     beforeAll(() => {
         // sanity check stream hash assignments
         const trackerRegistry = new Utils.TrackerRegistry<TrackerInfo>(TRACKERS)
-        function checkTrackerAssignment(spid: SPID, expectedTracker: TrackerInfo): void {
-            expect(trackerRegistry.getTracker(spid)).toEqual(expectedTracker)
+        function checkTrackerAssignment(streamPartId: StreamPartID, expectedTracker: TrackerInfo): void {
+            expect(trackerRegistry.getTracker(streamPartId)).toEqual(expectedTracker)
         }
         checkTrackerAssignment(T1_STREAM, TRACKERS[0])
         checkTrackerAssignment(T2_STREAM, TRACKERS[1])
@@ -116,10 +116,10 @@ describe(TrackerConnector, () => {
         setUpConnector(1000000000)
         connector.start()
 
-        connector.onNewStream(T2_STREAM)
+        connector.onNewStreamPart(T2_STREAM)
         expect(activeConnections).toEqual(new Set<string>(['t2']))
 
-        connector.onNewStream(T4_STREAM)
+        connector.onNewStreamPart(T4_STREAM)
         expect(activeConnections).toEqual(new Set<string>(['t2', 't4']))
     })
 })

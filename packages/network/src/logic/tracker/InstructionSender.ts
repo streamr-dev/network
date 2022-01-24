@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { SPID, SPIDKey } from 'streamr-client-protocol'
+import { StreamPartID } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics } from '../../helpers/MetricsContext'
 import { NodeId } from '../node/Node'
@@ -7,15 +7,15 @@ import { TopologyStabilizationOptions } from './Tracker'
 
 /**
  * Instructions are collected to buffers and sent after a short delay. For each stream
- * there is a separate buffer.
+ * part there is a separate buffer.
  * 
  * We use debouncing to delay the sending. It means that we send the buffered instructions 
  * when either of these conditions is satisfied: 
- * - the topology stabilizes: no new instructions has been formed for the stream in 
- *   X milliseconds
+ * - the topology stabilizes: no new instructions has been formed for the stream part 
+ *   in X milliseconds
  * - the buffer times out: we have buffered an instruction for Y milliseconds
  * 
- * When an instruction is added to a stream buffer, it may overwrite an existing
+ * When an instruction is added to a the buffer, it may overwrite an existing
  * instruction in the buffer if the both instructions share the same nodeId. In that 
  * situation we expect that the previous instruction is no longer valid (it has a lower
  * counterValue) and can be ignored.
@@ -30,12 +30,12 @@ const logger = new Logger(module)
 
 export interface Instruction {
     nodeId: NodeId,
-    spidKey: SPIDKey,
+    streamPartId: StreamPartID,
     newNeighbors: NodeId[],
     counterValue: number
 }
 
-class StreamInstructionBuffer {
+class StreamPartInstructionBuffer {
     private readonly instructions = new Map<NodeId, Instruction>()
     private readonly debouncedOnReady: _.DebouncedFunc<() => void>
 
@@ -62,13 +62,13 @@ class StreamInstructionBuffer {
 
 export type SendInstructionFn = (
     receiverNodeId: NodeId,
-    spid: SPID,
+    streamPartId: StreamPartID,
     nodeIds: NodeId[],
     counter: number
 ) => Promise<void>
 
 export class InstructionSender {
-    private readonly streamBuffers = new Map<SPIDKey, StreamInstructionBuffer>()
+    private readonly streamPartBuffers = new Map<StreamPartID, StreamPartInstructionBuffer>()
     private readonly options: TopologyStabilizationOptions
     private readonly sendInstruction: SendInstructionFn
     private readonly metrics: Metrics
@@ -85,44 +85,44 @@ export class InstructionSender {
     }
 
     addInstruction(instruction: Instruction): void {
-        this.getOrCreateBuffer(instruction.spidKey).addInstruction(instruction)
+        this.getOrCreateBuffer(instruction.streamPartId).addInstruction(instruction)
     }
 
     stop(): void {
-        this.streamBuffers.forEach((entry) => entry.stop())
+        this.streamPartBuffers.forEach((entry) => entry.stop())
     }
 
-    private getOrCreateBuffer(spidKey: SPIDKey): StreamInstructionBuffer {
-        const existingBuffer = this.streamBuffers.get(spidKey)
+    private getOrCreateBuffer(streamPartId: StreamPartID): StreamPartInstructionBuffer {
+        const existingBuffer = this.streamPartBuffers.get(streamPartId)
         if (existingBuffer !== undefined) {
             return existingBuffer
         } else {
-            const newBuffer = new StreamInstructionBuffer(this.options, () => {
-                this.streamBuffers.get(spidKey)?.stop()
-                this.streamBuffers.delete(spidKey)
+            const newBuffer = new StreamPartInstructionBuffer(this.options, () => {
+                this.streamPartBuffers.get(streamPartId)?.stop()
+                this.streamPartBuffers.delete(streamPartId)
                 this.sendInstructions(newBuffer)
             })
-            this.streamBuffers.set(spidKey, newBuffer)
+            this.streamPartBuffers.set(streamPartId, newBuffer)
             return newBuffer
         }
     }
 
-    private async sendInstructions(buffer: StreamInstructionBuffer): Promise<void> {
+    private async sendInstructions(buffer: StreamPartInstructionBuffer): Promise<void> {
         const promises = Array.from(buffer.getInstructions())
-            .map(async ({ nodeId, spidKey, newNeighbors, counterValue }) => {
+            .map(async ({ nodeId, streamPartId, newNeighbors, counterValue }) => {
                 this.metrics.record('instructionsSent', 1)
                 try {
                     await this.sendInstruction(
                         nodeId,
-                        SPID.from(spidKey),
+                        streamPartId,
                         newNeighbors,
                         counterValue
                     )
-                    logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, spidKey, nodeId })
+                    logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamPartId, nodeId })
                 } catch (err) {
                     logger.error(`failed to send instructions %o to node %o, reason: %s`,
                         newNeighbors,
-                        { counterValue, spidKey, nodeId },
+                        { counterValue, streamPartId, nodeId },
                         err
                     )
                 }

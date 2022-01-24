@@ -21,12 +21,12 @@ function buildMsg(
     content: any = {}
 ) {
     return new Protocol.StreamMessage({
-        messageId: new Protocol.MessageIDStrict(
+        messageId: new Protocol.MessageID(
             toStreamID(streamId),
-            streamPartition, 
-            timestamp, 
-            sequenceNumber, 
-            publisherId, 
+            streamPartition,
+            timestamp,
+            sequenceNumber,
+            publisherId,
             msgChainId
         ),
         content: JSON.stringify(content)
