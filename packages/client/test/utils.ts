@@ -171,7 +171,12 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
         id: createRelativeTestStreamId(module),
         ...props
     })
-    await until(async () => { return streamrClient.streamExistsOnTheGraph(stream.id) }, 20000, 500)
+    await until(
+        async () => { return streamrClient.streamExistsOnTheGraph(stream.id) },
+        20000,
+        500,
+        () => `timed out while waiting for streamrClient.streamExistsOnTheGraph(${stream.id})`
+    )
     return stream
 }
 
@@ -233,7 +238,7 @@ export class LeaksDetector {
         'rovider/formatter',
     ])
 
-    private counter = CounterId(this.id)
+    private counter = CounterId(this.id, { maxPrefixes: 1024 })
 
     add(name: string, obj: any) {
         if (!obj || typeof obj !== 'object') { return }
