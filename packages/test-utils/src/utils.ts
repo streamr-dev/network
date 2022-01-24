@@ -285,7 +285,7 @@ export class KeyServer {
     constructor() {
         const app = express()
         app.use(cors())
-        let c = Math.floor((Math.random() * 998) + 1) // TODO: add explanation why needed
+        let c = 1
         app.get('/key', (_req, res) => {
             const hexString = c.toString(16)
             const privateKey = '0x' + hexString.padStart(64, '0')
