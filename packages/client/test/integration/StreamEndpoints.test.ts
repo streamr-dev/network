@@ -7,6 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
 import { SearchStreamsOptions } from '../../src/StreamRegistry'
+import { StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(40000)
 
@@ -97,8 +98,8 @@ describe('StreamEndpoints', () => {
         })
 
         it('get a non-existing Stream', async () => {
-            const streamid = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
-            return expect(() => client.getStream(streamid)).rejects.toThrow(NotFoundError)
+            const streamId = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
+            return expect(() => client.getStream(streamId)).rejects.toThrow(NotFoundError)
         })
 
         it('get all Streams', async () => {
@@ -626,9 +627,8 @@ describe('StreamEndpoints', () => {
             expect(storageNodes.length).toBe(1)
             expect(storageNodes[0]).toStrictEqual(storageNodeAddress.toLowerCase())
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            return expect(storedStreamParts.some(
-                (sp) => (sp.streamId === stream.id) && (sp.streamPartition === 0)
-            )).toBeTruthy()
+            const expectedStreamPartId = toStreamPartID(stream.id, 0)
+            return expect(storedStreamParts.some((sp) => sp === expectedStreamPartId)).toBeTruthy()
         })
 
         it('remove', async () => {
@@ -640,9 +640,7 @@ describe('StreamEndpoints', () => {
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            return expect(storedStreamParts.some(
-                (sp) => (sp.streamId === stream.id)
-            )).toBeFalsy()
+            return expect(storedStreamParts.some((sp) => (StreamPartIDUtils.getStreamID(sp) === stream.id))).toBeFalsy()
         })
     })
 })

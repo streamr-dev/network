@@ -49,7 +49,7 @@ type StoredStreamQueryResult = {
         id: string,
         metadata: string,
         storageNodes: NodeQueryResult[],
-    },
+    } | null,
 }
 
 type AllNodesQueryResult = {
@@ -183,13 +183,17 @@ export class NodeRegistry {
         if (res.node === null) {
             throw new NotFoundError('Node not found, id: ' + nodeAddress)
         }
-        return res.node.storedStreams.find((stream) => stream.id === streamId) !== undefined
+        const found = res.node.storedStreams.find((stream) => stream.id === streamId)
+        return found !== undefined
     }
 
     async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Getting storage nodes of stream %s', streamId)
         const res = await this.sendNodeQuery(NodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
+        if (res.stream === null) {
+            return []
+        }
         return res.stream.storageNodes.map((node) => node.id)
     }
 
@@ -272,9 +276,9 @@ export class NodeRegistry {
         return JSON.stringify({ query })
     }
 
-    private static buildStoredStreamQuery(streamid: StreamID): string {
+    private static buildStoredStreamQuery(streamId: StreamID): string {
         const query = `{
-            stream (id: "${streamid}") {
+            stream (id: "${streamId}") {
                 id,
                 metadata,
                 storageNodes {

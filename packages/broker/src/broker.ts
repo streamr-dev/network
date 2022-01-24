@@ -12,12 +12,13 @@ import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
+import { StreamPartID } from 'streamr-client-protocol'
 
 const logger = new Logger(module)
 
 export interface Broker {
     getNeighbors: () => readonly string[]
-    getSPIDs: () => Iterable<Protocol.SPID>
+    getStreamParts: () => Iterable<StreamPartID>
     getNodeId: () => string
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
@@ -67,7 +68,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     return {
         getNeighbors: () => networkNode.getNeighbors(),
-        getSPIDs: () => networkNode.getSPIDs(),
+        getStreamParts: () => networkNode.getStreamParts(),
         getNodeId: () => networkNode.getNodeId(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)

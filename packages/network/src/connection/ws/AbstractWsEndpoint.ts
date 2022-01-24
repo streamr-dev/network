@@ -24,7 +24,7 @@ export enum DisconnectionCode {
 export enum DisconnectionReason {
     GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
     DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
-    NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
+    NO_SHARED_STREAM_PARTS = 'streamr:node:no-shared-stream-parts',
     DEAD_CONNECTION = 'dead connection'
 }
 

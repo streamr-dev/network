@@ -1,4 +1,4 @@
-import { SmartContractRecord, TrackerLayer } from 'streamr-client-protocol'
+import { SmartContractRecord, StreamID, TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from './logic/node/Node'
 import { MetricsContext } from './helpers/MetricsContext'
 
@@ -13,15 +13,15 @@ export interface Location {
     city?: string
 }
 
-export interface StreamStatus {
-    id: string
+export interface StreamPartStatus {
+    id: StreamID
     partition: number,
     neighbors: NodeId[]
-    counter: number // TODO this field could be a field of "Status" interface, not this interface?
+    counter: number
 }
 
 export interface Status {
-    stream: StreamStatus
+    streamPart: StreamPartStatus
     rtts: Rtts | null
     location?: Location
     started: string
