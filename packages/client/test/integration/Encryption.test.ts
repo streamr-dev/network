@@ -124,7 +124,7 @@ describeRepeats('decryption', () => {
 
         beforeEach(async () => {
             await setupStream()
-        })
+        }, 60000)
 
         describe('subscriber has permissions', () => {
             beforeEach(async () => {
@@ -468,12 +468,12 @@ describeRepeats('decryption', () => {
                     resend: {
                         last: 2,
                     },
-                })
+                }, (_msg: any) => {})
 
                 const received = await sub.collectContent(2)
 
                 expect(received).toEqual(published.slice(-2).map((s) => s.getParsedContent()))
-            }, TIMEOUT * 2)
+            }, TIMEOUT * 3)
 
             describe('error handling', () => {
                 let sub: Subscription<any>
@@ -589,7 +589,7 @@ describeRepeats('decryption', () => {
         it('client.subscribe can not decrypt encrypted messages if does not know the group key', async () => {
             const sub = await subscriber.subscribe({
                 stream: stream.id,
-            })
+            }, (_msg: any) => {})
 
             await publishTestMessages(3, {
                 timestamp: 1111111,
