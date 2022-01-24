@@ -67,8 +67,7 @@ describe('PushBuffer', () => {
             expect(await pushBuffer.push(expected[1])).toBe(false)
         })
 
-        // TODO: fix flaky test in NET-664
-        it.skip('push resolves false if errored', async () => {
+        it('push resolves false if errored', async () => {
             const err = new Error(counterId('expected error'))
             const pushBuffer = new PushBuffer(3)
             leaksDetector.add('PushBuffer', pushBuffer)
