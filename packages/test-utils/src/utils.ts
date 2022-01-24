@@ -293,6 +293,14 @@ export class KeyServer {
             c += 1
             if (c > 1000) {
                 c = 1
+            } else if (c === 10) {
+                /*
+                    NET-666: There is something weird about the 10th key '0x0000000000....a'
+                    that causes StreamRegistryContract to read a weird value to msg.sender
+                    that does NOT correspond to the public address. Until that is investigated
+                    and solved, skipping this key.
+                 */
+                c = 11
             }
         })
         this.server = app.listen(KeyServer.KEY_SERVER_PORT)
