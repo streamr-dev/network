@@ -99,10 +99,10 @@ jobs:
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph chainlink"
       - name: start trackers and brokers
-        working-directory: './packages/broker'
+        working-directory: './'
         run: |
-          npm run build
-          (cd bin && node run-all.js&)
+          npm run boostrap-pkg streamr-broker
+          (cd packages/broker/bin && node run-all.js&)
       - name: Run Test
         run: npm run $TEST_NAME
       - name: Collect docker logs on failure
@@ -149,10 +149,10 @@ jobs:
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
-        working-directory: './packages/broker'
+        working-directory: './'
         run: |
-          npm run build
-          (cd bin && node run-all.js&)
+          npm run boostrap-pkg streamr-broker
+          (cd packages/broker/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -194,10 +194,10 @@ jobs:
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
-        working-directory: './packages/broker'
+        working-directory: './'
         run: |
-          npm run build
-          (cd bin && node run-all.js&)
+          npm run boostrap-pkg streamr-broker
+          (cd packages/broker/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
