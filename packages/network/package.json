@@ -56,7 +56,7 @@
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "node-datachannel": "^0.1.14",
+    "node-datachannel": "^0.2.1",
     "pino": "^6.11.3",
     "setimmediate": "^1.0.5",
     "streamr-client-protocol": "^10.0.0",
