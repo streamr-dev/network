@@ -55,8 +55,7 @@ describe('EnvStressTest', () => {
                             pTimeout(client.createStream({
                                 id: '/' + name,
                                 name,
-                                requireSignedData: true,
-                                requireEncryptedData: false,
+                                requireSignedData: true
                             }), TEST_TIMEOUT * j * 0.2, `Timeout creating stream ${index + 1} ${testDesc}`)
                         )))
 
