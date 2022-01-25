@@ -98,7 +98,11 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph chainlink"
-      - uses: streamr-dev/network-monorepo/.github/segments/start-brokers-and-trackers.yml
+      - name: start trackers and brokers
+        working-directory: './packages/broker'
+        run: |
+          npm run build
+          (cd bin && node run-all.js&)
       - name: Run Test
         run: npm run $TEST_NAME
       - name: Collect docker logs on failure
@@ -144,7 +148,11 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
-      - uses: streamr-dev/network-monorepo/.github/segments/start-brokers-and-trackers.yml
+      - name: start trackers and brokers
+        working-directory: './packages/broker'
+        run: |
+          npm run build
+          (cd bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -185,7 +193,11 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
-      - uses: streamr-dev/network-monorepo/.github/segments/start-brokers-and-trackers.yml
+      - name: start trackers and brokers
+        working-directory: './packages/broker'
+        run: |
+          npm run build
+          (cd bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
