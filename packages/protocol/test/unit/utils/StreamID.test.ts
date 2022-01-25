@@ -120,6 +120,16 @@ describe('getAddress', () => {
     })
 })
 
+describe('isENSAddress', () => {
+    it('ENS name', () => {
+        expect(StreamIDUtils.isENSAddress('foobar.eth')).toBe(true)
+    })
+
+    it('Ethereum address', () => {
+        expect(StreamIDUtils.isENSAddress('0x1234567890123456789012345678901234567890')).toBe(false)
+    })
+})
+
 describe('getPath', () => {
     it('returns undefined for legacy stream id', () => {
         expect(StreamIDUtils.getPath(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()

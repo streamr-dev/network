@@ -54,6 +54,10 @@ export class StreamIDUtils {
         const addressAndPath = StreamIDUtils.getAddressAndPath(streamId)
         return addressAndPath?.[0]
     }
+
+    static isENSAddress(address: string): boolean {
+        return address.indexOf('.') !== -1
+    }
     
     static getPath(streamId: StreamID): string | undefined {
         const addressAndPath = StreamIDUtils.getAddressAndPath(streamId)
