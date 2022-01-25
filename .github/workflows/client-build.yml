@@ -103,7 +103,11 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "init-keyspace parity-node0 parity-sidechain-node0 brokers trackers nginx graph-deploy-streamregistry-subgraph"
+          services-to-start: "init-keyspace parity-node0 parity-sidechain-node0 nginx graph-deploy-streamregistry-subgraph"
+      - name: start trackers and brokers
+        run: |
+          npm run bootstrap-pkg streamr-broker
+          (cd packages/brokers/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Realtime Test
         with:
@@ -114,6 +118,7 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
+          sh packages/broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
@@ -142,7 +147,11 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "init-keyspace parity-node0 parity-sidechain-node0 brokers trackers nginx graph-deploy-streamregistry-subgraph"
+          services-to-start: "init-keyspace parity-node0 parity-sidechain-node0 nginx graph-deploy-streamregistry-subgraph"
+      - name: start trackers and brokers
+        run: |
+          npm run bootstrap-pkg streamr-broker
+          (cd packages/brokers/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Resend Test
         with:
@@ -153,6 +162,7 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
+          sh packages/broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
@@ -179,7 +189,11 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
+      - name: start trackers and brokers
+        run: |
+          npm run bootstrap-pkg streamr-broker
+          (cd packages/brokers/bin && node run-all.js&)
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -200,5 +214,6 @@ jobs:
         with:
           name: client-benchmarks
           path: |
+              sh packages/broker/bin/kill-all.sh
               packages/client/benchmark-publish.txt
               packages/client/benchmark-subscribe.txt

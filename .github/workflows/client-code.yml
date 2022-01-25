@@ -89,33 +89,6 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           check-latest: true
-      # >> use monorepo brokers/trackers with streamr-docker-dev
-      # For now, builds docker image and runs with streamr-docker-dev so we
-      # don't have to worry about backgrounding processes
-      - name: Cache Docker layers
-        uses: actions/cache@v2.1.7
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1.6.0
-        with:
-          driver-opts: |
-            network=host
-      - name: Build
-        uses: docker/build-push-action@v2.7.0
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64
-          push: false
-          load: true
-          tags: streamr/broker-node:dev
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-      # << use monorepo brokers/trackers with streamr-docker-dev
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -124,7 +97,11 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph chainlink"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph chainlink"
+      - name: start trackers and brokers
+        run: |
+          npm run bootstrap-pkg streamr-broker
+          (cd packages/brokers/bin && node run-all.js&)
       - name: Run Test
         run: npm run $TEST_NAME
       - name: Collect docker logs on failure
@@ -141,6 +118,7 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
+          sh packages/broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
@@ -168,7 +146,11 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
+      - name: start trackers and brokers
+        run: |
+          run bootstrap-pkg streamr-broker
+          (cd packages/brokers/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -179,6 +161,7 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
+          sh packages/broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
@@ -207,7 +190,11 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
+      - name: start trackers and brokers
+        run: |
+          npm run bootstrap-pkg streamr-broker
+          (cd packages/brokers/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -218,5 +205,6 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
+          sh packages/broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
