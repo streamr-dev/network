@@ -26,7 +26,7 @@ defaults:
 
 jobs:
   build:
-    name: Build Client
+    name: Build Client and Broker
     runs-on: ubuntu-latest
     env:
       BUNDLE_ANALYSIS: true
@@ -41,6 +41,7 @@ jobs:
         working-directory: './'
         run: |
           npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-broker
           npm run bootstrap-pkg streamr-client
       - name: npm run build
         run: npm run build-production
@@ -48,6 +49,10 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
+      - uses: actions/upload-artifact@v2.3.1
+        with:
+          name: broker-build
+          path: packages/broker/dist
 
   test-exports:
     name: Test Exports using Node ${{ matrix.node-version }}
@@ -68,11 +73,6 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
-      - name: bootstrap-pkg
-        working-directory: './'
-        run: |
-          npm install -g npm@8 --prefer-offline --no-audit
-          npm run bootstrap-pkg streamr-client
       - name: test-types
         run: npm run test-types
       - name: npm run test-exports
@@ -91,15 +91,14 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v2.0.10
         with:
           name: client-build
           path: packages/client/dist
-      - name: bootstrap-pkg
-        working-directory: './'
-        run: |
-          npm install -g npm@8 --prefer-offline --no-audit
-          npm run bootstrap-pkg streamr-client
+      - uses: actions/download-artifact@v2.0.10
+        with:
+          name: broker-build
+          path: packages/broker/dist
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -135,15 +134,14 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v2.0.10
         with:
           name: client-build
           path: packages/client/dist
-      - name: bootstrap-pkg
-        working-directory: './'
-        run: |
-          npm install -g npm@8 --prefer-offline --no-audit
-          npm run bootstrap-pkg streamr-client
+      - uses: actions/download-artifact@v2.0.10
+        with:
+          name: broker-build
+          path: packages/broker/dist
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -186,6 +184,10 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
+      - uses: actions/download-artifact@v2.0.10
+        with:
+          name: broker-build
+          path: packages/broker/dist
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
@@ -194,11 +196,6 @@ jobs:
         working-directory: './'
         run: |
           (cd packages/broker/bin && node run-all.js&)
-      - name: bootstrap-pkg
-        working-directory: './'
-        run: |
-          npm install -g npm@8 --prefer-offline --no-audit
-          npm run bootstrap-pkg streamr-client
       - name: benchmark publish
         timeout-minutes: 15
         run: DEBUG='' npm run benchmark-publish > benchmark-publish.txt
