@@ -101,7 +101,7 @@ jobs:
       - name: start trackers and brokers
         working-directory: './'
         run: |
-          (cd ./packages/brokers/bin && node run-all.js&)
+          (cd packages/broker/bin && node run-all.js&)
       - name: Run Test
         run: npm run $TEST_NAME
       - name: Collect docker logs on failure
@@ -150,7 +150,7 @@ jobs:
       - name: start trackers and brokers
         working-directory: './'
         run: |
-          (cd ./packages/brokers/bin && node run-all.js&)
+          (cd packages/broker/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -194,7 +194,7 @@ jobs:
       - name: start trackers and brokers
         working-directory: './'
         run: |
-          (cd ./packages/brokers/bin && node run-all.js&)
+          (cd packages/broker/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
