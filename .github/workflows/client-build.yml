@@ -107,7 +107,7 @@ jobs:
       - name: start trackers and brokers
         working-directory: './'
         run: |
-          npm run boostrap-pkg streamr-broker
+          npm run bootstrap-pkg streamr-broker
           (cd packages/broker/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Realtime Test
@@ -152,7 +152,7 @@ jobs:
       - name: start trackers and brokers
         working-directory: './'
         run: |
-          npm run boostrap-pkg streamr-broker
+          npm run bootstrap-pkg streamr-broker
           (cd packages/broker/bin && node run-all.js&)
       - uses: nick-invision/retry@v2
         name: Run Resend Test
@@ -195,7 +195,7 @@ jobs:
       - name: start trackers and brokers
         working-directory: './'
         run: |
-          npm run boostrap-pkg streamr-broker
+          npm run bootstrap-pkg streamr-broker
           (cd packages/broker/bin && node run-all.js&)
       - name: bootstrap-pkg
         working-directory: './'
