@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import { waitForEvent } from 'streamr-test-utils'
 
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'

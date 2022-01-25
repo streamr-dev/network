@@ -1,7 +1,13 @@
 /**
  * MessageChains
  */
-import { MessageRef, MessageID, MessageIDStrict, SPID } from 'streamr-client-protocol'
+import {
+    MessageRef,
+    MessageID,
+    StreamPartID,
+    StreamID,
+    StreamPartIDUtils
+} from 'streamr-client-protocol'
 import { CacheConfig } from './Config'
 import { randomString, CacheFn } from './utils'
 
@@ -10,12 +16,12 @@ export type MessageChainOptions = {
     msgChainId?: string
 }
 
-export function getCachedMesssageChain(cacheConfig: CacheConfig) {
+export function getCachedMessageChain(cacheConfig: CacheConfig) {
     // one chainer per streamId + streamPartition + publisherId + msgChainId
     return CacheFn((...args: ConstructorParameters<typeof MessageChain>) => new MessageChain(...args), {
-        cacheKey: ([spid, { publisherId, msgChainId }]) => (
+        cacheKey: ([streamPartId, { publisherId, msgChainId }]) => (
             // empty msgChainId is fine
-            [spid.key, publisherId, msgChainId ?? ''].join('|')
+            [streamPartId, publisherId, msgChainId ?? ''].join('|')
         ),
         ...cacheConfig,
         maxAge: Infinity
@@ -26,11 +32,14 @@ export function getCachedMesssageChain(cacheConfig: CacheConfig) {
  * Manage sequenceNumber & msgChainId for StreamMessages
  */
 export default class MessageChain {
+    private readonly streamId: StreamID
+    private readonly streamPartition: number
     readonly publisherId
     readonly msgChainId
     prevMsgRef?: MessageRef
 
-    constructor(private spid: SPID, { publisherId, msgChainId = randomString(20) }: MessageChainOptions) {
+    constructor(streamPartId: StreamPartID, { publisherId, msgChainId = randomString(20) }: MessageChainOptions) {
+        [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.publisherId = publisherId
         this.msgChainId = msgChainId
     }
@@ -40,7 +49,7 @@ export default class MessageChain {
      * Messages with same timestamp get incremented sequence numbers.
      */
     add(timestamp: number): [MessageID, MessageRef | undefined] {
-        const { prevMsgRef, publisherId, msgChainId, spid } = this
+        const { prevMsgRef, publisherId, msgChainId, streamId, streamPartition } = this
         // NOTE: publishing back-dated (i.e. non-sequentially timestamped) messages will 'break' sequencing.
         // i.e. we lose track of biggest sequence number whenever timestamp changes for stream id+partition combo
         // so backdated messages will start at sequence 0 again, regardless of the sequencing of existing messages.
@@ -51,7 +60,7 @@ export default class MessageChain {
         const isBackdated = prevMsgRef && prevMsgRef.timestamp > timestamp
         // increment if timestamp the same, otherwise 0
         const nextSequenceNumber = isSameTimestamp ? prevMsgRef!.sequenceNumber + 1 : 0
-        const messageId = new MessageIDStrict(spid.streamId, spid.streamPartition, timestamp, nextSequenceNumber, publisherId, msgChainId)
+        const messageId = new MessageID(streamId, streamPartition, timestamp, nextSequenceNumber, publisherId, msgChainId)
         // update latest timestamp + sequence for this streamId+partition
         // (see note above about clobbering sequencing)
         // don't update latest if timestamp < previous timestamp

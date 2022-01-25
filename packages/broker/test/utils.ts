@@ -3,11 +3,12 @@ import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, Stream
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
-import { Tracker, Protocol, startTracker } from 'streamr-network'
+import { Tracker, startTracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config'
 import { NodeRegistryOptions } from 'streamr-client/src/NodeRegistry'
+import { StreamPartID } from 'streamr-client-protocol'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 // const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -242,8 +243,8 @@ export class Queue<T> {
     }
 }
 
-export const getSPIDKeys = (broker: Broker): Protocol.SPIDKey[] => {
-    return Array.from(broker.getSPIDs(), (spid) => spid.toKey())
+export const getStreamParts = (broker: Broker): StreamPartID[] => {
+    return Array.from(broker.getStreamParts())
 }
 
 export async function sleep(ms = 0): Promise<void> {

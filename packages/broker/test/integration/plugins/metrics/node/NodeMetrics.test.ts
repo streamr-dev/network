@@ -24,7 +24,7 @@ describe('NodeMetrics', () => {
         const tmpAccount = new Wallet(await getPrivateKey())
         const storageNodeAccount = new Wallet(await getPrivateKey())
         const storageNodeRegistry = {
-            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
+            contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
             jsonRpcProvider: `http://10.200.10.1:8546`
         }
         nodeAddress = tmpAccount.address
@@ -88,10 +88,10 @@ describe('NodeMetrics', () => {
     it('should retrieve the a `sec` metrics', async () => {
         const messageQueue = new Queue<any>()
 
-        const streamId = `${streamIdPrefix}sec`
-        const streamPartition = keyToArrayIndex(NUM_OF_PARTITIONS, metricsGeneratingBroker.getNodeId().toLowerCase())
+        const id = `${streamIdPrefix}sec`
+        const partition = keyToArrayIndex(NUM_OF_PARTITIONS, metricsGeneratingBroker.getNodeId().toLowerCase())
 
-        await client2.subscribe({ streamId, streamPartition }, (content: any) => {
+        await client2.subscribe({ id, partition }, (content: any) => {
             messageQueue.push({ content })
         })
 

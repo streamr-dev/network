@@ -8,7 +8,7 @@ import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { toStreamID } from "streamr-client-protocol"
 
-const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
+const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -33,7 +33,7 @@ function buildMsg({
     content?: any
 }) {
     return new StreamMessage({
-        messageId: new MessageIDStrict(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+        messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: JSON.stringify(content)
     })
 }
@@ -56,7 +56,7 @@ function buildEncryptedMsg({
     content?: string
 }) {
     return new StreamMessage({
-        messageId: new MessageIDStrict(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+        messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content,
         encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
     })
@@ -294,7 +294,8 @@ describe('Storage', () => {
         })
     })
 
-    test('multiple buckets', async () => {
+    // TODO: fix flaky test in NET-646
+    test.skip('multiple buckets', async () => {
         const messageCount = 3 * MAX_BUCKET_MESSAGE_COUNT
         await storeMockMessages({ streamId, streamPartition: 777, minTimestamp: 123000000, maxTimestamp: 456000000, count: messageCount, storage })
 

@@ -32,9 +32,9 @@ describe('Node-to-Node protocol version negotiation', () => {
             }
         })
 
-        const peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31])
+        const peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31, 32])
         const peerInfo2 = new PeerInfo('node-endpoint2', PeerType.Node, [1, 2], [31, 32, 33])
-        const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [32])
+        const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [33])
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
         const wsEp1 = new NodeClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
@@ -98,15 +98,15 @@ describe('Node-to-Node protocol version negotiation', () => {
     })
     
     it('protocol versions are correctly negotiated',  () => {
-        expect(nodeToNode1.getNegotiatedProtocolVersionsOnNode('node-endpoint2')).toEqual([2,31])
-        expect(nodeToNode2.getNegotiatedProtocolVersionsOnNode('node-endpoint1')).toEqual([2,31])
+        expect(nodeToNode1.getNegotiatedProtocolVersionsOnNode('node-endpoint2')).toEqual([2,32])
+        expect(nodeToNode2.getNegotiatedProtocolVersionsOnNode('node-endpoint1')).toEqual([2,32])
     })
 
     it('messages are sent with the negotiated protocol version', (done) => {
         ep2.once(wrtcEvent.MESSAGE_RECEIVED, (peerInfo, data) => {
             const parsedData = JSON.parse(data)
             expect(parsedData[0]).toEqual(2)
-            expect(parsedData[3][0]).toEqual(31)
+            expect(parsedData[3][0]).toEqual(32)
             done()
         })
         const i = 1

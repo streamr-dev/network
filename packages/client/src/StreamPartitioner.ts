@@ -5,14 +5,14 @@ import { StreamID, Utils } from 'streamr-client-protocol'
 import { CacheFn } from './utils'
 import { Config, CacheConfig } from './Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamRegistry } from './StreamRegistry'
+import { StreamEndpointsCached } from './StreamEndpointsCached'
 
 export type PartitionKey = string | number | undefined
 
 @scoped(Lifecycle.ContainerScoped)
 export default class StreamPartitioner {
     constructor(
-        private streamRegistry: StreamRegistry,
+        private streamEndpoints: StreamEndpointsCached,
         @inject(Config.Cache) private cacheOptions: CacheConfig,
     ) {
         // NOTE: ensure cache partitions by streamId + partitionCount.
@@ -28,7 +28,7 @@ export default class StreamPartitioner {
             return 0
         }
 
-        const stream = await this.streamRegistry.getStream(streamId)
+        const stream = await this.streamEndpoints.getStream(streamId)
         return this.computeStreamPartition(stream.id, stream.partitions, partitionKey)
     }
 

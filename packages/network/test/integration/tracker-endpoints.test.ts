@@ -5,7 +5,7 @@ import http from 'http'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { SPID } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 function getHttp(url: string) {
     return new Promise((resolve, reject) => {
@@ -64,17 +64,17 @@ describe('tracker endpoint', () => {
             foo: 'bar'
         })
 
-        nodeOne.subscribe(new SPID('stream-1', 0))
-        nodeTwo.subscribe(new SPID('stream-1', 0))
+        nodeOne.subscribe(StreamPartIDUtils.parse('stream-1#0'))
+        nodeTwo.subscribe(StreamPartIDUtils.parse('stream-1#0'))
 
-        nodeOne.subscribe(new SPID('stream-2', 0))
-        nodeOne.subscribe(new SPID('sandbox/test/stream-3', 0))
+        nodeOne.subscribe(StreamPartIDUtils.parse('stream-2#0'))
+        nodeOne.subscribe(StreamPartIDUtils.parse('sandbox/test/stream-3#0'))
 
         nodeOne.start()
         nodeTwo.start()
 
         // @ts-expect-error private variable
-        await waitForCondition(() => Object.keys(tracker.overlayPerStream).length === 3)
+        await waitForCondition(() => Object.keys(tracker.overlayPerStreamPart).length === 3)
     })
 
     afterAll(async () => {
