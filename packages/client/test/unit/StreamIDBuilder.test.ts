@@ -44,7 +44,7 @@ describe('StreamIDBuilder', () => {
             isAuthenticated.mockReturnValue(false)
             return expect(streamIdBuilder.toStreamID('/foo/bar'))
                 .rejects
-                .toThrow('path-only format "/foo/bar" provided without address')
+                .toThrow('path-only format "/foo/bar" provided without domain')
         })
 
         it('throws if given path-only format but ethereum address fetching rejects', () => {

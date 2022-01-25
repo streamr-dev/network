@@ -45,7 +45,6 @@ export interface StreamProperties {
     }
     partitions?: number
     requireSignedData?: boolean
-    requireEncryptedData?: boolean
     storageDays?: number
     inactivityThresholdHours?: number
 }
@@ -90,8 +89,6 @@ class StreamrStream implements StreamMetadata {
         fields: Field[];
     } = { fields: [] }
     partitions!: number
-    /** @internal */
-    requireEncryptedData!: boolean
     requireSignedData!: boolean
     storageDays?: number
     inactivityThresholdHours?: number

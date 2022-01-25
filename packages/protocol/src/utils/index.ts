@@ -7,7 +7,7 @@ import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
 import { StreamID, toStreamID, StreamIDUtils } from "./StreamID"
 import { StreamPartID, toStreamPartID, StreamPartIDUtils } from "./StreamPartID"
-import { EthereumAddress } from "./types"
+import { EthereumAddress, ENSName } from "./types"
 
 export {
     OrderingUtil,
@@ -30,5 +30,6 @@ export {
     StreamIDUtils,
     StreamPartID,
     StreamPartIDUtils,
-    EthereumAddress
+    EthereumAddress,
+    ENSName
 }

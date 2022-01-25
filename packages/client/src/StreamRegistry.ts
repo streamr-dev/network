@@ -8,7 +8,7 @@ import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'
 import Ethereum from './Ethereum'
-import { instanceId } from './utils'
+import { instanceId, until } from './utils'
 import { Context } from './utils/Context'
 import { Config, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamPermission, StreamPermissions, StreamProperties } from './Stream'
@@ -166,25 +166,46 @@ export class StreamRegistry implements Context {
         props.partitions ??= 1
 
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        await this.ensureStreamIdInNamespaceOfAuthenticatedUser(streamId)
 
         const normalizedProperties = {
             ...props,
             id: streamId
         }
+
+        const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
+        if (domainAndPath === undefined) {
+            throw new Error(`stream id "${streamId}" not valid`)
+        }
+        const [domain, path] = domainAndPath
+
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.createStream(
-            StreamIDUtils.getPath(streamId)!,
-            JSON.stringify(normalizedProperties)
-        )
+        let tx
+        if (StreamIDUtils.isENSAddress(domain)) {
+            tx = await this.streamRegistryContract!.createStreamWithENS(domain, path, JSON.stringify(normalizedProperties))
+            /*
+                The call to createStreamWithENS delegates the ENS ownership check, and therefore the
+                call doesn't fail e.g. if the user doesn't own the ENS name. To see whether the stream
+                creation succeeeds, we need to poll The Graph. If the polling timeouts, we don'
+                know what the actual error was. (Most likely it has anything to do with timeout
+                -> we don't use the error from until(), but throw an explicit error instead.)
+            */
+            try {
+                await until(async () => { return this.streamExistsOnTheGraph(streamId) }, 20000, 500)
+            } catch (e) {
+                throw new Error(`unable to create stream "${streamId}"`)
+            }
+        } else {
+            await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
+            tx = await this.streamRegistryContract!.createStream(path, JSON.stringify(normalizedProperties))
+        }
+
         await tx.wait()
         return new Stream(normalizedProperties, this.container)
     }
 
-    private async ensureStreamIdInNamespaceOfAuthenticatedUser(streamId: StreamID): Promise<void> {
-        const address = StreamIDUtils.getAddress(streamId)
+    private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
         const userAddress = await this.ethereum.getAddress()
-        if (address === undefined || address.toLowerCase() !== userAddress.toLowerCase()) { // TODO: add check for ENS??
+        if (address.toLowerCase() !== userAddress.toLowerCase()) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }
     }

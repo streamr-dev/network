@@ -38,8 +38,7 @@ describe('StreamEndpoints', () => {
     beforeAll(async () => {
         createdStream = await createTestStream(client, module, {
             name: getName(),
-            requireSignedData: true,
-            requireEncryptedData: false,
+            requireSignedData: true
         })
         const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
         // const storageNodeClient = new StreamrClient({
@@ -60,8 +59,7 @@ describe('StreamEndpoints', () => {
             const stream = await client.createStream({
                 id,
                 name,
-                requireSignedData: true,
-                requireEncryptedData: true,
+                requireSignedData: true
             })
             await until(async () => { return client.streamExistsOnTheGraph(stream.streamId) }, 100000, 1000)
             expect(stream.id).toBeTruthy()
@@ -87,8 +85,45 @@ describe('StreamEndpoints', () => {
             expect(newStream.id).toEqual(expectedId)
         })
 
-        it('invalid id', async () => {
-            await expect(async () => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow()
+        it('legacy format', async () => {
+            const streamId = '7wa7APtlTq6EC5iTCBy6dw'
+            await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
+        })
+
+        it('key-exchange format', async () => {
+            const streamId = 'SYSTEM/keyexchange/0x0000000000000000000000000000000000000000'
+            await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
+        })
+
+        describe('ENS', () => {
+
+            it('domain owned by user', async () => {
+                const streamId = 'testdomain1.eth/foobar/' + Date.now()
+                const ensOwnerClient = new StreamrClient({
+                    ...clientOptions,
+                    auth: {
+                        // In dev environment the testdomain1.eth is owned by 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0.
+                        // The ownership is preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
+                        privateKey: '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb'
+                    },
+                })
+                const newStream = await ensOwnerClient.createStream({
+                    id: streamId,
+                })
+                await until(async () => { return ensOwnerClient.streamExistsOnTheGraph(streamId) }, 100000, 1000)
+                expect(newStream.id).toEqual(streamId)
+            })
+
+            it('domain not owned by user', async () => {
+                const streamId = 'testdomain1.eth/foobar'
+                await expect(async () => client.createStream({ id: streamId })).rejects.toThrow()
+            })
+
+            it('domain not registered', async () => {
+                const streamId = 'some-non-registered-address.eth/foobar'
+                await expect(async () => client.createStream({ id: streamId })).rejects.toThrow()
+            })
+
         })
     })
 
