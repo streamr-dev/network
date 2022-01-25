@@ -26,8 +26,6 @@ function getSubtle() {
     return subtle
 }
 
-getSubtle()
-
 export class StreamMessageProcessingError extends StreamMessageError {
     constructor(message = '', streamMessage: StreamMessage) {
         super(`Could not process. ${message}`, streamMessage)
